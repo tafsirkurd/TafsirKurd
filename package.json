@@ -1,0 +1,19 @@
+{
+    "name": "tafsir-kurd-dashboard",
+    "version": "1.0.0",
+    "description": "Admin dashboard for Tafsir Kurd website",
+    "main": "index.js",
+    "scripts": {
+        "build": "echo 'No build step required'",
+        "dev": "netlify dev",
+        "deploy": "netlify deploy",
+        "deploy:prod": "netlify deploy --prod"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.55.0",
+        "jsonwebtoken": "^9.0.2"
+    },
+    "devDependencies": {
+        "netlify-cli": "^17.0.0"
+    }
+}

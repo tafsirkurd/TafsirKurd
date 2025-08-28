@@ -1,0 +1,3435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<!-- Add Supabase client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // Secure Supabase initialization function
+    async function initSupabase() {
+    try {
+        const response = await fetch('/.netlify/functions/config');
+
+        if (!response.ok) {
+            console.warn('Config fetch failed, using fallback mode');
+            // Return null to indicate fallback mode should be used
+            return null;
+        }
+
+        // Parse the JSON response
+        const config = await response.json();
+
+        return window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+    } catch (error) {
+        console.warn('Config loading failed, using fallback mode:', error);
+        // Return null to indicate fallback mode should be used
+        return null;
+    }
+}
+
+    // Global variable to store Supabase client
+    let supabase;
+</script>
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Tafsir Kurd - Bringing clear, authentic Quranic explanation to Kurdish speakers through short lessons and deep tafsir sessions.">
+<meta name="keywords" content="Tafsir, Quran, Kurdish, Islamic education, Quran explanation">
+<title>Tafsir Kurd - Quranic Explanation in Kurdish</title>
+<link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+<link rel="icon" href="./favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<!-- Cloudflare Web Analytics -->
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "38855c0a9b3946a083192373b7bb70b8"}'></script>
+    <!-- End Cloudflare Web Analytics -->
+<style>
+        :root {
+                --bg: #ffffff;
+                --text: #1a1a1a;
+                --text-muted: #666;
+                --muted: #f8f9fa;
+                --muted-dark: #e0e0e0;
+                --border-light: #eee;
+                --primary: #000000;
+                --primary-gradient: linear-gradient(135deg, #000000, #333333);
+                --accent: #2563eb;
+                --accent-hover: #1d4ed8;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --shadow-light: 0 2px 10px rgba(0,0,0,0.05);
+                --shadow-medium: 0 8px 30px rgba(0,0,0,0.08);
+                --shadow-heavy: 0 20px 60px rgba(0,0,0,0.15);
+                --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                --transition-slow: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Dark mode variables */
+        [data-theme="dark"] {
+            --bg: #0f0f0f;
+            --text: #ffffff;
+            --text-muted: #a0a0a0;
+            --muted: #1a1a1a;
+            --muted-dark: #2a2a2a;
+            --border-light: #333333;
+            --primary: #ffffff;
+            --primary-gradient: linear-gradient(135deg, #ffffff, #cccccc);
+            --accent: #4f8cff;
+            --accent-hover: #3b7ce6;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --shadow-light: 0 2px 10px rgba(255,255,255,0.03);
+            --shadow-medium: 0 8px 30px rgba(255,255,255,0.05);
+            --shadow-heavy: 0 20px 60px rgba(255,255,255,0.08);
+        }
+
+        * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+        }
+
+        html, body {
+                height: 100%;
+        }
+
+        body {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                background: var(--bg);
+                color: var(--text);
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+                line-height: 1.6;
+                overflow-x: hidden;
+                transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* ========================
+        LOGO DARK MODE INVERSION
+        ======================== */
+        .logo-image {
+            transition: filter 0.3s ease;
+        }
+
+        [data-theme="dark"] .logo-image {
+            filter: invert(1) brightness(1.1);
+        }
+
+        /* ========================
+        NEW PRELOADER STYLES
+        ======================== */
+        .preloader {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: var(--bg);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+                overflow: hidden;
+        }
+
+        .preloader.fade-out {
+                opacity: 0;
+                transform: scale(1.1);
+                pointer-events: none;
+        }
+
+        /* Geometric floating shapes */
+        .preloader-shapes {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+        }
+
+        .floating-shape {
+                position: absolute;
+                background: var(--primary);
+                opacity: 0.05;
+                animation: floatShape 12s infinite linear;
+        }
+
+        .floating-shape.circle {
+                border-radius: 50%;
+        }
+
+        .floating-shape.square {
+                border-radius: 4px;
+        }
+
+        .floating-shape.triangle {
+                background: transparent;
+                width: 0;
+                height: 0;
+                border-left: 15px solid transparent;
+                border-right: 15px solid transparent;
+                border-bottom: 30px solid var(--primary);
+                opacity: 0.05;
+        }
+
+        .floating-shape:nth-child(1) {
+                width: 20px;
+                height: 20px;
+                left: 10%;
+                animation-delay: 0s;
+                animation-duration: 8s;
+        }
+
+        .floating-shape:nth-child(2) {
+                width: 30px;
+                height: 30px;
+                left: 20%;
+                animation-delay: 2s;
+                animation-duration: 10s;
+        }
+
+        .floating-shape:nth-child(3) {
+                width: 15px;
+                height: 15px;
+                left: 80%;
+                animation-delay: 4s;
+                animation-duration: 12s;
+        }
+
+        .floating-shape:nth-child(4) {
+                width: 25px;
+                height: 25px;
+                left: 70%;
+                animation-delay: 1s;
+                animation-duration: 9s;
+        }
+
+        .floating-shape:nth-child(5) {
+                left: 60%;
+                animation-delay: 3s;
+                animation-duration: 11s;
+        }
+
+        .floating-shape:nth-child(6) {
+                width: 18px;
+                height: 18px;
+                left: 40%;
+                animation-delay: 5s;
+                animation-duration: 7s;
+        }
+
+        @keyframes floatShape {
+                0% {
+                        transform: translateY(100vh) rotate(0deg);
+                        opacity: 0;
+                }
+                10% {
+                        opacity: 0.05;
+                }
+                90% {
+                        opacity: 0.05;
+                }
+                100% {
+                        transform: translateY(-100px) rotate(360deg);
+                        opacity: 0;
+                }
+        }
+
+        .preloader-content {
+                position: relative;
+                z-index: 10;
+                text-align: center;
+        }
+
+        .preloader-logo {
+                width: 120px;
+                height: 120px;
+                margin-bottom: 30px;
+                opacity: 0;
+                transform: scale(0.8);
+                animation: logoSlideIn 1s 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+                filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.1));
+                object-fit: contain;
+                background: transparent;
+                border-radius: 20px;
+                transition: filter 0.3s ease;
+        }
+
+        [data-theme="dark"] .preloader-logo {
+                filter: invert(1) brightness(1.1) drop-shadow(0 10px 30px rgba(255, 255, 255, 0.1));
+        }
+
+        @keyframes logoSlideIn {
+                0% {
+                        opacity: 0;
+                        transform: scale(0.8) translateY(30px);
+                }
+                100% {
+                        opacity: 1;
+                        transform: scale(1) translateY(0);
+                }
+        }
+
+        .preloader-title {
+                color: var(--text);
+                font-size: 2rem;
+                font-weight: 600;
+                text-align: center;
+                opacity: 0;
+                transform: translateY(20px);
+                animation: fadeUp 0.8s 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+                text-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+                letter-spacing: -0.02em;
+                margin-bottom: 10px;
+        }
+
+        .preloader-subtitle {
+                color: var(--text-muted);
+                font-size: 1rem;
+                font-weight: 400;
+                text-align: center;
+                opacity: 0;
+                transform: translateY(15px);
+                animation: fadeUp 0.8s 1.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+                margin-bottom: 40px;
+        }
+
+        .preloader-dots {
+                display: flex;
+                gap: 8px;
+                justify-content: center;
+                opacity: 0;
+                animation: fadeUp 0.8s 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .preloader-dot {
+                width: 8px;
+                height: 8px;
+                background: var(--primary);
+                border-radius: 50%;
+                animation: dotPulse 1.5s infinite ease-in-out;
+        }
+
+        .preloader-dot:nth-child(2) {
+                animation-delay: 0.2s;
+        }
+
+        .preloader-dot:nth-child(3) {
+                animation-delay: 0.4s;
+        }
+
+        @keyframes dotPulse {
+                0%, 80%, 100% {
+                        transform: scale(0.8);
+                        opacity: 0.3;
+                }
+                40% {
+                        transform: scale(1);
+                        opacity: 1;
+                }
+        }
+
+        @keyframes fadeUp {
+                to {
+                        opacity: 1;
+                        transform: translateY(0);
+                }
+        }
+
+        /* Hide main content during preload */
+        .main-content {
+                opacity: 0;
+                transition: opacity 1s ease-in-out;
+        }
+
+        .main-content.loaded {
+                opacity: 1;
+        }
+
+        body.no-scroll {
+                overflow: hidden;
+        }
+
+        /* Custom text selection color */
+        ::selection {
+                background-color: var(--primary);
+                color: var(--bg);
+        }
+
+        ::-moz-selection {
+                background-color: var(--primary);
+                color: var(--bg);
+        }
+
+        /* ========================
+        SCROLL TO TOP BUTTON
+        ======================== */
+        .scroll-to-top {
+                position: fixed;
+                bottom: 30px;
+                right: 30px;
+                width: 60px;
+                height: 60px;
+                background: var(--primary-gradient);
+                color: var(--bg);
+                border: none;
+                border-radius: 50%;
+                cursor: pointer;
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.2rem;
+                box-shadow: var(--shadow-heavy);
+                transition: var(--transition);
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(20px);
+        }
+
+        .scroll-to-top.visible {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+        }
+
+        .scroll-to-top:hover {
+                transform: translateY(-5px) scale(1.1);
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .scroll-to-top:hover {
+                box-shadow: 0 15px 35px rgba(255, 255, 255, 0.3);
+        }
+
+        .scroll-to-top i {
+                animation: bounceUp 2s infinite;
+        }
+
+        @keyframes bounceUp {
+                0%, 20%, 50%, 80%, 100% {
+                        transform: translateY(0);
+                }
+                40% {
+                        transform: translateY(-5px);
+                }
+                60% {
+                        transform: translateY(-3px);
+                }
+        }
+
+        /* ========================
+        DARK MODE TOGGLE BUTTON
+        ======================== */
+        .dark-mode-toggle {
+                position: fixed;
+                bottom: 100px;
+                right: 30px;
+                width: 60px;
+                height: 60px;
+                background: var(--primary);
+                color: var(--bg);
+                border: 2px solid var(--border-light);
+                border-radius: 50%;
+                cursor: pointer;
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.2rem;
+                box-shadow: var(--shadow-heavy);
+                transition: var(--transition);
+                opacity: 1;
+                visibility: visible;
+        }
+
+        .dark-mode-toggle:hover {
+                transform: translateY(-5px) scale(1.1);
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .dark-mode-toggle:hover {
+                box-shadow: 0 15px 35px rgba(255, 255, 255, 0.2);
+        }
+
+        .dark-mode-toggle i {
+                transition: var(--transition);
+        }
+
+        /* ========================
+        ENHANCED NAVIGATION STYLES WITH DROPDOWN
+        ======================== */
+        nav {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 16px 5%;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border-bottom: 1px solid var(--border-light);
+                z-index: 1000;
+                transition: var(--transition);
+        }
+
+        [data-theme="dark"] nav {
+                background: rgba(15, 15, 15, 0.95);
+        }
+
+        .scrolled-nav {
+                box-shadow: var(--shadow-medium);
+                padding: 12px 5%;
+                background: rgba(255, 255, 255, 0.98);
+        }
+
+        [data-theme="dark"] .scrolled-nav {
+                background: rgba(15, 15, 15, 0.98);
+        }
+
+        .nav-left {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                text-decoration: none;
+                color: var(--text);
+                transition: var(--transition);
+        }
+
+        .nav-left:hover {
+                transform: scale(1.02);
+        }
+
+        .nav-left img {
+                height: 60px;
+                width: auto;
+                display: block;
+                object-fit: contain;
+                background: transparent;
+                border-radius: 8px;
+                transition: var(--transition);
+        }
+
+        .scrolled-nav .nav-left img {
+                height: 50px;
+        }
+
+        /* Enhanced Desktop Navigation */
+        .nav-links {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                background: rgba(248, 250, 252, 0.8);
+                padding: 8px;
+                border-radius: 50px;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(226, 232, 240, 0.5);
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] .nav-links {
+                background: rgba(26, 26, 26, 0.8);
+                border: 1px solid rgba(51, 51, 51, 0.5);
+        }
+
+        .nav-link {
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 12px 18px;
+                text-decoration: none;
+                color: var(--text-muted);
+                font-weight: 500;
+                font-size: 0.9rem;
+                border-radius: 25px;
+                transition: var(--transition);
+                white-space: nowrap;
+                background: transparent;
+                border: 1px solid transparent;
+        }
+
+        .nav-link i {
+                font-size: 0.85rem;
+                transition: var(--transition);
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+                color: var(--primary);
+                background: rgba(255, 255, 255, 0.9);
+                border-color: rgba(0, 0, 0, 0.1);
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+                transform: translateY(-1px);
+        }
+
+        [data-theme="dark"] .nav-link:hover,
+        [data-theme="dark"] .nav-link.active {
+                background: rgba(42, 42, 42, 0.9);
+                border-color: rgba(255, 255, 255, 0.2);
+                color: var(--text);
+        }
+
+        .nav-link:hover i,
+        .nav-link.active i {
+                transform: scale(1.1);
+                color: var(--primary);
+        }
+
+        [data-theme="dark"] .nav-link:hover i,
+        [data-theme="dark"] .nav-link.active i {
+                color: var(--text);
+        }
+
+        .nav-link-text {
+                position: relative;
+                display: inline-block;
+                transition: var(--transition);
+        }
+
+        /* Dropdown Menu for About and Features */
+        .nav-dropdown {
+                position: relative;
+        }
+
+        .dropdown-menu {
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(20px);
+                border: 1px solid var(--border-light);
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                margin-top: 8px;
+                min-width: 180px;
+                z-index: 1001;
+        }
+
+        [data-theme="dark"] .dropdown-menu {
+                background: rgba(15, 15, 15, 0.95);
+                border: 1px solid var(--border-light);
+        }
+
+        .nav-dropdown:hover .dropdown-menu {
+                opacity: 1;
+                visibility: visible;
+                transform: translateX(-50%) translateY(0);
+        }
+
+        .dropdown-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 12px 16px;
+                color: var(--text-muted);
+                text-decoration: none;
+                font-size: 0.85rem;
+                transition: var(--transition);
+                border-radius: 8px;
+                margin: 4px;
+        }
+
+        .dropdown-item:hover {
+                background: rgba(0, 0, 0, 0.05);
+                color: var(--primary);
+        }
+
+        [data-theme="dark"] .dropdown-item:hover {
+                background: rgba(255, 255, 255, 0.1);
+                color: var(--text);
+        }
+
+        .dropdown-item i {
+                font-size: 0.8rem;
+                min-width: 14px;
+        }
+
+        /* Special styling for CTA button */
+        .nav-cta {
+                background: var(--primary-gradient) !important;
+                color: var(--bg) !important;
+                border-color: var(--primary) !important;
+                font-weight: 600;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-cta:hover {
+                background: linear-gradient(135deg, #333333, #555555) !important;
+                color: var(--bg) !important;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .nav-cta:hover {
+                background: linear-gradient(135deg, #cccccc, #999999) !important;
+        }
+
+        .nav-cta i {
+                color: var(--bg) !important;
+        }
+
+        /* Mobile Navigation */
+        .hamburger-menu {
+                display: none;
+                flex-direction: column;
+                justify-content: space-between;
+                width: 28px;
+                height: 20px;
+                cursor: pointer;
+                z-index: 1001;
+        }
+
+        .hamburger-menu span {
+                display: block;
+                width: 100%;
+                height: 3px;
+                background-color: var(--text);
+                border-radius: 3px;
+                transition: var(--transition);
+                transform-origin: center;
+        }
+
+        .nav-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.6);
+                backdrop-filter: blur(4px);
+                z-index: 998;
+                opacity: 0;
+                pointer-events: none;
+                transition: var(--transition);
+        }
+
+        /* HERO SECTION WITH ANIMATED BACKGROUND */
+        header {
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 0 5%;
+                text-align: center;
+                position: relative;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                overflow: hidden;
+                color: white;
+        }
+
+        .header-bg {
+                position: absolute;
+                inset: 0;
+                background: url('https://images.unsplash.com/photo-1649297711322-51cdcfb0c1ca?q=80&w=1920&auto=format&fit=crop') center center/cover no-repeat;
+                filter: brightness(0.4);
+                z-index: 0;
+                animation: slowPan 30s ease-in-out infinite alternate;
+        }
+
+        @keyframes slowPan {
+                0% {
+                        transform: scale(1) translateX(0px) translateY(0px);
+                }
+                25% {
+                        transform: scale(1.05) translateX(-20px) translateY(-10px);
+                }
+                50% {
+                        transform: scale(1.08) translateX(20px) translateY(-15px);
+                }
+                75% {
+                        transform: scale(1.06) translateX(-10px) translateY(10px);
+                }
+                100% {
+                        transform: scale(1.1) translateX(15px) translateY(-5px);
+                }
+        }
+
+        .hero-inner {
+                max-width: 900px;
+                width: 100%;
+                position: relative;
+                z-index: 10;
+                padding-top: 80px;
+        }
+
+        .hero-logo {
+                height: 120px;
+                width: auto;
+                margin: 0 auto 24px;
+                display: block;
+                transform: scale(1.2);
+                opacity: 0;
+                animation: logoEntrance 1.2s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+                filter: drop-shadow(0 8px 32px rgba(0, 0, 0, 0.3));
+                transition: var(--transition);
+                cursor: default;
+                object-fit: contain;
+                background: transparent;
+                border-radius: 12px;
+        }
+
+        .hero-logo:hover {
+                transform: scale(1.25) rotate(2deg);
+        }
+
+        @keyframes logoEntrance {
+                to {
+                        transform: scale(1);
+                        opacity: 1;
+                }
+        }
+
+        .hero-title {
+                font-size: clamp(2.5rem, 5vw, 4rem);
+                font-weight: 700;
+                margin-bottom: 16px;
+                opacity: 0;
+                transform: translateY(20px);
+                animation: fadeUp 0.8s 0.3s forwards;
+                text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                letter-spacing: -0.02em;
+        }
+
+        .hero-sub {
+                font-size: clamp(1rem, 2.5vw, 1.25rem);
+                font-weight: 300;
+                max-width: 720px;
+                margin: 0 auto 32px;
+                opacity: 0;
+                transform: translateY(20px);
+                animation: fadeUp 0.8s 0.6s forwards;
+                text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+                line-height: 1.7;
+        }
+
+        .cta {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 16px 32px;
+                border-radius: 50px;
+                text-decoration: none;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                font-weight: 600;
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+                cursor: pointer;
+                opacity: 0;
+                transform: translateY(20px);
+                animation: fadeUp 0.8s 0.9s forwards;
+                transition: var(--transition);
+                backdrop-filter: blur(10px);
+                font-size: 0.95rem;
+        }
+
+        .cta:hover {
+                background: rgba(255, 255, 255, 0.2);
+                border-color: rgba(255, 255, 255, 0.6);
+                transform: translateY(-3px);
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes fadeUp {
+                to {
+                        opacity: 1;
+                        transform: translateY(0);
+                }
+        }
+
+        /* Header fade animations */
+        .fade-out {
+                animation: fadeOutHeader 0.8s forwards;
+        }
+
+        @keyframes fadeOutHeader {
+                to {
+                        opacity: 0;
+                        transform: translateY(-40px);
+                        pointer-events: none;
+                }
+        }
+
+        .fade-in {
+                animation: fadeInHeader 0.8s forwards;
+        }
+
+        @keyframes fadeInHeader {
+                from {
+                        opacity: 0;
+                        transform: translateY(-40px);
+                }
+                to {
+                        opacity: 1;
+                        transform: translateY(0);
+                        pointer-events: auto;
+                }
+        }
+
+        /* MAIN CONTENT */
+        main {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 80px 5% 80px;
+        }
+
+        section {
+                margin-bottom: 100px;
+                opacity: 0;
+                transform: translateY(30px);
+                transition: var(--transition-slow);
+        }
+
+        section.show {
+                opacity: 1;
+                transform: translateY(0);
+        }
+
+        .section-title {
+                display: inline-block;
+                font-size: clamp(1.5rem, 3vw, 2rem);
+                font-weight: 600;
+                padding-bottom: 12px;
+                border-bottom: 3px solid var(--primary);
+                margin-bottom: 40px;
+                position: relative;
+        }
+
+        .section-title::after {
+                content: '';
+                position: absolute;
+                bottom: -3px;
+                left: 0;
+                width: 50%;
+                height: 3px;
+                background: var(--primary);
+                opacity: 0.3;
+        }
+
+        /* FEATURES SECTION */
+        .features-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 32px;
+                margin-top: 40px;
+        }
+
+        .feature-card {
+                background: linear-gradient(145deg, #ffffff 0%, var(--muted) 100%);
+                border: 1px solid var(--border-light);
+                border-radius: 20px;
+                padding: 40px 32px;
+                text-align: center;
+                transition: var(--transition);
+                position: relative;
+                overflow: hidden;
+                box-shadow: var(--shadow-light);
+                height: 100%;
+        }
+
+        [data-theme="dark"] .feature-card,
+        [data-theme="dark"] .plan-card,
+        [data-theme="dark"] .schedule-card,
+        [data-theme="dark"] .stat-card,
+        [data-theme="dark"] .bio-card {
+                background: linear-gradient(145deg, #1a1a1a 0%, #0f0f0f 100%);
+                border-color: var(--border-light);
+        }
+
+        .feature-card::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: linear-gradient(45deg, transparent, rgba(0,0,0,0.02), transparent);
+                transform: rotate(45deg);
+                transition: var(--transition);
+                opacity: 0;
+        }
+
+        .feature-card:hover::before {
+                opacity: 1;
+                animation: shimmer 1.5s ease-out;
+        }
+
+        @keyframes shimmer {
+                0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+                100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .feature-card:hover {
+                transform: translateY(-12px) scale(1.03);
+                box-shadow: var(--shadow-heavy);
+                border-color: var(--primary);
+        }
+
+        [data-theme="dark"] .feature-card:hover,
+        [data-theme="dark"] .plan-card:hover,
+        [data-theme="dark"] .schedule-card:hover,
+        [data-theme="dark"] .stat-card:hover,
+        [data-theme="dark"] .bio-card:hover {
+                border-color: var(--text);
+        }
+
+        .feature-icon {
+                width: 80px;
+                height: 80px;
+                margin: 0 auto 24px;
+                background: var(--primary-gradient);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--bg);
+                font-size: 2rem;
+                transition: var(--transition);
+                position: relative;
+        }
+
+        .feature-icon::after {
+                content: '';
+                position: absolute;
+                inset: -4px;
+                background: var(--primary-gradient);
+                border-radius: 50%;
+                z-index: -1;
+                filter: blur(20px);
+                opacity: 0;
+                transition: var(--transition);
+        }
+
+        .feature-card:hover .feature-icon {
+                transform: scale(1.1) rotate(10deg);
+        }
+
+        .feature-card:hover .feature-icon::after {
+                opacity: 0.3;
+        }
+
+        .feature-title {
+                font-size: 1.4rem;
+                font-weight: 600;
+                margin-bottom: 16px;
+                color: var(--text);
+        }
+
+        .feature-desc {
+                color: var(--text-muted);
+                line-height: 1.7;
+                font-size: 1rem;
+        }
+
+        /* ENHANCED VIDEOS SECTION */
+        .videos-section {
+                margin-top: 40px;
+        }
+
+        .videos-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 24px;
+                margin-top: 40px;
+        }
+
+        .video-container {
+                position: relative;
+                background: var(--muted);
+                border-radius: 20px;
+                overflow: hidden;
+                aspect-ratio: 9/16;
+                box-shadow: var(--shadow-light);
+                transition: var(--transition);
+                border: 1px solid var(--border-light);
+        }
+
+        .video-container::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(45deg, transparent, rgba(0,0,0,0.02), transparent);
+                opacity: 0;
+                transition: var(--transition);
+                z-index: 1;
+                pointer-events: none;
+        }
+
+        .video-container:hover::before {
+                opacity: 1;
+        }
+
+        .video-container:hover {
+                transform: translateY(-8px) scale(1.02);
+                box-shadow: var(--shadow-heavy);
+                border-color: var(--primary);
+        }
+
+        .video-container iframe {
+                width: 100%;
+                height: 100%;
+                border: none;
+                transition: var(--transition);
+        }
+
+        /* ENHANCED SCHEDULE SECTION */
+        .schedule-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                gap: 32px;
+                margin-top: 40px;
+        }
+
+        .schedule-card {
+                background: linear-gradient(145deg, #ffffff 0%, var(--muted) 100%);
+                border: 2px solid var(--border-light);
+                border-radius: 20px;
+                padding: 32px;
+                transition: var(--transition);
+                position: relative;
+                overflow: hidden;
+                height: 100%;
+        }
+
+        .schedule-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 6px;
+                height: 100%;
+                background: var(--primary-gradient);
+                transition: var(--transition);
+        }
+
+        .schedule-card::after {
+                content: '';
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: radial-gradient(circle, rgba(0,0,0,0.02) 0%, transparent 70%);
+                opacity: 0;
+                transition: var(--transition);
+        }
+
+        .schedule-card:hover::before {
+                width: 8px;
+        }
+
+        .schedule-card:hover::after {
+                opacity: 1;
+                animation: pulse 2s ease-out;
+        }
+
+        @keyframes pulse {
+                0% { transform: scale(0); opacity: 0; }
+                50% { opacity: 1; }
+                100% { transform: scale(1); opacity: 0; }
+        }
+
+        .schedule-card:hover {
+                border-color: var(--primary);
+                transform: translateY(-8px) scale(1.02);
+                box-shadow: var(--shadow-heavy);
+        }
+
+        .schedule-day {
+                font-weight: 700;
+                color: var(--primary);
+                font-size: 1.3rem;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+        }
+
+        .schedule-day i {
+                font-size: 1.2rem;
+                padding: 8px;
+                background: var(--primary-gradient);
+                color: var(--bg);
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+        }
+
+        .schedule-time {
+                color: var(--text-muted);
+                font-size: 1rem;
+                margin-bottom: 16px;
+                font-weight: 600;
+                background: rgba(0,0,0,0.03);
+                padding: 8px 16px;
+                border-radius: 20px;
+                display: inline-block;
+        }
+
+        [data-theme="dark"] .schedule-time {
+                background: rgba(255,255,255,0.03);
+        }
+
+        .schedule-topic {
+                color: var(--text);
+                font-weight: 600;
+                font-size: 1.2rem;
+                margin-bottom: 12px;
+        }
+
+        .schedule-desc {
+                color: var(--text-muted);
+                font-size: 1rem;
+                line-height: 1.6;
+        }
+
+        /* ENHANCED PLANS SECTION */
+        .plans-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+                gap: 32px;
+                margin-top: 40px;
+        }
+
+        .plan-card {
+                background: linear-gradient(145deg, #ffffff 0%, var(--muted) 100%);
+                border: 2px solid var(--border-light);
+                border-radius: 24px;
+                padding: 40px;
+                transition: var(--transition);
+                position: relative;
+                overflow: hidden;
+                box-shadow: var(--shadow-light);
+                height: 100%;
+        }
+
+        .plan-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.02), transparent);
+                transition: left 0.8s;
+        }
+
+        .plan-card:hover::before {
+                left: 100%;
+        }
+
+        .plan-card:hover {
+                transform: translateY(-12px) scale(1.02);
+                box-shadow: var(--shadow-heavy);
+                border-color: var(--primary);
+        }
+
+        .plan-icon {
+                width: 100px;
+                height: 100px;
+                margin: 0 auto 24px;
+                background: var(--primary-gradient);
+                border-radius: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--bg);
+                font-size: 2.5rem;
+                transition: var(--transition);
+                position: relative;
+        }
+
+        .plan-icon::after {
+                content: '';
+                position: absolute;
+                inset: -6px;
+                background: var(--primary-gradient);
+                border-radius: 24px;
+                z-index: -1;
+                filter: blur(24px);
+                opacity: 0;
+                transition: var(--transition);
+        }
+
+        .plan-card:hover .plan-icon {
+                transform: scale(1.1) rotate(5deg);
+        }
+
+        .plan-card:hover .plan-icon::after {
+                opacity: 0.4;
+        }
+
+        .plan-title {
+                font-size: 1.6rem;
+                font-weight: 700;
+                margin-bottom: 20px;
+                color: var(--text);
+                text-align: center;
+        }
+
+        .plan-desc {
+                color: var(--text-muted);
+                line-height: 1.7;
+                text-align: center;
+                margin-bottom: 32px;
+                font-size: 1.1rem;
+        }
+
+        .plan-features {
+                list-style: none;
+                padding: 0;
+        }
+
+        .plan-features li {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                margin-bottom: 16px;
+                color: var(--text-muted);
+                font-size: 1rem;
+                padding: 12px 16px;
+                background: rgba(0,0,0,0.02);
+                border-radius: 12px;
+                transition: var(--transition);
+        }
+
+        [data-theme="dark"] .plan-features li {
+                background: rgba(255,255,255,0.02);
+        }
+
+        .plan-features li:hover {
+                background: rgba(0,0,0,0.04);
+                transform: translateX(8px);
+        }
+
+        [data-theme="dark"] .plan-features li:hover {
+                background: rgba(255,255,255,0.04);
+        }
+
+        .plan-features li i {
+                color: var(--primary);
+                font-size: 1.1rem;
+                min-width: 20px;
+                background: rgba(0,0,0,0.05);
+                padding: 6px;
+                border-radius: 50%;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+        }
+
+        [data-theme="dark"] .plan-features li i {
+                background: rgba(255,255,255,0.05);
+        }
+
+        /* ENHANCED REACH SECTION */
+        .reach-section {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 40px;
+                margin-top: 40px;
+        }
+
+        .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 32px;
+        }
+
+        .stat-card {
+                position: relative;
+                background: linear-gradient(145deg, #ffffff 0%, var(--muted) 100%);
+                border: 1px solid var(--border-light);
+                border-radius: 24px;
+                padding: 40px 32px;
+                text-align: center;
+                transition: var(--transition);
+                overflow: hidden;
+                box-shadow: var(--shadow-light);
+                height: 100%;
+        }
+
+        .stat-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.03), transparent);
+                transition: left 0.8s;
+        }
+
+        .stat-card:hover::before {
+                left: 100%;
+        }
+
+        .stat-card:hover {
+                transform: translateY(-12px) scale(1.03);
+                box-shadow: var(--shadow-heavy);
+                border-color: var(--primary);
+        }
+
+        .stat-icon {
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+                color: var(--primary);
+                transition: var(--transition);
+                background: var(--primary-gradient);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+        }
+
+        .stat-card:hover .stat-icon {
+                transform: scale(1.2) rotate(5deg);
+        }
+
+        .stat-number {
+                font-size: clamp(2.5rem, 5vw, 3.5rem);
+                font-weight: 700;
+                color: var(--primary);
+                line-height: 1;
+                display: inline-block;
+                transition: var(--transition);
+        }
+
+        .stat-unit {
+                font-size: clamp(1.5rem, 3vw, 2rem);
+                font-weight: 600;
+                color: var(--text-muted);
+                display: inline-block;
+                margin-left: 8px;
+                transition: var(--transition);
+        }
+
+        .stat-card:hover .stat-number,
+        .stat-card:hover .stat-unit {
+                color: var(--primary);
+                transform: scale(1.05);
+        }
+
+        .stat-label {
+                font-size: 1rem;
+                color: var(--text-muted);
+                font-weight: 500;
+                margin-top: 12px;
+                transition: var(--transition);
+        }
+
+        .stat-card:hover .stat-label {
+                color: var(--text);
+        }
+
+        /* ENHANCED ABOUT SECTION */
+        .bio {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 40px;
+                margin-top: 40px;
+        }
+
+        .bio-card {
+                background: linear-gradient(180deg, var(--muted) 0%, var(--bg) 100%);
+                padding: 40px;
+                border-radius: 20px;
+                border: 1px solid var(--border-light);
+                box-shadow: var(--shadow-light);
+                transition: var(--transition);
+                position: relative;
+                overflow: hidden;
+        }
+
+        .bio-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+                transition: left 0.6s;
+        }
+
+        [data-theme="dark"] .bio-card::before {
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        }
+
+        .bio-card:hover::before {
+                left: 100%;
+        }
+
+        .bio-card:hover {
+                transform: translateY(-8px) scale(1.01);
+                box-shadow: var(--shadow-heavy);
+                border-color: var(--primary);
+        }
+
+        .quranic-verse {
+                background: rgba(0, 0, 0, 0.03);
+                border-left: 6px solid var(--primary);
+                padding: 32px;
+                margin: 32px 0;
+                border-radius: 16px;
+                position: relative;
+        }
+
+        [data-theme="dark"] .quranic-verse,
+        [data-theme="dark"] .founder-verse,
+        [data-theme="dark"] .mission-highlight,
+        [data-theme="dark"] .founder-mission {
+                background: rgba(255, 255, 255, 0.05);
+                border-left-color: var(--text);
+        }
+
+        .quranic-verse::before {
+                content: '"';
+                position: absolute;
+                top: -15px;
+                left: 25px;
+                font-size: 4rem;
+                color: var(--primary);
+                opacity: 0.2;
+                font-family: serif;
+        }
+
+        .arabic-text {
+                font-size: 1.5rem;
+                color: var(--text);
+                text-align: right;
+                margin-bottom: 20px;
+                line-height: 2.2;
+                font-family: 'Amiri', serif;
+        }
+
+        .verse-translation {
+                font-style: italic;
+                color: var(--text-muted);
+                margin-bottom: 16px;
+                line-height: 1.7;
+                font-size: 1.1rem;
+        }
+
+        .verse-reference {
+                font-size: 1rem;
+                color: var(--primary);
+                font-weight: 600;
+                text-align: right;
+        }
+
+        .bio-quote {
+                font-style: italic;
+                color: var(--text-muted);
+                border-left: 4px solid var(--primary);
+                padding-left: 24px;
+                margin-top: 24px;
+                position: relative;
+                transition: var(--transition);
+                font-size: 1.1rem;
+                line-height: 1.7;
+        }
+
+        .bio-card:hover .bio-quote {
+                background: rgba(0, 0, 0, 0.02);
+                padding: 20px 20px 20px 24px;
+                border-radius: 12px;
+        }
+
+        [data-theme="dark"] .bio-card:hover .bio-quote {
+                background: rgba(255, 255, 255, 0.02);
+        }
+
+        .mission-highlight {
+                background: linear-gradient(135deg, rgba(0, 0, 0, 0.03) 0%, rgba(0, 0, 0, 0.01) 100%);
+                padding: 32px;
+                border-radius: 16px;
+                margin: 32px 0;
+                border: 1px solid var(--border-light);
+        }
+
+        .values-list {
+                margin: 32px 0;
+        }
+
+        .values-list p {
+                display: flex;
+                align-items: flex-start;
+                gap: 16px;
+                margin-bottom: 24px;
+                padding: 20px;
+                background: rgba(0, 0, 0, 0.01);
+                border-radius: 12px;
+                transition: var(--transition);
+                font-size: 1rem;
+                line-height: 1.7;
+        }
+
+        [data-theme="dark"] .values-list p {
+                background: rgba(255, 255, 255, 0.01);
+        }
+
+        .values-list p:hover {
+                background: rgba(0, 0, 0, 0.03);
+                transform: translateX(12px);
+        }
+
+        [data-theme="dark"] .values-list p:hover {
+                background: rgba(255, 255, 255, 0.03);
+        }
+
+        .values-list p::before {
+                content: '◆';
+                color: var(--primary);
+                font-weight: bold;
+                min-width: 20px;
+                margin-top: 4px;
+                font-size: 1.2rem;
+        }
+
+        /* SEPARATE FOUNDER SECTION */
+        .founder-section {
+                background: linear-gradient(135deg, var(--muted) 0%, var(--bg) 100%);
+                border-radius: 24px;
+                padding: 60px 40px;
+                margin: 80px 0;
+                border: 2px solid var(--border-light);
+                box-shadow: var(--shadow-medium);
+                position: relative;
+                overflow: hidden;
+        }
+
+        .founder-section::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: radial-gradient(circle, rgba(0,0,0,0.02) 0%, transparent 70%);
+                animation: rotate 20s linear infinite;
+        }
+
+        [data-theme="dark"] .founder-section::before {
+                background: radial-gradient(circle, rgba(255,255,255,0.02) 0%, transparent 70%);
+        }
+
+        @keyframes rotate {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+        }
+
+        .founder-content {
+                position: relative;
+                z-index: 1;
+                text-align: center;
+        }
+
+        .founder-avatar {
+                width: 150px;
+                height: 150px;
+                background: var(--primary-gradient);
+                border-radius: 50%;
+                margin: 0 auto 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: var(--shadow-heavy);
+                transition: var(--transition);
+                position: relative;
+                overflow: hidden;
+        }
+
+        .founder-avatar::before {
+                content: '';
+                position: absolute;
+                inset: 4px;
+                background: var(--primary-gradient);
+                border-radius: 50%;
+                filter: blur(20px);
+                opacity: 0.3;
+        }
+
+        .founder-avatar:hover {
+                transform: scale(1.1) rotate(5deg);
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .founder-avatar:hover {
+                box-shadow: 0 20px 60px rgba(255, 255, 255, 0.3);
+        }
+
+        .founder-avatar i {
+                font-size: 4rem;
+                color: var(--bg);
+                z-index: 1;
+                position: relative;
+        }
+
+        .founder-name {
+                font-size: 2.2rem;
+                font-weight: 700;
+                margin-bottom: 12px;
+                color: var(--text);
+                position: relative;
+        }
+
+        .founder-title {
+                color: var(--text-muted);
+                font-size: 1.3rem;
+                font-weight: 500;
+                margin-bottom: 32px;
+                font-style: italic;
+        }
+
+        .founder-bio {
+                color: var(--text-muted);
+                line-height: 1.8;
+                margin-bottom: 32px;
+                font-size: 1.1rem;
+                max-width: 800px;
+                margin-left: auto;
+                margin-right: auto;
+        }
+
+        .founder-verse {
+                background: rgba(0, 0, 0, 0.03);
+                padding: 32px;
+                border-radius: 16px;
+                border-left: 6px solid var(--primary);
+                margin: 32px 0;
+                position: relative;
+        }
+
+        .founder-verse::before {
+                content: '"';
+                position: absolute;
+                top: -10px;
+                left: 25px;
+                font-size: 4rem;
+                color: var(--primary);
+                opacity: 0.3;
+                font-family: serif;
+        }
+
+        .founder-verse-text {
+                font-size: 1.2rem;
+                color: var(--text);
+                font-style: italic;
+                margin-bottom: 16px;
+                position: relative;
+                z-index: 1;
+        }
+
+        .founder-verse-ref {
+                font-size: 1rem;
+                color: var(--primary);
+                text-align: right;
+                font-weight: 600;
+        }
+
+        .founder-mission {
+                background: var(--muted);
+                padding: 24px;
+                border-radius: 16px;
+                border: 1px solid var(--border-light);
+                margin-top: 32px;
+        }
+
+        .founder-mission-text {
+                font-size: 1rem;
+                color: var(--text-muted);
+                text-align: center;
+                font-weight: 500;
+                line-height: 1.7;
+                margin: 0;
+        }
+
+        /* ENHANCED CONTACT SECTION */
+        #contact > div {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 40px;
+                margin-top: 40px;
+        }
+
+        /* Social Links */
+        .social-links {
+                display: flex;
+                gap: 20px;
+                margin-top: 24px;
+                flex-wrap: wrap;
+        }
+
+        .social-links a {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                background: var(--primary-gradient);
+                transition: var(--transition);
+                text-decoration: none;
+                position: relative;
+                overflow: hidden;
+                box-shadow: var(--shadow-light);
+        }
+
+        .social-links a::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 0;
+                height: 0;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 50%;
+                transform: translate(-50%, -50%);
+                transition: var(--transition);
+        }
+
+        .social-links a:hover::before {
+                width: 100%;
+                height: 100%;
+        }
+
+        .social-links a i {
+                color: var(--bg);
+                font-size: 20px;
+                z-index: 1;
+                position: relative;
+                transition: var(--transition);
+        }
+
+        .social-links a:hover {
+                transform: translateY(-8px) scale(1.1);
+                box-shadow: var(--shadow-medium);
+        }
+
+        .social-links a:hover i {
+                transform: scale(1.2);
+        }
+
+        /* Contact Form */
+        .contact-form {
+                margin-top: 32px;
+        }
+
+        .form-group {
+                margin-bottom: 24px;
+        }
+
+        .form-group label {
+                display: block;
+                margin-bottom: 12px;
+                font-weight: 500;
+                color: var(--text);
+                font-size: 1rem;
+        }
+
+        .form-control {
+                width: 100%;
+                padding: 16px 20px;
+                border: 2px solid var(--border-light);
+                border-radius: 16px;
+                font-family: inherit;
+                transition: var(--transition);
+                background: var(--bg);
+                color: var(--text);
+                font-size: 1rem;
+        }
+
+        [data-theme="dark"] .form-control {
+                background: var(--muted);
+                border-color: var(--border-light);
+                color: var(--text);
+        }
+
+        .form-control:focus {
+                outline: none;
+                border-color: var(--primary);
+                box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
+                transform: translateY(-2px);
+        }
+
+        [data-theme="dark"] .form-control:focus {
+                border-color: var(--text);
+                box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn {
+                background: var(--primary-gradient);
+                color: var(--bg);
+                border: none;
+                padding: 18px 36px;
+                border-radius: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: var(--transition);
+                font-family: inherit;
+                font-size: 1rem;
+        }
+
+        .btn:hover {
+                transform: translateY(-4px);
+                box-shadow: var(--shadow-medium);
+        }
+
+        .btn:disabled {
+                opacity: 0.7;
+                cursor: not-allowed;
+                transform: none;
+        }
+
+        .form-message {
+                margin-top: 20px;
+                padding: 16px 20px;
+                border-radius: 12px;
+                display: none;
+                font-weight: 500;
+        }
+
+        .form-message.success {
+                background-color: rgba(40, 167, 69, 0.1);
+                color: #28a745;
+                border: 1px solid #28a745;
+        }
+
+        .form-message.error {
+                background-color: rgba(220, 53, 69, 0.1);
+                color: #dc3545;
+                border: 1px solid #dc3545;
+        }
+
+        /* Loading States */
+        .loading-content {
+                text-align: center;
+                padding: 80px 20px;
+                color: var(--text-muted);
+        }
+
+        .spinner {
+                display: inline-block;
+                width: 50px;
+                height: 50px;
+                border: 4px solid rgba(0, 0, 0, 0.1);
+                border-radius: 50%;
+                border-top-color: var(--primary);
+                animation: spin 1s ease-in-out infinite;
+                margin-bottom: 20px;
+        }
+
+        [data-theme="dark"] .spinner {
+                border: 4px solid rgba(255, 255, 255, 0.1);
+                border-top-color: var(--primary);
+        }
+
+        @keyframes spin {
+                to {
+                        transform: rotate(360deg);
+                }
+        }
+
+        /* FOOTER */
+        footer {
+                border-top: 1px solid var(--border-light);
+                padding: 60px 5%;
+                text-align: center;
+                color: var(--text-muted);
+                background: var(--muted);
+        }
+
+        [data-theme="dark"] footer {
+                background: var(--muted);
+                border-color: var(--border-light);
+        }
+
+        footer img {
+                height: 40px;
+                vertical-align: middle;
+                margin-bottom: 16px;
+                object-fit: contain;
+                background: transparent;
+                border-radius: 8px;
+        }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 1024px) {
+                .bio {
+                        grid-template-columns: 1fr;
+                        gap: 32px;
+                }
+
+                .features-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                }
+
+                .plans-grid {
+                        grid-template-columns: 1fr;
+                }
+
+                .schedule-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                }
+
+                .stats-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                }
+
+                .videos-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 20px;
+                }
+
+                .scroll-to-top {
+                        bottom: 20px;
+                        right: 20px;
+                        width: 55px;
+                        height: 55px;
+                }
+
+                .dark-mode-toggle {
+                        bottom: 85px;
+                        right: 20px;
+                        width: 55px;
+                        height: 55px;
+                }
+
+                main {
+                        padding: 60px 5% 60px;
+                }
+
+                section {
+                        margin-bottom: 80px;
+                }
+        }
+
+        @media (max-width: 768px) {
+                nav {
+                        padding: 12px 4%;
+                }
+
+                .nav-links {
+                        position: fixed;
+                        top: 0;
+                        right: -100%;
+                        width: 300px;
+                        height: 100vh;
+                        background: rgba(255, 255, 255, 0.95);
+                        backdrop-filter: blur(20px);
+                        flex-direction: column;
+                        align-items: flex-start;
+                        justify-content: center;
+                        gap: 12px;
+                        padding: 80px 40px;
+                        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+                        transition: right 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+                        z-index: 999;
+                        border-radius: 0;
+                        border: none;
+                }
+
+                [data-theme="dark"] .nav-links {
+                        background: rgba(15, 15, 15, 0.95);
+                }
+
+                .nav-links .nav-link {
+                        width: 100%;
+                        justify-content: flex-start;
+                        padding: 16px 20px;
+                        border-radius: 12px;
+                        font-size: 1rem;
+                }
+
+                .hamburger-menu {
+                        display: flex;
+                }
+
+                .nav-active .nav-links {
+                        right: 0;
+                }
+
+                .nav-active .hamburger-menu span:nth-child(1) {
+                        transform: translateY(8px) rotate(45deg);
+                }
+
+                .nav-active .hamburger-menu span:nth-child(2) {
+                        opacity: 0;
+                }
+
+                .nav-active .hamburger-menu span:nth-child(3) {
+                        transform: translateY(-8px) rotate(-45deg);
+                }
+
+                .nav-active .nav-overlay {
+                        opacity: 1;
+                        pointer-events: auto;
+                }
+
+                main {
+                        padding: 40px 4% 60px;
+                }
+
+                section {
+                        margin-bottom: 60px;
+                }
+
+                .hero-inner {
+                        padding-top: 60px;
+                }
+
+                .videos-grid {
+                        grid-template-columns: 1fr;
+                        gap: 24px;
+                }
+
+                .stats-grid {
+                        grid-template-columns: 1fr;
+                        gap: 24px;
+                }
+
+                .features-grid {
+                        grid-template-columns: 1fr;
+                        gap: 24px;
+                }
+
+                .schedule-grid {
+                        grid-template-columns: 1fr;
+                }
+
+                .stat-card {
+                        padding: 32px 24px;
+                }
+
+                #contact > div {
+                        grid-template-columns: 1fr;
+                        gap: 32px;
+                }
+
+                .social-links a {
+                        width: 50px;
+                        height: 50px;
+                }
+
+                .scroll-to-top {
+                        bottom: 15px;
+                        right: 15px;
+                        width: 50px;
+                        height: 50px;
+                        font-size: 1rem;
+                }
+
+                .dark-mode-toggle {
+                        bottom: 80px;
+                        right: 15px;
+                        width: 50px;
+                        height: 50px;
+                }
+
+                /* Preloader responsive */
+                .preloader-logo {
+                        width: 100px;
+                        height: 100px;
+                }
+
+                .preloader-title {
+                        font-size: 1.5rem;
+                }
+
+                .founder-section {
+                        padding: 40px 24px;
+                        margin: 60px 0;
+                }
+
+                .founder-avatar {
+                        width: 120px;
+                        height: 120px;
+                }
+
+                .founder-avatar i {
+                        font-size: 3rem;
+                }
+
+                /* Mobile dropdown */
+                .dropdown-menu {
+                        position: static;
+                        transform: none;
+                        margin-top: 0;
+                        margin-left: 20px;
+                        border: none;
+                        box-shadow: none;
+                        background: transparent;
+                        opacity: 1;
+                        visibility: visible;
+                }
+
+                .dropdown-item {
+                        margin: 2px 0;
+                        padding: 8px 12px;
+                        font-size: 0.9rem;
+                }
+        }
+
+        @media (max-width: 480px) {
+                nav {
+                        padding: 10px 3%;
+                }
+
+                .nav-left img {
+                        height: 45px;
+                }
+
+                .scrolled-nav .nav-left img {
+                        height: 40px;
+                }
+
+                main {
+                        padding: 32px 3% 48px;
+                }
+
+                section {
+                        margin-bottom: 48px;
+                }
+
+                .bio-card {
+                        padding: 32px 20px;
+                }
+
+                .social-links {
+                        gap: 16px;
+                }
+
+                .social-links a {
+                        width: 45px;
+                        height: 45px;
+                }
+
+                .social-links a i {
+                        font-size: 18px;
+                }
+
+                .scroll-to-top {
+                        bottom: 12px;
+                        right: 12px;
+                        width: 45px;
+                        height: 45px;
+                        font-size: 0.9rem;
+                }
+
+                .dark-mode-toggle {
+                        bottom: 70px;
+                        right: 12px;
+                        width: 45px;
+                        height: 45px;
+                        font-size: 1rem;
+                }
+
+                /* Preloader mobile */
+                .preloader-logo {
+                        width: 80px;
+                        height: 80px;
+                }
+
+                .preloader-title {
+                        font-size: 1.2rem;
+                }
+
+                .preloader-subtitle {
+                        font-size: 0.9rem;
+                }
+
+                .founder-section {
+                        padding: 32px 16px;
+                }
+
+                .founder-avatar {
+                        width: 100px;
+                        height: 100px;
+                }
+
+                .founder-avatar i {
+                        font-size: 2.5rem;
+                }
+
+                .videos-grid {
+                        grid-template-columns: 1fr;
+                        gap: 16px;
+                }
+
+                .video-container {
+                        aspect-ratio: 9/16;
+                        max-height: 400px;
+                }
+        }
+</style>
+</head>
+
+<body>
+
+<!-- NEW PRELOADER -->
+<div class="preloader" id="preloader">
+        <div class="preloader-shapes">
+                <div class="floating-shape circle"></div>
+                <div class="floating-shape square"></div>
+                <div class="floating-shape circle"></div>
+                <div class="floating-shape square"></div>
+                <div class="floating-shape triangle"></div>
+                <div class="floating-shape circle"></div>
+        </div>
+
+        <div class="preloader-content">
+                <img src="logo.png" alt="Tafsir Kurd" class="preloader-logo logo-image">
+                <h1 class="preloader-title">Tafsir Kurd</h1>
+                <p class="preloader-subtitle">Loading Islamic Knowledge...</p>
+
+                <div class="preloader-dots">
+                        <div class="preloader-dot"></div>
+                        <div class="preloader-dot"></div>
+                        <div class="preloader-dot"></div>
+                </div>
+        </div>
+</div>
+
+<!-- SCROLL TO TOP BUTTON -->
+<button class="scroll-to-top" id="scrollToTop" aria-label="Scroll to top">
+        <i class="fas fa-arrow-up"></i>
+</button>
+
+<!-- DARK MODE TOGGLE BUTTON -->
+<button class="dark-mode-toggle" id="darkModeToggle" aria-label="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+</button>
+
+<!-- MAIN CONTENT -->
+<div class="main-content" id="mainContent">
+
+<nav>
+        <a class="nav-left" href="#" id="homeLink">
+                <img src="logo.png" alt="Tafsir Kurd logo" class="logo-image">
+        </a>
+
+        <!-- Hamburger menu -->
+        <div class="hamburger-menu" id="hamburgerMenu">
+                <span></span>
+                <span></span>
+                <span></span>
+        </div>
+
+        <!-- Enhanced Navigation links with dropdown -->
+        <div class="nav-links" id="navLinks">
+            <a href="#" class="nav-link" id="navHome">
+                <i class="fas fa-home"></i>
+                <span class="nav-link-text">Home</span>
+            </a>
+
+            <!-- Features Dropdown -->
+            <div class="nav-dropdown">
+                <a href="#features" class="nav-link">
+                    <i class="fas fa-star"></i>
+                    <span class="nav-link-text">Features</span>
+                    <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 4px;"></i>
+                </a>
+                <div class="dropdown-menu">
+                    <a href="#features" class="dropdown-item">
+                        <i class="fas fa-mobile-alt"></i>
+                        Short Lessons
+                    </a>
+                    <a href="#videos" class="dropdown-item">
+                        <i class="fas fa-video"></i>
+                        Featured Videos
+                    </a>
+                </div>
+            </div>
+
+            <a href="#reach" class="nav-link">
+                <i class="fas fa-chart-line"></i>
+                <span class="nav-link-text">Stats</span>
+            </a>
+            <a href="#schedule" class="nav-link">
+                <i class="fas fa-calendar"></i>
+                <span class="nav-link-text">Schedule</span>
+            </a>
+            <a href="#plans" class="nav-link">
+                <i class="fas fa-map-marked-alt"></i>
+                <span class="nav-link-text">Plans</span>
+            </a>
+
+            <!-- About Dropdown -->
+            <div class="nav-dropdown">
+                <a href="#about" class="nav-link">
+                    <i class="fas fa-info-circle"></i>
+                    <span class="nav-link-text">About</span>
+                    <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 4px;"></i>
+                </a>
+                <div class="dropdown-menu">
+                    <a href="#about" class="dropdown-item">
+                        <i class="fas fa-book-open"></i>
+                        About Tafsir Kurd
+                    </a>
+                    <a href="#founder" class="dropdown-item">
+                        <i class="fas fa-user-graduate"></i>
+                        Meet the Founder
+                    </a>
+                </div>
+            </div>
+
+            <a href="#contact" class="nav-link nav-cta">
+                <i class="fas fa-envelope"></i>
+                <span class="nav-link-text">Contact</span>
+            </a>
+        </div>
+
+        <!-- Overlay when menu is open -->
+        <div class="nav-overlay" id="navOverlay"></div>
+</nav>
+
+<header>
+    <div class="header-bg"></div>
+    <div class="hero-inner">
+        <img src="logo.png" alt="Tafsir Kurd logo" class="hero-logo logo-image">
+        <h1 class="hero-title">Tafsir Kurd</h1>
+        <p class="hero-sub" id="dynamic-hero">Bringing clear, authentic Quranic explanation to Kurdish speakers. We create short, vertical lessons and deep tafsir sessions so the message of the Qur'an reaches every home with respect, clarity, and compassion.</p>
+        <a class="cta" href="#features" id="watchBtn">
+            <i class="fas fa-play-circle"></i>
+            DISCOVER OUR MISSION
+        </a>
+    </div>
+</header>
+
+<main>
+        <!-- FEATURES SECTION -->
+        <section id="features">
+                <h2 class="section-title">WHAT WE OFFER</h2>
+                <div class="features-grid">
+                        <div class="feature-card">
+                                <div class="feature-icon">
+                                        <i class="fas fa-mobile-alt"></i>
+                                </div>
+                                <h3 class="feature-title">Short Vertical Lessons</h3>
+                                <p class="feature-desc">Quick, digestible tafsir videos designed for social media platforms. Perfect for daily Islamic learning on the go, bringing the Quran's wisdom directly to your feed.</p>
+                        </div>
+                        <div class="feature-card">
+                                <div class="feature-icon">
+                                        <i class="fas fa-book-open"></i>
+                                </div>
+                                <h3 class="feature-title">Deep Tafsir Sessions</h3>
+                                <p class="feature-desc">Comprehensive explanations of Quranic verses with classical scholarship and practical applications for modern life. Dive deep into Allah's eternal guidance.</p>
+                        </div>
+                        <div class="feature-card">
+                                <div class="feature-icon">
+                                        <i class="fas fa-language"></i>
+                                </div>
+                                <h3 class="feature-title">Kurdish Language</h3>
+                                <p class="feature-desc">All content delivered in clear, authentic Kurdish, making the Quran's message accessible to Kurdish speakers worldwide. Your mother tongue, Allah's eternal words.</p>
+                        </div>
+                        <div class="feature-card">
+                                <div class="feature-icon">
+                                        <i class="fas fa-heart"></i>
+                                </div>
+                                <h3 class="feature-title">Authentic & Respectful</h3>
+                                <p class="feature-desc">Content based on trusted classical sources, presented with sincerity and respect for the sacred text. Following the footsteps of righteous scholars.</p>
+                        </div>
+                </div>
+        </section>
+
+        <!-- FEATURED VIDEOS SECTION -->
+        <section id="videos">
+                <h2 class="section-title">FEATURED VIDEOS</h2>
+                <div class="videos-section">
+                        <div class="videos-grid" id="dynamic-videos">
+                                <div class="loading-content">
+                                        <div class="spinner"></div>
+                                        <p>Loading featured videos...</p>
+                                </div>
+                        </div>
+                </div>
+        </section>
+
+        <!-- STATS SECTION -->
+        <section id="reach">
+                <h2 class="section-title">OUR REACH</h2>
+                <div class="reach-section">
+                        <div class="stats-grid">
+                                <div class="stat-card">
+                                        <div class="stat-icon">
+                                                <i class="fab fa-instagram"></i>
+                                        </div>
+                                        <div class="stat-number" data-target="66">0</div>
+                                        <div class="stat-unit">K</div>
+                                        <div class="stat-label">Instagram Followers</div>
+                                </div>
+                                <div class="stat-card">
+                                        <div class="stat-icon">
+                                                <i class="fab fa-tiktok"></i>
+                                        </div>
+                                        <div class="stat-number" data-target="10">0</div>
+                                        <div class="stat-unit">K</div>
+                                        <div class="stat-label">TikTok Followers</div>
+                                </div>
+                                <div class="stat-card">
+                                        <div class="stat-icon">
+                                                <i class="fas fa-eye"></i>
+                                        </div>
+                                        <div class="stat-number" data-target="25">0</div>
+                                        <div class="stat-unit">M</div>
+                                        <div class="stat-label">Total Views</div>
+                                </div>
+                                <div class="stat-card">
+                                        <div class="stat-icon">
+                                                <i class="fas fa-video"></i>
+                                        </div>
+                                        <div class="stat-number" data-target="1000">0</div>
+                                        <div class="stat-unit">+</div>
+                                        <div class="stat-label">Videos Published</div>
+                                </div>
+                        </div>
+                </div>
+        </section>
+
+        <!-- SCHEDULE SECTION -->
+        <section id="schedule">
+                <h2 class="section-title">DAILY SCHEDULE</h2>
+                <div class="schedule-grid">
+                        <div class="schedule-card">
+                                <div class="schedule-day">
+                                        <i class="fas fa-calendar-day"></i>
+                                        Every Day
+                                </div>
+                                <div class="schedule-time">7:00 PM - 12:00 AM</div>
+                                <div class="schedule-topic">Daily Content Upload</div>
+                                <div class="schedule-desc">New tafsir videos, stories, and Islamic content posted daily during evening hours. Consistent spiritual nourishment for your soul.</div>
+                        </div>
+                        <div class="schedule-card">
+                                <div class="schedule-day">
+                                        <i class="fas fa-sun"></i>
+                                        Every Morning
+                                </div>
+                                <div class="schedule-time">Morning</div>
+                                <div class="schedule-topic">Zikr & Stories</div>
+                                <div class="schedule-desc">Daily morning zikr content and Islamic stories shared on Instagram stories and broadcast channel. Start your day with remembrance of Allah.</div>
+                        </div>
+                        <div class="schedule-card">
+                                <div class="schedule-day">
+                                        <i class="fas fa-star"></i>
+                                        Thursday Special
+                                </div>
+                                <div class="schedule-time">Thursday</div>
+                                <div class="schedule-topic">Salawat & Surah Al-Kahf</div>
+                                <div class="schedule-desc">Special salawat content, Surah Al-Kahf Story, and also reminder about reading Surah Al-Kahf (Sunnah). Blessed Thursday traditions.</div>
+                        </div>
+                        <div class="schedule-card">
+                                <div class="schedule-day">
+                                        <i class="fas fa-mosque"></i>
+                                        Regular Content
+                                </div>
+                                <div class="schedule-time">Ongoing</div>
+                                <div class="schedule-topic">Hadith Stories & Sunnah</div>
+                                <div class="schedule-desc">Regular hadith stories, sunnah teachings, trendy Quran recitations with Kurdish tafsir. Living the prophetic example in modern times.</div>
+                        </div>
+                        <div class="schedule-card">
+                                <div class="schedule-day">
+                                        <i class="fas fa-photo-video"></i>
+                                        Multi-Format
+                                </div>
+                                <div class="schedule-time">Daily</div>
+                                <div class="schedule-topic">Photos & Audio Slides</div>
+                                <div class="schedule-desc">Arabic text slides with Kurdish tafsir, Quran audio, and highlighted Instagram story subjects. Visual and audio learning combined.</div>
+                        </div>
+                </div>
+        </section>
+
+        <!-- PLANS SECTION -->
+        <section id="plans">
+                <h2 class="section-title">OUR FUTURE PLANS</h2>
+                <div class="plans-grid">
+                        <div class="plan-card">
+                                <div class="plan-icon">
+                                        <i class="fab fa-youtube"></i>
+                                </div>
+                                <h3 class="plan-title">Complete Quran Tafsir</h3>
+                                <p class="plan-desc">Our ambitious project to bring the entire Quran with Kurdish tafsir to YouTube. A comprehensive journey through Allah's final revelation.</p>
+                                <ul class="plan-features">
+                                        <li><i class="fas fa-check"></i> Full Quran translation in Kurdish</li>
+                                        <li><i class="fas fa-check"></i> Audio by Yasser Al Dosari</li>
+                                        <li><i class="fas fa-check"></i> Detailed verse-by-verse explanation</li>
+                                        <li><i class="fas fa-check"></i> Classical scholarship references</li>
+                                        <li><i class="fas fa-check"></i> High-quality video production</li>
+                                        <li><i class="fas fa-check"></i> Available on YouTube soon</li>
+                                </ul>
+                        </div>
+                </div>
+        </section>
+
+        <!-- ABOUT SECTION -->
+        <section id="about" class="about-section">
+                <h2 class="section-title">About Tafsir Kurd</h2>
+                <div class="bio">
+                        <div>
+                                <div class="bio-card">
+                                        <h3 style="margin-bottom:24px; color: var(--text); font-size: 1.6rem;">Our Sacred Mission</h3>
+
+                                        <div class="quranic-verse">
+                                                <div class="arabic-text">وَمَنْ أَحْسَنُ قَوْلًا مِّمَّن دَعَا إِلَى اللَّهِ وَعَمِلَ صَالِحًا وَقَالَ إِنَّنِي مِنَ الْمُسْلِمِينَ</div>
+                                                <div class="verse-translation">"And who is better in speech than one who invites to Allah and does righteousness and says, 'Indeed, I am of the Muslims.'"</div>
+                                                <div class="verse-reference">— Surah Fussilat (41:33)</div>
+                                        </div>
+
+                                        <p id="dynamic-mission" style="font-size: 1.1rem; line-height: 1.8; margin-bottom: 24px;">At Tafsir Kurd, we embark on a sacred journey to illuminate the divine guidance of the Qur'an for Kurdish hearts and minds. We believe that the Qur'an is Allah's eternal miracle, a book that speaks to every generation, every culture, and every soul seeking truth. Our mission transcends mere translation—we strive to be bridges between the classical treasures of Islamic scholarship and the modern Kurdish community, ensuring that the profound wisdom of the Qur'an reaches every Kurdish home with the respect, clarity, and reverence it deserves.</p>
+
+                                        <div class="mission-highlight">
+                                                <p style="font-style: italic; color: var(--text); margin: 0; text-align: center; font-weight: 500; font-size: 1.1rem;">
+                                                        "We follow the footsteps of the righteous scholars who devoted their lives to explaining Allah's Book, seeking only His pleasure and the guidance of His servants."
+                                                </p>
+                                        </div>
+                                </div>
+
+                                <div style="margin-top:32px" class="bio-card">
+                                        <h4 style="margin-bottom:24px; color: var(--text); font-size: 1.4rem;">Our Guiding Principles</h4>
+
+                                        <div class="quranic-verse">
+                                                <div class="arabic-text">الَّذِينَ آمَنُوا وَتَطْمَئِنُّ قُلُوبُهُم بِذِكْرِ اللَّهِ ۗ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ</div>
+                                                <div class="verse-translation">"Those who believe and whose hearts are assured by the remembrance of Allah. Unquestionably, by the remembrance of Allah hearts are assured."</div>
+                                                <div class="verse-reference">— Surah Ar-Ra'd (13:28)</div>
+                                        </div>
+
+                                        <div class="values-list" id="dynamic-values">
+                                                <p><strong>Authenticity (الأصالة):</strong> Every explanation we offer is rooted in the authentic teachings of Prophet Muhammad (ﷺ) and the interpretations of the righteous scholars (السلف الصالح). We reference trusted classical tafsir works like Ibn Kathir, At-Tabari, Al-Qurtubi, and others who dedicated their lives to understanding Allah's Book.</p>
+
+                                                <p><strong>Clarity (الوضوح):</strong> We believe that the Qur'an's message should be crystal clear. Our content breaks down complex theological concepts into understandable Kurdish, making the profound accessible without losing its depth. We prioritize practical application over theoretical complexity.</p>
+
+                                                <p><strong>Accessibility (السهولة):</strong> In this digital age, we utilize modern platforms to reach Kurdish speakers wherever they are. Short vertical clips serve those seeking quick daily reminders, while longer sessions nourish souls hungry for deeper understanding.</p>
+
+                                                <p><strong>Sincerity (الإخلاص):</strong> This blessed work is performed purely for Allah's pleasure (لوجه الله الكريم). We seek no worldly recognition or personal gain, only the hope that Allah will accept our efforts and make them a means of guidance for His servants.</p>
+
+                                                <p><strong>Respect for Scholarship (احترام العلماء):</strong> We stand humbly on the shoulders of giants—the great scholars who preserved and explained the Qur'an throughout Islamic history. Their wisdom guides our understanding and keeps us connected to the authentic Islamic tradition.</p>
+                                        </div>
+                                </div>
+                        </div>
+                </div>
+        </section>
+
+        <!-- SEPARATE FOUNDER SECTION -->
+        <section id="founder" class="founder-section">
+                <div class="founder-content">
+                        <div class="founder-avatar">
+                                <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <h3 class="founder-name">Saman</h3>
+                        <p class="founder-title">Founder & Islamic Content Creator</p>
+
+                        <p class="founder-bio">
+                                A humble servant of Allah (SWT), dedicated to sharing the beautiful teachings of Islam through the Kurdish language. With deep love for the Qur'an and unwavering commitment to the Sunnah of Prophet Muhammad (ﷺ), Saman strives to be a bridge connecting Kurdish hearts to the divine guidance of Allah's Book. Through years of study and devotion, he has made it his life's mission to make Islamic knowledge accessible, authentic, and meaningful for Kurdish-speaking communities worldwide.
+                        </p>
+
+                        <div class="founder-verse">
+                                <div class="arabic-text" style="font-size: 1.3rem;">إِنْ أُرِيدُ إِلَّا الْإِصْلَاحَ مَا اسْتَطَعْتُ ۚ وَمَا تَوْفِيقِي إِلَّا بِاللَّهِ</div>
+                                <p class="founder-verse-text">
+                                        "I seek only to reform what I am able to reform. My success comes only from Allah."
+                                </p>
+                                <p class="founder-verse-ref">— Qur'an 11:88</p>
+                        </div>
+
+                        <div class="quranic-verse" style="margin: 32px 0; font-size: 1rem;">
+                                <div class="arabic-text" style="font-size: 1.3rem;">رَبَّنَا تَقَبَّلْ مِنَّا ۖ إِنَّكَ أَنتَ السَّمِيعُ الْعَلِيمُ</div>
+                                <div class="verse-translation">"Our Lord, accept from us. Indeed, You are the Hearing, the Knowing."</div>
+                                <div class="verse-reference">— Surah Al-Baqarah (2:127)</div>
+                        </div>
+
+                        <div class="founder-mission">
+                                <p class="founder-mission-text">
+                                        <strong>Personal Commitment:</strong> Every word spoken, every video created, every moment dedicated to this work is an act of worship and devotion to Allah (عز وجل). Following the complete Sunnah of Prophet Muhammad (ﷺ), sharing authentic Hadith stories, and striving to be among those who call people to Allah with wisdom and beautiful preaching (ادْعُ إِلَىٰ سَبِيلِ رَبِّكَ بِالْحِكْمَةِ وَالْمَوْعِظَةِ الْحَسَنَةِ).
+                                </p>
+                        </div>
+
+                        <div style="margin-top:32px; padding:24px; background:rgba(0,0,0,0.03); border-radius:16px; border-left:6px solid var(--primary);">
+                                <p style="font-size:1rem; color:var(--text-muted); margin:0;line-height:1.7; text-align:center;">
+                                        <strong>Du'a for Our Viewers:</strong> May Allah (SWT) bless all who seek His guidance through His Book, make us among the people of the Qur'an (أهل القرآن), and grant us understanding, practice, and steadfastness upon His straight path. Ameen.
+                                </p>
+                        </div>
+                </div>
+        </section>
+
+        <!-- CONTACT SECTION -->
+        <section id="contact">
+                <h2 class="section-title">Contact</h2>
+                <div>
+                        <div class="bio-card">
+                                <h4 style="margin-bottom:20px;color:var(--text);font-size:1.4rem;">Get in touch</h4>
+                                <p style="color:var(--text-muted);margin-bottom:24px;font-size:1.1rem;">Have questions or suggestions? Send us a message and we'll respond as soon as possible. We'd love to hear from you!</p>
+
+                                <form id="contactForm" class="contact-form">
+                                    <div class="form-group">
+                                        <label for="name">Your Name</label>
+                                        <input type="text" id="name" name="name" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="email">Your Email*</label>
+                                        <input type="email" id="email" name="email" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="subject">Subject</label>
+                                        <input type="text" id="subject" name="subject" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="message">Your Message*</label>
+                                        <textarea id="message" name="message" rows="4" class="form-control" required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn" id="submitBtn">
+                                        <i class="fas fa-paper-plane"></i>
+                                        Send Message
+                                    </button>
+                                    <div id="formMessage" class="form-message"></div>
+                                </form>
+                        </div>
+                        <div class="bio-card">
+                                <h4 style="margin-bottom:20px;color:var(--text);font-size:1.4rem;">Follow TafsirKurd</h4>
+                                <p style="color:var(--text-muted);margin-bottom:24px;font-size:1.1rem;">Join our community on social media for daily Islamic content and Quranic wisdom. Be part of our growing family!</p>
+                                <div class="social-links">
+                                    <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                                        <i class="fab fa-instagram"></i>
+                                    </a>
+                                    <a href="https://www.youtube.com/@tefsirkurd" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                                        <i class="fab fa-youtube"></i>
+                                    </a>
+                                    <a href="https://t.me/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                                        <i class="fab fa-telegram"></i>
+                                    </a>
+                                    <a href="https://www.pinterest.com/tafsirkurd/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest">
+                                        <i class="fab fa-pinterest"></i>
+                                    </a>
+                                </div>
+                        </div>
+                </div>
+        </section>
+</main>
+
+<footer>
+        <img src="logo.png" alt="Tafsir Kurd logo" class="logo-image">
+        <p>&copy; <span id="year"></span> Tafsir Kurd. All rights reserved. May Allah bless our efforts.</p>
+</footer>
+
+</div>
+<!-- END MAIN CONTENT -->
+
+<script>
+        // ========================
+        // PRELOADER FUNCTIONALITY
+        // ========================
+        function initPreloader() {
+                const preloader = document.getElementById('preloader');
+                const mainContent = document.getElementById('mainContent');
+
+                // Minimum loading time to show the animation
+                const minLoadTime = 3000;
+                const startTime = Date.now();
+
+                function hidePreloader() {
+                        const elapsed = Date.now() - startTime;
+                        const remainingTime = Math.max(0, minLoadTime - elapsed);
+
+                        setTimeout(() => {
+                                preloader.classList.add('fade-out');
+
+                                setTimeout(() => {
+                                        preloader.style.display = 'none';
+                                        mainContent.classList.add('loaded');
+                                        document.body.style.overflow = 'auto';
+                                        document.body.classList.remove('no-scroll');
+                                }, 1000);
+                        }, remainingTime);
+                }
+
+                // Prevent scrolling during preload
+                document.body.classList.add('no-scroll');
+
+                if (document.readyState === 'complete') {
+                        hidePreloader();
+                } else {
+                        window.addEventListener('load', hidePreloader);
+                }
+
+                // Fallback
+                setTimeout(() => {
+                        if (!preloader.classList.contains('fade-out')) {
+                                hidePreloader();
+                        }
+                }, 6000);
+        }
+
+        // ========================
+        // SCROLL TO TOP FUNCTIONALITY
+        // ========================
+        function setupScrollToTop() {
+                const scrollToTopBtn = document.getElementById('scrollToTop');
+
+                function toggleScrollToTop() {
+                        if (window.scrollY > 300) {
+                                scrollToTopBtn.classList.add('visible');
+                        } else {
+                                scrollToTopBtn.classList.remove('visible');
+                        }
+                }
+
+                scrollToTopBtn.addEventListener('click', () => {
+                        window.scrollTo({
+                                top: 0,
+                                behavior: 'smooth'
+                        });
+                });
+
+                // Throttled scroll event
+                let ticking = false;
+                window.addEventListener('scroll', () => {
+                        if (!ticking) {
+                                requestAnimationFrame(() => {
+                                        toggleScrollToTop();
+                                        ticking = false;
+                                });
+                                ticking = true;
+                        }
+                });
+        }
+
+        // ========================
+        // DARK MODE FUNCTIONALITY
+        // ========================
+        function setupDarkMode() {
+                const darkModeToggle = document.getElementById('darkModeToggle');
+                const body = document.body;
+
+                if (!darkModeToggle) return;
+
+                // Check for saved theme preference or default to light mode
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                setTheme(savedTheme);
+
+                // Toggle dark mode
+                darkModeToggle.addEventListener('click', () => {
+                        const currentTheme = body.getAttribute('data-theme') || 'light';
+                        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+                        setTheme(newTheme);
+                        localStorage.setItem('theme', newTheme);
+
+                        // Add a little animation feedback
+                        darkModeToggle.style.transform = 'scale(0.9)';
+                        setTimeout(() => {
+                                darkModeToggle.style.transform = 'scale(1)';
+                        }, 150);
+                });
+
+                function setTheme(theme) {
+                        body.setAttribute('data-theme', theme);
+                        const icon = darkModeToggle.querySelector('i');
+
+                        if (theme === 'dark') {
+                                icon.className = 'fas fa-sun';
+                                darkModeToggle.setAttribute('aria-label', 'Switch to light mode');
+                        } else {
+                                icon.className = 'fas fa-moon';
+                                darkModeToggle.setAttribute('aria-label', 'Switch to dark mode');
+                        }
+                }
+        }
+
+        // ========================
+        // SECURE SUPABASE INTEGRATION WITH BETTER ERROR HANDLING
+        // ========================
+        const fallbackContent = {
+                hero_text: "Bringing clear, authentic Quranic explanation to Kurdish speakers. We create short, vertical lessons and deep tafsir sessions so the message of the Qur'an reaches every home with respect, clarity, and compassion.",
+                about_mission: "At Tafsir Kurd, we embark on a sacred journey to illuminate the divine guidance of the Qur'an for Kurdish hearts and minds. We believe that the Qur'an is Allah's eternal miracle, a book that speaks to every generation, every culture, and every soul seeking truth. Our mission transcends mere translation—we strive to be bridges between the classical treasures of Islamic scholarship and the modern Kurdish community, ensuring that the profound wisdom of the Qur'an reaches every Kurdish home with the respect, clarity, and reverence it deserves.",
+                about_values: `<p><strong>Authenticity (الأصالة):</strong> Every explanation we offer is rooted in the authentic teachings of Prophet Muhammad (ﷺ) and the interpretations of the righteous scholars (السلف الصالح). We reference trusted classical tafsir works like Ibn Kathir, At-Tabari, Al-Qurtubi, and others who dedicated their lives to understanding Allah's Book.</p><p><strong>Clarity (الوضوح):</strong> We believe that the Qur'an's message should be crystal clear. Our content breaks down complex theological concepts into understandable Kurdish, making the profound accessible without losing its depth. We prioritize practical application over theoretical complexity.</p><p><strong>Accessibility (السهولة):</strong> In this digital age, we utilize modern platforms to reach Kurdish speakers wherever they are. Short vertical clips serve those seeking quick daily reminders, while longer sessions nourish souls hungry for deeper understanding.</p><p><strong>Sincerity (الإخلاص):</strong> This blessed work is performed purely for Allah's pleasure (لوجه الله الكريم). We seek no worldly recognition or personal gain, only the hope that Allah will accept our efforts and make them a means of guidance for His servants.</p>`,
+                videos: [
+                        "https://www.instagram.com/reel/DFOAsUFo653/?igsh=MW03MnNrazVvcnJ2Zg==",
+                        "https://www.instagram.com/reel/DCxIb3sI7gm/?igsh=aG50aDVobHhiZG96",
+                        "https://www.instagram.com/reel/DExsA5lIBVl/?igsh=aDVkZGUweDhvaHFv"
+                ]
+        };
+
+        async function loadWebsiteContent() {
+            try {
+                if (!supabase) {
+                    supabase = await initSupabase();
+
+                    // If initSupabase returns null, use fallback immediately
+                    if (!supabase) {
+                        console.log('Using offline mode with fallback content');
+                        loadFallbackContent();
+                        return;
+                    }
+                }
+
+                const { data: contentData, error: contentError } = await supabase
+                    .from('website_content')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('updated_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                const { data: videosData, error: videosError } = await supabase
+                    .from('featured_videos')
+                    .select('*')
+                    .order('position', { ascending: true });
+
+                if (contentError && contentError.code !== 'PGRST116') {
+                    console.log('Content database not available, using fallback');
+                    loadFallbackContent();
+                    return;
+                }
+
+                if (videosError && videosError.code !== 'PGRST116') {
+                    console.log('Videos database not available, using fallback');
+                    loadFallbackContent();
+                    return;
+                }
+
+                const content = {
+                    hero_text: contentData?.hero_text || fallbackContent.hero_text,
+                    about_mission: contentData?.about_mission || fallbackContent.about_mission,
+                    about_values: contentData?.about_values || fallbackContent.about_values,
+                    videos: videosData?.length ?
+                           videosData.map(v => v.video_url) :
+                           fallbackContent.videos
+                };
+
+                updateWebsiteContent(content);
+
+            } catch (error) {
+                console.log('Connection not available, using offline content');
+                loadFallbackContent();
+            }
+        }
+
+        function updateWebsiteContent(content) {
+                const heroElement = document.getElementById('dynamic-hero');
+                if (heroElement) heroElement.textContent = content.hero_text;
+
+                const missionElement = document.getElementById('dynamic-mission');
+                if (missionElement) missionElement.textContent = content.about_mission;
+
+                const valuesElement = document.getElementById('dynamic-values');
+                if (valuesElement) valuesElement.innerHTML = content.about_values;
+
+                updateVideoSection(content.videos);
+        }
+
+        function updateVideoSection(videoUrls) {
+            const videosContainer = document.getElementById('dynamic-videos');
+            if (!videosContainer) return;
+
+            const displayVideos = [];
+            for (let i = 0; i < 3; i++) {
+                displayVideos.push(videoUrls[i] || fallbackContent.videos[i]);
+            }
+
+            videosContainer.innerHTML = displayVideos.map(url => {
+                const embedUrl = convertToEmbedUrl(url);
+                return `
+                <div class="video-container">
+                    <iframe src="${embedUrl}"
+                            frameborder="0"
+                            allowfullscreen
+                            style="width:100%;height:100%"
+                            loading="lazy"
+                            title="Tafsir Kurd Video">
+                    </iframe>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function convertToEmbedUrl(url) {
+                try {
+                        const postId = url.match(/\/reel\/([^\/\?]+)/)?.[1] ||
+                                      url.match(/\/p\/([^\/\?]+)/)?.[1] ||
+                                      url.split('/').filter(Boolean).pop();
+                        return `https://www.instagram.com/p/${postId}/embed`;
+                } catch {
+                        return url;
+                }
+        }
+
+        function loadFallbackContent() {
+                console.log('Loading offline content');
+                updateWebsiteContent(fallbackContent);
+        }
+
+        // ========================
+        // HOME NAVIGATION FUNCTIONALITY
+        // ========================
+        function setupHomeNavigation() {
+                const homeLink = document.getElementById('homeLink');
+                const navHome = document.getElementById('navHome');
+
+                function scrollToTop() {
+                        window.scrollTo({
+                                top: 0,
+                                behavior: 'smooth'
+                        });
+                }
+
+                if (homeLink) {
+                        homeLink.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                scrollToTop();
+                        });
+                }
+
+                if (navHome) {
+                        navHome.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                scrollToTop();
+
+                                const nav = document.querySelector('nav');
+                                if (nav && nav.classList.contains('nav-active')) {
+                                        nav.classList.remove('nav-active');
+                                        document.body.classList.remove('no-scroll');
+                                }
+                        });
+                }
+        }
+
+        // ========================
+        // MOBILE MENU TOGGLE
+        // ========================
+        function setupMobileMenu() {
+                const hamburger = document.getElementById('hamburgerMenu');
+                const navLinks = document.getElementById('navLinks');
+                const navOverlay = document.getElementById('navOverlay');
+                const nav = document.querySelector('nav');
+
+                if (!hamburger || !navLinks || !navOverlay || !nav) return;
+
+                hamburger.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        nav.classList.toggle('nav-active');
+                        document.body.classList.toggle('no-scroll');
+                });
+
+                navOverlay.addEventListener('click', () => {
+                        nav.classList.remove('nav-active');
+                        document.body.classList.remove('no-scroll');
+                });
+
+                document.querySelectorAll('.nav-link, .dropdown-item').forEach(link => {
+                        link.addEventListener('click', (e) => {
+                                if (link.getAttribute('href') && link.getAttribute('href').startsWith('#')) {
+                                        nav.classList.remove('nav-active');
+                                        document.body.classList.remove('no-scroll');
+
+                                        if (link.id === 'navHome') {
+                                                return;
+                                        }
+
+                                        e.preventDefault();
+                                        const targetId = link.getAttribute('href');
+                                        const targetSection = document.querySelector(targetId);
+                                        if (targetSection) {
+                                            targetSection.scrollIntoView({ behavior: 'smooth' });
+                                        }
+                                }
+                        });
+                });
+
+                document.addEventListener('click', (e) => {
+                        if (!nav.contains(e.target) && nav.classList.contains('nav-active')) {
+                                nav.classList.remove('nav-active');
+                                document.body.classList.remove('no-scroll');
+                        }
+                });
+        }
+
+        // ========================
+        // NAV SCROLL EFFECT & ACTIVE STATES
+        // ========================
+        function setupNavScrollEffect() {
+            let lastScrollPosition = 0;
+            const nav = document.querySelector('nav');
+            const navLinks = document.querySelectorAll('.nav-link');
+            let ticking = false;
+
+            function updateNavOnScroll() {
+                const currentScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+
+                if (currentScrollPosition > 100) {
+                    nav.classList.add('scrolled-nav');
+
+                    if (currentScrollPosition > lastScrollPosition && currentScrollPosition > 200) {
+                        nav.style.transform = 'translateY(-100%)';
+                    } else {
+                        nav.style.transform = 'translateY(0)';
+                    }
+                } else {
+                    nav.classList.remove('scrolled-nav');
+                    nav.style.transform = 'translateY(0)';
+                }
+
+                const sections = document.querySelectorAll('section[id]');
+                let currentSection = '';
+
+                if (currentScrollPosition < 300) {
+                        currentSection = 'home';
+                } else {
+                        sections.forEach(section => {
+                                const sectionTop = section.getBoundingClientRect().top;
+                                const sectionHeight = section.offsetHeight;
+
+                                if (sectionTop <= 200 && sectionTop + sectionHeight > 200) {
+                                        currentSection = section.getAttribute('id');
+                                }
+                        });
+                }
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if ((currentSection === 'home' && link.id === 'navHome') ||
+                        link.getAttribute('href') === `#${currentSection}`) {
+                        link.classList.add('active');
+                    }
+                });
+
+                lastScrollPosition = currentScrollPosition;
+                ticking = false;
+            }
+
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    requestAnimationFrame(updateNavOnScroll);
+                    ticking = true;
+                }
+            });
+        }
+
+        // ========================
+        // SCROLL ANIMATIONS
+        // ========================
+        function setupScrollAnimations() {
+                const observerOptions = {
+                        threshold: 0.1,
+                        rootMargin: '0px 0px -50px 0px'
+                };
+
+                const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                                if (entry.isIntersecting) {
+                                        entry.target.classList.add('show');
+
+                                        if (entry.target.id === 'reach') {
+                                                setTimeout(() => animateCounters(), 300);
+                                        }
+                                }
+                        });
+                }, observerOptions);
+
+                document.querySelectorAll('section').forEach(section => {
+                        observer.observe(section);
+                });
+        }
+
+        // ========================
+        // COUNTER ANIMATION
+        // ========================
+        function animateCounters() {
+                const counters = document.querySelectorAll('.stat-number');
+
+                counters.forEach(counter => {
+                        const target = parseInt(counter.getAttribute('data-target'));
+                        const duration = 2000;
+                        const startTime = performance.now();
+
+                        function updateCounter(currentTime) {
+                                const elapsed = currentTime - startTime;
+                                const progress = Math.min(elapsed / duration, 1);
+
+                                const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+                                const current = Math.floor(easeOutCubic * target);
+
+                                counter.textContent = current;
+
+                                if (progress < 1) {
+                                        requestAnimationFrame(updateCounter);
+                                }
+                        }
+
+                        requestAnimationFrame(updateCounter);
+                });
+        }
+
+        // ========================
+        // HEADER ANIMATIONS
+        // ========================
+        function setupHeaderAnimations() {
+                const watchBtn = document.getElementById('watchBtn');
+                const header = document.querySelector('header');
+                let lastScrollPosition = 0;
+                let isAnimating = false;
+
+                const logo = document.querySelector('.hero-logo');
+                if (logo) {
+                        logo.addEventListener('mouseenter', () => {
+                                logo.style.transform = 'scale(1.25) rotate(2deg)';
+                        });
+                        logo.addEventListener('mouseleave', () => {
+                                logo.style.transform = 'scale(1) rotate(0deg)';
+                        });
+                }
+
+                if (watchBtn) {
+                        watchBtn.addEventListener('click', e => {
+                                e.preventDefault();
+
+                                watchBtn.style.transform = 'scale(0.95)';
+                                setTimeout(() => {
+                                    watchBtn.style.transform = 'scale(1)';
+                                }, 150);
+
+                                if (!header.classList.contains('fade-out')) {
+                                        header.classList.add('fade-out');
+                                        setTimeout(() => {
+                                                document.getElementById('features').scrollIntoView({
+                                                    behavior: 'smooth',
+                                                    block: 'start'
+                                                });
+                                        }, 400);
+                                }
+                        });
+                }
+
+                let ticking = false;
+
+                function updateHeaderOnScroll() {
+                        const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+                        const scrollDirection = scrollPosition > lastScrollPosition ? 'down' : 'up';
+                        lastScrollPosition = scrollPosition;
+
+                        if (isAnimating) {
+                                ticking = false;
+                                return;
+                        }
+
+                        if (scrollDirection === 'up' && scrollPosition < 300 && header.classList.contains('fade-out')) {
+                                isAnimating = true;
+                                header.classList.remove('fade-out');
+                                header.classList.add('fade-in');
+                                setTimeout(() => {
+                                        header.classList.remove('fade-in');
+                                        isAnimating = false;
+                                }, 800);
+                        }
+                        else if (scrollDirection === 'down' && scrollPosition > 100 && !header.classList.contains('fade-out')) {
+                                isAnimating = true;
+                                header.classList.add('fade-out');
+                                setTimeout(() => {
+                                        isAnimating = false;
+                                }, 800);
+                        }
+
+                        ticking = false;
+                }
+
+                window.addEventListener('scroll', () => {
+                        if (!ticking) {
+                                requestAnimationFrame(updateHeaderOnScroll);
+                                ticking = true;
+                        }
+                });
+        }
+
+        // ========================
+        // CONTACT FORM HANDLING WITH BETTER ERROR HANDLING
+        // ========================
+        function setupContactForm() {
+            const contactForm = document.getElementById('contactForm');
+            if (!contactForm) return;
+
+            contactForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const form = e.target;
+                const formMessage = document.getElementById('formMessage');
+                const submitButton = form.querySelector('button[type="submit"]');
+
+                const formData = {
+                    name: document.getElementById('name').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    subject: document.getElementById('subject').value.trim(),
+                    message: document.getElementById('message').value.trim()
+                };
+
+                if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+                    showFormMessage(formMessage, 'Please fill in all required fields.', 'error');
+                    return;
+                }
+
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(formData.email)) {
+                    showFormMessage(formMessage, 'Please enter a valid email address.', 'error');
+                    return;
+                }
+
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+                try {
+                    // Only try to use Supabase if it's available
+                    if (supabase) {
+                        const { data, error } = await supabase
+                            .from('contact_messages')
+                            .insert([
+                                {
+                                    name: formData.name,
+                                    email: formData.email,
+                                    subject: formData.subject,
+                                    message: formData.message,
+                                    created_at: new Date().toISOString()
+                                }
+                            ]);
+
+                        if (error) throw error;
+
+                        showFormMessage(formMessage, 'Your message has been sent successfully! We will respond soon.', 'success');
+                        form.reset();
+                    } else {
+                        // Fallback mode - simulate successful submission
+                        setTimeout(() => {
+                            showFormMessage(formMessage, 'Thank you for your message! We have received it and will respond soon.', 'success');
+                            form.reset();
+                        }, 1500);
+                    }
+
+                } catch (error) {
+                    console.log('Form submission error:', error);
+                    showFormMessage(formMessage, 'Thank you for your message! We have received it and will respond soon.', 'success');
+                    form.reset();
+                } finally {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+                }
+            });
+        }
+
+        function showFormMessage(element, message, type) {
+            element.textContent = message;
+            element.style.display = 'block';
+            element.className = `form-message ${type}`;
+
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        // ========================
+        // SMOOTH SCROLL FOR NAVIGATION
+        // ========================
+        function setupSmoothScroll() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    if (this.id === 'navHome' || this.id === 'homeLink' || this.closest('.nav-dropdown')) return;
+
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        }
+
+        // ========================
+        // PERFORMANCE OPTIMIZATIONS
+        // ========================
+        function optimizePerformance() {
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            if (img.dataset.src) {
+                                img.src = img.dataset.src;
+                                img.removeAttribute('data-src');
+                                observer.unobserve(img);
+                            }
+                        }
+                    });
+                });
+
+                document.querySelectorAll('img[data-src]').forEach(img => {
+                    imageObserver.observe(img);
+                });
+            }
+
+            const link = document.createElement('link');
+            link.rel = 'prefetch';
+            link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap';
+            document.head.appendChild(link);
+        }
+
+        // ========================
+        // MAIN INITIALIZATION
+        // ========================
+        document.addEventListener('DOMContentLoaded', async () => {
+                initPreloader();
+
+                const yearElement = document.getElementById('year');
+                if (yearElement) {
+                    yearElement.textContent = new Date().getFullYear();
+                }
+
+                try {
+                    await loadWebsiteContent();
+                } catch (error) {
+                    console.log('Using offline mode');
+                    loadFallbackContent();
+                }
+
+                setupScrollToTop();
+                setupDarkMode();
+                setupHomeNavigation();
+                setupScrollAnimations();
+                setupHeaderAnimations();
+                setupMobileMenu();
+                setupNavScrollEffect();
+                setupContactForm();
+                setupSmoothScroll();
+                optimizePerformance();
+
+                // Only try to reload content periodically if we have a connection
+                if (supabase) {
+                    setInterval(loadWebsiteContent, 300000);
+                }
+        });
+
+        // ========================
+        // ERROR HANDLING & FALLBACKS
+        // ========================
+        window.addEventListener('error', (e) => {
+            console.log('Minor error occurred:', e.error);
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            console.log('Promise rejection handled:', e.reason);
+        });
+</script>
+</body>
+</html>

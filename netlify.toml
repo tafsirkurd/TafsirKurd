@@ -1,0 +1,54 @@
+# netlify.toml
+# This file should be placed in the root of your project
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+  command = "npm run build"
+
+[functions]
+  # Function configuration
+  directory = "netlify/functions"
+
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Security headers
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+    # Cache control for static assets
+    Cache-Control = "public, max-age=3600"
+
+# Special headers for API endpoints
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Cache control for images
+[[headers]]
+  for = "/*.{png,jpg,jpeg,gif,webp,svg,ico}"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[redirects]]
+  # This redirect rule maps a friendly /api/* path to the actual Netlify Functions directory.
+  # This is a best practice to keep API endpoints clean and consistent.
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Environment variables for local development (optional, but good practice)
+# Use the Netlify UI for production environment variables
+[dev.environment]
+  SUPABASE_URL = "https://gijupzejtbpifjzwadee.supabase.co"
+  SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanVwemVqdGJwaWZqendhZGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDAyOTcsImV4cCI6MjA3MTExNjI5N30.-d33o2dDpfD6ywubBcc51srvf1VUewAJwpnd0OOo51M"
+  ADMIN_EMAIL = "admin@tafsirkurd.com"
+  ADMIN_PASSWORD = "TafsirKurd2024!"
+  ENVIRONMENT = "development"
+[[plugins]]
+  package = "netlify-purge-cloudflare-on-deploy"

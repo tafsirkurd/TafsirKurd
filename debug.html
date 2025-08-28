@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tafsir Kurd - Debug Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #1a1a1a;
+            --primary-light: #333333;
+            --secondary: #3b82f6;
+            --secondary-light: #93c5fd;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --surface-dark: #f1f5f9;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --radius-lg: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Login Page Styles */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideUp 0.8s cubic-bezier(0.18, 1.25, 0.4, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 2rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            transition: var(--transition);
+        }
+
+        .login-logo:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .login-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text);
+            background: linear-gradient(135deg, var(--danger) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            transition: var(--transition);
+            background: white;
+            box-shadow: var(--shadow);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--danger);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #dc2626;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-full {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        /* Debug Container Styles */
+        .debug-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .debug-container.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .debug-header {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .debug-section {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .debug-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--primary);
+        }
+
+        .debug-info {
+            background: var(--surface-dark);
+            padding: 16px;
+            border-radius: var(--radius);
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .status-indicator {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .messages-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .messages-table th,
+        .messages-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .messages-table th {
+            font-weight: 600;
+            background: var(--surface-dark);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            background: var(--surface);
+            color: var(--text);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.18, 1.25, 0.4, 1);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .toast i {
+            font-size: 1.2rem;
+        }
+
+        .toast.success i {
+            color: var(--success);
+        }
+
+        .toast.error i {
+            color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <div id="loginPage" class="login-container">
+        <div class="login-card">
+            <div class="login-logo">
+                <i class="fas fa-bug"></i>
+            </div>
+            <h1 class="login-title">Debug Dashboard</h1>
+            <p class="login-subtitle">Secure access for debugging</p>
+
+            <div id="loginAlert"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" name="email" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-input" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Access Debug Panel
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="debugContainer" class="debug-container">
+        <div class="debug-header">
+            <div>
+                <h1>Tafsir Kurd Debug Dashboard</h1>
+                <p>Advanced diagnostics and troubleshooting tools</p>
+            </div>
+            <button class="btn btn-danger" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </button>
+        </div>
+
+        <div class="debug-section">
+            <h2 class="debug-title">1. Environment Check</h2>
+            <div id="envStatus" class="debug-info">Checking environment...</div>
+            <button class="btn btn-primary" onclick="checkEnvironment()">
+                <i class="fas fa-sync"></i> Recheck Environment
+            </button>
+        </div>
+
+        <div class="debug-section">
+            <h2 class="debug-title">2. Supabase Connection</h2>
+            <div id="supabaseStatus" class="debug-info">Checking Supabase connection...</div>
+            <button class="btn btn-primary" onclick="testSupabaseConnection()">
+                <i class="fas fa-database"></i> Test Connection
+            </button>
+        </div>
+
+        <div class="debug-section">
+            <h2 class="debug-title">3. Table Structure</h2>
+            <div id="tableStructure" class="debug-info">Checking table structure...</div>
+            <button class="btn btn-primary" onclick="checkTableStructure()">
+                <i class="fas fa-table"></i> Check Structure
+            </button>
+        </div>
+
+        <div class="debug-section">
+            <h2 class="debug-title">4. Raw Data Query</h2>
+            <div id="rawDataStatus" class="debug-info">Ready to query data...</div>
+            <button class="btn btn-primary" onclick="queryRawData()">
+                <i class="fas fa-search"></i> Query Raw Data
+            </button>
+            <button class="btn btn-success" onclick="queryWithFilters()">
+                <i class="fas fa-filter"></i> Query with Filters
+            </button>
+        </div>
+
+        <div class="debug-section">
+            <h2 class="debug-title">5. Messages Display</h2>
+            <div id="messagesDisplay">
+                <div class="loading">Click "Load Messages" to display data</div>
+            </div>
+            <button class="btn btn-success" onclick="loadAndDisplayMessages()">
+                <i class="fas fa-envelope"></i> Load Messages
+            </button>
+        </div>
+
+        <div class="debug-section">
+            <h2 class="debug-title">6. Authentication Test</h2>
+            <div id="authStatus" class="debug-info">Authentication not tested</div>
+            <button class="btn btn-primary" onclick="testAuthentication()">
+                <i class="fas fa-key"></i> Test Auth
+            </button>
+        </div>
+
+        <div class="debug-section">
+            <h2 class="debug-title">7. Export Debug Information</h2>
+            <p>Export all collected debug information for analysis:</p>
+            <button class="btn btn-secondary" onclick="exportDebugInfo()">
+                <i class="fas fa-download"></i> Export Debug Info
+            </button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        let supabase;
+        let currentUser = null;
+        let debugInfo = {
+            environment: null,
+            connection: null,
+            tableStructure: null,
+            rawData: null,
+            auth: null
+        };
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', async function() {
+            checkAuth();
+            setupEventListeners();
+        });
+
+        // Authentication functions
+        function checkAuth() {
+            const session = getStoredSession();
+            if (session) {
+                currentUser = session.user;
+                showDebugPanel();
+                return;
+            }
+            showLogin();
+        }
+
+        function getStoredSession() {
+            try {
+                const session = localStorage.getItem('debug_session');
+                return session ? JSON.parse(session) : null;
+            } catch (e) {
+                console.error('Error parsing stored session:', e);
+                return null;
+            }
+        }
+
+        function storeSession(sessionData) {
+            try {
+                localStorage.setItem('debug_session', JSON.stringify(sessionData));
+            } catch (e) {
+                console.error('Error storing session:', e);
+            }
+        }
+
+        function clearStoredSession() {
+            try {
+                localStorage.removeItem('debug_session');
+            } catch (e) {
+                console.error('Error clearing session:', e);
+            }
+        }
+
+        async function login(email, password) {
+            try {
+                const response = await fetch('/.netlify/functions/auth', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email.trim(),
+                        password: password.trim()
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    const session = {
+                        user: data.user,
+                        token: data.token,
+                        expires: data.expires
+                    };
+                    storeSession(session);
+                    currentUser = data.user;
+                    showDebugPanel();
+                    showToast('Login successful!', 'success');
+                    return true;
+                } else {
+                    showAlert(data.message || 'Invalid credentials', 'danger');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showAlert('Login service unavailable. Please try again later.', 'danger');
+                return false;
+            }
+        }
+
+        function logout() {
+            clearStoredSession();
+            currentUser = null;
+            showLogin();
+            showToast('Logged out successfully', 'success');
+        }
+
+        function showLogin() {
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('debugContainer').classList.remove('active');
+        }
+
+        function showDebugPanel() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('debugContainer').classList.add('active');
+            // Auto-start environment check
+            setTimeout(checkEnvironment, 500);
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('loginAlert');
+            alertDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                alertDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toastMessage.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function setupEventListeners() {
+            // Login form
+            document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                await login(email, password);
+            });
+
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+        }
+
+        // Debug functions (same as original)
+        async function checkEnvironment() {
+            const statusDiv = document.getElementById('envStatus');
+            statusDiv.innerHTML = 'Checking environment variables and config...';
+
+            try {
+                // Test config endpoint
+                const response = await fetch('/.netlify/functions/config');
+
+                if (!response.ok) {
+                    throw new Error(`Config endpoint failed: ${response.status} ${response.statusText}`);
+                }
+
+                const config = await response.json();
+
+                const envInfo = {
+                    configEndpointStatus: response.status,
+                    hasSupabaseUrl: !!config.supabaseUrl,
+                    hasSupabaseKey: !!config.supabaseKey,
+                    supabaseUrl: config.supabaseUrl ? config.supabaseUrl.substring(0, 50) + '...' : 'Missing',
+                    supabaseKeyPrefix: config.supabaseKey ? config.supabaseKey.substring(0, 20) + '...' : 'Missing'
+                };
+
+                debugInfo.environment = envInfo;
+
+                statusDiv.innerHTML = JSON.stringify(envInfo, null, 2);
+                statusDiv.className = 'debug-info status-success';
+
+                // Initialize Supabase if config is available
+                if (config.supabaseUrl && config.supabaseKey) {
+                    supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                    testSupabaseConnection();
+                }
+
+            } catch (error) {
+                const errorInfo = {
+                    error: error.message,
+                    timestamp: new Date().toISOString()
+                };
+
+                debugInfo.environment = errorInfo;
+                statusDiv.innerHTML = JSON.stringify(errorInfo, null, 2);
+                statusDiv.className = 'debug-info status-error';
+            }
+        }
+
+        async function testSupabaseConnection() {
+            const statusDiv = document.getElementById('supabaseStatus');
+            statusDiv.innerHTML = 'Testing Supabase connection...';
+
+            if (!supabase) {
+                statusDiv.innerHTML = 'Supabase client not initialized. Check environment first.';
+                statusDiv.className = 'debug-info status-error';
+                return;
+            }
+
+            try {
+                const { data, error, status } = await supabase
+                    .from('contact_messages')
+                    .select('count')
+                    .limit(1);
+
+                const connectionInfo = {
+                    status: status,
+                    error: error ? error.message : null,
+                    errorCode: error ? error.code : null,
+                    errorDetails: error ? error.details : null,
+                    dataReceived: !!data,
+                    timestamp: new Date().toISOString()
+                };
+
+                debugInfo.connection = connectionInfo;
+                statusDiv.innerHTML = JSON.stringify(connectionInfo, null, 2);
+
+                if (error) {
+                    statusDiv.className = 'debug-info status-error';
+                } else {
+                    statusDiv.className = 'debug-info status-success';
+                    checkTableStructure();
+                }
+
+            } catch (error) {
+                const errorInfo = {
+                    networkError: error.message,
+                    timestamp: new Date().toISOString()
+                };
+
+                debugInfo.connection = errorInfo;
+                statusDiv.innerHTML = JSON.stringify(errorInfo, null, 2);
+                statusDiv.className = 'debug-info status-error';
+            }
+        }
+
+        async function checkTableStructure() {
+            const statusDiv = document.getElementById('tableStructure');
+            statusDiv.innerHTML = 'Checking table structure...';
+
+            if (!supabase) {
+                statusDiv.innerHTML = 'Supabase client not initialized.';
+                statusDiv.className = 'debug-info status-error';
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('contact_messages')
+                    .select('*')
+                    .limit(0);
+
+                const structureInfo = {
+                    tableExists: !error || error.code !== '42P01',
+                    error: error ? error.message : null,
+                    errorCode: error ? error.code : null,
+                    timestamp: new Date().toISOString()
+                };
+
+                debugInfo.tableStructure = structureInfo;
+                statusDiv.innerHTML = JSON.stringify(structureInfo, null, 2);
+
+                if (error && error.code === '42P01') {
+                    statusDiv.className = 'debug-info status-error';
+                } else {
+                    statusDiv.className = 'debug-info status-success';
+                }
+
+            } catch (error) {
+                const errorInfo = {
+                    structureError: error.message,
+                    timestamp: new Date().toISOString()
+                };
+
+                debugInfo.tableStructure = errorInfo;
+                statusDiv.innerHTML = JSON.stringify(errorInfo, null, 2);
+                statusDiv.className = 'debug-info status-error';
+            }
+        }
+
+        async function queryRawData() {
+            const statusDiv = document.getElementById('rawDataStatus');
+            statusDiv.innerHTML = 'Querying raw data from contact_messages...';
+
+            if (!supabase) {
+                statusDiv.innerHTML = 'Supabase client not initialized.';
+                statusDiv.className = 'debug-info status-error';
+                return;
+            }
+
+            try {
+                const { data, error, count } = await supabase
+                    .from('contact_messages')
+                    .select('*', { count: 'exact' });
+
+                const queryInfo = {
+                    totalCount: count,
+                    recordsReturned: data ? data.length : 0,
+                    error: error ? error.message : null,
+                    errorCode: error ? error.code : null,
+                    sampleRecord: data && data.length > 0 ? data[0] : null,
+                    allRecordIds: data ? data.map(record => record.id) : [],
+                    timestamp: new Date().toISOString()
+                };
+
+                debugInfo.rawData = queryInfo;
+                statusDiv.innerHTML = JSON.stringify(queryInfo, null, 2);
+
+                if (error) {
+                    statusDiv.className = 'debug-info status-error';
+                } else {
+                    statusDiv.className = 'debug-info status-success';
+                }
+
+            } catch (error) {
+                const errorInfo = {
+                    queryError: error.message,
+                    timestamp: new Date().toISOString()
+                };
+
+                debugInfo.rawData = errorInfo;
+                statusDiv.innerHTML = JSON.stringify(errorInfo, null, 2);
+                statusDiv.className = 'debug-info status-error';
+            }
+        }
+
+        async function queryWithFilters() {
+            const statusDiv = document.getElementById('rawDataStatus');
+            statusDiv.innerHTML = 'Testing various query filters...';
+
+            if (!supabase) {
+                statusDiv.innerHTML = 'Supabase client not initialized.';
+                return;
+            }
+
+            try {
+                const queries = {
+                    allRecords: await supabase.from('contact_messages').select('*'),
+                    orderByCreated: await supabase.from('contact_messages').select('*').order('created_at', { ascending: false }),
+                    unreadOnly: await supabase.from('contact_messages').select('*').eq('status', 'unread'),
+                    recentMessages: await supabase.from('contact_messages').select('*').order('created_at', { ascending: false }).limit(5)
+                };
+
+                const filterResults = {};
+                for (const [queryName, result] of Object.entries(queries)) {
+                    filterResults[queryName] = {
+                        count: result.data ? result.data.length : 0,
+                        error: result.error ? result.error.message : null,
+                        errorCode: result.error ? result.error.code : null
+                    };
+                }
+
+                statusDiv.innerHTML = JSON.stringify(filterResults, null, 2);
+                statusDiv.className = 'debug-info status-success';
+
+            } catch (error) {
+                statusDiv.innerHTML = JSON.stringify({ filterTestError: error.message }, null, 2);
+                statusDiv.className = 'debug-info status-error';
+            }
+        }
+
+        async function loadAndDisplayMessages() {
+            const displayDiv = document.getElementById('messagesDisplay');
+            displayDiv.innerHTML = '<div class="loading">Loading messages...</div>';
+
+            if (!supabase) {
+                displayDiv.innerHTML = '<div class="status-error">Supabase client not initialized.</div>';
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('contact_messages')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    displayDiv.innerHTML = `<div class="status-error">Query Error: ${error.message} (Code: ${error.code})</div>`;
+                    return;
+                }
+
+                if (!data || data.length === 0) {
+                    displayDiv.innerHTML = '<div class="status-error">No data returned from query (but no error reported)</div>';
+                    return;
+                }
+
+                let tableHtml = `
+                    <table class="messages-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Subject</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                data.forEach(message => {
+                    tableHtml += `
+                        <tr>
+                            <td>${message.id}</td>
+                            <td>${message.name}</td>
+                            <td>${message.email}</td>
+                            <td>${message.subject}</td>
+                            <td><span class="status-indicator ${message.status === 'read' ? 'status-success' : 'status-error'}">${message.status || 'unread'}</span></td>
+                            <td>${new Date(message.created_at).toLocaleString()}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHtml += '</tbody></table>';
+                tableHtml = `<div class="status-success">Found ${data.length} messages:</div>` + tableHtml;
+
+                displayDiv.innerHTML = tableHtml;
+
+            } catch (error) {
+                displayDiv.innerHTML = `<div class="status-error">JavaScript Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testAuthentication() {
+            const statusDiv = document.getElementById('authStatus');
+            statusDiv.innerHTML = 'Testing authentication endpoints...';
+
+            try {
+                const configResponse = await fetch('/.netlify/functions/config');
+                const configResult = {
+                    status: configResponse.status,
+                    ok: configResponse.ok
+                };
+
+                const authResponse = await fetch('/.netlify/functions/auth', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'test'
+                    })
+                });
+
+                const authResult = {
+                    status: authResponse.status,
+                    ok: authResponse.ok
+                };
+
+                const authInfo = {
+                    configEndpoint: configResult,
+                    authEndpoint: authResult,
+                    timestamp: new Date().toISOString()
+                };
+
+                debugInfo.auth = authInfo;
+                statusDiv.innerHTML = JSON.stringify(authInfo, null, 2);
+                statusDiv.className = 'debug-info status-success';
+
+            } catch (error) {
+                const errorInfo = {
+                    authTestError: error.message,
+                    timestamp: new Date().toISOString()
+                };
+
+                debugInfo.auth = errorInfo;
+                statusDiv.innerHTML = JSON.stringify(errorInfo, null, 2);
+                statusDiv.className = 'debug-info status-error';
+            }
+        }
+
+        function exportDebugInfo() {
+            const fullDebugInfo = {
+                ...debugInfo,
+                userAgent: navigator.userAgent,
+                timestamp: new Date().toISOString(),
+                url: window.location.href,
+                currentUser: currentUser ? currentUser.email : 'Not logged in'
+            };
+
+            console.log('Debug Information:', fullDebugInfo);
+
+            // Create downloadable file
+            const dataStr = JSON.stringify(fullDebugInfo, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+
+            const exportFileDefaultName = `tafsir-kurd-debug-${new Date().toISOString().split('T')[0]}.json`;
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+
+            showToast('Debug information exported to file and console', 'success');
+        }
+    </script>
+</body>
+</html>
