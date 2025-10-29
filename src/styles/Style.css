@@ -648,6 +648,7 @@ header {
     color: #ffffff;
     padding: 15px 30px;
     border-radius: 12px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
     font-size: 1.1rem;
     font-weight: 600;
     cursor: pointer;
