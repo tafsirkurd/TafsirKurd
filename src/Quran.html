@@ -3039,15 +3039,14 @@
             const { surah, ayah } = currentCopyAyah;
             const key = `${surah}-${ayah}`;
 
-            // Get text from displayed element using textContent (preserves Unicode better)
-            const ayahElement = document.getElementById(`ayah-${ayah}`);
-            if (!ayahElement) return;
+            // Get text directly from JSON data
+            if (!quranData[surah] || !quranData[surah].verses) return;
 
-            const arabicElement = ayahElement.querySelector('.ayah-arabic');
-            const tafsirElement = ayahElement.querySelector('.tafsir-content');
+            const verse = quranData[surah].verses.find(v => Number(v.verse) === Number(ayah));
+            if (!verse) return;
 
-            const arabicText = arabicElement ? arabicElement.textContent.trim() : '';
-            const tafsirText = tafsirElement ? tafsirElement.textContent.trim() : '';
+            const arabicText = verse.text;
+            const tafsirText = tafsirData[key] || 'تەفسیر بەردەست نییە';
             const surahName = surahNames[surah];
 
             // Build text with proper line breaks
@@ -3064,12 +3063,13 @@
 
             const { surah, ayah } = currentCopyAyah;
 
-            // Get text from displayed element using textContent (preserves Unicode better)
-            const ayahElement = document.getElementById(`ayah-${ayah}`);
-            if (!ayahElement) return;
+            // Get text directly from JSON data
+            if (!quranData[surah] || !quranData[surah].verses) return;
 
-            const arabicElement = ayahElement.querySelector('.ayah-arabic');
-            const arabicText = arabicElement ? arabicElement.textContent.trim() : '';
+            const verse = quranData[surah].verses.find(v => Number(v.verse) === Number(ayah));
+            if (!verse) return;
+
+            const arabicText = verse.text;
             const surahName = surahNames[surah];
 
             // Build text with proper line breaks
