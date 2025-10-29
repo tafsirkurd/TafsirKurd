@@ -741,6 +741,8 @@
             google.accounts.id.initialize({
                 client_id: CLIENT_ID,
                 callback: handleCredentialResponse,
+                ux_mode: 'redirect',
+                login_uri: window.location.origin + '/onboarding.html'
             });
         }
 
@@ -748,34 +750,36 @@
             const btn = document.getElementById('googleSignInBtn');
             btn.classList.add('loading');
 
-            // Trigger the Google Sign-In with prompt
+            // Redirect to Google Sign-In page
             try {
                 google.accounts.id.prompt((notification) => {
                     if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                        // Fallback: try to render button temporarily for sign-in
-                        btn.classList.remove('loading');
-                        // Create a temporary div for Google button
+                        // Fallback: render button and auto-click
                         const tempDiv = document.createElement('div');
-                        tempDiv.style.display = 'none';
+                        tempDiv.style.position = 'absolute';
+                        tempDiv.style.top = '50%';
+                        tempDiv.style.left = '50%';
+                        tempDiv.style.transform = 'translate(-50%, -50%)';
+                        tempDiv.style.zIndex = '10000';
                         document.body.appendChild(tempDiv);
 
                         google.accounts.id.renderButton(tempDiv, {
                             theme: "filled_black",
                             size: "large",
-                            type: "standard"
+                            type: "standard",
+                            width: 300
                         });
 
-                        // Trigger click on the hidden Google button
                         setTimeout(() => {
                             const googleBtn = tempDiv.querySelector('div[role="button"]');
                             if (googleBtn) {
                                 googleBtn.click();
-                                btn.classList.add('loading');
                             } else {
                                 btn.classList.remove('loading');
+                                tempDiv.remove();
                                 showNotification('تکایە دووبارە هەوڵبدەرەوە');
                             }
-                        }, 100);
+                        }, 200);
                     }
                 });
             } catch (error) {
@@ -806,9 +810,9 @@
             localStorage.setItem('user', JSON.stringify(currentUser));
             localStorage.setItem('isAuthenticated', 'true');
 
-            // Redirect to complete signup page after 1.5 seconds
+            // Redirect to onboarding page after 1.5 seconds
             setTimeout(() => {
-                window.location.href = 'complete-signup.html';
+                window.location.href = 'onboarding.html';
             }, 1500);
         }
 

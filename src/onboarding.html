@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="بەخێربێیت بۆ تەفسیر کوورد">
+    <title>بەخێربێیت - تەفسیر کوورد</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <style>
+        :root {
+            --primary: #000000;
+            --accent: #ffffff;
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #000000;
+            --text-muted: #666666;
+            --border: #e8e8e8;
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --success: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #fdfdfd 0%, #ffffff 100%);
+            min-height: 100vh;
+            max-height: 100vh;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bg-animation {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape:nth-child(1) {
+            width: 200px;
+            height: 200px;
+            background: black;
+            border-radius: 50%;
+            top: 10%;
+            left: 10%;
+        }
+
+        .shape:nth-child(2) {
+            width: 150px;
+            height: 150px;
+            background: black;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            top: 60%;
+            right: 10%;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0) scale(1);
+            }
+            50% {
+                transform: translateY(-20px) translateX(20px) scale(1.05);
+            }
+        }
+
+        .onboarding-container {
+            max-width: 520px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .onboarding-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 35px 28px;
+            box-shadow: var(--shadow-lg);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .slide {
+            display: none;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .slide-icon {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .slide-icon i {
+            font-size: 4rem;
+            background: linear-gradient(135deg, #000000 0%, #333333 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .slide-content {
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .slide-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--primary);
+            line-height: 1.4;
+        }
+
+        .slide-subtitle {
+            font-size: 1.1rem;
+            color: var(--text);
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .slide-description {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+
+        .feature-list {
+            text-align: right;
+            background: var(--bg);
+            padding: 18px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .feature-list-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .feature-list-item i {
+            color: var(--success);
+            font-size: 1.1rem;
+            min-width: 25px;
+        }
+
+        .progress-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 25px 0 20px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dot.active {
+            background: var(--primary);
+            width: 30px;
+            border-radius: 5px;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 13px 20px;
+            border: 2px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .nav-btn:disabled:hover {
+            border-color: var(--border);
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .nav-btn.primary {
+            background: linear-gradient(135deg, #000000 0%, #333333 100%);
+            color: var(--accent);
+            border-color: transparent;
+        }
+
+        .nav-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .skip-btn {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .skip-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .skip-link:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+
+            .onboarding-card {
+                padding: 28px 22px;
+                min-height: 480px;
+            }
+
+            .slide-icon i {
+                font-size: 3.5rem;
+            }
+
+            .slide-title {
+                font-size: 1.5rem;
+                margin-bottom: 12px;
+            }
+
+            .slide-subtitle {
+                font-size: 1rem;
+            }
+
+            .slide-description {
+                font-size: 0.9rem;
+            }
+
+            .shape {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .onboarding-card {
+                padding: 25px 20px;
+                min-height: 450px;
+            }
+
+            .slide-icon {
+                margin-bottom: 20px;
+            }
+
+            .slide-icon i {
+                font-size: 3rem;
+            }
+
+            .slide-title {
+                font-size: 1.3rem;
+            }
+
+            .slide-subtitle {
+                font-size: 0.95rem;
+                margin-bottom: 15px;
+            }
+
+            .slide-description {
+                font-size: 0.85rem;
+                margin-bottom: 20px;
+            }
+
+            .feature-list {
+                padding: 15px;
+                margin-top: 15px;
+            }
+
+            .feature-list-item {
+                font-size: 0.85rem;
+                padding: 6px 0;
+                gap: 10px;
+            }
+
+            .feature-list-item i {
+                font-size: 1rem;
+            }
+
+            .nav-btn {
+                padding: 12px 16px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .onboarding-card {
+                padding: 20px 16px;
+            }
+
+            .slide-title {
+                font-size: 1.2rem;
+            }
+
+            .nav-btn {
+                padding: 11px 14px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="onboarding-container">
+        <div class="onboarding-card">
+            <!-- Slide 1: Welcome -->
+            <div class="slide active" data-slide="0">
+                <div class="slide-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="slide-content">
+                    <h1 class="slide-title">سوپاس بۆ باوەڕکردنت بە ئێمە!</h1>
+                    <p class="slide-subtitle">
+                        تۆ ئێستا بەشێکی لە کۆمەڵگەیەکی تایبەتیت
+                    </p>
+                    <p class="slide-description">
+                        ئێمە زۆر خۆشحاڵین کە تۆ بڕیارت داوە بەشدار بیت لە گەشەکردنی یەکەم پلاتفۆرمی کوردی بۆ خوێندنەوە و تێگەیشتنی قورئانی پیرۆز. بەشداریکردنت ماناداری گەورەیە بۆ ئێمە و بۆ هەموو کۆمەڵگەی کوردی.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Slide 2: Mission -->
+            <div class="slide" data-slide="1">
+                <div class="slide-icon">
+                    <i class="fas fa-flag"></i>
+                </div>
+                <div class="slide-content">
+                    <h1 class="slide-title">ئامانجی ئێمە</h1>
+                    <p class="slide-subtitle">
+                        دروستکردنی پردی نێوان خەڵکی کورد و قورئانی پیرۆز
+                    </p>
+                    <p class="slide-description">
+                        ئێمە ئامانجمان ئەوەیە کە زانست و تێگەیشتنی قورئان بە زمانی کوردی بگەیەنینە دەست هەموو کەسێک. بە دروستکردنی ئەم پلاتفۆرمە، ئێمە هەوڵ دەدەین کە خوێندنەوە و لێکۆڵینەوە لە قورئاندا ئاسانتر و پڕبەهرەتر بکەین.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Slide 3: Features -->
+            <div class="slide" data-slide="2">
+                <div class="slide-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="slide-content">
+                    <h1 class="slide-title">چیت چاوەڕوان دەکات؟</h1>
+                    <p class="slide-subtitle">
+                        تایبەتمەندییەکانێک کە ژیانی ڕۆحیت دەگۆڕن
+                    </p>
+                    <div class="feature-list">
+                        <div class="feature-list-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>تەفسیری تەواو بە زمانی کوردی</span>
+                        </div>
+                        <div class="feature-list-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>تێبینی تایبەتی و نیشانەکردنەوە</span>
+                        </div>
+                        <div class="feature-list-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>گوێگرتن بە دەنگی جوان</span>
+                        </div>
+                        <div class="feature-list-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>هاوکاتکردن لە هەموو ئامێرەکانت</span>
+                        </div>
+                        <div class="feature-list-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>خوێندنەوە بەبێ ئینتەرنێت</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4: Community -->
+            <div class="slide" data-slide="3">
+                <div class="slide-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="slide-content">
+                    <h1 class="slide-title">کۆمەڵگەیەکی گەورە</h1>
+                    <p class="slide-subtitle">
+                        هاوبەشی زانیاری و ئەزموون لەگەڵ براکانت
+                    </p>
+                    <p class="slide-description">
+                        بەشێک بە لە کۆمەڵگەیەکی چالاک و بەهێز کە هەموو ڕۆژێک گەشە دەکات. هاوبەشی بیرۆکە و پرسیار و ئەزموونەکانت بکە لەگەڵ هەزاران بەکارهێنەری دیکە کە هەمان ئامانج و خەونیان هەیە.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Slide 5: Let's Start -->
+            <div class="slide" data-slide="4">
+                <div class="slide-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <div class="slide-content">
+                    <h1 class="slide-title">ئامادەیت بۆ دەستپێکردن؟</h1>
+                    <p class="slide-subtitle">
+                        گەشتی ڕۆحیت لێرەوە دەست پێدەکات
+                    </p>
+                    <p class="slide-description">
+                        ئێستا کات و ناوخۆی ئەوەیە کە دەستبکەیت بە خوێندنەوە و فێربوون. ئێمە لێرەین بۆ یارمەتیدانت لە هەموو قۆناغەکانی ئەم گەشتە نایابەدا. با پێکەوە ئەم گەشتە جوانە دەست پێبکەین!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Progress Dots -->
+            <div class="progress-dots">
+                <div class="dot active" data-dot="0"></div>
+                <div class="dot" data-dot="1"></div>
+                <div class="dot" data-dot="2"></div>
+                <div class="dot" data-dot="3"></div>
+                <div class="dot" data-dot="4"></div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="navigation">
+                <button class="nav-btn" id="prevBtn" onclick="previousSlide()" disabled>
+                    <i class="fas fa-arrow-right"></i>
+                    <span>پێشوو</span>
+                </button>
+                <button class="nav-btn primary" id="nextBtn" onclick="nextSlide()">
+                    <span id="nextBtnText">دواتر</span>
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+            </div>
+
+            <div class="skip-btn">
+                <a class="skip-link" onclick="skipOnboarding()">پەلکێشکردن و دەستپێکردن</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CLIENT_ID = "510335424343-i42ua2q2718pg230e0kbrgha8edtmb14.apps.googleusercontent.com";
+        let currentSlide = 0;
+        const totalSlides = 5;
+
+        // Handle Google Sign-In callback from redirect
+        window.addEventListener('load', () => {
+            // Check if coming from Google Sign-In
+            const urlParams = new URLSearchParams(window.location.search);
+            const credential = urlParams.get('credential');
+
+            if (credential) {
+                // Handle the credential
+                handleCredentialResponse({credential: credential});
+            } else {
+                // Check if user is already logged in
+                const isAuthenticated = localStorage.getItem('isAuthenticated');
+                if (isAuthenticated !== 'true') {
+                    // Not authenticated, redirect to login
+                    window.location.href = 'login.html';
+                }
+            }
+
+            // Initialize Google Sign-In for handling callback
+            google.accounts.id.initialize({
+                client_id: CLIENT_ID,
+                callback: handleCredentialResponse
+            });
+        });
+
+        function handleCredentialResponse(response) {
+            const credential = response.credential;
+            const payload = parseJwt(credential);
+
+            const currentUser = {
+                name: payload.name,
+                email: payload.email,
+                picture: payload.picture,
+                sub: payload.sub
+            };
+
+            // Store user data
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            localStorage.setItem('isAuthenticated', 'true');
+        }
+
+        function parseJwt(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        function showSlide(index) {
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.dot');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            // Hide all slides
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+
+            // Show current slide
+            slides[index].classList.add('active');
+            dots[index].classList.add('active');
+
+            // Update buttons
+            prevBtn.disabled = index === 0;
+
+            if (index === totalSlides - 1) {
+                nextBtnText.textContent = 'دەستپێکردن';
+            } else {
+                nextBtnText.textContent = 'دواتر';
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            } else {
+                // Last slide, go to complete-signup
+                completeOnboarding();
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        function skipOnboarding() {
+            completeOnboarding();
+        }
+
+        function completeOnboarding() {
+            localStorage.setItem('onboardingCompleted', 'true');
+            window.location.href = 'complete-signup.html';
+        }
+
+        // Allow clicking on dots to navigate
+        document.querySelectorAll('.dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+                const slideIndex = parseInt(dot.getAttribute('data-dot'));
+                currentSlide = slideIndex;
+                showSlide(currentSlide);
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                nextSlide();
+            } else if (e.key === 'ArrowRight') {
+                previousSlide();
+            }
+        });
+    </script>
+</body>
+</html>
