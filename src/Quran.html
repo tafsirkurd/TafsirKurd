@@ -217,30 +217,6 @@
             margin-left: var(--sidebar-width);
         }
 
-        /* Settings Button */
-        .settings-btn {
-            position: fixed;
-            top: 90px;
-            left: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: var(--accent);
-            border: 2px solid var(--accent);
-            box-shadow: var(--shadow-lg);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            z-index: 998;
-            transition: all var(--transition);
-        }
-
-        .settings-btn:hover {
-            transform: scale(1.1) rotate(45deg);
-        }
 
         /* Settings Modal */
         .settings-modal {
@@ -1605,12 +1581,6 @@
                 flex-direction: column;
             }
 
-            .settings-btn {
-                top: 80px;
-                left: 15px;
-                width: 45px;
-                height: 45px;
-            }
         }
 
         .hidden {
@@ -1649,10 +1619,6 @@
         </div>
     </div>
 
-    <!-- Settings Button -->
-    <button class="settings-btn" id="settingsBtn" onclick="openSettings()">
-        <i class="fas fa-cog"></i>
-    </button>
 
     <!-- Settings Modal -->
     <div class="settings-modal" id="settingsModal">
