@@ -3039,19 +3039,13 @@
             const { surah, ayah } = currentCopyAyah;
             const key = `${surah}-${ayah}`;
 
-            // Get text directly from displayed elements to ensure proper encoding
-            const ayahElement = document.getElementById(`ayah-${ayah}`);
-            const arabicText = ayahElement.querySelector('.ayah-arabic').textContent;
-            const tafsirText = ayahElement.querySelector('.tafsir-content').textContent;
+            // Get text from JSON data for accurate encoding
+            const verse = quranData[surah].verses.find(v => v.verse === ayah);
+            const arabicText = verse.text;
+            const tafsirText = tafsirData[key] || 'تەفسیر بەردەست نییە';
             const surahName = surahNames[surah];
 
-            const text = `${arabicText}
-
-${tafsirText}
-
-${surahName.english} (${surahName.arabic}) - ئایەت ${ayah}
-
-https://tafsirkurd.com/Quran`;
+            const text = arabicText + '\n\n' + tafsirText + '\n\n' + surahName.english + ' (' + surahName.arabic + ') - ئایەت ' + ayah + '\n\nhttps://tafsirkurd.com/Quran';
 
             copyToClipboard(text);
             closeCopyModal();
@@ -3063,16 +3057,12 @@ https://tafsirkurd.com/Quran`;
 
             const { surah, ayah } = currentCopyAyah;
 
-            // Get text directly from displayed elements to ensure proper encoding
-            const ayahElement = document.getElementById(`ayah-${ayah}`);
-            const arabicText = ayahElement.querySelector('.ayah-arabic').textContent;
+            // Get text from JSON data for accurate encoding
+            const verse = quranData[surah].verses.find(v => v.verse === ayah);
+            const arabicText = verse.text;
             const surahName = surahNames[surah];
 
-            const text = `${arabicText}
-
-${surahName.english} (${surahName.arabic}) - ئایەت ${ayah}
-
-https://tafsirkurd.com/Quran`;
+            const text = arabicText + '\n\n' + surahName.english + ' (' + surahName.arabic + ') - ئایەت ' + ayah + '\n\nhttps://tafsirkurd.com/Quran';
 
             copyToClipboard(text);
             closeCopyModal();
