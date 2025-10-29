@@ -523,64 +523,15 @@
         let currentSlide = 0;
         const totalSlides = 5;
 
-        // Handle OAuth callback and check authentication
+        // Check if user is authenticated
         window.addEventListener('load', () => {
+            const isAuthenticated = localStorage.getItem('isAuthenticated');
             const onboardingCompleted = localStorage.getItem('onboardingCompleted');
 
-            // Check if coming back from Google OAuth (hash contains id_token)
-            const hash = window.location.hash.substring(1);
-            const params = new URLSearchParams(hash);
-            const idToken = params.get('id_token');
-            const state = params.get('state');
-
-            if (idToken) {
-                // Verify state to prevent CSRF
-                const savedState = sessionStorage.getItem('oauth_state');
-                if (state && state === savedState) {
-                    // Parse the JWT token
-                    try {
-                        const payload = parseJwt(idToken);
-
-                        const currentUser = {
-                            name: payload.name,
-                            email: payload.email,
-                            picture: payload.picture,
-                            sub: payload.sub
-                        };
-
-                        // Store user data
-                        localStorage.setItem('user', JSON.stringify(currentUser));
-                        localStorage.setItem('isAuthenticated', 'true');
-
-                        // Clean up
-                        sessionStorage.removeItem('oauth_state');
-                        sessionStorage.removeItem('oauth_nonce');
-                        sessionStorage.removeItem('oauth_flow_started');
-
-                        // Remove hash from URL to clean it up
-                        history.replaceState(null, '', window.location.pathname);
-
-                        // Show welcome message
-                        showWelcomeMessage(currentUser.name);
-                    } catch (error) {
-                        console.error('Error parsing token:', error);
-                        window.location.href = 'login.html';
-                        return;
-                    }
-                } else {
-                    // State mismatch, possible CSRF attack
-                    console.error('State mismatch');
-                    window.location.href = 'login.html';
-                    return;
-                }
-            } else {
-                // No token in URL, check if already authenticated
-                const isAuthenticated = localStorage.getItem('isAuthenticated');
-                if (isAuthenticated !== 'true') {
-                    // Not authenticated, redirect to login
-                    window.location.href = 'login.html';
-                    return;
-                }
+            if (isAuthenticated !== 'true') {
+                // Not authenticated, redirect to login
+                window.location.href = 'login.html';
+                return;
             }
 
             if (onboardingCompleted === 'true') {
@@ -588,16 +539,13 @@
                 window.location.href = 'complete-signup.html';
                 return;
             }
-        });
 
-        function parseJwt(token) {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
-        }
+            // Show welcome message
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                showWelcomeMessage(user.name);
+            }
+        });
 
         function showWelcomeMessage(name) {
             // Create a welcome notification
