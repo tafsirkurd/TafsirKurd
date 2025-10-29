@@ -7,7 +7,11 @@
       "Bash(netlify deploy:*)",
       "Bash(netlify status:*)",
       "Bash(git rm:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(for file in profile.html goals.html complete-signup.html onboarding.html login.html)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(head:*)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []
