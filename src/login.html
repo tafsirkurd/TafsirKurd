@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ku">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="description" content="چوونەژووروەوە بۆ تەفسیر کوورد">
     <title>چوونەژووروەوە - تەفسیر کوورد</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -33,13 +33,15 @@
             font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
             background: linear-gradient(135deg, #fdfdfd 0%, #ffffff 100%);
             min-height: 100vh;
+            max-height: 100vh;
             color: var(--text);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 15px;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         /* Animated Background */
@@ -113,11 +115,12 @@
         }
 
         .login-container {
-            max-width: 550px;
+            max-width: 500px;
             width: 100%;
             position: relative;
             z-index: 1;
             animation: slideUp 0.6s ease-out;
+            margin: auto;
         }
 
         @keyframes slideUp {
@@ -133,21 +136,21 @@
 
         .login-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 25px;
             color: black;
         }
 
         .login-title {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 700;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
             animation: fadeIn 0.8s ease-out;
         }
 
         .login-subtitle {
-            font-size: 1.1rem;
-            line-height: 1.8;
+            font-size: 1rem;
+            line-height: 1.6;
             max-width: 450px;
             margin: 0 auto;
             opacity: 0.95;
@@ -161,8 +164,8 @@
 
         .login-card {
             background: var(--card-bg);
-            border-radius: 25px;
-            padding: 50px;
+            border-radius: 20px;
+            padding: 30px 25px;
             box-shadow: var(--shadow-lg);
             border: 3px solid rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
@@ -182,13 +185,13 @@
 
         .logo-section {
             text-align: center;
-            margin-bottom: 35px;
+            margin-bottom: 20px;
         }
 
         .logo-section img {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 20px;
+            width: 65px;
+            height: 65px;
+            margin-bottom: 12px;
             animation: bounce 2s infinite;
         }
 
@@ -198,26 +201,26 @@
         }
 
         .logo-text {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: 700;
             color: var(--primary);
         }
 
         .features-list {
-            margin: 35px 0;
+            margin: 20px 0;
             text-align: right;
             background: var(--bg);
-            padding: 25px;
-            border-radius: 15px;
+            padding: 18px;
+            border-radius: 12px;
             border: 2px solid var(--border);
         }
 
         .feature-item {
             display: flex;
             align-items: center;
-            gap: 15px;
-            padding: 12px 0;
-            font-size: 1rem;
+            gap: 12px;
+            padding: 8px 0;
+            font-size: 0.9rem;
             color: var(--text);
             animation: slideRight 0.5s ease-out backwards;
         }
@@ -241,8 +244,8 @@
         .feature-icon {
             color: var(--primary);
             font-weight: 700;
-            font-size: 1.3rem;
-            min-width: 30px;
+            font-size: 1.1rem;
+            min-width: 25px;
             animation: pulse 2s infinite;
         }
 
@@ -269,20 +272,20 @@
 
         .google-signin-btn {
             width: 100%;
-            padding: 18px;
+            padding: 14px;
             background: linear-gradient(135deg, #000000 0%, #333333 100%);
             color: var(--accent);
             border: none;
-            border-radius: 15px;
-            font-size: 1.1rem;
+            border-radius: 12px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
             transition: all var(--transition);
-            margin: 35px 0 25px 0;
+            margin: 20px 0 18px 0;
             font-family: 'IBM Plex Sans Arabic', sans-serif;
             position: relative;
             overflow: hidden;
@@ -307,8 +310,8 @@
         }
 
         .google-signin-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
         }
 
         .google-signin-btn span {
@@ -323,7 +326,7 @@
 
         .divider {
             text-align: center;
-            margin: 30px 0;
+            margin: 18px 0;
             position: relative;
         }
 
@@ -348,7 +351,7 @@
 
         .back-link {
             text-align: center;
-            margin: 30px 0 0 0;
+            margin: 18px 0 0 0;
         }
 
         .back-btn {
@@ -357,12 +360,13 @@
             font-weight: 600;
             display: inline-flex;
             align-items: center;
-            gap: 10px;
-            padding: 12px 25px;
+            gap: 8px;
+            padding: 10px 20px;
             border-radius: 10px;
             transition: all 0.3s ease;
             background: var(--bg);
             border: 2px solid var(--border);
+            font-size: 0.9rem;
         }
 
         .back-btn:hover {
@@ -374,11 +378,11 @@
 
         .privacy-text {
             text-align: center;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
-            line-height: 1.8;
-            margin-top: 30px;
-            padding-top: 25px;
+            line-height: 1.6;
+            margin-top: 18px;
+            padding-top: 18px;
             border-top: 1px solid var(--border);
         }
 

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ku">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="description" content="*�H'H�1/F� *�E'1�1/F - *�A3�1 �HH1/">
-    <title>*�H'H�1/F� *�E'1�1/F - *�A3�1 �HH1/</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="تەواوکردنی تۆمارکردن - تەفسیر کوورد">
+    <title>تەواوکردنی تۆمارکردن - تەفسیر کوورد</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -33,16 +33,17 @@
             font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
             background: linear-gradient(135deg, #fdfdfd 0%, #ffffff 100%);
             min-height: 100vh;
+            max-height: 100vh;
             color: var(--text);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 15px;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
-        /* Animated Background */
         .bg-animation {
             position: absolute;
             width: 100%;
@@ -64,7 +65,6 @@
             border-radius: 50%;
             top: 10%;
             left: 10%;
-            animation-delay: 0s;
         }
 
         .shape:nth-child(2) {
@@ -74,46 +74,30 @@
             border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
             top: 60%;
             right: 10%;
-            animation-delay: 2s;
-        }
-
-        .shape:nth-child(3) {
-            width: 180px;
-            height: 180px;
-            background: black;
-            border-radius: 50%;
-            bottom: 10%;
-            left: 50%;
-            animation-delay: 4s;
         }
 
         @keyframes float {
             0%, 100% {
-                transform: translateY(0) translateX(0) rotate(0deg) scale(1);
-            }
-            25% {
-                transform: translateY(-30px) translateX(20px) rotate(90deg) scale(1.1);
+                transform: translateY(0) translateX(0) scale(1);
             }
             50% {
-                transform: translateY(0) translateX(40px) rotate(180deg) scale(1);
-            }
-            75% {
-                transform: translateY(30px) translateX(20px) rotate(270deg) scale(0.9);
+                transform: translateY(-20px) translateX(20px) scale(1.05);
             }
         }
 
         .signup-container {
-            max-width: 550px;
+            max-width: 500px;
             width: 100%;
             position: relative;
             z-index: 1;
-            animation: slideUp 0.6s ease-out;
+            animation: slideUp 0.5s ease-out;
+            margin: auto;
         }
 
         @keyframes slideUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
@@ -123,32 +107,20 @@
 
         .signup-card {
             background: var(--card-bg);
-            border-radius: 25px;
-            padding: 50px;
+            border-radius: 20px;
+            padding: 25px;
             box-shadow: var(--shadow-lg);
             border: 3px solid rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
-            animation: scaleIn 0.5s ease-out;
-        }
-
-        @keyframes scaleIn {
-            from {
-                transform: scale(0.95);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
         }
 
         .success-icon {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
         }
 
         .success-icon i {
-            font-size: 5rem;
+            font-size: 2.8rem;
             color: var(--success);
             animation: checkBounce 0.6s ease-out;
         }
@@ -156,80 +128,70 @@
         @keyframes checkBounce {
             0% {
                 transform: scale(0);
-                opacity: 0;
             }
             50% {
-                transform: scale(1.2);
+                transform: scale(1.1);
             }
             100% {
                 transform: scale(1);
-                opacity: 1;
             }
         }
 
         .welcome-header {
             text-align: center;
-            margin-bottom: 35px;
+            margin-bottom: 15px;
         }
 
         .welcome-title {
-            font-size: 2.2rem;
+            font-size: 1.6rem;
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-bottom: 6px;
             color: var(--primary);
-            animation: fadeIn 0.8s ease-out;
         }
 
         .welcome-subtitle {
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             color: var(--text-muted);
-            line-height: 1.8;
-            animation: fadeIn 1s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            line-height: 1.5;
         }
 
         .user-info {
             background: var(--bg);
-            padding: 25px;
-            border-radius: 15px;
-            margin: 30px 0;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
             text-align: center;
             border: 2px solid var(--border);
         }
 
         .user-avatar {
-            width: 80px;
-            height: 80px;
+            width: 55px;
+            height: 55px;
             border-radius: 50%;
-            margin: 0 auto 15px;
+            margin: 0 auto 10px;
             border: 3px solid var(--primary);
-            animation: fadeIn 0.6s ease-out;
         }
 
         .user-name {
-            font-size: 1.5rem;
+            font-size: 1.1rem;
             font-weight: 700;
             color: var(--primary);
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
         .user-email {
-            font-size: 1rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
         }
 
         .preferences-section {
-            margin: 30px 0;
+            margin: 15px 0;
         }
 
         .preferences-title {
-            font-size: 1.3rem;
+            font-size: 1rem;
             font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             color: var(--primary);
             text-align: center;
         }
@@ -238,10 +200,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 18px;
+            padding: 10px 12px;
             background: var(--bg);
-            border-radius: 12px;
-            margin-bottom: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
             border: 2px solid var(--border);
             transition: all 0.3s ease;
             cursor: pointer;
@@ -249,29 +211,30 @@
 
         .preference-item:hover {
             border-color: var(--primary);
-            transform: translateX(-5px);
+            transform: translateX(-3px);
         }
 
         .preference-label {
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 1rem;
+            gap: 8px;
+            font-size: 0.9rem;
             font-weight: 500;
         }
 
         .preference-icon {
-            font-size: 1.2rem;
+            font-size: 1rem;
             color: var(--primary);
         }
 
         .toggle-switch {
             position: relative;
-            width: 50px;
-            height: 26px;
+            width: 45px;
+            height: 24px;
             background: #ccc;
             border-radius: 50px;
             transition: background 0.3s ease;
+            flex-shrink: 0;
         }
 
         .toggle-switch.active {
@@ -281,8 +244,8 @@
         .toggle-switch::after {
             content: '';
             position: absolute;
-            width: 22px;
-            height: 22px;
+            width: 20px;
+            height: 20px;
             background: white;
             border-radius: 50%;
             top: 2px;
@@ -291,25 +254,25 @@
         }
 
         .toggle-switch.active::after {
-            right: 26px;
+            right: 23px;
         }
 
         .continue-btn {
             width: 100%;
-            padding: 18px;
+            padding: 13px;
             background: linear-gradient(135deg, #000000 0%, #333333 100%);
             color: var(--accent);
             border: none;
-            border-radius: 15px;
-            font-size: 1.1rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
             transition: all var(--transition);
-            margin: 35px 0 0 0;
+            margin: 15px 0 0 0;
             font-family: 'IBM Plex Sans Arabic', sans-serif;
             position: relative;
             overflow: hidden;
@@ -334,15 +297,11 @@
         }
 
         .continue-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
         }
 
-        .continue-btn span {
-            position: relative;
-            z-index: 1;
-        }
-
+        .continue-btn span,
         .continue-btn i {
             position: relative;
             z-index: 1;
@@ -350,8 +309,8 @@
 
         .loading-spinner {
             display: none;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border: 3px solid rgba(255, 255, 255, 0.3);
             border-top-color: white;
             border-radius: 50%;
@@ -372,13 +331,13 @@
 
         .skip-link {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 12px;
         }
 
         .skip-btn {
             color: var(--text-muted);
             text-decoration: none;
-            font-size: 0.95rem;
+            font-size: 0.8rem;
             transition: color 0.3s ease;
             cursor: pointer;
         }
@@ -388,111 +347,22 @@
             text-decoration: underline;
         }
 
-        /* Tablet */
-        @media (max-width: 992px) {
-            .signup-card {
-                padding: 40px 30px;
-            }
-
-            .welcome-title {
-                font-size: 2rem;
-            }
-        }
-
-        /* Mobile Large */
+        /* Responsive */
         @media (max-width: 768px) {
-            body {
-                padding: 15px;
-            }
-
-            .signup-card {
-                padding: 35px 25px;
-                border-radius: 20px;
-            }
-
-            .welcome-title {
-                font-size: 1.8rem;
-            }
-
-            .welcome-subtitle {
-                font-size: 1rem;
-            }
-
-            .success-icon i {
-                font-size: 4rem;
-            }
-
-            .user-avatar {
-                width: 70px;
-                height: 70px;
-            }
-
-            .user-name {
-                font-size: 1.3rem;
-            }
-
-            .continue-btn {
-                font-size: 1rem;
-                padding: 16px;
-            }
-        }
-
-        /* Mobile Small */
-        @media (max-width: 480px) {
             body {
                 padding: 10px;
             }
 
-            .signup-container {
-                max-width: 100%;
-            }
-
             .signup-card {
-                padding: 25px 20px;
-                border-radius: 18px;
-            }
-
-            .welcome-title {
-                font-size: 1.5rem;
-            }
-
-            .welcome-subtitle {
-                font-size: 0.95rem;
+                padding: 20px;
             }
 
             .success-icon i {
-                font-size: 3.5rem;
+                font-size: 2.5rem;
             }
 
-            .user-avatar {
-                width: 60px;
-                height: 60px;
-            }
-
-            .user-name {
-                font-size: 1.2rem;
-            }
-
-            .user-email {
-                font-size: 0.9rem;
-            }
-
-            .preferences-title {
-                font-size: 1.1rem;
-            }
-
-            .preference-item {
-                padding: 15px;
-            }
-
-            .preference-label {
-                font-size: 0.95rem;
-            }
-
-            .continue-btn {
-                font-size: 0.95rem;
-                padding: 15px;
-                margin-top: 25px;
+            .welcome-title {
+                font-size: 1.4rem;
             }
 
             .shape {
@@ -500,26 +370,125 @@
             }
         }
 
-        /* Mobile Extra Small */
-        @media (max-width: 360px) {
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+
             .signup-card {
-                padding: 20px 15px;
+                padding: 18px;
+                border-radius: 18px;
+            }
+
+            .success-icon {
+                margin-bottom: 12px;
+            }
+
+            .success-icon i {
+                font-size: 2.2rem;
+            }
+
+            .welcome-header {
+                margin-bottom: 12px;
             }
 
             .welcome-title {
-                font-size: 1.3rem;
+                font-size: 1.2rem;
+            }
+
+            .welcome-subtitle {
+                font-size: 0.85rem;
+            }
+
+            .user-info {
+                padding: 12px;
+                margin: 12px 0;
+            }
+
+            .user-avatar {
+                width: 45px;
+                height: 45px;
+                margin-bottom: 8px;
+            }
+
+            .user-name {
+                font-size: 1rem;
+            }
+
+            .user-email {
+                font-size: 0.78rem;
+            }
+
+            .preferences-section {
+                margin: 12px 0;
+            }
+
+            .preferences-title {
+                font-size: 0.9rem;
+                margin-bottom: 10px;
+            }
+
+            .preference-item {
+                padding: 8px 10px;
+                margin-bottom: 6px;
+            }
+
+            .preference-label {
+                font-size: 0.8rem;
+                gap: 6px;
+            }
+
+            .preference-icon {
+                font-size: 0.9rem;
+            }
+
+            .toggle-switch {
+                width: 40px;
+                height: 22px;
+            }
+
+            .toggle-switch::after {
+                width: 18px;
+                height: 18px;
+            }
+
+            .toggle-switch.active::after {
+                right: 20px;
             }
 
             .continue-btn {
-                font-size: 0.9rem;
-                padding: 14px;
+                font-size: 0.88rem;
+                padding: 11px;
+                margin-top: 12px;
+            }
+
+            .skip-link {
+                margin-top: 10px;
+            }
+
+            .skip-btn {
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .signup-card {
+                padding: 15px;
+            }
+
+            .welcome-title {
+                font-size: 1.1rem;
+            }
+
+            .continue-btn {
+                font-size: 0.82rem;
+                padding: 10px;
             }
         }
     </style>
 </head>
 <body>
     <div class="bg-animation">
-        <div class="shape"></div>
         <div class="shape"></div>
         <div class="shape"></div>
     </div>
@@ -531,9 +500,9 @@
             </div>
 
             <div class="welcome-header">
-                <h1 class="welcome-title">3�1��H*HH (HH!</h1>
+                <h1 class="welcome-title">سەرکەوتوو بوو!</h1>
                 <p class="welcome-subtitle">
-                    (� 3�1��H*HH�� �HH�*� �HH1�H�. (' &�2EHHFթ�* �Ω(.��F
+                    بە سەرکەوتوویی چوویتە ژوورەوە. با ئەزموونەکەت ڕێکبخەین
                 </p>
             </div>
 
@@ -542,12 +511,12 @@
             </div>
 
             <div class="preferences-section">
-                <h2 class="preferences-title">Gյ(�'1/Fթ'F*</h2>
+                <h2 class="preferences-title">هەڵبژاردنەکانت</h2>
 
                 <div class="preference-item" onclick="togglePreference(this, 'notifications')">
                     <div class="preference-label">
                         <i class="fas fa-bell preference-icon"></i>
-                        <span>&'�'/'1�1/F�H�� �Ƙ'F�</span>
+                        <span>ئاگادارکردنەوەی ڕۆژانە</span>
                     </div>
                     <div class="toggle-switch active" data-pref="notifications"></div>
                 </div>
@@ -555,7 +524,7 @@
                 <div class="preference-item" onclick="togglePreference(this, 'darkMode')">
                     <div class="preference-label">
                         <i class="fas fa-moon preference-icon"></i>
-                        <span>/�.� *'1̩</span>
+                        <span>دۆخی تاریک</span>
                     </div>
                     <div class="toggle-switch" data-pref="darkMode"></div>
                 </div>
@@ -563,7 +532,7 @@
                 <div class="preference-item" onclick="togglePreference(this, 'autoSave')">
                     <div class="preference-label">
                         <i class="fas fa-save preference-icon"></i>
-                        <span>Gյ�1*F� .Ʃ'1</span>
+                        <span>هەڵگرتنی خۆکار</span>
                     </div>
                     <div class="toggle-switch active" data-pref="autoSave"></div>
                 </div>
@@ -571,12 +540,12 @@
 
             <button class="continue-btn" id="continueBtn" onclick="completeSignup()">
                 <div class="loading-spinner"></div>
-                <span>/�3*~Ω1/F</span>
+                <span>دەستپێکردن</span>
                 <i class="fas fa-arrow-left"></i>
             </button>
 
             <div class="skip-link">
-                <a class="skip-btn" onclick="skipToMain()">~�D��4�1/F H �HHF� 3�1�*'</a>
+                <a class="skip-btn" onclick="skipToMain()">پەلکێشکردن و چوونە سەرەتا</a>
             </div>
         </div>
     </div>
