@@ -206,8 +206,19 @@
             color: var(--primary);
         }
 
-        .features-list {
+        .benefits-section {
             margin: 20px 0;
+        }
+
+        .benefits-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .features-list {
             text-align: right;
             background: var(--bg);
             padding: 18px;
@@ -448,56 +459,80 @@
         /* Tablet */
         @media (max-width: 992px) {
             .login-card {
-                padding: 40px 30px;
+                padding: 35px 28px;
             }
 
             .login-title {
-                font-size: 2.2rem;
+                font-size: 1.9rem;
+            }
+
+            .benefits-title {
+                font-size: 1rem;
             }
         }
 
         /* Mobile Large */
         @media (max-width: 768px) {
             body {
-                padding: 15px;
+                padding: 12px;
             }
 
             .login-card {
-                padding: 35px 25px;
+                padding: 28px 22px;
                 border-radius: 20px;
             }
 
             .login-title {
-                font-size: 1.8rem;
-                margin-bottom: 12px;
+                font-size: 1.7rem;
+                margin-bottom: 10px;
             }
 
             .login-subtitle {
                 font-size: 0.95rem;
             }
 
-            .google-signin-btn {
-                font-size: 1rem;
-                padding: 16px;
+            .benefits-section {
+                margin: 18px 0;
+            }
+
+            .benefits-title {
+                font-size: 0.98rem;
+                margin-bottom: 10px;
             }
 
             .features-list {
-                padding: 20px;
-                margin: 25px 0;
+                padding: 16px;
             }
 
             .feature-item {
-                font-size: 0.95rem;
-                padding: 10px 0;
+                font-size: 0.88rem;
+                padding: 7px 0;
+                gap: 10px;
+            }
+
+            .feature-icon {
+                font-size: 1.05rem;
+                min-width: 23px;
+            }
+
+            .feature-badge {
+                font-size: 0.7rem;
+                padding: 3px 9px;
+            }
+
+            .google-signin-btn {
+                font-size: 0.98rem;
+                padding: 14px;
+                margin: 18px 0;
             }
 
             .logo-section img {
-                width: 70px;
-                height: 70px;
+                width: 62px;
+                height: 62px;
             }
 
             .logo-text {
-                font-size: 1.5rem;
+                font-size: 1.4rem;
             }
 
             .notification {
@@ -541,30 +576,39 @@
                 font-size: 1.3rem;
             }
 
+            .benefits-section {
+                margin: 18px 0;
+            }
+
+            .benefits-title {
+                font-size: 0.95rem;
+                margin-bottom: 10px;
+            }
+
             .features-list {
-                padding: 18px;
-                margin: 20px 0;
+                padding: 15px;
             }
 
             .feature-item {
-                font-size: 0.88rem;
-                gap: 12px;
+                font-size: 0.85rem;
+                gap: 10px;
+                padding: 6px 0;
             }
 
             .feature-icon {
-                font-size: 1.1rem;
-                min-width: 25px;
+                font-size: 1rem;
+                min-width: 22px;
             }
 
             .feature-badge {
-                font-size: 0.7rem;
-                padding: 3px 10px;
+                font-size: 0.68rem;
+                padding: 3px 8px;
             }
 
             .google-signin-btn {
                 font-size: 0.95rem;
                 padding: 15px;
-                margin: 25px 0 20px 0;
+                margin: 20px 0 18px 0;
             }
 
             .back-btn {
@@ -591,6 +635,14 @@
 
             .login-title {
                 font-size: 1.3rem;
+            }
+
+            .benefits-title {
+                font-size: 0.88rem;
+            }
+
+            .feature-item {
+                font-size: 0.8rem;
             }
 
             .google-signin-btn {
@@ -622,32 +674,43 @@
                 <div class="logo-text">تەفسیر کوورد</div>
             </div>
 
-            <div class="features-list">
-                <div class="feature-item">
-                    <span class="feature-icon">✦</span>
-                    <div>
-                        <span class="feature-badge">نوێ!</span>
-                        تێبینی و نیشانەکردنەوە
+            <div class="benefits-section">
+                <h3 class="benefits-title">چی بەدەست دەهێنیت دوای چوونەژوورەوە:</h3>
+                <div class="features-list">
+                    <div class="feature-item">
+                        <span class="feature-icon">✦</span>
+                        <div>
+                            <span class="feature-badge">نوێ!</span>
+                            تێبینی تایبەت و نیشانەکردنەوە
+                        </div>
                     </div>
-                </div>
-                <div class="feature-item">
-                    <span class="feature-icon">✦</span>
-                    <div>شوێنکەوتنی ئامانجەکانت</div>
-                </div>
-                <div class="feature-item">
-                    <span class="feature-icon">✦</span>
-                    <div>هەڵگرتنی بەردەوامی خوێندنەوە</div>
-                </div>
-                <div class="feature-item">
-                    <span class="feature-icon">✦</span>
-                    <div>هاوکات کردنی زانیاری لە نێوان ئامێرەکان</div>
+                    <div class="feature-item">
+                        <span class="feature-icon">✦</span>
+                        <div>شوێنکەوتنی ئامانج و پێشکەوتنت</div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">✦</span>
+                        <div>هەڵگرتنی خوێندنەوەی بەردەوام</div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">✦</span>
+                        <div>هاوکات کردن لەنێوان هەموو ئامێرەکانت</div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">✦</span>
+                        <div>دەسگەیشتن بە تایبەتمەندی پێشکەوتوو</div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">✦</span>
+                        <div>ئاگادارکردنەوەی ڕۆژانە بۆ خوێندنەوە</div>
+                    </div>
                 </div>
             </div>
 
-            <button class="google-signin-btn" id="googleSignInBtn">
+            <button class="google-signin-btn" id="googleSignInBtn" onclick="startGoogleSignIn()">
                 <div class="loading-spinner"></div>
                 <i class="fab fa-google"></i>
-                <span>بەردەوامبوون بە Google</span>
+                <span>چوونەژوورەوە بە Google</span>
             </button>
 
             <div class="divider">
@@ -678,18 +741,21 @@
             google.accounts.id.initialize({
                 client_id: CLIENT_ID,
                 callback: handleCredentialResponse,
+                ux_mode: 'popup',
             });
+        }
 
-            google.accounts.id.renderButton(
-                document.getElementById('googleSignInBtn'),
-                {
-                    theme: "filled_black",
-                    size: "large",
-                    text: "continue_with",
-                    width: 400,
-                    locale: "ku"
+        function startGoogleSignIn() {
+            const btn = document.getElementById('googleSignInBtn');
+            btn.classList.add('loading');
+
+            // Trigger the Google Sign-In popup
+            google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    // If One Tap is not displayed, show the button-based flow
+                    btn.classList.remove('loading');
                 }
-            );
+            });
         }
 
         function handleCredentialResponse(response) {
@@ -707,7 +773,7 @@
                 sub: payload.sub
             };
 
-            showNotification('بەخێربێیت ' + currentUser.name.split(' ')[0] + '!');
+            showNotification('بەخێربێیت ' + currentUser.name.split(' ')[0] + '! ئێستا دەتگەیەنینە لاپەڕەی تەواوکردنی تۆمارکردن...');
 
             // Store user data
             localStorage.setItem('user', JSON.stringify(currentUser));
