@@ -1056,7 +1056,88 @@
             font-weight: 700;
             color: var(--primary);
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
+        }
+
+        /* Filter and Sort Controls */
+        .filter-sort-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 2px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .filter-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-size: 1rem;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+        }
+
+        .filter-btn i {
+            font-size: 1.1rem;
+        }
+
+        .sort-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sort-select {
+            padding: 12px 20px;
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-size: 1rem;
+        }
+
+        .sort-select:hover {
+            border-color: var(--primary);
+        }
+
+        .sort-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
         }
 
         .surah-grid {
@@ -1727,6 +1808,33 @@
                 gap: 10px;
             }
 
+            .filter-sort-controls {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .filter-group {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .filter-btn {
+                flex: 1;
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+
+            .sort-group {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .sort-select {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+
             .nav-btn {
                 width: 100%;
             }
@@ -2281,6 +2389,28 @@
                     <i class="fas fa-book-open"></i>
                     هەموو سوورەکانی قورئان
                 </h2>
+
+                <!-- Filter and Sort Controls -->
+                <div class="filter-sort-controls">
+                    <div class="filter-group">
+                        <button class="filter-btn active" data-filter="surah" onclick="changeFilter('surah')">
+                            <i class="fas fa-book"></i>
+                            <span>Surah</span>
+                        </button>
+                        <button class="filter-btn" data-filter="juz" onclick="changeFilter('juz')">
+                            <i class="fas fa-bookmark"></i>
+                            <span>Juz</span>
+                        </button>
+                    </div>
+                    <div class="sort-group">
+                        <label style="font-weight: 600; color: var(--text); margin-right: 10px;">Sort by:</label>
+                        <select class="sort-select" id="sortOrder" onchange="changeSortOrder()">
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="surah-grid" id="surahGrid"></div>
             </section>
         </div>
@@ -2459,6 +2589,64 @@
             113: { arabic: "الفلق", english: "Al-Falaq", ayahs: 5 },
             114: { arabic: "الناس", english: "An-Nas", ayahs: 6 }
         };
+
+        // Juz (Parts) mapping - which surahs belong to which Juz
+        const juzMapping = {
+            1: [1, 2],
+            2: [2],
+            3: [2, 3],
+            4: [3, 4],
+            5: [4],
+            6: [4, 5],
+            7: [5, 6],
+            8: [6, 7],
+            9: [7, 8],
+            10: [8, 9],
+            11: [9, 10, 11],
+            12: [11, 12],
+            13: [12, 13, 14, 15],
+            14: [15, 16, 17],
+            15: [17, 18],
+            16: [18, 19, 20],
+            17: [21, 22],
+            18: [23, 24, 25],
+            19: [25, 26, 27],
+            20: [27, 28, 29],
+            21: [29, 30, 31, 32, 33],
+            22: [33, 34, 35, 36],
+            23: [36, 37, 38, 39],
+            24: [39, 40, 41],
+            25: [41, 42, 43, 44, 45],
+            26: [46, 47, 48, 49, 50, 51],
+            27: [51, 52, 53, 54, 55, 56, 57],
+            28: [58, 59, 60, 61, 62, 63, 64, 65, 66],
+            29: [67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77],
+            30: [78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114]
+        };
+
+        // Filter and sort state
+        let currentFilter = 'surah'; // 'surah' or 'juz'
+        let currentSortOrder = 'asc'; // 'asc' or 'desc'
+
+        // Change filter (Surah/Juz)
+        function changeFilter(filter) {
+            currentFilter = filter;
+
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+
+            // Re-render grid
+            renderSurahGrid();
+        }
+
+        // Change sort order
+        function changeSortOrder() {
+            currentSortOrder = document.getElementById('sortOrder').value;
+            renderSurahGrid();
+        }
 
         // Initialize on Load
         window.addEventListener('load', async () => {
@@ -2856,22 +3044,73 @@
         function renderSurahGrid() {
             const container = document.getElementById('surahGrid');
             container.innerHTML = '';
-            for (let i = 1; i <= 114; i++) {
-                const info = surahNames[i];
-                const card = document.createElement('div');
-                card.className = 'surah-card';
-                card.onclick = () => openSurah(i);
-                card.innerHTML = `
-                    <div class="surah-card-header">
-                        <div class="surah-card-number">${i}</div>
-                        <div class="surah-card-info">
-                            <div class="surah-card-english">${info.english}</div>
-                            <div class="surah-card-arabic">${info.arabic}</div>
+
+            if (currentFilter === 'surah') {
+                // Display by Surahs
+                let surahs = [];
+                for (let i = 1; i <= 114; i++) {
+                    surahs.push(i);
+                }
+
+                // Apply sorting
+                if (currentSortOrder === 'desc') {
+                    surahs.reverse();
+                }
+
+                // Render surah cards
+                surahs.forEach(i => {
+                    const info = surahNames[i];
+                    const card = document.createElement('div');
+                    card.className = 'surah-card';
+                    card.onclick = () => openSurah(i);
+                    card.innerHTML = `
+                        <div class="surah-card-header">
+                            <div class="surah-card-number">${i}</div>
+                            <div class="surah-card-info">
+                                <div class="surah-card-english">${info.english}</div>
+                                <div class="surah-card-arabic">${info.arabic}</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="surah-card-ayahs">${info.ayahs} ئایەت</div>
-                `;
-                container.appendChild(card);
+                        <div class="surah-card-ayahs">${info.ayahs} ئایەت</div>
+                    `;
+                    container.appendChild(card);
+                });
+            } else {
+                // Display by Juz
+                let juzNumbers = Object.keys(juzMapping).map(Number);
+
+                // Apply sorting
+                if (currentSortOrder === 'desc') {
+                    juzNumbers.reverse();
+                }
+
+                // Render Juz cards
+                juzNumbers.forEach(juzNum => {
+                    const surahs = juzMapping[juzNum];
+                    const surahList = surahs.map(s => surahNames[s].english).join(', ');
+
+                    const card = document.createElement('div');
+                    card.className = 'surah-card juz-card';
+                    card.onclick = () => {
+                        // Open first surah in this Juz
+                        openSurah(surahs[0]);
+                    };
+                    card.innerHTML = `
+                        <div class="surah-card-header">
+                            <div class="surah-card-number" style="background: linear-gradient(135deg, var(--primary) 0%, #555 100%);">
+                                ${juzNum}
+                            </div>
+                            <div class="surah-card-info">
+                                <div class="surah-card-english" style="font-weight: 700;">Juz ${juzNum}</div>
+                                <div class="surah-card-arabic" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">
+                                    ${surahList.substring(0, 50)}${surahList.length > 50 ? '...' : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="surah-card-ayahs">${surahs.length} سوورە</div>
+                    `;
+                    container.appendChild(card);
+                });
             }
         }
 
