@@ -457,6 +457,8 @@
         let bookmarkedAyahs = [];
         let ayahNotes = {};
         let ayahTimestamps = {};
+        let quranData = null;
+        let tafsirData = {};
 
         const surahNames = {
             1: { arabic: "الفاتحة", english: "Al-Fatihah" },
@@ -472,7 +474,76 @@
             // Add more as needed...
         };
 
-        window.addEventListener('load', () => {
+        // Load Quran Data
+        async function loadQuranData() {
+            try {
+                const paths = [
+                    { quran: 'data/quran.json', tafsir: 'data/kurdish_tafsir.json' },
+                    { quran: './data/quran.json', tafsir: './data/kurdish_tafsir.json' },
+                    { quran: '../data/quran.json', tafsir: '../data/kurdish_tafsir.json' },
+                    { quran: '/data/quran.json', tafsir: '/data/kurdish_tafsir.json' },
+                ];
+
+                let quranJson = null;
+                let tafsirJson = [];
+
+                for (const pathSet of paths) {
+                    try {
+                        const quranResponse = await fetch(pathSet.quran);
+                        if (!quranResponse.ok) continue;
+
+                        const quranText = await quranResponse.text();
+                        if (quranText.trim().startsWith('{')) {
+                            quranJson = JSON.parse(quranText);
+
+                            try {
+                                const tafsirResponse = await fetch(pathSet.tafsir);
+                                if (tafsirResponse.ok) {
+                                    const tafsirText = await tafsirResponse.text();
+                                    if (tafsirText.trim().startsWith('[')) {
+                                        tafsirJson = JSON.parse(tafsirText);
+                                    }
+                                }
+                            } catch (tafsirError) {
+                                console.warn('Tafsir not loaded');
+                            }
+
+                            break;
+                        }
+                    } catch (error) {
+                        continue;
+                    }
+                }
+
+                if (!quranJson) {
+                    throw new Error('Could not load Quran data from any path');
+                }
+
+                tafsirData = {};
+                if (Array.isArray(tafsirJson) && tafsirJson.length > 0) {
+                    tafsirJson.forEach(item => {
+                        const key = `${item.surah}-${item.ayah}`;
+                        tafsirData[key] = item.kurdish_tafsir || '';
+                    });
+                }
+
+                // Transform quranJson structure to match expected format
+                quranData = {};
+                for (const surahNum in quranJson) {
+                    if (Array.isArray(quranJson[surahNum])) {
+                        quranData[surahNum] = {
+                            verses: quranJson[surahNum]
+                        };
+                    }
+                }
+                console.log('✅ Quran data loaded successfully');
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        window.addEventListener('load', async () => {
+            await loadQuranData();
             loadBookmarks();
             renderBookmarks();
         });
@@ -600,13 +671,39 @@
         }
 
         async function loadAyahText(surah, ayah, key) {
-            // This is a placeholder - replace with actual Quran data
-            setTimeout(() => {
-                const element = document.getElementById(`ayah-${key}`);
-                if (element) {
-                    element.textContent = `بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ`; // Placeholder
-                }
-            }, 500);
+            const element = document.getElementById(`ayah-${key}`);
+            if (!element) {
+                console.error(`Element not found for ayah-${key}`);
+                return;
+            }
+
+            // Wait for quranData to be loaded if it's not ready yet
+            let attempts = 0;
+            while (!quranData && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+
+            if (!quranData || !quranData[surah]) {
+                console.error(`Quran data not available for surah ${surah}`);
+                element.innerHTML = '<span style="color: #999;">تەکستی ئایەت بەردەست نییە</span>';
+                return;
+            }
+
+            console.log(`Loading ayah ${ayah} from surah ${surah}`);
+            const verses = quranData[surah].verses;
+            console.log(`Found ${verses?.length} verses in surah ${surah}`);
+
+            const verse = verses.find(v => v.verse === ayah);
+            console.log(`Looking for verse ${ayah}, found:`, verse);
+
+            if (verse && verse.text) {
+                console.log(`Setting text for ${key}:`, verse.text.substring(0, 50) + '...');
+                element.textContent = verse.text;
+            } else {
+                console.error(`Verse ${ayah} not found in surah ${surah}`);
+                element.innerHTML = '<span style="color: #999;">تەکستی ئایەت بەردەست نییە</span>';
+            }
         }
 
         function removeBookmark(key) {
