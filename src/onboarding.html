@@ -523,55 +523,23 @@
         let currentSlide = 0;
         const totalSlides = 5;
 
-        // Handle Google Sign-In callback from redirect
+        // Check if user is authenticated
         window.addEventListener('load', () => {
-            // Check if coming from Google Sign-In
-            const urlParams = new URLSearchParams(window.location.search);
-            const credential = urlParams.get('credential');
+            const isAuthenticated = localStorage.getItem('isAuthenticated');
+            const onboardingCompleted = localStorage.getItem('onboardingCompleted');
 
-            if (credential) {
-                // Handle the credential
-                handleCredentialResponse({credential: credential});
-            } else {
-                // Check if user is already logged in
-                const isAuthenticated = localStorage.getItem('isAuthenticated');
-                if (isAuthenticated !== 'true') {
-                    // Not authenticated, redirect to login
-                    window.location.href = 'login.html';
-                }
+            if (isAuthenticated !== 'true') {
+                // Not authenticated, redirect to login
+                window.location.href = 'login.html';
+                return;
             }
 
-            // Initialize Google Sign-In for handling callback
-            google.accounts.id.initialize({
-                client_id: CLIENT_ID,
-                callback: handleCredentialResponse
-            });
+            if (onboardingCompleted === 'true') {
+                // Already completed onboarding, go to signup
+                window.location.href = 'complete-signup.html';
+                return;
+            }
         });
-
-        function handleCredentialResponse(response) {
-            const credential = response.credential;
-            const payload = parseJwt(credential);
-
-            const currentUser = {
-                name: payload.name,
-                email: payload.email,
-                picture: payload.picture,
-                sub: payload.sub
-            };
-
-            // Store user data
-            localStorage.setItem('user', JSON.stringify(currentUser));
-            localStorage.setItem('isAuthenticated', 'true');
-        }
-
-        function parseJwt(token) {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
-        }
 
         function showSlide(index) {
             const slides = document.querySelectorAll('.slide');
