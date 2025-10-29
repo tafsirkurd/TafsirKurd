@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="تەفسیرا کوردی - بەردەستکرنا شرۆڤەکا ڕوون و ڕەسەن یا قورئانێ ب زمانێ کوردی ب ڕێکا وانێن کورت و هویربینیێن تەفسیرێ.">
+  <meta name="keywords" content="تەفسیر، قورئان، کوردی، خواندنا ئیسلامی، شرۆڤەکرنا قورئانێ">
+  <title>تەفسیر کورد - شرۆڤەکرنا قورئانێ ب زمانێ کوردی</title>
+
+  <!-- Favicons -->
+  <link rel="shortcut icon" href="assets/images/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
+  <link rel="manifest" href="site.webmanifest">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles/Style.css">
+
+  <!-- Keep the Cloudflare script as is -->
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "38855c0a9b3946a083192373b7bb70b8"}'></script>
+
+<!-- Then in your main script section, add the error handler -->
+<script>
+// Add this to your existing JavaScript
+window.addEventListener('error', function(e) {
+    if (e.target.src && e.target.src.includes('cloudflareinsights.com')) {
+        console.log('Cloudflare analytics blocked by ad-blocker - this is normal');
+        e.preventDefault();
+    }
+}, true);
+</script>
+
+  <!-- Supabase Init -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    async function initSupabase() {
+      try {
+        const response = await fetch('/.netlify/functions/config');
+        if (!response.ok) throw new Error('Failed to fetch config');
+        const config = await response.json();
+        return window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+      } catch (error) {
+        console.warn('Using fallback Supabase mode:', error);
+        return null;
+      }
+    }
+
+<style>
+.logo-test {
+    border: 3px solid red;
+    background: yellow;
+    width: 100px;
+    height: 100px;
+    display: block;
+}
+</style>
+
+  </script>
+</head>
+
+<body dir="rtl">
+
+<div class="preloader" id="preloader">
+    <div class="preloader-shapes">
+        <div class="floating-shape circle"></div>
+        <div class="floating-shape square"></div>
+        <div class="floating-shape circle"></div>
+        <div class="floating-shape square"></div>
+        <div class="floating-shape circle"></div>
+        <div class="floating-shape square"></div>
+    </div>
+    <div class="preloader-content">
+        <img src="assets/images/logo.png" alt="Tafsir Kurd" class="preloader-logo logo-image">
+        <h1 class="preloader-title">تەفسیر کورد</h1>
+        <p class="preloader-subtitle">چاڤەڕێبە...</p>
+        <div class="preloader-dots">
+            <div class="preloader-dot"></div>
+            <div class="preloader-dot"></div>
+            <div class="preloader-dot"></div>
+        </div>
+    </div>
+</div>
+
+<div class="fab-container">
+    <div class="fab-backdrop"></div>
+    <div class="fab-group" id="fabGroup">
+        <div class="fab-sub-buttons">
+            <button class="fab-sub fab-scroll" id="fabScroll" aria-label="Scroll to top">
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            <button class="fab-sub fab-dark" id="fabDark" aria-label="Toggle dark mode">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        <button class="fab-main" id="fabMain" aria-label="Menu" aria-expanded="false">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+</div>
+
+<div class="main-content" id="mainContent">
+
+<nav>
+    <div class="nav-container">
+        <a class="nav-logo" href="#" id="homeLink">
+            <img src="assets/images/logo.png" alt="Tafsir Kurd logo" class="logo-image">
+        </a>
+
+        <div class="hamburger-menu" id="hamburgerMenu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <div class="nav-links" id="navLinks">
+            <a href="#home" class="nav-link active" id="navHome" data-scroll="home">
+                <i class="fas fa-home"></i>
+                <span>لاپەڕا سەرەکی </span>
+            </a>
+            <a href="#features" class="nav-link" data-scroll="features">
+                <i class="fas fa-star"></i>
+                <span>تایبەتمەندی</span>
+            </a>
+            <a href="#reach" class="nav-link" data-scroll="reach">
+                <i class="fas fa-chart-line"></i>
+                <span>ئامار</span>
+            </a>
+            <a href="#schedule" class="nav-link" data-scroll="schedule">
+                <i class="fas fa-calendar"></i>
+                <span>خشتە</span>
+            </a>
+            <a href="#plans" class="nav-link" data-scroll="plans">
+                <i class="fas fa-map-marked-alt"></i>
+                <span>پلان</span>
+            </a>
+            <a href="#about" class="nav-link" data-scroll="about">
+                <i class="fas fa-info-circle"></i>
+                <span>دەربارە</span>
+            </a>
+            <a href="#quran-section" class="nav-link" data-scroll="quran-section">
+    <i class="fas fa-book"></i>
+    <span>قورئان</span>
+</a>
+            <a href="#contact" class="nav-link" data-scroll="contact">
+                <i class="fas fa-envelope"></i>
+                <span>پەیوەندی</span>
+            </a>
+        </div>
+
+        <div class="nav-overlay" id="navOverlay"></div>
+    </div>
+</nav>
+
+<header id="headerBg">
+    <div class="header-bg-layer" id="headerBgLayer"></div>
+    <div class="hero-inner">
+        <h1 class="hero-title">تەفسیر کورد</h1>
+        <p class="hero-sub">بەردەستکرنا شرۆڤەکرنەکا ڕوون و ڕەسەن یا قورئانا پیرۆز ب زمانێ کوردی. ب شێوەیەکێ ڕوون و ب دلسۆزی و ڕێزگرتن، ئەم وانەیان ب شێوازێ ڤیدیویێن کورت و ئاسۆیی و هەروەسا تەفسیرا تەمام دروست دکەین دا کو پەیاما قورئانێ بگەهیتە هەمی ماڵان.</p>
+
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="mission">
+                <i class="fas fa-bullseye"></i>
+                <span>ئەرکێن مە ببینە</span>
+            </button>
+            <button class="tab-btn" data-tab="content">
+                <i class="fas fa-video"></i>
+                <span>ناڤەرۆک</span>
+            </button>
+            <button class="tab-btn tab-btn-quran" data-tab="quran">
+    <i class="fas fa-book"></i>
+    <span>خواندنا قورئانێ</span>
+</button>
+        </div>
+    </div>
+</header>
+
+<main>
+    <div class="tab-contents">
+
+        <div class="tab-content active" id="missionContent">
+            <section id="features">
+                <h2 class="section-title">ئەم چ پێشکێشدکەین</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3 class="feature-title">وانێن کورت</h3>
+                        <p class="feature-desc">ڤیدیویێن تەفسیری یێن بلەز و بسەناهی بۆ تێگەهشتنێ، دهێنە دروستکرن بۆ تۆڕێن جڤاکی، حیکمەتا قورئانێ ب شێوەیەکێ ڕاستەوخو بۆ لاپەڕەیا تە یا سەرەکی ڤەدگوهێزن،
+کو ڕێکەکا بێ وێنەیە بۆ زانینا ئیسلامی یا ڕۆژانە.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <h3 class="feature-title">تەفسیرا قورئانێ ب تەمامی</h3>
+                        <p class="feature-desc">شرۆڤەکرنەکا هەمەلایەنی یا ئایەتێن قورئانێ، دگەل خواندنێن زانستی و بجهئینانا کرداری بۆ ژیانا مۆدرێن.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-language"></i>
+                        </div>
+                        <h3 class="feature-title">زمانێ کوردی</h3>
+                        <p class="feature-desc">هەمی ناڤەڕۆک ب شێوازەکێ ڕوون و ڕەسەن ب زمانێ کوردی دهێنە ڤەگوهاستن، ئەڤە وەدکەت پەیاما قورئانێ بگەهیتە خەلکێ کورد ل سەرانسەری جیهانێ.
+گوتنێن خودای یێن ئەبەدی، ب زمانێ تە یێ دایک.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <h3 class="feature-title">ڕەسەنایەتی و ڕێزگرتن</h3>
+                        <p class="feature-desc">ناڤەرۆکەک کو لسەر بنەمایێ ژێدەرێن مێژوویی یێن باوەرپێکری، ب دلسۆزی و ڕێزگرتن ل دەقێ پیرۆز دهێتە پێشکێشکرن. لدیف ڕێکا زانایێن چاک و ڕاستگۆ.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="reach">
+                <h2 class="section-title">دەستگەهشتن</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fab fa-instagram"></i>
+                        </div>
+                        <div class="stat-number" data-target="65">0</div>
+                        <div class="stat-unit">K</div>
+                        <div class="stat-label">فۆڵۆوەرێن ئینستاگرامى</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fab fa-tiktok"></i>
+                        </div>
+                        <div class="stat-number" data-target="10">0</div>
+                        <div class="stat-unit">K</div>
+                        <div class="stat-label">فۆڵۆوەرێن تیکتۆکى</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <div class="stat-number" data-target="25">0</div>
+                        <div class="stat-unit">M</div>
+                        <div class="stat-label">ژمارا بینەران</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <div class="stat-number" data-target="1000">0</div>
+                        <div class="stat-unit">+</div>
+                        <div class="stat-label">ڤیدیۆیێن بەلاڤکرین</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="plans">
+                <h2 class="section-title">پلانێن مە بۆ پاشەڕۆژێ</h2>
+                <div class="plans-grid">
+                    <div class="plan-card">
+                        <div class="plan-icon">
+                            <i class="fab fa-youtube"></i>
+                        </div>
+                        <h3 class="plan-title">تەفسیرا قورئانێ ب تەمامی</h3>
+                        <p class="plan-desc">ئێک ژ مەبەستێن پڕۆژێ مە بەردەستکرنا تەفسیرا هەمی قورئانێیە ب زمانێ کوردی د پلاتفورما یوتیوبی دا.
+گەشتەکا هەمەلایەنییە بۆ دوماهی وەحیا خودایی.</p>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> وەرگێڕانا قورئانێ ب تەمامی بۆ زمانێ کوردی</li>
+                            <li><i class="fas fa-check"></i> دەنگێ قورئان خوین یاسر الدوسری</li>
+                            <li><i class="fas fa-check"></i> شروڤەکرنەکا کویر بۆ هەمی ئایەتان</li>
+                            <li><i class="fas fa-check"></i> ژێدەرێن خواندنێ یێن کلاسیک</li>
+                            <li><i class="fas fa-check"></i> دروستکرنا ڤیدیویێن کواڵتی بلند</li>
+                            <li><i class="fas fa-check"></i> بەردەستبوون ل یوتیوبی، ل نێزیک</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="tab-content" id="contentContent">
+            <section id="videos">
+                <h2 class="section-title">ڤیدیویێن تایبەت</h2>
+                <div class="videos-grid" id="dynamic-videos">
+                    <div class="loading-content">
+                        <div class="spinner"></div>
+                        <p>چاڤەڕێبە...</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="schedule">
+                <h2 class="section-title">خشتەیێ ڕۆژانە</h2>
+                <div class="schedule-grid">
+                    <div class="schedule-card">
+                        <div class="schedule-day">
+                            <i class="fas fa-calendar-day"></i>
+                            ڕۆژانە
+                        </div>
+                        <div class="schedule-time">ژ دەمژمێر ٥ ی ئێڤاری هەتا ١٢ ی شەڤ</div>
+                        <div class="schedule-topic">پارڤەکرنا ناڤەڕۆکا ڕۆژانە</div>
+                        <div class="schedule-desc">ڤیدیو و چیڕۆک و ناڤەڕۆکا ئیسلامی یێن نوی کو ڕۆژانە ل ئێڤارییان دهێنە بەڵاڤکرن. خوراکەکێ ڕۆحی یێ بەردەوام بۆ ڕۆحا تە.</div>
+                    </div>
+                    <div class="schedule-card">
+                        <div class="schedule-day">
+                            <i class="fas fa-sun"></i>
+                            ل سپێدەهییان
+                        </div>
+                        <div class="schedule-time">سپێدێ</div>
+                        <div class="schedule-topic">زکر و ستوری</div>
+                        <div class="schedule-desc">ڕۆژانە ناڤەڕۆکا زکر و ستورییێن ئیسلامیێن سپێدەهییان ل ستوری و کەناڵێ پەخشی یێ ئنستاگرامی دهێنە بەڵاڤکرن.
+ڕۆژا خۆ ب زکرێ خودێ دەستپێبکە.</div>
+                    </div>
+                    <div class="schedule-card">
+                        <div class="schedule-day">
+                            <i class="fas fa-star"></i>
+                            تایبەت ل ڕۆژا پێنجشەمبێ
+                        </div>
+                        <div class="schedule-time">پێنجشەمب</div>
+                        <div class="schedule-topic">سەلەوات و سورەتا (الکهف)</div>
+                        <div class="schedule-desc">ناڤەڕۆکەکا تایبەت یا سەلەواتان، ڕیلزێن سورەتا الکهف، کو دبیتە بیرئینان بۆ خواندنا وێ - (سونەت)
+نەریتێن پیرۆز یێن پێنجشەمبێ.</div>
+                    </div>
+                    <div class="schedule-card">
+                        <div class="schedule-day">
+                            <i class="fas fa-mosque"></i>
+                            ناڤەڕۆکا ئاسایی
+                        </div>
+                        <div class="schedule-time">ب بەردەوامی</div>
+                        <div class="schedule-topic">ستۆریێن ئنستاگرامی دەربارەی فەرموودە و سوننەتان</div>
+                        <div class="schedule-desc">ستوریێن پلاتفورما ئنستاگرامی و فێرکاریێن سوننەتان، قورئان خواندنا نوی دگەل تەفسیرا کوردی.
+نمونا ژیانا پێغەمبەرایەتی ل سەردەمێ مۆدرێن.</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="tab-content" id="quranContent">
+            <section id="quran-section">
+                <h2 class="section-title">قورئانا پیرۆز بخوینە</h2>
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div class="feature-icon" style="margin: 0 auto 30px;">
+    <i class="fas fa-book"></i>
+</div>
+                    <h3 style="font-size: 2rem; margin-bottom: 20px; color: var(--text);">قورئانێ ب تەفسیرا کوردی ببینە</h3>
+                    <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 40px; line-height: 1.8;">
+                        دەستگەهشتن ب تەفسیرا ئایەت ب ئایەت یا قورئانا پیرۆز. پەیاما خودایێ مەزن ب زمانێ دایک بخوینە و فێرببە و تێبگەهە.
+                    </p>
+                    <a href="Quran.html" class="cta">
+                        <i class="fas fa-book-open"></i>
+                        <span>دەست ب خواندنێ بکە</span>
+                    </a>
+                </div>
+            </section>
+        </div>
+
+    </div>
+
+    <section id="about" class="about-section">
+        <h2 class="section-title">دەربارەی  تەفسیر کورد</h2>
+        <div class="bio">
+            <div>
+                <div class="bio-card">
+                    <h3 style="margin-bottom:24px; color: var(--text); font-size: 2rem;">ئەرکێ مە یێ پیرۆز</h3>
+
+                    <div class="quranic-verse">
+                        <div class="arabic-text">وَمَنْ أَحْسَنُ قَوْلًا مِّمَّن دَعَا إِلَى اللَّهِ وَعَمِلَ صَالِحًا وَقَالَ إِنَّنِي مِنَ الْمُسْلِمِينَ</div>
+                        <div class="verse-translation">"كه‌س ژ وى گۆتن باشتر نينه‌ يێ بۆ ته‌وحيدا خودێ وپه‌رستنا وى گازى كرى وكارێ چاك كرى، وگۆتى: هندى ئه‌زم ئه‌ز ژ وان موسلمانامه‌ يێن خۆ ئێخستينه‌ بن فه‌رمانا خودێ. وئه‌ڤ ئايه‌ته‌ به‌رێ مه‌ دده‌ته‌ هندێ كو ئه‌م بۆ خودێ گازى بكه‌ين، وبهايێ وان زانايان ژى به‌رچاڤ دكه‌ت يێن به‌رێ خه‌لكى دده‌نه‌ خودێ ل دويڤ وێ ڕێكێ يا پێغه‌مبه‌رێ خودێ موحه‌ممه‌د سلاڤ لێ بن پێ هاتى.'"</div>
+                        <div class="verse-reference">— سوڕەتا فصلت (41:33)</div>
+                    </div>
+
+                    <p style="font-size: 1.1rem; line-height: 1.8; margin-bottom: 24px;">ل تەفسیر کورد دێ دەست ب گەشتەکا پیرۆز کەین بۆ ئاشنابوون دگەل ڕێنمایێن ئیلاهی یێن قورئانێ بۆ دل و دەروونێن کوردان. ئەم د وێ باوەرێ داینە کو قورئان موعجیزا ئەبەدی یا خوداییە، پەرتوکەکە دگەل وان هەمی جیل و کەلتوور و ڕۆحان دئاخڤیت یێن لدیف حەقیێ دگەڕن.
+ئەرکێ مە ژ وەرگێڕانێ دەردکەڤیت، ئەم هەوڵ ددەین پرەک بین دناڤبەرا گەنجینەیا کلاسیک یا زانستێ ئیسلامێ و کۆمەڵگەها کوردی یا مۆدرێن، و پشتراستبین کو حیکمەتا کویر یا قورئانێ ب وێ ڕێز و ڕوونی و پیرۆزییا ئەو ژ هەژی بگەهیتە هەمی ماڵێن کوردان.</p>
+
+                    <div class="mission-highlight">
+                        <p style="font-style: italic; color: var(--text); margin: 0; text-align: center; font-weight: 500; font-size: 1.1rem;">
+                            "ئەم لدیف شوینپێیێن ئەوان زانایێن ڕاستگۆ دچین یێن ژیانا خۆ تەرخانکری بۆ شروڤەکرنا پەرتوکا خودێ، ئەوێن بتنێ ل ڕازیبوونا خودێ و هیدایەتا بەندەیێن وی دگەڕن."
+                        </p>
+                    </div>
+                </div>
+
+                <div style="margin-top:32px" class="bio-card">
+                    <h4 style="margin-bottom:24px; color: var(--text); font-size: 2rem;">ئەو بنەمایێن ڕێنماییا مە دکەن</h4>
+
+                    <div class="quranic-verse">
+                        <div class="arabic-text">الَّذِينَ آمَنُوا وَتَطْمَئِنُّ قُلُوبُهُم بِذِكْرِ اللَّهِ ۗ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ</div>
+                        <div class="verse-translation">"وئه‌و به‌رێ وان دده‌ته‌ هيدايه‌تێ ئه‌وێن دلێن وان ب ته‌وحيدا خودێ وزكرێ وى ته‌نا وڕحه‌ت دبن، ما نه‌ ب گوهدان وزكرێ خودێ دل ته‌نا وڕحه‌ت دبن."</div>
+                        <div class="verse-reference">— سوڕەتا الرعد (13:28)</div>
+                    </div>
+
+                    <div class="values-list">
+                        <p><strong>ڕەسەنایەتی:</strong> هەر تەفسیرەکا ئەم پێشکێش دکەین بنیاتێ وێ ژ فێرکاریێن ڕەسەن یێن پێغەمبەرێ خودێ محمد (سلاڤ لێبن) و لێکدانەڤەیێن زانایێن ڕاستەڕێ (السلف الصالح) هاتییە. ئەم پشتبەستنێ ب بەرهەمێن کلاسیک یێن باوەرپێکری دکەین، وەک (ابن کثیر، الطبري، القرطبي) و هندەکێن دی کو ژیانا خۆ بۆ تێگەهشتنا پەرتوکا خودای تەرخان کرییە.</p>
+
+                        <p><strong>ڕوونی:</strong> ئەم د وێ باوەریێ داینە کو پێدڤییە پەیاما خودای وەک ئاڤێ یا ڕوون بیت. ب زمانەکێ کوردی یێ سادە، ناڤەڕۆکا مە چەمکێن ئایینی یێن ئاڵوز دشکێنیت، دگەهیتە کویراتییا وان بێی کو ڕامانا خۆ ژدەستبدەن. ئەم بکارئینانا پراکتیکی پێشتر ددانین ژ ئاڵوزییا تیوری.</p>
+
+                        <p><strong>دەستگەهشتن:</strong> د ئەڤی سەردەمێ دیجیتاڵ دا، ئەم مفای ژ پلاتفورمێن مۆدرێن وەردگرین دا بشێین بگەهینە هەمی کورد زمانان ل هەر جهەکێ لێبن. کلیپێن شێواز کورت و ڕاست خزمەتا وان کەسان دکەن یێن پێدڤی ب بیرئینانێن ڕۆژانە هەی، ڤیدیویێن درێژ وەک خوراکەکینە بۆ روحا وان کەسان یێن تێگەهشتنەکا کویرتر دڤێت.</p>
+
+                        <p><strong>دلسۆزی:</strong> ئەڤ کارە بتنێ بۆ ڕازەمەندییا خودێ (لوجە الله الكريم) دهێتە ئەنجامدان. ئەم ل دویڤ چ دانپێدان و قازانجێن کەسوکی یێن دونیایی دا ناگەڕین، هیڤییا مە بتنێ ئەوە خودایێ مەزن هەوڵێن مە قەبویل بکەت و بکەتە ئامرازەکێ هیدایەتێ بۆ بەندەیێن خۆ.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="founder" class="founder-section">
+        <div class="founder-content">
+            <div class="founder-avatar">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <h3 class="founder-name">سامان عبدالرحمن</h3>
+            <p class="founder-title">دامەزرێنەر و دروستکەرێ ناڤەڕۆکێن ئیسلامی</p>
+
+            <p class="founder-bio">
+                بەندەیەکێ خودایێ مەزن، کارێ من تایبەتە ب پارڤەکرنا فێرکاریێن جوان یێن ئیسلامێ ب ڕێکا زمانێ کوردی. ئەز ب ڤیانا خۆ یا مەزن بۆ قورئانا پیرۆز و ب پابەندبوون ب سونەتێن پێغەمبەر محمد (ﷺ) هەوڵ ددەم ببمە پرەک کو دلێ خەلکێ کورد ب ڕێنمایێن خودای و پەرتوکا وی ڤە گرێدەم. پشتی خواندنا ب ساڵان، من ئەرکێ خۆ کریە گەهاندنا زانستێ ئیسلامێ دا دەستگەهشتن بۆ هەبیت ب رێکەکا ڕەسەن و ڕاماندار بۆ کورد زمانان ل سەرانسەری جیهانێ.
+            </p>
+
+            <div class="quranic-verse" style="margin: 32px 0;">
+                <div class="arabic-text">إِنْ أُرِيدُ إِلَّا الْإِصْلَاحَ مَا اسْتَطَعْتُ ۚ وَمَا تَوْفِيقِي إِلَّا بِاللَّهِ</div>
+                <div class="verse-translation">"وهه‌ما من ب ڤى كارێ خۆ ژ چاككرنێ پێڤه‌تر چو ددى نه‌ڤێت، وهه‌ما ڕێككه‌فتنا من -د گه‌ل ڕاستییێ وچاككرنا هه‌وه‌- ب خودێ ب تنێیه‌."</div>
+                <div class="verse-reference">— سوڕەتا هود (11:88)</div>
+            </div>
+
+            <div class="quranic-verse" style="margin: 32px 0;">
+                <div class="arabic-text">رَبَّنَا تَقَبَّلْ مِنَّا ۖ إِنَّكَ أَنتَ السَّمِيعُ الْعَلِيمُ</div>
+                <div class="verse-translation">"خودايێ مه‌ تو كريارێن مه‌ يێن چاك ودوعايێن مه‌ ژ مه‌ قه‌بويل بكه‌، هندى تویى تو گوهدێرێ گۆتنێن به‌نییێن خۆيى، يێ پڕزانايى ب حالێ وان."</div>
+                <div class="verse-reference">— سوڕەتا البقرة (2:127)</div>
+            </div>
+
+            <div class="founder-mission">
+                <p class="founder-mission-text">
+                    <strong>پابەندبوونا تایبەت:</strong> هەر پەیڤەکا بهێتە گوتن، هەر ڤیدیویەکا بهێتە دروستکرن و هەر دەمەکێ بهێتە تەرخانکرن بۆ ئەڤی کاری کردارەکا پەرستنێیە بۆ خودایێ مەزن. پەیڕەوکرنا سوننەتا تەمام یا پێغەمبەر محمد (ص)، و پارڤەکرنا فەرمودێن باوەرپێکری د ستوریان دا بۆ هندێیە دا ژ وان کەسان بین یێن ب حیکمەت و ب بانگەوازییا جوان بانگەشا خەلکی دکەن بۆ لایێ خودێ (ادْعُ إِلَىٰ سَبِيلِ رَبِّكَ بِالْحِكْمَةِ وَالْمَوْعِظَةِ الْحَسَنَةِ).
+                </p>
+            </div>
+
+            <div class="founder-mission">
+                <p class="founder-mission-text">
+                    <strong>دوعا بۆ بینەرێن مە:</strong> خودایێ مەزن هەمی وان کەسان بپارێزیت یێن ب ڕێکا پەرتوکا وی لدیف هیدایەتێ دچن، مە ژ ئەهلێ قورئانێ ب هەژمێریت و هێزا مە موکم بکەت لسەر تێگەهشتن و بکارئینان و خۆڕاگریێ بۆ ڕێکا خۆ یا ڕاست. ئامین.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact">
+        <h2 class="section-title">پەیوەندی</h2>
+        <div>
+            <div class="bio-card">
+                <h4 style="margin-bottom:20px;color:var(--text);font-size:1.4rem;">پەیوەندیێ بکە</h4>
+                <p style="color:var(--text-muted);margin-bottom:24px;font-size:1.1rem;">ئەگەر تە پسیارەک یان پێشنیارەک هەیە، پەیوەندیێ ب مە بکە و ب زویترین دەم دێ بەرسڤا تە هێتە دان!</p>
+
+                <form id="contactForm" class="contact-form">
+                    <div class="form-group">
+                        <label for="name">ناڤ</label>
+                        <input type="text" id="name" name="name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">ئیمەیل</label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">بابەت</label>
+                        <input type="text" id="subject" name="subject" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">ناما تە</label>
+                        <textarea id="message" name="message" rows="4" class="form-control" required></textarea>
+                    </div>
+                    <button type="submit" class="btn" id="submitBtn">
+                        <i class="fas fa-paper-plane"></i>
+هنارتنا نامەیێ
+                    </button>
+                    <div id="formMessage" class="form-message"></div>
+                </form>
+            </div>
+            <div class="bio-card">
+                <h4 style="margin-bottom:20px;color:var(--text);font-size:1.4rem;">تەفسیر کورد فۆڵۆ بکە</h4>
+                <p style="color:var(--text-muted);margin-bottom:24px;font-size:1.1rem;">بەشداریێ دگەل مە بکە ل سوشیاڵ میدیایێ بۆ ناڤەڕۆکا ڕۆژانە یا ئیسلامی و پەندێن قورئانا پیرۆز.
+ببە بەشەک ژ خێزانا مە!</p>
+                <div class="social-links">
+                    <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://www.youtube.com/@tefsirkurd" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                    <a href="https://t.me/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                        <i class="fab fa-telegram"></i>
+                    </a>
+                    <a href="https://www.pinterest.com/tafsirkurd/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest">
+                        <i class="fab fa-pinterest"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <img src="assets/images/logo.png" alt="Tafsir Kurd logo" class="logo-image">
+    <p>&copy; <span id="year"></span> تەفسیر کورد. هەمی ماف د پاراستینە. خودایێ مەزن بەرەکەتێ بێخیتە هەوڵ و ماندیبوونا مە.</p>
+</footer>
+
+</div>
+
+<script>
+const backgroundImages = [
+    'https://images.unsplash.com/photo-1649297711811-5cfa2774cbc7?q=80&w=1073&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1644461561916-2acd569906b0?q=80&w=1073&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1685601342582-eee16ab0a9f9?q=80&w=1073&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1644374544063-78b5cd18ba79?q=80&w=1073&auto=format&fit=crop'
+];
+
+let currentBgIndex = 0;
+
+function startBackgroundRotation() {
+    const headerBg = document.getElementById('headerBg');
+    if (!headerBg) return;
+
+    // Create two layers for crossfade
+    let layer1 = document.getElementById('headerBgLayer');
+    let layer2 = document.createElement('div');
+    layer2.className = 'header-bg-layer';
+    layer2.style.zIndex = '-1';
+    headerBg.insertBefore(layer2, headerBg.firstChild);
+
+    let useLayer1 = true;
+
+    setInterval(() => {
+        currentBgIndex = (currentBgIndex + 1) % backgroundImages.length;
+
+        if (useLayer1) {
+            layer2.style.backgroundImage = `url('${backgroundImages[currentBgIndex]}')`;
+            layer2.style.opacity = '1';
+            layer1.style.opacity = '0';
+        } else {
+            layer1.style.backgroundImage = `url('${backgroundImages[currentBgIndex]}')`;
+            layer1.style.opacity = '1';
+            layer2.style.opacity = '0';
+        }
+
+        useLayer1 = !useLayer1;
+    }, 8000);
+}
+
+function setInitialBackground() {
+    const headerLayer = document.getElementById('headerBgLayer');
+    if (headerLayer) {
+        headerLayer.style.backgroundImage = `url('${backgroundImages[currentBgIndex]}')`;
+        headerLayer.style.opacity = '1';
+    }
+}
+
+(function() {
+    if (performance.navigation.type === 2) {
+        // Page was accessed via back/forward button
+        const preloader = document.getElementById('preloader');
+        if (preloader) {
+            preloader.style.display = 'none';
+        }
+        const mainContent = document.getElementById('mainContent');
+        if (mainContent) {
+            mainContent.classList.add('loaded');
+            document.body.style.overflow = 'auto';
+            document.body.classList.remove('no-scroll');
+        }
+    }
+})();
+
+function initPreloader() {
+    const preloader = document.getElementById('preloader');
+    const mainContent = document.getElementById('mainContent');
+
+    // Check if page was loaded via back/forward button
+    if (performance.navigation.type === 2) {
+        // Skip preloader for back navigation
+        preloader.style.display = 'none';
+        mainContent.classList.add('loaded');
+        document.body.style.overflow = 'auto';
+        document.body.classList.remove('no-scroll');
+        return;
+    }
+
+    const minLoadTime = 3000;
+    const startTime = Date.now();
+
+    function hidePreloader() {
+        const elapsed = Date.now() - startTime;
+        const remainingTime = Math.max(0, minLoadTime - elapsed);
+
+        setTimeout(() => {
+            preloader.classList.add('fade-out');
+            setTimeout(() => {
+                preloader.style.display = 'none';
+                mainContent.classList.add('loaded');
+                document.body.style.overflow = 'auto';
+                document.body.classList.remove('no-scroll');
+            }, 1000);
+        }, remainingTime);
+    }
+
+    document.body.classList.add('no-scroll');
+
+    if (document.readyState === 'complete') {
+        hidePreloader();
+    } else {
+        window.addEventListener('load', hidePreloader);
+    }
+}
+
+function initTabs() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.dataset.tab;
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            const targetContent = document.getElementById(targetTab + 'Content');
+            if (targetContent) targetContent.classList.add('active');
+        });
+    });
+}
+
+class FloatingActionButtons {
+    constructor() {
+        this.fabMain = document.getElementById('fabMain');
+        this.fabGroup = document.getElementById('fabGroup');
+        this.fabScroll = document.getElementById('fabScroll');
+        this.fabDark = document.getElementById('fabDark');
+        this.backdrop = document.querySelector('.fab-backdrop');
+        this.isOpen = false;
+        this.init();
+    }
+
+    init() {
+        this.setupEventListeners();
+        this.setupScrollVisibility();
+        this.setupDarkModeState();
+    }
+
+    setupEventListeners() {
+        this.fabMain.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggle();
+        });
+
+        this.backdrop.addEventListener('click', () => this.close());
+
+        document.addEventListener('click', (e) => {
+            if (!this.fabGroup.contains(e.target) && this.isOpen) {
+                this.close();
+            }
+        });
+
+        this.fabScroll.addEventListener('click', () => this.handleScrollToTop());
+        this.fabDark.addEventListener('click', () => this.handleDarkMode());
+    }
+
+    setupScrollVisibility() {
+        let ticking = false;
+        const toggleVisibility = () => {
+            if (window.scrollY > 200) {
+                this.fabMain.style.opacity = '1';
+                this.fabMain.style.transform = 'translateY(0)';
+            } else {
+                this.fabMain.style.opacity = '0';
+                this.fabMain.style.transform = 'translateY(100px)';
+            }
+        };
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    toggleVisibility();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+
+        toggleVisibility();
+    }
+
+    setupDarkModeState() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        const icon = this.fabDark.querySelector('i');
+
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            icon.className = 'fas fa-sun';
+        }
+    }
+
+    toggle() {
+        this.isOpen ? this.close() : this.open();
+    }
+
+    open() {
+        this.isOpen = true;
+        this.fabGroup.classList.add('active');
+        this.fabMain.classList.add('active');
+        this.fabMain.setAttribute('aria-expanded', 'true');
+    }
+
+    close() {
+        this.isOpen = false;
+        this.fabGroup.classList.remove('active');
+        this.fabMain.classList.remove('active');
+        this.fabMain.setAttribute('aria-expanded', 'false');
+    }
+
+    handleScrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        this.close();
+    }
+
+    handleDarkMode() {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+
+        const icon = this.fabDark.querySelector('i');
+        icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+
+        this.close();
+    }
+}
+
+function setupMobileMenu() {
+    const hamburger = document.getElementById('hamburgerMenu');
+    const navLinks = document.getElementById('navLinks');
+    const navOverlay = document.getElementById('navOverlay');
+    const nav = document.querySelector('nav');
+
+    if (!hamburger || !navLinks || !navOverlay || !nav) return;
+
+    hamburger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        nav.classList.toggle('nav-active');
+        document.body.classList.toggle('no-scroll');
+    });
+
+    navOverlay.addEventListener('click', () => {
+        nav.classList.remove('nav-active');
+        document.body.classList.remove('no-scroll');
+    });
+
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const scrollTarget = link.getAttribute('data-scroll');
+
+            nav.classList.remove('nav-active');
+            document.body.classList.remove('no-scroll');
+
+            if (scrollTarget === 'home') {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            if (scrollTarget) {
+                e.preventDefault();
+
+                const missionSections = ['features', 'reach', 'plans'];
+                const contentSections = ['videos', 'schedule'];
+                const quranSections = ['quran-section'];
+
+                let targetTab = null;
+                if (missionSections.includes(scrollTarget)) {
+                    targetTab = 'mission';
+                } else if (contentSections.includes(scrollTarget)) {
+                    targetTab = 'content';
+                } else if (quranSections.includes(scrollTarget)) {
+                    targetTab = 'quran';
+                }
+
+                if (targetTab) {
+                    const currentActiveTab = document.querySelector('.tab-content.active');
+                    const targetTabContent = document.getElementById(targetTab + 'Content');
+
+                    if (currentActiveTab !== targetTabContent) {
+                        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+                        const tabBtn = document.querySelector(`[data-tab="${targetTab}"]`);
+                        if (tabBtn) tabBtn.classList.add('active');
+                        if (targetTabContent) targetTabContent.classList.add('active');
+                    }
+                }
+
+                setTimeout(() => {
+                    const targetElement = document.getElementById(scrollTarget);
+                    if (targetElement) {
+                        const offset = 100;
+                        const elementPosition = targetElement.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+                        window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                }, 100);
+            }
+        });
+    });
+}
+
+function setupNavScrollEffect() {
+    const nav = document.querySelector('nav');
+    const navLinks = document.querySelectorAll('.nav-link');
+    let ticking = false;
+
+    function updateNavOnScroll() {
+        const currentScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+
+        if (currentScrollPosition > 100) {
+            nav.classList.add('scrolled-nav');
+        } else {
+            nav.classList.remove('scrolled-nav');
+        }
+
+        const sections = document.querySelectorAll('section[id]');
+        let currentSection = '';
+
+        if (currentScrollPosition < 300) {
+            currentSection = 'home';
+        } else {
+            sections.forEach(section => {
+                const sectionTop = section.getBoundingClientRect().top;
+                const sectionHeight = section.offsetHeight;
+                if (sectionTop <= 200 && sectionTop + sectionHeight > 200) {
+                    currentSection = section.getAttribute('id');
+                }
+            });
+        }
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            const linkScroll = link.getAttribute('data-scroll');
+            if ((currentSection === 'home' && linkScroll === 'home') ||
+                linkScroll === currentSection) {
+                link.classList.add('active');
+            }
+        });
+
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            requestAnimationFrame(updateNavOnScroll);
+            ticking = true;
+        }
+    });
+}
+
+function setupScrollAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('show');
+                if (entry.target.id === 'reach') {
+                    setTimeout(() => animateCounters(), 300);
+                }
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('section').forEach(section => {
+        observer.observe(section);
+    });
+}
+
+function animateCounters() {
+    const counters = document.querySelectorAll('.stat-number');
+    counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target'));
+        const duration = 2000;
+        const startTime = performance.now();
+
+        function updateCounter(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+            const current = Math.floor(easeOutCubic * target);
+            counter.textContent = current;
+            if (progress < 1) {
+                requestAnimationFrame(updateCounter);
+            }
+        }
+        requestAnimationFrame(updateCounter);
+    });
+}
+
+const fallbackContent = {
+    videos: [
+        "https://www.instagram.com/reel/DFOAsUFo653/?igsh=MW03MnNrazVvcnJ2Zg==",
+        "https://www.instagram.com/reel/DCxIb3sI7gm/?igsh=aG50aDVobHhiZG96",
+        "https://www.instagram.com/reel/DExsA5lIBVl/?igsh=aDVkZGUweDhvaHFv"
+    ]
+};
+
+async function loadWebsiteContent() {
+    try {
+        if (!supabase) {
+            supabase = await initSupabase();
+            if (!supabase) {
+                loadFallbackContent();
+                return;
+            }
+        }
+
+        const { data: videosData } = await supabase
+            .from('featured_videos')
+            .select('*')
+            .order('position', { ascending: true });
+
+        const content = {
+            videos: videosData?.length ? videosData.map(v => v.video_url) : fallbackContent.videos
+        };
+
+        updateVideoSection(content.videos);
+    } catch (error) {
+        loadFallbackContent();
+    }
+}
+
+function updateVideoSection(videoUrls) {
+    const videosContainer = document.getElementById('dynamic-videos');
+    if (!videosContainer) return;
+
+    const displayVideos = videoUrls.slice(0, 3);
+    videosContainer.innerHTML = displayVideos.map(url => {
+        const embedUrl = convertToEmbedUrl(url);
+        return `
+            <div class="video-container">
+                <iframe src="${embedUrl}"
+                        frameborder="0"
+                        allowfullscreen
+                        loading="lazy"
+                        title="Tafsir Kurd Video">
+                </iframe>
+            </div>
+        `;
+    }).join('');
+}
+
+function convertToEmbedUrl(url) {
+    try {
+        const postId = url.match(/\/reel\/([^\/\?]+)/)?.[1] || url.match(/\/p\/([^\/\?]+)/)?.[1];
+        return postId ? `https://www.instagram.com/p/${postId}/embed` : url;
+    } catch {
+        return url;
+    }
+}
+
+function loadFallbackContent() {
+    updateVideoSection(fallbackContent.videos);
+}
+
+function setupContactForm() {
+    const contactForm = document.getElementById('contactForm');
+    if (!contactForm) return;
+
+    contactForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formMessage = document.getElementById('formMessage');
+        const submitButton = this.querySelector('button[type="submit"]');
+
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        setTimeout(() => {
+            formMessage.textContent = 'نامە گەهشت، ل نێزیک دێ بەرسڤا تە هێتە دان.';
+            formMessage.className = 'form-message success';
+            formMessage.style.display = 'block';
+            contactForm.reset();
+
+            setTimeout(() => {
+                formMessage.style.display = 'none';
+            }, 5000);
+
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+        }, 1500);
+    });
+}
+
+function setupHomeNavigation() {
+    const homeLink = document.getElementById('homeLink');
+    const navHome = document.getElementById('navHome');
+
+    function scrollToTop(e) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    if (homeLink) {
+        homeLink.addEventListener('click', scrollToTop);
+    }
+
+    if (navHome) {
+        navHome.addEventListener('click', scrollToTop);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    setInitialBackground();
+    startBackgroundRotation();
+    initPreloader();
+    initTabs();
+
+    const yearElement = document.getElementById('year');
+    if (yearElement) {
+        yearElement.textContent = new Date().getFullYear();
+    }
+
+    try {
+        await loadWebsiteContent();
+    } catch (error) {
+        loadFallbackContent();
+    }
+
+    new FloatingActionButtons();
+    setupHomeNavigation();  // ✅ FIXED - was "setupnetlify deploy --prodHomeNavigation()"
+    setupScrollAnimations();
+    setupMobileMenu();
+    setupNavScrollEffect();
+    setupContactForm();
+
+    if (supabase) {
+        setInterval(loadWebsiteContent, 300000);
+    }
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ئامانجەکان - تەفسیر کوورد</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #000000;
+            --accent: #ffffff;
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --text-muted: #666666;
+            --border: #e8e8e8;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
+            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: var(--card-bg);
+            padding: 20px 0;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: var(--accent);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 30px;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Streak Container */
+        .streak-container {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+            align-items: center;
+        }
+
+        .streak-left {
+            text-align: center;
+        }
+
+        .streak-number {
+            font-size: 5rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .streak-label {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
+
+        .streak-right h3 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+
+        /* Week Progress - Like the image */
+        .week-progress {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            position: relative;
+        }
+
+        .week-progress::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--border);
+            z-index: 0;
+        }
+
+        .day-card {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .day-name {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .day-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--border);
+            border: 4px solid var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all var(--transition);
+        }
+
+        .day-card.completed .day-circle {
+            background: var(--success);
+            color: white;
+        }
+
+        .day-card.today .day-circle {
+            border-color: var(--primary);
+            border-width: 6px;
+            transform: scale(1.1);
+        }
+
+        /* Goal Progress */
+        .goal-section {
+            margin-bottom: 40px;
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .goal-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .goal-percentage {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 40px;
+            background: var(--bg);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), #27ae60);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            color: white;
+            font-weight: 700;
+        }
+
+        /* Calendar Section */
+        .calendar-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .year-selector {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .year-btn {
+            padding: 10px 20px;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition);
+        }
+
+        .year-btn:hover {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+        }
+
+        .current-year {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .months-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .month-card {
+            background: var(--bg);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid var(--border);
+        }
+
+        .month-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .day-cell:hover:not(.empty) {
+            transform: scale(1.1);
+        }
+
+        .day-cell.empty {
+            background: transparent;
+        }
+
+        .day-cell.read {
+            background: var(--success);
+            color: white;
+        }
+
+        .day-cell.partial {
+            background: var(--warning);
+            color: white;
+        }
+
+        .day-cell.unread {
+            background: var(--border);
+        }
+
+        /* Manual Entry */
+        .manual-entry {
+            background: var(--bg);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .manual-entry-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .manual-entry-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+        }
+
+        .form-input {
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .add-btn {
+            padding: 12px 30px;
+            background: var(--primary);
+            color: var(--accent);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition);
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Goal Management */
+        .goal-management {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .goal-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .goal-btn {
+            padding: 15px 30px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition);
+            background: var(--bg);
+        }
+
+        .goal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .goal-btn.delete {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        .goal-btn.edit {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .week-progress {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+            }
+
+            .months-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .manual-entry-form {
+                grid-template-columns: 1fr;
+            }
+
+            .streak-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <h1 class="header-title">ئامانجەکان</h1>
+            <a href="Quran.html" class="back-btn">
+                <i class="fas fa-arrow-right"></i>
+                گەڕانەوە
+            </a>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Progress Section -->
+        <div class="progress-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                پێشکەوتن
+            </h2>
+
+            <div class="streak-container">
+                <div class="streak-left">
+                    <div class="streak-number" id="streakNumber">0</div>
+                    <div class="streak-label">ڕۆژ</div>
+                </div>
+                <div class="streak-right">
+                    <h3>پێشکەوتنی ئەم هەفتەیە</h3>
+                    <div class="week-progress" id="weekProgress">
+                        <!-- Days will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Today's Goal -->
+            <div class="goal-section">
+                <div class="goal-header">
+                    <div class="goal-text" id="goalText">ئامانجی ئەمڕۆ: 10 خولەک خوێندنەوە</div>
+                    <div class="goal-percentage" id="goalPercent">0%</div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Section -->
+        <div class="calendar-section">
+            <h2 class="section-title">
+                <i class="fas fa-calendar-alt"></i>
+                ڕۆژژمێری پێشکەوتن
+            </h2>
+
+            <div class="year-selector">
+                <button class="year-btn" onclick="changeYear(-1)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <div class="current-year" id="currentYear">2025</div>
+                <button class="year-btn" onclick="changeYear(1)">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+
+            <div class="months-grid" id="monthsGrid">
+                <!-- Months will be populated by JavaScript -->
+            </div>
+
+            <!-- Manual Entry -->
+            <div class="manual-entry">
+                <div class="manual-entry-title">زیادکردنی خولەک بە دەستی</div>
+                <div class="manual-entry-form">
+                    <input type="date" class="form-input" id="manualDate">
+                    <input type="number" class="form-input" id="manualMinutes" placeholder="خولەک (بە خولەک)">
+                    <button class="add-btn" onclick="addManualEntry()">
+                        <i class="fas fa-plus"></i> زیادکردن
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goal Management -->
+        <div class="goal-management">
+            <h2 class="section-title">
+                <i class="fas fa-cog"></i>
+                بەڕێوەبردنی ئامانج
+            </h2>
+
+            <div class="goal-actions">
+                <button class="goal-btn edit" onclick="editGoal()">
+                    <i class="fas fa-edit"></i> دەستکاریکردنی ئامانج
+                </button>
+                <button class="goal-btn delete" onclick="deleteGoal()">
+                    <i class="fas fa-trash"></i> سڕینەوەی هەموو زانیاری
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentYear = 2025;
+        let readingData = {};
+        let dailyGoalMinutes = 10;
+        let streakDays = 0;
+
+        const daysOfWeek = ['یەکشەممە', 'دووشەممە', 'سێشەممە', 'چوارشەممە', 'پێنجشەممە', 'هەینی', 'شەممە'];
+        const monthNames = ['کانوونی دووەم', 'شوبات', 'ئازار', 'نیسان', 'ئایار', 'حوزەیران', 'تەممووز', 'ئاب', 'ئەیلوول', 'تشرینی یەکەم', 'تشرینی دووەم', 'کانوونی یەکەم'];
+
+        window.addEventListener('load', () => {
+            loadData();
+            renderWeekProgress();
+            renderCalendar();
+            updateStreak();
+            updateTodayProgress();
+            document.getElementById('currentYear').textContent = currentYear;
+            document.getElementById('manualDate').valueAsDate = new Date();
+        });
+
+        function loadData() {
+            const saved = localStorage.getItem('quran_reading_data');
+            if (saved) {
+                const data = JSON.parse(saved);
+                readingData = data.readings || {};
+                dailyGoalMinutes = data.goal || 10;
+                streakDays = calculateStreak();
+            }
+        }
+
+        function saveData() {
+            const data = {
+                readings: readingData,
+                goal: dailyGoalMinutes
+            };
+            localStorage.setItem('quran_reading_data', JSON.stringify(data));
+        }
+
+        function renderWeekProgress() {
+            const container = document.getElementById('weekProgress');
+            container.innerHTML = '';
+
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - dayOfWeek);
+
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(startOfWeek);
+                date.setDate(startOfWeek.getDate() + i);
+                const dateKey = formatDate(date);
+                const isToday = i === dayOfWeek;
+                const hasReading = readingData[dateKey] && readingData[dateKey] >= dailyGoalMinutes;
+
+                const dayCard = document.createElement('div');
+                dayCard.className = `day-card ${hasReading ? 'completed' : ''} ${isToday ? 'today' : ''}`;
+                dayCard.innerHTML = `
+                    <div class="day-name">${daysOfWeek[i]}</div>
+                    <div class="day-circle">${hasReading ? '✓' : '○'}</div>
+                `;
+                container.appendChild(dayCard);
+            }
+        }
+
+        function renderCalendar() {
+            const container = document.getElementById('monthsGrid');
+            container.innerHTML = '';
+
+            for (let month = 0; month < 12; month++) {
+                const monthCard = document.createElement('div');
+                monthCard.className = 'month-card';
+
+                const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
+                const firstDay = new Date(currentYear, month, 1).getDay();
+
+                let daysHTML = '';
+                for (let i = 0; i < firstDay; i++) {
+                    daysHTML += '<div class="day-cell empty"></div>';
+                }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(currentYear, month, day);
+                    const dateKey = formatDate(date);
+                    const reading = readingData[dateKey] || 0;
+
+                    let className = 'day-cell unread';
+                    if (reading >= dailyGoalMinutes) {
+                        className = 'day-cell read';
+                    } else if (reading > 0) {
+                        className = 'day-cell partial';
+                    }
+
+                    daysHTML += `<div class="${className}" title="${reading} خولەک">${day}</div>`;
+                }
+
+                monthCard.innerHTML = `
+                    <div class="month-name">${monthNames[month]}</div>
+                    <div class="days-grid">${daysHTML}</div>
+                `;
+                container.appendChild(monthCard);
+            }
+        }
+
+        function changeYear(delta) {
+            currentYear += delta;
+            document.getElementById('currentYear').textContent = currentYear;
+            renderCalendar();
+        }
+
+        function addManualEntry() {
+            const dateInput = document.getElementById('manualDate');
+            const minutesInput = document.getElementById('manualMinutes');
+
+            if (!dateInput.value || !minutesInput.value) {
+                alert('تکایە هەردوو خانە پڕبکەرەوە');
+                return;
+            }
+
+            const date = new Date(dateInput.value);
+            const minutes = parseInt(minutesInput.value);
+            const dateKey = formatDate(date);
+
+            readingData[dateKey] = (readingData[dateKey] || 0) + minutes;
+            saveData();
+            renderCalendar();
+            renderWeekProgress();
+            updateStreak();
+            updateTodayProgress();
+
+            minutesInput.value = '';
+            alert('زانیاریەکە زیادکرا');
+        }
+
+        function calculateStreak() {
+            const today = new Date();
+            let streak = 0;
+            let checkDate = new Date(today);
+
+            while (true) {
+                const dateKey = formatDate(checkDate);
+                if (readingData[dateKey] && readingData[dateKey] >= dailyGoalMinutes) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+
+            return streak;
+        }
+
+        function updateStreak() {
+            streakDays = calculateStreak();
+            document.getElementById('streakNumber').textContent = streakDays;
+        }
+
+        function updateTodayProgress() {
+            const today = formatDate(new Date());
+            const todayMinutes = readingData[today] || 0;
+            const percent = Math.min(100, Math.round((todayMinutes / dailyGoalMinutes) * 100));
+
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('goalPercent').textContent = percent + '%';
+            document.getElementById('goalText').textContent =
+                `ئامانجی ئەمڕۆ: ${dailyGoalMinutes} خولەک خوێندنەوە (${todayMinutes} خولەک تەواوکراوە)`;
+        }
+
+        function editGoal() {
+            const newGoal = prompt('خولەکی ئامانج بۆ هەر ڕۆژێک:', dailyGoalMinutes);
+            if (newGoal && !isNaN(newGoal) && newGoal > 0) {
+                dailyGoalMinutes = parseInt(newGoal);
+                saveData();
+                renderWeekProgress();
+                updateTodayProgress();
+                alert('ئامانج نوێکرایەوە');
+            }
+        }
+
+        function deleteGoal() {
+            if (confirm('ئایا دڵنیایت لە سڕینەوەی هەموو زانیاری و دەستپێکردنەوە؟')) {
+                readingData = {};
+                dailyGoalMinutes = 10;
+                saveData();
+                renderCalendar();
+                renderWeekProgress();
+                updateStreak();
+                updateTodayProgress();
+                alert('هەموو زانیاریەکان سڕایەوە');
+            }
+        }
+
+        function formatDate(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+    </script>
+</body>
+</html>

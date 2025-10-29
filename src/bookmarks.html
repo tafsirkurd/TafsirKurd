@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>نیشانەکراوەکان - تەفسیر کوورد</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #000000;
+            --accent: #ffffff;
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --text-muted: #666666;
+            --border: #e8e8e8;
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
+            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: var(--card-bg);
+            padding: 20px 0;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn {
+            padding: 12px 24px;
+            background: var(--primary);
+            color: var(--accent);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 30px;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-sm);
+            border: 2px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 100px 20px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+            border: 2px solid var(--border);
+        }
+
+        .empty-icon {
+            font-size: 6rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        .empty-desc {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        /* Bookmarks Grid */
+        .bookmarks-grid {
+            display: grid;
+            gap: 25px;
+        }
+
+        .bookmark-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 35px;
+            box-shadow: var(--shadow-sm);
+            border: 2px solid var(--border);
+            transition: all var(--transition);
+            border-right: 5px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bookmark-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.02;
+            background-image:
+                repeating-linear-gradient(45deg, transparent, transparent 35px, var(--primary) 35px, var(--primary) 36px);
+            pointer-events: none;
+        }
+
+        .bookmark-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateX(5px);
+            border-right-width: 8px;
+        }
+
+        .bookmark-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .bookmark-ref {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bookmark-badge {
+            background: var(--primary);
+            color: var(--accent);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .bookmark-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+            font-size: 1.1rem;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+            transform: scale(1.15);
+        }
+
+        .action-btn.delete:hover {
+            background: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .ayah-arabic {
+            font-family: 'Scheherazade New', serif;
+            font-size: 2.2rem;
+            line-height: 2.2;
+            direction: rtl;
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--text);
+            padding: 25px;
+            background: var(--bg);
+            border-radius: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .ayah-note {
+            background: var(--bg);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-right: 4px solid var(--primary);
+            position: relative;
+            z-index: 1;
+        }
+
+        .note-label {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .note-text {
+            color: var(--text);
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+
+        .note-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            resize: vertical;
+            min-height: 100px;
+            font-size: 1rem;
+            transition: all var(--transition);
+        }
+
+        .note-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .save-note-btn {
+            margin-top: 12px;
+            padding: 12px 24px;
+            background: var(--primary);
+            color: var(--accent);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .save-note-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .timestamp {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Filter & Sort */
+        .controls-bar {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow-sm);
+            border: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            transition: all var(--transition);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .sort-select {
+            padding: 12px 20px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            background: var(--card-bg);
+            color: var(--text);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .sort-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .ayah-arabic {
+                font-size: 1.8rem;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+            }
+
+            .controls-bar {
+                flex-direction: column;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <h1 class="header-title">
+                <i class="fas fa-bookmark"></i>
+                نیشانەکراوەکان
+            </h1>
+            <a href="Quran.html" class="back-btn">
+                <i class="fas fa-arrow-right"></i>
+                گەڕانەوە
+            </a>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Stats Bar -->
+        <div class="stats-bar" id="statsBar" style="display: none;">
+            <div class="stat-item">
+                <div class="stat-value" id="totalBookmarks">0</div>
+                <div class="stat-label">نیشانەکراوە</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalNotes">0</div>
+                <div class="stat-label">تێبینی</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalSurahs">0</div>
+                <div class="stat-label">سوورە</div>
+            </div>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="controls-bar" id="controlsBar" style="display: none;">
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="گەڕان لە نیشانەکراوەکان..." id="searchInput">
+            </div>
+            <select class="sort-select" id="sortSelect">
+                <option value="newest">نوێترین</option>
+                <option value="oldest">کۆنترین</option>
+                <option value="surah">بەپێی سوورە</option>
+            </select>
+        </div>
+
+        <div id="bookmarksContainer">
+            <!-- Bookmarks will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        let bookmarkedAyahs = [];
+        let ayahNotes = {};
+        let ayahTimestamps = {};
+
+        const surahNames = {
+            1: { arabic: "الفاتحة", english: "Al-Fatihah" },
+            2: { arabic: "البقرة", english: "Al-Baqarah" },
+            3: { arabic: "آل عمران", english: "Aal-E-Imran" },
+            4: { arabic: "النساء", english: "An-Nisa" },
+            5: { arabic: "المائدة", english: "Al-Maidah" },
+            6: { arabic: "الأنعام", english: "Al-An'am" },
+            7: { arabic: "الأعراف", english: "Al-A'raf" },
+            8: { arabic: "الأنفال", english: "Al-Anfal" },
+            9: { arabic: "التوبة", english: "At-Tawbah" },
+            10: { arabic: "يونس", english: "Yunus" },
+            // Add more as needed...
+        };
+
+        window.addEventListener('load', () => {
+            loadBookmarks();
+            renderBookmarks();
+        });
+
+        function loadBookmarks() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                const userKey = 'quran_data_' + user.sub;
+                const saved = localStorage.getItem(userKey);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    bookmarkedAyahs = data.bookmarks || [];
+                    ayahNotes = data.notes || {};
+                    ayahTimestamps = data.timestamps || {};
+                }
+            }
+        }
+
+        function saveBookmarks() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                const userKey = 'quran_data_' + user.sub;
+                const saved = localStorage.getItem(userKey) || '{}';
+                const data = JSON.parse(saved);
+                data.bookmarks = bookmarkedAyahs;
+                data.notes = ayahNotes;
+                data.timestamps = ayahTimestamps;
+                localStorage.setItem(userKey, JSON.stringify(data));
+            }
+        }
+
+        function renderBookmarks() {
+            const container = document.getElementById('bookmarksContainer');
+
+            if (bookmarkedAyahs.length === 0) {
+                document.getElementById('statsBar').style.display = 'none';
+                document.getElementById('controlsBar').style.display = 'none';
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="far fa-bookmark"></i>
+                        </div>
+                        <div class="empty-text">هێشتا هیچ ئایەتێکت نیشانە نەکردووە</div>
+                        <div class="empty-desc">
+                            کاتێک ئایەتێک نیشانە دەکەیت، لێرە دەبینیتەوە.<br>
+                            دەتوانیت تێبینی و بیرەوەریشی تۆمار بکەیت.
+                        </div>
+                        <a href="Quran.html" class="back-btn">
+                            <i class="fas fa-book-open"></i>
+                            دەستپێبکە بە خوێندنەوە
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            // Show stats and controls
+            document.getElementById('statsBar').style.display = 'flex';
+            document.getElementById('controlsBar').style.display = 'flex';
+
+            // Update stats
+            document.getElementById('totalBookmarks').textContent = bookmarkedAyahs.length;
+            const notesCount = Object.keys(ayahNotes).filter(key => ayahNotes[key]).length;
+            document.getElementById('totalNotes').textContent = notesCount;
+            const uniqueSurahs = new Set(bookmarkedAyahs.map(key => key.split('-')[0])).size;
+            document.getElementById('totalSurahs').textContent = uniqueSurahs;
+
+            container.innerHTML = '<div class="bookmarks-grid" id="bookmarksList"></div>';
+            const list = document.getElementById('bookmarksList');
+
+            bookmarkedAyahs.forEach(key => {
+                const [surah, ayah] = key.split('-').map(Number);
+                const note = ayahNotes[key] || '';
+                const timestamp = ayahTimestamps[key] || Date.now();
+
+                const card = document.createElement('div');
+                card.className = 'bookmark-card';
+                card.innerHTML = `
+                    <div class="bookmark-header">
+                        <div class="bookmark-ref">
+                            <i class="fas fa-bookmark"></i>
+                            ${surahNames[surah]?.english || 'Surah ' + surah}
+                            <span class="bookmark-badge">ئایەت ${ayah}</span>
+                        </div>
+                        <div class="bookmark-actions">
+                            <button class="action-btn" onclick="goToAyah(${surah}, ${ayah})" title="بڕۆ بۆ ئایەت">
+                                <i class="fas fa-external-link-alt"></i>
+                            </button>
+                            <button class="action-btn" onclick="toggleNote('${key}')" title="تێبینی">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete" onclick="removeBookmark('${key}')" title="سڕینەوە">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="ayah-arabic" id="ayah-${key}">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                    ${note ? `
+                        <div class="ayah-note">
+                            <div class="note-label">
+                                <i class="fas fa-sticky-note"></i>
+                                تێبینی:
+                            </div>
+                            <div class="note-text">${note}</div>
+                        </div>
+                    ` : ''}
+                    <div id="note-editor-${key}" style="display: none;">
+                        <textarea class="note-input" id="note-input-${key}" placeholder="تێبینیەکەت لێرە بنووسە...">${note}</textarea>
+                        <button class="save-note-btn" onclick="saveNote('${key}')">
+                            <i class="fas fa-save"></i> پاشەکەوتکردن
+                        </button>
+                    </div>
+                    <div class="timestamp">
+                        <i class="far fa-clock"></i>
+                        ${getTimeAgo(timestamp)}
+                    </div>
+                `;
+                list.appendChild(card);
+
+                // Load ayah text (simulated)
+                loadAyahText(surah, ayah, key);
+            });
+        }
+
+        async function loadAyahText(surah, ayah, key) {
+            // This is a placeholder - replace with actual Quran data
+            setTimeout(() => {
+                const element = document.getElementById(`ayah-${key}`);
+                if (element) {
+                    element.textContent = `بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ`; // Placeholder
+                }
+            }, 500);
+        }
+
+        function removeBookmark(key) {
+            if (confirm('ئایا دڵنیایت لە سڕینەوەی ئەم نیشانەیە؟')) {
+                bookmarkedAyahs = bookmarkedAyahs.filter(b => b !== key);
+                delete ayahNotes[key];
+                delete ayahTimestamps[key];
+                saveBookmarks();
+                renderBookmarks();
+            }
+        }
+
+        function toggleNote(key) {
+            const editor = document.getElementById(`note-editor-${key}`);
+            if (editor) {
+                editor.style.display = editor.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function saveNote(key) {
+            const input = document.getElementById(`note-input-${key}`);
+            if (input) {
+                ayahNotes[key] = input.value;
+                saveBookmarks();
+                renderBookmarks();
+                showNotification('تێبینی پاشەکەوتکرا');
+            }
+        }
+
+        function goToAyah(surah, ayah) {
+            window.location.href = `Quran.html?surah=${surah}&ayah=${ayah}`;
+        }
+
+        function getTimeAgo(timestamp) {
+            const now = Date.now();
+            const diff = now - timestamp;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return 'ئێستا';
+            if (minutes < 60) return `${minutes} خولەک لەمەوپێش`;
+            if (hours < 24) return `${hours} کاتژمێر لەمەوپێش`;
+            if (days < 7) return `${days} ڕۆژ لەمەوپێش`;
+            return new Date(timestamp).toLocaleDateString('ku');
+        }
+
+        function showNotification(msg) {
+            const notif = document.createElement('div');
+            notif.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                padding: 15px 25px;
+                background: var(--primary);
+                color: var(--accent);
+                border-radius: 12px;
+                box-shadow: var(--shadow-md);
+                z-index: 9999;
+                font-weight: 600;
+            `;
+            notif.textContent = msg;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

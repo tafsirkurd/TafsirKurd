@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>پڕۆفایل - تەفسیر کوورد</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #000000;
+            --accent: #ffffff;
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --text-muted: #666666;
+            --border: #e8e8e8;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: var(--card-bg);
+            padding: 20px 0;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn {
+            padding: 12px 24px;
+            background: var(--primary);
+            color: var(--accent);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 30px;
+        }
+
+        /* Profile Hero - Matching Quran.html style */
+        .profile-hero {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 50px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-md);
+            border: 2px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            background-image:
+                repeating-linear-gradient(45deg, transparent, transparent 35px, var(--primary) 35px, var(--primary) 36px),
+                repeating-linear-gradient(-45deg, transparent, transparent 35px, var(--primary) 35px, var(--primary) 36px);
+            pointer-events: none;
+        }
+
+        .profile-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .profile-avatar-large {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 5px solid var(--primary);
+            box-shadow: var(--shadow-lg);
+            flex-shrink: 0;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .profile-email {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .profile-badges {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: var(--bg);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 2px solid var(--border);
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all var(--transition);
+        }
+
+        .badge:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .badge i {
+            color: var(--primary);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--shadow-sm);
+            border: 2px solid var(--border);
+            transition: all var(--transition);
+            text-align: center;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+
+        .stat-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 20px;
+        }
+
+        .stat-value {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .section-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-md);
+            border: 2px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Quick Actions - Enhanced */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .action-btn {
+            padding: 25px;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all var(--transition);
+            text-align: center;
+            text-decoration: none;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .action-icon {
+            font-size: 2.5rem;
+        }
+
+        .action-label {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .action-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .action-btn:hover .action-desc {
+            color: var(--accent);
+        }
+
+        /* Achievements Grid */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px;
+        }
+
+        .achievement {
+            background: var(--bg);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            border: 2px solid var(--border);
+            transition: all var(--transition);
+        }
+
+        .achievement.locked {
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+
+        .achievement:not(.locked):hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .achievement-icon {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+        }
+
+        .achievement-name {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .achievement-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Recent Activity */
+        .recent-activity {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .recent-activity::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .recent-activity::-webkit-scrollbar-track {
+            background: var(--bg);
+            border-radius: 4px;
+        }
+
+        .recent-activity::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .recent-activity::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: var(--bg);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-right: 4px solid var(--primary);
+            transition: all var(--transition);
+        }
+
+        .activity-item:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .activity-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.3rem;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 1.05rem;
+        }
+
+        .activity-time {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Danger Zone */
+        .danger-zone {
+            background: #fff5f5;
+            border: 2px solid var(--danger);
+            border-radius: 16px;
+            padding: 30px;
+        }
+
+        .danger-title {
+            color: var(--danger);
+            font-weight: 700;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .danger-text {
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+
+        .danger-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .danger-btn {
+            padding: 14px 28px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .danger-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .danger-btn.secondary {
+            background: #e67e22;
+        }
+
+        .danger-btn.secondary:hover {
+            background: #d35400;
+        }
+
+        /* Progress Bars */
+        .progress-section {
+            margin-top: 30px;
+        }
+
+        .progress-item {
+            margin-bottom: 25px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .progress-label {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .progress-value {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 12px;
+            background: var(--bg);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #333);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .profile-hero {
+                padding: 30px 20px;
+            }
+
+            .profile-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-name {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .achievements-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .danger-buttons {
+                flex-direction: column;
+            }
+
+            .danger-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <h1 class="header-title">
+                <i class="fas fa-user-circle"></i>
+                پڕۆفایل
+            </h1>
+            <a href="Quran.html" class="back-btn">
+                <i class="fas fa-arrow-right"></i>
+                گەڕانەوە
+            </a>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Profile Hero -->
+        <div class="profile-hero">
+            <div class="profile-content">
+                <img src="" alt="Profile" class="profile-avatar-large" id="profileAvatar">
+                <div class="profile-info">
+                    <h1 class="profile-name" id="profileName">ناو</h1>
+                    <p class="profile-email" id="profileEmail">email@example.com</p>
+                    <div class="profile-badges">
+                        <div class="badge">
+                            <i class="fas fa-calendar-check"></i>
+                            <span id="memberSince">ئەندام لە ...</span>
+                        </div>
+                        <div class="badge">
+                            <i class="fas fa-fire"></i>
+                            <span id="streakBadge">0 ڕۆژ بەردەوام</span>
+                        </div>
+                        <div class="badge">
+                            <i class="fas fa-trophy"></i>
+                            <span id="levelBadge">ئاستی 1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <div class="stat-value" id="totalSurahs">0</div>
+                <div class="stat-label">سوورە تەواوکراوە</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-value" id="totalAyahs">0</div>
+                <div class="stat-label">ئایەت خوێندراوە</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-bookmark"></i>
+                </div>
+                <div class="stat-value" id="totalBookmarks">0</div>
+                <div class="stat-label">نیشانەکراوە</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-value" id="totalTime">0</div>
+                <div class="stat-label">خولەک خوێندنەوە</div>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="section-card">
+            <h2 class="section-title">
+                <i class="fas fa-chart-bar"></i>
+                پێشکەوتنی قورئان
+            </h2>
+            <div class="progress-section">
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <span class="progress-label">گشتی قورئان</span>
+                        <span class="progress-value" id="quranProgress">0%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="quranProgressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <span class="progress-label">ئامانجی مانگانە</span>
+                        <span class="progress-value" id="monthlyProgress">0%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="monthlyProgressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <span class="progress-label">ئامانجی ساڵانە</span>
+                        <span class="progress-value" id="yearlyProgress">0%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="yearlyProgressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="section-card">
+            <h2 class="section-title">
+                <i class="fas fa-bolt"></i>
+                کردارە خێراکان
+            </h2>
+            <div class="quick-actions">
+                <a href="goals.html" class="action-btn">
+                    <div class="action-icon">🎯</div>
+                    <div class="action-label">ئامانجەکانم</div>
+                    <div class="action-desc">بینینی پێشکەوتن</div>
+                </a>
+                <a href="bookmarks.html" class="action-btn">
+                    <div class="action-icon">📖</div>
+                    <div class="action-label">نیشانەکراوەکان</div>
+                    <div class="action-desc">ئایەتە پاشکەوتکراوەکان</div>
+                </a>
+                <a href="Quran.html" class="action-btn">
+                    <div class="action-icon">📚</div>
+                    <div class="action-label">خوێندنەوە</div>
+                    <div class="action-desc">بەردەوامبە</div>
+                </a>
+                <a href="#" class="action-btn" onclick="openSettings(); return false;">
+                    <div class="action-icon">⚙️</div>
+                    <div class="action-label">ڕێکخستنەکان</div>
+                    <div class="action-desc">دەستکاری کردن</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Achievements -->
+        <div class="section-card">
+            <h2 class="section-title">
+                <i class="fas fa-trophy"></i>
+                دەستکەوتەکان
+            </h2>
+            <div class="achievements-grid">
+                <div class="achievement">
+                    <div class="achievement-icon">🌟</div>
+                    <div class="achievement-name">یەکەم هەنگاو</div>
+                    <div class="achievement-desc">یەکەم ئایەت</div>
+                </div>
+                <div class="achievement">
+                    <div class="achievement-icon">📚</div>
+                    <div class="achievement-name">خوێنەر</div>
+                    <div class="achievement-desc">10 سوورە</div>
+                </div>
+                <div class="achievement">
+                    <div class="achievement-icon">🔥</div>
+                    <div class="achievement-name">بەردەوام</div>
+                    <div class="achievement-desc">7 ڕۆژ</div>
+                </div>
+                <div class="achievement locked">
+                    <div class="achievement-icon">🏆</div>
+                    <div class="achievement-name">قارەمان</div>
+                    <div class="achievement-desc">50 سوورە</div>
+                </div>
+                <div class="achievement locked">
+                    <div class="achievement-icon">💎</div>
+                    <div class="achievement-name">ماستەر</div>
+                    <div class="achievement-desc">هەموو قورئان</div>
+                </div>
+                <div class="achievement">
+                    <div class="achievement-icon">📝</div>
+                    <div class="achievement-name">نووسەر</div>
+                    <div class="achievement-desc">10 تێبینی</div>
+                </div>
+                <div class="achievement locked">
+                    <div class="achievement-icon">⭐</div>
+                    <div class="achievement-name">ستێرە</div>
+                    <div class="achievement-desc">30 ڕۆژ بەردەوام</div>
+                </div>
+                <div class="achievement locked">
+                    <div class="achievement-icon">👑</div>
+                    <div class="achievement-name">پاشا</div>
+                    <div class="achievement-desc">100 ڕۆژ بەردەوام</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="section-card">
+            <h2 class="section-title">
+                <i class="fas fa-history"></i>
+                چالاکیی دوایی
+            </h2>
+            <div class="recent-activity" id="recentActivity">
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-text">سوورەی البقرة خوێندرایەوە</div>
+                        <div class="activity-time">2 کاتژمێر لەمەوپێش</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-bookmark"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-text">ئایەتی 2:255 نیشانەکرا</div>
+                        <div class="activity-time">5 کاتژمێر لەمەوپێش</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-text">ئامانجی ڕۆژانە تەواوکرا</div>
+                        <div class="activity-time">دوێنێ</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-text">بەردەوامی 7 ڕۆژ بەدەستهێنا</div>
+                        <div class="activity-time">3 ڕۆژ لەمەوپێش</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="section-card">
+            <h2 class="section-title">
+                <i class="fas fa-exclamation-triangle"></i>
+                ناوچەی مەترسی
+            </h2>
+            <div class="danger-zone">
+                <div class="danger-title">
+                    <i class="fas fa-exclamation-circle"></i>
+                    کردارە مەترسیدارەکان
+                </div>
+                <p class="danger-text">
+                    ئەم کردارانە هەمیشەییە و ناگەڕێتەوە. تکایە ئاگاداربە پێش ئەنجامدانیان.
+                </p>
+                <div class="danger-buttons">
+                    <button class="danger-btn secondary" onclick="signOut()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        دەرچوون
+                    </button>
+                    <button class="danger-btn" onclick="deleteAccount()">
+                        <i class="fas fa-trash"></i>
+                        سڕینەوەی هەژمار
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        window.addEventListener('load', () => {
+            loadUserProfile();
+        });
+
+        function loadUserProfile() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            currentUser = JSON.parse(user);
+            document.getElementById('profileAvatar').src = currentUser.picture;
+            document.getElementById('profileName').textContent = currentUser.name;
+            document.getElementById('profileEmail').textContent = currentUser.email;
+
+            // Load user stats
+            const userKey = 'quran_data_' + currentUser.sub;
+            const saved = localStorage.getItem(userKey);
+            
+            if (saved) {
+                const data = JSON.parse(saved);
+                const stats = data.stats || {};
+                
+                document.getElementById('totalSurahs').textContent = stats.surahsCompleted || 0;
+                document.getElementById('totalAyahs').textContent = stats.ayahsRead || 0;
+                document.getElementById('totalBookmarks').textContent = (data.bookmarks || []).length;
+                document.getElementById('streakBadge').textContent = `${stats.streak || 0} ڕۆژ بەردەوام`;
+                
+                // Calculate level based on ayahs read
+                const level = Math.floor((stats.ayahsRead || 0) / 100) + 1;
+                document.getElementById('levelBadge').textContent = `ئاستی ${level}`;
+                
+                // Update progress bars
+                const totalAyahs = 6236; // Total ayahs in Quran
+                const quranPercent = Math.min(100, Math.round(((stats.ayahsRead || 0) / totalAyahs) * 100));
+                document.getElementById('quranProgress').textContent = quranPercent + '%';
+                document.getElementById('quranProgressBar').style.width = quranPercent + '%';
+                
+                // Monthly progress (mock)
+                const monthlyPercent = Math.min(100, Math.floor(Math.random() * 80) + 20);
+                document.getElementById('monthlyProgress').textContent = monthlyPercent + '%';
+                document.getElementById('monthlyProgressBar').style.width = monthlyPercent + '%';
+                
+                // Yearly progress (mock)
+                const yearlyPercent = Math.min(100, Math.floor(Math.random() * 60) + 30);
+                document.getElementById('yearlyProgress').textContent = yearlyPercent + '%';
+                document.getElementById('yearlyProgressBar').style.width = yearlyPercent + '%';
+            }
+
+            // Calculate total reading time (mock)
+            document.getElementById('totalTime').textContent = Math.floor(Math.random() * 500) + 100;
+
+            // Member since
+            const joinDate = new Date();
+            document.getElementById('memberSince').textContent = `ئەندام لە ${joinDate.getFullYear()}`;
+        }
+
+        function openSettings() {
+            window.location.href = 'Quran.html#settings';
+        }
+
+        function signOut() {
+            if (confirm('ئایا دڵنیایت لە دەرچوون؟')) {
+                localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+
+        function deleteAccount() {
+            if (confirm('⚠️ ئاگاداربوونەوە: ئەم کردارە هەمیشەییە!\n\nهەموو زانیاریەکانت بە تەواوی دەسڕێتەوە و ناتوانیت بیگەڕێنیتەوە.\n\nئایا دڵنیایت لە سڕینەوەی هەژمار؟')) {
+                if (confirm('دڵنیایت؟ ئەم کارە ناگەڕێتەوە!')) {
+                    // Delete all user data
+                    const userKey = 'quran_data_' + currentUser.sub;
+                    localStorage.removeItem(userKey);
+                    localStorage.removeItem('quran_reading_data');
+                    localStorage.removeItem('isAuthenticated');
+                    localStorage.removeItem('user');
+                    
+                    alert('هەژمارەکەت بە سەرکەوتوویی سڕایەوە');
+                    window.location.href = 'login.html';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

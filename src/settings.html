@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ڕێکخستنەکان - تەفسیر کوورد</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #000000;
+            --accent: #ffffff;
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #000000;
+            --text-muted: #666666;
+            --border: #e8e8e8;
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
+            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --primary: #ffffff;
+            --accent: #000000;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #ffffff;
+            --text-muted: #b0b0b0;
+            --border: #2a2a2a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            transition: background-color var(--transition), color var(--transition);
+        }
+
+        .header {
+            background: var(--card-bg);
+            padding: 20px 0;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            padding: 12px 24px;
+            background: var(--primary);
+            color: var(--accent);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto 100px;
+            padding: 0 30px;
+        }
+
+        .settings-grid {
+            display: grid;
+            gap: 30px;
+        }
+
+        .settings-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--shadow-md);
+            border: 2px solid var(--border);
+        }
+
+        .settings-card-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 1.1rem;
+        }
+
+        .setting-description {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .setting-toggle {
+            width: 60px;
+            height: 32px;
+            background: var(--border);
+            border-radius: 16px;
+            position: relative;
+            cursor: pointer;
+            transition: background var(--transition);
+        }
+
+        .setting-toggle.active {
+            background: var(--primary);
+        }
+
+        .setting-toggle-knob {
+            width: 26px;
+            height: 26px;
+            background: var(--accent);
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            transition: transform var(--transition);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .setting-toggle.active .setting-toggle-knob {
+            transform: translateX(-28px);
+        }
+
+        .setting-select {
+            padding: 12px 20px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            background: var(--card-bg);
+            color: var(--text);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            min-width: 200px;
+        }
+
+        .setting-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .setting-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .setting-slider {
+            width: 200px;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--border);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .setting-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .setting-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .slider-value {
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 60px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 15px;
+            background: transparent;
+            color: #e74c3c;
+            border: 2px solid #e74c3c;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .reset-btn:hover {
+            background: #e74c3c;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 30px;
+            padding: 18px 30px;
+            background: var(--primary);
+            color: var(--accent);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .setting-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .setting-slider {
+                width: 100%;
+            }
+
+            .setting-select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <h1 class="header-title">
+                <i class="fas fa-cog"></i>
+                ڕێکخستنەکان
+            </h1>
+            <a href="Quran.html" class="back-btn">
+                <i class="fas fa-arrow-right"></i>
+                گەڕانەوە
+            </a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="settings-grid">
+            <!-- Display Settings -->
+            <div class="settings-card">
+                <h2 class="settings-card-title">
+                    <i class="fas fa-palette"></i>
+                    ڕووکار
+                </h2>
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-label">دۆخی تاریکی</div>
+                        <div class="setting-description">گۆڕین بۆ دۆخی تاریکی بۆ خوێندنەوەی ئاسانتر</div>
+                    </div>
+                    <div class="setting-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
+                        <div class="setting-toggle-knob"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Arabic Font Settings -->
+            <div class="settings-card">
+                <h2 class="settings-card-title">
+                    <i class="fas fa-font"></i>
+                    فۆنتی عەرەبی
+                </h2>
+                
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-label">جۆری فۆنت</div>
+                        <div class="setting-description">دەستکاری فۆنتی دەقی عەرەبی</div>
+                    </div>
+                    <select class="setting-select" id="arabicFontSelect" onchange="changeArabicFont()">
+                        <option value="Scheherazade New">Scheherazade New</option>
+                        <option value="Amiri">Amiri</option>
+                        <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-label">قەبارەی فۆنت</div>
+                        <div class="setting-description">گەورە یان بچووک کردنەوەی دەقی عەرەبی</div>
+                    </div>
+                    <div class="setting-slider-container">
+                        <input type="range" class="setting-slider" id="arabicSizeSlider"
+                               min="1.5" max="3.5" step="0.1" value="2.2"
+                               oninput="changeArabicSize(this.value)">
+                        <span class="slider-value" id="arabicSizeValue">2.2rem</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tafsir Font Settings -->
+            <div class="settings-card">
+                <h2 class="settings-card-title">
+                    <i class="fas fa-book-open"></i>
+                    فۆنتی تەفسیر
+                </h2>
+                
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-label">جۆری فۆنت</div>
+                        <div class="setting-description">دەستکاری فۆنتی تەفسیری کوردی</div>
+                    </div>
+                    <select class="setting-select" id="tafsirFontSelect" onchange="changeTafsirFont()">
+                        <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
+                        <option value="Scheherazade New">Scheherazade New</option>
+                        <option value="Amiri">Amiri</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-label">قەبارەی فۆنت</div>
+                        <div class="setting-description">گەورە یان بچووک کردنەوەی دەقی تەفسیر</div>
+                    </div>
+                    <div class="setting-slider-container">
+                        <input type="range" class="setting-slider" id="tafsirSizeSlider"
+                               min="0.9" max="1.8" step="0.05" value="1.1"
+                               oninput="changeTafsirSize(this.value)">
+                        <span class="slider-value" id="tafsirSizeValue">1.1rem</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reading Settings -->
+            <div class="settings-card">
+                <h2 class="settings-card-title">
+                    <i class="fas fa-book-reader"></i>
+                    خوێندنەوە
+                </h2>
+                
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-label">پیشاندانی تەفسیر</div>
+                        <div class="setting-description">پیشاندان یان شاردنەوەی تەفسیری کوردی</div>
+                    </div>
+                    <div class="setting-toggle active" id="tafsirToggle" onclick="toggleTafsir()">
+                        <div class="setting-toggle-knob"></div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-label">خولاندنی خۆکار</div>
+                        <div class="setting-description">خولاندنی خۆکاری پەڕە لە کاتی خوێندنەوە</div>
+                    </div>
+                    <div class="setting-toggle" id="autoScrollToggle" onclick="toggleAutoScroll()">
+                        <div class="setting-toggle-knob"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reset Settings -->
+            <div class="settings-card">
+                <h2 class="settings-card-title">
+                    <i class="fas fa-undo"></i>
+                    گەڕاندنەوە بۆ بنەڕەت
+                </h2>
+                <p style="color: var(--text-muted); margin-bottom: 20px; line-height: 1.8;">
+                    ئەم کارە هەموو ڕێکخستنەکان دەگەڕێنێتەوە بۆ بنەڕەتەکانیان. ئەم کردارە ناگەڕێتەوە.
+                </p>
+                <button class="reset-btn" onclick="resetSettings()">
+                    <i class="fas fa-redo"></i>
+                    گەڕاندنەوەی هەموو ڕێکخستنەکان
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize settings from localStorage
+        window.addEventListener('load', () => {
+            loadSettings();
+        });
+
+        function loadSettings() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedTheme === 'dark') {
+                document.getElementById('darkModeToggle').classList.add('active');
+            }
+
+            const savedArabicFont = localStorage.getItem('arabicFont') || 'Scheherazade New';
+            const savedArabicSize = localStorage.getItem('arabicSize') || '2.2';
+            const savedTafsirFont = localStorage.getItem('tafsirFont') || 'IBM Plex Sans Arabic';
+            const savedTafsirSize = localStorage.getItem('tafsirSize') || '1.1';
+
+            document.getElementById('arabicFontSelect').value = savedArabicFont;
+            document.getElementById('arabicSizeSlider').value = savedArabicSize;
+            document.getElementById('arabicSizeValue').textContent = savedArabicSize + 'rem';
+            document.getElementById('tafsirFontSelect').value = savedTafsirFont;
+            document.getElementById('tafsirSizeSlider').value = savedTafsirSize;
+            document.getElementById('tafsirSizeValue').textContent = savedTafsirSize + 'rem';
+
+            document.documentElement.style.setProperty('--arabic-font', savedArabicFont);
+            document.documentElement.style.setProperty('--arabic-size', savedArabicSize + 'rem');
+            document.documentElement.style.setProperty('--tafsir-font', savedTafsirFont);
+            document.documentElement.style.setProperty('--tafsir-size', savedTafsirSize + 'rem');
+        }
+
+        function toggleDarkMode() {
+            const toggle = document.getElementById('darkModeToggle');
+            const current = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = current === 'light' ? 'dark' : 'light';
+
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            toggle.classList.toggle('active');
+
+            showNotification(newTheme === 'dark' ? 'دۆخی تاریکی چالاککرا' : 'دۆخی ڕووناکی چالاککرا');
+        }
+
+        function changeArabicFont() {
+            const font = document.getElementById('arabicFontSelect').value;
+            document.documentElement.style.setProperty('--arabic-font', font);
+            localStorage.setItem('arabicFont', font);
+            showNotification('فۆنتی عەرەبی گۆڕدرا');
+        }
+
+        function changeArabicSize(value) {
+            document.getElementById('arabicSizeValue').textContent = value + 'rem';
+            document.documentElement.style.setProperty('--arabic-size', value + 'rem');
+            localStorage.setItem('arabicSize', value);
+        }
+
+        function changeTafsirFont() {
+            const font = document.getElementById('tafsirFontSelect').value;
+            document.documentElement.style.setProperty('--tafsir-font', font);
+            localStorage.setItem('tafsirFont', font);
+            showNotification('فۆنتی تەفسیر گۆڕدرا');
+        }
+
+        function changeTafsirSize(value) {
+            document.getElementById('tafsirSizeValue').textContent = value + 'rem';
+            document.documentElement.style.setProperty('--tafsir-size', value + 'rem');
+            localStorage.setItem('tafsirSize', value);
+        }
+
+        function toggleTafsir() {
+            const toggle = document.getElementById('tafsirToggle');
+            toggle.classList.toggle('active');
+            localStorage.setItem('showTafsir', toggle.classList.contains('active'));
+            showNotification(toggle.classList.contains('active') ? 'تەفسیر پیشاندرا' : 'تەفسیر شاراوە');
+        }
+
+        function toggleAutoScroll() {
+            const toggle = document.getElementById('autoScrollToggle');
+            toggle.classList.toggle('active');
+            localStorage.setItem('autoScroll', toggle.classList.contains('active'));
+            showNotification(toggle.classList.contains('active') ? 'خولاندنی خۆکار چالاککرا' : 'خولاندنی خۆکار ناچالاککرا');
+        }
+
+        function resetSettings() {
+            if (confirm('ئایا دڵنیایت لە گەڕاندنەوەی هەموو ڕێکخستنەکان بۆ بنەڕەت؟')) {
+                localStorage.removeItem('arabicFont');
+                localStorage.removeItem('arabicSize');
+                localStorage.removeItem('tafsirFont');
+                localStorage.removeItem('tafsirSize');
+                localStorage.removeItem('theme');
+                localStorage.removeItem('showTafsir');
+                localStorage.removeItem('autoScroll');
+
+                document.getElementById('arabicFontSelect').value = 'Scheherazade New';
+                document.getElementById('arabicSizeSlider').value = '2.2';
+                document.getElementById('arabicSizeValue').textContent = '2.2rem';
+                document.getElementById('tafsirFontSelect').value = 'IBM Plex Sans Arabic';
+                document.getElementById('tafsirSizeSlider').value = '1.1';
+                document.getElementById('tafsirSizeValue').textContent = '1.1rem';
+
+                document.documentElement.style.setProperty('--arabic-font', 'Scheherazade New');
+                document.documentElement.style.setProperty('--arabic-size', '2.2rem');
+                document.documentElement.style.setProperty('--tafsir-font', 'IBM Plex Sans Arabic');
+                document.documentElement.style.setProperty('--tafsir-size', '1.1rem');
+                document.documentElement.setAttribute('data-theme', 'light');
+
+                document.getElementById('darkModeToggle').classList.remove('active');
+                document.getElementById('tafsirToggle').classList.add('active');
+                document.getElementById('autoScrollToggle').classList.remove('active');
+
+                showNotification('ڕێکخستنەکان گەڕانەوە بۆ بنەڕەت');
+            }
+        }
+
+        function showNotification(msg) {
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.textContent = msg;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

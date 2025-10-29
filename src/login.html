@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="چوونەژووروەوە بۆ تەفسیر کوورد">
+    <title>چوونەژووروەوە - تەفسیر کوورد</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <style>
+        :root {
+            --primary: #000000;
+            --accent: #ffffff;
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --text-muted: #666666;
+            --border: #e8e8e8;
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #fdfdfd 0%, #ffffff 100%);
+            min-height: 100vh;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape:nth-child(1) {
+            width: 200px;
+            height: 200px;
+            background: black;
+            border-radius: 50%;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 150px;
+            height: 150px;
+            background: black;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            top: 60%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        .shape:nth-child(3) {
+            width: 180px;
+            height: 180px;
+            background: black;
+            border-radius: 50%;
+            bottom: 10%;
+            left: 50%;
+            animation-delay: 4s;
+        }
+
+        .shape:nth-child(4) {
+            width: 120px;
+            height: 120px;
+            background: black;
+            border-radius: 50%;
+            top: 30%;
+            right: 30%;
+            animation-delay: 1s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+            }
+            25% {
+                transform: translateY(-30px) translateX(20px) rotate(90deg) scale(1.1);
+            }
+            50% {
+                transform: translateY(0) translateX(40px) rotate(180deg) scale(1);
+            }
+            75% {
+                transform: translateY(30px) translateX(20px) rotate(270deg) scale(0.9);
+            }
+        }
+
+        .login-container {
+            max-width: 550px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: black;
+        }
+
+        .login-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .login-subtitle {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            max-width: 450px;
+            margin: 0 auto;
+            opacity: 0.95;
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            border-radius: 25px;
+            padding: 50px;
+            box-shadow: var(--shadow-lg);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .logo-section img {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .features-list {
+            margin: 35px 0;
+            text-align: right;
+            background: var(--bg);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid var(--border);
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 0;
+            font-size: 1rem;
+            color: var(--text);
+            animation: slideRight 0.5s ease-out backwards;
+        }
+
+        .feature-item:nth-child(1) { animation-delay: 0.1s; }
+        .feature-item:nth-child(2) { animation-delay: 0.2s; }
+        .feature-item:nth-child(3) { animation-delay: 0.3s; }
+        .feature-item:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes slideRight {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .feature-icon {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.3rem;
+            min-width: 30px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .feature-badge {
+            background: linear-gradient(135deg, #000000 0%, #000000 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-right: 8px;
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.8); }
+        }
+
+        .google-signin-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #000000 0%, #333333 100%);
+            color: var(--accent);
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all var(--transition);
+            margin: 35px 0 25px 0;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .google-signin-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .google-signin-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .google-signin-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .google-signin-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .google-signin-btn i {
+            position: relative;
+            z-index: 1;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .divider-text {
+            background: var(--card-bg);
+            padding: 0 20px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+        }
+
+        .back-link {
+            text-align: center;
+            margin: 30px 0 0 0;
+        }
+
+        .back-btn {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 25px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            background: var(--bg);
+            border: 2px solid var(--border);
+        }
+
+        .back-btn:hover {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .privacy-text {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+        }
+
+        .privacy-link {
+            color: var(--primary);
+            text-decoration: none;
+            border-bottom: 1px solid var(--primary);
+            transition: opacity 0.3s ease;
+        }
+
+        .privacy-link:hover {
+            opacity: 0.7;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 18px 30px;
+            background: linear-gradient(135deg, #000000 0%, #333333 100%);
+            color: white;
+            border-radius: 15px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: slideInRight 0.4s ease;
+            z-index: 1000;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .google-signin-btn.loading .loading-spinner {
+            display: block;
+        }
+
+        .google-signin-btn.loading span {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .login-card {
+                padding: 35px 25px;
+            }
+
+            .login-title {
+                font-size: 1.8rem;
+            }
+
+            .login-subtitle {
+                font-size: 0.95rem;
+            }
+
+            .google-signin-btn {
+                font-size: 1rem;
+                padding: 16px;
+            }
+
+            .features-list {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="login-container">
+        <div class="login-header">
+            <h1 class="login-title">بەخێربێیت بۆ تەفسیر کوورد</h1>
+            <p class="login-subtitle">
+                چوونەژووروەوە بکە بۆ دەسپێگەیشتن بە تایبەتمەندییە تایبەتەکان
+            </p>
+        </div>
+
+        <div class="login-card">
+            <div class="logo-section">
+                <img src="assets/images/logo.png" alt="تەفسیر کوورد">
+                <div class="logo-text">تەفسیر کوورد</div>
+            </div>
+
+            <div class="features-list">
+                <div class="feature-item">
+                    <span class="feature-icon">✦</span>
+                    <div>
+                        <span class="feature-badge">نوێ!</span>
+                        تێبینی و نیشانەکردنەوە
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✦</span>
+                    <div>شوێنکەوتنی ئامانجەکانت</div>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✦</span>
+                    <div>هەڵگرتنی بەردەوامی خوێندنەوە</div>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✦</span>
+                    <div>هاوکات کردنی زانیاری لە نێوان ئامێرەکان</div>
+                </div>
+            </div>
+
+            <button class="google-signin-btn" id="googleSignInBtn">
+                <div class="loading-spinner"></div>
+                <i class="fab fa-google"></i>
+                <span>بەردەوامبوون بە Google</span>
+            </button>
+
+            <div class="divider">
+                <span class="divider-text">یان</span>
+            </div>
+
+            <div class="back-link">
+                <a href="Quran.html" class="back-btn">
+                    <i class="fas fa-arrow-right"></i>
+                    گەڕانەوە بۆ سەرەتا
+                </a>
+            </div>
+
+            <p class="privacy-text">
+                پاراستنی تایبەتێتیت لەپێش دایە – بە چوونەژووروەوە، ڕازیت بە
+                <a href="#" class="privacy-link">سیاسەتی تایبەتێتی</a> و
+                <a href="#" class="privacy-link">مەرج و بەندەکان</a>مان
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const CLIENT_ID = "510335424343-i42ua2q2718pg230e0kbrgha8edtmb14.apps.googleusercontent.com";
+
+        let currentUser = null;
+
+        function initGoogleSignIn() {
+            google.accounts.id.initialize({
+                client_id: CLIENT_ID,
+                callback: handleCredentialResponse,
+            });
+
+            google.accounts.id.renderButton(
+                document.getElementById('googleSignInBtn'),
+                {
+                    theme: "filled_black",
+                    size: "large",
+                    text: "continue_with",
+                    width: 400,
+                    locale: "ku"
+                }
+            );
+        }
+
+        function handleCredentialResponse(response) {
+            // Show loading
+            const btn = document.getElementById('googleSignInBtn');
+            btn.classList.add('loading');
+
+            const credential = response.credential;
+            const payload = parseJwt(credential);
+
+            currentUser = {
+                name: payload.name,
+                email: payload.email,
+                picture: payload.picture,
+                sub: payload.sub
+            };
+
+            showNotification('بەخێربێیت ' + currentUser.name.split(' ')[0] + '!');
+
+            // Store user data
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            localStorage.setItem('isAuthenticated', 'true');
+
+            // Redirect to main page after 1.5 seconds
+            setTimeout(() => {
+                window.location.href = 'Quran.html';
+            }, 1500);
+        }
+
+        function parseJwt(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        function showNotification(msg) {
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.textContent = msg;
+            document.body.appendChild(notif);
+
+            setTimeout(() => {
+                notif.style.animation = 'slideInRight 0.3s ease reverse';
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
+        }
+
+        // Check if user is already logged in
+        window.addEventListener('load', () => {
+            const isAuthenticated = localStorage.getItem('isAuthenticated');
+            if (isAuthenticated === 'true') {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user) {
+                    showNotification('ئێوە پێشتر چووبوونەتە ژوورەوە');
+                    setTimeout(() => {
+                        window.location.href = 'Quran.html';
+                    }, 1500);
+                    return;
+                }
+            }
+
+            // Initialize Google Sign-In
+            initGoogleSignIn();
+        });
+    </script>
+</body>
+</html>

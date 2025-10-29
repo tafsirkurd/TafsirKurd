@@ -1,0 +1,14 @@
+i add 
+* bookmark.html
+* goals.html
+* settings.html
+* profile.html
+* login.html
+
+i just wanna something like this that images i send you but with my style and design cause i don't wanna change anything my design in css just add this icon in sidebar top of the screen with that html pages i have it i mean with my things..
+
+and the data for Kurdish tafsir and also Quran its not work and i have both json is in D:\WEBSITE\src\data 
+-kurdish_tafsir.json
+-quran.json
+
+i wanna fully entire code to just paste it into my files.
