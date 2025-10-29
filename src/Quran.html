@@ -1618,8 +1618,8 @@
         @media (max-width: 768px) {
             :root {
                 --sidebar-width: 85%;
-                --arabic-size: 1.8rem;
-                --tafsir-size: 1rem;
+                --arabic-size: 1.5rem;
+                --tafsir-size: 0.9rem;
             }
 
             .header-container {
@@ -1627,12 +1627,12 @@
             }
 
             .header-title {
-                font-size: 1.3rem;
+                font-size: 1.2rem;
             }
 
             .header-logo-img {
-                width: 55px;
-                height: 55px;
+                width: 50px;
+                height: 50px;
             }
 
             .header-btn span {
@@ -2247,8 +2247,8 @@
 
         <!-- Footer -->
         <footer>
-            <img src="assets/images/logo.png" alt="Logo" class="footer-logo-img logo-image">
-            <p>&copy; 2025 تەفسیر کوورد. هەمی مافی پاراستنە.</p>
+            <img src="assets/images/logo.png" alt="Tafsir Kurd logo" class="footer-logo-img logo-image">
+            <p>&copy; <span id="year"></span> تەفسیر کورد. هەمی ماف د پاراستینە. خودایێ مەزن بەرەکەتێ بێخیتە هەوڵ و ماندیبوونا مە.</p>
         </footer>
 
     </div>
@@ -3441,6 +3441,9 @@
             document.body.appendChild(notif);
             setTimeout(() => notif.remove(), 3000);
         }
+
+        // Set current year in footer
+        document.getElementById('year').textContent = new Date().getFullYear();
 
         console.log('✅ تەفسیر کوورد - Quran Reader loaded successfully');
     </script>

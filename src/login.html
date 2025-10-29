@@ -748,16 +748,10 @@
 
         function startGoogleSignIn() {
             const btn = document.getElementById('googleSignInBtn');
-            btn.classList.add('loading');
+            btn.classList.remove('loading');
 
-            // Use Google's prompt method (opens in new window/tab)
-            google.accounts.id.prompt((notification) => {
-                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                    // If One Tap doesn't work, render the button
-                    btn.classList.remove('loading');
-                    renderGoogleSignInButton();
-                }
-            });
+            // Directly show the Google sign-in modal (no English One Tap first)
+            renderGoogleSignInButton();
         }
 
         function renderGoogleSignInButton() {
