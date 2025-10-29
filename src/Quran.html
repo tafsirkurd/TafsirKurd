@@ -2395,18 +2395,18 @@
                     <div class="filter-group">
                         <button class="filter-btn active" data-filter="surah" onclick="changeFilter('surah')">
                             <i class="fas fa-book"></i>
-                            <span>Surah</span>
+                            <span>سوورە</span>
                         </button>
                         <button class="filter-btn" data-filter="juz" onclick="changeFilter('juz')">
                             <i class="fas fa-bookmark"></i>
-                            <span>Juz</span>
+                            <span>جوز</span>
                         </button>
                     </div>
                     <div class="sort-group">
-                        <label style="font-weight: 600; color: var(--text); margin-right: 10px;">Sort by:</label>
+                        <label style="font-weight: 600; color: var(--text); margin-right: 10px;">ڕیزکردن بەپێی:</label>
                         <select class="sort-select" id="sortOrder" onchange="changeSortOrder()">
-                            <option value="asc">Ascending</option>
-                            <option value="desc">Descending</option>
+                            <option value="asc">لە کەمەوە بۆ زۆر</option>
+                            <option value="desc">لە زۆرەوە بۆ کەم</option>
                         </select>
                     </div>
                 </div>
@@ -3101,7 +3101,7 @@
                                 ${juzNum}
                             </div>
                             <div class="surah-card-info">
-                                <div class="surah-card-english" style="font-weight: 700;">Juz ${juzNum}</div>
+                                <div class="surah-card-english" style="font-weight: 700;">جوزی ${juzNum}</div>
                                 <div class="surah-card-arabic" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">
                                     ${surahList.substring(0, 50)}${surahList.length > 50 ? '...' : ''}
                                 </div>
