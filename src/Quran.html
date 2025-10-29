@@ -3039,18 +3039,20 @@
             const { surah, ayah } = currentCopyAyah;
             const key = `${surah}-${ayah}`;
 
-            // Get text from displayed element to ensure it's exactly what user sees
+            // Get text from displayed element using textContent (preserves Unicode better)
             const ayahElement = document.getElementById(`ayah-${ayah}`);
             if (!ayahElement) return;
 
             const arabicElement = ayahElement.querySelector('.ayah-arabic');
             const tafsirElement = ayahElement.querySelector('.tafsir-content');
 
-            const arabicText = arabicElement ? arabicElement.innerText : '';
-            const tafsirText = tafsirElement ? tafsirElement.innerText : '';
+            const arabicText = arabicElement ? arabicElement.textContent.trim() : '';
+            const tafsirText = tafsirElement ? tafsirElement.textContent.trim() : '';
             const surahName = surahNames[surah];
 
-            const text = arabicText + '\n\n' + tafsirText + '\n\n' + surahName.english + ' (' + surahName.arabic + ') - ئایەت ' + ayah + '\n\nhttps://tafsirkurd.com/Quran';
+            // Build text with proper line breaks
+            const parts = [arabicText, tafsirText, surahName.english + ' (' + surahName.arabic + ') - ئایەت ' + ayah, 'https://tafsirkurd.com/Quran'];
+            const text = parts.join('\n\n');
 
             copyToClipboard(text);
             closeCopyModal();
@@ -3062,15 +3064,17 @@
 
             const { surah, ayah } = currentCopyAyah;
 
-            // Get text from displayed element to ensure it's exactly what user sees
+            // Get text from displayed element using textContent (preserves Unicode better)
             const ayahElement = document.getElementById(`ayah-${ayah}`);
             if (!ayahElement) return;
 
             const arabicElement = ayahElement.querySelector('.ayah-arabic');
-            const arabicText = arabicElement ? arabicElement.innerText : '';
+            const arabicText = arabicElement ? arabicElement.textContent.trim() : '';
             const surahName = surahNames[surah];
 
-            const text = arabicText + '\n\n' + surahName.english + ' (' + surahName.arabic + ') - ئایەت ' + ayah + '\n\nhttps://tafsirkurd.com/Quran';
+            // Build text with proper line breaks
+            const parts = [arabicText, surahName.english + ' (' + surahName.arabic + ') - ئایەت ' + ayah, 'https://tafsirkurd.com/Quran'];
+            const text = parts.join('\n\n');
 
             copyToClipboard(text);
             closeCopyModal();
