@@ -3039,10 +3039,15 @@
             const { surah, ayah } = currentCopyAyah;
             const key = `${surah}-${ayah}`;
 
-            // Get text from JSON data for accurate encoding
-            const verse = quranData[surah].verses.find(v => v.verse === ayah);
-            const arabicText = verse.text;
-            const tafsirText = tafsirData[key] || 'تەفسیر بەردەست نییە';
+            // Get text from displayed element to ensure it's exactly what user sees
+            const ayahElement = document.getElementById(`ayah-${ayah}`);
+            if (!ayahElement) return;
+
+            const arabicElement = ayahElement.querySelector('.ayah-arabic');
+            const tafsirElement = ayahElement.querySelector('.tafsir-content');
+
+            const arabicText = arabicElement ? arabicElement.innerText : '';
+            const tafsirText = tafsirElement ? tafsirElement.innerText : '';
             const surahName = surahNames[surah];
 
             const text = arabicText + '\n\n' + tafsirText + '\n\n' + surahName.english + ' (' + surahName.arabic + ') - ئایەت ' + ayah + '\n\nhttps://tafsirkurd.com/Quran';
@@ -3057,9 +3062,12 @@
 
             const { surah, ayah } = currentCopyAyah;
 
-            // Get text from JSON data for accurate encoding
-            const verse = quranData[surah].verses.find(v => v.verse === ayah);
-            const arabicText = verse.text;
+            // Get text from displayed element to ensure it's exactly what user sees
+            const ayahElement = document.getElementById(`ayah-${ayah}`);
+            if (!ayahElement) return;
+
+            const arabicElement = ayahElement.querySelector('.ayah-arabic');
+            const arabicText = arabicElement ? arabicElement.innerText : '';
             const surahName = surahNames[surah];
 
             const text = arabicText + '\n\n' + surahName.english + ' (' + surahName.arabic + ') - ئایەت ' + ayah + '\n\nhttps://tafsirkurd.com/Quran';
