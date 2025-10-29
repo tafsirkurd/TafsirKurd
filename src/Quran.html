@@ -857,6 +857,54 @@
             font-family: 'IBM Plex Sans Arabic', sans-serif;
         }
 
+        /* Navigation Menu Items */
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all var(--transition);
+            cursor: pointer;
+        }
+
+        .nav-menu-item:hover {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+            transform: translateX(-5px);
+        }
+
+        .nav-menu-item i {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+            transition: transform var(--transition);
+        }
+
+        .nav-menu-item:hover i {
+            transform: scale(1.2);
+        }
+
+        .nav-menu-item.active {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+        }
+
         .profile-section {
             display: flex;
             align-items: center;
@@ -1756,9 +1804,36 @@
                     <div class="profile-email" id="profileEmail">email@gmail.com</div>
                 </div>
             </div>
-            <button class="signout-btn" onclick="signOut()">
-                <i class="fas fa-sign-out-alt"></i> دەرچوون
-            </button>
+        </div>
+
+        <!-- Navigation Menu -->
+        <div class="feather-section" id="navMenuSection" style="display: none;">
+            <div class="nav-menu">
+                <a href="profile.html" class="nav-menu-item">
+                    <i class="fas fa-user"></i>
+                    <span>پرۆفایل</span>
+                </a>
+                <a href="Dashboard.html" class="nav-menu-item">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>داشبۆرد</span>
+                </a>
+                <a href="bookmarks.html" class="nav-menu-item">
+                    <i class="fas fa-bookmark"></i>
+                    <span>نیشانەکراوەکان</span>
+                </a>
+                <a href="goals.html" class="nav-menu-item">
+                    <i class="fas fa-bullseye"></i>
+                    <span>ئامانجەکان</span>
+                </a>
+                <div class="nav-menu-item" onclick="openSettings(); closeFeatherOverlay();">
+                    <i class="fas fa-cog"></i>
+                    <span>ڕێکخستنەکان</span>
+                </div>
+                <div class="nav-menu-item" onclick="signOut()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>دەرچوون</span>
+                </div>
+            </div>
         </div>
 
         <!-- Stats -->
@@ -2160,6 +2235,7 @@
             document.getElementById('profileName').textContent = currentUser.name;
             document.getElementById('profileEmail').textContent = currentUser.email;
             document.getElementById('profileSection').style.display = 'block';
+            document.getElementById('navMenuSection').style.display = 'block';
 
             loadUserData();
         }
@@ -2178,6 +2254,7 @@
             `;
 
             document.getElementById('profileSection').style.display = 'none';
+            document.getElementById('navMenuSection').style.display = 'none';
             closeFeatherOverlay();
             showNotification('بە سەرکەوتوویی دەرچوویت');
 
