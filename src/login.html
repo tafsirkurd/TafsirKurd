@@ -441,13 +441,31 @@
             display: none;
         }
 
+        /* Tablet */
+        @media (max-width: 992px) {
+            .login-card {
+                padding: 40px 30px;
+            }
+
+            .login-title {
+                font-size: 2.2rem;
+            }
+        }
+
+        /* Mobile Large */
         @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
             .login-card {
                 padding: 35px 25px;
+                border-radius: 20px;
             }
 
             .login-title {
                 font-size: 1.8rem;
+                margin-bottom: 12px;
             }
 
             .login-subtitle {
@@ -461,6 +479,119 @@
 
             .features-list {
                 padding: 20px;
+                margin: 25px 0;
+            }
+
+            .feature-item {
+                font-size: 0.95rem;
+                padding: 10px 0;
+            }
+
+            .logo-section img {
+                width: 70px;
+                height: 70px;
+            }
+
+            .logo-text {
+                font-size: 1.5rem;
+            }
+
+            .notification {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                text-align: center;
+            }
+        }
+
+        /* Mobile Small */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .login-container {
+                max-width: 100%;
+            }
+
+            .login-card {
+                padding: 25px 20px;
+                border-radius: 18px;
+            }
+
+            .login-title {
+                font-size: 1.5rem;
+            }
+
+            .login-subtitle {
+                font-size: 0.88rem;
+            }
+
+            .logo-section img {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 15px;
+            }
+
+            .logo-text {
+                font-size: 1.3rem;
+            }
+
+            .features-list {
+                padding: 18px;
+                margin: 20px 0;
+            }
+
+            .feature-item {
+                font-size: 0.88rem;
+                gap: 12px;
+            }
+
+            .feature-icon {
+                font-size: 1.1rem;
+                min-width: 25px;
+            }
+
+            .feature-badge {
+                font-size: 0.7rem;
+                padding: 3px 10px;
+            }
+
+            .google-signin-btn {
+                font-size: 0.95rem;
+                padding: 15px;
+                margin: 25px 0 20px 0;
+            }
+
+            .back-btn {
+                padding: 10px 20px;
+                font-size: 0.95rem;
+            }
+
+            .privacy-text {
+                font-size: 0.8rem;
+                margin-top: 20px;
+                padding-top: 20px;
+            }
+
+            .shape {
+                display: none;
+            }
+        }
+
+        /* Mobile Extra Small */
+        @media (max-width: 360px) {
+            .login-card {
+                padding: 20px 15px;
+            }
+
+            .login-title {
+                font-size: 1.3rem;
+            }
+
+            .google-signin-btn {
+                font-size: 0.9rem;
+                padding: 14px;
             }
         }
     </style>
@@ -578,9 +709,9 @@
             localStorage.setItem('user', JSON.stringify(currentUser));
             localStorage.setItem('isAuthenticated', 'true');
 
-            // Redirect to main page after 1.5 seconds
+            // Redirect to complete signup page after 1.5 seconds
             setTimeout(() => {
-                window.location.href = 'Quran.html';
+                window.location.href = 'complete-signup.html';
             }, 1500);
         }
 
