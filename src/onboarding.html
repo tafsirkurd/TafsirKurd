@@ -523,15 +523,64 @@
         let currentSlide = 0;
         const totalSlides = 5;
 
-        // Check if user is authenticated
+        // Handle OAuth callback and check authentication
         window.addEventListener('load', () => {
-            const isAuthenticated = localStorage.getItem('isAuthenticated');
             const onboardingCompleted = localStorage.getItem('onboardingCompleted');
 
-            if (isAuthenticated !== 'true') {
-                // Not authenticated, redirect to login
-                window.location.href = 'login.html';
-                return;
+            // Check if coming back from Google OAuth (hash contains id_token)
+            const hash = window.location.hash.substring(1);
+            const params = new URLSearchParams(hash);
+            const idToken = params.get('id_token');
+            const state = params.get('state');
+
+            if (idToken) {
+                // Verify state to prevent CSRF
+                const savedState = sessionStorage.getItem('oauth_state');
+                if (state && state === savedState) {
+                    // Parse the JWT token
+                    try {
+                        const payload = parseJwt(idToken);
+
+                        const currentUser = {
+                            name: payload.name,
+                            email: payload.email,
+                            picture: payload.picture,
+                            sub: payload.sub
+                        };
+
+                        // Store user data
+                        localStorage.setItem('user', JSON.stringify(currentUser));
+                        localStorage.setItem('isAuthenticated', 'true');
+
+                        // Clean up
+                        sessionStorage.removeItem('oauth_state');
+                        sessionStorage.removeItem('oauth_nonce');
+                        sessionStorage.removeItem('oauth_flow_started');
+
+                        // Remove hash from URL to clean it up
+                        history.replaceState(null, '', window.location.pathname);
+
+                        // Show welcome message
+                        showWelcomeMessage(currentUser.name);
+                    } catch (error) {
+                        console.error('Error parsing token:', error);
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                } else {
+                    // State mismatch, possible CSRF attack
+                    console.error('State mismatch');
+                    window.location.href = 'login.html';
+                    return;
+                }
+            } else {
+                // No token in URL, check if already authenticated
+                const isAuthenticated = localStorage.getItem('isAuthenticated');
+                if (isAuthenticated !== 'true') {
+                    // Not authenticated, redirect to login
+                    window.location.href = 'login.html';
+                    return;
+                }
             }
 
             if (onboardingCompleted === 'true') {
@@ -540,6 +589,41 @@
                 return;
             }
         });
+
+        function parseJwt(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        function showWelcomeMessage(name) {
+            // Create a welcome notification
+            const notif = document.createElement('div');
+            notif.style.position = 'fixed';
+            notif.style.top = '20px';
+            notif.style.right = '20px';
+            notif.style.left = '20px';
+            notif.style.padding = '18px 25px';
+            notif.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            notif.style.color = 'white';
+            notif.style.borderRadius = '12px';
+            notif.style.fontWeight = '600';
+            notif.style.textAlign = 'center';
+            notif.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.2)';
+            notif.style.zIndex = '10000';
+            notif.style.animation = 'slideInDown 0.5s ease-out';
+            notif.textContent = `بەخێربێیت ${name.split(' ')[0]}! 🎉`;
+
+            document.body.appendChild(notif);
+
+            setTimeout(() => {
+                notif.style.animation = 'slideInDown 0.3s ease-in reverse';
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
+        }
 
         function showSlide(index) {
             const slides = document.querySelectorAll('.slide');

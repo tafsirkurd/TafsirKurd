@@ -738,139 +738,40 @@
         let currentUser = null;
 
         function initGoogleSignIn() {
-            google.accounts.id.initialize({
-                client_id: CLIENT_ID,
-                callback: handleCredentialResponse,
-                auto_select: false,
-                cancel_on_tap_outside: true
-            });
+            // No initialization needed for redirect flow
         }
 
         function startGoogleSignIn() {
             const btn = document.getElementById('googleSignInBtn');
             btn.classList.add('loading');
 
-            // Use popup mode for Google Sign-In
-            try {
-                // First try the One Tap prompt
-                google.accounts.id.prompt((notification) => {
-                    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                        // One Tap not available, show popup instead
-                        btn.classList.remove('loading');
+            // Store that we're starting the OAuth flow
+            sessionStorage.setItem('oauth_flow_started', 'true');
 
-                        // Create popup window for Google Sign-In
-                        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-                            `client_id=${CLIENT_ID}&` +
-                            `redirect_uri=${encodeURIComponent(window.location.origin + '/login.html')}&` +
-                            `response_type=token id_token&` +
-                            `scope=openid email profile&` +
-                            `nonce=${Math.random().toString(36).substring(2)}`;
+            // Redirect to Google OAuth page (full page redirect)
+            const redirectUri = window.location.origin + '/onboarding.html';
+            const state = Math.random().toString(36).substring(2, 15);
+            const nonce = Math.random().toString(36).substring(2, 15);
 
-                        // Open in popup
-                        const popup = window.open(authUrl, 'Google Sign In', 'width=500,height=600');
+            // Store state for verification
+            sessionStorage.setItem('oauth_state', state);
+            sessionStorage.setItem('oauth_nonce', nonce);
 
-                        // If popup blocked, try rendering button
-                        if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-                            renderGoogleButton();
-                        }
-                    }
-                });
-            } catch (error) {
-                btn.classList.remove('loading');
-                renderGoogleButton();
-            }
+            // Build Google OAuth URL
+            const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' +
+                `client_id=${encodeURIComponent(CLIENT_ID)}&` +
+                `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+                `response_type=id_token token&` +
+                `scope=${encodeURIComponent('openid email profile')}&` +
+                `state=${encodeURIComponent(state)}&` +
+                `nonce=${encodeURIComponent(nonce)}&` +
+                `prompt=select_account`;
+
+            // Navigate to Google's page (full page redirect)
+            window.location.href = authUrl;
         }
 
-        function renderGoogleButton() {
-            // Fallback: render actual Google button
-            const btn = document.getElementById('googleSignInBtn');
-            const tempContainer = document.createElement('div');
-            tempContainer.style.position = 'fixed';
-            tempContainer.style.top = '50%';
-            tempContainer.style.left = '50%';
-            tempContainer.style.transform = 'translate(-50%, -50%)';
-            tempContainer.style.zIndex = '10000';
-            tempContainer.style.background = 'white';
-            tempContainer.style.padding = '30px';
-            tempContainer.style.borderRadius = '15px';
-            tempContainer.style.boxShadow = '0 20px 60px rgba(0,0,0,0.3)';
-
-            const overlay = document.createElement('div');
-            overlay.style.position = 'fixed';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.width = '100%';
-            overlay.style.height = '100%';
-            overlay.style.background = 'rgba(0,0,0,0.5)';
-            overlay.style.zIndex = '9999';
-
-            const closeBtn = document.createElement('button');
-            closeBtn.innerHTML = '<i class="fas fa-times"></i>';
-            closeBtn.style.position = 'absolute';
-            closeBtn.style.top = '10px';
-            closeBtn.style.right = '10px';
-            closeBtn.style.background = 'none';
-            closeBtn.style.border = 'none';
-            closeBtn.style.fontSize = '1.5rem';
-            closeBtn.style.cursor = 'pointer';
-            closeBtn.style.color = '#666';
-            closeBtn.onclick = () => {
-                overlay.remove();
-                tempContainer.remove();
-                btn.classList.remove('loading');
-            };
-
-            tempContainer.appendChild(closeBtn);
-            document.body.appendChild(overlay);
-            document.body.appendChild(tempContainer);
-
-            google.accounts.id.renderButton(tempContainer, {
-                theme: "filled_black",
-                size: "large",
-                type: "standard",
-                text: "continue_with",
-                width: 300,
-                locale: "en"
-            });
-
-            btn.classList.remove('loading');
-        }
-
-        function handleCredentialResponse(response) {
-            // Show loading
-            const btn = document.getElementById('googleSignInBtn');
-            btn.classList.add('loading');
-
-            const credential = response.credential;
-            const payload = parseJwt(credential);
-
-            currentUser = {
-                name: payload.name,
-                email: payload.email,
-                picture: payload.picture,
-                sub: payload.sub
-            };
-
-            showNotification('بەخێربێیت ' + currentUser.name.split(' ')[0] + '! ئێستا دەتگەیەنینە لاپەڕەی تەواوکردنی تۆمارکردن...');
-
-            // Store user data
-            localStorage.setItem('user', JSON.stringify(currentUser));
-            localStorage.setItem('isAuthenticated', 'true');
-
-            // Redirect to onboarding page after 1.5 seconds
-            setTimeout(() => {
-                window.location.href = 'onboarding.html';
-            }, 1500);
-        }
-
-        function parseJwt(token) {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
-        }
+        // No callback handler needed on login page anymore
 
         function showNotification(msg) {
             const notif = document.createElement('div');
@@ -897,9 +798,6 @@
                     return;
                 }
             }
-
-            // Initialize Google Sign-In
-            initGoogleSignIn();
         });
     </script>
 </body>
