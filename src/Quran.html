@@ -3045,8 +3045,9 @@
             const verse = quranData[surah].verses.find(v => Number(v.verse) === Number(ayah));
             if (!verse) return;
 
-            const arabicText = verse.text;
-            const tafsirText = tafsirData[key] || 'تەفسیر بەردەست نییە';
+            // Normalize Arabic text to NFC (Canonical Composition) for proper Unicode
+            const arabicText = verse.text.normalize('NFC');
+            const tafsirText = (tafsirData[key] || 'تەفسیر بەردەست نییە').normalize('NFC');
             const surahName = surahNames[surah];
 
             // Build text with proper line breaks
@@ -3069,7 +3070,8 @@
             const verse = quranData[surah].verses.find(v => Number(v.verse) === Number(ayah));
             if (!verse) return;
 
-            const arabicText = verse.text;
+            // Normalize Arabic text to NFC (Canonical Composition) for proper Unicode
+            const arabicText = verse.text.normalize('NFC');
             const surahName = surahNames[surah];
 
             // Build text with proper line breaks
