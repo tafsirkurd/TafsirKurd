@@ -4,6 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="description" content="Quran - Read the Holy Quran with Kurdish translations - Tafsir Kurd">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
     <title>قوورئان - تەفسیر کوورد</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -2404,7 +2408,28 @@
             loadRandomAyah();
             startRandomAyahTimer();
             updateContinueReading();
+            handleUrlParameters();
         });
+
+        // Handle URL parameters for direct ayah navigation
+        function handleUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const surahParam = urlParams.get('surah');
+            const ayahParam = urlParams.get('ayah');
+
+            if (surahParam) {
+                const surahNum = parseInt(surahParam);
+                const ayahNum = ayahParam ? parseInt(ayahParam) : null;
+
+                if (surahNum >= 1 && surahNum <= 114) {
+                    if (ayahNum) {
+                        openSurahWithAyah(surahNum, ayahNum);
+                    } else {
+                        openSurah(surahNum);
+                    }
+                }
+            }
+        }
 
         // Check Authentication
         function checkAuthentication() {
@@ -2465,7 +2490,10 @@
             const preloader = document.getElementById('preloader');
             const mainContent = document.getElementById('mainContent');
 
-            if (performance.navigation.type === 2) {
+            // Check if preloader has already been shown in this session
+            const hasSeenPreloader = sessionStorage.getItem('hasSeenPreloader');
+
+            if (hasSeenPreloader || performance.navigation.type === 2) {
                 preloader.style.display = 'none';
                 mainContent.classList.add('loaded');
                 document.body.classList.remove('no-scroll');
@@ -2485,6 +2513,8 @@
                         preloader.style.display = 'none';
                         mainContent.classList.add('loaded');
                         document.body.classList.remove('no-scroll');
+                        // Mark that preloader has been shown in this session
+                        sessionStorage.setItem('hasSeenPreloader', 'true');
                     }, 1000);
                 }, remainingTime);
             }
@@ -3444,6 +3474,19 @@
 
         // Set current year in footer
         document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Register Service Worker for offline support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registered successfully:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('❌ Service Worker registration failed:', error);
+                    });
+            });
+        }
 
         console.log('✅ تەفسیر کوورد - Quran Reader loaded successfully');
     </script>

@@ -1,0 +1,28 @@
+{
+  "name": "تەفسیر کوورد - Tafsir Kurd",
+  "short_name": "تەفسیر کوورد",
+  "description": "قوورئانی پیرۆز بە تەفسیری کوردی - Read the Holy Quran with Kurdish Tafsir",
+  "start_url": "/Quran.html",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "lang": "ku",
+  "dir": "rtl",
+  "categories": ["education", "books", "religion"],
+  "screenshots": []
+}

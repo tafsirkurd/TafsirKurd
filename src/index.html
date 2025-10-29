@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="تەفسیرا کوردی - بەردەستکرنا شرۆڤەکا ڕوون و ڕەسەن یا قورئانێ ب زمانێ کوردی ب ڕێکا وانێن کورت و هویربینیێن تەفسیرێ.">
   <meta name="keywords" content="تەفسیر، قورئان، کوردی، خواندنا ئیسلامی، شرۆڤەکرنا قورئانێ">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>تەفسیر کورد - شرۆڤەکرنا قورئانێ ب زمانێ کوردی</title>
 
   <!-- Favicons -->
@@ -1045,6 +1048,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (supabase) {
         setInterval(loadWebsiteContent, 300000);
+    }
+
+    // Register Service Worker for offline support
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+                console.log('✅ Service Worker registered successfully:', registration.scope);
+            })
+            .catch(error => {
+                console.log('❌ Service Worker registration failed:', error);
+            });
     }
 });
 
