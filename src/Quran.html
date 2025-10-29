@@ -3038,17 +3038,20 @@
 
             const { surah, ayah } = currentCopyAyah;
             const key = `${surah}-${ayah}`;
-            const verse = quranData[surah].verses.find(v => v.verse === ayah);
-            const tafsir = tafsirData[key] || 'تەفسیر بەردەست نییە';
+
+            // Get text directly from displayed elements to ensure proper encoding
+            const ayahElement = document.getElementById(`ayah-${ayah}`);
+            const arabicText = ayahElement.querySelector('.ayah-arabic').textContent;
+            const tafsirText = ayahElement.querySelector('.tafsir-content').textContent;
             const surahName = surahNames[surah];
 
-            const text = `${verse.text}
+            const text = `${arabicText}
 
-${tafsir}
+${tafsirText}
 
 ${surahName.english} (${surahName.arabic}) - ئایەت ${ayah}
 
-https://tafsirkurd.com/Quran.html`;
+https://tafsirkurd.com/Quran`;
 
             copyToClipboard(text);
             closeCopyModal();
@@ -3059,14 +3062,17 @@ https://tafsirkurd.com/Quran.html`;
             if (!currentCopyAyah) return;
 
             const { surah, ayah } = currentCopyAyah;
-            const verse = quranData[surah].verses.find(v => v.verse === ayah);
+
+            // Get text directly from displayed elements to ensure proper encoding
+            const ayahElement = document.getElementById(`ayah-${ayah}`);
+            const arabicText = ayahElement.querySelector('.ayah-arabic').textContent;
             const surahName = surahNames[surah];
 
-            const text = `${verse.text}
+            const text = `${arabicText}
 
 ${surahName.english} (${surahName.arabic}) - ئایەت ${ayah}
 
-https://tafsirkurd.com/Quran.html`;
+https://tafsirkurd.com/Quran`;
 
             copyToClipboard(text);
             closeCopyModal();
