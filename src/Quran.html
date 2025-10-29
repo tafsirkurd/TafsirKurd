@@ -1392,6 +1392,107 @@
             }
         }
 
+        /* Copy Modal */
+        .copy-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .copy-modal.active {
+            display: flex;
+        }
+
+        .copy-modal-content {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+            animation: scaleIn 0.3s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .copy-modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            text-align: center;
+        }
+
+        .copy-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .copy-option-btn {
+            padding: 15px 20px;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .copy-option-btn:hover {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .copy-option-btn i {
+            font-size: 1.2rem;
+        }
+
+        .copy-cancel-btn {
+            margin-top: 15px;
+            padding: 12px;
+            background: transparent;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            transition: all var(--transition);
+            width: 100%;
+        }
+
+        .copy-cancel-btn:hover {
+            background: var(--bg);
+        }
+
         /* Footer */
         footer {
             background: var(--card-bg);
@@ -1706,6 +1807,24 @@
                     <i class="fas fa-redo"></i> گەڕاندنەوەی ڕێکخستنەکان
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Copy Modal -->
+    <div class="copy-modal" id="copyModal">
+        <div class="copy-modal-content">
+            <h3 class="copy-modal-title">کۆپیکردنی ئایەت</h3>
+            <div class="copy-options">
+                <button class="copy-option-btn" onclick="copyAyahWithTafsir()">
+                    <i class="fas fa-copy"></i>
+                    <span>کۆپی لەگەڵ تەفسیر</span>
+                </button>
+                <button class="copy-option-btn" onclick="copyAyahWithoutTafsir()">
+                    <i class="fas fa-file-alt"></i>
+                    <span>کۆپی بەبێ تەفسیر</span>
+                </button>
+            </div>
+            <button class="copy-cancel-btn" onclick="closeCopyModal()">پاشگەزبوونەوە</button>
         </div>
     </div>
 
@@ -2746,6 +2865,11 @@
                         <div class="ayah-header">
                             <div class="ayah-number">${verse.verse}</div>
                             <div class="ayah-actions">
+                                <button class="ayah-action-btn"
+                                        onclick="openCopyModal(${surahNum}, ${verse.verse})"
+                                        title="کۆپیکردن">
+                                    <i class="fas fa-copy"></i>
+                                </button>
                                 <button class="ayah-action-btn ${isBookmarked ? 'bookmarked' : ''}"
                                         onclick="toggleBookmark(${surahNum}, ${verse.verse})"
                                         title="نیشانەکردن">
@@ -2892,6 +3016,88 @@
 
             // Save to localStorage
             saveUserData();
+        }
+
+        // Copy Functions
+        let currentCopyAyah = null;
+
+        function openCopyModal(surah, ayah) {
+            currentCopyAyah = { surah, ayah };
+            document.getElementById('copyModal').classList.add('active');
+            document.body.classList.add('no-scroll');
+        }
+
+        function closeCopyModal() {
+            document.getElementById('copyModal').classList.remove('active');
+            document.body.classList.remove('no-scroll');
+            currentCopyAyah = null;
+        }
+
+        function copyAyahWithTafsir() {
+            if (!currentCopyAyah) return;
+
+            const { surah, ayah } = currentCopyAyah;
+            const key = `${surah}-${ayah}`;
+            const verse = quranData[surah].verses.find(v => v.verse === ayah);
+            const tafsir = tafsirData[key] || 'تەفسیر بەردەست نییە';
+            const surahName = surahNames[surah];
+
+            const text = `${verse.text}
+
+${tafsir}
+
+${surahName.english} (${surahName.arabic}) - ئایەت ${ayah}
+
+https://tafsirkurd.com/Quran.html`;
+
+            copyToClipboard(text);
+            closeCopyModal();
+            showNotification('کۆپیکرا لەگەڵ تەفسیر');
+        }
+
+        function copyAyahWithoutTafsir() {
+            if (!currentCopyAyah) return;
+
+            const { surah, ayah } = currentCopyAyah;
+            const verse = quranData[surah].verses.find(v => v.verse === ayah);
+            const surahName = surahNames[surah];
+
+            const text = `${verse.text}
+
+${surahName.english} (${surahName.arabic}) - ئایەت ${ayah}
+
+https://tafsirkurd.com/Quran.html`;
+
+            copyToClipboard(text);
+            closeCopyModal();
+            showNotification('کۆپیکرا بەبێ تەفسیر');
+        }
+
+        function copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(err => {
+                    // Fallback method
+                    fallbackCopyToClipboard(text);
+                });
+            } else {
+                fallbackCopyToClipboard(text);
+            }
+        }
+
+        function fallbackCopyToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+            }
+            document.body.removeChild(textArea);
         }
 
         // Reading Position Functions
