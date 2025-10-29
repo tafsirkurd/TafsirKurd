@@ -1885,7 +1885,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
                         <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 10px;">
                             <i class="fas fa-star"></i>
-                            ئایەتێکی هەڵبژێردراو
+                            ئایەتی ڕۆژانە
                         </div>
                         <div style="background: var(--bg); padding: 10px 20px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-clock"></i>
@@ -2926,30 +2926,73 @@
             }
         }
 
-        // Random Ayah Functions
+        // Random Ayah Functions - Daily Ayah (changes at midnight)
         function loadRandomAyah() {
             if (!quranData) {
                 setTimeout(loadRandomAyah, 1000);
                 return;
             }
 
-            const randomSurah = Math.floor(Math.random() * 114) + 1;
-            const surahData = quranData[randomSurah];
+            // Get today's date as string (YYYY-MM-DD)
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
 
-            if (surahData && surahData.verses && surahData.verses.length > 0) {
-                const randomAyahIndex = Math.floor(Math.random() * surahData.verses.length);
-                const randomAyah = surahData.verses[randomAyahIndex];
+            // Check if we have ayah for today in localStorage
+            const storedData = localStorage.getItem('dailyAyah');
+            let dailyAyah = null;
 
-                const key = `${randomSurah}-${randomAyah.verse}`;
+            if (storedData) {
+                try {
+                    dailyAyah = JSON.parse(storedData);
+                    // Check if it's still today's ayah
+                    if (dailyAyah.date !== dateStr) {
+                        dailyAyah = null; // Expired, need new ayah
+                    }
+                } catch (e) {
+                    dailyAyah = null;
+                }
+            }
+
+            // Generate new ayah if we don't have one for today
+            if (!dailyAyah) {
+                // Use date as seed for consistent random (same ayah all day)
+                const seed = parseInt(dateStr.replace(/-/g, ''));
+                const seededRandom = (seed) => {
+                    const x = Math.sin(seed++) * 10000;
+                    return x - Math.floor(x);
+                };
+
+                const randomSurah = Math.floor(seededRandom(seed) * 114) + 1;
+                const surahData = quranData[randomSurah];
+
+                if (surahData && surahData.verses && surahData.verses.length > 0) {
+                    const randomAyahIndex = Math.floor(seededRandom(seed + 1) * surahData.verses.length);
+                    const randomAyah = surahData.verses[randomAyahIndex];
+
+                    dailyAyah = {
+                        date: dateStr,
+                        surah: randomSurah,
+                        ayah: randomAyah.verse,
+                        text: randomAyah.text
+                    };
+
+                    // Store in localStorage
+                    localStorage.setItem('dailyAyah', JSON.stringify(dailyAyah));
+                }
+            }
+
+            // Display the ayah
+            if (dailyAyah) {
+                const key = `${dailyAyah.surah}-${dailyAyah.ayah}`;
                 const tafsir = tafsirData[key] || 'تەفسیر بەردەست نییە';
 
-                document.getElementById('randomAyahArabic').textContent = randomAyah.text;
+                document.getElementById('randomAyahArabic').textContent = dailyAyah.text;
                 document.getElementById('randomAyahKurdish').textContent = tafsir;
                 document.getElementById('randomAyahRef').textContent =
-                    `${surahNames[randomSurah].english} - ئایەت ${randomAyah.verse}`;
+                    `${surahNames[dailyAyah.surah].english} - ئایەت ${dailyAyah.ayah}`;
 
                 // Store for navigation
-                window.currentRandomAyah = { surah: randomSurah, ayah: randomAyah.verse };
+                window.currentRandomAyah = { surah: dailyAyah.surah, ayah: dailyAyah.ayah };
             }
         }
 
@@ -2960,22 +3003,30 @@
         }
 
         function startRandomAyahTimer() {
-            setInterval(() => {
+            function updateTimer() {
                 const now = new Date();
-                const nextChange = new Date();
-                nextChange.setHours(nextChange.getHours() + 1, 0, 0, 0);
+                const midnight = new Date();
+                midnight.setHours(24, 0, 0, 0); // Next midnight
 
-                const diff = nextChange - now;
+                const diff = midnight - now;
                 const hours = Math.floor(diff / 1000 / 60 / 60);
                 const minutes = Math.floor((diff / 1000 / 60) % 60);
                 const seconds = Math.floor((diff / 1000) % 60);
 
                 document.getElementById('randomTimer').textContent =
                     `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            }, 1000);
 
-            // Change ayah every hour
-            setInterval(loadRandomAyah, 3600000);
+                // Check if we passed midnight (diff is very small means we just passed)
+                if (diff < 2000) {
+                    setTimeout(() => {
+                        loadRandomAyah(); // Load new ayah at midnight
+                    }, diff + 100);
+                }
+            }
+
+            // Update timer every second
+            updateTimer();
+            setInterval(updateTimer, 1000);
         }
 
         // User Data Management
