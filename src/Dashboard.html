@@ -1094,6 +1094,10 @@
                     <i class="fas fa-edit"></i>
                     Content
                 </a>
+                <a href="#" class="nav-item" data-page="database">
+                    <i class="fas fa-database"></i>
+                    Database
+                </a>
             </nav>
         </aside>
 
@@ -1314,6 +1318,47 @@
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                <!-- Database Page -->
+                <div id="databasePage" class="page-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Database Management</h2>
+                            <button class="btn btn-secondary" id="refreshDbInfo">
+                                <i class="fas fa-sync-alt"></i>
+                                Refresh
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="dbInfoContainer">
+                                <div class="loading">
+                                    <div class="spinner"></div>
+                                    <p>Loading database information...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 24px;">
+                        <div class="card-header">
+                            <h2 class="card-title">Quick Actions</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="btn-group">
+                                <button class="btn btn-success" onclick="seedDemoData()">
+                                    <i class="fas fa-seedling"></i>
+                                    Add Demo Data
+                                </button>
+                                <button class="btn btn-secondary" onclick="exportDatabase()">
+                                    <i class="fas fa-download"></i>
+                                    Export Data
+                                </button>
+                                <button class="btn btn-danger" onclick="clearOldMessages()">
+                                    <i class="fas fa-trash"></i>
+                                    Clear Old Messages
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1621,6 +1666,7 @@
 
             // Refresh
             document.getElementById('refreshMessages').addEventListener('click', loadMessages);
+            document.getElementById('refreshDbInfo').addEventListener('click', loadDatabaseInfo);
             document.getElementById('addScheduleBtn').addEventListener('click', function() {
                 currentScheduleId = null;
                 document.getElementById('scheduleForm').reset();
@@ -1653,7 +1699,8 @@
                 videos: 'Featured Videos',
                 stats: 'Statistics',
                 schedule: 'Schedule',
-                content: 'Content'
+                content: 'Content',
+                database: 'Database Management'
             };
             document.getElementById('pageTitle').textContent = titles[page];
 
@@ -1676,6 +1723,9 @@
                     break;
                 case 'content':
                     loadContent();
+                    break;
+                case 'database':
+                    loadDatabaseInfo();
                     break;
             }
         }
@@ -2508,6 +2558,192 @@
             setTimeout(() => {
                 alertDiv.innerHTML = '';
             }, 5000);
+        }
+
+        // Database Management
+        async function loadDatabaseInfo() {
+            try {
+                const session = getStoredSession();
+                if (!session) return;
+
+                const response = await fetch('/.netlify/functions/db-info', {
+                    headers: { 'Authorization': `Bearer ${session.token}` }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayDatabaseInfo(result);
+                } else {
+                    document.getElementById('dbInfoContainer').innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
+                }
+            } catch (error) {
+                console.error('Error loading database info:', error);
+                document.getElementById('dbInfoContainer').innerHTML = '<div class="alert alert-danger">Error loading database information</div>';
+            }
+        }
+
+        function displayDatabaseInfo(result) {
+            const container = document.getElementById('dbInfoContainer');
+
+            let html = `
+                <div style="margin-bottom: 24px;">
+                    <h3 style="margin-bottom: 16px;">Database Summary</h3>
+                    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                        <div class="stat-card">
+                            <div class="stat-body">
+                                <div class="stat-label">Total Tables</div>
+                                <div class="stat-value">${result.summary.totalTables}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-body">
+                                <div class="stat-label">Tables with Data</div>
+                                <div class="stat-value">${result.summary.tablesWithData}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Table Name</th>
+                                <th>Status</th>
+                                <th>Total Records</th>
+                                <th>Sample Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            for (const [tableName, info] of Object.entries(result.tables)) {
+                const count = result.totals[tableName] || 0;
+                const statusBadge = info.exists ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-danger">Missing</span>';
+                const sampleData = info.sample ? JSON.stringify(info.sample).substring(0, 100) + '...' : 'No data';
+
+                html += `
+                    <tr>
+                        <td><strong>${tableName}</strong></td>
+                        <td>${statusBadge}</td>
+                        <td>${count}</td>
+                        <td style="font-size: 0.875rem; color: var(--text-muted);">${sampleData}</td>
+                    </tr>
+                `;
+            }
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        async function seedDemoData() {
+            if (!confirm('Add demo data to your database? This will create sample entries.')) return;
+
+            try {
+                // Add demo schedule
+                const demoSchedule = [
+                    { day: 'Monday', day_icon: 'fas fa-calendar-day', time_slot: '10:00 AM - 11:00 AM', topic: 'Tafsir Al-Fatiha', description: 'Understanding the opening chapter', position: 1, is_active: true },
+                    { day: 'Wednesday', day_icon: 'fas fa-calendar-week', time_slot: '2:00 PM - 3:00 PM', topic: 'Surah Al-Baqarah', description: 'The Cow - Deep dive', position: 2, is_active: true }
+                ];
+
+                const { error: scheduleError } = await supabase
+                    .from('daily_schedule')
+                    .insert(demoSchedule);
+
+                if (scheduleError) throw scheduleError;
+
+                // Add demo stats if none exist
+                const { data: existingStats } = await supabase
+                    .from('website_stats')
+                    .select('id')
+                    .limit(1);
+
+                if (!existingStats || existingStats.length === 0) {
+                    const { error: statsError } = await supabase
+                        .from('website_stats')
+                        .insert([{
+                            instagram_followers: 145,
+                            tiktok_followers: 89,
+                            total_views: 2.5,
+                            videos_published: 50,
+                            updated_at: new Date().toISOString()
+                        }]);
+
+                    if (statsError) throw statsError;
+                }
+
+                showToast('Demo data added successfully!', 'success');
+                loadDatabaseInfo();
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error adding demo data', 'error');
+            }
+        }
+
+        async function exportDatabase() {
+            try {
+                const data = {};
+
+                // Export all tables
+                const tables = ['website_stats', 'contact_messages', 'featured_videos', 'daily_schedule', 'website_content'];
+
+                for (const table of tables) {
+                    const { data: tableData, error } = await supabase
+                        .from(table)
+                        .select('*');
+
+                    if (!error) {
+                        data[table] = tableData;
+                    }
+                }
+
+                // Create download
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `tafsirkurd-backup-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast('Database exported successfully!', 'success');
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error exporting database', 'error');
+            }
+        }
+
+        async function clearOldMessages() {
+            const days = prompt('Clear messages older than how many days?', '30');
+            if (!days || isNaN(days)) return;
+
+            if (!confirm(`Delete all messages older than ${days} days?`)) return;
+
+            try {
+                const cutoffDate = new Date();
+                cutoffDate.setDate(cutoffDate.getDate() - parseInt(days));
+
+                const { error } = await supabase
+                    .from('contact_messages')
+                    .delete()
+                    .lt('created_at', cutoffDate.toISOString());
+
+                if (error) throw error;
+
+                showToast(`Old messages cleared successfully!`, 'success');
+                loadDatabaseInfo();
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error clearing messages', 'error');
+            }
         }
 
         // Auto-refresh
