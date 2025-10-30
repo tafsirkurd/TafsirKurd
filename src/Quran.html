@@ -2975,6 +2975,28 @@
             // Setup Sidebar
             document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
 
+            // Close sidebar when clicking outside
+            document.addEventListener('click', (e) => {
+                const sidebar = document.getElementById('sidebar');
+                const toggle = document.getElementById('sidebarToggle');
+                const isClickInsideSidebar = sidebar.contains(e.target);
+                const isClickOnToggle = toggle.contains(e.target);
+
+                if (!isClickInsideSidebar && !isClickOnToggle && sidebar.classList.contains('visible')) {
+                    closeSidebar();
+                }
+            });
+
+            // Close sidebar with ESC key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    const sidebar = document.getElementById('sidebar');
+                    if (sidebar.classList.contains('visible')) {
+                        closeSidebar();
+                    }
+                }
+            });
+
             // Hero Search
             document.getElementById('heroSearchInput').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
