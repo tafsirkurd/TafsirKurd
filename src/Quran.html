@@ -2182,6 +2182,14 @@
                     <div class="stat-value" id="statStreak">0</div>
                     <div class="stat-label">🔥 بەردەوامی</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statTime">0</div>
+                    <div class="stat-label">خولەک خوێندنەوە</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statLevel">1</div>
+                    <div class="stat-label">ئاست</div>
+                </div>
             </div>
         </div>
     </div>
@@ -2471,13 +2479,34 @@
             daysActive: 0,
             surahsCompleted: 0,
             ayahsRead: 0,
-            streak: 0
+            totalActiveMinutes: 0,
+            streak: 0,
+            level: 1
         };
         let currentSurahNumber = 1;
         let bookmarkedAyahs = [];
         let lastReadPosition = { surah: 1, ayah: 1 };
         let autoScrollEnabled = false;
         let autoScrollInterval = null;
+
+        // Activity Tracking Variables
+        let activityTracker = {
+            sessionStartTime: null,
+            lastActivityTime: null,
+            activeSeconds: 0,
+            isActive: true,
+            idleTimeout: null,
+            saveInterval: null,
+            currentSessionAyahs: new Set(),
+            scrolledAyahs: new Set(),
+            sessionData: {
+                startTime: null,
+                endTime: null,
+                activeMinutes: 0,
+                surah: null,
+                ayahsRead: []
+            }
+        };
 
         // Surah Names - ALL 114 SURAHS
         const surahNames = {
@@ -3242,6 +3271,12 @@
             // Save reading position if authenticated
             if (isUserAuthenticated) {
                 saveReadingPosition(surahNum, 1);
+
+                // Initialize activity tracking for this surah
+                initializeActivityTracking();
+
+                // Setup scroll tracking
+                setupScrollTracking();
             }
         }
 
@@ -3752,6 +3787,15 @@
                 userStats = data.stats || userStats;
                 bookmarkedAyahs = data.bookmarks || [];
                 lastReadPosition = data.lastRead || { surah: 1, ayah: 1 };
+
+                // Initialize new data structure if missing
+                if (!data.completedSurahs) data.completedSurahs = [];
+                if (!data.sessions) data.sessions = [];
+                if (!data.dailyActivity) data.dailyActivity = {};
+                if (!data.currentPosition) data.currentPosition = { surah: 1, ayah: 1, scrollPosition: 0, timestamp: Date.now() };
+
+                // Calculate real stats from session data
+                calculateRealStats(data);
             }
 
             updateStatsUI();
@@ -3762,10 +3806,18 @@
             if (!isUserAuthenticated || !currentUser) return;
 
             const userKey = 'quran_data_' + currentUser.sub;
+            const saved = localStorage.getItem(userKey);
+            const existingData = saved ? JSON.parse(saved) : {};
+
             const data = {
                 stats: userStats,
                 bookmarks: bookmarkedAyahs,
-                lastRead: lastReadPosition
+                lastRead: lastReadPosition,
+                completedSurahs: existingData.completedSurahs || [],
+                sessions: existingData.sessions || [],
+                dailyActivity: existingData.dailyActivity || {},
+                currentPosition: existingData.currentPosition || { surah: 1, ayah: 1, scrollPosition: 0, timestamp: Date.now() },
+                notes: existingData.notes || []
             };
 
             localStorage.setItem(userKey, JSON.stringify(data));
@@ -3776,6 +3828,400 @@
             document.getElementById('statSurahs').textContent = userStats.surahsCompleted;
             document.getElementById('statAyahs').textContent = userStats.ayahsRead;
             document.getElementById('statStreak').textContent = userStats.streak;
+            document.getElementById('statTime').textContent = userStats.totalActiveMinutes || 0;
+            document.getElementById('statLevel').textContent = userStats.level || 1;
+        }
+
+        // COMPREHENSIVE ACTIVITY TRACKING SYSTEM
+
+        // Calculate real stats from session history
+        function calculateRealStats(data) {
+            if (!data.sessions || data.sessions.length === 0) {
+                return;
+            }
+
+            // Calculate total active minutes
+            let totalMinutes = 0;
+            data.sessions.forEach(session => {
+                totalMinutes += session.activeMinutes || 0;
+            });
+            userStats.totalActiveMinutes = totalMinutes;
+
+            // Calculate days active (unique days with at least 1 minute)
+            const uniqueDays = new Set();
+            data.sessions.forEach(session => {
+                if (session.activeMinutes >= 1) {
+                    uniqueDays.add(session.date);
+                }
+            });
+            userStats.daysActive = uniqueDays.size;
+
+            // Calculate streak (consecutive days)
+            userStats.streak = calculateStreak(data.dailyActivity);
+
+            // Count completed surahs
+            userStats.surahsCompleted = (data.completedSurahs || []).length;
+
+            // Count unique ayahs read across all sessions
+            const allAyahsRead = new Set();
+            data.sessions.forEach(session => {
+                if (session.ayahsRead) {
+                    session.ayahsRead.forEach(ayah => {
+                        allAyahsRead.add(`${session.surah}:${ayah}`);
+                    });
+                }
+            });
+            userStats.ayahsRead = allAyahsRead.size;
+
+            // Calculate level
+            userStats.level = Math.floor(userStats.ayahsRead / 100) + 1;
+        }
+
+        // Calculate consecutive days streak
+        function calculateStreak(dailyActivity) {
+            if (!dailyActivity || Object.keys(dailyActivity).length === 0) {
+                return 0;
+            }
+
+            const today = new Date();
+            const todayStr = formatDate(today);
+            let streak = 0;
+            let checkDate = new Date(today);
+
+            // Check if today has activity
+            if (!dailyActivity[todayStr] || dailyActivity[todayStr].minutes < 1) {
+                // If no activity today, check yesterday
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+
+            while (true) {
+                const dateStr = formatDate(checkDate);
+                if (dailyActivity[dateStr] && dailyActivity[dateStr].minutes >= 1) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else {
+                    break;
+                }
+
+                // Safety limit: don't check more than 365 days
+                if (streak > 365) break;
+            }
+
+            return streak;
+        }
+
+        // Initialize activity tracking when opening a surah
+        function initializeActivityTracking() {
+            if (!isUserAuthenticated || !currentUser) return;
+
+            // Start new session
+            activityTracker.sessionStartTime = Date.now();
+            activityTracker.lastActivityTime = Date.now();
+            activityTracker.activeSeconds = 0;
+            activityTracker.isActive = true;
+            activityTracker.currentSessionAyahs = new Set();
+            activityTracker.scrolledAyahs = new Set();
+            activityTracker.sessionData = {
+                startTime: Date.now(),
+                endTime: null,
+                activeMinutes: 0,
+                surah: currentSurahNumber,
+                ayahsRead: []
+            };
+
+            // Set up activity detection
+            setupActivityDetection();
+
+            // Set up auto-save every 10 seconds
+            if (activityTracker.saveInterval) {
+                clearInterval(activityTracker.saveInterval);
+            }
+            activityTracker.saveInterval = setInterval(() => {
+                saveActivityProgress();
+            }, 10000); // Save every 10 seconds
+
+            // Track active time every second
+            setInterval(() => {
+                if (activityTracker.isActive) {
+                    activityTracker.activeSeconds++;
+                }
+            }, 1000);
+        }
+
+        // Setup activity detection (mouse, keyboard, scroll)
+        function setupActivityDetection() {
+            const events = ['mousemove', 'keydown', 'scroll', 'touchstart', 'touchmove'];
+
+            events.forEach(event => {
+                document.addEventListener(event, handleUserActivity);
+            });
+
+            // Check for idle every 5 seconds
+            setInterval(checkIdleStatus, 5000);
+        }
+
+        // Handle user activity
+        function handleUserActivity() {
+            const now = Date.now();
+
+            // If was idle and now active, resume timer
+            if (!activityTracker.isActive) {
+                activityTracker.isActive = true;
+            }
+
+            activityTracker.lastActivityTime = now;
+
+            // Clear existing idle timeout
+            if (activityTracker.idleTimeout) {
+                clearTimeout(activityTracker.idleTimeout);
+            }
+
+            // Set new idle timeout (30 seconds)
+            activityTracker.idleTimeout = setTimeout(() => {
+                activityTracker.isActive = false;
+            }, 30000);
+        }
+
+        // Check idle status
+        function checkIdleStatus() {
+            const now = Date.now();
+            const timeSinceLastActivity = now - activityTracker.lastActivityTime;
+
+            if (timeSinceLastActivity > 30000) {
+                activityTracker.isActive = false;
+            }
+        }
+
+        // Track ayah scroll/view
+        function trackAyahView(surahNumber, ayahNumber) {
+            if (!isUserAuthenticated || !currentUser) return;
+
+            const ayahKey = `${surahNumber}:${ayahNumber}`;
+
+            // Add to current session ayahs
+            activityTracker.currentSessionAyahs.add(ayahKey);
+            activityTracker.scrolledAyahs.add(ayahNumber);
+
+            // Update current position
+            lastReadPosition = { surah: surahNumber, ayah: ayahNumber };
+
+            // Check if surah is completed (scrolled through 80% of ayahs)
+            checkSurahCompletion(surahNumber);
+        }
+
+        // Check if surah should be marked as completed
+        function checkSurahCompletion(surahNumber) {
+            if (!surahNames[surahNumber]) return;
+
+            const totalAyahs = surahNames[surahNumber].ayahs;
+            const readAyahs = activityTracker.scrolledAyahs.size;
+            const completionPercent = (readAyahs / totalAyahs) * 100;
+
+            // If user scrolled through 80% of ayahs, mark as complete
+            if (completionPercent >= 80) {
+                markSurahAsCompleted(surahNumber);
+            }
+        }
+
+        // Mark surah as completed
+        function markSurahAsCompleted(surahNumber) {
+            if (!isUserAuthenticated || !currentUser) return;
+
+            const userKey = 'quran_data_' + currentUser.sub;
+            const saved = localStorage.getItem(userKey);
+            const data = saved ? JSON.parse(saved) : {};
+
+            if (!data.completedSurahs) data.completedSurahs = [];
+
+            // Check if already completed
+            const alreadyCompleted = data.completedSurahs.find(s => s.surah === surahNumber);
+            if (!alreadyCompleted) {
+                data.completedSurahs.push({
+                    surah: surahNumber,
+                    completedAt: Date.now()
+                });
+
+                // Update stats
+                userStats.surahsCompleted = data.completedSurahs.length;
+
+                // Save immediately
+                localStorage.setItem(userKey, JSON.stringify(data));
+                updateStatsUI();
+            }
+        }
+
+        // Save activity progress
+        function saveActivityProgress() {
+            if (!isUserAuthenticated || !currentUser) return;
+            if (!activityTracker.sessionStartTime) return;
+
+            const userKey = 'quran_data_' + currentUser.sub;
+            const saved = localStorage.getItem(userKey);
+            const data = saved ? JSON.parse(saved) : {};
+
+            // Calculate active minutes for this session
+            const activeMinutes = Math.floor(activityTracker.activeSeconds / 60);
+
+            // Update current position
+            data.currentPosition = {
+                surah: currentSurahNumber,
+                ayah: lastReadPosition.ayah,
+                scrollPosition: window.scrollY || 0,
+                timestamp: Date.now()
+            };
+
+            // Get today's date string
+            const today = formatDate(new Date());
+
+            // Update daily activity
+            if (!data.dailyActivity) data.dailyActivity = {};
+            if (!data.dailyActivity[today]) {
+                data.dailyActivity[today] = {
+                    minutes: 0,
+                    ayahs: 0,
+                    surahs: new Set()
+                };
+            }
+
+            // Add to today's minutes (only add the difference since last save)
+            const lastSavedMinutes = data.dailyActivity[today].minutes || 0;
+            const minutesDiff = activeMinutes - (activityTracker.sessionData.activeMinutes || 0);
+            if (minutesDiff > 0) {
+                data.dailyActivity[today].minutes += minutesDiff;
+            }
+
+            // Update session data
+            activityTracker.sessionData.activeMinutes = activeMinutes;
+            activityTracker.sessionData.endTime = Date.now();
+            activityTracker.sessionData.ayahsRead = Array.from(activityTracker.scrolledAyahs);
+
+            // Add ayahs to today's count
+            data.dailyActivity[today].ayahs = activityTracker.currentSessionAyahs.size;
+            if (Array.isArray(data.dailyActivity[today].surahs)) {
+                data.dailyActivity[today].surahs = new Set(data.dailyActivity[today].surahs);
+            }
+            data.dailyActivity[today].surahs.add(currentSurahNumber);
+
+            // Convert Set to Array for storage
+            data.dailyActivity[today].surahs = Array.from(data.dailyActivity[today].surahs);
+
+            // Recalculate stats
+            calculateRealStats(data);
+
+            // Update stats in data
+            data.stats = userStats;
+            data.lastRead = lastReadPosition;
+
+            // Save to localStorage
+            localStorage.setItem(userKey, JSON.stringify(data));
+
+            // Update UI
+            updateStatsUI();
+        }
+
+        // End session and save final data
+        function endActivitySession() {
+            if (!isUserAuthenticated || !currentUser) return;
+            if (!activityTracker.sessionStartTime) return;
+
+            const userKey = 'quran_data_' + currentUser.sub;
+            const saved = localStorage.getItem(userKey);
+            const data = saved ? JSON.parse(saved) : {};
+
+            // Calculate final active minutes
+            const activeMinutes = Math.floor(activityTracker.activeSeconds / 60);
+
+            // Only save session if user was active for at least 1 minute
+            if (activeMinutes >= 1) {
+                if (!data.sessions) data.sessions = [];
+
+                const today = formatDate(new Date());
+
+                const sessionRecord = {
+                    date: today,
+                    startTime: activityTracker.sessionData.startTime,
+                    endTime: Date.now(),
+                    activeMinutes: activeMinutes,
+                    surah: currentSurahNumber,
+                    ayahsRead: Array.from(activityTracker.scrolledAyahs)
+                };
+
+                data.sessions.push(sessionRecord);
+
+                // Update daily activity
+                if (!data.dailyActivity) data.dailyActivity = {};
+                if (!data.dailyActivity[today]) {
+                    data.dailyActivity[today] = { minutes: 0, ayahs: 0, surahs: [] };
+                }
+
+                data.dailyActivity[today].minutes = (data.dailyActivity[today].minutes || 0) + activeMinutes;
+                data.dailyActivity[today].ayahs = activityTracker.currentSessionAyahs.size;
+
+                if (Array.isArray(data.dailyActivity[today].surahs)) {
+                    data.dailyActivity[today].surahs = new Set(data.dailyActivity[today].surahs);
+                }
+                if (!data.dailyActivity[today].surahs) {
+                    data.dailyActivity[today].surahs = new Set();
+                }
+                data.dailyActivity[today].surahs.add(currentSurahNumber);
+                data.dailyActivity[today].surahs = Array.from(data.dailyActivity[today].surahs);
+
+                // Recalculate all stats
+                calculateRealStats(data);
+                data.stats = userStats;
+
+                // Save
+                localStorage.setItem(userKey, JSON.stringify(data));
+            }
+
+            // Clear intervals
+            if (activityTracker.saveInterval) {
+                clearInterval(activityTracker.saveInterval);
+            }
+
+            // Reset tracker
+            activityTracker.sessionStartTime = null;
+            activityTracker.activeSeconds = 0;
+        }
+
+        // Format date as YYYY-MM-DD
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Setup scroll tracking for ayahs
+        function setupScrollTracking() {
+            let scrollTimeout;
+
+            window.addEventListener('scroll', () => {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    detectVisibleAyahs();
+                }, 200);
+            });
+        }
+
+        // Detect which ayahs are currently visible
+        function detectVisibleAyahs() {
+            if (!isUserAuthenticated || !currentUser) return;
+
+            const ayahElements = document.querySelectorAll('.ayah-container');
+            const viewportHeight = window.innerHeight;
+
+            ayahElements.forEach(element => {
+                const rect = element.getBoundingClientRect();
+
+                // Check if ayah is in viewport
+                if (rect.top >= 0 && rect.top <= viewportHeight * 0.7) {
+                    const ayahNum = element.getAttribute('data-ayah');
+                    if (ayahNum) {
+                        trackAyahView(currentSurahNumber, parseInt(ayahNum));
+                    }
+                }
+            });
         }
 
         // Login Required Functions
@@ -3824,6 +4270,19 @@
 
         // Set current year in footer
         document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Save activity on page unload
+        window.addEventListener('beforeunload', () => {
+            endActivitySession();
+            saveUserData();
+        });
+
+        // Also save on visibility change (when user switches tabs)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                saveActivityProgress();
+            }
+        });
 
         // Register Service Worker for offline support
         if ('serviceWorker' in navigator) {

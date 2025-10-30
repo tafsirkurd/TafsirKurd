@@ -837,43 +837,164 @@
             // Load user stats
             const userKey = 'quran_data_' + currentUser.sub;
             const saved = localStorage.getItem(userKey);
-            
+
             if (saved) {
                 const data = JSON.parse(saved);
                 const stats = data.stats || {};
-                
+
+                // REAL stats from actual activity
                 document.getElementById('totalSurahs').textContent = stats.surahsCompleted || 0;
                 document.getElementById('totalAyahs').textContent = stats.ayahsRead || 0;
                 document.getElementById('totalBookmarks').textContent = (data.bookmarks || []).length;
                 document.getElementById('streakBadge').textContent = `${stats.streak || 0} ڕۆژ بەردەوام`;
-                
+
                 // Calculate level based on ayahs read
-                const level = Math.floor((stats.ayahsRead || 0) / 100) + 1;
+                const level = stats.level || Math.floor((stats.ayahsRead || 0) / 100) + 1;
                 document.getElementById('levelBadge').textContent = `ئاستی ${level}`;
-                
+
                 // Update progress bars
                 const totalAyahs = 6236; // Total ayahs in Quran
                 const quranPercent = Math.min(100, Math.round(((stats.ayahsRead || 0) / totalAyahs) * 100));
                 document.getElementById('quranProgress').textContent = quranPercent + '%';
                 document.getElementById('quranProgressBar').style.width = quranPercent + '%';
-                
-                // Monthly progress (mock)
-                const monthlyPercent = Math.min(100, Math.floor(Math.random() * 80) + 20);
+
+                // Calculate monthly progress based on REAL data
+                const monthlyPercent = calculateMonthlyProgress(data);
                 document.getElementById('monthlyProgress').textContent = monthlyPercent + '%';
                 document.getElementById('monthlyProgressBar').style.width = monthlyPercent + '%';
-                
-                // Yearly progress (mock)
-                const yearlyPercent = Math.min(100, Math.floor(Math.random() * 60) + 30);
+
+                // Calculate yearly progress based on REAL data
+                const yearlyPercent = calculateYearlyProgress(data);
                 document.getElementById('yearlyProgress').textContent = yearlyPercent + '%';
                 document.getElementById('yearlyProgressBar').style.width = yearlyPercent + '%';
-            }
 
-            // Calculate total reading time (mock)
-            document.getElementById('totalTime').textContent = Math.floor(Math.random() * 500) + 100;
+                // REAL total reading time from actual tracking
+                document.getElementById('totalTime').textContent = stats.totalActiveMinutes || 0;
+
+                // Load and display REAL recent activity
+                loadRecentActivity(data);
+            } else {
+                // No data yet
+                document.getElementById('totalTime').textContent = 0;
+            }
 
             // Member since
             const joinDate = new Date();
             document.getElementById('memberSince').textContent = `ئەندام لە ${joinDate.getFullYear()}`;
+        }
+
+        // Calculate monthly progress based on real data
+        function calculateMonthlyProgress(data) {
+            if (!data.dailyActivity) return 0;
+
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            let monthlyMinutes = 0;
+            Object.keys(data.dailyActivity).forEach(dateStr => {
+                const date = new Date(dateStr);
+                if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+                    monthlyMinutes += data.dailyActivity[dateStr].minutes || 0;
+                }
+            });
+
+            // Assume goal is to read the Quran once per month (average ~600 minutes)
+            const monthlyGoal = 600;
+            return Math.min(100, Math.round((monthlyMinutes / monthlyGoal) * 100));
+        }
+
+        // Calculate yearly progress based on real data
+        function calculateYearlyProgress(data) {
+            if (!data.dailyActivity) return 0;
+
+            const now = new Date();
+            const currentYear = now.getFullYear();
+
+            let yearlyMinutes = 0;
+            Object.keys(data.dailyActivity).forEach(dateStr => {
+                const date = new Date(dateStr);
+                if (date.getFullYear() === currentYear) {
+                    yearlyMinutes += data.dailyActivity[dateStr].minutes || 0;
+                }
+            });
+
+            // Assume goal is to read Quran 12 times per year (average ~7200 minutes)
+            const yearlyGoal = 7200;
+            return Math.min(100, Math.round((yearlyMinutes / yearlyGoal) * 100));
+        }
+
+        // Load and display recent activity from REAL session data
+        function loadRecentActivity(data) {
+            const activityContainer = document.getElementById('recentActivity');
+            if (!data.sessions || data.sessions.length === 0) {
+                activityContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">هێشتا چالاکیت نییە</div>';
+                return;
+            }
+
+            // Get last 10 sessions
+            const recentSessions = data.sessions.slice(-10).reverse();
+
+            let html = '';
+            recentSessions.forEach(session => {
+                const timeAgo = getTimeAgo(session.startTime);
+                const surahName = getSurahName(session.surah);
+
+                html += `
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-text">${session.activeMinutes} خولەک لە ${surahName} خوێندرایەوە</div>
+                            <div class="activity-time">${timeAgo}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Add streak achievements
+            const stats = data.stats || {};
+            if (stats.streak >= 7) {
+                html = `
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-text">بەردەوامی ${stats.streak} ڕۆژ بەدەستهێنا</div>
+                            <div class="activity-time">ئێستا</div>
+                        </div>
+                    </div>
+                ` + html;
+            }
+
+            activityContainer.innerHTML = html;
+        }
+
+        // Get surah name
+        function getSurahName(surahNum) {
+            const surahNames = {
+                1: "الفاتحة", 2: "البقرة", 3: "آل عمران", 4: "النساء", 5: "المائدة",
+                6: "الأنعام", 7: "الأعراف", 8: "الأنفال", 9: "التوبة", 10: "يونس",
+                18: "الكهف", 36: "يس", 55: "الرحمن", 67: "الملك"
+            };
+            return surahNames[surahNum] || `سوورەی ${surahNum}`;
+        }
+
+        // Get time ago string
+        function getTimeAgo(timestamp) {
+            const now = Date.now();
+            const diff = now - timestamp;
+
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 60) return `${minutes} خولەک لەمەوپێش`;
+            if (hours < 24) return `${hours} کاتژمێر لەمەوپێش`;
+            if (days === 1) return 'دوێنێ';
+            return `${days} ڕۆژ لەمەوپێش`;
         }
 
         function openSettings() {

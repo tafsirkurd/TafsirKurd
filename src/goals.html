@@ -546,15 +546,24 @@
     </div>
 
     <script>
-        let currentYear = 2025;
+        let currentYear = new Date().getFullYear();
         let readingData = {};
         let dailyGoalMinutes = 10;
         let streakDays = 0;
+        let currentUser = null;
 
         const daysOfWeek = ['یەکشەممە', 'دووشەممە', 'سێشەممە', 'چوارشەممە', 'پێنجشەممە', 'هەینی', 'شەممە'];
         const monthNames = ['کانوونی دووەم', 'شوبات', 'ئازار', 'نیسان', 'ئایار', 'حوزەیران', 'تەممووز', 'ئاب', 'ئەیلوول', 'تشرینی یەکەم', 'تشرینی دووەم', 'کانوونی یەکەم'];
 
         window.addEventListener('load', () => {
+            // Check if user is authenticated
+            const user = localStorage.getItem('user');
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            currentUser = JSON.parse(user);
+
             loadData();
             renderWeekProgress();
             renderCalendar();
@@ -565,21 +574,49 @@
         });
 
         function loadData() {
-            const saved = localStorage.getItem('quran_reading_data');
+            // Load REAL data from user's quran_data
+            const userKey = 'quran_data_' + currentUser.sub;
+            const saved = localStorage.getItem(userKey);
+
             if (saved) {
                 const data = JSON.parse(saved);
-                readingData = data.readings || {};
-                dailyGoalMinutes = data.goal || 10;
+
+                // Convert dailyActivity to readingData format
+                readingData = {};
+                if (data.dailyActivity) {
+                    Object.keys(data.dailyActivity).forEach(date => {
+                        readingData[date] = data.dailyActivity[date].minutes || 0;
+                    });
+                }
+
+                // Get daily goal (default 10 minutes)
+                dailyGoalMinutes = data.dailyGoalMinutes || 10;
+
+                // Calculate streak from real data
                 streakDays = calculateStreak();
             }
         }
 
         function saveData() {
-            const data = {
-                readings: readingData,
-                goal: dailyGoalMinutes
-            };
-            localStorage.setItem('quran_reading_data', JSON.stringify(data));
+            // Save to the main quran_data structure
+            const userKey = 'quran_data_' + currentUser.sub;
+            const saved = localStorage.getItem(userKey);
+            const data = saved ? JSON.parse(saved) : {};
+
+            // Update dailyActivity from readingData
+            if (!data.dailyActivity) data.dailyActivity = {};
+
+            Object.keys(readingData).forEach(date => {
+                if (!data.dailyActivity[date]) {
+                    data.dailyActivity[date] = { minutes: 0, ayahs: 0, surahs: [] };
+                }
+                data.dailyActivity[date].minutes = readingData[date];
+            });
+
+            // Save daily goal
+            data.dailyGoalMinutes = dailyGoalMinutes;
+
+            localStorage.setItem(userKey, JSON.stringify(data));
         }
 
         function renderWeekProgress() {
@@ -724,9 +761,30 @@
 
         function deleteGoal() {
             if (confirm('ئایا دڵنیایت لە سڕینەوەی هەموو زانیاری و دەستپێکردنەوە؟')) {
+                // Clear reading data but keep other user data
+                const userKey = 'quran_data_' + currentUser.sub;
+                const saved = localStorage.getItem(userKey);
+                const data = saved ? JSON.parse(saved) : {};
+
+                // Clear activity-related data only
+                data.dailyActivity = {};
+                data.sessions = [];
+                data.stats = {
+                    daysActive: 0,
+                    surahsCompleted: 0,
+                    ayahsRead: 0,
+                    totalActiveMinutes: 0,
+                    streak: 0,
+                    level: 1
+                };
+
+                localStorage.setItem(userKey, JSON.stringify(data));
+
+                // Reset local data
                 readingData = {};
                 dailyGoalMinutes = 10;
-                saveData();
+                streakDays = 0;
+
                 renderCalendar();
                 renderWeekProgress();
                 updateStreak();
