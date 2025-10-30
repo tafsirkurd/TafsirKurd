@@ -1067,6 +1067,14 @@
             font-weight: 600;
         }
 
+        /* Reset Progress Button */
+        .feather-section button[onclick="resetReadingProgress()"]:hover {
+            background: var(--card-bg);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
         /* Hero Section */
         .hero-section {
             position: relative;
@@ -2472,6 +2480,12 @@
                     <div class="stat-label">ئاست</div>
                 </div>
             </div>
+
+            <!-- Reset Reading Progress Button -->
+            <button onclick="resetReadingProgress()" style="width: 100%; margin-top: 20px; padding: 14px 20px; background: var(--bg); border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif; font-size: 1rem; font-weight: 600; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <i class="fas fa-redo"></i>
+                <span>دەستپێکردنەوە لە سەرەتاوە</span>
+            </button>
         </div>
     </div>
 
@@ -4011,6 +4025,34 @@
             } else {
                 surahNameEl.textContent = 'الفاتحة';
                 infoEl.textContent = '١. الفاتحة';
+            }
+        }
+
+        // Reset Reading Progress
+        function resetReadingProgress() {
+            if (!isUserAuthenticated) {
+                showNotification('تکایە چوونەژوورەوە بکە');
+                return;
+            }
+
+            // Confirm with user
+            const confirmed = confirm('دڵنیای دەتەوێت پێشکەوتنەکەت لە سەرەتاوە دەست پێ بکەیتەوە؟\n\nئەمە پۆزیشنی خوێندنەوەکەت دەگەڕێنێتەوە بۆ سوورەی ١، ئایەتی ١.\n\n(ئامارەکانی تر وەک سوورە تەواوکراوەکان و خولەکە چالاکەکان دەمێننەوە)');
+
+            if (confirmed) {
+                // Reset position to beginning
+                lastReadPosition = { surah: 1, ayah: 1 };
+
+                // Update UI
+                updateContinueReading();
+
+                // Save to localStorage
+                saveUserData();
+
+                // Show notification
+                showNotification('پێشکەوتنی خوێندنەوە گەڕایەوە بۆ سەرەتا');
+
+                // Close menu
+                closeFeatherOverlay();
             }
         }
 
