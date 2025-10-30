@@ -1280,6 +1280,38 @@
             color: var(--text-muted);
         }
 
+        .surah-progress-indicator {
+            margin-top: 20px;
+            padding: 15px 20px;
+            background: var(--bg);
+            border-radius: 12px;
+            border: 2px solid var(--border);
+        }
+
+        .progress-bar-mini {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill-mini {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text-mini {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            text-align: center;
+        }
+
         .reader-back-btn {
             margin-bottom: 20px;
             padding: 12px 24px;
@@ -1335,6 +1367,36 @@
 
         [data-theme="dark"] .ayah.highlight {
             background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Read ayah indicator */
+        .ayah.ayah-read {
+            border-right-color: #2ecc71;
+            background: rgba(46, 204, 113, 0.03);
+            position: relative;
+        }
+
+        .ayah.ayah-read::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 24px;
+            height: 24px;
+            background: #2ecc71;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        [data-theme="dark"] .ayah.ayah-read {
+            background: rgba(46, 204, 113, 0.08);
         }
 
         .ayah-header {
@@ -2440,6 +2502,12 @@
             <div class="reader-header">
                 <h2 class="reader-surah-name" id="readerSurahName">Al-Fatihah (الفاتحة)</h2>
                 <p class="reader-surah-info" id="readerSurahInfo">7 ئایەت</p>
+                <div class="surah-progress-indicator" id="surahProgressIndicator" style="display: none;">
+                    <div class="progress-bar-mini">
+                        <div class="progress-fill-mini" id="surahProgressFill"></div>
+                    </div>
+                    <div class="progress-text-mini" id="surahProgressText">0 / 7 ئایەت خوێندراوە</div>
+                </div>
             </div>
 
             <div class="ayah-container" id="ayahContainer">
@@ -2499,6 +2567,9 @@
             saveInterval: null,
             currentSessionAyahs: new Set(),
             scrolledAyahs: new Set(),
+            readAyahs: new Set(), // All-time read ayahs as "surah:ayah"
+            ayahObserver: null, // IntersectionObserver for ayah tracking
+            ayahReadTimes: {}, // Track when each ayah was read
             sessionData: {
                 startTime: null,
                 endTime: null,
@@ -3333,6 +3404,14 @@
                     const ayahDiv = document.createElement('div');
                     ayahDiv.className = 'ayah';
                     ayahDiv.id = `ayah-${verse.verse}`;
+                    ayahDiv.setAttribute('data-ayah', verse.verse);
+                    ayahDiv.setAttribute('data-surah', surahNum);
+
+                    // Check if this ayah was already read
+                    const ayahKey = `${surahNum}:${verse.verse}`;
+                    if (isUserAuthenticated && activityTracker.readAyahs && activityTracker.readAyahs.has(ayahKey)) {
+                        ayahDiv.classList.add('ayah-read');
+                    }
 
                     if (highlightAyah && verse.verse === highlightAyah) {
                         ayahDiv.classList.add('highlight');
@@ -3372,6 +3451,11 @@
                             ayahEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
                     }, 300);
+                }
+
+                // Update progress indicator after loading ayahs
+                if (isUserAuthenticated) {
+                    updateSurahProgressIndicator(surahNum);
                 }
             }
         }
@@ -3788,6 +3872,20 @@
                 bookmarkedAyahs = data.bookmarks || [];
                 lastReadPosition = data.lastRead || { surah: 1, ayah: 1 };
 
+                // Load read ayahs (convert array back to Set)
+                if (data.readAyahs && Array.isArray(data.readAyahs)) {
+                    activityTracker.readAyahs = new Set(data.readAyahs);
+                } else {
+                    activityTracker.readAyahs = new Set();
+                }
+
+                // Load ayah read times
+                if (data.ayahReadTimes) {
+                    activityTracker.ayahReadTimes = data.ayahReadTimes;
+                } else {
+                    activityTracker.ayahReadTimes = {};
+                }
+
                 // Initialize new data structure if missing
                 if (!data.completedSurahs) data.completedSurahs = [];
                 if (!data.sessions) data.sessions = [];
@@ -3813,6 +3911,8 @@
                 stats: userStats,
                 bookmarks: bookmarkedAyahs,
                 lastRead: lastReadPosition,
+                readAyahs: Array.from(activityTracker.readAyahs), // Convert Set to Array for storage
+                ayahReadTimes: activityTracker.ayahReadTimes, // Object with timestamps
                 completedSurahs: existingData.completedSurahs || [],
                 sessions: existingData.sessions || [],
                 dailyActivity: existingData.dailyActivity || {},
@@ -3992,21 +4092,76 @@
             }
         }
 
-        // Track ayah scroll/view
-        function trackAyahView(surahNumber, ayahNumber) {
+        // Track ayah scroll/view - Enhanced with visual feedback
+        function trackAyahView(surahNumber, ayahNumber, ayahElement) {
             if (!isUserAuthenticated || !currentUser) return;
 
             const ayahKey = `${surahNumber}:${ayahNumber}`;
 
-            // Add to current session ayahs
-            activityTracker.currentSessionAyahs.add(ayahKey);
-            activityTracker.scrolledAyahs.add(ayahNumber);
+            // Check if this is a new ayah read
+            const isNewRead = !activityTracker.readAyahs.has(ayahKey);
+
+            // Add to all tracking sets
+            activityTracker.readAyahs.add(ayahKey); // All-time read ayahs
+            activityTracker.currentSessionAyahs.add(ayahKey); // Current session
+            activityTracker.scrolledAyahs.add(ayahNumber); // Current surah
+
+            // Store read timestamp
+            if (isNewRead) {
+                activityTracker.ayahReadTimes[ayahKey] = Date.now();
+            }
+
+            // Mark ayah visually as read
+            if (ayahElement && !ayahElement.classList.contains('ayah-read')) {
+                ayahElement.classList.add('ayah-read');
+
+                // Add a subtle animation effect
+                ayahElement.style.transition = 'all 0.5s ease';
+            }
 
             // Update current position
             lastReadPosition = { surah: surahNumber, ayah: ayahNumber };
 
+            // Update stats display in real-time
+            if (isNewRead) {
+                userStats.ayahsRead = activityTracker.readAyahs.size;
+                updateStatsDisplay();
+            }
+
+            // Update surah progress indicator
+            updateSurahProgressIndicator(surahNumber);
+
             // Check if surah is completed (scrolled through 80% of ayahs)
             checkSurahCompletion(surahNumber);
+        }
+
+        // Update surah progress indicator in reader header
+        function updateSurahProgressIndicator(surahNumber) {
+            if (!surahNames[surahNumber] || !isUserAuthenticated) return;
+
+            const totalAyahs = surahNames[surahNumber].ayahs;
+            let readCount = 0;
+
+            // Count how many ayahs in this surah have been read
+            for (let i = 1; i <= totalAyahs; i++) {
+                const ayahKey = `${surahNumber}:${i}`;
+                if (activityTracker.readAyahs.has(ayahKey)) {
+                    readCount++;
+                }
+            }
+
+            // Show indicator only if user is authenticated
+            const indicator = document.getElementById('surahProgressIndicator');
+            const fillBar = document.getElementById('surahProgressFill');
+            const textElement = document.getElementById('surahProgressText');
+
+            if (indicator && fillBar && textElement) {
+                indicator.style.display = 'block';
+
+                const percentage = Math.round((readCount / totalAyahs) * 100);
+                fillBar.style.width = percentage + '%';
+                textElement.textContent = `${readCount} / ${totalAyahs} ئایەت خوێندراوە (${percentage}%)`;
+            }
         }
 
         // Check if surah should be marked as completed
@@ -4192,33 +4347,62 @@
             return `${year}-${month}-${day}`;
         }
 
-        // Setup scroll tracking for ayahs
+        // Setup IntersectionObserver for precise ayah tracking
         function setupScrollTracking() {
-            let scrollTimeout;
+            if (!isUserAuthenticated || !currentUser) return;
 
-            window.addEventListener('scroll', () => {
-                clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(() => {
-                    detectVisibleAyahs();
-                }, 200);
-            });
+            // Disconnect existing observer if any
+            if (activityTracker.ayahObserver) {
+                activityTracker.ayahObserver.disconnect();
+            }
+
+            // Create IntersectionObserver with precise options
+            const observerOptions = {
+                root: null, // viewport
+                rootMargin: '-20% 0px -20% 0px', // Trigger when ayah is 20% into viewport
+                threshold: [0.3, 0.5, 0.7, 1.0] // Multiple thresholds for better detection
+            };
+
+            activityTracker.ayahObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    // Only track if ayah is significantly visible (50% threshold)
+                    if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+                        const ayahElement = entry.target;
+                        const surahNum = parseInt(ayahElement.getAttribute('data-surah'));
+                        const ayahNum = parseInt(ayahElement.getAttribute('data-ayah'));
+
+                        if (surahNum && ayahNum) {
+                            trackAyahView(surahNum, ayahNum, ayahElement);
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all ayah elements
+            setTimeout(() => {
+                const ayahElements = document.querySelectorAll('.ayah[data-ayah]');
+                ayahElements.forEach(ayah => {
+                    activityTracker.ayahObserver.observe(ayah);
+                });
+            }, 500); // Small delay to ensure elements are rendered
         }
 
-        // Detect which ayahs are currently visible
+        // Detect which ayahs are currently visible (legacy fallback)
         function detectVisibleAyahs() {
             if (!isUserAuthenticated || !currentUser) return;
 
-            const ayahElements = document.querySelectorAll('.ayah-container');
+            const ayahElements = document.querySelectorAll('.ayah[data-ayah]');
             const viewportHeight = window.innerHeight;
 
             ayahElements.forEach(element => {
                 const rect = element.getBoundingClientRect();
 
-                // Check if ayah is in viewport
-                if (rect.top >= 0 && rect.top <= viewportHeight * 0.7) {
-                    const ayahNum = element.getAttribute('data-ayah');
-                    if (ayahNum) {
-                        trackAyahView(currentSurahNumber, parseInt(ayahNum));
+                // Check if ayah is in viewport (at least 50% visible)
+                if (rect.top >= 0 && rect.bottom <= viewportHeight) {
+                    const surahNum = parseInt(element.getAttribute('data-surah'));
+                    const ayahNum = parseInt(element.getAttribute('data-ayah'));
+                    if (surahNum && ayahNum) {
+                        trackAyahView(surahNum, ayahNum, element);
                     }
                 }
             });
