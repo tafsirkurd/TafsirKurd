@@ -26,7 +26,7 @@
   to = "/.netlify/functions/:splat"
   status = 200
 
-# SPA redirects - Exclude static assets first
+# SPA redirects - Exclude static assets and HTML files
 [[redirects]]
   from = "/assets/*"
   to = "/assets/:splat"
@@ -37,7 +37,8 @@
   to = "/data/:splat"
   status = 200
 
+# Only redirect 404s to index.html (not existing HTML files)
 [[redirects]]
   from = "/*"
   to = "/index.html"
-  status = 200
+  status = 404
