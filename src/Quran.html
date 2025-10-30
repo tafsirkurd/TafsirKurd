@@ -4377,12 +4377,16 @@
                 ayahElement.style.transition = 'all 0.5s ease';
             }
 
-            // Update current position - ONLY if we've read further than before
-            const isFurtherAhead =
-                surahNumber > lastReadPosition.surah ||
-                (surahNumber === lastReadPosition.surah && ayahNumber > lastReadPosition.ayah);
+            // Update current position - ONLY if reading SEQUENTIALLY (consecutively)
+            const isSequentialRead =
+                // Same surah, next ayah
+                (surahNumber === lastReadPosition.surah && ayahNumber === lastReadPosition.ayah + 1) ||
+                // Next surah, first ayah (finished previous surah)
+                (surahNumber === lastReadPosition.surah + 1 && ayahNumber === 1) ||
+                // Very first ayah (starting fresh)
+                (lastReadPosition.surah === 1 && lastReadPosition.ayah === 1 && surahNumber === 1);
 
-            if (isFurtherAhead) {
+            if (isSequentialRead) {
                 lastReadPosition = { surah: surahNumber, ayah: ayahNumber };
 
                 // Update continue reading card in real-time
