@@ -4036,20 +4036,57 @@
             }
 
             // Confirm with user
-            const confirmed = confirm('دڵنیای دەتەوێت پێشکەوتنەکەت لە سەرەتاوە دەست پێ بکەیتەوە؟\n\nئەمە پۆزیشنی خوێندنەوەکەت دەگەڕێنێتەوە بۆ سوورەی ١، ئایەتی ١.\n\n(ئامارەکانی تر وەک سوورە تەواوکراوەکان و خولەکە چالاکەکان دەمێننەوە)');
+            const confirmed = confirm('دڵنیای دەتەوێت هەموو پێشکەوتنەکەت بسڕیتەوە و لە سەرەتاوە دەست پێ بکەیتەوە؟\n\nئەمە هەموو شتێک دەسڕێتەوە:\n• پۆزیشنی خوێندنەوە\n• ئامارەکان (ڕۆژی چالاک، سوورە تەواو، ئایەت خوێندراوە)\n• ئایەتە خوێندراوەکان\n• هەموو داتا\n\nئایا دڵنیایت؟');
 
             if (confirmed) {
                 // Reset position to beginning
                 lastReadPosition = { surah: 1, ayah: 1 };
 
+                // Reset all stats
+                userStats = {
+                    daysActive: 0,
+                    surahsCompleted: 0,
+                    ayahsRead: 0,
+                    totalActiveMinutes: 0,
+                    streak: 0,
+                    level: 1
+                };
+
+                // Reset activity tracker
+                activityTracker.readAyahs = new Set();
+                activityTracker.currentSessionAyahs = new Set();
+                activityTracker.scrolledAyahs = new Set();
+                activityTracker.ayahReadTimes = {};
+
+                // Clear all visual "read" marks from ayahs
+                document.querySelectorAll('.ayah-read').forEach(ayah => {
+                    ayah.classList.remove('ayah-read');
+                });
+
                 // Update UI
                 updateContinueReading();
+                updateStatsUI();
 
-                // Save to localStorage
-                saveUserData();
+                // Save to localStorage (reset everything)
+                if (currentUser) {
+                    const userKey = 'quran_data_' + currentUser.sub;
+                    const resetData = {
+                        stats: userStats,
+                        bookmarks: [],
+                        lastRead: { surah: 1, ayah: 1 },
+                        readAyahs: [],
+                        ayahReadTimes: {},
+                        completedSurahs: [],
+                        sessions: [],
+                        dailyActivity: {},
+                        currentPosition: { surah: 1, ayah: 1, scrollPosition: 0, timestamp: Date.now() },
+                        notes: []
+                    };
+                    localStorage.setItem(userKey, JSON.stringify(resetData));
+                }
 
                 // Show notification
-                showNotification('پێشکەوتنی خوێندنەوە گەڕایەوە بۆ سەرەتا');
+                showNotification('هەموو پێشکەوتنەکان سڕانەوە! دەست پێ بکەرەوە لە سەرەتاوە');
 
                 // Close menu
                 closeFeatherOverlay();
