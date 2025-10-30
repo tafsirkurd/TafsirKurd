@@ -4383,11 +4383,17 @@
                 ayahElement.style.transition = 'all 0.5s ease';
             }
 
-            // Update current position
-            lastReadPosition = { surah: surahNumber, ayah: ayahNumber };
+            // Update current position - ONLY if we've read further than before
+            const isFurtherAhead =
+                surahNumber > lastReadPosition.surah ||
+                (surahNumber === lastReadPosition.surah && ayahNumber > lastReadPosition.ayah);
 
-            // Update continue reading card in real-time
-            updateContinueReading();
+            if (isFurtherAhead) {
+                lastReadPosition = { surah: surahNumber, ayah: ayahNumber };
+
+                // Update continue reading card in real-time
+                updateContinueReading();
+            }
 
             // Update stats display in real-time
             if (isNewRead) {
