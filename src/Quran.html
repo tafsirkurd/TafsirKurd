@@ -1962,6 +1962,20 @@
                 font-size: 1rem;
             }
 
+            /* Continue Reading Card - Mobile Fix */
+            #continueReadingCard {
+                padding: 30px 20px !important;
+                min-height: 250px !important;
+            }
+
+            #continueReadingSurahName {
+                font-size: 3rem !important;
+            }
+
+            #continueReadingInfo {
+                font-size: 1rem !important;
+            }
+
             .hero-chip {
                 font-size: 0.9rem;
                 padding: 10px 18px;
@@ -4314,6 +4328,9 @@
 
             // Update current position
             lastReadPosition = { surah: surahNumber, ayah: ayahNumber };
+
+            // Update continue reading card in real-time
+            updateContinueReading();
 
             // Update stats display in real-time
             if (isNewRead) {
