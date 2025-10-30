@@ -1747,33 +1747,22 @@
 
         async function loadStats() {
             try {
+                // Get all stats and find the one with actual data
                 const { data, error } = await supabase
                     .from('website_stats')
                     .select('*')
-                    .order('updated_at', { ascending: false })
-                    .limit(1);
+                    .order('updated_at', { ascending: false });
 
                 if (error) throw error;
 
-                let stats = data && data.length > 0 ? data[0] : null;
+                // Find the first row with non-zero data
+                let stats = data && data.length > 0 ?
+                    data.find(s => s.instagram_followers > 0 || s.tiktok_followers > 0) :
+                    null;
 
-                // If no stats exist, create default ones
-                if (!stats || (stats.instagram_followers === 0 && stats.tiktok_followers === 0)) {
-                    const { data: newStats, error: insertError } = await supabase
-                        .from('website_stats')
-                        .insert([{
-                            instagram_followers: 145,
-                            tiktok_followers: 89,
-                            total_views: 2.5,
-                            videos_published: 50,
-                            updated_at: new Date().toISOString()
-                        }])
-                        .select()
-                        .single();
-
-                    if (!insertError) {
-                        stats = newStats;
-                    }
+                // If no stats exist or all are zeros, use the most recent one
+                if (!stats && data && data.length > 0) {
+                    stats = data[0];
                 }
 
                 stats = stats || {
@@ -1927,15 +1916,18 @@
                 const { data, error } = await supabase
                     .from('website_stats')
                     .select('instagram_followers, tiktok_followers')
-                    .order('updated_at', { ascending: false })
-                    .limit(1)
-                    .single();
+                    .order('updated_at', { ascending: false });
 
                 if (error) throw error;
 
+                // Find the first row with non-zero data
+                const stats = data && data.length > 0 ?
+                    data.find(s => s.instagram_followers > 0 || s.tiktok_followers > 0) || data[0] :
+                    null;
+
                 return {
-                    instagram: data?.instagram_followers || 0,
-                    tiktok: data?.tiktok_followers || 0
+                    instagram: stats?.instagram_followers || 0,
+                    tiktok: stats?.tiktok_followers || 0
                 };
             } catch (error) {
                 console.error('Error fetching social media stats:', error);
@@ -2298,16 +2290,21 @@
                 const { data, error } = await supabase
                     .from('website_stats')
                     .select('*')
-                    .order('updated_at', { ascending: false })
-                    .limit(1)
-                    .single();
+                    .order('updated_at', { ascending: false });
 
                 if (error) throw error;
 
-                document.getElementById('instagramFollowers').value = data.instagram_followers;
-                document.getElementById('tiktokFollowers').value = data.tiktok_followers;
-                document.getElementById('totalViews').value = data.total_views;
-                document.getElementById('videosPublished').value = data.videos_published;
+                // Find the first row with non-zero data
+                const stats = data && data.length > 0 ?
+                    data.find(s => s.instagram_followers > 0 || s.tiktok_followers > 0) || data[0] :
+                    null;
+
+                if (stats) {
+                    document.getElementById('instagramFollowers').value = stats.instagram_followers;
+                    document.getElementById('tiktokFollowers').value = stats.tiktok_followers;
+                    document.getElementById('totalViews').value = stats.total_views;
+                    document.getElementById('videosPublished').value = stats.videos_published;
+                }
             } catch (error) {
                 console.error('Error:', error);
             }
