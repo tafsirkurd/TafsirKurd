@@ -449,8 +449,8 @@ nav.scrolled-nav {
 }
 
 .logo-image {
-    width: 65px;
-    height: 65px;
+    width: 55px;
+    height: 55px;
     object-fit: contain;
     transition: transform var(--transition-medium) var(--cubic);
 }
@@ -1519,8 +1519,8 @@ footer {
 }
 
 footer .logo-image {
-    width: 60px;
-    height: 60px;
+    width: 55px;
+    height: 55px;
     transition: transform var(--transition-medium);
 }
 
@@ -1748,8 +1748,8 @@ footer p {
     }
 
     .logo-image {
-        width: 50px;
-        height: 50px;
+        width: 55px;
+        height: 55px;
     }
 
     .fab-container {
@@ -1774,8 +1774,8 @@ footer p {
     }
 
     footer .logo-image {
-        width: 50px;
-        height: 50px;
+        width: 55px;
+        height: 55px;
     }
 }
 
