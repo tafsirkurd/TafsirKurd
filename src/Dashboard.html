@@ -135,18 +135,17 @@
         }
 
         .login-logo {
-            width: 72px;
-            height: 72px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
-            color: white;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 80px;
+            height: 80px;
             margin: 0 auto 24px;
-            font-size: 2rem;
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
             animation: float 3s ease-in-out infinite;
+        }
+
+        .login-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.2));
         }
 
         @keyframes float {
@@ -301,14 +300,15 @@
         .sidebar-logo-icon {
             width: 48px;
             height: 48px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
-            color: white;
-            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .sidebar-logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .sidebar-logo-text {
@@ -1029,7 +1029,7 @@
     <div id="loginPage" class="login-container">
         <div class="login-card">
             <div class="login-logo">
-                <i class="fas fa-book-quran"></i>
+                <img src="assets/images/logo.png" alt="Tafsir Kurd">
             </div>
             <h1 class="login-title">Tafsir Kurd</h1>
             <p class="login-subtitle">Modern Dashboard 2025</p>
@@ -1059,7 +1059,7 @@
             <div class="sidebar-header">
                 <div class="sidebar-logo">
                     <div class="sidebar-logo-icon">
-                        <i class="fas fa-book-quran"></i>
+                        <img src="assets/images/logo.png" alt="Tafsir Kurd">
                     </div>
                     <span class="sidebar-logo-text">Tafsir Kurd</span>
                 </div>
@@ -1828,13 +1828,37 @@
             }
         }
 
-        // Analytics
-        function loadAnalytics() {
-            // Simulated data - replace with real Google Analytics API data
-            document.getElementById('totalVisitors').textContent = '12.5K';
-            document.getElementById('avgSession').textContent = '4m 32s';
-            document.getElementById('bounceRate').textContent = '42%';
-            document.getElementById('pageViews').textContent = '45.2K';
+        // Helper function to get analytics metrics
+        async function getAnalyticsMetric(metric) {
+            try {
+                const response = await fetch(`/.netlify/functions/analytics?metric=${metric}`);
+                const data = await response.json();
+                if (data.success && data.data[metric]) {
+                    return data.data[metric];
+                }
+                return '—';
+            } catch (error) {
+                console.error('Error fetching metric:', metric, error);
+                return '—';
+            }
+        }
+
+        // Analytics - Real Google Analytics Data
+        async function loadAnalytics() {
+            // Fetch real data from Google Analytics
+            try {
+                // Display data from API
+                document.getElementById('totalVisitors').textContent = await getAnalyticsMetric('visitors');
+                document.getElementById('avgSession').textContent = await getAnalyticsMetric('avgSession');
+                document.getElementById('bounceRate').textContent = await getAnalyticsMetric('bounceRate');
+                document.getElementById('pageViews').textContent = await getAnalyticsMetric('pageViews');
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                document.getElementById('totalVisitors').textContent = '—';
+                document.getElementById('avgSession').textContent = '—';
+                document.getElementById('bounceRate').textContent = '—';
+                document.getElementById('pageViews').textContent = '—';
+            }
 
             // Engagement Chart
             const engagementCtx = document.getElementById('engagementChart').getContext('2d');
