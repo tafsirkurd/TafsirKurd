@@ -2279,38 +2279,56 @@
                     ڕێکخستنی خوێندنەوە
                 </h3>
 
-                <div class="setting-item">
-                    <span class="setting-label">جۆری فۆنتی عەرەبی</span>
-                    <select class="setting-select" id="arabicFontSelect" onchange="changeArabicFont()">
-                        <option value="Scheherazade New">Scheherazade New</option>
-                        <option value="Amiri">Amiri</option>
-                        <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
-                    </select>
+                <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span class="setting-label">جۆری فۆنتی عەرەبی</span>
+                        <select class="setting-select" id="arabicFontSelect" onchange="changeArabicFont()">
+                            <option value="Scheherazade New">Scheherazade New</option>
+                            <option value="Amiri">Amiri</option>
+                            <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
+                        </select>
+                    </div>
+                    <div id="arabicPreview" style="width: 100%; padding: 15px; background: var(--bg); border-radius: 8px; text-align: center; font-size: 2.2rem; color: var(--text); border: 2px solid var(--border);">
+                        بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+                    </div>
                 </div>
 
-                <div class="setting-item">
-                    <span class="setting-label">قەبارەی فۆنتی عەرەبی</span>
-                    <input type="range" class="setting-slider" id="arabicSizeSlider"
-                           min="1.5" max="3.5" step="0.1" value="2.2"
-                           oninput="changeArabicSize(this.value)">
-                    <span id="arabicSizeValue">2.2</span>
+                <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span class="setting-label">قەبارەی فۆنتی عەرەبی</span>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="range" class="setting-slider" id="arabicSizeSlider"
+                                   min="1.5" max="3.5" step="0.1" value="2.2"
+                                   oninput="changeArabicSize(this.value)">
+                            <span id="arabicSizeValue">2.2</span>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="setting-item">
-                    <span class="setting-label">جۆری فۆنتی تەفسیر</span>
-                    <select class="setting-select" id="tafsirFontSelect" onchange="changeTafsirFont()">
-                        <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
-                        <option value="Scheherazade New">Scheherazade New</option>
-                        <option value="Amiri">Amiri</option>
-                    </select>
+                <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span class="setting-label">جۆری فۆنتی تەفسیر</span>
+                        <select class="setting-select" id="tafsirFontSelect" onchange="changeTafsirFont()">
+                            <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
+                            <option value="Scheherazade New">Scheherazade New</option>
+                            <option value="Amiri">Amiri</option>
+                        </select>
+                    </div>
+                    <div id="tafsirPreview" style="width: 100%; padding: 15px; background: var(--bg); border-radius: 8px; text-align: right; font-size: 1.1rem; color: var(--text); border: 2px solid var(--border); direction: rtl;">
+                        بە ناوی خوای بە بەزەیی و میهرەبان، ستایشی جێگای ستایش خوایە کە پەروەردگاری گشت دونیایە.
+                    </div>
                 </div>
 
-                <div class="setting-item">
-                    <span class="setting-label">قەبارەی فۆنتی تەفسیر</span>
-                    <input type="range" class="setting-slider" id="tafsirSizeSlider"
-                           min="0.9" max="1.8" step="0.05" value="1.1"
-                           oninput="changeTafsirSize(this.value)">
-                    <span id="tafsirSizeValue">1.1</span>
+                <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span class="setting-label">قەبارەی فۆنتی تەفسیر</span>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="range" class="setting-slider" id="tafsirSizeSlider"
+                                   min="0.9" max="1.8" step="0.05" value="1.1"
+                                   oninput="changeTafsirSize(this.value)">
+                            <span id="tafsirSizeValue">1.1</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="setting-item">
@@ -3247,6 +3265,24 @@
         // Settings Functions
         function openSettings() {
             document.getElementById('settingsModal').classList.add('active');
+
+            // Initialize preview boxes with current settings
+            const arabicPreview = document.getElementById('arabicPreview');
+            const tafsirPreview = document.getElementById('tafsirPreview');
+            const arabicFont = document.getElementById('arabicFontSelect').value;
+            const tafsirFont = document.getElementById('tafsirFontSelect').value;
+            const arabicSize = document.getElementById('arabicSizeSlider').value;
+            const tafsirSize = document.getElementById('tafsirSizeSlider').value;
+
+            if (arabicPreview) {
+                arabicPreview.style.fontFamily = arabicFont;
+                arabicPreview.style.fontSize = arabicSize + 'rem';
+            }
+
+            if (tafsirPreview) {
+                tafsirPreview.style.fontFamily = tafsirFont;
+                tafsirPreview.style.fontSize = tafsirSize + 'rem';
+            }
         }
 
         function closeSettings() {
@@ -3267,26 +3303,60 @@
 
         function changeArabicFont() {
             const font = document.getElementById('arabicFontSelect').value;
+            const preview = document.getElementById('arabicPreview');
+
+            // Update preview
+            if (preview) {
+                preview.style.fontFamily = font;
+            }
+
+            // Update page
             document.documentElement.style.setProperty('--arabic-font', font);
             localStorage.setItem('arabicFont', font);
             showNotification('فۆنتی عەرەبی گۆڕدرا');
         }
 
         function changeArabicSize(value) {
+            const preview = document.getElementById('arabicPreview');
+
             document.getElementById('arabicSizeValue').textContent = value;
+
+            // Update preview
+            if (preview) {
+                preview.style.fontSize = value + 'rem';
+            }
+
+            // Update page
             document.documentElement.style.setProperty('--arabic-size', value + 'rem');
             localStorage.setItem('arabicSize', value);
         }
 
         function changeTafsirFont() {
             const font = document.getElementById('tafsirFontSelect').value;
+            const preview = document.getElementById('tafsirPreview');
+
+            // Update preview
+            if (preview) {
+                preview.style.fontFamily = font;
+            }
+
+            // Update page
             document.documentElement.style.setProperty('--tafsir-font', font);
             localStorage.setItem('tafsirFont', font);
             showNotification('فۆنتی تەفسیر گۆڕدرا');
         }
 
         function changeTafsirSize(value) {
+            const preview = document.getElementById('tafsirPreview');
+
             document.getElementById('tafsirSizeValue').textContent = value;
+
+            // Update preview
+            if (preview) {
+                preview.style.fontSize = value + 'rem';
+            }
+
+            // Update page
             document.documentElement.style.setProperty('--tafsir-size', value + 'rem');
             localStorage.setItem('tafsirSize', value);
         }
