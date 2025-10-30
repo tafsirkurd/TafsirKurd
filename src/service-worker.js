@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v1';
+const CACHE_NAME = 'tafsir-kurd-v2';
 const urlsToCache = [
   '/',
   '/Quran.html',
@@ -6,6 +6,7 @@ const urlsToCache = [
   '/index.html',
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
+  '/assets/fonts/SurahName.ttf',
   'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap',
   'https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'

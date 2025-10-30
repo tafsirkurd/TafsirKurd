@@ -19,7 +19,7 @@
     <style>
         @font-face {
             font-family: "SurahName";
-            src: url("assets/fonts/SurahName.ttf") format("truetype");
+            src: url("/assets/fonts/SurahName.ttf") format("truetype");
             font-weight: normal;
             font-style: normal;
             font-display: swap;
@@ -2653,17 +2653,26 @@
         // Initialize on Load
         window.addEventListener('load', async () => {
             initPreloader();
-            await loadQuranData();
+
+            // Initialize UI immediately (don't wait for data)
             checkAuthentication();
             initializeApp();
-            renderSurahGrid();
-            renderSidebarList();
-            loadUserData();
             initScrollToTop();
-            loadRandomAyah();
-            startRandomAyahTimer();
-            updateContinueReading();
-            handleUrlParameters();
+
+            // Show loading skeleton immediately
+            renderSurahGrid();
+
+            // Load data in background while showing UI
+            loadQuranData().then(() => {
+                // Once data is loaded, render content
+                renderSurahGrid();
+                renderSidebarList();
+                loadUserData();
+                loadRandomAyah();
+                startRandomAyahTimer();
+                updateContinueReading();
+                handleUrlParameters();
+            });
         });
 
         // Handle URL parameters for direct ayah navigation
@@ -2783,52 +2792,22 @@
             }
         }
 
-        // Load Quran Data - FIXED PATH ISSUE
+        // Load Quran Data - OPTIMIZED FOR SPEED
         async function loadQuranData() {
             try {
-                // Multiple path attempts to find the data files
-                const paths = [
-                    { quran: 'data/quran.json', tafsir: 'data/kurdish_tafsir.json' },
-                    { quran: './data/quran.json', tafsir: './data/kurdish_tafsir.json' },
-                    { quran: '../data/quran.json', tafsir: '../data/kurdish_tafsir.json' },
-                    { quran: '/data/quran.json', tafsir: '/data/kurdish_tafsir.json' },
-                ];
+                // Parallel fetch both JSON files at the same time
+                const [quranResponse, tafsirResponse] = await Promise.all([
+                    fetch('data/quran.json'),
+                    fetch('data/kurdish_tafsir.json')
+                ]);
 
-                let quranJson = null;
-                let tafsirJson = [];
+                // Use .json() method directly (more efficient than .text() + JSON.parse())
+                const [quranJson, tafsirJson] = await Promise.all([
+                    quranResponse.json(),
+                    tafsirResponse.json()
+                ]);
 
-                for (const pathSet of paths) {
-                    try {
-                        const quranResponse = await fetch(pathSet.quran);
-                        if (!quranResponse.ok) continue;
-
-                        const quranText = await quranResponse.text();
-                        if (quranText.trim().startsWith('{')) {
-                            quranJson = JSON.parse(quranText);
-
-                            try {
-                                const tafsirResponse = await fetch(pathSet.tafsir);
-                                if (tafsirResponse.ok) {
-                                    const tafsirText = await tafsirResponse.text();
-                                    if (tafsirText.trim().startsWith('[')) {
-                                        tafsirJson = JSON.parse(tafsirText);
-                                    }
-                                }
-                            } catch (tafsirError) {
-                                console.warn('Tafsir not loaded');
-                            }
-
-                            break;
-                        }
-                    } catch (error) {
-                        continue;
-                    }
-                }
-
-                if (!quranJson) {
-                    throw new Error('Could not load Quran data from any path');
-                }
-
+                // Process tafsir data
                 tafsirData = {};
                 if (Array.isArray(tafsirJson) && tafsirJson.length > 0) {
                     tafsirJson.forEach(item => {
@@ -3045,6 +3024,13 @@
         // Render Surah Grid - ALL 114 SURAHS
         function renderSurahGrid() {
             const container = document.getElementById('surahGrid');
+
+            // Show loading skeleton if data not ready
+            if (!quranData || Object.keys(quranData).length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 15px;"></i><div>دەستپێدەکرێت...</div></div>';
+                return;
+            }
+
             container.innerHTML = '';
 
             if (currentFilter === 'surah') {
