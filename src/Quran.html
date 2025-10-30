@@ -776,61 +776,103 @@
             color: var(--primary);
         }
 
-        /* Feather Overlay */
+        /* Feather Overlay - Enhanced Design */
         .feather-overlay {
             position: fixed;
             top: 0;
-            right: -450px;
-            width: 450px;
+            right: -480px;
+            width: 480px;
             height: 100vh;
-            background: var(--card-bg);
-            border-left: 2px solid var(--primary);
-            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transition: right var(--transition);
+            background: linear-gradient(180deg, var(--card-bg) 0%, var(--bg) 100%);
+            border-left: 3px solid var(--primary);
+            box-shadow: -10px 0 40px rgba(0, 0, 0, 0.25);
+            z-index: 10001;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             overflow-y: auto;
-            backdrop-filter: blur(10px);
+            overflow-x: hidden;
         }
 
         .feather-overlay.active {
             right: 0;
+            animation: slideInRight 0.4s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                right: -480px;
+                opacity: 0.8;
+            }
+            to {
+                right: 0;
+                opacity: 1;
+            }
+        }
+
+        .feather-overlay::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .feather-overlay::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        .feather-overlay::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
         }
 
         .feather-overlay-header {
-            padding: 25px;
-            background: var(--bg);
-            border-bottom: 2px solid var(--border);
+            padding: 30px 25px;
+            background: linear-gradient(135deg, var(--primary) 0%, #333 100%);
+            color: var(--accent);
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 10;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] .feather-overlay-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #222 100%);
         }
 
         .feather-overlay-title {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 700;
-            color: var(--primary);
+            color: var(--accent);
             font-family: 'IBM Plex Sans Arabic', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .feather-overlay-title::before {
+            content: '👤';
+            font-size: 1.8rem;
         }
 
         .feather-close-btn {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
-            background: var(--primary);
+            background: rgba(255, 255, 255, 0.2);
             color: var(--accent);
-            border: none;
+            border: 2px solid rgba(255, 255, 255, 0.3);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all var(--transition);
+            backdrop-filter: blur(10px);
         }
 
         .feather-close-btn:hover {
-            transform: rotate(90deg) scale(1.1);
+            transform: rotate(90deg) scale(1.15);
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
         }
 
         .feather-section {
@@ -860,41 +902,60 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            padding: 15px 20px;
+            padding: 16px 20px;
             background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
+            border: 2px solid var(--border);
+            border-radius: 14px;
             text-decoration: none;
             color: var(--text);
             font-family: 'IBM Plex Sans Arabic', sans-serif;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: all var(--transition);
+            font-size: 1.05rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-menu-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 0;
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+            z-index: -1;
+        }
+
+        .nav-menu-item:hover::before {
+            width: 100%;
         }
 
         .nav-menu-item:hover {
-            background: var(--primary);
             color: var(--accent);
             border-color: var(--primary);
-            transform: translateX(-5px);
+            transform: translateX(-8px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .nav-menu-item i {
-            font-size: 1.2rem;
-            width: 24px;
+            font-size: 1.3rem;
+            width: 28px;
             text-align: center;
-            transition: transform var(--transition);
+            transition: all 0.3s ease;
         }
 
         .nav-menu-item:hover i {
-            transform: scale(1.2);
+            transform: scale(1.25) rotate(5deg);
         }
 
         .nav-menu-item.active {
             background: var(--primary);
             color: var(--accent);
             border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         .profile-section {
@@ -951,28 +1012,52 @@
         .stat-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            gap: 12px;
         }
 
         .stat-card {
-            background: var(--bg);
-            padding: 20px;
-            border-radius: 12px;
+            background: linear-gradient(135deg, var(--bg) 0%, var(--card-bg) 100%);
+            padding: 22px 18px;
+            border-radius: 16px;
             text-align: center;
             border: 2px solid var(--border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary) 0%, transparent 100%);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            border-color: var(--primary);
         }
 
         .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 5px;
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary) 0%, #666 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
         }
 
         .stat-label {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--text-muted);
             font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-weight: 600;
         }
 
         /* Hero Section */
@@ -1251,6 +1336,13 @@
 
         .scroll-to-top:hover {
             transform: scale(1.1) translateY(-5px);
+        }
+
+        /* Hide scroll-to-top when user menu is open */
+        .feather-overlay.active ~ .scroll-to-top {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none;
         }
 
         /* Surah Reader Page */
