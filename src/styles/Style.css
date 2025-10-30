@@ -196,11 +196,12 @@ body.no-scroll {
 }
 
 .preloader-logo {
-    width: 120px;
-    height: 120px;
+    width: 55px;
+    height: 55px;
     margin-bottom: 30px;
     animation: logoFade 2s ease-in-out infinite;
     filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.2));
+    object-fit: contain;
 }
 
 @keyframes logoFade {
@@ -1522,6 +1523,7 @@ footer .logo-image {
     width: 55px;
     height: 55px;
     transition: transform var(--transition-medium);
+    object-fit: contain;
 }
 
 footer:hover .logo-image {
@@ -1596,6 +1598,7 @@ footer p {
     .logo-image {
         width: 55px;
         height: 55px;
+        object-fit: contain;
     }
 }
 
@@ -1750,6 +1753,7 @@ footer p {
     .logo-image {
         width: 55px;
         height: 55px;
+        object-fit: contain;
     }
 
     .fab-container {
@@ -1776,6 +1780,7 @@ footer p {
     footer .logo-image {
         width: 55px;
         height: 55px;
+        object-fit: contain;
     }
 }
 
