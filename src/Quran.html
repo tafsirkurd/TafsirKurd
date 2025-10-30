@@ -3381,9 +3381,12 @@
             toggle.classList.toggle('active');
             autoScrollEnabled = toggle.classList.contains('active');
 
+            // Save preference
+            localStorage.setItem('autoScrollEnabled', autoScrollEnabled);
+
             if (autoScrollEnabled) {
                 startAutoScroll();
-                showNotification('خولاندنی خۆکار چالاککرا');
+                showNotification('خولاندنی خۆکار چالاککرا - تکایە بچۆ بۆ خوێندنەوەی سوورە');
             } else {
                 stopAutoScroll();
                 showNotification('خولاندنی خۆکار ناچالاککرا');
@@ -3391,17 +3394,28 @@
         }
 
         function startAutoScroll() {
+            // Only work on reader page
+            const readerPage = document.getElementById('surahReaderPage');
+            if (!readerPage || !readerPage.classList.contains('visible')) {
+                showNotification('تکایە سوورەیەک بکەرەوە بۆ خولاندنی خۆکار');
+                autoScrollEnabled = false;
+                document.getElementById('autoScrollToggle').classList.remove('active');
+                return;
+            }
+
             if (autoScrollInterval) clearInterval(autoScrollInterval);
 
+            // Scroll 2 pixels every 50ms = 40px per second (smooth reading speed)
             autoScrollInterval = setInterval(() => {
                 window.scrollBy({
-                    top: 1,
-                    behavior: 'smooth'
+                    top: 2,
+                    behavior: 'auto'
                 });
 
                 // Stop at bottom
                 if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
                     stopAutoScroll();
+                    showNotification('گەیشتیت بە کۆتایی');
                 }
             }, 50);
         }
@@ -3412,7 +3426,11 @@
                 autoScrollInterval = null;
             }
             autoScrollEnabled = false;
-            document.getElementById('autoScrollToggle').classList.remove('active');
+            const toggle = document.getElementById('autoScrollToggle');
+            if (toggle) {
+                toggle.classList.remove('active');
+            }
+            localStorage.setItem('autoScrollEnabled', 'false');
         }
 
         function resetSettings() {
