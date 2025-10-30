@@ -1134,6 +1134,10 @@
             position: relative;
             z-index: 1000;
             pointer-events: auto;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-size: 1rem;
+            color: var(--text);
+            outline: none;
         }
 
         .hero-chip:hover {
@@ -2509,18 +2513,18 @@
                     <i class="fas fa-search hero-search-icon"></i>
                 </div>
                 <div class="hero-actions">
-                    <div class="hero-chip" onclick="toggleSidebar()">
+                    <button class="hero-chip" onclick="toggleSidebar(); return false;">
                         <i class="fas fa-list"></i>
                         <span>لیستی سوورەکان</span>
-                    </div>
-                    <div class="hero-chip" onclick="continueReading()">
+                    </button>
+                    <button class="hero-chip" onclick="continueReading(); return false;">
                         <i class="fas fa-play-circle"></i>
                         <span>بەردەوامبە لە خوێندنەوە</span>
-                    </div>
-                    <div class="hero-chip" onclick="document.getElementById('randomAyahArabic').scrollIntoView({behavior: 'smooth', block: 'center'})">
+                    </button>
+                    <button class="hero-chip" onclick="document.getElementById('randomAyahArabic').scrollIntoView({behavior: 'smooth', block: 'center'}); return false;">
                         <i class="fas fa-star"></i>
                         <span>ئایەتی ڕۆژانە</span>
-                    </div>
+                    </button>
                 </div>
             </section>
 
