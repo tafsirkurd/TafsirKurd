@@ -3584,16 +3584,14 @@
             currentSurahNumber = surahNum;
             showSurahReader(surahNum);
 
-            // Save reading position if authenticated
+            // Initialize activity tracking for this surah
             if (isUserAuthenticated) {
-                saveReadingPosition(surahNum, 1);
-
-                // Initialize activity tracking for this surah
                 initializeActivityTracking();
 
                 // Setup scroll tracking
                 setupScrollTracking();
             }
+            // Note: Reading position will be saved automatically when user scrolls and views ayahs
         }
 
         function openSurahWithAyah(surahNum, ayahNum) {
@@ -3602,11 +3600,7 @@
             if (window.innerWidth <= 768) {
                 closeSidebar();
             }
-
-            // Save reading position if authenticated
-            if (isUserAuthenticated) {
-                saveReadingPosition(surahNum, ayahNum);
-            }
+            // Note: Reading position will be saved automatically when user scrolls and views ayahs
         }
 
         function showSurahReader(surahNum, highlightAyah = null) {
