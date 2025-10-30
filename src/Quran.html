@@ -1128,11 +1128,14 @@
             align-items: center;
             gap: 8px;
             font-weight: 600;
+            position: relative;
+            z-index: 10;
         }
 
         .hero-chip:hover {
             border-color: var(--primary);
             transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         /* Popular Search Button Hover Effects */
@@ -2505,6 +2508,14 @@
                     <div class="hero-chip" onclick="toggleSidebar()">
                         <i class="fas fa-list"></i>
                         <span>لیستی سوورەکان</span>
+                    </div>
+                    <div class="hero-chip" onclick="continueReading()">
+                        <i class="fas fa-play-circle"></i>
+                        <span>بەردەوامبە لە خوێندنەوە</span>
+                    </div>
+                    <div class="hero-chip" onclick="document.getElementById('randomAyahArabic').scrollIntoView({behavior: 'smooth', block: 'center'})">
+                        <i class="fas fa-star"></i>
+                        <span>ئایەتی ڕۆژانە</span>
                     </div>
                 </div>
             </section>
