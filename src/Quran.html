@@ -675,6 +675,11 @@
             top: 0;
             z-index: 900;
             backdrop-filter: blur(10px);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .professional-header.header-hidden {
+            transform: translateY(-100%);
         }
 
         .header-container {
@@ -4778,6 +4783,29 @@
                     }
                 });
             }
+        });
+
+        // Header hide on scroll down, show on scroll up
+        let lastScrollTop = 0;
+        let scrollTimeout;
+        const header = document.querySelector('.professional-header');
+
+        window.addEventListener('scroll', function() {
+            clearTimeout(scrollTimeout);
+
+            scrollTimeout = setTimeout(function() {
+                let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+                if (scrollTop > lastScrollTop && scrollTop > 100) {
+                    // Scrolling down & past 100px
+                    header.classList.add('header-hidden');
+                } else {
+                    // Scrolling up or at top
+                    header.classList.remove('header-hidden');
+                }
+
+                lastScrollTop = scrollTop;
+            }, 10);
         });
 
         console.log('✅ تەفسیر کوورد - Quran Reader loaded successfully');
