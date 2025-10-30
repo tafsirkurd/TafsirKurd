@@ -5,18 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Tafsir Kurd - Dashboard 2025</title>
-
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <title>Tafsir Kurd - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-
-    <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-    <!-- Google Analytics -->
+    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-WVQC0MKLFN"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -28,38 +25,36 @@
     <style>
         :root {
             --primary: #000000;
-            --primary-rgb: 0, 0, 0;
-            --accent: #6366f1;
-            --accent-light: #818cf8;
+            --primary-light: #333333;
+            --accent: #ffffff;
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #000000;
+            --text-muted: #666666;
+            --border: #e8e8e8;
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
-            --bg: #fafafa;
-            --surface: #ffffff;
-            --text: #0a0a0a;
-            --text-muted: #6b7280;
-            --border: #e5e7eb;
-            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            --radius: 16px;
-            --radius-lg: 24px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --radius: 12px;
+            --radius-lg: 20px;
         }
 
         [data-theme="dark"] {
             --primary: #ffffff;
-            --primary-rgb: 255, 255, 255;
+            --primary-light: #e0e0e0;
+            --accent: #000000;
             --bg: #0a0a0a;
-            --surface: #1a1a1a;
-            --text: #f5f5f5;
-            --text-muted: #9ca3af;
+            --card-bg: #1a1a1a;
+            --text: #ffffff;
+            --text-muted: #b0b0b0;
             --border: #2a2a2a;
-            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            --shadow-sm: 0 2px 10px rgba(255, 255, 255, 0.05);
+            --shadow-md: 0 8px 25px rgba(255, 255, 255, 0.08);
+            --shadow-lg: 0 20px 40px rgba(255, 255, 255, 0.1);
         }
 
         * {
@@ -74,92 +69,103 @@
             color: var(--text);
             line-height: 1.6;
             overflow-x: hidden;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: background-color var(--transition), color var(--transition);
         }
 
-        /* Animated Background */
-        .bg-pattern {
+        body::before {
+            content: '';
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 0;
-            opacity: 0.03;
-            pointer-events: none;
+            opacity: 0.02;
+            z-index: -1;
             background-image:
-                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.2) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.2) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(245, 158, 11, 0.2) 0%, transparent 50%);
-            animation: gradientShift 15s ease infinite;
+                repeating-linear-gradient(45deg, transparent, transparent 35px, var(--primary) 35px, var(--primary) 36px),
+                repeating-linear-gradient(-45deg, transparent, transparent 35px, var(--primary) 35px, var(--primary) 36px);
+            pointer-events: none;
         }
 
-        @keyframes gradientShift {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-20px) scale(1.1); }
-        }
-
-        /* Login Page */
+        /* Login Page Styles */
         .login-container {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: var(--bg);
             padding: 20px;
             position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 0, 0, 0.05) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.5; }
         }
 
         .login-card {
-            background: var(--surface);
+            background: var(--card-bg);
             backdrop-filter: blur(20px);
             padding: 48px;
             border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-xl);
+            box-shadow: var(--shadow-lg);
             width: 100%;
-            max-width: 440px;
-            border: 1px solid var(--border);
+            max-width: 420px;
+            text-align: center;
             position: relative;
             z-index: 10;
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid var(--border);
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideUp 0.8s cubic-bezier(0.18, 1.25, 0.4, 1) forwards;
         }
 
         @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
             to {
-                opacity: 1;
                 transform: translateY(0);
+                opacity: 1;
             }
         }
 
         .login-logo {
-            width: 72px;
-            height: 72px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
             color: white;
-            border-radius: 20px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 24px;
             font-size: 2rem;
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
-            animation: float 3s ease-in-out infinite;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            transition: var(--transition);
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+        .login-logo:hover {
+            transform: scale(1.1) rotate(5deg);
         }
 
         .login-title {
-            font-size: 2rem;
-            font-weight: 800;
+            font-size: 1.8rem;
+            font-weight: 700;
             margin-bottom: 8px;
-            text-align: center;
-            background: linear-gradient(135deg, var(--text) 0%, var(--text-muted) 100%);
+            color: var(--text);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -167,52 +173,52 @@
 
         .login-subtitle {
             color: var(--text-muted);
-            text-align: center;
             margin-bottom: 32px;
             font-size: 0.95rem;
         }
 
         .form-group {
             margin-bottom: 20px;
+            text-align: left;
+            position: relative;
         }
 
         .form-label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 600;
+            font-weight: 500;
             color: var(--text);
-            font-size: 0.875rem;
+            font-size: 0.9rem;
         }
 
         .form-input {
             width: 100%;
             padding: 14px 16px;
             border: 2px solid var(--border);
-            border-radius: 12px;
+            border-radius: var(--radius);
             font-size: 1rem;
             transition: var(--transition);
-            background: var(--surface);
-            color: var(--text);
-            font-family: inherit;
+            background: white;
+            box-shadow: var(--shadow);
         }
 
         .form-input:focus {
             outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.1);
+            transform: translateY(-2px);
         }
 
         .btn {
             padding: 14px 24px;
             border: none;
-            border-radius: 12px;
-            font-weight: 600;
+            border-radius: var(--radius);
+            font-weight: 500;
             cursor: pointer;
             transition: var(--transition);
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 8px;
             font-size: 1rem;
             position: relative;
@@ -222,42 +228,72 @@
         .btn::before {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
         }
 
         .btn:hover::before {
-            width: 300px;
-            height: 300px;
+            left: 100%;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            background: var(--primary);
             color: white;
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
-            width: 100%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(99, 102, 241, 0.5);
+            background: var(--primary-light);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
 
-        .btn-primary:active {
-            transform: translateY(0);
+        .btn-full {
+            width: 100%;
+            justify-content: center;
         }
 
-        /* Dashboard Layout */
+        .alert {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        /* Dashboard Styles */
         .dashboard {
             display: none;
+            min-height: 100vh;
             opacity: 0;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.5s ease-in-out;
         }
 
         .dashboard.active {
@@ -267,23 +303,15 @@
 
         .sidebar {
             width: 280px;
-            background: var(--surface);
+            background: var(--card-bg);
             border-right: 1px solid var(--border);
             padding: 24px 0;
+            overflow-y: auto;
             position: fixed;
             height: 100vh;
-            overflow-y: auto;
             z-index: 100;
-            transition: transform 0.3s ease;
-        }
-
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 3px;
+            transition: var(--transition);
+            box-shadow: var(--shadow-md);
         }
 
         .sidebar-header {
@@ -295,26 +323,29 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            cursor: pointer;
+            margin-bottom: 16px;
         }
 
         .sidebar-logo-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
             color: white;
-            border-radius: 12px;
+            border-radius: var(--radius);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            transition: var(--transition);
+        }
+
+        .sidebar-logo:hover .sidebar-logo-icon {
+            transform: rotate(10deg);
         }
 
         .sidebar-logo-text {
-            font-weight: 800;
-            font-size: 1.2rem;
-            background: linear-gradient(135deg, var(--text) 0%, var(--text-muted) 100%);
+            font-weight: 700;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -333,49 +364,53 @@
             transition: var(--transition);
             cursor: pointer;
             position: relative;
-            border-left: 3px solid transparent;
-            font-weight: 500;
+            overflow: hidden;
+            border-left: 4px solid transparent;
         }
 
-        .nav-item:hover {
-            background: rgba(var(--primary-rgb), 0.05);
-            color: var(--text);
-            border-left-color: var(--accent);
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.03), transparent);
+            transition: left 0.5s;
         }
 
+        .nav-item:hover::before {
+            left: 100%;
+        }
+
+        .nav-item:hover,
         .nav-item.active {
-            background: rgba(var(--primary-rgb), 0.08);
-            color: var(--accent);
-            border-left-color: var(--accent);
+            background: rgba(0, 0, 0, 0.03);
+            color: var(--primary);
+            border-left-color: var(--primary);
         }
 
         .nav-item i {
-            width: 24px;
+            width: 20px;
             margin-right: 12px;
-            font-size: 1.1rem;
+            transition: var(--transition);
         }
 
-        .nav-badge {
-            margin-left: auto;
-            background: var(--danger);
-            color: white;
-            font-size: 0.75rem;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-weight: 600;
+        .nav-item:hover i,
+        .nav-item.active i {
+            transform: scale(1.2);
         }
 
         .main-content {
             flex: 1;
-            margin-left: 280px;
-            min-height: 100vh;
             background: var(--bg);
-            position: relative;
-            z-index: 1;
+            margin-left: 280px;
+            transition: margin-left 0.3s ease;
+            min-height: 100vh;
         }
 
         .header {
-            background: var(--surface);
+            background: var(--card-bg);
             border-bottom: 1px solid var(--border);
             padding: 20px 32px;
             display: flex;
@@ -384,27 +419,13 @@
             position: sticky;
             top: 0;
             z-index: 90;
+            box-shadow: var(--shadow-sm);
             backdrop-filter: blur(10px);
         }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .mobile-menu {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: var(--text);
-            cursor: pointer;
-        }
-
         .header-title {
-            font-size: 1.75rem;
-            font-weight: 800;
+            font-size: 1.5rem;
+            font-weight: 600;
             color: var(--text);
         }
 
@@ -414,214 +435,130 @@
             align-items: center;
         }
 
-        .btn-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--surface);
-            border: 2px solid var(--border);
-            color: var(--text);
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .btn-icon:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: var(--surface);
-            color: var(--text);
-            border: 2px solid var(--border);
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-        }
-
         .content {
-            padding: 32px;
+            padding: 24px;
         }
 
-        /* Stats Grid */
+        .page-section {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 24px;
             margin-bottom: 32px;
         }
 
         .stat-card {
-            background: var(--surface);
+            background: var(--card-bg);
+            padding: 28px;
+            border-radius: var(--radius-lg);
             border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
             position: relative;
             overflow: hidden;
-            transition: var(--transition);
         }
 
         .stat-card::before {
             content: '';
             position: absolute;
             top: 0;
-            right: 0;
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
-            opacity: 0.1;
-            border-radius: 50%;
-            transform: translate(30%, -30%);
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.03), transparent);
+            transition: left 0.5s;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
         }
 
         .stat-card:hover {
-            transform: translateY(-4px);
+            transform: translateY(-5px);
             box-shadow: var(--shadow-lg);
         }
 
         .stat-header {
             display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 16px;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
         }
 
         .stat-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 14px;
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
             color: white;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .stat-icon.instagram {
-            background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-        }
-
-        .stat-icon.tiktok {
-            background: linear-gradient(135deg, #000000 0%, #00f2ea 100%);
-        }
-
-        .stat-icon.views {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        }
-
-        .stat-icon.videos {
-            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-        }
-
-        .stat-trend {
-            font-size: 0.875rem;
-            font-weight: 600;
-            padding: 4px 12px;
-            border-radius: 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .stat-trend.up {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-
-        .stat-trend.down {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-        }
-
-        .stat-body {
-            position: relative;
-            z-index: 1;
-        }
-
-        .stat-label {
-            font-size: 0.875rem;
-            color: var(--text-muted);
-            font-weight: 500;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: var(--text);
-            line-height: 1;
-        }
-
-        /* Charts */
-        .chart-container {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-            margin-bottom: 32px;
-        }
-
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .chart-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .chart-canvas {
-            max-height: 300px;
-        }
-
-        /* Cards */
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            overflow: hidden;
+            font-size: 1.2rem;
             transition: var(--transition);
         }
 
+        .stat-card:hover .stat-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .stat-icon.instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .stat-icon.tiktok { background: linear-gradient(45deg, #000000, #25f4ee, #fe2c55); }
+        .stat-icon.views { background: linear-gradient(45deg, var(--secondary), var(--secondary-light)); }
+        .stat-icon.videos { background: linear-gradient(45deg, var(--success), #34d399); }
+
+        .stat-title {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.2;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            overflow: hidden;
+        }
+
         .card:hover {
+            transform: translateY(-3px);
             box-shadow: var(--shadow-md);
         }
 
         .card-header {
-            padding: 20px 24px;
+            padding: 24px 28px;
             border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 1.1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-
-        .card-title {
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: var(--text);
+            background: var(--card-bg);
         }
 
         .card-body {
             padding: 24px;
-        }
-
-        /* Table */
-        .table-container {
-            overflow-x: auto;
         }
 
         .table {
@@ -631,7 +568,7 @@
 
         .table th,
         .table td {
-            padding: 16px;
+            padding: 14px;
             text-align: left;
             border-bottom: 1px solid var(--border);
         }
@@ -639,46 +576,146 @@
         .table th {
             font-weight: 600;
             color: var(--text-muted);
-            font-size: 0.875rem;
+            font-size: 0.9rem;
+            background: rgba(0, 0, 0, 0.02);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            background: rgba(var(--primary-rgb), 0.02);
+        }
+
+        [data-theme="dark"] .table th {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .table tr {
+            transition: var(--transition);
         }
 
         .table tr:hover {
-            background: rgba(var(--primary-rgb), 0.02);
+            background: rgba(0, 0, 0, 0.02);
         }
 
-        .table-actions {
-            display: flex;
-            gap: 8px;
+        [data-theme="dark"] .table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
         }
 
         .badge {
-            padding: 6px 12px;
-            border-radius: 12px;
+            padding: 6px 10px;
+            border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        .badge-success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-
-        .badge-warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning);
-        }
-
-        .badge-danger {
+        .badge-unread {
             background: rgba(239, 68, 68, 0.1);
             color: var(--danger);
         }
 
-        /* Modal */
+        .badge-read {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        .form-grid-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: var(--transition);
+            background: var(--card-bg);
+            color: var(--text);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            background: var(--card-bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -687,40 +724,40 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
             z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .modal.show {
             display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 1;
         }
 
         .modal-content {
-            background: var(--surface);
+            background: white;
             border-radius: var(--radius-lg);
-            max-width: 600px;
+            max-width: 500px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
-            animation: modalSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: var(--shadow-lg);
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.18, 1.25, 0.4, 1);
         }
 
-        @keyframes modalSlide {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .modal.show .modal-content {
+            transform: scale(1);
+            opacity: 1;
         }
 
         .modal-header {
-            padding: 24px;
+            padding: 20px 24px;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
@@ -728,59 +765,123 @@
         }
 
         .modal-title {
-            font-size: 1.25rem;
-            font-weight: 700;
+            font-weight: 600;
+            font-size: 1.2rem;
         }
 
         .modal-close {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
+            background: none;
             border: none;
-            background: var(--bg);
-            color: var(--text);
+            font-size: 1.5rem;
+            color: var(--text-muted);
             cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
             transition: var(--transition);
         }
 
         .modal-close:hover {
-            background: var(--border);
+            background: var(--surface-dark);
+            color: var(--text);
+            transform: rotate(90deg);
         }
 
         .modal-body {
             padding: 24px;
         }
 
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
+        .message-content {
+            background: var(--surface);
+            padding: 16px;
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            border-left: 4px solid var(--primary);
         }
 
-        .spinner {
-            width: 48px;
-            height: 48px;
-            border: 4px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 16px;
+        .video-preview {
+            aspect-ratio: 9/16;
+            max-width: 200px;
+            margin: 12px 0;
+            border-radius: var(--radius);
+            overflow: hidden;
+            background: var(--surface);
+            transition: var(--transition);
+            box-shadow: var(--shadow);
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .video-preview:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
         }
 
-        /* Toast */
+        .video-preview iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .mobile-menu {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: var(--radius);
+            transition: var(--transition);
+        }
+
+        .mobile-menu:hover {
+            background: var(--surface-dark);
+        }
+
+        .schedule-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: var(--transition);
+        }
+
+        .schedule-item:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+            backdrop-filter: blur(4px);
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* Toast notifications */
         .toast {
             position: fixed;
             bottom: 24px;
             right: 24px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
             padding: 16px 24px;
+            border-radius: var(--radius);
+            background: var(--surface);
+            color: var(--text);
             box-shadow: var(--shadow-lg);
             display: flex;
             align-items: center;
@@ -788,7 +889,7 @@
             z-index: 1000;
             transform: translateY(100px);
             opacity: 0;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.5s cubic-bezier(0.18, 1.25, 0.4, 1);
         }
 
         .toast.show {
@@ -805,7 +906,7 @@
         }
 
         .toast i {
-            font-size: 1.25rem;
+            font-size: 1.2rem;
         }
 
         .toast.success i {
@@ -816,120 +917,22 @@
             color: var(--danger);
         }
 
-        /* Alert */
-        .alert {
-            padding: 16px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .alert-success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-
-        .alert-danger {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        /* Page Sections */
-        .page-section {
+        /* Debug info */
+        .debug-info {
+            background: var(--surface-dark);
+            padding: 12px;
+            border-radius: var(--radius);
+            font-family: monospace;
+            font-size: 0.85rem;
+            margin: 10px 0;
             display: none;
-            animation: fadeIn 0.4s ease-out;
         }
 
-        .page-section.active {
+        .show-debug .debug-info {
             display: block;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Form */
-        .form-grid {
-            display: grid;
-            gap: 20px;
-        }
-
-        .form-grid-2 {
-            grid-template-columns: 1fr 1fr;
-        }
-
-        .form-textarea {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: var(--transition);
-            background: var(--surface);
-            color: var(--text);
-            resize: vertical;
-            min-height: 120px;
-        }
-
-        .form-textarea:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, var(--success) 0%, #34d399 100%);
-            color: white;
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(16, 185, 129, 0.5);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, var(--danger) 0%, #f87171 100%);
-            color: white;
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
-        }
-
-        .btn-danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(239, 68, 68, 0.5);
-        }
-
-        /* Responsive */
+        /* Responsive styles */
         @media (max-width: 1024px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -949,111 +952,95 @@
         }
 
         @media (max-width: 768px) {
-            .mobile-menu {
-                display: block;
-            }
-
-            .content {
-                padding: 20px;
-            }
-
-            .header {
-                padding: 16px 20px;
-            }
-
-            .header-title {
-                font-size: 1.25rem;
-            }
-
             .stats-grid {
                 grid-template-columns: 1fr;
             }
 
-            .login-card {
-                padding: 32px 24px;
+            .content {
+                padding: 16px;
             }
 
-            .header-actions .btn span {
+            .header {
+                padding: 12px 16px;
+            }
+
+            .header-title {
+                font-size: 1.2rem;
+            }
+
+            .header-actions .btn-text {
                 display: none;
+            }
+
+            .header-actions .btn {
+                padding: 12px;
+            }
+
+            .mobile-menu {
+                display: block;
             }
 
             .btn-group {
                 flex-direction: column;
             }
 
-            .chart-canvas {
-                max-height: 200px;
+            .modal-content {
+                margin: 0 10px;
             }
         }
 
-        /* Overlay */
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(2px);
-            z-index: 99;
-        }
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 24px;
+            }
 
-        .overlay.active {
-            display: block;
-        }
+            .card-header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
 
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-        }
-
-        .empty-state i {
-            font-size: 4rem;
-            color: var(--text-muted);
-            opacity: 0.5;
-            margin-bottom: 16px;
-        }
-
-        .empty-state p {
-            color: var(--text-muted);
-            font-size: 1.125rem;
+            .stat-value {
+                font-size: 1.8rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="bg-pattern"></div>
-
-    <!-- Login Page -->
     <div id="loginPage" class="login-container">
         <div class="login-card">
             <div class="login-logo">
                 <i class="fas fa-book-quran"></i>
             </div>
-            <h1 class="login-title">Tafsir Kurd</h1>
-            <p class="login-subtitle">Modern Dashboard 2025</p>
+            <h1 class="login-title">Tafsir Kurd Dashboard</h1>
+            <p class="login-subtitle">Access your admin panel</p>
 
             <div id="loginAlert"></div>
 
             <form id="loginForm">
                 <div class="form-group">
                     <label for="email" class="form-label">Email</label>
-                    <input type="email" id="email" class="form-input" required placeholder="admin@tafsirkurd.com">
+                    <input type="email" id="email" name="email" class="form-input" required>
                 </div>
                 <div class="form-group">
                     <label for="password" class="form-label">Password</label>
-                    <input type="password" id="password" class="form-input" required placeholder="••••••••">
+                    <input type="password" id="password" name="password" class="form-input" required>
                 </div>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary btn-full">
                     <i class="fas fa-sign-in-alt"></i>
-                    <span>Sign In</span>
+                    Sign In
                 </button>
             </form>
+
+            <!-- Debug toggle button -->
+            <div style="position: fixed; bottom: 10px; right: 10px;">
+                <button class="btn btn-secondary" onclick="toggleDebugMode()" style="font-size: 0.8rem; padding: 8px 12px;">
+                    <i class="fas fa-bug"></i> Debug
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Dashboard -->
     <div id="dashboard" class="dashboard">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
@@ -1069,30 +1056,26 @@
                     <i class="fas fa-chart-line"></i>
                     Overview
                 </a>
-                <a href="#" class="nav-item" data-page="analytics">
-                    <i class="fas fa-chart-pie"></i>
-                    Analytics
-                </a>
                 <a href="#" class="nav-item" data-page="messages">
                     <i class="fas fa-envelope"></i>
                     Messages
-                    <span id="unreadBadge" class="nav-badge" style="display: none;">0</span>
+                    <span id="unreadCount" class="badge badge-unread" style="margin-left: auto; display: none;">0</span>
                 </a>
                 <a href="#" class="nav-item" data-page="videos">
                     <i class="fas fa-video"></i>
-                    Videos
+                    Featured Videos
                 </a>
                 <a href="#" class="nav-item" data-page="stats">
                     <i class="fas fa-chart-bar"></i>
-                    Statistics
+                    Website Stats
                 </a>
                 <a href="#" class="nav-item" data-page="schedule">
                     <i class="fas fa-calendar"></i>
-                    Schedule
+                    Daily Schedule
                 </a>
                 <a href="#" class="nav-item" data-page="content">
                     <i class="fas fa-edit"></i>
-                    Content
+                    Website Content
                 </a>
             </nav>
         </aside>
@@ -1106,19 +1089,27 @@
                     <h1 class="header-title" id="pageTitle">Dashboard Overview</h1>
                 </div>
                 <div class="header-actions">
-                    <button class="btn-icon" onclick="toggleTheme()" id="themeToggle" title="Toggle Theme">
+                    <button class="btn btn-secondary" onclick="toggleTheme()" id="themeToggle" title="Toggle Dark Mode">
                         <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="btn btn-secondary" onclick="toggleDebugMode()">
+                        <i class="fas fa-bug"></i>
+                        <span class="btn-text">Debug</span>
                     </button>
                     <button class="btn btn-secondary" id="logoutBtn">
                         <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
+                        <span class="btn-text">Logout</span>
                     </button>
                 </div>
             </header>
 
             <div class="content">
-                <!-- Overview Page -->
                 <div id="overviewPage" class="page-section active">
+                    <div class="debug-info">
+                        <strong>Debug - Overview Page:</strong>
+                        <div id="overviewDebug">Loading debug info...</div>
+                    </div>
+
                     <div class="stats-grid" id="statsContainer">
                         <div class="loading">
                             <div class="spinner"></div>
@@ -1127,104 +1118,63 @@
                     </div>
 
                     <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Recent Messages</h2>
-                        </div>
+                        <div class="card-header">Recent Messages</div>
                         <div class="card-body">
-                            <div class="table-container" id="recentMessages">
-                                <div class="loading">
-                                    <div class="spinner"></div>
-                                    <p>Loading messages...</p>
-                                </div>
+                            <div class="debug-info">
+                                <strong>Debug - Recent Messages:</strong>
+                                <div id="recentMessagesDebug">Loading debug info...</div>
+                            </div>
+                            <div id="recentMessages" class="loading">
+                                <div class="spinner"></div>
+                                <p>Loading recent messages...</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Analytics Page -->
-                <div id="analyticsPage" class="page-section">
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-body">
-                                <div class="stat-label">Total Visitors</div>
-                                <div class="stat-value" id="totalVisitors">0</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-body">
-                                <div class="stat-label">Avg. Session</div>
-                                <div class="stat-value" id="avgSession">0m</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-body">
-                                <div class="stat-label">Bounce Rate</div>
-                                <div class="stat-value" id="bounceRate">0%</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-body">
-                                <div class="stat-label">Page Views</div>
-                                <div class="stat-value" id="pageViews">0</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="chart-container">
-                        <div class="chart-header">
-                            <h3 class="chart-title">Engagement Overview</h3>
-                        </div>
-                        <canvas id="engagementChart" class="chart-canvas"></canvas>
-                    </div>
-
-                    <div class="chart-container">
-                        <div class="chart-header">
-                            <h3 class="chart-title">Social Media Growth</h3>
-                        </div>
-                        <canvas id="socialChart" class="chart-canvas"></canvas>
-                    </div>
-                </div>
-
-                <!-- Messages Page -->
                 <div id="messagesPage" class="page-section">
                     <div class="card">
                         <div class="card-header">
-                            <h2 class="card-title">Contact Messages</h2>
-                            <button class="btn btn-secondary" id="refreshMessages">
-                                <i class="fas fa-sync-alt"></i>
-                                Refresh
-                            </button>
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                                Contact Messages
+                                <button class="btn btn-secondary" id="refreshMessages">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Refresh
+                                </button>
+                            </div>
                         </div>
                         <div class="card-body">
-                            <div class="table-container" id="messagesTable">
-                                <div class="loading">
-                                    <div class="spinner"></div>
-                                    <p>Loading messages...</p>
-                                </div>
+                            <div class="debug-info">
+                                <strong>Debug - Messages Query:</strong>
+                                <div id="messagesDebug">Loading debug info...</div>
+                            </div>
+                            <div id="messagesTable" class="loading">
+                                <div class="spinner"></div>
+                                <p>Loading messages...</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Videos Page -->
                 <div id="videosPage" class="page-section">
                     <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Featured Videos</h2>
-                        </div>
+                        <div class="card-header">Featured Videos Management</div>
                         <div class="card-body">
                             <form id="videosForm" class="form-grid">
                                 <div class="form-group">
                                     <label class="form-label">Video 1 URL</label>
-                                    <input type="url" id="video1" class="form-input" placeholder="https://instagram.com/reel/...">
+                                    <input type="url" id="video1" class="form-input" placeholder="https://www.instagram.com/reel/...">
+                                    <div class="video-preview" id="preview1"></div>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Video 2 URL</label>
-                                    <input type="url" id="video2" class="form-input" placeholder="https://instagram.com/reel/...">
+                                    <input type="url" id="video2" class="form-input" placeholder="https://www.instagram.com/reel/...">
+                                    <div class="video-preview" id="preview2"></div>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Video 3 URL</label>
-                                    <input type="url" id="video3" class="form-input" placeholder="https://instagram.com/reel/...">
+                                    <input type="url" id="video3" class="form-input" placeholder="https://www.instagram.com/reel/...">
+                                    <div class="video-preview" id="preview3"></div>
                                 </div>
                                 <div class="btn-group">
                                     <button type="submit" class="btn btn-success">
@@ -1237,12 +1187,9 @@
                     </div>
                 </div>
 
-                <!-- Stats Page -->
                 <div id="statsPage" class="page-section">
                     <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Website Statistics</h2>
-                        </div>
+                        <div class="card-header">Website Statistics</div>
                         <div class="card-body">
                             <form id="statsForm" class="form-grid form-grid-2">
                                 <div class="form-group">
@@ -1272,40 +1219,34 @@
                     </div>
                 </div>
 
-                <!-- Schedule Page -->
                 <div id="schedulePage" class="page-section">
                     <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Daily Schedule</h2>
-                            <button class="btn btn-success" id="addScheduleBtn">
-                                <i class="fas fa-plus"></i>
-                                Add Schedule
-                            </button>
-                        </div>
-                        <div class="card-body" id="scheduleList">
-                            <div class="loading">
+                        <div class="card-header">Daily Schedule Management</div>
+                        <div class="card-body">
+                            <div id="scheduleList" class="loading">
                                 <div class="spinner"></div>
                                 <p>Loading schedule...</p>
                             </div>
+                            <button class="btn btn-primary" id="addScheduleBtn" style="margin-top: 20px;">
+                                <i class="fas fa-plus"></i>
+                                Add Schedule Item
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Content Page -->
                 <div id="contentPage" class="page-section">
                     <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Website Content</h2>
-                        </div>
+                        <div class="card-header">Website Content</div>
                         <div class="card-body">
                             <form id="contentForm" class="form-grid">
                                 <div class="form-group">
                                     <label class="form-label">Hero Section Text</label>
-                                    <textarea id="heroText" class="form-textarea"></textarea>
+                                    <textarea id="heroText" class="form-textarea" rows="4"></textarea>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">About Mission Text</label>
-                                    <textarea id="aboutMission" class="form-textarea"></textarea>
+                                    <textarea id="aboutMission" class="form-textarea" rows="6"></textarea>
                                 </div>
                                 <div class="btn-group">
                                     <button type="submit" class="btn btn-success">
@@ -1321,7 +1262,7 @@
         </main>
     </div>
 
-    <!-- Message Modal -->
+    <!-- Modals -->
     <div id="messageModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1334,19 +1275,19 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">From</label>
-                        <div id="modalName" style="padding: 12px; background: var(--bg); border-radius: 8px;"></div>
+                        <div id="modalName" class="message-content"></div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Email</label>
-                        <div id="modalEmail" style="padding: 12px; background: var(--bg); border-radius: 8px;"></div>
+                        <div id="modalEmail" class="message-content"></div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Subject</label>
-                        <div id="modalSubject" style="padding: 12px; background: var(--bg); border-radius: 8px;"></div>
+                        <div id="modalSubject" class="message-content"></div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Message</label>
-                        <div id="modalMessage" style="padding: 12px; background: var(--bg); border-radius: 8px; white-space: pre-wrap;"></div>
+                        <div id="modalMessage" class="message-content"></div>
                     </div>
                     <div class="btn-group">
                         <button class="btn btn-success" id="markReadBtn">
@@ -1363,7 +1304,6 @@
         </div>
     </div>
 
-    <!-- Schedule Modal -->
     <div id="scheduleModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1373,13 +1313,13 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form id="scheduleForm" class="form-grid">
+                <form id="scheduleItemForm" class="form-grid">
                     <div class="form-group">
                         <label class="form-label">Day</label>
                         <input type="text" id="scheduleDay" class="form-input" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Icon (Font Awesome)</label>
+                        <label class="form-label">Icon (Font Awesome class)</label>
                         <input type="text" id="scheduleIcon" class="form-input" placeholder="fas fa-calendar-day">
                     </div>
                     <div class="form-group">
@@ -1392,7 +1332,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Description</label>
-                        <textarea id="scheduleDescription" class="form-textarea" required></textarea>
+                        <textarea id="scheduleDescription" class="form-textarea" rows="4" required></textarea>
                     </div>
                     <div class="btn-group">
                         <button type="submit" class="btn btn-success">
@@ -1408,7 +1348,7 @@
         </div>
     </div>
 
-    <div class="overlay" id="overlay"></div>
+    <div class="overlay" id="mobileOverlay"></div>
 
     <div id="toast" class="toast">
         <i class="fas fa-check-circle"></i>
@@ -1420,10 +1360,9 @@
         let currentUser = null;
         let currentMessageId = null;
         let currentScheduleId = null;
-        let engagementChart = null;
-        let socialChart = null;
+        let debugMode = false;
 
-        // Initialize
+        // Initialize app
         document.addEventListener('DOMContentLoaded', async function() {
             initTheme();
             await initSupabase();
@@ -1431,69 +1370,123 @@
             setupEventListeners();
         });
 
-        // Theme
         function toggleTheme() {
-            const current = document.documentElement.getAttribute('data-theme');
-            const newTheme = current === 'dark' ? 'light' : 'dark';
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
 
-            const icon = document.querySelector('#themeToggle i');
+            // Update icon
+            const themeToggle = document.getElementById('themeToggle');
+            const icon = themeToggle.querySelector('i');
             icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
 
             showToast(`${newTheme === 'dark' ? 'Dark' : 'Light'} mode activated`, 'success');
-
-            // Update charts if they exist
-            if (engagementChart) engagementChart.options.plugins.legend.labels.color = getComputedStyle(document.documentElement).getPropertyValue('--text');
-            if (socialChart) socialChart.options.plugins.legend.labels.color = getComputedStyle(document.documentElement).getPropertyValue('--text');
         }
 
         function initTheme() {
-            const saved = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', saved);
-            const icon = document.querySelector('#themeToggle i');
-            if (icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-        }
-
-        // Supabase Init
-        async function initSupabase() {
-            try {
-                const response = await fetch('/.netlify/functions/config');
-                if (!response.ok) throw new Error('Config fetch failed');
-
-                const config = await response.json();
-                supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
-                console.log('✅ Supabase initialized');
-            } catch (error) {
-                console.error('Supabase init failed:', error);
-                showAlert('Connection error. Please refresh.', 'danger');
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                const icon = themeToggle.querySelector('i');
+                icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
             }
         }
 
-        // Auth
+        function toggleDebugMode() {
+            debugMode = !debugMode;
+            document.body.classList.toggle('show-debug', debugMode);
+            if (debugMode) {
+                showToast('Debug mode enabled', 'success');
+                updateDebugInfo('Debug mode activated - showing detailed query information');
+            } else {
+                showToast('Debug mode disabled', 'success');
+            }
+        }
+
+        function updateDebugInfo(message, elementId = null) {
+            if (!debugMode) return;
+
+            const timestamp = new Date().toISOString();
+            const debugText = `[${timestamp}] ${message}`;
+
+            if (elementId) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.innerHTML = debugText;
+                }
+            }
+            console.log(debugText);
+        }
+
+        // Initialize Supabase with enhanced error handling
+        async function initSupabase() {
+            try {
+                updateDebugInfo('Initializing Supabase client...');
+                console.log('Fetching Supabase config...');
+                const response = await fetch('/.netlify/functions/config');
+
+                if (!response.ok) {
+                    throw new Error(`Config fetch failed: ${response.status}`);
+                }
+
+                const config = await response.json();
+                updateDebugInfo(`Config loaded: URL=${config.supabaseUrl?.substring(0, 30)}...`, 'overviewDebug');
+
+                if (!config.supabaseUrl || !config.supabaseKey) {
+                    throw new Error('Missing Supabase configuration');
+                }
+
+                supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                updateDebugInfo('Supabase client initialized successfully');
+                console.log('Supabase client initialized successfully');
+
+                return supabase;
+            } catch (error) {
+                console.error('Failed to initialize Supabase:', error.message);
+                updateDebugInfo(`Supabase init failed: ${error.message}`);
+                showAlert('Connection Error: Unable to connect to our servers. Please refresh the page.', 'danger');
+                throw error;
+            }
+        }
+
+        // Authentication functions with RLS handling
         async function checkAuth() {
             const session = getStoredSession();
             if (session) {
                 try {
+                    updateDebugInfo('Validating stored session...');
+                    // Verify session with server
                     const response = await fetch('/.netlify/functions/auth', {
-                        headers: { 'Authorization': `Bearer ${session.token}` }
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${session.token}`
+                        }
                     });
+
                     const data = await response.json();
 
                     if (response.ok && data.success) {
                         currentUser = data.user;
+                        updateDebugInfo(`Session valid for user: ${currentUser.email}`);
+
+                        // Set the auth token for Supabase queries
                         if (supabase && session.token !== 'admin-session-token') {
                             await supabase.auth.setSession({
                                 access_token: session.token,
                                 refresh_token: session.refresh_token || session.token
                             });
                         }
+
                         showDashboard();
                         return;
                     }
                 } catch (e) {
                     console.error('Session validation failed:', e);
+                    updateDebugInfo(`Session validation failed: ${e.message}`);
                 }
+                // Clear invalid session
                 clearStoredSession();
             }
             showLogin();
@@ -1504,41 +1497,56 @@
                 const session = localStorage.getItem('dashboard_session');
                 return session ? JSON.parse(session) : null;
             } catch (e) {
+                console.error('Error parsing stored session:', e);
                 return null;
             }
         }
 
-        function storeSession(data) {
+        function storeSession(sessionData) {
             try {
-                localStorage.setItem('dashboard_session', JSON.stringify(data));
+                localStorage.setItem('dashboard_session', JSON.stringify(sessionData));
             } catch (e) {
                 console.error('Error storing session:', e);
             }
         }
 
         function clearStoredSession() {
-            localStorage.removeItem('dashboard_session');
+            try {
+                localStorage.removeItem('dashboard_session');
+            } catch (e) {
+                console.error('Error clearing session:', e);
+            }
         }
 
         async function login(email, password) {
             try {
+                updateDebugInfo(`Attempting login for: ${email}`);
                 const response = await fetch('/.netlify/functions/auth', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: email.trim(), password: password.trim() })
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email.trim(),
+                        password: password.trim()
+                    })
                 });
 
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    storeSession({
+                    const session = {
                         user: data.user,
                         token: data.token,
                         refresh_token: data.refresh_token || data.token,
                         expires: data.expires
-                    });
+                    };
+                    storeSession(session);
                     currentUser = data.user;
 
+                    updateDebugInfo(`Login successful for: ${currentUser.email}`);
+
+                    // Set Supabase auth if we have a real JWT token
                     if (supabase && data.token !== 'admin-session-token') {
                         await supabase.auth.setSession({
                             access_token: data.token,
@@ -1547,15 +1555,17 @@
                     }
 
                     showDashboard();
-                    showToast('Welcome back!', 'success');
+                    showToast('Login successful!', 'success');
                     return true;
                 } else {
+                    updateDebugInfo(`Login failed: ${data.message}`);
                     showAlert(data.message || 'Invalid credentials', 'danger');
                     return false;
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                showAlert('Login failed. Please try again.', 'danger');
+                updateDebugInfo(`Login error: ${error.message}`);
+                showAlert('Login service unavailable. Please try again later.', 'danger');
                 return false;
             }
         }
@@ -1563,7 +1573,9 @@
         function logout() {
             clearStoredSession();
             currentUser = null;
-            if (supabase) supabase.auth.signOut();
+            if (supabase) {
+                supabase.auth.signOut();
+            }
             showLogin();
             showToast('Logged out successfully', 'success');
         }
@@ -1579,15 +1591,36 @@
             loadDashboardData();
         }
 
-        // Event Listeners
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('loginAlert');
+            alertDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                alertDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toastMessage.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Event listeners
         function setupEventListeners() {
-            // Login
+            // Login form
             document.getElementById('loginForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                await login(
-                    document.getElementById('email').value,
-                    document.getElementById('password').value
-                );
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                await login(email, password);
             });
 
             // Logout
@@ -1605,10 +1638,10 @@
             // Mobile menu
             document.getElementById('mobileMenuBtn').addEventListener('click', function() {
                 document.getElementById('sidebar').classList.toggle('active');
-                document.getElementById('overlay').classList.toggle('active');
+                document.getElementById('mobileOverlay').classList.toggle('active');
             });
 
-            document.getElementById('overlay').addEventListener('click', function() {
+            document.getElementById('mobileOverlay').addEventListener('click', function() {
                 document.getElementById('sidebar').classList.remove('active');
                 this.classList.remove('active');
             });
@@ -1617,51 +1650,51 @@
             document.getElementById('videosForm').addEventListener('submit', updateVideos);
             document.getElementById('statsForm').addEventListener('submit', updateStats);
             document.getElementById('contentForm').addEventListener('submit', updateContent);
-            document.getElementById('scheduleForm').addEventListener('submit', saveSchedule);
+            document.getElementById('scheduleItemForm').addEventListener('submit', saveScheduleItem);
 
-            // Refresh
+            // Refresh buttons
             document.getElementById('refreshMessages').addEventListener('click', loadMessages);
             document.getElementById('addScheduleBtn').addEventListener('click', function() {
                 currentScheduleId = null;
-                document.getElementById('scheduleForm').reset();
+                document.getElementById('scheduleItemForm').reset();
                 openModal('scheduleModal');
             });
 
-            // Modal clicks
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.addEventListener('click', function(e) {
-                    if (e.target === this) closeModal(this.id);
+            // Video URL inputs - add preview functionality
+            ['video1', 'video2', 'video3'].forEach((id, index) => {
+                document.getElementById(id).addEventListener('blur', function() {
+                    updateVideoPreview(this.value, `preview${index + 1}`);
                 });
             });
         }
 
         // Navigation
         function showPage(page) {
-            // Update nav
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
             document.querySelector(`[data-page="${page}"]`).classList.add('active');
 
-            // Update content
-            document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
+            // Update page content
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.remove('active');
+            });
             document.getElementById(`${page}Page`).classList.add('active');
 
-            // Update title
+            // Update page title
             const titles = {
                 overview: 'Dashboard Overview',
-                analytics: 'Analytics',
-                messages: 'Messages',
+                messages: 'Contact Messages',
                 videos: 'Featured Videos',
-                stats: 'Statistics',
-                schedule: 'Schedule',
-                content: 'Content'
+                stats: 'Website Statistics',
+                schedule: 'Daily Schedule',
+                content: 'Website Content'
             };
             document.getElementById('pageTitle').textContent = titles[page];
 
-            // Load page data
+            // Load page-specific data
             switch(page) {
-                case 'analytics':
-                    loadAnalytics();
-                    break;
                 case 'messages':
                     loadMessages();
                     break;
@@ -1680,24 +1713,25 @@
             }
         }
 
-        // Dashboard Data
-        async function loadDashboardData() {
-            await Promise.all([
-                loadStats(),
-                loadRecentMessages()
-            ]);
-        }
-
+        // Enhanced dashboard data loading with auth context
         async function loadStats() {
             try {
+                updateDebugInfo('Loading website stats...', 'overviewDebug');
+
                 const { data, error } = await supabase
                     .from('website_stats')
                     .select('*')
                     .order('updated_at', { ascending: false })
                     .limit(1);
 
-                if (error) throw error;
+                if (error) {
+                    updateDebugInfo(`Stats query error: ${error.message} (${error.code})`, 'overviewDebug');
+                    throw error;
+                }
 
+                updateDebugInfo(`Stats loaded: ${data ? data.length : 0} records`, 'overviewDebug');
+
+                // Get the first record or use defaults
                 const stats = data[0] || {
                     instagram_followers: 0,
                     tiktok_followers: 0,
@@ -1705,89 +1739,82 @@
                     videos_published: 0
                 };
 
-                document.getElementById('statsContainer').innerHTML = `
+                const statsHtml = `
                     <div class="stat-card">
                         <div class="stat-header">
                             <div class="stat-icon instagram">
                                 <i class="fab fa-instagram"></i>
                             </div>
-                            <div class="stat-trend up">
-                                <i class="fas fa-arrow-up"></i>
-                                12%
-                            </div>
+                            <span class="stat-title">Instagram Followers</span>
                         </div>
-                        <div class="stat-body">
-                            <div class="stat-label">Instagram Followers</div>
-                            <div class="stat-value">${stats.instagram_followers}K</div>
-                        </div>
+                        <div class="stat-value">${stats.instagram_followers}K</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-header">
                             <div class="stat-icon tiktok">
                                 <i class="fab fa-tiktok"></i>
                             </div>
-                            <div class="stat-trend up">
-                                <i class="fas fa-arrow-up"></i>
-                                8%
-                            </div>
+                            <span class="stat-title">TikTok Followers</span>
                         </div>
-                        <div class="stat-body">
-                            <div class="stat-label">TikTok Followers</div>
-                            <div class="stat-value">${stats.tiktok_followers}K</div>
-                        </div>
+                        <div class="stat-value">${stats.tiktok_followers}K</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-header">
                             <div class="stat-icon views">
                                 <i class="fas fa-eye"></i>
                             </div>
-                            <div class="stat-trend up">
-                                <i class="fas fa-arrow-up"></i>
-                                15%
-                            </div>
+                            <span class="stat-title">Total Views</span>
                         </div>
-                        <div class="stat-body">
-                            <div class="stat-label">Total Views</div>
-                            <div class="stat-value">${stats.total_views}M</div>
-                        </div>
+                        <div class="stat-value">${stats.total_views}M</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-header">
                             <div class="stat-icon videos">
                                 <i class="fas fa-video"></i>
                             </div>
-                            <div class="stat-trend up">
-                                <i class="fas fa-arrow-up"></i>
-                                5%
-                            </div>
+                            <span class="stat-title">Videos Published</span>
                         </div>
-                        <div class="stat-body">
-                            <div class="stat-label">Videos Published</div>
-                            <div class="stat-value">${stats.videos_published}+</div>
-                        </div>
+                        <div class="stat-value">${stats.videos_published}+</div>
                     </div>
                 `;
+                document.getElementById('statsContainer').innerHTML = statsHtml;
             } catch (error) {
                 console.error('Error loading stats:', error);
+                updateDebugInfo(`Stats loading failed: ${error.message}`, 'overviewDebug');
                 document.getElementById('statsContainer').innerHTML = '<p>Error loading statistics</p>';
             }
         }
 
         async function loadRecentMessages() {
             try {
-                const { data, error } = await supabase
+                updateDebugInfo('Loading recent messages...', 'recentMessagesDebug');
+
+                // For admin session token, bypass Supabase RLS by using service role
+                if (currentUser && currentUser.email) {
+                    updateDebugInfo(`Querying as authenticated user: ${currentUser.email}`, 'recentMessagesDebug');
+                }
+
+                const { data, error, count } = await supabase
                     .from('contact_messages')
-                    .select('*')
+                    .select('*', { count: 'exact' })
                     .order('created_at', { ascending: false })
                     .limit(5);
 
-                if (error) throw error;
+                if (error) {
+                    updateDebugInfo(`Messages query error: ${error.message} (${error.code}) - ${error.details || 'No details'}`, 'recentMessagesDebug');
 
-                const unread = data.filter(m => m.status !== 'read').length;
-                updateUnreadCount(unread);
+                    // If RLS is blocking, try to provide helpful info
+                    if (error.code === 'PGRST301' || error.message.includes('permission')) {
+                        updateDebugInfo('RLS Policy blocking - need to authenticate properly', 'recentMessagesDebug');
+                    }
+                    throw error;
+                }
 
+                updateDebugInfo(`Recent messages loaded: ${data ? data.length : 0} records (total: ${count})`, 'recentMessagesDebug');
+
+                let messagesHtml = '';
                 if (data && data.length > 0) {
-                    document.getElementById('recentMessages').innerHTML = `
+                    messagesHtml = `
                         <table class="table">
                             <thead>
                                 <tr>
@@ -1798,126 +1825,56 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${data.map(m => `
-                                    <tr style="cursor: pointer;" onclick="viewMessage('${m.id}')">
-                                        <td><strong>${m.name}</strong></td>
-                                        <td>${m.subject.substring(0, 50)}...</td>
-                                        <td>${new Date(m.created_at).toLocaleDateString()}</td>
-                                        <td><span class="badge badge-${m.status === 'read' ? 'success' : 'warning'}">${m.status || 'unread'}</span></td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
                     `;
+
+                    data.forEach(message => {
+                        const messageStatus = message.status || 'unread';
+                        messagesHtml += `
+                            <tr>
+                                <td>${message.name}</td>
+                                <td>${message.subject}</td>
+                                <td>${new Date(message.created_at).toLocaleDateString()}</td>
+                                <td><span class="badge badge-${messageStatus === 'read' ? 'read' : 'unread'}">${messageStatus}</span></td>
+                            </tr>
+                        `;
+                    });
+
+                    messagesHtml += '</tbody></table>';
+
+                    const unreadCount = data.filter(m => m.status !== 'read').length;
+                    updateUnreadCount(unreadCount);
                 } else {
-                    document.getElementById('recentMessages').innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No messages yet</p></div>';
+                    messagesHtml = '<p>No messages yet</p>';
+                    updateDebugInfo('No messages returned from query', 'recentMessagesDebug');
                 }
+
+                document.getElementById('recentMessages').innerHTML = messagesHtml;
             } catch (error) {
-                console.error('Error loading messages:', error);
+                console.error('Error loading recent messages:', error);
+                updateDebugInfo(`Recent messages failed: ${error.message}`, 'recentMessagesDebug');
                 document.getElementById('recentMessages').innerHTML = '<p>Error loading messages</p>';
             }
         }
 
-        function updateUnreadCount(count) {
-            const badge = document.getElementById('unreadBadge');
-            if (count > 0) {
-                badge.textContent = count;
-                badge.style.display = 'inline-block';
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-
-        // Analytics
-        function loadAnalytics() {
-            // Simulated data - replace with real Google Analytics API data
-            document.getElementById('totalVisitors').textContent = '12.5K';
-            document.getElementById('avgSession').textContent = '4m 32s';
-            document.getElementById('bounceRate').textContent = '42%';
-            document.getElementById('pageViews').textContent = '45.2K';
-
-            // Engagement Chart
-            const engagementCtx = document.getElementById('engagementChart').getContext('2d');
-            if (engagementChart) engagementChart.destroy();
-
-            engagementChart = new Chart(engagementCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [{
-                        label: 'Page Views',
-                        data: [1200, 1900, 1500, 2100, 2400, 1800, 2200],
-                        borderColor: '#6366f1',
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-
-            // Social Chart
-            const socialCtx = document.getElementById('socialChart').getContext('2d');
-            if (socialChart) socialChart.destroy();
-
-            socialChart = new Chart(socialCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Instagram', 'TikTok', 'YouTube', 'Facebook'],
-                    datasets: [{
-                        label: 'Followers (K)',
-                        data: [145, 89, 67, 124],
-                        backgroundColor: [
-                            '#e1306c',
-                            '#000000',
-                            '#ff0000',
-                            '#1877f2'
-                        ],
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
-
-        // Messages
         async function loadMessages() {
             try {
-                const { data, error } = await supabase
+                updateDebugInfo('Loading all messages...', 'messagesDebug');
+
+                const { data, error, count } = await supabase
                     .from('contact_messages')
-                    .select('*')
+                    .select('*', { count: 'exact' })
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
+                if (error) {
+                    updateDebugInfo(`Full messages query error: ${error.message} (${error.code})`, 'messagesDebug');
+                    throw error;
+                }
 
+                updateDebugInfo(`All messages loaded: ${data ? data.length : 0} records (total: ${count})`, 'messagesDebug');
+
+                let messagesHtml = '';
                 if (data && data.length > 0) {
-                    document.getElementById('messagesTable').innerHTML = `
+                    messagesHtml = `
                         <table class="table">
                             <thead>
                                 <tr>
@@ -1930,70 +1887,88 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${data.map(m => `
-                                    <tr>
-                                        <td><strong>${m.name}</strong></td>
-                                        <td>${m.email}</td>
-                                        <td>${m.subject.substring(0, 40)}...</td>
-                                        <td>${new Date(m.created_at).toLocaleDateString()}</td>
-                                        <td><span class="badge badge-${m.status === 'read' ? 'success' : 'warning'}">${m.status || 'unread'}</span></td>
-                                        <td>
-                                            <div class="table-actions">
-                                                <button class="btn-icon" onclick="viewMessage('${m.id}')">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
                     `;
 
-                    const unread = data.filter(m => m.status !== 'read').length;
-                    updateUnreadCount(unread);
+                    data.forEach(message => {
+                        const messageStatus = message.status || 'unread';
+                        const badgeClass = messageStatus === 'read' ? 'read' : 'unread';
+
+                        messagesHtml += `
+                            <tr>
+                                <td>${message.name}</td>
+                                <td>${message.email}</td>
+                                <td>${message.subject.substring(0, 50)}${message.subject.length > 50 ? '...' : ''}</td>
+                                <td>${new Date(message.created_at).toLocaleDateString()}</td>
+                                <td><span class="badge badge-${badgeClass}">${messageStatus}</span></td>
+                                <td>
+                                    <button class="btn btn-secondary" onclick="viewMessage('${message.id}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    messagesHtml += '</tbody></table>';
+
+                    const unreadCount = data.filter(m => m.status !== 'read').length;
+                    updateUnreadCount(unreadCount);
                 } else {
-                    document.getElementById('messagesTable').innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No messages found</p></div>';
+                    messagesHtml = '<p>No messages found</p>';
                     updateUnreadCount(0);
                 }
+
+                document.getElementById('messagesTable').innerHTML = messagesHtml;
             } catch (error) {
                 console.error('Error loading messages:', error);
-                document.getElementById('messagesTable').innerHTML = '<p>Error loading messages</p>';
+                updateDebugInfo(`Messages loading failed: ${error.message}`, 'messagesDebug');
+                document.getElementById('messagesTable').innerHTML = `<p>Error loading messages: ${error.message}</p>`;
             }
         }
 
-        async function viewMessage(id) {
+        function updateUnreadCount(count) {
+            const badge = document.getElementById('unreadCount');
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        async function viewMessage(messageId) {
             try {
                 const { data, error } = await supabase
                     .from('contact_messages')
                     .select('*')
-                    .eq('id', id)
+                    .eq('id', messageId)
                     .single();
 
                 if (error) throw error;
 
-                currentMessageId = id;
+                currentMessageId = messageId;
                 document.getElementById('modalName').textContent = data.name;
                 document.getElementById('modalEmail').textContent = data.email;
                 document.getElementById('modalSubject').textContent = data.subject;
                 document.getElementById('modalMessage').textContent = data.message;
 
-                document.getElementById('markReadBtn').onclick = () => markMessageRead(id);
-                document.getElementById('deleteMessageBtn').onclick = () => deleteMessage(id);
+                // Update button handlers
+                document.getElementById('markReadBtn').onclick = () => markMessageRead(messageId);
+                document.getElementById('deleteMessageBtn').onclick = () => deleteMessage(messageId);
 
                 openModal('messageModal');
             } catch (error) {
                 console.error('Error loading message:', error);
-                showToast('Error loading message', 'error');
+                showToast('Error loading message details', 'error');
             }
         }
 
-        async function markMessageRead(id) {
+        async function markMessageRead(messageId) {
             try {
                 const { error } = await supabase
                     .from('contact_messages')
                     .update({ status: 'read' })
-                    .eq('id', id);
+                    .eq('id', messageId);
 
                 if (error) throw error;
 
@@ -2002,33 +1977,32 @@
                 loadRecentMessages();
                 showToast('Message marked as read', 'success');
             } catch (error) {
-                console.error('Error:', error);
-                showToast('Error updating message', 'error');
+                console.error('Error marking message as read:', error);
+                showToast('Error updating message status', 'error');
             }
         }
 
-        async function deleteMessage(id) {
-            if (!confirm('Delete this message?')) return;
+        async function deleteMessage(messageId) {
+            if (!confirm('Are you sure you want to delete this message?')) return;
 
             try {
                 const { error } = await supabase
                     .from('contact_messages')
                     .delete()
-                    .eq('id', id);
+                    .eq('id', messageId);
 
                 if (error) throw error;
 
                 closeModal('messageModal');
                 loadMessages();
                 loadRecentMessages();
-                showToast('Message deleted', 'success');
+                showToast('Message deleted successfully', 'success');
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error deleting message:', error);
                 showToast('Error deleting message', 'error');
             }
         }
 
-        // Videos
         async function loadVideos() {
             try {
                 const { data, error } = await supabase
@@ -2042,9 +2016,33 @@
                     document.getElementById('video1').value = data[0]?.video_url || '';
                     document.getElementById('video2').value = data[1]?.video_url || '';
                     document.getElementById('video3').value = data[2]?.video_url || '';
+
+                    // Update previews
+                    updateVideoPreview(data[0]?.video_url || '', 'preview1');
+                    updateVideoPreview(data[1]?.video_url || '', 'preview2');
+                    updateVideoPreview(data[2]?.video_url || '', 'preview3');
                 }
             } catch (error) {
                 console.error('Error loading videos:', error);
+            }
+        }
+
+        function updateVideoPreview(url, previewId) {
+            const preview = document.getElementById(previewId);
+            if (url && url.includes('instagram.com')) {
+                try {
+                    const postId = url.match(/\/reel\/([^\/\?]+)/)?.[1] ||
+                                        url.match(/\/p\/([^\/\?]+)/)?.[1] ||
+                                        url.split('/').filter(Boolean).pop();
+                    const embedUrl = `https://www.instagram.com/p/${postId}/embed`;
+                    preview.innerHTML = `<iframe src="${embedUrl}" frameborder="0" allowfullscreen></iframe>`;
+                } catch (e) {
+                    preview.innerHTML = '<p>Invalid Instagram URL</p>';
+                }
+            } else if (url) {
+                preview.innerHTML = '<p>Preview not available</p>';
+            } else {
+                preview.innerHTML = '';
             }
         }
 
@@ -2058,6 +2056,7 @@
             ];
 
             try {
+                // Delete existing videos and insert new ones
                 await supabase.from('featured_videos').delete().gte('position', 1);
 
                 const { error } = await supabase
@@ -2073,12 +2072,11 @@
 
                 showToast('Videos updated successfully!', 'success');
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error updating videos:', error);
                 showToast('Error updating videos', 'error');
             }
         }
 
-        // Stats
         async function loadStatsForm() {
             try {
                 const { data, error } = await supabase
@@ -2095,7 +2093,7 @@
                 document.getElementById('totalViews').value = data.total_views;
                 document.getElementById('videosPublished').value = data.videos_published;
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error loading stats form:', error);
             }
         }
 
@@ -2111,18 +2109,19 @@
             };
 
             try {
-                const { data: current } = await supabase
+                // Get current stats ID or create new one
+                const { data: currentStats } = await supabase
                     .from('website_stats')
                     .select('id')
                     .order('updated_at', { ascending: false })
                     .limit(1)
                     .single();
 
-                if (current) {
+                if (currentStats) {
                     const { error } = await supabase
                         .from('website_stats')
                         .update(stats)
-                        .eq('id', current.id);
+                        .eq('id', currentStats.id);
 
                     if (error) throw error;
                 } else {
@@ -2133,15 +2132,14 @@
                     if (error) throw error;
                 }
 
-                showToast('Statistics updated!', 'success');
-                loadStats();
+                showToast('Statistics updated successfully!', 'success');
+                loadStats(); // Refresh overview stats
             } catch (error) {
-                console.error('Error:', error);
-                showToast('Error updating stats', 'error');
+                console.error('Error updating stats:', error);
+                showToast('Error updating statistics', 'error');
             }
         }
 
-        // Schedule
         async function loadSchedule() {
             try {
                 const { data, error } = await supabase
@@ -2152,10 +2150,11 @@
 
                 if (error) throw error;
 
+                let scheduleHtml = '';
                 if (data && data.length > 0) {
-                    document.getElementById('scheduleList').innerHTML = data.map(item => `
-                        <div class="card" style="margin-bottom: 16px;">
-                            <div class="card-body">
+                    data.forEach(item => {
+                        scheduleHtml += `
+                            <div class="schedule-item">
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
                                     <div style="flex: 1;">
                                         <h4 style="margin-bottom: 8px; display: flex; align-items: center; gap: 12px;">
@@ -2163,31 +2162,33 @@
                                             ${item.day}
                                         </h4>
                                         <p style="color: var(--text-muted); font-weight: 600; margin-bottom: 8px;">${item.time_slot}</p>
-                                        <h5 style="margin-bottom: 8px;">${item.topic}</h5>
+                                        <h5 style="margin-bottom: 8px; color: var(--text);">${item.topic}</h5>
                                         <p style="color: var(--text-muted); margin: 0;">${item.description}</p>
                                     </div>
-                                    <div style="display: flex; gap: 8px;">
-                                        <button class="btn-icon" onclick="editSchedule('${item.id}')">
+                                    <div style="display: flex; gap: 8px; margin-left: 16px;">
+                                        <button class="btn btn-secondary" onclick="editScheduleItem('${item.id}')">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn-icon" onclick="deleteSchedule('${item.id}')">
+                                        <button class="btn btn-danger" onclick="deleteScheduleItem('${item.id}')">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    `).join('');
+                        `;
+                    });
                 } else {
-                    document.getElementById('scheduleList').innerHTML = '<div class="empty-state"><i class="fas fa-calendar"></i><p>No schedule items</p></div>';
+                    scheduleHtml = '<p>No schedule items found</p>';
                 }
+
+                document.getElementById('scheduleList').innerHTML = scheduleHtml;
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error loading schedule:', error);
                 document.getElementById('scheduleList').innerHTML = '<p>Error loading schedule</p>';
             }
         }
 
-        async function editSchedule(id) {
+        async function editScheduleItem(id) {
             try {
                 const { data, error } = await supabase
                     .from('daily_schedule')
@@ -2206,12 +2207,12 @@
 
                 openModal('scheduleModal');
             } catch (error) {
-                console.error('Error:', error);
-                showToast('Error loading schedule', 'error');
+                console.error('Error loading schedule item:', error);
+                showToast('Error loading schedule item', 'error');
             }
         }
 
-        async function saveSchedule(e) {
+        async function saveScheduleItem(e) {
             e.preventDefault();
 
             const scheduleData = {
@@ -2225,14 +2226,16 @@
 
             try {
                 if (currentScheduleId) {
+                    // Update existing item
                     const { error } = await supabase
                         .from('daily_schedule')
                         .update(scheduleData)
                         .eq('id', currentScheduleId);
 
                     if (error) throw error;
-                    showToast('Schedule updated', 'success');
+                    showToast('Schedule item updated successfully', 'success');
                 } else {
+                    // Create new item - get next position
                     const { data: maxPos } = await supabase
                         .from('daily_schedule')
                         .select('position')
@@ -2247,20 +2250,20 @@
                         .insert([scheduleData]);
 
                     if (error) throw error;
-                    showToast('Schedule created', 'success');
+                    showToast('Schedule item created successfully', 'success');
                 }
 
                 closeModal('scheduleModal');
                 loadSchedule();
                 currentScheduleId = null;
             } catch (error) {
-                console.error('Error:', error);
-                showToast('Error saving schedule', 'error');
+                console.error('Error saving schedule item:', error);
+                showToast('Error saving schedule item', 'error');
             }
         }
 
-        async function deleteSchedule(id) {
-            if (!confirm('Delete this schedule?')) return;
+        async function deleteScheduleItem(id) {
+            if (!confirm('Are you sure you want to delete this schedule item?')) return;
 
             try {
                 const { error } = await supabase
@@ -2271,14 +2274,13 @@
                 if (error) throw error;
 
                 loadSchedule();
-                showToast('Schedule deleted', 'success');
+                showToast('Schedule item deleted successfully', 'success');
             } catch (error) {
-                console.error('Error:', error);
-                showToast('Error deleting schedule', 'error');
+                console.error('Error deleting schedule item:', error);
+                showToast('Error deleting schedule item', 'error');
             }
         }
 
-        // Content
         async function loadContent() {
             try {
                 const { data, error } = await supabase
@@ -2296,7 +2298,7 @@
                     document.getElementById('aboutMission').value = data.about_mission || '';
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error loading content:', error);
             }
         }
 
@@ -2311,7 +2313,8 @@
             };
 
             try {
-                const { data: current } = await supabase
+                // Get current content ID or create new one
+                const { data: currentContent } = await supabase
                     .from('website_content')
                     .select('id')
                     .eq('is_active', true)
@@ -2319,11 +2322,11 @@
                     .limit(1)
                     .single();
 
-                if (current) {
+                if (currentContent) {
                     const { error } = await supabase
                         .from('website_content')
                         .update(contentData)
-                        .eq('id', current.id);
+                        .eq('id', currentContent.id);
 
                     if (error) throw error;
                 } else {
@@ -2334,58 +2337,74 @@
                     if (error) throw error;
                 }
 
-                showToast('Content updated!', 'success');
+                showToast('Content updated successfully!', 'success');
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error updating content:', error);
                 showToast('Error updating content', 'error');
             }
         }
 
-        // Modal
-        function openModal(id) {
-            document.getElementById(id).classList.add('show');
+        async function loadDashboardData() {
+            await Promise.all([
+                loadStats(),
+                loadRecentMessages()
+            ]);
         }
 
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('show');
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
         }
 
-        // Toast & Alert
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
-            const icon = toast.querySelector('i');
-
-            toastMessage.textContent = message;
-            toast.className = `toast ${type}`;
-            icon.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
-            toast.classList.add('show');
-
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
         }
 
-        function showAlert(message, type) {
-            const alertDiv = document.getElementById('loginAlert');
-            alertDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
-            setTimeout(() => {
-                alertDiv.innerHTML = '';
-            }, 5000);
-        }
+        // Close modal when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('show');
+                }
+            });
+        });
 
-        // Auto-refresh
+        // Auto-refresh data every 5 minutes
         setInterval(() => {
             if (currentUser) {
                 loadDashboardData();
             }
         }, 5 * 60 * 1000);
 
-        // Service Worker
+        // Handle network errors gracefully
+        window.addEventListener('online', () => {
+            if (currentUser) {
+                loadDashboardData();
+            }
+        });
+
+        window.addEventListener('offline', () => {
+            showToast('You are currently offline', 'error');
+        });
+
+        // Prevent form submission on Enter key for some inputs
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'submit') {
+                if (!e.target.closest('form')) {
+                    e.preventDefault();
+                }
+            }
+        });
+
+        // Register Service Worker for offline support
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/service-worker.js')
-                .then(reg => console.log('✅ Service Worker registered'))
-                .catch(err => console.log('❌ Service Worker failed:', err));
+                .then(registration => {
+                    console.log('✅ Service Worker registered successfully:', registration.scope);
+                })
+                .catch(error => {
+                    console.log('❌ Service Worker registration failed:', error);
+                });
         }
     </script>
 </body>
