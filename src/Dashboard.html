@@ -29,16 +29,16 @@
         :root {
             --primary: #000000;
             --primary-rgb: 0, 0, 0;
-            --accent: #6366f1;
-            --accent-light: #818cf8;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --bg: #fafafa;
-            --surface: #ffffff;
-            --text: #0a0a0a;
-            --text-muted: #6b7280;
-            --border: #e5e7eb;
+            --accent: #000000;
+            --accent-light: #333333;
+            --success: #000000;
+            --warning: #666666;
+            --danger: #000000;
+            --bg: #ffffff;
+            --surface: #fafafa;
+            --text: #000000;
+            --text-muted: #666666;
+            --border: #e0e0e0;
             --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
@@ -51,15 +51,20 @@
         [data-theme="dark"] {
             --primary: #ffffff;
             --primary-rgb: 255, 255, 255;
-            --bg: #0a0a0a;
-            --surface: #1a1a1a;
-            --text: #f5f5f5;
-            --text-muted: #9ca3af;
-            --border: #2a2a2a;
-            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            --accent: #ffffff;
+            --accent-light: #cccccc;
+            --success: #ffffff;
+            --warning: #999999;
+            --danger: #ffffff;
+            --bg: #000000;
+            --surface: #0a0a0a;
+            --text: #ffffff;
+            --text-muted: #999999;
+            --border: #333333;
+            --shadow: 0 1px 3px 0 rgba(255, 255, 255, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(255, 255, 255, 0.1);
+            --shadow-lg: 0 20px 25px -5px rgba(255, 255, 255, 0.1);
+            --shadow-xl: 0 25px 50px -12px rgba(255, 255, 255, 0.25);
         }
 
         * {
@@ -85,12 +90,11 @@
             width: 100%;
             height: 100%;
             z-index: 0;
-            opacity: 0.03;
+            opacity: 0.02;
             pointer-events: none;
             background-image:
-                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.2) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.2) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(245, 158, 11, 0.2) 0%, transparent 50%);
+                radial-gradient(circle at 20% 50%, rgba(0, 0, 0, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 0, 0, 0.05) 0%, transparent 50%);
             animation: gradientShift 15s ease infinite;
         }
 
@@ -237,15 +241,16 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            background: var(--primary);
             color: white;
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             width: 100%;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(99, 102, 241, 0.5);
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.3);
+            background: var(--accent-light);
         }
 
         .btn-primary:active {
@@ -357,7 +362,7 @@
 
         .nav-badge {
             margin-left: auto;
-            background: var(--danger);
+            background: var(--primary);
             color: white;
             font-size: 0.75rem;
             padding: 2px 8px;
@@ -501,24 +506,24 @@
             justify-content: center;
             font-size: 1.5rem;
             color: white;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
-            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+            background: var(--primary);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         }
 
         .stat-icon.instagram {
-            background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            background: var(--primary);
         }
 
         .stat-icon.tiktok {
-            background: linear-gradient(135deg, #000000 0%, #00f2ea 100%);
+            background: var(--primary);
         }
 
         .stat-icon.views {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            background: var(--primary);
         }
 
         .stat-icon.videos {
-            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            background: var(--primary);
         }
 
         .stat-trend {
@@ -532,13 +537,13 @@
         }
 
         .stat-trend.up {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
+            background: rgba(0, 0, 0, 0.1);
+            color: var(--primary);
         }
 
         .stat-trend.down {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-muted);
         }
 
         .stat-body {
@@ -664,18 +669,18 @@
         }
 
         .badge-success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
+            background: rgba(0, 0, 0, 0.1);
+            color: var(--primary);
         }
 
         .badge-warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning);
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-muted);
         }
 
         .badge-danger {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-muted);
         }
 
         /* Modal */
@@ -908,25 +913,27 @@
         }
 
         .btn-success {
-            background: linear-gradient(135deg, var(--success) 0%, #34d399 100%);
+            background: var(--primary);
             color: white;
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .btn-success:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(16, 185, 129, 0.5);
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.3);
+            background: var(--accent-light);
         }
 
         .btn-danger {
-            background: linear-gradient(135deg, var(--danger) 0%, #f87171 100%);
+            background: var(--text-muted);
             color: white;
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .btn-danger:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(239, 68, 68, 0.5);
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.3);
+            background: var(--primary);
         }
 
         /* Responsive */
@@ -1748,7 +1755,28 @@
 
                 if (error) throw error;
 
-                const stats = data[0] || {
+                let stats = data && data.length > 0 ? data[0] : null;
+
+                // If no stats exist, create default ones
+                if (!stats || (stats.instagram_followers === 0 && stats.tiktok_followers === 0)) {
+                    const { data: newStats, error: insertError } = await supabase
+                        .from('website_stats')
+                        .insert([{
+                            instagram_followers: 145,
+                            tiktok_followers: 89,
+                            total_views: 2.5,
+                            videos_published: 50,
+                            updated_at: new Date().toISOString()
+                        }])
+                        .select()
+                        .single();
+
+                    if (!insertError) {
+                        stats = newStats;
+                    }
+                }
+
+                stats = stats || {
                     instagram_followers: 0,
                     tiktok_followers: 0,
                     total_views: 0,
@@ -2000,8 +2028,8 @@
                     datasets: [{
                         label: 'Messages Received',
                         data: engagementData.values,
-                        borderColor: '#6366f1',
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderColor: '#000000',
+                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
                         tension: 0.4,
                         fill: true,
                         pointRadius: 4,
@@ -2064,8 +2092,8 @@
                         label: 'Followers (K)',
                         data: [socialData.instagram, socialData.tiktok],
                         backgroundColor: [
-                            '#e1306c',
-                            '#000000'
+                            '#000000',
+                            '#666666'
                         ],
                         borderRadius: 8
                     }]
