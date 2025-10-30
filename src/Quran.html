@@ -2135,6 +2135,10 @@
                     <i class="fas fa-file-alt"></i>
                     <span>کۆپی بەبێ تەفسیر</span>
                 </button>
+                <button class="copy-option-btn" onclick="copyJustTafsir()">
+                    <i class="fas fa-language"></i>
+                    <span>کۆپی تەنها تەفسیر</span>
+                </button>
             </div>
             <button class="copy-cancel-btn" onclick="closeCopyModal()">پاشگەزبوونەوە</button>
         </div>
@@ -3721,6 +3725,25 @@
             copyToClipboard(text);
             closeCopyModal();
             showNotification('کۆپیکرا بەبێ تەفسیر');
+        }
+
+        function copyJustTafsir() {
+            if (!currentCopyAyah) return;
+
+            const { surah, ayah } = currentCopyAyah;
+            const key = `${surah}-${ayah}`;
+
+            // Get tafsir text
+            const tafsirText = tafsirData[key] || 'تەفسیر بەردەست نییە';
+            const surahName = surahNames[surah];
+
+            // Build text with proper line breaks (tafsir only)
+            const parts = [tafsirText, surahName.english + ' (' + surahName.arabic + ') - ئایەت ' + ayah, 'https://tafsirkurd.com/Quran'];
+            const text = parts.join('\n\n');
+
+            copyToClipboard(text);
+            closeCopyModal();
+            showNotification('تەفسیر کۆپیکرا');
         }
 
         function copyToClipboard(text) {
