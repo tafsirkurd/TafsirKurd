@@ -431,6 +431,32 @@
             padding: 20px;
             border-bottom: 1px solid var(--border);
             background: var(--bg);
+            position: relative;
+        }
+
+        .sidebar-close-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+            font-size: 1.1rem;
+        }
+
+        .sidebar-close-btn:hover {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+            transform: rotate(90deg);
         }
 
         .sidebar-logo {
@@ -2142,6 +2168,9 @@
                 <img src="assets/images/logo.png" alt="Tafsir Kurd" class="logo-image">
                 <div class="sidebar-title">قوورئان</div>
             </div>
+            <button class="sidebar-close-btn" onclick="closeSidebar()" title="داخستن">
+                <i class="fas fa-times"></i>
+            </button>
             <div class="search-container-sidebar">
                 <input type="text" class="search-input-sidebar" placeholder="گەڕان: ٢:١٢٧ یان ناوی سوورە..." id="sidebarSearch">
             </div>
