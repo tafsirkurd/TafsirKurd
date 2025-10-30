@@ -2513,15 +2513,15 @@
                     <i class="fas fa-search hero-search-icon"></i>
                 </div>
                 <div class="hero-actions">
-                    <button class="hero-chip" onclick="toggleSidebar(); return false;">
+                    <button class="hero-chip" id="heroSidebarBtn" type="button">
                         <i class="fas fa-list"></i>
                         <span>لیستی سوورەکان</span>
                     </button>
-                    <button class="hero-chip" onclick="continueReading(); return false;">
+                    <button class="hero-chip" id="heroContinueBtn" type="button">
                         <i class="fas fa-play-circle"></i>
                         <span>بەردەوامبە لە خوێندنەوە</span>
                     </button>
-                    <button class="hero-chip" onclick="document.getElementById('randomAyahArabic').scrollIntoView({behavior: 'smooth', block: 'center'}); return false;">
+                    <button class="hero-chip" id="heroRandomBtn" type="button">
                         <i class="fas fa-star"></i>
                         <span>ئایەتی ڕۆژانە</span>
                     </button>
@@ -4742,6 +4742,43 @@
                     });
             });
         }
+
+        // Hero button event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const heroSidebarBtn = document.getElementById('heroSidebarBtn');
+            const heroContinueBtn = document.getElementById('heroContinueBtn');
+            const heroRandomBtn = document.getElementById('heroRandomBtn');
+
+            if (heroSidebarBtn) {
+                heroSidebarBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Sidebar button clicked!');
+                    toggleSidebar();
+                });
+            }
+
+            if (heroContinueBtn) {
+                heroContinueBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Continue button clicked!');
+                    continueReading();
+                });
+            }
+
+            if (heroRandomBtn) {
+                heroRandomBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Random ayah button clicked!');
+                    const randomAyah = document.getElementById('randomAyahArabic');
+                    if (randomAyah) {
+                        randomAyah.scrollIntoView({behavior: 'smooth', block: 'center'});
+                    }
+                });
+            }
+        });
 
         console.log('✅ تەفسیر کوورد - Quran Reader loaded successfully');
     </script>
