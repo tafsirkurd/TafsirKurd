@@ -1962,11 +1962,27 @@
                 font-size: 1rem;
             }
 
-            /* Continue Reading Card - Mobile Fix */
+            /* Two Column Grid - Mobile Reorder */
+            div[style*="grid-template-columns: 1fr 1.5fr"] {
+                grid-template-columns: 1fr !important;
+                gap: 20px !important;
+                padding: 0 15px !important;
+            }
+
+            /* Continue Reading Card - Mobile Fix & Position */
             #continueReadingCard {
                 padding: 20px 15px !important;
                 min-height: 180px !important;
-                margin-bottom: 20px;
+                margin-bottom: 0 !important;
+                order: -1 !important; /* Show first on mobile */
+            }
+
+            /* Left column cards */
+            div[style*="grid-template-columns: 1fr 1.5fr"] > div:first-child {
+                order: 0 !important;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
             }
 
             #continueReadingSurahName {
