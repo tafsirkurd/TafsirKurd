@@ -958,6 +958,16 @@
             background: var(--bg);
             border-radius: 12px;
             margin-bottom: 15px;
+            cursor: pointer;
+            transition: all var(--transition);
+            border: 2px solid transparent;
+        }
+
+        .profile-section:hover {
+            background: var(--card-bg);
+            border-color: var(--primary);
+            transform: translateX(-5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .profile-avatar-large {
@@ -2282,7 +2292,7 @@
 
         <!-- Profile Section -->
         <div class="feather-section" id="profileSection" style="display: none;">
-            <div class="profile-section">
+            <div class="profile-section" onclick="window.location.href='profile.html'">
                 <img src="" alt="Profile" class="profile-avatar-large" id="profileAvatar">
                 <div class="profile-info">
                     <div class="profile-name" id="profileName">ناو</div>
