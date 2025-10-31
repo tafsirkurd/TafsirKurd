@@ -743,29 +743,14 @@
         const CLIENT_ID = "510335424343-i42ua2q2718pg230e0kbrgha8edtmb14.apps.googleusercontent.com";
 
         let currentUser = null;
+        let tokenClient = null;
 
         function initGoogleSignIn() {
-            google.accounts.id.initialize({
+            // Initialize OAuth2 token client for popup flow
+            tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
-                callback: handleCredentialResponse,
-                auto_select: false,
-                cancel_on_tap_outside: true
-            });
-
-            // Create a hidden container for Google's button
-            const hiddenContainer = document.createElement('div');
-            hiddenContainer.id = 'hiddenGoogleButton';
-            hiddenContainer.style.position = 'absolute';
-            hiddenContainer.style.top = '-9999px';
-            hiddenContainer.style.left = '-9999px';
-            document.body.appendChild(hiddenContainer);
-
-            // Render Google's button in hidden container
-            google.accounts.id.renderButton(hiddenContainer, {
-                theme: 'filled_black',
-                size: 'large',
-                type: 'standard',
-                width: 280
+                scope: 'openid profile email',
+                callback: handleTokenResponse,
             });
         }
 
@@ -774,25 +759,13 @@
             btn.classList.add('loading');
 
             try {
-                // Find and click the hidden Google button
-                const hiddenContainer = document.getElementById('hiddenGoogleButton');
-                const googleBtn = hiddenContainer?.querySelector('[role="button"]');
+                // Request access token - this opens the Google popup
+                tokenClient.requestAccessToken();
 
-                if (googleBtn) {
-                    googleBtn.click();
-                    // Remove loading after a short delay to show the popup
-                    setTimeout(() => {
-                        btn.classList.remove('loading');
-                    }, 500);
-                } else {
-                    // Fallback to prompt
-                    google.accounts.id.prompt((notification) => {
-                        btn.classList.remove('loading');
-                        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                            showNotification('تکایە دووبارە هەوڵ بدەرەوە');
-                        }
-                    });
-                }
+                // Remove loading state after popup opens
+                setTimeout(() => {
+                    btn.classList.remove('loading');
+                }, 800);
             } catch (error) {
                 console.error('Google Sign-In error:', error);
                 btn.classList.remove('loading');
@@ -800,18 +773,39 @@
             }
         }
 
-        function handleCredentialResponse(response) {
+        async function handleTokenResponse(response) {
+            if (response.error) {
+                console.error('Token error:', response.error);
+                showNotification('چوونەژوورەوە سەرکەوتوو نەبوو');
+                return;
+            }
+
             const btn = document.getElementById('googleSignInBtn');
             btn.classList.add('loading');
 
-            const credential = response.credential;
-            const payload = parseJwt(credential);
+            try {
+                // Get user info using the access token
+                const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                    headers: {
+                        'Authorization': `Bearer ${response.access_token}`
+                    }
+                });
 
+                const userInfo = await userInfoResponse.json();
+                handleUserInfo(userInfo);
+            } catch (error) {
+                console.error('Failed to get user info:', error);
+                btn.classList.remove('loading');
+                showNotification('هەڵەیەک ڕوویدا، تکایە دووبارە هەوڵ بدەرەوە');
+            }
+        }
+
+        function handleUserInfo(userInfo) {
             currentUser = {
-                name: payload.name,
-                email: payload.email,
-                picture: payload.picture,
-                sub: payload.sub
+                name: userInfo.name,
+                email: userInfo.email,
+                picture: userInfo.picture,
+                sub: userInfo.sub
             };
 
             showNotification('بەخێربێیت ' + currentUser.name.split(' ')[0] + '! ئێستا دەتگەیەنینە لاپەڕەی بەخێربێیت...');
@@ -824,15 +818,6 @@
             setTimeout(() => {
                 window.location.href = 'onboarding.html';
             }, 1500);
-        }
-
-        function parseJwt(token) {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
         }
 
         function showNotification(msg) {
@@ -861,8 +846,21 @@
                 }
             }
 
-            // Initialize Google Sign-In
-            initGoogleSignIn();
+            // Wait for Google library to load, then initialize
+            const checkGoogleLoaded = setInterval(() => {
+                if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+                    clearInterval(checkGoogleLoaded);
+                    initGoogleSignIn();
+                }
+            }, 100);
+
+            // Timeout after 10 seconds
+            setTimeout(() => {
+                clearInterval(checkGoogleLoaded);
+                if (!tokenClient) {
+                    console.error('Google library failed to load');
+                }
+            }, 10000);
         });
 
         // Register Service Worker for offline support
