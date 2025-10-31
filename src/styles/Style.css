@@ -1829,7 +1829,27 @@ footer {
 
     .footer-main {
         grid-template-columns: 1fr 1fr !important;
-        gap: 30px;
+        gap: 25px;
+    }
+
+    .footer-brand-name {
+        font-size: 1.3rem;
+    }
+
+    .footer-section-title {
+        font-size: 1.1rem;
+    }
+
+    .footer-links a {
+        font-size: 0.9rem;
+    }
+
+    .footer-social-icons {
+        gap: 12px;
+    }
+
+    .footer-social-icons a {
+        font-size: 1.1rem;
     }
 
     .fab-main {
@@ -1914,7 +1934,38 @@ footer {
 
     .footer-main {
         grid-template-columns: 1fr !important;
-        gap: 30px;
+        gap: 25px;
+    }
+
+    .footer-brand-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .footer-logo-img {
+        margin-bottom: 10px;
+    }
+
+    .footer-brand-tagline,
+    .footer-contact-text {
+        font-size: 0.85rem;
+    }
+
+    .footer-copyright {
+        font-size: 0.8rem;
+        text-align: center;
+    }
+
+    .footer-meta-links {
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        gap: 15px;
     }
 
     .footer-bottom {

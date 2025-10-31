@@ -17,9 +17,11 @@
   <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
   <link rel="manifest" href="site.webmanifest">
 
-  <!-- Fonts -->
+  <!-- Fonts - Preload for better performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 
   <!-- Icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -631,9 +633,12 @@ function initPreloader() {
     const preloader = document.getElementById('preloader');
     const mainContent = document.getElementById('mainContent');
 
-    // Check if page was loaded via back/forward button
-    if (performance.navigation.type === 2) {
-        // Skip preloader for back navigation
+    // Check if page has been visited before or loaded via back button
+    const hasVisited = sessionStorage.getItem('hasVisited');
+    const isBackNavigation = performance.navigation.type === 2;
+
+    if (hasVisited || isBackNavigation) {
+        // Skip preloader for returning visitors or back navigation
         preloader.style.display = 'none';
         mainContent.classList.add('loaded');
         document.body.style.overflow = 'auto';
@@ -641,7 +646,10 @@ function initPreloader() {
         return;
     }
 
-    const minLoadTime = 3000;
+    // Mark as visited for this session
+    sessionStorage.setItem('hasVisited', 'true');
+
+    const minLoadTime = 1500; // Reduced from 3000ms to 1500ms
     const startTime = Date.now();
 
     function hidePreloader() {
@@ -655,7 +663,7 @@ function initPreloader() {
                 mainContent.classList.add('loaded');
                 document.body.style.overflow = 'auto';
                 document.body.classList.remove('no-scroll');
-            }, 1000);
+            }, 600); // Faster fade out
         }, remainingTime);
     }
 
