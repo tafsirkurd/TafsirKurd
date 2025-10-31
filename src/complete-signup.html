@@ -685,20 +685,23 @@
             }, 2000);
         }
 
-        function completeSignup() {
+        async function completeSignup() {
             const btn = document.getElementById('continueBtn');
             btn.classList.add('loading');
 
             // Save completion status
             localStorage.setItem('signupCompleted', 'true');
 
-            // Redirect to main page after 1 second
+            // Clear service worker caches before navigating
+            await clearAllCaches();
+
+            // Redirect to main page with cache busting
             setTimeout(() => {
-                window.location.href = 'Quran.html';
+                window.location.href = 'Quran.html?t=' + Date.now();
             }, 1000);
         }
 
-        function skipToMain() {
+        async function skipToMain() {
             // Save default preferences
             const defaultPrefs = {
                 notifications: true,
@@ -708,20 +711,37 @@
             localStorage.setItem('userPreferences', JSON.stringify(defaultPrefs));
             localStorage.setItem('signupCompleted', 'true');
 
-            // Redirect to main page
-            window.location.href = 'Quran.html';
+            // Clear service worker caches before navigating
+            await clearAllCaches();
+
+            // Redirect to main page with cache busting
+            window.location.href = 'Quran.html?t=' + Date.now();
         }
 
-        // Register Service Worker for offline support
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js')
-                .then(registration => {
-                    console.log('✅ Service Worker registered successfully:', registration.scope);
-                })
-                .catch(error => {
-                    console.log('❌ Service Worker registration failed:', error);
-                });
+        async function clearAllCaches() {
+            try {
+                // Clear all caches
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(cacheName => {
+                    console.log('Clearing cache:', cacheName);
+                    return caches.delete(cacheName);
+                }));
+
+                // Unregister all service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map(registration => {
+                        console.log('Unregistering service worker');
+                        return registration.unregister();
+                    }));
+                }
+            } catch (error) {
+                console.error('Failed to clear caches:', error);
+            }
         }
+
+        // Don't register service worker on signup page
+        // It will be registered on Quran.html after successful navigation
     </script>
 </body>
 </html>
