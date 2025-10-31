@@ -1145,7 +1145,7 @@
             max-height: 70vh;
             overflow-y: auto;
             display: none;
-            z-index: 1000;
+            z-index: 2000;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
 
@@ -4171,100 +4171,177 @@
             return 0; // No match
         }
 
-        // Normalize Arabic text for ultra-smart fuzzy matching
+        // Ultra-deep Arabic text normalization for fuzzy matching
         function normalizeArabicText(text) {
-            // Remove all diacritical marks (tashkeel)
-            text = text.replace(/[\u064B-\u065F\u0670]/g, '');
+            // Remove all diacritical marks (tashkeel) - kasrah, fatha, damma, sukun, shadda, etc.
+            text = text.replace(/[\u064B-\u065F\u0670\u0671]/g, '');
 
-            // Normalize all Alef variations to simple Alef
-            text = text.replace(/[إأآٱ]/g, 'ا');
+            // Normalize ALL Alef variations to simple Alef (ا)
+            // Includes: أ إ آ ٱ ٲ ٳ ٵ
+            text = text.replace(/[أإآٱٲٳٵ]/g, 'ا');
 
-            // Normalize Ta Marbuta and Ha
+            // Normalize Ta Marbuta (ة) to Ha (ه) - commonly interchanged
             text = text.replace(/[ة]/g, 'ه');
 
-            // Normalize all Ya variations
+            // Normalize ALL Ya variations to simple Ya (ي)
+            // Includes: ى ئ ؤ (alef maksura, hamza on ya, hamza on waw)
             text = text.replace(/[ىئ]/g, 'ي');
 
-            // Remove Tatweel (kashida)
+            // Normalize Waw with Hamza (ؤ) to simple Waw (و)
+            text = text.replace(/[ؤ]/g, 'و');
+
+            // Remove Tatweel (kashida) - ـ
             text = text.replace(/ـ/g, '');
 
-            // Remove extra spaces and trim
+            // Normalize Arabic comma and semicolon to regular punctuation
+            text = text.replace(/[،؛]/g, ' ');
+
+            // Remove zero-width characters and other invisible Unicode
+            text = text.replace(/[\u200B-\u200F\u202A-\u202E]/g, '');
+
+            // Remove extra spaces, trim, and convert to lowercase
             text = text.replace(/\s+/g, ' ').trim();
 
             return text.toLowerCase();
         }
 
-        // Advanced similarity scoring with fuzzy matching
+        // Ultra-advanced similarity scoring with deep fuzzy matching
         function calculateSimilarity(query, text) {
             const queryNorm = normalizeArabicText(query);
             const textNorm = normalizeArabicText(text);
 
-            // LEVEL 1: Exact substring match (highest score)
+            // LEVEL 1: Exact substring match (highest priority - 10000+ points)
             if (textNorm.includes(queryNorm)) {
                 const position = textNorm.indexOf(queryNorm);
-                // Earlier matches score much higher
-                return 10000 - position;
+                // Earlier matches get bonus, exact match at start = 10000
+                return 10000 - (position * 5);
             }
 
-            // LEVEL 2: All query words found in order
+            // LEVEL 2: All query words found in order with smart matching
             const queryWords = queryNorm.split(/\s+/).filter(w => w.length > 0);
             const textWords = textNorm.split(/\s+/);
 
             let orderedMatches = 0;
             let lastIndex = -1;
             let consecutiveMatches = 0;
+            let exactWordMatches = 0;
 
             queryWords.forEach(qWord => {
                 for (let i = lastIndex + 1; i < textWords.length; i++) {
-                    if (textWords[i].includes(qWord) || qWord.includes(textWords[i])) {
+                    const tWord = textWords[i];
+
+                    // Exact word match (best)
+                    if (tWord === qWord) {
+                        orderedMatches++;
+                        exactWordMatches++;
+                        if (i === lastIndex + 1) consecutiveMatches++;
+                        lastIndex = i;
+                        break;
+                    }
+                    // Word contains query or query contains word
+                    else if (tWord.includes(qWord) || qWord.includes(tWord)) {
                         orderedMatches++;
                         if (i === lastIndex + 1) consecutiveMatches++;
+                        lastIndex = i;
+                        break;
+                    }
+                    // Check character similarity for fuzzy word matching
+                    else if (calculateCharOverlap(qWord, tWord) > 0.7) {
+                        orderedMatches++;
                         lastIndex = i;
                         break;
                     }
                 }
             });
 
+            // All words found in order - 5000-8000 points depending on quality
             if (orderedMatches === queryWords.length) {
-                // All words found in order
-                return 5000 + (consecutiveMatches * 100);
+                let score = 5000;
+                score += exactWordMatches * 500; // Bonus for exact word matches
+                score += consecutiveMatches * 200; // Bonus for consecutive matches
+                score += (orderedMatches / textWords.length) * 300; // Bonus for density
+                return score;
             }
 
-            // LEVEL 3: Partial word matching
+            // LEVEL 3: Partial word matching with deep fuzzy logic
             let partialScore = 0;
             let matchedWords = 0;
+            let bestMatches = [];
 
             queryWords.forEach(qWord => {
-                if (qWord.length < 2) return; // Skip very short words
+                if (qWord.length < 2) return; // Skip single characters
+
+                let bestWordScore = 0;
+                let wordMatched = false;
 
                 textWords.forEach(tWord => {
-                    // Check if query word is substring of text word or vice versa
+                    if (tWord.length < 2) return;
+
+                    // Perfect substring match
                     if (tWord.includes(qWord) || qWord.includes(tWord)) {
-                        matchedWords++;
-                        partialScore += 100;
+                        const lengthRatio = Math.min(qWord.length, tWord.length) / Math.max(qWord.length, tWord.length);
+                        const matchScore = 150 * lengthRatio;
+                        if (matchScore > bestWordScore) {
+                            bestWordScore = matchScore;
+                            wordMatched = true;
+                        }
                     }
-                    // Check for character overlap
+                    // Character overlap fuzzy matching
                     else {
                         const overlapScore = calculateCharOverlap(qWord, tWord);
-                        if (overlapScore > 0.6) {
-                            matchedWords += overlapScore;
-                            partialScore += overlapScore * 50;
+                        if (overlapScore > 0.5) {
+                            const matchScore = overlapScore * 100;
+                            if (matchScore > bestWordScore) {
+                                bestWordScore = matchScore;
+                                wordMatched = true;
+                            }
                         }
                     }
                 });
+
+                if (wordMatched) {
+                    matchedWords++;
+                    partialScore += bestWordScore;
+                    bestMatches.push(bestWordScore);
+                }
             });
 
+            // Some words matched - 1000-4000 points
             if (matchedWords > 0) {
-                return partialScore + (matchedWords / queryWords.length) * 1000;
+                const matchRatio = matchedWords / queryWords.length;
+                const baseScore = partialScore * (1 + matchRatio);
+                const bonusScore = matchRatio * 1500;
+                return baseScore + bonusScore;
             }
 
-            // LEVEL 4: Character-by-character fuzzy matching
+            // LEVEL 4: Character-level fuzzy matching (very loose)
             const charOverlap = calculateCharOverlap(queryNorm, textNorm);
-            if (charOverlap > 0.5) {
-                return charOverlap * 200;
+            if (charOverlap > 0.4) { // Lower threshold for more results
+                return charOverlap * 300;
+            }
+
+            // LEVEL 5: Last resort - any shared characters
+            const sharedChars = calculateSharedCharacters(queryNorm, textNorm);
+            if (sharedChars > 0.3) {
+                return sharedChars * 100;
             }
 
             return 0;
+        }
+
+        // Calculate shared characters ratio (simpler than overlap)
+        function calculateSharedCharacters(str1, str2) {
+            if (!str1 || !str2) return 0;
+
+            const chars1 = new Set(str1.split(''));
+            const chars2 = new Set(str2.split(''));
+            let shared = 0;
+
+            chars1.forEach(char => {
+                if (chars2.has(char)) shared++;
+            });
+
+            return shared / Math.max(chars1.size, chars2.size);
         }
 
         // Calculate character overlap between two strings
