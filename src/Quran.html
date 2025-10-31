@@ -2868,9 +2868,32 @@
     <script>
         const CLIENT_ID = "510335424343-i42ua2q2718pg230e0kbrgha8edtmb14.apps.googleusercontent.com";
 
-        // Global State
+        // INSTANT CACHE LOADER - Runs synchronously before anything else!
+        // This pre-loads data from cache so it's available immediately
         let quranData = null;
         let tafsirData = null;
+
+        (function() {
+            const CACHE_VERSION = 'v1';
+            const QURAN_CACHE_KEY = `quranData_${CACHE_VERSION}`;
+            const TAFSIR_CACHE_KEY = `tafsirData_${CACHE_VERSION}`;
+
+            try {
+                const cachedQuran = localStorage.getItem(QURAN_CACHE_KEY);
+                const cachedTafsir = localStorage.getItem(TAFSIR_CACHE_KEY);
+
+                if (cachedQuran && cachedTafsir) {
+                    // Load synchronously - data is available INSTANTLY!
+                    quranData = JSON.parse(cachedQuran);
+                    tafsirData = JSON.parse(cachedTafsir);
+                    console.log('⚡ INSTANT: Data pre-loaded from cache synchronously');
+                }
+            } catch (e) {
+                console.warn('Cache pre-load failed:', e);
+            }
+        })();
+
+        // Global State
         let isUserAuthenticated = false;
         let currentUser = null;
         let userStats = {
@@ -3239,6 +3262,12 @@
             const TAFSIR_CACHE_KEY = `tafsirData_${CACHE_VERSION}`;
 
             try {
+                // Check if data was already loaded synchronously at page start
+                if (quranData !== null && tafsirData !== null) {
+                    console.log('✅ Data already loaded synchronously - skipping async load');
+                    return;
+                }
+
                 // Try to load from localStorage first (INSTANT!)
                 const cachedQuran = localStorage.getItem(QURAN_CACHE_KEY);
                 const cachedTafsir = localStorage.getItem(TAFSIR_CACHE_KEY);
