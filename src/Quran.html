@@ -4215,22 +4215,44 @@
             query = query.trim();
             if (!query) return;
 
+            const allResults = [];
+
             // Check for surah:ayah format (e.g., "2:255" or "67 5")
             const match = query.match(/^(\d+)[:\s]+(\d+)$/);
             if (match) {
                 const surah = parseInt(match[1]);
                 const ayah = parseInt(match[2]);
-                if (surah >= 1 && surah <= 114) {
-                    openSurahWithAyah(surah, ayah);
-                    return;
+                if (surah >= 1 && surah <= 114 && quranData[surah]) {
+                    const verse = quranData[surah].verses?.find(v => v.verse === ayah);
+                    if (verse) {
+                        allResults.push({
+                            surah: surah,
+                            ayah: ayah,
+                            text: verse.text,
+                            surahName: surahNames[surah]?.english || `Surah ${surah}`,
+                            similarity: 10000 // Highest priority for exact reference
+                        });
+                    }
                 }
             }
 
             // Check for just surah number
             const surahNum = parseInt(query);
             if (!isNaN(surahNum) && surahNum >= 1 && surahNum <= 114) {
-                openSurah(surahNum);
-                return;
+                const surahInfo = surahNames[surahNum];
+                if (surahInfo && quranData[surahNum]) {
+                    // Show first ayah as representative
+                    const firstVerse = quranData[surahNum].verses?.[0];
+                    if (firstVerse) {
+                        allResults.push({
+                            surah: surahNum,
+                            ayah: 1,
+                            text: `${surahInfo.arabic} - ${surahInfo.english}`,
+                            surahName: `سوورەی ${surahInfo.english}`,
+                            similarity: 9000 // High priority for surah number
+                        });
+                    }
+                }
             }
 
             // Check if query contains Arabic text (for ayah search)
@@ -4239,7 +4261,6 @@
             if (hasArabic) {
                 // SMART ARABIC SEARCH: Search in ayah text without diacritics
                 console.log('🔍 Smart Arabic search for:', query);
-                const results = [];
 
                 for (let s = 1; s <= 114; s++) {
                     if (quranData[s] && quranData[s].verses) {
@@ -4247,7 +4268,7 @@
                             const similarity = calculateSimilarity(query, verse.text);
 
                             if (similarity > 0) {
-                                results.push({
+                                allResults.push({
                                     surah: s,
                                     ayah: verse.verse,
                                     text: verse.text,
@@ -4258,20 +4279,9 @@
                         });
                     }
                 }
-
-                // Sort by similarity (highest first)
-                results.sort((a, b) => b.similarity - a.similarity);
-
-                // Take top 15 results
-                const topResults = results.slice(0, 15);
-
-                // Show results in dropdown (or empty message)
-                showSearchResults(topResults, query);
-                return;
             }
 
-            // Search in surah names with fuzzy matching (non-Arabic queries)
-            const surahMatches = [];
+            // Search in surah names with fuzzy matching (for all queries)
             for (let i = 1; i <= 114; i++) {
                 const surah = surahNames[i];
                 if (surah) {
@@ -4280,48 +4290,51 @@
                     const maxScore = Math.max(englishScore, arabicScore);
 
                     if (maxScore > 0) {
-                        surahMatches.push({ surah: i, score: maxScore, name: surah.english });
+                        // Add surah as a result option
+                        const firstVerse = quranData[i]?.verses?.[0];
+                        if (firstVerse) {
+                            allResults.push({
+                                surah: i,
+                                ayah: 1,
+                                text: `${surah.arabic} - ${surah.english}`,
+                                surahName: `سوورەی ${surah.english}`,
+                                similarity: maxScore * 10 // Boost surah matches
+                            });
+                        }
                     }
                 }
             }
 
-            // Sort by score (highest first)
-            surahMatches.sort((a, b) => b.score - a.score);
+            // Search in Kurdish tafsir (for Kurdish text)
+            if (!hasArabic) {
+                for (let s = 1; s <= 114; s++) {
+                    if (quranData[s] && quranData[s].verses) {
+                        quranData[s].verses.forEach(verse => {
+                            const key = `${s}-${verse.verse}`;
+                            const tafsir = tafsirData[key] || '';
 
-            // If we have surah name matches, open the best match
-            if (surahMatches.length > 0) {
-                openSurah(surahMatches[0].surah);
-                if (surahMatches.length > 1) {
-                    showNotification(`${surahMatches.length} سوورە دۆزرایەوە - ${surahMatches[0].name} کرایەوە`);
-                }
-                return;
-            }
-
-            // Search in Kurdish tafsir
-            const results = [];
-            for (let s = 1; s <= 114; s++) {
-                if (quranData[s] && quranData[s].verses) {
-                    quranData[s].verses.forEach(verse => {
-                        const key = `${s}-${verse.verse}`;
-                        const tafsir = tafsirData[key] || '';
-
-                        if (tafsir.toLowerCase().includes(query.toLowerCase())) {
-                            results.push({
-                                surah: s,
-                                ayah: verse.verse,
-                                text: verse.text.substring(0, 100) + '...'
-                            });
-                        }
-                    });
+                            if (tafsir.toLowerCase().includes(query.toLowerCase())) {
+                                allResults.push({
+                                    surah: s,
+                                    ayah: verse.verse,
+                                    text: verse.text,
+                                    surahName: surahNames[s]?.english || `Surah ${s}`,
+                                    similarity: 100 // Lower priority for tafsir matches
+                                });
+                            }
+                        });
+                    }
                 }
             }
 
-            if (results.length > 0) {
-                openSurahWithAyah(results[0].surah, results[0].ayah);
-                showNotification(`${results.length} ئەنجام دۆزرایەوە`);
-            } else {
-                showNotification('هیچ ئەنجامێک نەدۆزرایەوە');
-            }
+            // Sort all results by similarity (highest first)
+            allResults.sort((a, b) => b.similarity - a.similarity);
+
+            // Take top 15 results
+            const topResults = allResults.slice(0, 15);
+
+            // Show all results in dropdown
+            showSearchResults(topResults, query);
         }
 
         // Show search results in dropdown
