@@ -3931,10 +3931,21 @@
 
         function toggleTafsir() {
             const toggle = document.getElementById('tafsirToggle');
-            toggle.classList.toggle('active');
+            if (!toggle) {
+                console.error('tafsirToggle element not found!');
+                return;
+            }
 
-            document.querySelectorAll('.tafsir-label, .tafsir-content').forEach(el => {
-                if (toggle.classList.contains('active')) {
+            toggle.classList.toggle('active');
+            const isActive = toggle.classList.contains('active');
+
+            console.log('Toggle Tafsir - Active:', isActive);
+
+            const elements = document.querySelectorAll('.tafsir-label, .tafsir-content');
+            console.log('Found tafsir elements:', elements.length);
+
+            elements.forEach(el => {
+                if (isActive) {
                     el.style.display = 'block';
                 } else {
                     el.style.display = 'none';
@@ -3942,9 +3953,10 @@
             });
 
             // Save preference
-            localStorage.setItem('showTafsir', toggle.classList.contains('active'));
+            localStorage.setItem('showTafsir', isActive);
+            console.log('Saved showTafsir to localStorage:', isActive);
 
-            showNotification(toggle.classList.contains('active') ? 'تەفسیر پیشاندرا' : 'تەفسیر شاراوە');
+            showNotification(isActive ? 'تەفسیر پیشاندرا' : 'تەفسیر شاراوە');
         }
 
         function toggleAutoScroll() {
@@ -4358,7 +4370,12 @@
                 // Apply tafsir visibility setting (default: show)
                 const showTafsir = localStorage.getItem('showTafsir');
                 const shouldShow = showTafsir === null ? true : showTafsir === 'true';
-                document.querySelectorAll('.tafsir-label, .tafsir-content').forEach(el => {
+                console.log('loadAyahs - showTafsir from localStorage:', showTafsir, 'shouldShow:', shouldShow);
+
+                const tafsirElements = document.querySelectorAll('.tafsir-label, .tafsir-content');
+                console.log('loadAyahs - Found tafsir elements:', tafsirElements.length);
+
+                tafsirElements.forEach(el => {
                     el.style.display = shouldShow ? 'block' : 'none';
                 });
 
