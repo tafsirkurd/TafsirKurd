@@ -2236,6 +2236,18 @@
     </style>
 </head>
 <body>
+    <!-- Instant CSS to prevent home page flash -->
+    <script>
+        // This must run FIRST, before any DOM elements render
+        (function() {
+            const returningFromSettings = sessionStorage.getItem('returnToQuranReader');
+            if (returningFromSettings === 'true') {
+                // Inject CSS immediately to hide home page
+                document.write('<style id="instant-hide">#homePage { display: none !important; } #surahReaderPage { display: block !important; }</style>');
+            }
+        })();
+    </script>
+
     <!-- Preloader -->
     <div class="preloader" id="preloader">
         <div class="preloader-shapes">
