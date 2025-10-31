@@ -935,6 +935,34 @@ section.show {
     border: 1px solid var(--border-light);
     position: relative;
     overflow: hidden;
+    animation: statCardPulse 4s ease-in-out infinite;
+}
+
+.stat-card:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.stat-card:nth-child(2) {
+    animation-delay: 0.5s;
+}
+
+.stat-card:nth-child(3) {
+    animation-delay: 1s;
+}
+
+.stat-card:nth-child(4) {
+    animation-delay: 1.5s;
+}
+
+@keyframes statCardPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: var(--shadow-sm);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 10px 40px rgba(var(--primary-rgb), 0.2);
+    }
 }
 
 .stat-card::after {
