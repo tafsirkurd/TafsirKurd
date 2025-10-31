@@ -1507,34 +1507,126 @@ textarea.form-control {
     box-shadow: var(--shadow-md);
 }
 
-/* Footer - FIXED PADDING */
+/* Footer - Quran.com inspired design */
 footer {
     background: var(--card-bg);
-    padding: 20px;
-    text-align: center;
     border-top: 1px solid var(--border);
-    margin-top: 60px;
-    position: relative;
-    bottom: 0;
-    width: 100%;
+    margin-top: 80px;
+    padding: 60px 20px 30px;
 }
 
-footer .logo-image {
-    width: 55px;
-    height: 55px;
-    transition: transform var(--transition-medium);
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-main {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.footer-brand-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.footer-logo-img {
+    width: 45px;
+    height: 45px;
     object-fit: contain;
+    transition: transform var(--transition-medium);
 }
 
-footer:hover .logo-image {
+.footer-logo-img:hover {
     transform: scale(1.1) rotate(10deg);
 }
 
-footer p {
+.footer-brand-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
     font-family: 'IBM Plex Sans Arabic', sans-serif;
+}
+
+.footer-brand-tagline {
+    font-size: 0.95rem;
+    line-height: 1.6;
     color: var(--text-muted);
+    margin-top: 5px;
+}
+
+.footer-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.footer-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 5px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+}
+
+.footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.footer-link {
+    color: var(--text-muted);
+    text-decoration: none;
     font-size: 0.9rem;
-    margin-top: 10px;
+    transition: all var(--transition-medium);
+    width: fit-content;
+}
+
+.footer-link:hover {
+    color: var(--primary);
+    transform: translateX(5px);
+}
+
+.footer-bottom {
+    border-top: 1px solid var(--border);
+    padding-top: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.footer-copyright {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.footer-meta-links {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.footer-meta-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color var(--transition-medium);
+}
+
+.footer-meta-link:hover {
+    color: var(--primary);
 }
 
 .cta {
@@ -1693,6 +1785,11 @@ footer p {
         grid-template-columns: 1fr;
     }
 
+    .footer-main {
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
     .fab-main {
         width: 56px;
         height: 56px;
@@ -1771,6 +1868,16 @@ footer p {
         width: 44px;
         height: 44px;
         font-size: 1rem;
+    }
+
+    .footer-main {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        text-align: center;
     }
 
     footer p {
