@@ -3232,10 +3232,27 @@
             }
         }
 
-        // Load Quran Data - OPTIMIZED FOR SPEED
+        // Load Quran Data - OPTIMIZED FOR SPEED WITH CACHING
         async function loadQuranData() {
+            const CACHE_VERSION = 'v1'; // Increment this to invalidate cache
+            const QURAN_CACHE_KEY = `quranData_${CACHE_VERSION}`;
+            const TAFSIR_CACHE_KEY = `tafsirData_${CACHE_VERSION}`;
+
             try {
-                // Parallel fetch both JSON files at the same time
+                // Try to load from localStorage first (INSTANT!)
+                const cachedQuran = localStorage.getItem(QURAN_CACHE_KEY);
+                const cachedTafsir = localStorage.getItem(TAFSIR_CACHE_KEY);
+
+                if (cachedQuran && cachedTafsir) {
+                    // Load from cache instantly - no network delay!
+                    quranData = JSON.parse(cachedQuran);
+                    tafsirData = JSON.parse(cachedTafsir);
+                    console.log('⚡ Quran data loaded from cache (instant)');
+                    return;
+                }
+
+                // If not cached, fetch from server
+                console.log('📥 Fetching Quran data from server...');
                 const [quranResponse, tafsirResponse] = await Promise.all([
                     fetch('data/quran.json'),
                     fetch('data/kurdish_tafsir.json')
@@ -3265,6 +3282,16 @@
                         };
                     }
                 }
+
+                // Cache the data for next time (instant loading!)
+                try {
+                    localStorage.setItem(QURAN_CACHE_KEY, JSON.stringify(quranData));
+                    localStorage.setItem(TAFSIR_CACHE_KEY, JSON.stringify(tafsirData));
+                    console.log('💾 Quran data cached for instant future loads');
+                } catch (e) {
+                    console.warn('⚠️ Could not cache data (localStorage full)');
+                }
+
                 console.log('✅ Quran data loaded successfully');
 
             } catch (error) {
