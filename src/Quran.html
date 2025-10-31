@@ -3138,8 +3138,10 @@
 
             // Check if preloader has already been shown in this session
             const hasSeenPreloader = sessionStorage.getItem('hasSeenPreloader');
+            // Check if returning from settings
+            const returningFromSettings = sessionStorage.getItem('returnToQuranReader');
 
-            if (hasSeenPreloader || performance.navigation.type === 2) {
+            if (hasSeenPreloader || returningFromSettings || performance.navigation.type === 2) {
                 preloader.style.display = 'none';
                 mainContent.classList.add('loaded');
                 document.body.classList.remove('no-scroll');
