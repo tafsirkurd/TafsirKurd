@@ -3187,11 +3187,18 @@
         }
 
         function signOut() {
+            // IMPORTANT: Save user data BEFORE logging out to preserve all statistics!
+            if (isUserAuthenticated && currentUser) {
+                endActivitySession(); // End current reading session
+                saveUserData(); // Save all progress, stats, bookmarks
+                console.log('✅ User data and session saved before logout');
+            }
+
+            // Now logout and clear authentication
             localStorage.removeItem('isAuthenticated');
             localStorage.removeItem('user');
-            isUserAuthenticated = false;
-            currentUser = null;
 
+            // Update UI
             document.getElementById('authSection').innerHTML = `
                 <button class="header-btn" onclick="goToLogin()">
                     <i class="fas fa-user"></i>
@@ -3201,12 +3208,15 @@
 
             document.getElementById('profileSection').style.display = 'none';
             document.getElementById('navMenuSection').style.display = 'none';
-            closeFeatherOverlay();
-            showNotification('بە سەرکەوتوویی دەرچوویت');
 
-            // Reset user data
+            // Reset in-memory state (but user data is already saved in localStorage!)
+            isUserAuthenticated = false;
+            currentUser = null;
             bookmarkedAyahs = [];
             lastReadPosition = { surah: 1, ayah: 1 };
+
+            closeFeatherOverlay();
+            showNotification('بە سەرکەوتوویی دەرچوویت - هەموو پێشکەوتنەکانت پارێزراوە');
             updateContinueReading();
         }
 
@@ -4531,6 +4541,8 @@
         function saveUserData() {
             if (!isUserAuthenticated || !currentUser) return;
 
+            // Save data with user-specific key (persists across logout/login)
+            // Each user's data is stored separately using their Google ID
             const userKey = 'quran_data_' + currentUser.sub;
             const saved = localStorage.getItem(userKey);
             const existingData = saved ? JSON.parse(saved) : {};
