@@ -3763,9 +3763,10 @@
             if (autoScrollToggle) {
                 console.log('Attaching click listener to autoScrollToggle');
                 autoScrollToggle.addEventListener('click', function(e) {
-                    console.log('Auto scroll toggle clicked!');
+                    console.log('Auto scroll toggle clicked!', e);
+                    e.stopPropagation();
                     toggleAutoScroll();
-                });
+                }, true);
             } else {
                 console.error('autoScrollToggle element not found!');
             }
