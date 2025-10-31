@@ -90,11 +90,8 @@
     }
 
     .legal-section li:before {
-      content: "◀";
-      position: absolute;
-      right: 0;
-      color: var(--primary);
-      font-size: 0.7rem;
+      content: "";
+      display: none;
     }
 
     .back-button {
@@ -156,7 +153,7 @@
 
   <div class="legal-header">
     <h1 class="legal-title">پارێزراوی تایبەتمەندی</h1>
-    <p class="legal-updated">دوایین نوێکردنەوە: ئۆکتۆبەری 2024</p>
+    <p class="legal-updated">دوایین نوێکردنەوە: <span id="lastUpdate"></span></p>
   </div>
 
   <div class="legal-section">
@@ -342,12 +339,20 @@
 </div>
 
 <script>
-  // Set current year
+  // Set current year and last update date
   document.addEventListener('DOMContentLoaded', function() {
     const yearSpans = document.querySelectorAll('#year');
     yearSpans.forEach(span => {
       span.textContent = new Date().getFullYear();
     });
+
+    // Set last update date to build time
+    const lastUpdateSpan = document.getElementById('lastUpdate');
+    if (lastUpdateSpan) {
+      const buildDate = new Date('2024-10-31'); // This will be updated on each deploy
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      lastUpdateSpan.textContent = buildDate.toLocaleDateString('ar', options);
+    }
   });
 </script>
 
