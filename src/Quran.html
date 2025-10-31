@@ -2822,6 +2822,29 @@
             </div>
         </div>
 
+        <!-- Instant page state restore for returning from settings -->
+        <script>
+            // This runs immediately after elements exist, before page render
+            (function() {
+                const returningFromSettings = sessionStorage.getItem('returnToQuranReader');
+
+                if (returningFromSettings === 'true') {
+                    const homePage = document.getElementById('homePage');
+                    const readerPage = document.getElementById('surahReaderPage');
+
+                    // Instantly hide home, show reader
+                    if (homePage) {
+                        homePage.classList.add('hidden');
+                        homePage.style.display = 'none';
+                    }
+                    if (readerPage) {
+                        readerPage.classList.add('visible');
+                        readerPage.style.display = 'block';
+                    }
+                }
+            })();
+        </script>
+
         <!-- Footer -->
         <footer>
             <img src="assets/images/logo.png" alt="Tafsir Kurd logo" class="footer-logo-img logo-image">
