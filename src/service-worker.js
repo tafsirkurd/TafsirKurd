@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v2';
+const CACHE_NAME = 'tafsir-kurd-v3';
 const urlsToCache = [
   '/',
   '/Quran.html',
