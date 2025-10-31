@@ -129,24 +129,42 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 0;
-            border-bottom: 1px solid var(--border);
+            padding: 25px;
+            background: var(--bg);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            transition: all var(--transition);
+            border: 2px solid transparent;
+        }
+
+        .setting-item:hover {
+            border-color: var(--border);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
         .setting-item:last-child {
-            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .setting-info {
+            flex: 1;
         }
 
         .setting-label {
             font-weight: 600;
             color: var(--text);
             font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .setting-description {
             font-size: 0.9rem;
             color: var(--text-muted);
-            margin-top: 5px;
+            margin-top: 6px;
+            line-height: 1.5;
         }
 
         .setting-toggle {
@@ -242,6 +260,40 @@
             font-size: 1.1rem;
         }
 
+        .font-preview {
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+            transition: all var(--transition);
+        }
+
+        .font-preview-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .font-preview-text {
+            font-size: 1.5rem;
+            line-height: 1.8;
+            color: var(--text);
+            transition: all var(--transition);
+        }
+
+        .font-preview-text.arabic-preview {
+            font-family: var(--arabic-font, 'Scheherazade New');
+            font-size: var(--arabic-size, 2.2rem);
+        }
+
+        .font-preview-text.tafsir-preview {
+            font-family: var(--tafsir-font, 'IBM Plex Sans Arabic');
+            font-size: var(--tafsir-size, 1.1rem);
+        }
+
         .reset-btn {
             width: 100%;
             padding: 15px;
@@ -298,6 +350,7 @@
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 15px;
+                padding: 20px;
             }
 
             .setting-slider {
@@ -306,6 +359,18 @@
 
             .setting-select {
                 width: 100%;
+            }
+
+            .setting-slider-container {
+                width: 100%;
+            }
+
+            .font-preview {
+                padding: 15px;
+            }
+
+            .font-preview-text {
+                font-size: 1.3rem;
             }
         }
     </style>
@@ -333,8 +398,11 @@
                     ڕووکار
                 </h2>
                 <div class="setting-item">
-                    <div>
-                        <div class="setting-label">دۆخی تاریکی</div>
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-moon"></i>
+                            دۆخی تاریکی
+                        </div>
                         <div class="setting-description">گۆڕین بۆ دۆخی تاریکی بۆ خوێندنەوەی ئاسانتر</div>
                     </div>
                     <div class="setting-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
@@ -351,8 +419,11 @@
                 </h2>
                 
                 <div class="setting-item">
-                    <div>
-                        <div class="setting-label">جۆری فۆنت</div>
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-text-height"></i>
+                            جۆری فۆنت
+                        </div>
                         <div class="setting-description">دەستکاری فۆنتی دەقی عەرەبی</div>
                     </div>
                     <select class="setting-select" id="arabicFontSelect" onchange="changeArabicFont()">
@@ -363,8 +434,11 @@
                 </div>
 
                 <div class="setting-item">
-                    <div>
-                        <div class="setting-label">قەبارەی فۆنت</div>
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-text-width"></i>
+                            قەبارەی فۆنت
+                        </div>
                         <div class="setting-description">گەورە یان بچووک کردنەوەی دەقی عەرەبی</div>
                     </div>
                     <div class="setting-slider-container">
@@ -372,6 +446,13 @@
                                min="1.5" max="3.5" step="0.1" value="2.2"
                                oninput="changeArabicSize(this.value)">
                         <span class="slider-value" id="arabicSizeValue">2.2rem</span>
+                    </div>
+                </div>
+
+                <div class="font-preview">
+                    <div class="font-preview-label">پێشبینینی فۆنت</div>
+                    <div class="font-preview-text arabic-preview" id="arabicPreview">
+                        بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
                     </div>
                 </div>
             </div>
@@ -384,8 +465,11 @@
                 </h2>
                 
                 <div class="setting-item">
-                    <div>
-                        <div class="setting-label">جۆری فۆنت</div>
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-text-height"></i>
+                            جۆری فۆنت
+                        </div>
                         <div class="setting-description">دەستکاری فۆنتی تەفسیری کوردی</div>
                     </div>
                     <select class="setting-select" id="tafsirFontSelect" onchange="changeTafsirFont()">
@@ -396,8 +480,11 @@
                 </div>
 
                 <div class="setting-item">
-                    <div>
-                        <div class="setting-label">قەبارەی فۆنت</div>
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-text-width"></i>
+                            قەبارەی فۆنت
+                        </div>
                         <div class="setting-description">گەورە یان بچووک کردنەوەی دەقی تەفسیر</div>
                     </div>
                     <div class="setting-slider-container">
@@ -405,6 +492,13 @@
                                min="0.9" max="1.8" step="0.05" value="1.1"
                                oninput="changeTafsirSize(this.value)">
                         <span class="slider-value" id="tafsirSizeValue">1.1rem</span>
+                    </div>
+                </div>
+
+                <div class="font-preview">
+                    <div class="font-preview-label">پێشبینینی فۆنت</div>
+                    <div class="font-preview-text tafsir-preview" id="tafsirPreview">
+                        لە ناوی خوای میهرەبان و بەزەییدا. ستایش بۆ خوایە، پەروەردگاری جیهانیان.
                     </div>
                 </div>
             </div>
@@ -417,8 +511,11 @@
                 </h2>
                 
                 <div class="setting-item">
-                    <div>
-                        <div class="setting-label">پیشاندانی تەفسیر</div>
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-eye"></i>
+                            پیشاندانی تەفسیر
+                        </div>
                         <div class="setting-description">پیشاندان یان شاردنەوەی تەفسیری کوردی</div>
                     </div>
                     <div class="setting-toggle active" id="tafsirToggle" onclick="toggleTafsir()">
@@ -427,8 +524,11 @@
                 </div>
 
                 <div class="setting-item">
-                    <div>
-                        <div class="setting-label">خولاندنی خۆکار</div>
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-scroll"></i>
+                            خولاندنی خۆکار
+                        </div>
                         <div class="setting-description">خولاندنی خۆکاری پەڕە لە کاتی خوێندنەوە</div>
                     </div>
                     <div class="setting-toggle" id="autoScrollToggle" onclick="toggleAutoScroll()">
@@ -483,6 +583,18 @@
             document.documentElement.style.setProperty('--arabic-size', savedArabicSize + 'rem');
             document.documentElement.style.setProperty('--tafsir-font', savedTafsirFont);
             document.documentElement.style.setProperty('--tafsir-size', savedTafsirSize + 'rem');
+
+            // Initialize previews
+            const arabicPreview = document.getElementById('arabicPreview');
+            const tafsirPreview = document.getElementById('tafsirPreview');
+            if (arabicPreview) {
+                arabicPreview.style.fontFamily = savedArabicFont;
+                arabicPreview.style.fontSize = savedArabicSize + 'rem';
+            }
+            if (tafsirPreview) {
+                tafsirPreview.style.fontFamily = savedTafsirFont;
+                tafsirPreview.style.fontSize = savedTafsirSize + 'rem';
+            }
         }
 
         function toggleDarkMode() {
@@ -501,6 +613,13 @@
             const font = document.getElementById('arabicFontSelect').value;
             document.documentElement.style.setProperty('--arabic-font', font);
             localStorage.setItem('arabicFont', font);
+
+            // Update preview
+            const preview = document.getElementById('arabicPreview');
+            if (preview) {
+                preview.style.fontFamily = font;
+            }
+
             showNotification('فۆنتی عەرەبی گۆڕدرا');
         }
 
@@ -508,12 +627,25 @@
             document.getElementById('arabicSizeValue').textContent = value + 'rem';
             document.documentElement.style.setProperty('--arabic-size', value + 'rem');
             localStorage.setItem('arabicSize', value);
+
+            // Update preview
+            const preview = document.getElementById('arabicPreview');
+            if (preview) {
+                preview.style.fontSize = value + 'rem';
+            }
         }
 
         function changeTafsirFont() {
             const font = document.getElementById('tafsirFontSelect').value;
             document.documentElement.style.setProperty('--tafsir-font', font);
             localStorage.setItem('tafsirFont', font);
+
+            // Update preview
+            const preview = document.getElementById('tafsirPreview');
+            if (preview) {
+                preview.style.fontFamily = font;
+            }
+
             showNotification('فۆنتی تەفسیر گۆڕدرا');
         }
 
@@ -521,6 +653,12 @@
             document.getElementById('tafsirSizeValue').textContent = value + 'rem';
             document.documentElement.style.setProperty('--tafsir-size', value + 'rem');
             localStorage.setItem('tafsirSize', value);
+
+            // Update preview
+            const preview = document.getElementById('tafsirPreview');
+            if (preview) {
+                preview.style.fontSize = value + 'rem';
+            }
         }
 
         function toggleTafsir() {

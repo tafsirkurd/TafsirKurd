@@ -828,6 +828,8 @@
                     window.location.href = 'complete-signup.html';
                 } else {
                     // New user - show onboarding
+                    // Set flag to prevent redirect checks in onboarding.html
+                    sessionStorage.setItem('fromLogin', 'true');
                     window.location.href = 'onboarding.html';
                 }
             }, 1500);

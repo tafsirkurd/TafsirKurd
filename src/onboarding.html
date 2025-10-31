@@ -529,6 +529,22 @@
 
         // Check if user is authenticated
         window.addEventListener('load', () => {
+            // Check if we're coming from login page
+            const fromLogin = sessionStorage.getItem('fromLogin');
+
+            if (fromLogin === 'true') {
+                // Clear the flag
+                sessionStorage.removeItem('fromLogin');
+
+                // Show onboarding directly without redirect checks
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user) {
+                    showWelcomeMessage(user.name);
+                }
+                return;
+            }
+
+            // Normal flow: check authentication and redirect if needed
             const isAuthenticated = localStorage.getItem('isAuthenticated');
             const onboardingCompleted = localStorage.getItem('onboardingCompleted');
             const signupCompleted = localStorage.getItem('signupCompleted');
