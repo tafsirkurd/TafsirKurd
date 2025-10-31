@@ -3722,6 +3722,38 @@
             document.documentElement.style.setProperty('--tafsir-font', savedTafsirFont);
             document.documentElement.style.setProperty('--tafsir-size', savedTafsirSize + 'rem');
 
+            // Load tafsir visibility setting
+            const showTafsir = localStorage.getItem('showTafsir');
+            if (showTafsir !== null) {
+                const shouldShow = showTafsir === 'true';
+                const tafsirToggle = document.getElementById('tafsirToggle');
+                if (shouldShow) {
+                    tafsirToggle.classList.add('active');
+                    document.querySelectorAll('.tafsir-content').forEach(el => {
+                        el.style.display = 'block';
+                    });
+                } else {
+                    tafsirToggle.classList.remove('active');
+                    document.querySelectorAll('.tafsir-content').forEach(el => {
+                        el.style.display = 'none';
+                    });
+                }
+            }
+
+            // Load auto scroll setting
+            const autoScroll = localStorage.getItem('autoScroll');
+            if (autoScroll !== null) {
+                const shouldAutoScroll = autoScroll === 'true';
+                const autoScrollToggle = document.getElementById('autoScrollToggle');
+                if (shouldAutoScroll) {
+                    autoScrollToggle.classList.add('active');
+                    autoScrollEnabled = true;
+                } else {
+                    autoScrollToggle.classList.remove('active');
+                    autoScrollEnabled = false;
+                }
+            }
+
             // Setup Sidebar
             document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
 
@@ -3913,6 +3945,9 @@
                 }
             });
 
+            // Save preference
+            localStorage.setItem('showTafsir', toggle.classList.contains('active'));
+
             showNotification(toggle.classList.contains('active') ? 'تەفسیر پیشاندرا' : 'تەفسیر شاراوە');
         }
 
@@ -3922,7 +3957,7 @@
             autoScrollEnabled = toggle.classList.contains('active');
 
             // Save preference
-            localStorage.setItem('autoScrollEnabled', autoScrollEnabled);
+            localStorage.setItem('autoScroll', autoScrollEnabled);
 
             if (autoScrollEnabled) {
                 startAutoScroll();
@@ -3970,7 +4005,7 @@
             if (toggle) {
                 toggle.classList.remove('active');
             }
-            localStorage.setItem('autoScrollEnabled', 'false');
+            localStorage.setItem('autoScroll', 'false');
         }
 
         function resetSettings() {

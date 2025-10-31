@@ -584,6 +584,29 @@
             document.documentElement.style.setProperty('--tafsir-font', savedTafsirFont);
             document.documentElement.style.setProperty('--tafsir-size', savedTafsirSize + 'rem');
 
+            // Load reading settings
+            const showTafsir = localStorage.getItem('showTafsir');
+            if (showTafsir !== null) {
+                const shouldShow = showTafsir === 'true';
+                const tafsirToggle = document.getElementById('tafsirToggle');
+                if (shouldShow) {
+                    tafsirToggle.classList.add('active');
+                } else {
+                    tafsirToggle.classList.remove('active');
+                }
+            }
+
+            const autoScroll = localStorage.getItem('autoScroll');
+            if (autoScroll !== null) {
+                const shouldAutoScroll = autoScroll === 'true';
+                const autoScrollToggle = document.getElementById('autoScrollToggle');
+                if (shouldAutoScroll) {
+                    autoScrollToggle.classList.add('active');
+                } else {
+                    autoScrollToggle.classList.remove('active');
+                }
+            }
+
             // Initialize previews
             const arabicPreview = document.getElementById('arabicPreview');
             const tafsirPreview = document.getElementById('tafsirPreview');
