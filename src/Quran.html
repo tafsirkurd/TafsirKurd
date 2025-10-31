@@ -3759,11 +3759,15 @@
             }
 
             // Setup auto scroll toggle event listener
+            console.log('autoScrollToggle element:', autoScrollToggle);
             if (autoScrollToggle) {
+                console.log('Attaching click listener to autoScrollToggle');
                 autoScrollToggle.addEventListener('click', function(e) {
                     console.log('Auto scroll toggle clicked!');
                     toggleAutoScroll();
                 });
+            } else {
+                console.error('autoScrollToggle element not found!');
             }
 
             // Setup Sidebar
