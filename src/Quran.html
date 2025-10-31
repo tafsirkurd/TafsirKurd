@@ -2079,13 +2079,52 @@
 
         @media (max-width: 480px) {
             .footer-main {
-                grid-template-columns: 1fr !important;
-                gap: 30px;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 20px;
+            }
+
+            .footer-brand {
+                grid-column: 1 / -1;
+            }
+
+            .footer-brand-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .footer-logo-img {
+                margin-bottom: 10px;
+            }
+
+            .footer-brand-tagline,
+            .footer-contact-text {
+                font-size: 0.85rem;
+            }
+
+            .footer-section-title {
+                font-size: 1rem;
+            }
+
+            .footer-links a {
+                font-size: 0.85rem;
+            }
+
+            .footer-copyright {
+                font-size: 0.8rem;
+                text-align: center;
+            }
+
+            .footer-meta-links {
+                flex-direction: column;
+                gap: 10px;
+                align-items: center;
             }
 
             .footer-bottom {
                 flex-direction: column;
                 text-align: center;
+                gap: 15px;
             }
         }
 

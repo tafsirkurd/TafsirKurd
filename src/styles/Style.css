@@ -1933,8 +1933,12 @@ footer {
     }
 
     .footer-main {
-        grid-template-columns: 1fr !important;
-        gap: 25px;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 20px;
+    }
+
+    .footer-brand {
+        grid-column: 1 / -1;
     }
 
     .footer-brand-header {
@@ -1949,6 +1953,14 @@ footer {
 
     .footer-brand-tagline,
     .footer-contact-text {
+        font-size: 0.85rem;
+    }
+
+    .footer-section-title {
+        font-size: 1rem;
+    }
+
+    .footer-links a {
         font-size: 0.85rem;
     }
 
