@@ -1568,6 +1568,23 @@ footer {
     margin-top: 5px;
 }
 
+.footer-social-icons {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.footer-social-icons a {
+    color: var(--text-muted);
+    font-size: 1.3rem;
+    transition: all var(--transition-medium);
+}
+
+.footer-social-icons a:hover {
+    color: var(--primary);
+    transform: translateY(-3px);
+}
+
 .footer-section {
     display: flex !important;
     flex-direction: column;
@@ -1591,6 +1608,13 @@ footer {
     align-items: flex-start;
 }
 
+.footer-contact-text {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
 .footer-link {
     color: var(--text-muted);
     text-decoration: none;
@@ -1599,6 +1623,11 @@ footer {
     width: fit-content;
     white-space: nowrap;
     display: inline-block;
+}
+
+.footer-link i {
+    margin-left: 8px;
+    font-size: 0.85rem;
 }
 
 .footer-link:hover {

@@ -1967,6 +1967,23 @@
             margin-top: 5px;
         }
 
+        .footer-social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .footer-social-icons a {
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            transition: all var(--transition);
+        }
+
+        .footer-social-icons a:hover {
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+
         .footer-section {
             display: flex !important;
             flex-direction: column;
@@ -1990,6 +2007,13 @@
             align-items: flex-start;
         }
 
+        .footer-contact-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
         .footer-link {
             color: var(--text-muted);
             text-decoration: none;
@@ -1998,6 +2022,11 @@
             width: fit-content;
             white-space: nowrap;
             display: inline-block;
+        }
+
+        .footer-link i {
+            margin-left: 8px;
+            font-size: 0.85rem;
         }
 
         .footer-link:hover {
@@ -3066,16 +3095,27 @@
                         <p class="footer-brand-tagline">
                             پلاتفۆرمێکا بڤیسەر و ئارامە بۆ خواندنا، گوهدارکرنا، گەڕانا و رامانێ لسەر قورئانا پیرۆز ب زمانێ کوردی (سۆرانی). قورئان بهێتە دەستێ هەرکەسێ، هەرکو و هەردەم.
                         </p>
+                        <div class="footer-social-icons">
+                            <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a href="https://www.youtube.com/@tefsirkurd" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                                <i class="fab fa-youtube"></i>
+                            </a>
+                            <a href="https://t.me/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                                <i class="fab fa-telegram"></i>
+                            </a>
+                        </div>
                     </div>
 
                     <!-- Navigate Section -->
                     <div class="footer-section">
                         <h3 class="footer-section-title">گەڕان</h3>
                         <div class="footer-links">
-                            <a href="index.html" class="footer-link">سەرەکی</a>
-                            <a href="Quran.html" class="footer-link">قورئانا پیرۆز</a>
+                            <a href="#" class="footer-link" onclick="showHomePage(); return false;">سەرەکی</a>
                             <a href="settings.html" class="footer-link">ڕێکخستنەکان</a>
-                            <a href="index.html#contact" class="footer-link">پەیوەندی</a>
+                            <a href="#" class="footer-link" onclick="document.getElementById('aboutModal').style.display = 'flex'; return false;">دەربارەی ئێمە</a>
+                            <a href="#" class="footer-link" onclick="document.getElementById('helpModal').style.display = 'flex'; return false;">یارمەتی</a>
                         </div>
                     </div>
 
@@ -3083,9 +3123,9 @@
                     <div class="footer-section">
                         <h3 class="footer-section-title">سەرچاوەکان</h3>
                         <div class="footer-links">
-                            <a href="https://tafsirkurd.com" class="footer-link" target="_blank" rel="noopener noreferrer">تەفسیرا کوردی</a>
-                            <a href="https://quran.com" class="footer-link" target="_blank" rel="noopener noreferrer">Quran.com</a>
-                            <a href="https://alquran.cloud" class="footer-link" target="_blank" rel="noopener noreferrer">AlQuran Cloud</a>
+                            <a href="index.html" class="footer-link">ماڵپەڕی سەرەکی</a>
+                            <a href="index.html#features" class="footer-link">تایبەتمەندی</a>
+                            <a href="index.html#about" class="footer-link">دەربارەی ئێمە</a>
                             <a href="https://github.com/tafsirkurd" class="footer-link" target="_blank" rel="noopener noreferrer">GitHub</a>
                         </div>
                     </div>
@@ -3094,10 +3134,13 @@
                     <div class="footer-section">
                         <h3 class="footer-section-title">پەیوەندی</h3>
                         <div class="footer-links">
-                            <a href="index.html#contact" class="footer-link">پەیوەندیێ بکە</a>
-                            <a href="https://www.instagram.com/tafsirkurd" class="footer-link" target="_blank" rel="noopener noreferrer">Instagram</a>
-                            <a href="https://www.youtube.com/@tefsirkurd" class="footer-link" target="_blank" rel="noopener noreferrer">YouTube</a>
-                            <a href="https://t.me/tafsirkurd" class="footer-link" target="_blank" rel="noopener noreferrer">Telegram</a>
+                            <p class="footer-contact-text">ئەگەر تە پسیارەک یان پێشنیارەک هەیە، پەیوەندیێ ب مە بکە و ب زویترین دەم دێ بەرسڤا تە هێتە دان!</p>
+                            <a href="mailto:info@tafsirkurd.com" class="footer-link">
+                                <i class="fas fa-envelope"></i> info@tafsirkurd.com
+                            </a>
+                            <a href="index.html#contact" class="footer-link">
+                                <i class="fas fa-paper-plane"></i> فۆرما پڕبکە
+                            </a>
                         </div>
                     </div>
                 </div>
