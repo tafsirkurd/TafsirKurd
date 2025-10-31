@@ -1524,10 +1524,11 @@ footer {
 
 .footer-main {
     display: grid !important;
-    grid-template-columns: 1.5fr 1fr 1fr 1fr;
-    gap: 40px;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr !important;
+    gap: 40px !important;
     margin-bottom: 40px;
     width: 100%;
+    min-height: 200px;
 }
 
 .footer-brand {
