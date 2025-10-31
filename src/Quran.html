@@ -3199,11 +3199,32 @@
 
         // Initialize App
         function initializeApp() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            if (savedTheme === 'dark') {
-                document.getElementById('darkModeToggle').classList.add('active');
+            // Load theme with priority: 1) localStorage theme, 2) userPreferences.darkMode, 3) default light
+            const savedTheme = localStorage.getItem('theme');
+            const userPrefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+
+            let theme = 'light';
+            if (savedTheme) {
+                theme = savedTheme;
+            } else if (userPrefs.darkMode) {
+                theme = 'dark';
             }
+
+            // Apply theme immediately (before page renders)
+            document.documentElement.setAttribute('data-theme', theme);
+
+            // Sync toggle button after DOM is ready
+            const toggle = document.getElementById('darkModeToggle');
+            if (toggle) {
+                if (theme === 'dark') {
+                    toggle.classList.add('active');
+                } else {
+                    toggle.classList.remove('active');
+                }
+            }
+
+            // Save theme for consistency
+            localStorage.setItem('theme', theme);
 
             // Load saved settings
             const savedArabicFont = localStorage.getItem('arabicFont') || 'Scheherazade New';
@@ -3294,9 +3315,21 @@
             const current = document.documentElement.getAttribute('data-theme') || 'light';
             const newTheme = current === 'light' ? 'dark' : 'light';
 
+            // Apply theme
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
-            toggle.classList.toggle('active');
+
+            // Sync toggle button state with theme (don't just toggle)
+            if (newTheme === 'dark') {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
+
+            // Save to userPreferences for consistency with signup page
+            const prefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+            prefs.darkMode = (newTheme === 'dark');
+            localStorage.setItem('userPreferences', JSON.stringify(prefs));
 
             showNotification(newTheme === 'dark' ? 'دۆخی تاریکی چالاککرا' : 'دۆخی ڕوونایی چالاککرا');
         }
