@@ -3762,11 +3762,25 @@
             console.log('autoScrollToggle element:', autoScrollToggle);
             if (autoScrollToggle) {
                 console.log('Attaching click listener to autoScrollToggle');
+                // Add listener to the toggle itself
                 autoScrollToggle.addEventListener('click', function(e) {
                     console.log('Auto scroll toggle clicked!', e);
                     e.stopPropagation();
+                    e.preventDefault();
                     toggleAutoScroll();
                 }, true);
+
+                // Also add to the knob inside
+                const knob = autoScrollToggle.querySelector('.setting-toggle-knob');
+                if (knob) {
+                    console.log('Also attaching to knob');
+                    knob.addEventListener('click', function(e) {
+                        console.log('Knob clicked!', e);
+                        e.stopPropagation();
+                        e.preventDefault();
+                        toggleAutoScroll();
+                    }, true);
+                }
             } else {
                 console.error('autoScrollToggle element not found!');
             }
