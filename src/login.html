@@ -755,90 +755,13 @@
 
         function startGoogleSignIn() {
             const btn = document.getElementById('googleSignInBtn');
-            btn.classList.remove('loading');
+            btn.classList.add('loading');
 
-            // Directly show the Google sign-in modal (no English One Tap first)
-            renderGoogleSignInButton();
-        }
-
-        function renderGoogleSignInButton() {
-            // Create a container for Google's button
-            const container = document.createElement('div');
-            container.id = 'googleButtonContainer';
-            container.style.position = 'fixed';
-            container.style.top = '50%';
-            container.style.left = '50%';
-            container.style.transform = 'translate(-50%, -50%)';
-            container.style.zIndex = '10001';
-            container.style.background = 'white';
-            container.style.padding = '40px';
-            container.style.borderRadius = '20px';
-            container.style.boxShadow = '0 20px 60px rgba(0,0,0,0.4)';
-            container.style.textAlign = 'center';
-
-            // Add overlay
-            const overlay = document.createElement('div');
-            overlay.id = 'googleOverlay';
-            overlay.style.position = 'fixed';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.width = '100%';
-            overlay.style.height = '100%';
-            overlay.style.background = 'rgba(0,0,0,0.6)';
-            overlay.style.zIndex = '10000';
-            overlay.onclick = closeGoogleButton;
-
-            // Add title
-            const title = document.createElement('div');
-            title.textContent = 'چوونەژوورەوە بە Google';
-            title.style.fontSize = '1.2rem';
-            title.style.fontWeight = '700';
-            title.style.marginBottom = '20px';
-            title.style.color = '#000';
-            container.appendChild(title);
-
-            // Add close button
-            const closeBtn = document.createElement('button');
-            closeBtn.innerHTML = '✕';
-            closeBtn.style.position = 'absolute';
-            closeBtn.style.top = '15px';
-            closeBtn.style.right = '15px';
-            closeBtn.style.background = 'none';
-            closeBtn.style.border = 'none';
-            closeBtn.style.fontSize = '1.5rem';
-            closeBtn.style.cursor = 'pointer';
-            closeBtn.style.color = '#666';
-            closeBtn.onclick = closeGoogleButton;
-            container.appendChild(closeBtn);
-
-            document.body.appendChild(overlay);
-            document.body.appendChild(container);
-
-            // Render Google's official button
-            google.accounts.id.renderButton(container, {
-                theme: 'filled_black',
-                size: 'large',
-                type: 'standard',
-                text: 'signin_with',
-                width: 280,
-                locale: 'en'
-            });
-        }
-
-        function closeGoogleButton() {
-            const container = document.getElementById('googleButtonContainer');
-            const overlay = document.getElementById('googleOverlay');
-            if (container) container.remove();
-            if (overlay) overlay.remove();
-
-            const btn = document.getElementById('googleSignInBtn');
-            btn.classList.remove('loading');
+            // Directly show Google's official One Tap popup
+            google.accounts.id.prompt();
         }
 
         function handleCredentialResponse(response) {
-            // Close any open modals
-            closeGoogleButton();
-
             const btn = document.getElementById('googleSignInBtn');
             btn.classList.add('loading');
 
