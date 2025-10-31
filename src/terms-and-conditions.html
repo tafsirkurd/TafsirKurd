@@ -113,6 +113,22 @@
       transform: translateX(5px);
     }
 
+    .thank-you-section {
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    .thank-you-section p {
+      text-align: center;
+      color: var(--text);
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .thank-you-section i {
+      color: var(--primary);
+    }
+
     @media (max-width: 768px) {
       .legal-title {
         font-size: 2rem;
@@ -243,9 +259,9 @@
     </ul>
   </div>
 
-  <div class="legal-section" style="background: var(--primary-light); border-color: var(--primary);">
-    <p style="text-align: center; color: var(--text); margin: 0; font-weight: 500;">
-      <i class="fas fa-heart" style="color: var(--primary);"></i>
+  <div class="legal-section thank-you-section">
+    <p>
+      <i class="fas fa-heart"></i>
       سوپاس بۆ بەکارهێنانی تەفسیر کورد. خودا بەرەکەت بێخاتە هەوڵەکانتەوە!
     </p>
   </div>
@@ -264,12 +280,12 @@
       span.textContent = new Date().getFullYear();
     });
 
-    // Set last update date to build time
+    // Set last update date to today
     const lastUpdateSpan = document.getElementById('lastUpdate');
     if (lastUpdateSpan) {
-      const buildDate = new Date('2024-10-31'); // This will be updated on each deploy
+      const today = new Date();
       const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      lastUpdateSpan.textContent = buildDate.toLocaleDateString('ar', options);
+      lastUpdateSpan.textContent = today.toLocaleDateString('ar', options);
     }
   });
 </script>
