@@ -2258,6 +2258,27 @@
         </div>
     </div>
 
+    <!-- Instant preloader hide for returning from settings -->
+    <script>
+        // This runs immediately, before page render, to prevent flash
+        (function() {
+            const returningFromSettings = sessionStorage.getItem('returnToQuranReader');
+            const hasSeenPreloader = sessionStorage.getItem('hasSeenPreloader');
+
+            if (returningFromSettings || hasSeenPreloader) {
+                const preloader = document.getElementById('preloader');
+                const mainContent = document.getElementById('mainContent');
+
+                if (preloader) {
+                    preloader.style.display = 'none';
+                }
+                if (mainContent) {
+                    mainContent.classList.add('loaded');
+                }
+                document.body.classList.remove('no-scroll');
+            }
+        })();
+    </script>
 
     <!-- Settings Modal -->
     <div class="settings-modal" id="settingsModal">
