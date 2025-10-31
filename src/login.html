@@ -749,7 +749,23 @@
                 client_id: CLIENT_ID,
                 callback: handleCredentialResponse,
                 auto_select: false,
-                cancel_on_tap_outside: false
+                cancel_on_tap_outside: true
+            });
+
+            // Create a hidden container for Google's button
+            const hiddenContainer = document.createElement('div');
+            hiddenContainer.id = 'hiddenGoogleButton';
+            hiddenContainer.style.position = 'absolute';
+            hiddenContainer.style.top = '-9999px';
+            hiddenContainer.style.left = '-9999px';
+            document.body.appendChild(hiddenContainer);
+
+            // Render Google's button in hidden container
+            google.accounts.id.renderButton(hiddenContainer, {
+                theme: 'filled_black',
+                size: 'large',
+                type: 'standard',
+                width: 280
             });
         }
 
@@ -757,8 +773,31 @@
             const btn = document.getElementById('googleSignInBtn');
             btn.classList.add('loading');
 
-            // Directly show Google's official One Tap popup
-            google.accounts.id.prompt();
+            try {
+                // Find and click the hidden Google button
+                const hiddenContainer = document.getElementById('hiddenGoogleButton');
+                const googleBtn = hiddenContainer?.querySelector('[role="button"]');
+
+                if (googleBtn) {
+                    googleBtn.click();
+                    // Remove loading after a short delay to show the popup
+                    setTimeout(() => {
+                        btn.classList.remove('loading');
+                    }, 500);
+                } else {
+                    // Fallback to prompt
+                    google.accounts.id.prompt((notification) => {
+                        btn.classList.remove('loading');
+                        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                            showNotification('تکایە دووبارە هەوڵ بدەرەوە');
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Google Sign-In error:', error);
+                btn.classList.remove('loading');
+                showNotification('هەڵەیەک ڕوویدا، تکایە دووبارە هەوڵ بدەرەوە');
+            }
         }
 
         function handleCredentialResponse(response) {
