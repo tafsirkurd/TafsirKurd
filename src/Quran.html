@@ -4217,6 +4217,11 @@
                 return 10000 - (position * 5);
             }
 
+            // LEVEL 1.5: Text starts with query (incomplete typing - 9500+ points)
+            if (textNorm.startsWith(queryNorm)) {
+                return 9500;
+            }
+
             // LEVEL 2: All query words found in order with smart matching
             const queryWords = queryNorm.split(/\s+/).filter(w => w.length > 0);
             const textWords = textNorm.split(/\s+/);
@@ -4225,15 +4230,28 @@
             let lastIndex = -1;
             let consecutiveMatches = 0;
             let exactWordMatches = 0;
+            let prefixMatches = 0;
+            let startsAtBeginning = true;
 
-            queryWords.forEach(qWord => {
+            queryWords.forEach((qWord, qIndex) => {
                 for (let i = lastIndex + 1; i < textWords.length; i++) {
                     const tWord = textWords[i];
+
+                    // Check if this is not at the beginning when it should be
+                    if (qIndex === 0 && i > 0) startsAtBeginning = false;
 
                     // Exact word match (best)
                     if (tWord === qWord) {
                         orderedMatches++;
                         exactWordMatches++;
+                        if (i === lastIndex + 1) consecutiveMatches++;
+                        lastIndex = i;
+                        break;
+                    }
+                    // Text word starts with query word (prefix match - incomplete typing!)
+                    else if (tWord.startsWith(qWord) && qWord.length >= 3) {
+                        orderedMatches++;
+                        prefixMatches++;
                         if (i === lastIndex + 1) consecutiveMatches++;
                         lastIndex = i;
                         break;
@@ -4254,12 +4272,19 @@
                 }
             });
 
-            // All words found in order - 5000-8000 points depending on quality
+            // All words found in order - 5000-9000 points depending on quality
             if (orderedMatches === queryWords.length) {
                 let score = 5000;
                 score += exactWordMatches * 500; // Bonus for exact word matches
+                score += prefixMatches * 800; // HUGE bonus for prefix matches (incomplete typing)
                 score += consecutiveMatches * 200; // Bonus for consecutive matches
                 score += (orderedMatches / textWords.length) * 300; // Bonus for density
+
+                // MEGA BONUS: All words match from the very start (like "الرحمن الرح")
+                if (startsAtBeginning && consecutiveMatches === queryWords.length) {
+                    score += 3000;
+                }
+
                 return score;
             }
 
