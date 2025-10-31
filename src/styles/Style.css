@@ -1513,11 +1513,13 @@ footer {
     border-top: 1px solid var(--border);
     margin-top: 80px;
     padding: 60px 20px 30px;
+    text-align: right;
 }
 
 .footer-container {
     max-width: 1200px;
     margin: 0 auto;
+    direction: rtl;
 }
 
 .footer-main {
@@ -1568,6 +1570,7 @@ footer {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    text-align: right;
 }
 
 .footer-section-title {
@@ -1576,12 +1579,14 @@ footer {
     color: var(--text);
     margin-bottom: 5px;
     font-family: 'IBM Plex Sans Arabic', sans-serif;
+    text-align: right;
 }
 
 .footer-links {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    align-items: flex-start;
 }
 
 .footer-link {
@@ -1590,11 +1595,13 @@ footer {
     font-size: 0.9rem;
     transition: all var(--transition-medium);
     width: fit-content;
+    white-space: nowrap;
+    display: inline-block;
 }
 
 .footer-link:hover {
     color: var(--primary);
-    transform: translateX(5px);
+    transform: translateX(-5px);
 }
 
 .footer-bottom {
@@ -1605,17 +1612,20 @@ footer {
     align-items: center;
     flex-wrap: wrap;
     gap: 15px;
+    direction: rtl;
 }
 
 .footer-copyright {
     color: var(--text-muted);
     font-size: 0.85rem;
+    text-align: right;
 }
 
 .footer-meta-links {
     display: flex;
     gap: 20px;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .footer-meta-link {
@@ -1623,6 +1633,7 @@ footer {
     text-decoration: none;
     font-size: 0.85rem;
     transition: color var(--transition-medium);
+    white-space: nowrap;
 }
 
 .footer-meta-link:hover {
