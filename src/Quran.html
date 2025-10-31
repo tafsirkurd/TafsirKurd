@@ -5014,7 +5014,7 @@
             }
         }
 
-        // Random Ayah Functions - Daily Ayah (changes at midnight)
+        // Random Ayah Functions - Daily Ayah (cycles through ALL ayahs before repeating)
         function loadRandomAyah() {
             if (!quranData) {
                 setTimeout(loadRandomAyah, 1000);
@@ -5043,30 +5043,58 @@
 
             // Generate new ayah if we don't have one for today
             if (!dailyAyah) {
-                // Use date as seed for consistent random (same ayah all day)
-                const seed = parseInt(dateStr.replace(/-/g, ''));
-                const seededRandom = (seed) => {
-                    const x = Math.sin(seed++) * 10000;
-                    return x - Math.floor(x);
+                // Get shown ayahs history
+                let shownAyahs = [];
+                try {
+                    const stored = localStorage.getItem('shownAyahs');
+                    if (stored) {
+                        shownAyahs = JSON.parse(stored);
+                    }
+                } catch (e) {
+                    shownAyahs = [];
+                }
+
+                // Build list of all ayahs
+                const allAyahs = [];
+                for (let surah = 1; surah <= 114; surah++) {
+                    const surahData = quranData[surah];
+                    if (surahData && surahData.verses) {
+                        for (let i = 0; i < surahData.verses.length; i++) {
+                            const verse = surahData.verses[i];
+                            allAyahs.push({
+                                surah: surah,
+                                ayah: verse.verse,
+                                text: verse.text,
+                                key: `${surah}-${verse.verse}`
+                            });
+                        }
+                    }
+                }
+
+                // Filter out already shown ayahs
+                const availableAyahs = allAyahs.filter(a => !shownAyahs.includes(a.key));
+
+                // If all ayahs have been shown, reset the cycle
+                if (availableAyahs.length === 0) {
+                    shownAyahs = [];
+                    availableAyahs.push(...allAyahs);
+                }
+
+                // Pick a random ayah from available ones
+                const randomIndex = Math.floor(Math.random() * availableAyahs.length);
+                const selectedAyah = availableAyahs[randomIndex];
+
+                dailyAyah = {
+                    date: dateStr,
+                    surah: selectedAyah.surah,
+                    ayah: selectedAyah.ayah,
+                    text: selectedAyah.text
                 };
 
-                const randomSurah = Math.floor(seededRandom(seed) * 114) + 1;
-                const surahData = quranData[randomSurah];
-
-                if (surahData && surahData.verses && surahData.verses.length > 0) {
-                    const randomAyahIndex = Math.floor(seededRandom(seed + 1) * surahData.verses.length);
-                    const randomAyah = surahData.verses[randomAyahIndex];
-
-                    dailyAyah = {
-                        date: dateStr,
-                        surah: randomSurah,
-                        ayah: randomAyah.verse,
-                        text: randomAyah.text
-                    };
-
-                    // Store in localStorage
-                    localStorage.setItem('dailyAyah', JSON.stringify(dailyAyah));
-                }
+                // Add to shown list
+                shownAyahs.push(selectedAyah.key);
+                localStorage.setItem('shownAyahs', JSON.stringify(shownAyahs));
+                localStorage.setItem('dailyAyah', JSON.stringify(dailyAyah));
             }
 
             // Display the ayah
