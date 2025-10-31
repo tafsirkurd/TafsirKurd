@@ -132,6 +132,39 @@
       color: var(--primary);
     }
 
+    .closing-message {
+      text-align: center;
+      padding: 40px 20px;
+      margin: 40px 0 20px;
+      position: relative;
+    }
+
+    .closing-message::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(to right, transparent, var(--primary), transparent);
+    }
+
+    .closing-message i {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .closing-message p {
+      color: var(--text);
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin: 0;
+      font-weight: 500;
+    }
+
     @media (max-width: 768px) {
       .legal-title {
         font-size: 2rem;
@@ -330,11 +363,9 @@
     <p>ئێمە هەوڵ دەدەین وەڵامی هەموو داخوازیەکان بدەینەوە لە ماوەی ٣٠ ڕۆژدا.</p>
   </div>
 
-  <div class="highlight-box">
-    <p>
-      <i class="fas fa-shield-alt"></i>
-      تایبەتمەندی و ئاسایشی تۆ گرنگترین شتە بۆمان. سوپاس بۆ متمانەکردنت بە تەفسیر کورد!
-    </p>
+  <div class="closing-message">
+    <i class="fas fa-shield-alt"></i>
+    <p>تایبەتمەندی و ئاسایشی تۆ گرنگترین شتە بۆمان. سوپاس بۆ متمانەکردنت بە تەفسیر کورد!</p>
   </div>
 
   <a href="index.html" class="back-button" style="margin-top: 30px;">
