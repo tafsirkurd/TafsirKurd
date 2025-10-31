@@ -1906,30 +1906,145 @@
             background: var(--bg);
         }
 
-        /* Footer */
+        /* Footer - Quran.com inspired design */
         footer {
             background: var(--card-bg);
-            padding: 40px 20px;
-            text-align: center;
             border-top: 1px solid var(--border);
             margin-top: 80px;
+            padding: 60px 20px 30px;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-main {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .footer-logo-img {
-            width: 55px;
-            height: 55px;
-            margin-bottom: 15px;
-            transition: transform var(--transition);
+            width: 45px;
+            height: 45px;
             object-fit: contain;
+            transition: transform var(--transition);
         }
 
-        footer:hover .footer-logo-img {
+        .footer-logo-img:hover {
             transform: scale(1.1) rotate(10deg);
         }
 
-        footer p {
+        .footer-brand-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        .footer-brand-tagline {
+            font-size: 0.95rem;
+            line-height: 1.6;
             color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .footer-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 5px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .footer-link {
+            color: var(--text-muted);
+            text-decoration: none;
             font-size: 0.9rem;
+            transition: all var(--transition);
+            width: fit-content;
+        }
+
+        .footer-link:hover {
+            color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            padding-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .footer-copyright {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer-meta-links {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-meta-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color var(--transition);
+        }
+
+        .footer-meta-link:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 968px) {
+            .footer-main {
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .footer-main {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
         }
 
         /* Home Page */
@@ -2927,8 +3042,65 @@
 
         <!-- Footer -->
         <footer>
-            <img src="assets/images/logo.png" alt="Tafsir Kurd logo" class="footer-logo-img logo-image">
-            <p>&copy; <span id="year"></span> تەفسیر کورد. هەمی ماف د پاراستینە. خودایێ مەزن بەرەکەتێ بێخیتە هەوڵ و ماندیبوونا مە.</p>
+            <div class="footer-container">
+                <div class="footer-main">
+                    <!-- Brand Section -->
+                    <div class="footer-brand">
+                        <div class="footer-brand-header">
+                            <img src="assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image">
+                            <h2 class="footer-brand-name">تەفسیر کورد</h2>
+                        </div>
+                        <p class="footer-brand-tagline">
+                            پلاتفۆرمێکا بڤیسەر و ئارامە بۆ خواندنا، گوهدارکرنا، گەڕانا و رامانێ لسەر قورئانا پیرۆز ب زمانێ کوردی (سۆرانی). قورئان بهێتە دەستێ هەرکەسێ، هەرکو و هەردەم.
+                        </p>
+                    </div>
+
+                    <!-- Navigate Section -->
+                    <div class="footer-section">
+                        <h3 class="footer-section-title">گەڕان</h3>
+                        <div class="footer-links">
+                            <a href="#" class="footer-link" onclick="showHomePage(); return false;">سەرەکی</a>
+                            <a href="settings.html" class="footer-link">ڕێکخستنەکان</a>
+                            <a href="#" class="footer-link" onclick="document.getElementById('aboutModal').style.display = 'flex'; return false;">دەربارەی ئێمە</a>
+                            <a href="#" class="footer-link" onclick="document.getElementById('helpModal').style.display = 'flex'; return false;">یارمەتی</a>
+                        </div>
+                    </div>
+
+                    <!-- Resources Section -->
+                    <div class="footer-section">
+                        <h3 class="footer-section-title">سەرچاوەکان</h3>
+                        <div class="footer-links">
+                            <a href="https://tafsirkurd.com" class="footer-link" target="_blank">تەفسیرا کوردی</a>
+                            <a href="https://quran.com" class="footer-link" target="_blank">Quran.com</a>
+                            <a href="https://alquran.cloud" class="footer-link" target="_blank">AlQuran Cloud</a>
+                            <a href="https://github.com/tafsirkurd" class="footer-link" target="_blank">GitHub</a>
+                        </div>
+                    </div>
+
+                    <!-- Connect Section -->
+                    <div class="footer-section">
+                        <h3 class="footer-section-title">پەیوەندی</h3>
+                        <div class="footer-links">
+                            <a href="mailto:contact@tafsirkurd.com" class="footer-link">ئیمەیل بنێرن</a>
+                            <a href="https://twitter.com/tafsirkurd" class="footer-link" target="_blank">Twitter</a>
+                            <a href="https://facebook.com/tafsirkurd" class="footer-link" target="_blank">Facebook</a>
+                            <a href="https://instagram.com/tafsirkurd" class="footer-link" target="_blank">Instagram</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Bottom -->
+                <div class="footer-bottom">
+                    <p class="footer-copyright">
+                        &copy; <span id="year"></span> تەفسیر کورد. هەمی مافەکان پارێزراون.
+                    </p>
+                    <div class="footer-meta-links">
+                        <a href="#" class="footer-meta-link">پارێزراوی تایبەتمەندی</a>
+                        <a href="#" class="footer-meta-link">مەرج و ڕێسا</a>
+                        <a href="https://github.com/tafsirkurd" class="footer-meta-link" target="_blank">نەخشەی ماڵپەڕ</a>
+                    </div>
+                </div>
+            </div>
         </footer>
 
     </div>
