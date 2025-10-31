@@ -3761,25 +3761,34 @@
             // Setup auto scroll toggle event listener
             console.log('autoScrollToggle element:', autoScrollToggle);
             if (autoScrollToggle) {
-                console.log('Attaching click listener to autoScrollToggle');
-                // Add listener to the toggle itself
-                autoScrollToggle.addEventListener('click', function(e) {
-                    console.log('Auto scroll toggle clicked!', e);
-                    e.stopPropagation();
-                    e.preventDefault();
-                    toggleAutoScroll();
-                }, true);
+                console.log('Attaching MULTIPLE event listeners to autoScrollToggle');
+
+                // Try ALL possible events
+                ['click', 'mousedown', 'mouseup', 'touchstart', 'pointerdown'].forEach(eventType => {
+                    autoScrollToggle.addEventListener(eventType, function(e) {
+                        console.log(`Auto scroll toggle ${eventType}!`, e);
+                        if (eventType === 'mousedown' || eventType === 'touchstart' || eventType === 'pointerdown') {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            toggleAutoScroll();
+                        }
+                    }, true);
+                });
 
                 // Also add to the knob inside
                 const knob = autoScrollToggle.querySelector('.setting-toggle-knob');
                 if (knob) {
                     console.log('Also attaching to knob');
-                    knob.addEventListener('click', function(e) {
-                        console.log('Knob clicked!', e);
-                        e.stopPropagation();
-                        e.preventDefault();
-                        toggleAutoScroll();
-                    }, true);
+                    ['click', 'mousedown', 'touchstart', 'pointerdown'].forEach(eventType => {
+                        knob.addEventListener(eventType, function(e) {
+                            console.log(`Knob ${eventType}!`, e);
+                            if (eventType === 'mousedown' || eventType === 'touchstart' || eventType === 'pointerdown') {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                toggleAutoScroll();
+                            }
+                        }, true);
+                    });
                 }
             } else {
                 console.error('autoScrollToggle element not found!');
