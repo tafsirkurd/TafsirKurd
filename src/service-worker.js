@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v3';
+const CACHE_NAME = 'tafsir-kurd-v4';
 const urlsToCache = [
   '/',
   '/Quran.html',
@@ -14,16 +14,29 @@ const urlsToCache = [
 
 // Install event - cache resources
 self.addEventListener('install', event => {
+  console.log('[ServiceWorker] Installing v4 - clearing all old caches');
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache.map(url => {
-          return new Request(url, { cache: 'reload' });
-        })).catch(error => {
-          console.error('Failed to cache:', error);
-        });
-      })
+    // First, delete ALL old caches
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('[ServiceWorker] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => {
+      // Then cache new resources
+      return caches.open(CACHE_NAME);
+    }).then(cache => {
+      console.log('[ServiceWorker] Opened new cache');
+      return cache.addAll(urlsToCache.map(url => {
+        return new Request(url, { cache: 'reload' });
+      })).catch(error => {
+        console.error('[ServiceWorker] Failed to cache:', error);
+      });
+    })
   );
   self.skipWaiting();
 });

@@ -1057,16 +1057,30 @@
             setTimeout(() => notif.remove(), 3000);
         }
 
-        // Register Service Worker for offline support
+        // Clear old service worker and caches
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => {
-                        console.log('✅ Service Worker registered successfully:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('❌ Service Worker registration failed:', error);
-                    });
+            window.addEventListener('load', async () => {
+                try {
+                    // Clear all caches
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(cacheName => {
+                        console.log('Clearing cache:', cacheName);
+                        return caches.delete(cacheName);
+                    }));
+
+                    // Unregister all service workers
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map(registration => {
+                        console.log('Unregistering service worker');
+                        return registration.unregister();
+                    }));
+
+                    // Register new service worker
+                    const registration = await navigator.serviceWorker.register('/service-worker.js');
+                    console.log('✅ Service Worker registered successfully:', registration.scope);
+                } catch (error) {
+                    console.log('❌ Service Worker error:', error);
+                }
             });
         }
     </script>
