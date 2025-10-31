@@ -531,10 +531,17 @@
         window.addEventListener('load', () => {
             const isAuthenticated = localStorage.getItem('isAuthenticated');
             const onboardingCompleted = localStorage.getItem('onboardingCompleted');
+            const signupCompleted = localStorage.getItem('signupCompleted');
 
             if (isAuthenticated !== 'true') {
                 // Not authenticated, redirect to login
                 window.location.href = 'login.html';
+                return;
+            }
+
+            // If both onboarding and signup are completed, go straight to Quran.html
+            if (signupCompleted === 'true') {
+                window.location.href = 'Quran.html';
                 return;
             }
 

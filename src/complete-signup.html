@@ -27,6 +27,37 @@
             --success: #10b981;
         }
 
+        /* Dark Mode */
+        [data-theme="dark"] {
+            --primary: #ffffff;
+            --accent: #000000;
+            --bg: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text: #ffffff;
+            --text-muted: #b3b3b3;
+            --border: #404040;
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        }
+
+        [data-theme="dark"] .shape {
+            background: white;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -579,6 +610,7 @@
 
         function loadPreferences() {
             const savedPrefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+            const savedTheme = localStorage.getItem('theme');
 
             // Set default preferences if not saved
             if (Object.keys(savedPrefs).length === 0) {
@@ -587,7 +619,15 @@
                 savedPrefs.autoSave = true;
             }
 
-            // Apply saved preferences
+            // Sync theme with darkMode preference
+            if (savedTheme) {
+                savedPrefs.darkMode = (savedTheme === 'dark');
+            }
+
+            // Apply saved theme
+            document.documentElement.setAttribute('data-theme', savedPrefs.darkMode ? 'dark' : 'light');
+
+            // Apply saved preferences to toggles
             document.querySelectorAll('.toggle-switch').forEach(toggle => {
                 const pref = toggle.getAttribute('data-pref');
                 if (savedPrefs[pref]) {
@@ -601,11 +641,48 @@
         function togglePreference(item, prefName) {
             const toggle = item.querySelector('.toggle-switch');
             toggle.classList.toggle('active');
+            const isActive = toggle.classList.contains('active');
 
             // Save preference
             const prefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
-            prefs[prefName] = toggle.classList.contains('active');
+            prefs[prefName] = isActive;
             localStorage.setItem('userPreferences', JSON.stringify(prefs));
+
+            // If darkMode, apply theme immediately and save in Quran.html format
+            if (prefName === 'darkMode') {
+                const theme = isActive ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+
+                // Show notification
+                showNotification(isActive ? 'دۆخی تاریک چالاککرا' : 'دۆخی ڕووناک چالاککرا');
+            }
+        }
+
+        function showNotification(msg) {
+            const notif = document.createElement('div');
+            notif.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                left: 20px;
+                padding: 15px 20px;
+                background: linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%);
+                color: var(--accent);
+                border-radius: 12px;
+                font-weight: 600;
+                text-align: center;
+                box-shadow: var(--shadow-lg);
+                z-index: 10000;
+                animation: slideInDown 0.3s ease-out;
+            `;
+            notif.textContent = msg;
+            document.body.appendChild(notif);
+
+            setTimeout(() => {
+                notif.style.animation = 'slideInDown 0.3s ease-in reverse';
+                setTimeout(() => notif.remove(), 300);
+            }, 2000);
         }
 
         function completeSignup() {
