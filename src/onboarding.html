@@ -533,37 +533,25 @@
             const onboardingCompleted = localStorage.getItem('onboardingCompleted');
             const signupCompleted = localStorage.getItem('signupCompleted');
 
-            console.log('Onboarding page load - Auth check:', {
-                isAuthenticated,
-                onboardingCompleted,
-                signupCompleted
-            });
-
             if (isAuthenticated !== 'true') {
                 // Not authenticated, redirect to login
-                console.log('Not authenticated, redirecting to login');
                 window.location.href = 'login.html';
                 return;
             }
 
-            // If both onboarding and signup are completed, go straight to Quran.html
+            // If signup is completed, go straight to Quran.html
             if (signupCompleted === 'true') {
-                console.log('Signup already completed, redirecting to Quran.html');
                 window.location.href = 'Quran.html';
                 return;
             }
 
+            // If onboarding is completed, go to signup
             if (onboardingCompleted === 'true') {
-                // Already completed onboarding, go to signup
-                console.log('Onboarding already completed, redirecting to complete-signup.html');
                 window.location.href = 'complete-signup.html';
                 return;
             }
 
-            // Show onboarding slides
-            console.log('Showing onboarding slides');
-
-            // Show welcome message
+            // Show onboarding slides for new users
             const user = JSON.parse(localStorage.getItem('user'));
             if (user) {
                 showWelcomeMessage(user.name);

@@ -808,27 +808,28 @@
                 sub: userInfo.sub
             };
 
-            console.log('Google Sign-In successful for:', currentUser.email);
-
             showNotification('بەخێربێیت ' + currentUser.name.split(' ')[0] + '! ئێستا دەتگەیەنینە لاپەڕەی بەخێربێیت...');
 
             // Store user data
             localStorage.setItem('user', JSON.stringify(currentUser));
             localStorage.setItem('isAuthenticated', 'true');
 
-            // Clear any previous onboarding/signup state for fresh start
-            console.log('Clearing onboarding flags for fresh start');
-            localStorage.removeItem('onboardingCompleted');
-            localStorage.removeItem('signupCompleted');
+            // Check if this user has completed signup before (returning user)
+            const hasCompletedSignup = localStorage.getItem('signupCompleted');
+            const hasCompletedOnboarding = localStorage.getItem('onboardingCompleted');
 
-            // Verify they were cleared
-            console.log('After clearing - onboardingCompleted:', localStorage.getItem('onboardingCompleted'));
-            console.log('After clearing - signupCompleted:', localStorage.getItem('signupCompleted'));
-
-            // Redirect to onboarding page after 1.5 seconds
+            // Redirect based on user status
             setTimeout(() => {
-                console.log('Redirecting to onboarding.html');
-                window.location.href = 'onboarding.html';
+                if (hasCompletedSignup === 'true') {
+                    // Returning user - go straight to Quran.html
+                    window.location.href = 'Quran.html';
+                } else if (hasCompletedOnboarding === 'true') {
+                    // User completed onboarding but not signup - go to signup
+                    window.location.href = 'complete-signup.html';
+                } else {
+                    // New user - show onboarding
+                    window.location.href = 'onboarding.html';
+                }
             }, 1500);
         }
 
