@@ -2466,7 +2466,7 @@
                     <i class="fas fa-bullseye"></i>
                     <span>ئامانجەکان</span>
                 </a>
-                <a href="settings.html" class="nav-menu-item">
+                <a href="settings.html" class="nav-menu-item" onclick="saveStateBeforeSettings(event)">
                     <i class="fas fa-cog"></i>
                     <span>ڕێکخستنەکان</span>
                 </a>
@@ -2537,7 +2537,7 @@
                         <i class="fas fa-globe"></i>
                         <span>ماڵپەڕی سەرەکی</span>
                     </a>
-                    <a href="settings.html" class="header-btn outline">
+                    <a href="settings.html" class="header-btn outline" onclick="saveStateBeforeSettings(event)">
                         <i class="fas fa-cog"></i>
                         <span>ڕێکخستنەکان</span>
                     </a>
@@ -3051,6 +3051,9 @@
                 startRandomAyahTimer();
                 updateContinueReading();
                 handleUrlParameters();
+
+                // Restore state if returning from settings
+                restoreStateFromSettings();
             });
         });
 
@@ -3884,6 +3887,44 @@
             document.getElementById('homePage').classList.remove('hidden');
             document.getElementById('surahReaderPage').classList.remove('visible');
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Save state before navigating to settings
+        function saveStateBeforeSettings(event) {
+            const readerPage = document.getElementById('surahReaderPage');
+            const isReadingQuran = readerPage && readerPage.classList.contains('visible');
+
+            sessionStorage.setItem('returnToQuranReader', isReadingQuran ? 'true' : 'false');
+            if (isReadingQuran) {
+                sessionStorage.setItem('returnToSurah', currentSurahNumber);
+                sessionStorage.setItem('returnScrollPosition', window.scrollY);
+            }
+
+            // Allow default navigation to continue
+            return true;
+        }
+
+        // Restore state when returning from settings
+        function restoreStateFromSettings() {
+            const shouldReturnToReader = sessionStorage.getItem('returnToQuranReader');
+
+            if (shouldReturnToReader === 'true') {
+                const surahNumber = parseInt(sessionStorage.getItem('returnToSurah') || '1');
+                const scrollPosition = parseInt(sessionStorage.getItem('returnScrollPosition') || '0');
+
+                // Open the surah they were reading
+                openSurah(surahNumber);
+
+                // Restore scroll position after a short delay
+                setTimeout(() => {
+                    window.scrollTo({ top: scrollPosition, behavior: 'instant' });
+                }, 300);
+
+                // Clear the session storage
+                sessionStorage.removeItem('returnToQuranReader');
+                sessionStorage.removeItem('returnToSurah');
+                sessionStorage.removeItem('returnScrollPosition');
+            }
         }
 
         // Fuzzy search helper function
