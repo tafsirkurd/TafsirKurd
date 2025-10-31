@@ -3961,11 +3961,19 @@
 
         function toggleAutoScroll() {
             const toggle = document.getElementById('autoScrollToggle');
+            if (!toggle) {
+                console.error('autoScrollToggle element not found!');
+                return;
+            }
+
             toggle.classList.toggle('active');
             autoScrollEnabled = toggle.classList.contains('active');
 
+            console.log('Toggle AutoScroll - Active:', autoScrollEnabled);
+
             // Save preference
             localStorage.setItem('autoScroll', autoScrollEnabled);
+            console.log('Saved autoScroll to localStorage:', autoScrollEnabled);
 
             if (autoScrollEnabled) {
                 startAutoScroll();
@@ -3977,17 +3985,27 @@
         }
 
         function startAutoScroll() {
+            console.log('startAutoScroll called');
+
             // Only work on reader page
             const readerPage = document.getElementById('surahReaderPage');
+            console.log('Reader page element:', readerPage);
+            console.log('Reader page visible:', readerPage ? readerPage.classList.contains('visible') : 'N/A');
+
             if (!readerPage || !readerPage.classList.contains('visible')) {
+                console.log('Reader page not visible - stopping auto scroll');
                 showNotification('تکایە سوورەیەک بکەرەوە بۆ خولاندنی خۆکار');
                 autoScrollEnabled = false;
                 document.getElementById('autoScrollToggle').classList.remove('active');
                 return;
             }
 
-            if (autoScrollInterval) clearInterval(autoScrollInterval);
+            if (autoScrollInterval) {
+                console.log('Clearing existing interval');
+                clearInterval(autoScrollInterval);
+            }
 
+            console.log('Starting auto scroll interval');
             // Scroll 2 pixels every 50ms = 40px per second (smooth reading speed)
             autoScrollInterval = setInterval(() => {
                 window.scrollBy({
