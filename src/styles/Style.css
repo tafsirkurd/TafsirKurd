@@ -548,6 +548,47 @@ nav.scrolled-nav {
     color: var(--accent);
 }
 
+/* Special highlighted style for Quran nav link */
+.nav-link-quran {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: var(--accent) !important;
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.3);
+    position: relative;
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+[data-theme="dark"] .nav-link-quran {
+    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
+}
+
+.nav-link-quran i {
+    color: var(--accent) !important;
+}
+
+.nav-link-quran::before {
+    display: none;
+}
+
+.nav-link-quran:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 25px rgba(var(--primary-rgb), 0.5);
+}
+
+[data-theme="dark"] .nav-link-quran:hover {
+    box-shadow: 0 6px 30px rgba(255, 255, 255, 0.3);
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 25px rgba(var(--primary-rgb), 0.6);
+    }
+}
+
 .nav-overlay {
     display: none;
 }
