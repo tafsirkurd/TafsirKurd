@@ -3728,12 +3728,12 @@
             const tafsirToggle = document.getElementById('tafsirToggle');
             if (shouldShow) {
                 tafsirToggle.classList.add('active');
-                document.querySelectorAll('.tafsir-content').forEach(el => {
+                document.querySelectorAll('.tafsir-label, .tafsir-content').forEach(el => {
                     el.style.display = 'block';
                 });
             } else {
                 tafsirToggle.classList.remove('active');
-                document.querySelectorAll('.tafsir-content').forEach(el => {
+                document.querySelectorAll('.tafsir-label, .tafsir-content').forEach(el => {
                     el.style.display = 'none';
                 });
             }
@@ -3933,7 +3933,7 @@
             const toggle = document.getElementById('tafsirToggle');
             toggle.classList.toggle('active');
 
-            document.querySelectorAll('.tafsir-content').forEach(el => {
+            document.querySelectorAll('.tafsir-label, .tafsir-content').forEach(el => {
                 if (toggle.classList.contains('active')) {
                     el.style.display = 'block';
                 } else {
@@ -4353,6 +4353,13 @@
                     `;
 
                     container.appendChild(ayahDiv);
+                });
+
+                // Apply tafsir visibility setting (default: show)
+                const showTafsir = localStorage.getItem('showTafsir');
+                const shouldShow = showTafsir === null ? true : showTafsir === 'true';
+                document.querySelectorAll('.tafsir-label, .tafsir-content').forEach(el => {
+                    el.style.display = shouldShow ? 'block' : 'none';
                 });
 
                 // Scroll to highlighted ayah
