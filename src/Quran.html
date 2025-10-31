@@ -3738,6 +3738,14 @@
                 });
             }
 
+            // Setup tafsir toggle event listener
+            if (tafsirToggle) {
+                tafsirToggle.addEventListener('click', function(e) {
+                    console.log('Tafsir toggle clicked!');
+                    toggleTafsir();
+                });
+            }
+
             // Load auto scroll setting (default: false - disabled)
             const autoScroll = localStorage.getItem('autoScroll');
             const shouldAutoScroll = autoScroll === null ? false : autoScroll === 'true';
@@ -3748,6 +3756,14 @@
             } else {
                 autoScrollToggle.classList.remove('active');
                 autoScrollEnabled = false;
+            }
+
+            // Setup auto scroll toggle event listener
+            if (autoScrollToggle) {
+                autoScrollToggle.addEventListener('click', function(e) {
+                    console.log('Auto scroll toggle clicked!');
+                    toggleAutoScroll();
+                });
             }
 
             // Setup Sidebar
