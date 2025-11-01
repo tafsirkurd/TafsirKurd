@@ -29,6 +29,9 @@
   <!-- Styles -->
   <link rel="stylesheet" href="styles/Style.css?v=9">
 
+  <!-- Console Cleaner - Clean console in production -->
+  <script src="utils/console-cleaner.js"></script>
+
   <!-- Keep the Cloudflare script as is -->
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "38855c0a9b3946a083192373b7bb70b8"}'></script>
 
@@ -37,7 +40,7 @@
 // Add this to your existing JavaScript
 window.addEventListener('error', function(e) {
     if (e.target.src && e.target.src.includes('cloudflareinsights.com')) {
-        console.log('Cloudflare analytics blocked by ad-blocker - this is normal');
+        // Silently ignore Cloudflare analytics errors (ad-blockers)
         e.preventDefault();
     }
 }, true);

@@ -16,7 +16,15 @@
       "Bash(sort:*)",
       "Bash(curl:*)",
       "Bash(for file in src/profile.html src/goals.html src/complete-signup.html src/onboarding.html src/login.html src/Dashboard.html src/bookmarks.html src/settings.html src/Quran.html src/privacy-policy.html src/terms-and-conditions.html)",
-      "WebFetch(domain:supabase.com)"
+      "WebFetch(domain:supabase.com)",
+      "Bash(for file in src/Quran.html src/Dashboard.html src/profile.html src/goals.html src/bookmarks.html src/settings.html src/login.html src/onboarding.html src/complete-signup.html src/privacy-policy.html src/terms-and-conditions.html)",
+      "Bash(do echo \"=== $file ===\" head -n 25 \"$file\")",
+      "Bash(for file in goals.html bookmarks.html settings.html onboarding.html complete-signup.html)",
+      "Bash(do)",
+      "Bash(if ! grep -q \"console-cleaner.js\" \"$file\")",
+      "Bash(then)",
+      "Bash(echo:*)",
+      "Bash(fi)"
     ],
     "deny": [],
     "ask": []
