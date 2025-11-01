@@ -3768,39 +3768,13 @@
             }
 
             // Setup auto scroll toggle event listener
-            console.log('autoScrollToggle element:', autoScrollToggle);
             if (autoScrollToggle) {
-                console.log('Attaching MULTIPLE event listeners to autoScrollToggle');
-
-                // Try ALL possible events
-                ['click', 'mousedown', 'mouseup', 'touchstart', 'pointerdown'].forEach(eventType => {
-                    autoScrollToggle.addEventListener(eventType, function(e) {
-                        console.log(`Auto scroll toggle ${eventType}!`, e);
-                        if (eventType === 'mousedown' || eventType === 'touchstart' || eventType === 'pointerdown') {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            toggleAutoScroll();
-                        }
-                    }, true);
+                // Simple click handler
+                autoScrollToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    toggleAutoScroll();
                 });
-
-                // Also add to the knob inside
-                const knob = autoScrollToggle.querySelector('.setting-toggle-knob');
-                if (knob) {
-                    console.log('Also attaching to knob');
-                    ['click', 'mousedown', 'touchstart', 'pointerdown'].forEach(eventType => {
-                        knob.addEventListener(eventType, function(e) {
-                            console.log(`Knob ${eventType}!`, e);
-                            if (eventType === 'mousedown' || eventType === 'touchstart' || eventType === 'pointerdown') {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                toggleAutoScroll();
-                            }
-                        }, true);
-                    });
-                }
-            } else {
-                console.error('autoScrollToggle element not found!');
             }
 
             // Setup Sidebar
@@ -4015,18 +3989,14 @@
         function toggleAutoScroll() {
             const toggle = document.getElementById('autoScrollToggle');
             if (!toggle) {
-                console.error('autoScrollToggle element not found!');
                 return;
             }
 
             toggle.classList.toggle('active');
             autoScrollEnabled = toggle.classList.contains('active');
 
-            console.log('Toggle AutoScroll - Active:', autoScrollEnabled);
-
             // Save preference
             localStorage.setItem('autoScroll', autoScrollEnabled);
-            console.log('Saved autoScroll to localStorage:', autoScrollEnabled);
 
             if (autoScrollEnabled) {
                 startAutoScroll();
@@ -4037,30 +4007,22 @@
             }
         }
 
-        console.log('toggleAutoScroll function defined:', typeof toggleAutoScroll);
-
         function startAutoScroll() {
-            console.log('startAutoScroll called');
-
             // Only work on reader page
             const readerPage = document.getElementById('surahReaderPage');
-            console.log('Reader page element:', readerPage);
-            console.log('Reader page visible:', readerPage ? readerPage.classList.contains('visible') : 'N/A');
 
             if (!readerPage || !readerPage.classList.contains('visible')) {
-                console.log('Reader page not visible - stopping auto scroll');
                 showNotification('تکایە سوورەیەک بکەرەوە بۆ خولاندنی خۆکار');
                 autoScrollEnabled = false;
-                document.getElementById('autoScrollToggle').classList.remove('active');
+                const toggle = document.getElementById('autoScrollToggle');
+                if (toggle) toggle.classList.remove('active');
                 return;
             }
 
             if (autoScrollInterval) {
-                console.log('Clearing existing interval');
                 clearInterval(autoScrollInterval);
             }
 
-            console.log('Starting auto scroll interval');
             // Scroll 2 pixels every 50ms = 40px per second (smooth reading speed)
             autoScrollInterval = setInterval(() => {
                 window.scrollBy({
