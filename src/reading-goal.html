@@ -18,6 +18,16 @@
     <!-- Console Cleaner - Clean console in production -->
     <script src="utils/console-cleaner.js"></script>
 
+    <!-- Apply theme immediately -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const userPrefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+            const theme = savedTheme || (userPrefs.darkMode ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
@@ -25,14 +35,26 @@
         :root {
             --primary: #000000;
             --accent: #ffffff;
-            --cyan: #00d9ff;
-            --bg: #1a1d24;
-            --card-bg: #252930;
-            --text: #ffffff;
-            --text-muted: #9ca3af;
-            --border: #374151;
-            --shadow: rgba(0, 0, 0, 0.3);
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #000000;
+            --text-muted: #666666;
+            --border: #e8e8e8;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
             --transition: 0.3s ease;
+        }
+
+        [data-theme="dark"] {
+            --primary: #000000;
+            --accent: #ffffff;
+            --bg: #0a0a0a;
+            --card-bg: #141414;
+            --text: #ffffff;
+            --text-muted: #999999;
+            --border: #2a2a2a;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
 
         * {
@@ -94,7 +116,7 @@
 
         .progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, var(--cyan), #00a8cc);
+            background: var(--primary);
             width: 0%;
             transition: width 0.5s ease;
         }
@@ -114,13 +136,13 @@
         }
 
         .goal-card:hover {
-            border-color: var(--cyan);
+            border-color: var(--primary);
             transform: translateX(-5px);
         }
 
         .goal-card.selected {
-            border-color: var(--cyan);
-            background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(0, 168, 204, 0.05));
+            border-color: var(--primary);
+            background: var(--bg);
         }
 
         .goal-card.recommended::before {
@@ -128,8 +150,8 @@
             position: absolute;
             top: -10px;
             right: 20px;
-            background: var(--cyan);
-            color: var(--primary);
+            background: var(--primary);
+            color: var(--accent);
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.75rem;
@@ -139,7 +161,7 @@
         .goal-icon {
             width: 50px;
             height: 50px;
-            background: rgba(0, 217, 255, 0.1);
+            background: var(--bg);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -149,8 +171,8 @@
         }
 
         .goal-card.selected .goal-icon {
-            background: var(--cyan);
-            color: var(--primary);
+            background: var(--primary);
+            color: var(--accent);
         }
 
         .goal-content {
@@ -218,14 +240,14 @@
         }
 
         .btn-primary {
-            background: var(--cyan);
-            color: var(--primary);
+            background: var(--primary);
+            color: var(--accent);
             flex: 1;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
         .btn-secondary {
@@ -235,8 +257,8 @@
         }
 
         .btn-secondary:hover {
-            border-color: var(--cyan);
-            color: var(--cyan);
+            border-color: var(--primary);
+            background: var(--bg);
         }
 
         .schedule-preview {
@@ -264,7 +286,7 @@
             top: 0;
             bottom: 0;
             width: 3px;
-            background: linear-gradient(180deg, var(--cyan), rgba(0, 217, 255, 0.2));
+            background: var(--border);
         }
 
         .timeline-item {
@@ -282,9 +304,9 @@
             top: 8px;
             width: 19px;
             height: 19px;
-            background: var(--cyan);
+            background: var(--primary);
             border-radius: 50%;
-            border: 3px solid var(--bg);
+            border: 3px solid var(--card-bg);
             z-index: 1;
         }
 
@@ -321,7 +343,7 @@
         }
 
         .step-dot.active {
-            background: var(--cyan);
+            background: var(--primary);
             width: 30px;
             border-radius: 5px;
         }

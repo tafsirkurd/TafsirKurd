@@ -575,10 +575,22 @@
             // Check if user is authenticated
             const user = localStorage.getItem('user');
             if (!user) {
-                window.location.href = 'login.html';
+                window.location.href = '/login';
                 return;
             }
             currentUser = JSON.parse(user);
+
+            // Check if user has set up a reading goal
+            const readingGoal = localStorage.getItem('readingGoal');
+            if (!readingGoal) {
+                // No goal set, redirect to reading goal setup
+                window.location.href = '/reading-goal';
+                return;
+            }
+
+            // Load goal settings
+            const goal = JSON.parse(readingGoal);
+            dailyGoalMinutes = goal.target || 10;
 
             loadData();
             renderWeekProgress();
