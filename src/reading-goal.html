@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <title>ئامانجی خوێندنەوە - تەفسیر کوورد</title>
+
+    <!-- Favicons -->
+    <link rel="shortcut icon" href="assets/images/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
+
+    <!-- Console Cleaner - Clean console in production -->
+    <script src="utils/console-cleaner.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #000000;
+            --accent: #ffffff;
+            --cyan: #00d9ff;
+            --bg: #1a1d24;
+            --card-bg: #252930;
+            --text: #ffffff;
+            --text-muted: #9ca3af;
+            --border: #374151;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --transition: 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            flex: 1;
+            display: flex;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .left-section {
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .right-section {
+            flex: 1;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 60px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--cyan), #00a8cc);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .goal-card {
+            background: var(--card-bg);
+            border: 2px solid transparent;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+        }
+
+        .goal-card:hover {
+            border-color: var(--cyan);
+            transform: translateX(-5px);
+        }
+
+        .goal-card.selected {
+            border-color: var(--cyan);
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(0, 168, 204, 0.05));
+        }
+
+        .goal-card.recommended::before {
+            content: 'پێشنیارکراو';
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: var(--cyan);
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .goal-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 217, 255, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .goal-card.selected .goal-icon {
+            background: var(--cyan);
+            color: var(--primary);
+        }
+
+        .goal-content {
+            flex: 1;
+        }
+
+        .goal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .goal-description {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all var(--transition);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--cyan);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 16px;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            border-radius: 12px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--cyan);
+            color: var(--primary);
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .schedule-preview {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            margin-top: 30px;
+        }
+
+        .schedule-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-right: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            right: 8px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--cyan), rgba(0, 217, 255, 0.2));
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 8px;
+            width: 19px;
+            height: 19px;
+            background: var(--cyan);
+            border-radius: 50%;
+            border: 3px solid var(--bg);
+            z-index: 1;
+        }
+
+        .timeline-day {
+            font-size: 1.1rem;
+            font-weight: 600;
+            min-width: 120px;
+        }
+
+        .timeline-task {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .step-indicator {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            background: var(--card-bg);
+            padding: 12px 20px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+        }
+
+        .step-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: all var(--transition);
+        }
+
+        .step-dot.active {
+            background: var(--cyan);
+            width: 30px;
+            border-radius: 5px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 968px) {
+            .container {
+                flex-direction: column;
+                gap: 40px;
+                padding: 20px;
+            }
+
+            .left-section, .right-section {
+                max-width: 100%;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Step 1: Choose Preset Goal -->
+    <div class="container" id="step1">
+        <div class="left-section">
+            <h1>ئامانجێ یێ پێشڤەچوویی هەلبژێرە یان ئامانجا خوە دروستبکە</h1>
+            <p class="subtitle">لڤێرێ لیستەکا ئامانجێن باو هەیە. تو دشێی ئامانجا خوە ژی دروست بکەیت.</p>
+        </div>
+
+        <div class="right-section">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="goal-card recommended" data-goal="10min">
+                <div class="goal-icon">⏰</div>
+                <div class="goal-content">
+                    <div class="goal-title">خواندنا ١٠ خولەکان رۆژانە</div>
+                    <div class="goal-description">ئامانجەکا ساکار بۆ دەستپێکەران</div>
+                </div>
+            </div>
+
+            <div class="goal-card" data-goal="30days">
+                <div class="goal-icon">📖</div>
+                <div class="goal-content">
+                    <div class="goal-title">خواندنا قورئانێ د ٣٠ رۆژان</div>
+                    <div class="goal-description">ئامانجا کلاسیکی - خواندنا ١ جوزێ هەر رۆژێ</div>
+                </div>
+            </div>
+
+            <div class="goal-card" data-goal="1year">
+                <div class="goal-icon">📅</div>
+                <div class="goal-content">
+                    <div class="goal-title">خواندنا قورئانێ د ساڵەکێدا</div>
+                    <div class="goal-description">خواندنا قورئانێ ب خێرایێیا خوە د سالا بێ دی</div>
+                </div>
+            </div>
+
+            <div class="goal-card" data-goal="custom">
+                <div class="goal-icon">⚙️</div>
+                <div class="goal-content">
+                    <div class="goal-title">تایبەت</div>
+                    <div class="goal-description">ئامانجەکێ تایبەت دروست بکە کو لگەل تە بگونجیت</div>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-primary" onclick="goToStep2()">
+                    <span>پێشڤە</span>
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Choose Frequency -->
+    <div class="container hidden" id="step2">
+        <div class="left-section">
+            <h1>دووبارەبوونەکێ بۆ ئامانجا خوە هەلبژێرە</h1>
+            <p class="subtitle">ئامانجا تە دڤێت هەر رۆژێ نوکە بیت یان ژمارەکێ رۆژان؟ نەگران بە، ئێمە پێشڤەچوونا تە چاڤێ دگرین بێ گومان کو کامەک دووبارەبوونێ هەلدبژێری.</p>
+        </div>
+
+        <div class="right-section">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar2"></div>
+            </div>
+
+            <div class="goal-card" data-frequency="daily">
+                <div class="goal-icon">🔄</div>
+                <div class="goal-content">
+                    <div class="goal-title">ئامانجا رۆژانە</div>
+                    <div class="goal-description">ئامانجا تە هەر رۆژێ نوکە دبیت</div>
+                </div>
+            </div>
+
+            <div class="goal-card" data-frequency="duration">
+                <div class="goal-icon">📅</div>
+                <div class="goal-content">
+                    <div class="goal-title">ماوەیەک</div>
+                    <div class="goal-description">ئامانجا تە پێشڤەچوونا تە ل سەر ماوەکێ رۆژان حیساب دکەت</div>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-secondary" onclick="goToStep1()">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>پاشڤە</span>
+                </button>
+                <button class="btn btn-primary" onclick="goToStep3()">
+                    <span>پێشڤە</span>
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Choose Criteria -->
+    <div class="container hidden" id="step3">
+        <div class="left-section">
+            <h1>پێوەرەکێ بۆ ئامانجا خوە هەلبژێرە</h1>
+            <p class="subtitle">ئامانجا تە دڤێت ل سەر کاتێ، لاپەڕان، یان رێزەکا تایبەت بهێتە دیاربکرن (وەکو، ٣ جوزێن قورئانێ)؟</p>
+        </div>
+
+        <div class="right-section">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar3"></div>
+            </div>
+
+            <div class="goal-card" data-criteria="time">
+                <div class="goal-icon">⏰</div>
+                <div class="goal-content">
+                    <div class="goal-title">کات</div>
+                    <div class="goal-description">ئامانجا تە ل سەر کاتێ دهێتە دیاربکرن</div>
+                </div>
+            </div>
+
+            <div class="goal-card selected" data-criteria="pages">
+                <div class="goal-icon">📄</div>
+                <div class="goal-content">
+                    <div class="goal-title">لاپەڕە</div>
+                    <div class="goal-description">ئامانجا تە ل سەر لاپەڕان دهێتە دیاربکرن</div>
+                </div>
+            </div>
+
+            <div class="goal-card" data-criteria="custom">
+                <div class="goal-icon">⚙️</div>
+                <div class="goal-content">
+                    <div class="goal-title">رێزا تایبەت</div>
+                    <div class="goal-description">ئامانجا تە ل سەر رێزەکا تایبەتی ئایەتان دهێتە دیاربکرن (ئەڤ دشێت سوورە، جوز، یان تەنانەت تەواڤی قورئان بیت)</div>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-secondary" onclick="goToStep2()">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>پاشڤە</span>
+                </button>
+                <button class="btn btn-primary" onclick="goToStep4()">
+                    <span>پێشڤە</span>
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 4: Set Target -->
+    <div class="container hidden" id="step4">
+        <div class="left-section">
+            <h1>ئامانجەکێ بۆ خوە دیاربکە</h1>
+            <p class="subtitle">چەندی کات، لاپەڕە، یان ئایەت دڤێی بخوێنی بۆ تەمامکرنا ئامانجا خوە؟</p>
+        </div>
+
+        <div class="right-section">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar4"></div>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" id="targetLabel">لاپەڕە</label>
+                <input type="number" class="input-field" id="targetInput" value="1" min="1" placeholder="ژمارەکێ بنڤیسە">
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-secondary" onclick="goToStep3()">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>پاشڤە</span>
+                </button>
+                <button class="btn btn-primary" onclick="goToStep5()">
+                    <span>پێشڤە</span>
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 5: Preview Schedule -->
+    <div class="container hidden" id="step5">
+        <div class="left-section">
+            <h1>پێشبینینەکا خشتەیا تە لڤێرە</h1>
+            <p class="subtitle">ئەڤ چەوایێ ئامانجا تە دێ بنیڤە. تو دشێی هەمیشە پاشێ بگوهوری.</p>
+        </div>
+
+        <div class="right-section">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar5"></div>
+            </div>
+
+            <div class="schedule-preview">
+                <div class="schedule-title">خشتەیا تە</div>
+                <div class="timeline" id="scheduleTimeline">
+                    <!-- Timeline will be generated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-secondary" onclick="goToStep4()">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>پاشڤە</span>
+                </button>
+                <button class="btn btn-primary" onclick="startJourney()">
+                    <span>دەستپێکرنا ڕێویا خوە!</span>
+                    <i class="fas fa-rocket"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+        <div class="step-dot active" data-step="1"></div>
+        <div class="step-dot" data-step="2"></div>
+        <div class="step-dot" data-step="3"></div>
+        <div class="step-dot" data-step="4"></div>
+        <div class="step-dot" data-step="5"></div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let selectedGoal = '10min';
+        let selectedFrequency = 'daily';
+        let selectedCriteria = 'pages';
+        let targetValue = 1;
+
+        // Kurdish day names
+        const kurdishDays = ['یەکشەممە', 'دووشەممە', 'سێشەممە', 'چوارشەممە', 'پێنجشەممە', 'هەینی', 'شەممە'];
+
+        // Setup goal card selection
+        document.querySelectorAll('.goal-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const parent = this.closest('.right-section');
+                parent.querySelectorAll('.goal-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+
+                // Store selection based on step
+                if (currentStep === 1) {
+                    selectedGoal = this.dataset.goal;
+                } else if (currentStep === 2) {
+                    selectedFrequency = this.dataset.frequency;
+                } else if (currentStep === 3) {
+                    selectedCriteria = this.dataset.criteria;
+                    updateTargetLabel();
+                }
+            });
+        });
+
+        function updateProgress(step) {
+            const progress = (step / 5) * 100;
+            document.querySelectorAll('.progress-bar').forEach(bar => {
+                bar.style.width = progress + '%';
+            });
+
+            // Update step indicator
+            document.querySelectorAll('.step-dot').forEach((dot, index) => {
+                if (index < step) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+
+        function goToStep1() {
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step1').classList.remove('hidden');
+            currentStep = 1;
+            updateProgress(1);
+        }
+
+        function goToStep2() {
+            if (!selectedGoal) {
+                alert('تکایە ئامانجەکێ هەلبژێرە');
+                return;
+            }
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+            currentStep = 2;
+            updateProgress(2);
+        }
+
+        function goToStep3() {
+            if (!selectedFrequency) {
+                alert('تکایە دووبارەبوونەکێ هەلبژێرە');
+                return;
+            }
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step4').classList.add('hidden');
+            document.getElementById('step3').classList.remove('hidden');
+            currentStep = 3;
+            updateProgress(3);
+        }
+
+        function goToStep4() {
+            if (!selectedCriteria) {
+                alert('تکایە پێوەرەکێ هەلبژێرە');
+                return;
+            }
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('step5').classList.add('hidden');
+            document.getElementById('step4').classList.remove('hidden');
+            currentStep = 4;
+            updateProgress(4);
+            updateTargetLabel();
+        }
+
+        function goToStep5() {
+            targetValue = parseInt(document.getElementById('targetInput').value) || 1;
+            if (targetValue < 1) {
+                alert('تکایە ژمارەیەکا دروست بنڤیسە');
+                return;
+            }
+            document.getElementById('step4').classList.add('hidden');
+            document.getElementById('step5').classList.remove('hidden');
+            currentStep = 5;
+            updateProgress(5);
+            generateSchedule();
+        }
+
+        function updateTargetLabel() {
+            const label = document.getElementById('targetLabel');
+            if (selectedCriteria === 'time') {
+                label.textContent = 'خولەک';
+            } else if (selectedCriteria === 'pages') {
+                label.textContent = 'لاپەڕە';
+            } else {
+                label.textContent = 'ئایەت / سوورە / جوز';
+            }
+        }
+
+        function generateSchedule() {
+            const timeline = document.getElementById('scheduleTimeline');
+            timeline.innerHTML = '';
+
+            const today = new Date();
+            const numDays = 7; // Show 7 days preview
+
+            for (let i = 0; i < numDays; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                const dayName = kurdishDays[date.getDay()];
+
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                item.innerHTML = `
+                    <div class="timeline-day">${dayName}</div>
+                    <div class="timeline-task">خواندنا ${targetValue} ${selectedCriteria === 'pages' ? 'لاپەڕە' : selectedCriteria === 'time' ? 'خولەک' : 'ئایەت'}</div>
+                `;
+                timeline.appendChild(item);
+            }
+        }
+
+        function startJourney() {
+            // Save goal to localStorage
+            const goalData = {
+                type: selectedGoal,
+                frequency: selectedFrequency,
+                criteria: selectedCriteria,
+                target: targetValue,
+                startDate: new Date().toISOString(),
+                completed: false
+            };
+
+            localStorage.setItem('readingGoal', JSON.stringify(goalData));
+
+            // Show success message
+            alert('ئامانجا تە هاتە تۆمارکرن! ڕێویا خوە دەستپێبکە 🎉');
+
+            // Redirect to goals page
+            window.location.href = '/goals';
+        }
+
+        // Initialize
+        updateProgress(1);
+    </script>
+
+</body>
+</html>
