@@ -46,3 +46,72 @@
   from = "/data/*"
   to = "/data/:splat"
   status = 200
+
+# Clean URLs - Remove .html extensions
+# Redirect .html to clean URLs (301 permanent redirect)
+[[redirects]]
+  from = "/*.html"
+  to = "/:splat"
+  status = 301
+  force = true
+
+# Serve clean URLs by looking for .html files
+[[redirects]]
+  from = "/quran"
+  to = "/Quran.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard"
+  to = "/Dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/profile"
+  to = "/profile.html"
+  status = 200
+
+[[redirects]]
+  from = "/goals"
+  to = "/goals.html"
+  status = 200
+
+[[redirects]]
+  from = "/bookmarks"
+  to = "/bookmarks.html"
+  status = 200
+
+[[redirects]]
+  from = "/settings"
+  to = "/settings.html"
+  status = 200
+
+[[redirects]]
+  from = "/login"
+  to = "/login.html"
+  status = 200
+
+[[redirects]]
+  from = "/onboarding"
+  to = "/onboarding.html"
+  status = 200
+
+[[redirects]]
+  from = "/complete-signup"
+  to = "/complete-signup.html"
+  status = 200
+
+[[redirects]]
+  from = "/privacy-policy"
+  to = "/privacy-policy.html"
+  status = 200
+
+[[redirects]]
+  from = "/terms-and-conditions"
+  to = "/terms-and-conditions.html"
+  status = 200
+
+[[redirects]]
+  from = "/debug"
+  to = "/debug.html"
+  status = 200
