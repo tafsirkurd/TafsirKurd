@@ -1,13 +1,19 @@
 // netlify/functions/auth.js
 const { createClient } = require('@supabase/supabase-js');
+const {
+    checkRateLimit,
+    getClientIP,
+    sanitizeInput,
+    isValidEmail,
+    getSecureHeaders,
+    logSecurityEvent,
+    detectSQLInjection,
+    validateBodySize
+} = require('./utils/security');
 
 exports.handler = async (event, context) => {
-    // Set CORS headers
-    const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        'Content-Type': 'application/json'
-    };
+    // Set secure CORS headers
+    const headers = getSecureHeaders('*');
 
     // Handle preflight requests
     if (event.httpMethod === 'OPTIONS') {
@@ -15,6 +21,33 @@ exports.handler = async (event, context) => {
             statusCode: 200,
             headers,
             body: ''
+        };
+    }
+
+    // Rate limiting - 20 requests per minute per IP
+    const clientIP = getClientIP(event);
+    if (checkRateLimit(clientIP, 20, 60000)) {
+        logSecurityEvent(event, 'Rate limit exceeded', 'warning');
+        return {
+            statusCode: 429,
+            headers,
+            body: JSON.stringify({
+                success: false,
+                message: 'Too many requests. Please try again later.'
+            })
+        };
+    }
+
+    // Validate request body size (max 10KB)
+    if (event.body && !validateBodySize(event.body, 10)) {
+        logSecurityEvent(event, 'Request body too large', 'warning');
+        return {
+            statusCode: 413,
+            headers,
+            body: JSON.stringify({
+                success: false,
+                message: 'Request body too large'
+            })
         };
     }
 
@@ -126,22 +159,49 @@ exports.handler = async (event, context) => {
             }
 
             const { email, password } = body;
-            
+
             console.log('Login attempt for email:', email);
 
             if (!email || !password) {
                 return {
                     statusCode: 400,
                     headers,
-                    body: JSON.stringify({ 
-                        success: false, 
-                        message: 'Email and password are required' 
+                    body: JSON.stringify({
+                        success: false,
+                        message: 'Email and password are required'
                     })
                 };
             }
 
-            const trimmedEmail = email.trim();
+            // Sanitize and validate inputs
+            const trimmedEmail = sanitizeInput(email.trim());
             const trimmedPassword = password.trim();
+
+            // Validate email format
+            if (!isValidEmail(trimmedEmail)) {
+                logSecurityEvent(event, 'Invalid email format attempt', 'warning');
+                return {
+                    statusCode: 400,
+                    headers,
+                    body: JSON.stringify({
+                        success: false,
+                        message: 'Invalid email format'
+                    })
+                };
+            }
+
+            // Detect SQL injection attempts
+            if (detectSQLInjection(trimmedEmail) || detectSQLInjection(trimmedPassword)) {
+                logSecurityEvent(event, 'SQL injection attempt detected', 'critical');
+                return {
+                    statusCode: 400,
+                    headers,
+                    body: JSON.stringify({
+                        success: false,
+                        message: 'Invalid input detected'
+                    })
+                };
+            }
 
             // Check against environment variables first (fallback authentication)
             if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {

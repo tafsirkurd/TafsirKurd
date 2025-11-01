@@ -1,15 +1,31 @@
 // netlify/functions/analytics.js
 const { createClient } = require('@supabase/supabase-js');
+const {
+    checkRateLimit,
+    getClientIP,
+    getSecureHeaders,
+    logSecurityEvent
+} = require('./utils/security');
 
 exports.handler = async (event, context) => {
-    const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Content-Type': 'application/json'
-    };
+    const headers = getSecureHeaders('*');
 
     if (event.httpMethod === 'OPTIONS') {
         return { statusCode: 200, headers, body: '' };
+    }
+
+    // Rate limiting - 30 requests per minute per IP
+    const clientIP = getClientIP(event);
+    if (checkRateLimit(clientIP, 30, 60000)) {
+        logSecurityEvent(event, 'Analytics rate limit exceeded', 'warning');
+        return {
+            statusCode: 429,
+            headers,
+            body: JSON.stringify({
+                success: false,
+                message: 'Too many requests. Please try again later.'
+            })
+        };
     }
 
     try {

@@ -11,7 +11,12 @@
       "Bash(for file in profile.html goals.html complete-signup.html onboarding.html login.html)",
       "Bash(do echo \"=== $file ===\")",
       "Bash(head:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "WebFetch(domain:tafsirkurd.com)",
+      "Bash(sort:*)",
+      "Bash(curl:*)",
+      "Bash(for file in src/profile.html src/goals.html src/complete-signup.html src/onboarding.html src/login.html src/Dashboard.html src/bookmarks.html src/settings.html src/Quran.html src/privacy-policy.html src/terms-and-conditions.html)",
+      "WebFetch(domain:supabase.com)"
     ],
     "deny": [],
     "ask": []

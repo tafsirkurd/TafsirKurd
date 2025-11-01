@@ -1,15 +1,14 @@
 // Enhanced config.js with better security
+const {
+    checkRateLimit,
+    getClientIP,
+    getSecureHeaders,
+    logSecurityEvent
+} = require('./utils/security');
+
 exports.handler = async (event, context) => {
     // Set CORS headers for all responses
-    const headers = {
-        'Access-Control-Allow-Origin': process.env.NODE_ENV === 'production'
-            ? 'https://your-domain.netlify.app'
-            : '*',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-store, no-cache, must-revalidate, private'
-    };
+    const headers = getSecureHeaders('*');
 
     // Handle preflight OPTIONS request
     if (event.httpMethod === 'OPTIONS') {
@@ -26,6 +25,19 @@ exports.handler = async (event, context) => {
             statusCode: 405,
             headers,
             body: JSON.stringify({ error: 'Method not allowed' })
+        };
+    }
+
+    // Rate limiting - 50 requests per minute per IP
+    const clientIP = getClientIP(event);
+    if (checkRateLimit(clientIP, 50, 60000)) {
+        logSecurityEvent(event, 'Config rate limit exceeded', 'warning');
+        return {
+            statusCode: 429,
+            headers,
+            body: JSON.stringify({
+                error: 'Too many requests. Please try again later.'
+            })
         };
     }
 

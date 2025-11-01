@@ -10,6 +10,12 @@
     <link rel="manifest" href="manifest.json">
     <title>قوورئان - تەفسیر کوورد</title>
 
+    <!-- Favicons -->
+    <link rel="shortcut icon" href="assets/images/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
+
     <!-- Apply theme immediately to prevent flash -->
     <script>
         (function() {
@@ -4346,6 +4352,15 @@
         function openSurahWithAyah(surahNum, ayahNum) {
             currentSurahNumber = surahNum;
             showSurahReader(surahNum, ayahNum);
+
+            // Initialize activity tracking for this surah
+            if (isUserAuthenticated) {
+                initializeActivityTracking();
+
+                // Setup scroll tracking
+                setupScrollTracking();
+            }
+
             if (window.innerWidth <= 768) {
                 closeSidebar();
             }
