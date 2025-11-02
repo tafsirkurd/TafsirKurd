@@ -3317,6 +3317,12 @@
             }
         };
 
+        // Helper function to get decorative surah name code for SurahName font
+        function getDecorativeSurahCode(surahNumber) {
+            // SurahName font uses codes like "surah001", "surah002", etc.
+            return `surah${String(surahNumber).padStart(3, '0')}`;
+        }
+
         // Surah Names - ALL 114 SURAHS
         const surahNames = {
             1: { arabic: "الفاتحة", english: "Al-Fatihah", ayahs: 7 },
@@ -4165,11 +4171,12 @@
                     const card = document.createElement('div');
                     card.className = 'surah-card';
                     card.onclick = () => openSurah(i);
+                    const decorativeCode = getDecorativeSurahCode(i);
                     card.innerHTML = `
                         <div class="surah-card-header">
                             <div class="surah-card-number">${KurdishNumbers.toKurdish(i)}</div>
                             <div class="surah-card-info">
-                                <div class="surah-card-arabic">${info.english}</div>
+                                <div class="surah-card-arabic">${decorativeCode}</div>
                                 <div class="surah-card-english">${info.arabic}</div>
                             </div>
                         </div>
@@ -4227,10 +4234,11 @@
                 item.className = 'surah-item-sidebar';
                 item.dataset.surah = i;
 
+                const decorativeCode = getDecorativeSurahCode(i);
                 const surahContent = `
                     <div class="surah-num-sidebar">${KurdishNumbers.toKurdish(i)}</div>
                     <div class="surah-info-sidebar">
-                        <div class="surah-arabic-sidebar">${info.english}</div>
+                        <div class="surah-arabic-sidebar">${decorativeCode}</div>
                         <div class="surah-name-sidebar">${info.arabic}</div>
                     </div>
                 `;
