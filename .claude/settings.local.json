@@ -7,7 +7,8 @@
       "Bash(python -m json.tool:*)",
       "Bash(/dev/null)",
       "Bash(python:*)",
-      "Bash(gzip:*)"
+      "Bash(gzip:*)",
+      "Bash(perl:*)"
     ],
     "deny": [],
     "ask": []
