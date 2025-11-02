@@ -1058,21 +1058,21 @@
             let goalText = '';
             if (currentGoal && currentGoal.criteria === 'pages') {
                 const pagesRead = Math.floor(todayMinutes / 3); // Estimate: 1 page ≈ 3 minutes
-                goalText = `ئامانجی ئەمڕۆ: ${currentGoal.target} لاپەڕە خوێندنەوە (${pagesRead} لاپەڕە تەواوکراوە)`;
+                goalText = `ئامانجی ئەمڕۆ: ${KurdishNumbers.toKurdish(currentGoal.target)} لاپەڕە خوێندنەوە (${KurdishNumbers.toKurdish(pagesRead)} لاپەڕە تەواوکراوە)`;
             } else if (currentGoal && currentGoal.criteria === 'juz') {
                 const juzRead = Math.floor(todayMinutes / 60); // Estimate: 1 juz ≈ 60 minutes
-                goalText = `ئامانجی ئەمڕۆ: ${currentGoal.target} جوز خوێندنەوە (${juzRead} جوز تەواوکراوە)`;
+                goalText = `ئامانجی ئەمڕۆ: ${KurdishNumbers.toKurdish(currentGoal.target)} جوز خوێندنەوە (${KurdishNumbers.toKurdish(juzRead)} جوز تەواوکراوە)`;
             } else if (currentGoal && currentGoal.criteria === 'verses') {
-                goalText = `ئامانجی ئەمڕۆ: ${currentGoal.target} ئایەت خوێندنەوە (${todayMinutes} خولەک تەواوکراوە)`;
+                goalText = `ئامانجی ئەمڕۆ: ${KurdishNumbers.toKurdish(currentGoal.target)} ئایەت خوێندنەوە (${KurdishNumbers.toKurdish(todayMinutes)} خولەک تەواوکراوە)`;
             } else if (currentGoal && currentGoal.criteria === 'ayahs') {
-                goalText = `ئامانجی ئەمڕۆ: ${currentGoal.target} ئایەت خوێندنەوە (${todayMinutes} خولەک تەواوکراوە)`;
+                goalText = `ئامانجی ئەمڕۆ: ${KurdishNumbers.toKurdish(currentGoal.target)} ئایەت خوێندنەوە (${KurdishNumbers.toKurdish(todayMinutes)} خولەک تەواوکراوە)`;
             } else if (currentGoal && currentGoal.criteria === 'surahs') {
                 const surahsRead = Math.floor(todayMinutes / 10); // Estimate
-                goalText = `ئامانجی ئەمڕۆ: ${currentGoal.target} سوورە خوێندنەوە (${surahsRead} سوورە تەواوکراوە)`;
+                goalText = `ئامانجی ئەمڕۆ: ${KurdishNumbers.toKurdish(currentGoal.target)} سوورە خوێندنەوە (${KurdishNumbers.toKurdish(surahsRead)} سوورە تەواوکراوە)`;
             } else {
                 // Default to time-based (minutes)
                 const targetMinutes = currentGoal ? currentGoal.target : dailyGoalMinutes;
-                goalText = `ئامانجی ئەمڕۆ: ${targetMinutes} خولەک خوێندنەوە (${todayMinutes} خولەک تەواوکراوە)`;
+                goalText = `ئامانجی ئەمڕۆ: ${KurdishNumbers.toKurdish(targetMinutes)} خولەک خوێندنەوە (${KurdishNumbers.toKurdish(todayMinutes)} خولەک تەواوکراوە)`;
             }
 
             document.getElementById('goalText').textContent = goalText;
