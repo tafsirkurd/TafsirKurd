@@ -31,7 +31,9 @@
       "Bash(mkdir:*)",
       "Bash(find:*)",
       "Bash(for file in D:WEBSITEsrc/*.html)",
-      "Bash(do echo '=== $(basename $file) ===')"
+      "Bash(do echo '=== $(basename $file) ===')",
+      "Bash(src/assets/fontawesome/all.min.css.tmp)",
+      "Bash(for file in src/*.html)"
     ],
     "deny": [],
     "ask": []
