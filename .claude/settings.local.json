@@ -8,7 +8,16 @@
       "Bash(/dev/null)",
       "Bash(python:*)",
       "Bash(gzip:*)",
-      "Bash(perl:*)"
+      "Bash(perl:*)",
+      "WebSearch",
+      "WebFetch(domain:www.fontspace.com)",
+      "Bash(cat:*)",
+      "Bash(for file in \"D:\\WEBSITE\\src\\Dashboard.html\" \"D:\\WEBSITE\\src\\profile.html\" \"D:\\WEBSITE\\src\\goals.html\" \"D:\\WEBSITE\\src\\bookmarks.html\" \"D:\\WEBSITE\\src\\settings.html\" \"D:\\WEBSITE\\src\\index.html\")",
+      "Bash(if grep -q \"kurdish-numbers.js\" \"$file\")",
+      "Bash(else)",
+      "Bash(for file in \"D:\\WEBSITE\\src\\profile.html\" \"D:\\WEBSITE\\src\\goals.html\" \"D:\\WEBSITE\\src\\bookmarks.html\" \"D:\\WEBSITE\\src\\settings.html\" \"D:\\WEBSITE\\src\\index.html\" \"D:\\WEBSITE\\src\\complete-signup.html\" \"D:\\WEBSITE\\src\\onboarding.html\" \"D:\\WEBSITE\\src\\login.html\" \"D:\\WEBSITE\\src\\reading-goal.html\")",
+      "Bash(for:*)",
+      "Bash(if ! grep -q \"kurdish-numbers.js\" \"$file\")"
     ],
     "deny": [],
     "ask": []

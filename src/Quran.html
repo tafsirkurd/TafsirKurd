@@ -20,6 +20,10 @@
     <!-- Console Cleaner - Clean console in production -->
     <script src="utils/console-cleaner.js"></script>
 
+    <!-- Kurdish Number Utility - Convert all numbers to Kurdish numerals -->
+    <script src="utils/kurdish-numbers.js"></script>
+    <script src="utils/auto-kurdish-numbers.js"></script>
+
     <!-- Apply theme immediately to prevent flash -->
     <script>
         (function() {
@@ -617,7 +621,7 @@
 
         .surah-arabic-sidebar {
             font-family: 'SurahName', serif;
-            font-size: 1.2rem;
+            font-size: 1.6rem;
             font-weight: normal;
             color: var(--primary);
             margin-bottom: 3px;
@@ -1413,7 +1417,7 @@
 
         .surah-card-arabic {
             font-family: 'SurahName', serif;
-            font-size: 2rem;
+            font-size: 2.8rem;
             font-weight: normal;
             color: var(--primary);
             margin-bottom: 5px;
@@ -4178,13 +4182,13 @@
                     const decorativeCode = getDecorativeSurahCode(i);
                     card.innerHTML = `
                         <div class="surah-card-header">
-                            <div class="surah-card-number">${i}</div>
+                            <div class="surah-card-number">${KurdishNumbers.toKurdish(i)}</div>
                             <div class="surah-card-info">
                                 <div class="surah-card-arabic">${decorativeCode}</div>
                                 <div class="surah-card-english">${info.english}</div>
                             </div>
                         </div>
-                        <div class="surah-card-ayahs">${info.ayahs} ئایەت</div>
+                        <div class="surah-card-ayahs">${KurdishNumbers.toKurdish(info.ayahs)} ئایەت</div>
                     `;
                     container.appendChild(card);
                 });
@@ -4211,16 +4215,16 @@
                     card.innerHTML = `
                         <div class="surah-card-header">
                             <div class="surah-card-number" style="background: linear-gradient(135deg, var(--primary) 0%, #555 100%);">
-                                ${juzNum}
+                                ${KurdishNumbers.toKurdish(juzNum)}
                             </div>
                             <div class="surah-card-info">
-                                <div class="surah-card-english" style="font-weight: 700;">جوزی ${juzNum}</div>
+                                <div class="surah-card-english" style="font-weight: 700;">جوزی ${KurdishNumbers.toKurdish(juzNum)}</div>
                                 <div class="surah-card-arabic" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">
                                     ${surahList.substring(0, 50)}${surahList.length > 50 ? '...' : ''}
                                 </div>
                             </div>
                         </div>
-                        <div class="surah-card-ayahs">${surahs.length} سوورە</div>
+                        <div class="surah-card-ayahs">${KurdishNumbers.toKurdish(surahs.length)} سوورە</div>
                     `;
                     container.appendChild(card);
                 });
@@ -4240,7 +4244,7 @@
 
                 const decorativeCode = getDecorativeSurahCode(i);
                 const surahContent = `
-                    <div class="surah-num-sidebar">${i}</div>
+                    <div class="surah-num-sidebar">${KurdishNumbers.toKurdish(i)}</div>
                     <div class="surah-info-sidebar">
                         <div class="surah-arabic-sidebar">${decorativeCode}</div>
                         <div class="surah-name-sidebar">${info.english}</div>
@@ -4264,7 +4268,7 @@
                 for (let j = 1; j <= info.ayahs; j++) {
                     const ayahItem = document.createElement('div');
                     ayahItem.className = 'ayah-item-sidebar';
-                    ayahItem.textContent = `ئایەتی ${j}`;
+                    ayahItem.textContent = `ئایەتی ${KurdishNumbers.toKurdish(j)}`;
                     ayahItem.onclick = (e) => {
                         e.stopPropagation();
                         openSurahWithAyah(i, j);
@@ -4392,7 +4396,7 @@
 
             const info = surahNames[surahNum];
             document.getElementById('readerSurahName').textContent = `${info.english} (${info.arabic})`;
-            document.getElementById('readerSurahInfo').textContent = `${info.ayahs} ئایەت`;
+            document.getElementById('readerSurahInfo').textContent = `${KurdishNumbers.toKurdish(info.ayahs)} ئایەت`;
 
             // Load ayahs
             loadAyahs(surahNum, highlightAyah);
@@ -4440,7 +4444,7 @@
 
                     ayahDiv.innerHTML = `
                         <div class="ayah-header">
-                            <div class="ayah-number">${verse.verse}</div>
+                            <div class="ayah-number">${KurdishNumbers.toKurdish(verse.verse)}</div>
                             <div class="ayah-actions">
                                 <button class="ayah-action-btn"
                                         onclick="openCopyModal(${surahNum}, ${verse.verse})"
@@ -4950,7 +4954,7 @@
             const resultsHTML = results.map((result) => `
                 <div class="search-result-item" onclick="openSurahWithAyah(${result.surah}, ${result.ayah}); hideSearchResults();">
                     <div class="search-result-header">
-                        ${result.surahName} - ئایەت ${result.ayah}
+                        ${result.surahName} - ئایەت ${KurdishNumbers.toKurdish(result.ayah)}
                     </div>
                     <div class="search-result-text">
                         ${result.text}
@@ -5030,7 +5034,7 @@
             const surahName = surahNames[surah];
 
             // Build text with proper line breaks
-            const parts = [arabicText, tafsirText, surahName.english + ' (' + surahName.arabic + ') - ئایەت ' + ayah, 'https://tafsirkurd.com/Quran'];
+            const parts = [arabicText, tafsirText, surahName.english + ' (' + surahName.arabic + ') - ئایەت ' + KurdishNumbers.toKurdish(ayah), 'https://tafsirkurd.com/Quran'];
             const text = parts.join('\n\n');
 
             copyToClipboard(text);
@@ -5054,7 +5058,7 @@
             const surahName = surahNames[surah];
 
             // Build text with proper line breaks
-            const parts = [arabicText, surahName.english + ' (' + surahName.arabic + ') - ئایەت ' + ayah, 'https://tafsirkurd.com/Quran'];
+            const parts = [arabicText, surahName.english + ' (' + surahName.arabic + ') - ئایەت ' + KurdishNumbers.toKurdish(ayah), 'https://tafsirkurd.com/Quran'];
             const text = parts.join('\n\n');
 
             copyToClipboard(text);
@@ -5073,7 +5077,7 @@
             const surahName = surahNames[surah];
 
             // Build text with proper line breaks (tafsir only)
-            const parts = [tafsirText, surahName.english + ' (' + surahName.arabic + ') - ئایەت ' + ayah, 'https://tafsirkurd.com/Quran'];
+            const parts = [tafsirText, surahName.english + ' (' + surahName.arabic + ') - ئایەت ' + KurdishNumbers.toKurdish(ayah), 'https://tafsirkurd.com/Quran'];
             const text = parts.join('\n\n');
 
             copyToClipboard(text);
@@ -5133,7 +5137,7 @@
             if (isUserAuthenticated && lastReadPosition.surah) {
                 const info = surahNames[lastReadPosition.surah];
                 surahNameEl.textContent = info.arabic;
-                infoEl.textContent = `${lastReadPosition.surah}. ${info.english} - ئایەت ${lastReadPosition.ayah}`;
+                infoEl.textContent = `${KurdishNumbers.toKurdish(lastReadPosition.surah)}. ${info.english} - ئایەت ${KurdishNumbers.toKurdish(lastReadPosition.ayah)}`;
             } else {
                 surahNameEl.textContent = 'الفاتحة';
                 infoEl.textContent = '١. الفاتحة';
@@ -5282,7 +5286,7 @@
                 document.getElementById('randomAyahArabic').textContent = dailyAyah.text;
                 document.getElementById('randomAyahKurdish').textContent = tafsir;
                 document.getElementById('randomAyahRef').textContent =
-                    `${surahNames[dailyAyah.surah].english} - ئایەت ${dailyAyah.ayah}`;
+                    `${surahNames[dailyAyah.surah].english} - ئایەت ${KurdishNumbers.toKurdish(dailyAyah.ayah)}`;
 
                 // Store for navigation
                 window.currentRandomAyah = { surah: dailyAyah.surah, ayah: dailyAyah.ayah };
@@ -5584,12 +5588,12 @@
         }
 
         function updateStatsUI() {
-            document.getElementById('statDays').textContent = userStats.daysActive;
-            document.getElementById('statSurahs').textContent = userStats.surahsCompleted;
-            document.getElementById('statAyahs').textContent = userStats.ayahsRead;
-            document.getElementById('statStreak').textContent = userStats.streak;
-            document.getElementById('statTime').textContent = userStats.totalActiveMinutes || 0;
-            document.getElementById('statLevel').textContent = userStats.level || 1;
+            document.getElementById('statDays').textContent = KurdishNumbers.toKurdish(userStats.daysActive);
+            document.getElementById('statSurahs').textContent = KurdishNumbers.toKurdish(userStats.surahsCompleted);
+            document.getElementById('statAyahs').textContent = KurdishNumbers.toKurdish(userStats.ayahsRead);
+            document.getElementById('statStreak').textContent = KurdishNumbers.toKurdish(userStats.streak);
+            document.getElementById('statTime').textContent = KurdishNumbers.toKurdish(userStats.totalActiveMinutes || 0);
+            document.getElementById('statLevel').textContent = KurdishNumbers.toKurdish(userStats.level || 1);
         }
 
         // COMPREHENSIVE ACTIVITY TRACKING SYSTEM
@@ -5833,7 +5837,7 @@
 
                 const percentage = Math.round((readCount / totalAyahs) * 100);
                 fillBar.style.width = percentage + '%';
-                textElement.textContent = `${readCount} / ${totalAyahs} ئایەت خوێندراوە (${percentage}%)`;
+                textElement.textContent = `${KurdishNumbers.toKurdish(readCount)} / ${KurdishNumbers.toKurdish(totalAyahs)} ئایەت خوێندراوە (${KurdishNumbers.toKurdish(percentage)}%)`;
             }
         }
 

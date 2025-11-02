@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v18-surah-names';
+const CACHE_NAME = 'tafsir-kurd-v19-kurdish-numbers';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -16,6 +16,9 @@ const urlsToCache = [
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
   '/styles/Style.css',
+  '/utils/console-cleaner.js',
+  '/utils/kurdish-numbers.js',
+  '/utils/auto-kurdish-numbers.js',
   '/assets/fonts/fonts.css',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.woff2',
@@ -35,7 +38,7 @@ const urlsToCache = [
 
 // Install event - cache resources aggressively
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v18-surah-names - Decorative surah name font');
+  console.log('[ServiceWorker] Installing v19-kurdish-numbers - Kurdish numerals with IBM Plex Arabic font');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
