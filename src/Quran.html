@@ -5300,11 +5300,12 @@
             const goalsCardContainer = document.getElementById('goalsCardContainer');
             const noGoalsCard = document.getElementById('noGoalsCard');
 
-            // Check if user has a reading goal set
+            // Check if user is authenticated AND has a reading goal set
             const readingGoal = localStorage.getItem('readingGoal');
+            const isAuthenticated = isUserAuthenticated && currentUser;
 
-            if (!readingGoal) {
-                // No reading goal - show noGoalsCard, hide goalsCardContainer
+            if (!isAuthenticated || !readingGoal) {
+                // User not logged in OR no reading goal - show noGoalsCard, hide goalsCardContainer
                 if (noGoalsCard) {
                     noGoalsCard.style.display = 'block';
                 }
@@ -5314,7 +5315,7 @@
                 return;
             }
 
-            // User has a reading goal - hide noGoalsCard, show goalsCardContainer
+            // User is authenticated AND has a reading goal - hide noGoalsCard, show goalsCardContainer
             if (noGoalsCard) {
                 noGoalsCard.style.display = 'none';
             }
