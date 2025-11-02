@@ -3,7 +3,11 @@
     "allow": [
       "Bash(perl -pi -e 's|/assets/fonts/fonts\\.css\\?v=12|/assets/fonts/fonts.css?v=13|g':*)",
       "Bash(perl -pi -e 's|/assets/fontawesome/all\\.min\\.css\\?v=12|/assets/fontawesome/all.min.css?v=13|g':*)",
-      "Bash(perl -pi -e 's|href=\"/assets/fonts/([^\"?]+\\.woff2)\"|href=\"/assets/fonts/$1?v=13\"|g':*)"
+      "Bash(perl -pi -e 's|href=\"/assets/fonts/([^\"?]+\\.woff2)\"|href=\"/assets/fonts/$1?v=13\"|g':*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(/dev/null)",
+      "Bash(python:*)",
+      "Bash(gzip:*)"
     ],
     "deny": [],
     "ask": []
