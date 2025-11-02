@@ -505,11 +505,6 @@
             border-color: var(--danger);
         }
 
-        .goal-btn.edit {
-            background: var(--primary);
-            color: var(--accent);
-            border-color: var(--primary);
-        }
 
         @media (max-width: 768px) {
             .week-progress {
@@ -638,9 +633,6 @@
             </h2>
 
             <div class="goal-actions">
-                <button class="goal-btn edit" onclick="editGoal()">
-                    <i class="fas fa-edit"></i> دەستکاریکردنی ئامانج
-                </button>
                 <button class="goal-btn delete" onclick="deleteGoal()">
                     <i class="fas fa-trash"></i> سڕینەوەی هەموو زانیاری
                 </button>
@@ -1066,12 +1058,6 @@
             document.getElementById('goalText').textContent = goalText;
         }
 
-        function editGoal() {
-            // Redirect to reading-goal page to edit with full options
-            if (confirm('ئایا تو دێت ئامانجا خوە بگوهورینی؟ تو دێ بەری لاپەڕێ دانانا ئامانجێ بشێت.')) {
-                window.location.href = '/reading-goal';
-            }
-        }
 
         function deleteGoal() {
             if (confirm('ئایا دڵنیایت لە سڕینەوەی هەموو زانیاری و دەستپێکردنەوە؟')) {
