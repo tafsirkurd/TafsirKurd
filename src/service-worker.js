@@ -27,7 +27,7 @@ const urlsToCache = [
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-700.woff2',
   '/assets/fonts/hafs.woff2',
   '/assets/fonts/amiri-quran-v1-arabic-regular.woff2',
-  '/assets/fonts/SurahName.ttf',
+  '/assets/fonts/surah-name-v4.woff2',
   '/assets/fontawesome/all.min.css',
   '/assets/fontawesome/webfonts/fa-solid-900.woff2',
   '/assets/fontawesome/webfonts/fa-regular-400.woff2',
