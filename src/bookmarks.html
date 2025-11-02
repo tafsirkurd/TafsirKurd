@@ -417,6 +417,86 @@
                 width: 100%;
             }
         }
+
+        /* Streak Badge Card */
+        .streak-badge-card {
+            background: linear-gradient(135deg, #58cc02 0%, #46a302 100%);
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(88, 204, 2, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .streak-badge-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(88, 204, 2, 0.4);
+        }
+
+        .streak-badge-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .streak-badge-icon {
+            font-size: 3rem;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        .streak-badge-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .streak-badge-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .streak-badge-label {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+        }
+
+        .streak-badge-arrow {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.2rem;
+        }
+
+        .bookmark-count-btn {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        .bookmark-count-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        .bookmark-count-btn i {
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 <body>
@@ -434,6 +514,21 @@
     </header>
 
     <div class="container">
+        <!-- Streak Badge Card -->
+        <div class="streak-badge-card">
+            <div class="streak-badge-left">
+                <div class="streak-badge-icon">📚</div>
+                <div class="streak-badge-info">
+                    <div class="streak-badge-number" id="bookmarkStreakNumber">0</div>
+                    <div class="streak-badge-label">saved ayahs <span class="streak-badge-arrow">›</span></div>
+                </div>
+            </div>
+            <button class="bookmark-count-btn" onclick="scrollToBookmarks()">
+                <i class="fas fa-bookmark"></i>
+                بینینی نیشانەکراوەکان
+            </button>
+        </div>
+
         <!-- Stats Bar -->
         <div class="stats-bar" id="statsBar" style="display: none;">
             <div class="stat-item">
@@ -744,6 +839,12 @@
             const uniqueSurahs = new Set(bookmarkedAyahs.map(key => key.split('-')[0])).size;
             document.getElementById('totalSurahs').textContent = uniqueSurahs;
 
+            // Update bookmark streak badge
+            const bookmarkStreakEl = document.getElementById('bookmarkStreakNumber');
+            if (bookmarkStreakEl) {
+                bookmarkStreakEl.textContent = bookmarkedAyahs.length;
+            }
+
             container.innerHTML = '<div class="bookmarks-grid" id="bookmarksList"></div>';
             const list = document.getElementById('bookmarksList');
 
@@ -864,6 +965,12 @@
             document.getElementById('totalNotes').textContent = notesCount;
             const uniqueSurahs = new Set(bookmarkedAyahs.map(key => key.split('-')[0])).size;
             document.getElementById('totalSurahs').textContent = uniqueSurahs;
+
+            // Update bookmark streak badge
+            const bookmarkStreakEl = document.getElementById('bookmarkStreakNumber');
+            if (bookmarkStreakEl) {
+                bookmarkStreakEl.textContent = bookmarkedAyahs.length;
+            }
 
             // Render filtered bookmarks
             container.innerHTML = '<div class="bookmarks-grid" id="bookmarksList"></div>';
@@ -1092,6 +1199,20 @@
                     console.log('❌ Service Worker error:', error);
                 }
             });
+        }
+
+        // Scroll to bookmarks list function
+        function scrollToBookmarks() {
+            const bookmarksList = document.getElementById('bookmarksList');
+            if (bookmarksList) {
+                bookmarksList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                // If no bookmarks list, scroll to stats bar
+                const statsBar = document.getElementById('statsBar');
+                if (statsBar) {
+                    statsBar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
         }
     </script>
 </body>
