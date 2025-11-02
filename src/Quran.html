@@ -617,9 +617,9 @@
         }
 
         .surah-arabic-sidebar {
-            font-family: 'KFGQPC Hafs', 'Scheherazade New', 'Traditional Arabic', serif;
+            font-family: 'SurahName', serif;
             font-size: 1.2rem;
-            font-weight: 600;
+            font-weight: normal;
             color: var(--primary);
             margin-bottom: 3px;
             white-space: nowrap;
@@ -1413,9 +1413,9 @@
         }
 
         .surah-card-arabic {
-            font-family: 'KFGQPC Hafs', 'Scheherazade New', 'Traditional Arabic', serif;
+            font-family: 'SurahName', serif;
             font-size: 2rem;
-            font-weight: 700;
+            font-weight: normal;
             color: var(--primary);
             margin-bottom: 5px;
         }
@@ -2513,11 +2513,11 @@
             display: none;
         }
 
-        /* Use KFGQPC Hafs for all Surah names */
+        /* Use SurahName decorative font for all Surah names */
         .surah-card-arabic,
         .surah-arabic-sidebar {
-            font-family: "KFGQPC Hafs", "Scheherazade New", "Traditional Arabic", serif !important;
-            font-weight: 700;
+            font-family: "SurahName", serif !important;
+            font-weight: normal;
             font-style: normal;
         }
     </style>
@@ -3323,6 +3323,12 @@
         };
 
         // Surah Names - ALL 114 SURAHS
+        // Helper function to get decorative surah name code for SurahName font
+        function getDecorativeSurahCode(surahNumber) {
+            // SurahName font uses codes like "surah001", "surah002", etc.
+            return `surah${String(surahNumber).padStart(3, '0')}`;
+        }
+
         const surahNames = {
             1: { arabic: "الفاتحة", english: "Al-Fatihah", ayahs: 7 },
             2: { arabic: "البقرة", english: "Al-Baqarah", ayahs: 286 },
@@ -4170,11 +4176,12 @@
                     const card = document.createElement('div');
                     card.className = 'surah-card';
                     card.onclick = () => openSurah(i);
+                    const decorativeCode = getDecorativeSurahCode(i);
                     card.innerHTML = `
                         <div class="surah-card-header">
                             <div class="surah-card-number">${i}</div>
                             <div class="surah-card-info">
-                                <div class="surah-card-arabic">${info.arabic}</div>
+                                <div class="surah-card-arabic">${decorativeCode}</div>
                                 <div class="surah-card-english">${info.english}</div>
                             </div>
                         </div>
@@ -4232,10 +4239,11 @@
                 item.className = 'surah-item-sidebar';
                 item.dataset.surah = i;
 
+                const decorativeCode = getDecorativeSurahCode(i);
                 const surahContent = `
                     <div class="surah-num-sidebar">${i}</div>
                     <div class="surah-info-sidebar">
-                        <div class="surah-arabic-sidebar">${info.arabic}</div>
+                        <div class="surah-arabic-sidebar">${decorativeCode}</div>
                         <div class="surah-name-sidebar">${info.english}</div>
                     </div>
                 `;
