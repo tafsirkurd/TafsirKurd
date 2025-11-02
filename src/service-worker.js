@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v11-fixed';
+const CACHE_NAME = 'tafsir-kurd-v14-optimized';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -34,7 +34,7 @@ const urlsToCache = [
 
 // Install event - cache resources aggressively
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v11-fixed - all assets properly cached');
+  console.log('[ServiceWorker] Installing v14-optimized - with aggressive JSON caching');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
