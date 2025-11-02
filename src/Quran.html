@@ -5184,11 +5184,15 @@
         }
 
         // Random Ayah Functions - Daily Ayah (cycles through ALL ayahs before repeating)
+        let dailyAyahLoaded = false; // Prevent multiple loads
         function loadRandomAyah() {
             if (!quranData) {
                 setTimeout(loadRandomAyah, 1000);
                 return;
             }
+
+            // Prevent multiple calls
+            if (dailyAyahLoaded) return;
 
             // Get today's date as string (YYYY-MM-DD)
             const today = new Date();
@@ -5261,6 +5265,9 @@
                 // Store for navigation
                 window.currentRandomAyah = { surah: dailyAyah.surah, ayah: dailyAyah.ayah };
             }
+
+            // Mark as loaded to prevent duplicate calls
+            dailyAyahLoaded = true;
         }
 
         function gotoRandomAyah() {
@@ -5286,6 +5293,7 @@
                 // Check if we passed midnight (diff is very small means we just passed)
                 if (diff < 2000) {
                     setTimeout(() => {
+                        dailyAyahLoaded = false; // Reset flag for new day
                         loadRandomAyah(); // Load new ayah at midnight
                     }, diff + 100);
                 }
