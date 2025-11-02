@@ -2982,7 +2982,7 @@
                 <!-- Left Column -->
                 <div style="display: flex; flex-direction: column; gap: 24px;">
                     <!-- Goals Card -->
-                    <div style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition);">
+                    <div id="goalsCardContainer" style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition); display: none;">
                         <!-- Streak Badge -->
                         <div id="streakBadgeContainer" onclick="requireLogin('goals')" style="background: linear-gradient(135deg, #58cc02 0%, #46a302 100%); border-radius: 12px; padding: 16px 24px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(88, 204, 2, 0.3); cursor: pointer; transition: all 0.3s;">
                             <div style="display: flex; align-items: center; gap: 16px;">
@@ -5283,13 +5283,30 @@
 
         // Update Streak Badge on main page
         function updateStreakBadge() {
+            const goalsCardContainer = document.getElementById('goalsCardContainer');
+            const streakContainer = document.getElementById('streakBadgeContainer');
+
             if (!isUserAuthenticated || !currentUser) {
-                // Hide streak badge for non-logged-in users
-                const streakContainer = document.getElementById('streakBadgeContainer');
-                if (streakContainer) {
-                    streakContainer.style.display = 'none';
+                // Hide goals card for non-logged-in users
+                if (goalsCardContainer) {
+                    goalsCardContainer.style.display = 'none';
                 }
                 return;
+            }
+
+            // Check if user has a reading goal
+            const readingGoal = localStorage.getItem('readingGoal');
+            if (!readingGoal) {
+                // Hide goals card if no reading goal is set
+                if (goalsCardContainer) {
+                    goalsCardContainer.style.display = 'none';
+                }
+                return;
+            }
+
+            // User has a reading goal, show the card
+            if (goalsCardContainer) {
+                goalsCardContainer.style.display = 'block';
             }
 
             const userKey = 'quran_data_' + currentUser.sub;
