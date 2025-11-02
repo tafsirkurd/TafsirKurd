@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v17-google-fix';
+const CACHE_NAME = 'tafsir-kurd-v18-surah-names';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -24,7 +24,7 @@ const urlsToCache = [
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-700.woff2',
   '/assets/fonts/hafs.woff2',
   '/assets/fonts/amiri-quran-v1-arabic-regular.woff2',
-  '/assets/fonts/SurahName.ttf',
+  '/assets/fonts/surah-name-v4.woff2',
   '/assets/fontawesome/all.min.css',
   '/assets/fontawesome/webfonts/fa-solid-900.woff2',
   '/assets/fontawesome/webfonts/fa-regular-400.woff2',
@@ -35,7 +35,7 @@ const urlsToCache = [
 
 // Install event - cache resources aggressively
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v17-google-fix - Skip Google profile images');
+  console.log('[ServiceWorker] Installing v18-surah-names - Decorative surah name font');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
