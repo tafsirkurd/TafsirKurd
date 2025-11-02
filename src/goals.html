@@ -588,11 +588,15 @@
                 return;
             }
 
-            // Load goal settings
+            // Load goal settings from reading-goal setup
             const goal = JSON.parse(readingGoal);
-            dailyGoalMinutes = goal.target || 10;
+            const goalMinutes = goal.target || 10;
 
             loadData();
+
+            // Apply goal settings (override what was loaded from quran_data)
+            dailyGoalMinutes = goalMinutes;
+
             renderWeekProgress();
             renderCalendar();
             updateStreak();
@@ -641,10 +645,18 @@
                 data.dailyActivity[date].minutes = readingData[date];
             });
 
-            // Save daily goal
+            // Save daily goal to quran_data
             data.dailyGoalMinutes = dailyGoalMinutes;
 
             localStorage.setItem(userKey, JSON.stringify(data));
+
+            // Also update the readingGoal to keep it in sync
+            const readingGoal = localStorage.getItem('readingGoal');
+            if (readingGoal) {
+                const goal = JSON.parse(readingGoal);
+                goal.target = dailyGoalMinutes;
+                localStorage.setItem('readingGoal', JSON.stringify(goal));
+            }
         }
 
         function renderWeekProgress() {

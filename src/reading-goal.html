@@ -35,7 +35,7 @@
         :root {
             --primary: #000000;
             --accent: #ffffff;
-            --bg: #fafafa;
+            --bg: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
             --card-bg: #ffffff;
             --text: #000000;
             --text-muted: #666666;
@@ -48,7 +48,7 @@
         [data-theme="dark"] {
             --primary: #000000;
             --accent: #ffffff;
-            --bg: #0a0a0a;
+            --bg: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
             --card-bg: #141414;
             --text: #ffffff;
             --text-muted: #999999;
@@ -307,6 +307,7 @@
             background: var(--primary);
             border-radius: 50%;
             border: 3px solid var(--card-bg);
+            box-shadow: 0 0 0 2px var(--bg);
             z-index: 1;
         }
 
@@ -314,11 +315,13 @@
             font-size: 1.1rem;
             font-weight: 600;
             min-width: 120px;
+            padding-right: 30px;
         }
 
         .timeline-task {
             color: var(--text-muted);
             font-size: 0.95rem;
+            flex: 1;
         }
 
         .step-indicator {
