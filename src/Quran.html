@@ -5416,10 +5416,15 @@
         }
 
         // User Data Management
-        function loadUserData() {
+        async function loadUserData() {
             if (!isUserAuthenticated || !currentUser) return;
 
             const userKey = 'quran_data_' + currentUser.sub;
+
+            // Try loading from cloud backup first (in case localStorage was cleared)
+            const loadedFromCloud = await loadFromDatabase();
+
+            // Now load from localStorage (which now has cloud data if it was restored)
             const saved = localStorage.getItem(userKey);
 
             if (saved) {
@@ -5488,6 +5493,72 @@
             };
 
             localStorage.setItem(userKey, JSON.stringify(data));
+
+            // Also save to database (cloud backup)
+            saveToDatabase();
+        }
+
+        // DATABASE SYNC FUNCTIONS - Cloud backup to Supabase
+
+        async function saveToDatabase() {
+            if (!isUserAuthenticated || !currentUser) return;
+
+            try {
+                const userKey = 'quran_data_' + currentUser.sub;
+                const saved = localStorage.getItem(userKey);
+
+                if (!saved) return;
+
+                const response = await fetch('/.netlify/functions/user-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.sub,
+                        action: 'save',
+                        data: JSON.parse(saved)
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    console.log('✅ Data backed up to cloud');
+                } else {
+                    console.warn('⚠️ Cloud backup failed:', result.error);
+                }
+            } catch (error) {
+                console.warn('⚠️ Cloud backup error:', error.message);
+            }
+        }
+
+        async function loadFromDatabase() {
+            if (!isUserAuthenticated || !currentUser) return false;
+
+            try {
+                const response = await fetch('/.netlify/functions/user-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.sub,
+                        action: 'load'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    // Restore from cloud to localStorage
+                    const userKey = 'quran_data_' + currentUser.sub;
+                    localStorage.setItem(userKey, JSON.stringify(result.data));
+                    console.log('✅ Data restored from cloud backup');
+                    return true;
+                } else {
+                    console.log('ℹ️ No cloud backup found');
+                    return false;
+                }
+            } catch (error) {
+                console.warn('⚠️ Cloud restore error:', error.message);
+                return false;
+            }
         }
 
         function updateStatsUI() {
@@ -5849,6 +5920,12 @@
 
             // Save to localStorage
             localStorage.setItem(userKey, JSON.stringify(data));
+
+            // Cloud backup every 30 seconds (not every save to reduce server load)
+            if (!window.lastCloudSync || (Date.now() - window.lastCloudSync) > 30000) {
+                saveToDatabase();
+                window.lastCloudSync = Date.now();
+            }
 
             // Update UI
             updateStatsUI();

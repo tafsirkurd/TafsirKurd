@@ -24,7 +24,9 @@
       "Bash(if ! grep -q \"console-cleaner.js\" \"$file\")",
       "Bash(then)",
       "Bash(echo:*)",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(node -c:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
