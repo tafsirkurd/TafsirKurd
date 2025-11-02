@@ -3498,7 +3498,7 @@
         }
 
         // Initialize on Load
-        window.addEventListener('load', async () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             initPreloader();
 
             // Initialize UI immediately (don't wait for data)
