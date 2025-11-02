@@ -832,15 +832,15 @@
             setTimeout(() => {
                 if (hasCompletedSignup === 'true') {
                     // Returning user - go straight to Quran.html
-                    window.location.href = 'Quran.html';
+                    window.location.href = '/quran';
                 } else if (hasCompletedOnboarding === 'true') {
                     // User completed onboarding but not signup - go to signup
-                    window.location.href = 'complete-signup.html';
+                    window.location.href = '/complete-signup';
                 } else {
                     // New user - show onboarding
                     // Set flag to prevent redirect checks in onboarding.html
                     sessionStorage.setItem('fromLogin', 'true');
-                    window.location.href = 'onboarding.html';
+                    window.location.href = '/onboarding';
                 }
             }, 1500);
         }
@@ -865,7 +865,7 @@
                 if (user) {
                     showNotification('ئێوە پێشتر چووبوونەتە ژوورەوە');
                     setTimeout(() => {
-                        window.location.href = 'Quran.html';
+                        window.location.href = '/quran';
                     }, 1500);
                     return;
                 }

@@ -835,7 +835,7 @@
         function loadUserProfile() {
             const user = localStorage.getItem('user');
             if (!user) {
-                window.location.href = 'login.html';
+                window.location.href = '/login';
                 return;
             }
 
@@ -1008,14 +1008,14 @@
         }
 
         function openSettings() {
-            window.location.href = 'Quran.html#settings';
+            window.location.href = '/quran#settings';
         }
 
         function signOut() {
             if (confirm('ئایا دڵنیایت لە دەرچوون؟')) {
                 localStorage.removeItem('isAuthenticated');
                 localStorage.removeItem('user');
-                window.location.href = 'login.html';
+                window.location.href = '/login';
             }
         }
 
@@ -1030,7 +1030,7 @@
                     localStorage.removeItem('user');
                     
                     alert('هەژمارەکەت بە سەرکەوتوویی سڕایەوە');
-                    window.location.href = 'login.html';
+                    window.location.href = '/login';
                 }
             }
         }

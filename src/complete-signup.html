@@ -609,7 +609,7 @@
 
             if (!user) {
                 // If no user data, redirect to login
-                window.location.href = 'login.html';
+                window.location.href = '/login';
                 return;
             }
 
@@ -714,7 +714,7 @@
 
             // Redirect to main page with cache busting
             setTimeout(() => {
-                window.location.href = 'Quran.html?t=' + Date.now();
+                window.location.href = '/quran?t=' + Date.now();
             }, 1000);
         }
 
@@ -732,7 +732,7 @@
             await clearAllCaches();
 
             // Redirect to main page with cache busting
-            window.location.href = 'Quran.html?t=' + Date.now();
+            window.location.href = '/quran?t=' + Date.now();
         }
 
         async function clearAllCaches() {

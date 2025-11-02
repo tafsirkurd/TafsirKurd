@@ -557,19 +557,19 @@
 
             if (isAuthenticated !== 'true') {
                 // Not authenticated, redirect to login
-                window.location.href = 'login.html';
+                window.location.href = '/login';
                 return;
             }
 
             // If signup is completed, go straight to Quran.html
             if (signupCompleted === 'true') {
-                window.location.href = 'Quran.html';
+                window.location.href = '/quran';
                 return;
             }
 
             // If onboarding is completed, go to signup
             if (onboardingCompleted === 'true') {
-                window.location.href = 'complete-signup.html';
+                window.location.href = '/complete-signup';
                 return;
             }
 
@@ -654,7 +654,7 @@
 
         function completeOnboarding() {
             localStorage.setItem('onboardingCompleted', 'true');
-            window.location.href = 'complete-signup.html';
+            window.location.href = '/complete-signup';
         }
 
         // Allow clicking on dots to navigate

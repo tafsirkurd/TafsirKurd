@@ -2984,7 +2984,7 @@
                     <!-- Goals Card -->
                     <div style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition);">
                         <!-- Streak Badge -->
-                        <div id="streakBadgeContainer" style="background: linear-gradient(135deg, #58cc02 0%, #46a302 100%); border-radius: 12px; padding: 16px 24px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(88, 204, 2, 0.3);">
+                        <div id="streakBadgeContainer" onclick="requireLogin('goals')" style="background: linear-gradient(135deg, #58cc02 0%, #46a302 100%); border-radius: 12px; padding: 16px 24px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(88, 204, 2, 0.3); cursor: pointer; transition: all 0.3s;">
                             <div style="display: flex; align-items: center; gap: 16px;">
                                 <div style="font-size: 2.5rem;">🌱</div>
                                 <div style="display: flex; flex-direction: column;">
@@ -2992,7 +2992,7 @@
                                     <div style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.9); font-weight: 600;">day streak <span style="color: rgba(255, 255, 255, 0.6);">›</span></div>
                                 </div>
                             </div>
-                            <button onclick="requireLogin('reading-goal')" style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.3); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif; display: flex; align-items: center; gap: 6px;">
+                            <button onclick="event.stopPropagation(); requireLogin('reading-goal')" style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.3); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif; display: flex; align-items: center; gap: 6px;">
                                 <i class="fas fa-bullseye"></i>
                                 دانانا ئامانجێ
                             </button>
@@ -3189,9 +3189,9 @@
                     <div class="footer-section">
                         <h3 class="footer-section-title">رۆژپەڕا دیکە</h3>
                         <div class="footer-links">
-                            <a href="index.html" class="footer-link">ماڵپەڕی سەرەکی</a>
-                            <a href="index.html#features" class="footer-link">تایبەتمەندی</a>
-                            <a href="index.html#about" class="footer-link">دەربارەی ئێمە</a>
+                            <a href="/" class="footer-link">ماڵپەڕی سەرەکی</a>
+                            <a href="/#features" class="footer-link">تایبەتمەندی</a>
+                            <a href="/#about" class="footer-link">دەربارەی ئێمە</a>
                         </div>
                     </div>
 
@@ -3203,7 +3203,7 @@
                             <a href="mailto:info@tafsirkurd.com" class="footer-link">
                                 <i class="fas fa-envelope"></i> info@tafsirkurd.com
                             </a>
-                            <a href="index.html#contact" class="footer-link">
+                            <a href="/#contact" class="footer-link">
                                 <i class="fas fa-paper-plane"></i> فۆرما پڕبکە
                             </a>
                         </div>
@@ -5915,11 +5915,11 @@
             if (isUserAuthenticated) {
                 // If authenticated, handle the feature
                 if (feature === 'goals') {
-                    window.location.href = 'goals.html';
+                    window.location.href = '/goals';
                 } else if (feature === 'bookmarks') {
-                    window.location.href = 'bookmarks.html';
+                    window.location.href = '/bookmarks';
                 } else if (feature === 'reading-goal') {
-                    window.location.href = 'reading-goal.html';
+                    window.location.href = '/reading-goal';
                 }
             } else {
                 document.getElementById('loginRequiredOverlay').classList.add('active');
@@ -5931,7 +5931,7 @@
         }
 
         function goToLogin() {
-            window.location.href = 'login.html';
+            window.location.href = '/login';
         }
 
         // Feather Overlay Functions
