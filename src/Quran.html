@@ -629,8 +629,9 @@
         }
 
         .surah-name-sidebar {
-            font-size: 0.85rem;
-            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -1422,8 +1423,9 @@
         }
 
         .surah-card-english {
-            font-size: 1rem;
-            color: var(--text-muted);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
         }
 
         .surah-card-ayahs {
@@ -4167,8 +4169,8 @@
                         <div class="surah-card-header">
                             <div class="surah-card-number">${KurdishNumbers.toKurdish(i)}</div>
                             <div class="surah-card-info">
-                                <div class="surah-card-arabic">${info.arabic}</div>
-                                <div class="surah-card-english">${info.english}</div>
+                                <div class="surah-card-arabic">${info.english}</div>
+                                <div class="surah-card-english">${info.arabic}</div>
                             </div>
                         </div>
                         <div class="surah-card-ayahs">${KurdishNumbers.toKurdish(info.ayahs)} ئایەت</div>
@@ -4228,8 +4230,8 @@
                 const surahContent = `
                     <div class="surah-num-sidebar">${KurdishNumbers.toKurdish(i)}</div>
                     <div class="surah-info-sidebar">
-                        <div class="surah-arabic-sidebar">${info.arabic}</div>
-                        <div class="surah-name-sidebar">${info.english}</div>
+                        <div class="surah-arabic-sidebar">${info.english}</div>
+                        <div class="surah-name-sidebar">${info.arabic}</div>
                     </div>
                 `;
 
