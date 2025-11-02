@@ -4,7 +4,7 @@
   font-style: normal;
   font-weight: 300;
   font-display: swap;
-  src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.woff2') format('woff2');
+  src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.woff2?v=13') format('woff2');
 }
 
 @font-face {
@@ -12,7 +12,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2') format('woff2');
+  src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=13') format('woff2');
 }
 
 @font-face {
@@ -20,7 +20,7 @@
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2') format('woff2');
+  src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2?v=13') format('woff2');
 }
 
 @font-face {
@@ -28,7 +28,7 @@
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2') format('woff2');
+  src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=13') format('woff2');
 }
 
 @font-face {
@@ -36,7 +36,7 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-700.woff2') format('woff2');
+  src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-700.woff2?v=13') format('woff2');
 }
 
 /* Amiri Quran - optimized local hosting with absolute path */
@@ -45,5 +45,5 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/assets/fonts/amiri-quran-v1-arabic-regular.woff2') format('woff2');
+  src: url('/assets/fonts/amiri-quran-v1-arabic-regular.woff2?v=13') format('woff2');
 }
