@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v15-unsplash-fix';
+const CACHE_NAME = 'tafsir-kurd-v16-hafs-font';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -22,6 +22,7 @@ const urlsToCache = [
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-700.woff2',
+  '/assets/fonts/hafs.woff2',
   '/assets/fonts/amiri-quran-v1-arabic-regular.woff2',
   '/assets/fonts/SurahName.ttf',
   '/assets/fontawesome/all.min.css',
@@ -34,7 +35,7 @@ const urlsToCache = [
 
 // Install event - cache resources aggressively
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v15-unsplash-fix - skip external images');
+  console.log('[ServiceWorker] Installing v16-hafs-font - KFGQPC Hafs Uthmanic Script');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(

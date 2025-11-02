@@ -31,15 +31,15 @@
     </script>
 
     <!-- Critical Font Preloading - Instant font display, zero FOIT/FOUT -->
-    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=14" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=14" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/assets/fonts/amiri-quran-v1-arabic-regular.woff2?v=14" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=16" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/hafs.woff2?v=16" as="font" type="font/woff2" crossorigin>
 
     <!-- Local Fonts - Zero external requests, instant loading -->
-    <link rel="stylesheet" href="/assets/fonts/fonts.css?v=14">
+    <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
 
     <!-- Local Font Awesome - Zero external requests -->
-    <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=14">
+    <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
@@ -53,12 +53,12 @@
             unicode-range: U+0600-06FF, U+0750-077F, U+FB50-FDFF, U+FE70-FEFF;
         }
 
-        /* Force Amiri Quran font for all Arabic text */
+        /* Force KFGQPC Hafs Uthmanic Script for all Quran text */
         .ayah-arabic,
         .surah-card-arabic,
         .surah-arabic-sidebar,
         .arabic-text {
-            font-family: 'Amiri Quran', 'Scheherazade New', 'Traditional Arabic', serif !important;
+            font-family: 'KFGQPC Hafs', 'Scheherazade New', 'Traditional Arabic', serif !important;
         }
 
         :root {
@@ -75,7 +75,7 @@
             --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
             --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             --sidebar-width: 350px;
-            --arabic-font: 'Amiri Quran';
+            --arabic-font: 'KFGQPC Hafs';
             --tafsir-font: 'IBM Plex Sans Arabic';
             --arabic-size: 2.2rem;
             --tafsir-size: 1.1rem;
@@ -1205,7 +1205,7 @@
         }
 
         .search-result-text {
-            font-family: 'Amiri Quran', 'Scheherazade New', serif;
+            font-family: 'KFGQPC Hafs', 'Scheherazade New', serif;
             font-size: 1.5rem;
             line-height: 1.8;
             color: var(--text);
@@ -2613,8 +2613,8 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <span class="setting-label">جۆری فۆنتی عەرەبی</span>
                         <select class="setting-select" id="arabicFontSelect" onchange="changeArabicFont()">
+                            <option value="KFGQPC Hafs">KFGQPC Hafs (هەفس)</option>
                             <option value="Scheherazade New">Scheherazade New</option>
-                            <option value="Amiri">Amiri</option>
                             <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
                         </select>
                     </div>
@@ -2641,7 +2641,7 @@
                         <select class="setting-select" id="tafsirFontSelect" onchange="changeTafsirFont()">
                             <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
                             <option value="Scheherazade New">Scheherazade New</option>
-                            <option value="Amiri">Amiri</option>
+                            <option value="KFGQPC Hafs">KFGQPC Hafs (هەفس)</option>
                         </select>
                     </div>
                     <div id="tafsirPreview" style="width: 100%; padding: 15px; background: var(--bg); border-radius: 8px; text-align: right; font-size: 1.1rem; color: var(--text); border: 2px solid var(--border); direction: rtl;">
@@ -2976,7 +2976,7 @@
                         </div>
                     </div>
 
-                    <div id="randomAyahArabic" style="font-family: 'Amiri Quran', 'Scheherazade New', serif; font-size: 2.2rem; line-height: 2; text-align: center; margin-bottom: 20px; padding: 25px; background: var(--bg); border-radius: 12px; min-height: 100px; display: flex; align-items: center; justify-content: center;">
+                    <div id="randomAyahArabic" style="font-family: 'KFGQPC Hafs', 'Scheherazade New', serif; font-size: 2.2rem; line-height: 2; text-align: center; margin-bottom: 20px; padding: 25px; background: var(--bg); border-radius: 12px; min-height: 100px; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
                     </div>
 
@@ -3759,7 +3759,7 @@
             localStorage.setItem('theme', theme);
 
             // Load saved settings
-            const savedArabicFont = localStorage.getItem('arabicFont') || 'Amiri Quran';
+            const savedArabicFont = localStorage.getItem('arabicFont') || 'KFGQPC Hafs';
             const savedArabicSize = localStorage.getItem('arabicSize') || '2.2';
             const savedTafsirFont = localStorage.getItem('tafsirFont') || 'IBM Plex Sans Arabic';
             const savedTafsirSize = localStorage.getItem('tafsirSize') || '1.1';
@@ -4103,14 +4103,14 @@
             localStorage.removeItem('tafsirSize');
             localStorage.removeItem('theme');
 
-            document.getElementById('arabicFontSelect').value = 'Amiri Quran';
+            document.getElementById('arabicFontSelect').value = 'KFGQPC Hafs';
             document.getElementById('arabicSizeSlider').value = '2.2';
             document.getElementById('arabicSizeValue').textContent = '2.2';
             document.getElementById('tafsirFontSelect').value = 'IBM Plex Sans Arabic';
             document.getElementById('tafsirSizeSlider').value = '1.1';
             document.getElementById('tafsirSizeValue').textContent = '1.1';
 
-            document.documentElement.style.setProperty('--arabic-font', 'Amiri Quran');
+            document.documentElement.style.setProperty('--arabic-font', 'KFGQPC Hafs');
             document.documentElement.style.setProperty('--arabic-size', '2.2rem');
             document.documentElement.style.setProperty('--tafsir-font', 'IBM Plex Sans Arabic');
             document.documentElement.style.setProperty('--tafsir-size', '1.1rem');
