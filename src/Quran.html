@@ -2983,6 +2983,21 @@
                 <div style="display: flex; flex-direction: column; gap: 24px;">
                     <!-- Goals Card -->
                     <div style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition);">
+                        <!-- Streak Badge -->
+                        <div id="streakBadgeContainer" style="background: linear-gradient(135deg, #58cc02 0%, #46a302 100%); border-radius: 12px; padding: 16px 24px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(88, 204, 2, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div style="font-size: 2.5rem;">🌱</div>
+                                <div style="display: flex; flex-direction: column;">
+                                    <div style="font-size: 2rem; font-weight: 800; color: white; line-height: 1;" id="streakDays">0</div>
+                                    <div style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.9); font-weight: 600;">day streak <span style="color: rgba(255, 255, 255, 0.6);">›</span></div>
+                                </div>
+                            </div>
+                            <button onclick="requireLogin('reading-goal')" style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.3); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif; display: flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-bullseye"></i>
+                                دانانا ئامانجێ
+                            </button>
+                        </div>
+
                         <h3 style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-bullseye"></i>
                             ئامانجەکانت لە قورئان
@@ -2992,7 +3007,7 @@
                         </p>
                         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                             <button onclick="requireLogin('goals')" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif;">
-                                <i class="fas fa-plus"></i> دروستکردنی ئامانج
+                                <i class="fas fa-plus"></i> بینینی ئامانجەکان
                             </button>
                         </div>
                     </div>
@@ -3473,6 +3488,7 @@
                 loadUserData();
                 loadRandomAyah();
                 startRandomAyahTimer();
+                updateStreakBadge(); // Update streak badge
                 updateContinueReading();
                 handleUrlParameters();
 
@@ -5265,6 +5281,71 @@
             setInterval(updateTimer, 1000);
         }
 
+        // Update Streak Badge on main page
+        function updateStreakBadge() {
+            if (!isUserAuthenticated || !currentUser) {
+                // Hide streak badge for non-logged-in users
+                const streakContainer = document.getElementById('streakBadgeContainer');
+                if (streakContainer) {
+                    streakContainer.style.display = 'none';
+                }
+                return;
+            }
+
+            const userKey = 'quran_data_' + currentUser.sub;
+            const saved = localStorage.getItem(userKey);
+
+            let streak = 0;
+            if (saved) {
+                const data = JSON.parse(saved);
+                const dailyActivity = data.dailyActivity || {};
+
+                // Calculate streak
+                const today = new Date();
+                let checkDate = new Date(today);
+                checkDate.setDate(checkDate.getDate() - 1); // Start from yesterday
+
+                while (true) {
+                    const dateKey = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
+                    if (dailyActivity[dateKey] && dailyActivity[dateKey].minutes > 0) {
+                        streak++;
+                        checkDate.setDate(checkDate.getDate() - 1);
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            // Update badge display
+            const streakDaysEl = document.getElementById('streakDays');
+            const streakContainer = document.getElementById('streakBadgeContainer');
+
+            if (streakDaysEl) {
+                streakDaysEl.textContent = streak;
+            }
+
+            // Change design based on streak
+            if (streakContainer) {
+                if (streak === 0) {
+                    // No streak - gray/neutral design
+                    streakContainer.style.background = 'linear-gradient(135deg, #6c757d 0%, #495057 100%)';
+                    streakContainer.style.boxShadow = '0 4px 12px rgba(108, 117, 125, 0.3)';
+                } else if (streak < 7) {
+                    // Short streak - green
+                    streakContainer.style.background = 'linear-gradient(135deg, #58cc02 0%, #46a302 100%)';
+                    streakContainer.style.boxShadow = '0 4px 12px rgba(88, 204, 2, 0.3)';
+                } else if (streak < 30) {
+                    // Medium streak - gold
+                    streakContainer.style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
+                    streakContainer.style.boxShadow = '0 4px 12px rgba(255, 193, 7, 0.4)';
+                } else {
+                    // Long streak - rainbow/fire
+                    streakContainer.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 50%, #c44569 100%)';
+                    streakContainer.style.boxShadow = '0 4px 12px rgba(255, 107, 107, 0.4)';
+                }
+            }
+        }
+
         // User Data Management
         function loadUserData() {
             if (!isUserAuthenticated || !currentUser) return;
@@ -5837,6 +5918,8 @@
                     window.location.href = 'goals.html';
                 } else if (feature === 'bookmarks') {
                     window.location.href = 'bookmarks.html';
+                } else if (feature === 'reading-goal') {
+                    window.location.href = 'reading-goal.html';
                 }
             } else {
                 document.getElementById('loginRequiredOverlay').classList.add('active');
