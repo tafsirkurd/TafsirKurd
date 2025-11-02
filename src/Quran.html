@@ -5448,6 +5448,11 @@
                 if (!data.dailyActivity) data.dailyActivity = {};
                 if (!data.currentPosition) data.currentPosition = { surah: 1, ayah: 1, scrollPosition: 0, timestamp: Date.now() };
 
+                // Restore reading goal if it exists
+                if (data.readingGoal) {
+                    localStorage.setItem('readingGoal', JSON.stringify(data.readingGoal));
+                }
+
                 // Calculate real stats from session data
                 calculateRealStats(data);
             }
@@ -5465,6 +5470,9 @@
             const saved = localStorage.getItem(userKey);
             const existingData = saved ? JSON.parse(saved) : {};
 
+            // Get reading goal from localStorage (saved separately)
+            const readingGoal = localStorage.getItem('readingGoal');
+
             const data = {
                 stats: userStats,
                 bookmarks: bookmarkedAyahs,
@@ -5475,7 +5483,8 @@
                 sessions: existingData.sessions || [],
                 dailyActivity: existingData.dailyActivity || {},
                 currentPosition: existingData.currentPosition || { surah: 1, ayah: 1, scrollPosition: 0, timestamp: Date.now() },
-                notes: existingData.notes || []
+                notes: existingData.notes || [],
+                readingGoal: readingGoal ? JSON.parse(readingGoal) : null // Save reading goal with user data
             };
 
             localStorage.setItem(userKey, JSON.stringify(data));
