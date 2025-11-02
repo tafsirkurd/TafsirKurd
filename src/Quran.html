@@ -2986,7 +2986,7 @@
                         <!-- Streak Badge -->
                         <div id="streakBadgeContainer" onclick="requireLogin('goals')" style="background: linear-gradient(135deg, #58cc02 0%, #46a302 100%); border-radius: 12px; padding: 16px 24px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(88, 204, 2, 0.3); cursor: pointer; transition: all 0.3s;">
                             <div style="display: flex; align-items: center; gap: 16px;">
-                                <div style="font-size: 2.5rem;">🌱</div>
+                                <div id="streakEmoji" style="font-size: 2.5rem;">🌱</div>
                                 <div style="display: flex; flex-direction: column;">
                                     <div style="font-size: 2rem; font-weight: 800; color: white; line-height: 1;" id="streakDays">0</div>
                                     <a href="/goals" style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.9); font-weight: 600; text-decoration: none; display: block;">day streak <span style="color: rgba(255, 255, 255, 0.6);">›</span></a>
@@ -5300,11 +5300,18 @@
                 const data = JSON.parse(saved);
                 const dailyActivity = data.dailyActivity || {};
 
-                // Calculate streak
+                // Calculate streak - including today
                 const today = new Date();
                 let checkDate = new Date(today);
-                checkDate.setDate(checkDate.getDate() - 1); // Start from yesterday
 
+                // Check today first
+                const todayKey = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
+                if (dailyActivity[todayKey] && dailyActivity[todayKey].minutes > 0) {
+                    streak = 1;
+                }
+
+                // Then check previous days
+                checkDate.setDate(checkDate.getDate() - 1); // Start from yesterday
                 while (true) {
                     const dateKey = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
                     if (dailyActivity[dateKey] && dailyActivity[dateKey].minutes > 0) {
@@ -5318,10 +5325,32 @@
 
             // Update badge display
             const streakDaysEl = document.getElementById('streakDays');
+            const streakEmojiEl = document.getElementById('streakEmoji');
             const streakContainer = document.getElementById('streakBadgeContainer');
 
             if (streakDaysEl) {
                 streakDaysEl.textContent = streak;
+            }
+
+            // Update emoji based on streak
+            if (streakEmojiEl) {
+                if (streak === 0) {
+                    streakEmojiEl.textContent = '💤';
+                } else if (streak < 3) {
+                    streakEmojiEl.textContent = '🌱';
+                } else if (streak < 7) {
+                    streakEmojiEl.textContent = '🌿';
+                } else if (streak < 14) {
+                    streakEmojiEl.textContent = '🪴';
+                } else if (streak < 30) {
+                    streakEmojiEl.textContent = '🌳';
+                } else if (streak < 60) {
+                    streakEmojiEl.textContent = '🏆';
+                } else if (streak < 100) {
+                    streakEmojiEl.textContent = '👑';
+                } else {
+                    streakEmojiEl.textContent = '🔥';
+                }
             }
 
             // Change design based on streak
