@@ -208,6 +208,79 @@
             transform: scale(1.1);
         }
 
+        /* Goal Details Card */
+        .goal-details-card {
+            background: linear-gradient(135deg, var(--primary) 0%, #333 100%);
+            color: var(--accent);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .goal-details-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .goal-details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .goal-details-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .goal-details-description {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .goal-details-icon {
+            font-size: 3rem;
+            opacity: 0.3;
+        }
+
+        .goal-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .goal-detail-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .goal-detail-label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .goal-detail-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
         /* Goal Progress */
         .goal-section {
             margin-bottom: 40px;
@@ -484,6 +557,20 @@
                 پێشکەوتن
             </h2>
 
+            <!-- Goal Details Card -->
+            <div class="goal-details-card" id="goalDetailsCard" style="display: none;">
+                <div class="goal-details-header">
+                    <div>
+                        <div class="goal-details-title" id="goalDetailsTitle">ئامانجا تە</div>
+                        <div class="goal-details-description" id="goalDetailsDescription"></div>
+                    </div>
+                    <div class="goal-details-icon">🎯</div>
+                </div>
+                <div class="goal-details-grid" id="goalDetailsGrid">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+
             <div class="streak-container">
                 <div class="streak-left">
                     <div class="streak-number" id="streakNumber">0</div>
@@ -609,6 +696,9 @@
             // Apply goal settings (override what was loaded from quran_data)
             dailyGoalMinutes = goalMinutes;
 
+            // Render goal details card
+            renderGoalDetails();
+
             renderWeekProgress();
             renderCalendar();
             updateStreak();
@@ -616,6 +706,169 @@
             document.getElementById('currentYear').textContent = currentYear;
             document.getElementById('manualDate').valueAsDate = new Date();
         });
+
+        function renderGoalDetails() {
+            if (!currentGoal) return;
+
+            const card = document.getElementById('goalDetailsCard');
+            const title = document.getElementById('goalDetailsTitle');
+            const description = document.getElementById('goalDetailsDescription');
+            const grid = document.getElementById('goalDetailsGrid');
+
+            // Show the card
+            card.style.display = 'block';
+
+            // Set title and description
+            title.textContent = currentGoal.name || 'ئامانجا تە';
+            description.textContent = currentGoal.description || '';
+
+            // Build details grid
+            grid.innerHTML = '';
+
+            // Add goal type detail
+            addDetailItem(grid, 'جۆرا ئامانجێ', getGoalTypeLabel(currentGoal.type));
+
+            // Add criteria detail
+            addDetailItem(grid, 'پێوەر', getCriteriaLabel(currentGoal.criteria));
+
+            // Add target detail
+            addDetailItem(grid, 'ئامانجا رۆژانە', `${currentGoal.target} ${getCriteriaUnit(currentGoal.criteria)}`);
+
+            // Add frequency detail
+            addDetailItem(grid, 'دووبارەبوون', getFrequencyLabel(currentGoal.frequency));
+
+            // Add flow details if available
+            if (currentGoal.flow) {
+                if (currentGoal.flow.step2) {
+                    addDetailItem(grid, 'هەلبژاردنا ١', getFlowLabel(currentGoal.type, 'step2', currentGoal.flow.step2));
+                }
+                if (currentGoal.flow.step3) {
+                    addDetailItem(grid, 'هەلبژاردنا ٢', getFlowLabel(currentGoal.type, 'step3', currentGoal.flow.step3));
+                }
+                if (currentGoal.flow.step4) {
+                    addDetailItem(grid, 'هەلبژاردنا ٣', getFlowLabel(currentGoal.type, 'step4', currentGoal.flow.step4));
+                }
+            }
+
+            // Add start date
+            const startDate = new Date(currentGoal.startDate);
+            addDetailItem(grid, 'دەستپێکرن', startDate.toLocaleDateString('ku'));
+        }
+
+        function addDetailItem(container, label, value) {
+            const item = document.createElement('div');
+            item.className = 'goal-detail-item';
+            item.innerHTML = `
+                <div class="goal-detail-label">${label}</div>
+                <div class="goal-detail-value">${value}</div>
+            `;
+            container.appendChild(item);
+        }
+
+        function getGoalTypeLabel(type) {
+            const labels = {
+                '10min': 'خواندنا ١٠ خولەکان',
+                '30days': 'قورئانا ٣٠ رۆژان',
+                '1year': 'قورئانا ساڵەکێ',
+                'custom': 'تایبەت'
+            };
+            return labels[type] || type;
+        }
+
+        function getCriteriaLabel(criteria) {
+            const labels = {
+                'time': 'کات',
+                'pages': 'لاپەڕە',
+                'ayahs': 'ئایەت',
+                'surahs': 'سوورە',
+                'juz': 'جوز',
+                'verses': 'ئایەت'
+            };
+            return labels[criteria] || criteria;
+        }
+
+        function getCriteriaUnit(criteria) {
+            const units = {
+                'time': 'خولەک',
+                'pages': 'لاپەڕە',
+                'ayahs': 'ئایەت',
+                'surahs': 'سوورە',
+                'juz': 'جوز',
+                'verses': 'ئایەت'
+            };
+            return units[criteria] || '';
+        }
+
+        function getFrequencyLabel(frequency) {
+            const labels = {
+                'daily': 'رۆژانە',
+                'weekly': 'هەفتانە',
+                'monthly': 'مەهانە',
+                '5days': '٥ رۆژ/هەفتە',
+                '3days': '٣ رۆژ/هەفتە'
+            };
+            return labels[frequency] || frequency;
+        }
+
+        function getFlowLabel(goalType, step, value) {
+            // Return Kurdish labels based on goal type and step
+            const flowLabels = {
+                '1year': {
+                    step2: {
+                        '1time': 'جارەکێ د ساڵێ',
+                        '2times': 'دوو جاران د ساڵێ',
+                        '3times': 'سێ جاران د ساڵێ'
+                    },
+                    step3: {
+                        'none': 'هەر رۆژێ بخێنە',
+                        'friday': 'هەینی بەتاڵ',
+                        'weekend': 'کۆتایی هەفتە بەتاڵ'
+                    },
+                    step4: {
+                        'weekly': 'پێداچوونەوەیا هەفتانە',
+                        'monthly': 'پێداچوونەوەیا مەهانە',
+                        'quarterly': 'پێداچوونەوەیا سێ مەهان'
+                    }
+                },
+                '30days': {
+                    step2: {
+                        'standard': '١ جوز/رۆژ',
+                        'intensive': '٢ جوز/رۆژ',
+                        'relaxed': '١ جوز/٢ رۆژ'
+                    },
+                    step3: {
+                        'tajweed': 'ب تەجویدێ',
+                        'understanding': 'ب تەفسیرێ',
+                        'memorization': 'حیڤز کرن',
+                        'both': 'تەجوید و تەفسیر'
+                    },
+                    step4: {
+                        'juz1': 'ل جوزا ١',
+                        'juz30': 'ل جوزا ٣٠',
+                        'juz29': 'ل جوزا ٢٩'
+                    }
+                },
+                '10min': {
+                    step2: {
+                        'daily': 'هەر رۆژێ',
+                        '5days': '٥ رۆژ/هەفتە',
+                        '3days': '٣ رۆژ/هەفتە'
+                    },
+                    step3: {
+                        'morning': 'سبەحێ',
+                        'afternoon': 'پێشڤانێ',
+                        'evening': 'ئێڤارێ',
+                        'flexible': 'دەمەکێ نەدیاری'
+                    }
+                }
+            };
+
+            if (flowLabels[goalType] && flowLabels[goalType][step] && flowLabels[goalType][step][value]) {
+                return flowLabels[goalType][step][value];
+            }
+
+            return value;
+        }
 
         function loadData() {
             // Load REAL data from user's quran_data

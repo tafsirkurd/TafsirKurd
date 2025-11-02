@@ -589,13 +589,149 @@
 
     <script>
         let currentStep = 1;
-        let selectedGoal = '10min';
+        let selectedGoal = null;
         let selectedFrequency = 'daily';
         let selectedCriteria = 'pages';
         let targetValue = 1;
+        let goalDetails = {}; // Store all goal-specific details
 
         // Kurdish day names
         const kurdishDays = ['یەکشەممە', 'دووشەممە', 'سێشەممە', 'چوارشەممە', 'پێنجشەممە', 'هەینی', 'شەممە'];
+
+        // Define specific flows for each goal type
+        const goalFlows = {
+            '10min': {
+                name: 'خواندنا ١٠ خولەکان رۆژانە',
+                description: 'ئامانجا ساکار بۆ دەستپێکەران',
+                defaultCriteria: 'time',
+                defaultTarget: 10,
+                defaultFrequency: 'daily',
+                steps: {
+                    step2: {
+                        title: 'ژمارا رۆژێن هەفتێیێ دیاربکە',
+                        subtitle: 'د هەفتێیێ دا چەند رۆژ دێت بخێنی؟',
+                        options: [
+                            { value: 'daily', label: 'هەر رۆژێ (٧ رۆژ)', description: 'بێ بهاربوونێ' },
+                            { value: '5days', label: '٥ رۆژ د هەفتێیێ', description: 'بەرنامەکا بێ فشارێ' },
+                            { value: '3days', label: '٣ رۆژ د هەفتێیێ', description: 'بۆ کار یان قوتابیێن بەرگریدار' }
+                        ]
+                    },
+                    step3: {
+                        title: 'کاتا خواندنا خوە دیاربکە',
+                        subtitle: 'کەنگە ئێدی بخێنی؟',
+                        options: [
+                            { value: 'morning', label: 'سبەحێ (پاش نڤێژا بەرێ)', description: 'دەمەکێ دێک و خاش' },
+                            { value: 'afternoon', label: 'پێشڤانێ', description: 'پاش کارێ یان درسێ' },
+                            { value: 'evening', label: 'ئێڤارێ (پێش نڤێژا عشێ)', description: 'پێش خوە بەر دان' },
+                            { value: 'flexible', label: 'نە دیاری', description: 'ل دەمێ کو پێت بخوازە' }
+                        ]
+                    }
+                }
+            },
+            '30days': {
+                name: 'خواندنا قورئانێ د ٣٠ رۆژان',
+                description: 'ئامانجا کلاسیکی - خواندنا ١ جوزێ هەر رۆژێ',
+                defaultCriteria: 'juz',
+                defaultTarget: 1,
+                defaultFrequency: 'daily',
+                steps: {
+                    step2: {
+                        title: 'رێکا خوێندنێ هەلبژێرە',
+                        subtitle: 'تو چاوا دێت قورئانێ بخوێنی؟',
+                        options: [
+                            { value: 'standard', label: '١ جوز هەر رۆژێ', description: '٣٠ رۆژ = قورئانا تەواو' },
+                            { value: 'intensive', label: '٢ جوز هەر رۆژێ', description: '١٥ رۆژ = قورئانا تەواو' },
+                            { value: 'relaxed', label: '١ جوز هەر ٢ رۆژان', description: '٦٠ رۆژ = قورئانا تەواو' }
+                        ]
+                    },
+                    step3: {
+                        title: 'چۆنیەتیا خوێندنێ',
+                        subtitle: 'تو دێت قورئانێ چ رەنگ بخوێنی؟',
+                        options: [
+                            { value: 'tajweed', label: 'ب تەجویدێ', description: 'خواندنا دروست و سلیم' },
+                            { value: 'understanding', label: 'ب تەفسیرێ', description: 'خواندن و تێگەهشتن' },
+                            { value: 'memorization', label: 'حیڤز کرن', description: 'خواندن و بیر دارین' },
+                            { value: 'both', label: 'تەجوید و تەفسیر', description: 'خواندنا باش و تێگەهشتن' }
+                        ]
+                    },
+                    step4: {
+                        title: 'یەکەمین جوز دیاربکە',
+                        subtitle: 'تو دێت ل کێڤێ دەست پێبکەی؟',
+                        options: [
+                            { value: 'juz1', label: 'جوزا ١ (الفاتحة)', description: 'دەستپێکا ئاسایی' },
+                            { value: 'juz30', label: 'جوزا ٣٠ (عم)', description: 'سوورێن کورت و ساکار' },
+                            { value: 'juz29', label: 'جوزا ٢٩ (تبارك)', description: 'سوورێن هەرە باو' }
+                        ]
+                    }
+                }
+            },
+            '1year': {
+                name: 'خواندنا قورئانێ د ساڵەکێدا',
+                description: 'بەرنامەکا دورگەهێ بۆ خواندنا دڕ و بێ فشار',
+                defaultCriteria: 'pages',
+                defaultTarget: 2,
+                defaultFrequency: 'daily',
+                steps: {
+                    step2: {
+                        title: 'ئامانجا ساڵانە دیاربکە',
+                        subtitle: 'تو دێت د ساڵەکێدا چەند جار قورئانێ بخوێنی؟',
+                        options: [
+                            { value: '1time', label: 'جارەکێ (٢ لاپەڕە رۆژانە)', description: 'بەرنامەکا ساکار و بێ فشار' },
+                            { value: '2times', label: 'دوو جاران (٤ لاپەڕە رۆژانە)', description: 'بەرنامەکا مامناوەند' },
+                            { value: '3times', label: 'سێ جاران (٦ لاپەڕە رۆژانە)', description: 'بەرنامەکا قورس' }
+                        ]
+                    },
+                    step3: {
+                        title: 'رۆژێن بەتاڵ',
+                        subtitle: 'ئایا دێت رۆژەکێ د هەفتێیێ دا بەتاڵ هێلی؟',
+                        options: [
+                            { value: 'none', label: 'هەر رۆژێ بخێنە', description: 'بەرنامەکا بەردەوام' },
+                            { value: 'friday', label: 'هەینی بەتاڵ', description: 'بۆ کار یان قوتابیێن بەرگریدار' },
+                            { value: 'weekend', label: 'هەینی و شەممە بەتاڵ', description: 'تەنێ ٥ رۆژ د هەفتێیێ' }
+                        ]
+                    },
+                    step4: {
+                        title: 'رێبەریا پێشڤەچوونێ',
+                        subtitle: 'تو دێت چاوا پێشڤەچوونا خوە چاڤێ بگری؟',
+                        options: [
+                            { value: 'weekly', label: 'هەفتانە', description: 'پێداچوونەوەیا هەفتانە' },
+                            { value: 'monthly', label: 'مەهانە', description: 'راپۆرتێن مەهانە' },
+                            { value: 'quarterly', label: 'سێ مەهان جارەکێ', description: 'پێداچوونەوەیا دورگەه' }
+                        ]
+                    }
+                }
+            },
+            'custom': {
+                name: 'ئامانجا تایبەت',
+                description: 'ئامانجەکێ تایبەت دروست بکە کو لگەل تە بگونجیت',
+                defaultCriteria: 'pages',
+                defaultTarget: 5,
+                defaultFrequency: 'daily',
+                steps: {
+                    step2: {
+                        title: 'جۆرا پێوەرێ هەلبژێرە',
+                        subtitle: 'تو دێت پێشڤەچوونا خوە چاوا پێڤەین؟',
+                        options: [
+                            { value: 'time', label: 'کات (خولەک)', description: 'چەندێ دەمێ دێت بخێنی' },
+                            { value: 'pages', label: 'لاپەڕە', description: 'ژمارا لاپەڕان' },
+                            { value: 'ayahs', label: 'ئایەت', description: 'ژمارا ئایەتان' },
+                            { value: 'surahs', label: 'سوورە', description: 'ژمارا سوورەیان' },
+                            { value: 'juz', label: 'جوز', description: 'ژمارا جوزان' }
+                        ]
+                    },
+                    step3: {
+                        title: 'دووبارەبوونا ئامانجێ',
+                        subtitle: 'ئەڤ ئامانج چەندێ جار دووبارە ببە؟',
+                        options: [
+                            { value: 'daily', label: 'رۆژانە', description: 'هەر رۆژێ' },
+                            { value: 'weekly', label: 'هەفتانە', description: 'هەر هەفتێیێ' },
+                            { value: 'monthly', label: 'مەهانە', description: 'هەر مەهەکێ' },
+                            { value: 'custom-days', label: 'ژمارەیەکا دیاری کری', description: 'هەر X رۆژان' }
+                        ]
+                    }
+                }
+            }
+        };
 
         // Setup goal card selection
         document.querySelectorAll('.goal-card').forEach(card => {
@@ -644,6 +780,18 @@
                 alert('تکایە ئامانجەکێ هەلبژێرە');
                 return;
             }
+
+            // Load goal-specific flow and apply defaults
+            const flow = goalFlows[selectedGoal];
+            if (flow) {
+                selectedCriteria = flow.defaultCriteria;
+                targetValue = flow.defaultTarget;
+                selectedFrequency = flow.defaultFrequency;
+
+                // Dynamically update step 2 content
+                renderDynamicStep(2, flow.steps.step2);
+            }
+
             document.getElementById('step1').classList.add('hidden');
             document.getElementById('step3').classList.add('hidden');
             document.getElementById('step2').classList.remove('hidden');
@@ -651,11 +799,56 @@
             updateProgress(2);
         }
 
+        function renderDynamicStep(stepNum, stepData) {
+            if (!stepData) return;
+
+            const stepEl = document.getElementById(`step${stepNum}`);
+            const titleEl = stepEl.querySelector('.left-section h1');
+            const subtitleEl = stepEl.querySelector('.left-section .subtitle');
+            const rightSection = stepEl.querySelector('.right-section');
+
+            // Update title and subtitle
+            if (titleEl) titleEl.textContent = stepData.title;
+            if (subtitleEl) subtitleEl.textContent = stepData.subtitle;
+
+            // Clear existing cards and rebuild
+            const existingCards = rightSection.querySelectorAll('.goal-card');
+            existingCards.forEach(card => card.remove());
+
+            // Insert new cards before buttons
+            const buttonsDiv = rightSection.querySelector('.buttons');
+            stepData.options.forEach(option => {
+                const card = document.createElement('div');
+                card.className = 'goal-card';
+                card.dataset.value = option.value;
+                card.innerHTML = `
+                    <div class="goal-icon">${option.icon || '✓'}</div>
+                    <div class="goal-content">
+                        <div class="goal-title">${option.label}</div>
+                        <div class="goal-description">${option.description}</div>
+                    </div>
+                `;
+                card.addEventListener('click', function() {
+                    rightSection.querySelectorAll('.goal-card').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                    goalDetails[`step${stepNum}`] = option.value;
+                });
+                rightSection.insertBefore(card, buttonsDiv);
+            });
+        }
+
         function goToStep3() {
-            if (!selectedFrequency) {
-                alert('تکایە دووبارەبوونەکێ هەلبژێرە');
+            if (!goalDetails.step2) {
+                alert('تکایە هەلبژێرەکا خوە بکە');
                 return;
             }
+
+            // Load goal-specific flow for step 3
+            const flow = goalFlows[selectedGoal];
+            if (flow && flow.steps.step3) {
+                renderDynamicStep(3, flow.steps.step3);
+            }
+
             document.getElementById('step2').classList.add('hidden');
             document.getElementById('step4').classList.add('hidden');
             document.getElementById('step3').classList.remove('hidden');
@@ -664,10 +857,17 @@
         }
 
         function goToStep4() {
-            if (!selectedCriteria) {
-                alert('تکایە پێوەرەکێ هەلبژێرە');
+            if (!goalDetails.step3) {
+                alert('تکایە هەلبژێرەکا خوە بکە');
                 return;
             }
+
+            // Load goal-specific flow for step 4
+            const flow = goalFlows[selectedGoal];
+            if (flow && flow.steps.step4) {
+                renderDynamicStep(4, flow.steps.step4);
+            }
+
             document.getElementById('step3').classList.add('hidden');
             document.getElementById('step5').classList.add('hidden');
             document.getElementById('step4').classList.remove('hidden');
@@ -723,14 +923,25 @@
         }
 
         function startJourney() {
-            // Save goal to localStorage
+            // Get the goal flow information
+            const flow = goalFlows[selectedGoal];
+
+            // Save comprehensive goal data to localStorage
             const goalData = {
                 type: selectedGoal,
+                name: flow ? flow.name : selectedGoal,
+                description: flow ? flow.description : '',
                 frequency: selectedFrequency,
                 criteria: selectedCriteria,
                 target: targetValue,
                 startDate: new Date().toISOString(),
-                completed: false
+                completed: false,
+                details: goalDetails, // Save all the step-by-step choices
+                flow: {
+                    step2: goalDetails.step2 || null,
+                    step3: goalDetails.step3 || null,
+                    step4: goalDetails.step4 || null
+                }
             };
 
             localStorage.setItem('readingGoal', JSON.stringify(goalData));
