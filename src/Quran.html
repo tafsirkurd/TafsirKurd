@@ -2981,7 +2981,23 @@
             <div style="max-width: 1400px; margin: 40px auto; padding: 0 30px; display: grid; grid-template-columns: 1fr 1.5fr; gap: 24px;">
                 <!-- Left Column -->
                 <div style="display: flex; flex-direction: column; gap: 24px;">
-                    <!-- Goals Card -->
+                    <!-- Goals Card for users WITHOUT goals -->
+                    <div id="noGoalsCard" style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition);">
+                        <h3 style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-bullseye"></i>
+                            ئامانجەکانت لە قورئان
+                        </h3>
+                        <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 25px;">
+                            شوێن کەوتنی پێشکەوتنەکەت بکە، ئامانجی تایبەتی خۆت دروست بکە، و بەردەوام بە.
+                        </p>
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            <button onclick="requireLogin('goals')" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif;">
+                                <i class="fas fa-plus"></i> بینینی ئامانجەکان
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Goals Card for users WITH goals -->
                     <div id="goalsCardContainer" style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition); display: none;">
                         <h3 style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-bullseye"></i>
@@ -5282,26 +5298,26 @@
         // Update Streak Badge on main page
         function updateStreakBadge() {
             const goalsCardContainer = document.getElementById('goalsCardContainer');
-
-            // Hide Goals card for non-logged-in users
-            if (!isUserAuthenticated || !currentUser) {
-                if (goalsCardContainer) {
-                    goalsCardContainer.style.display = 'none';
-                }
-                return;
-            }
+            const noGoalsCard = document.getElementById('noGoalsCard');
 
             // Check if user has a reading goal set
             const readingGoal = localStorage.getItem('readingGoal');
+
             if (!readingGoal) {
-                // Hide Goals card if no reading goal is set
+                // No reading goal - show noGoalsCard, hide goalsCardContainer
+                if (noGoalsCard) {
+                    noGoalsCard.style.display = 'block';
+                }
                 if (goalsCardContainer) {
                     goalsCardContainer.style.display = 'none';
                 }
                 return;
             }
 
-            // User has a reading goal, show the Goals card
+            // User has a reading goal - hide noGoalsCard, show goalsCardContainer
+            if (noGoalsCard) {
+                noGoalsCard.style.display = 'none';
+            }
             if (goalsCardContainer) {
                 goalsCardContainer.style.display = 'block';
             }
