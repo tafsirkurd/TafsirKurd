@@ -707,7 +707,7 @@
             renderCalendar();
             updateStreak();
             updateTodayProgress();
-            document.getElementById('currentYear').textContent = currentYear;
+            document.getElementById('currentYear').textContent = KurdishNumbers.toKurdish(currentYear);
             document.getElementById('manualDate').valueAsDate = new Date();
         });
 
@@ -995,7 +995,7 @@
 
         function changeYear(delta) {
             currentYear += delta;
-            document.getElementById('currentYear').textContent = currentYear;
+            document.getElementById('currentYear').textContent = KurdishNumbers.toKurdish(currentYear);
             renderCalendar();
         }
 
@@ -1043,7 +1043,7 @@
 
         function updateStreak() {
             streakDays = calculateStreak();
-            document.getElementById('streakNumber').textContent = streakDays;
+            document.getElementById('streakNumber').textContent = KurdishNumbers.toKurdish(streakDays);
         }
 
         function updateTodayProgress() {
@@ -1052,7 +1052,7 @@
             const percent = Math.min(100, Math.round((todayMinutes / dailyGoalMinutes) * 100));
 
             document.getElementById('progressFill').style.width = percent + '%';
-            document.getElementById('goalPercent').textContent = percent + '%';
+            document.getElementById('goalPercent').textContent = KurdishNumbers.toKurdish(percent) + '%';
 
             // Display goal based on criteria from reading-goal
             let goalText = '';
