@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v14-optimized';
+const CACHE_NAME = 'tafsir-kurd-v15-unsplash-fix';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -34,7 +34,7 @@ const urlsToCache = [
 
 // Install event - cache resources aggressively
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v14-optimized - with aggressive JSON caching');
+  console.log('[ServiceWorker] Installing v15-unsplash-fix - skip external images');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
@@ -62,10 +62,11 @@ self.addEventListener('install', event => {
 
 // Fetch event - Cache First strategy for maximum speed
 self.addEventListener('fetch', event => {
-  // Skip service worker for API requests
+  // Skip service worker for API requests and external images
   if (event.request.url.includes('googleapis.com') ||
       event.request.url.includes('accounts.google.com') ||
       event.request.url.includes('supabase.co') ||
+      event.request.url.includes('unsplash.com') ||
       event.request.url.includes('netlify/functions')) {
     return;
   }
