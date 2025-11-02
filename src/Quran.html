@@ -6039,10 +6039,33 @@
                 navigator.serviceWorker.register('/service-worker.js')
                     .then(registration => {
                         console.log('✅ Service Worker registered successfully:', registration.scope);
+
+                        // Check for updates every time the page loads
+                        registration.update();
+
+                        // When a new service worker is waiting, skip waiting and reload
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New service worker available, skip waiting and reload
+                                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                    window.location.reload();
+                                }
+                            });
+                        });
                     })
                     .catch(error => {
                         console.log('❌ Service Worker registration failed:', error);
                     });
+            });
+
+            // When service worker updates, reload the page
+            let refreshing;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (refreshing) return;
+                refreshing = true;
+                window.location.reload();
             });
         }
 
