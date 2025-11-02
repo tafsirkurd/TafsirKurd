@@ -245,7 +245,7 @@ window.addEventListener('error', function(e) {
                         <div class="stat-icon">
                             <i class="fab fa-instagram"></i>
                         </div>
-                        <div class="stat-number" data-target="65">0</div>
+                        <div class="stat-number" data-target="65">٠</div>
                         <div class="stat-unit">K+</div>
                         <div class="stat-label">فۆڵۆوەرێن ئینستاگرامى</div>
                     </div>
@@ -253,7 +253,7 @@ window.addEventListener('error', function(e) {
                         <div class="stat-icon">
                             <i class="fab fa-tiktok"></i>
                         </div>
-                        <div class="stat-number" data-target="10">0</div>
+                        <div class="stat-number" data-target="10">٠</div>
                         <div class="stat-unit">K+</div>
                         <div class="stat-label">فۆڵۆوەرێن تیکتۆکى</div>
                     </div>
@@ -261,7 +261,7 @@ window.addEventListener('error', function(e) {
                         <div class="stat-icon">
                             <i class="fas fa-eye"></i>
                         </div>
-                        <div class="stat-number" data-target="25">0</div>
+                        <div class="stat-number" data-target="25">٠</div>
                         <div class="stat-unit">M+</div>
                         <div class="stat-label">ژمارا بینەران</div>
                     </div>
@@ -269,7 +269,7 @@ window.addEventListener('error', function(e) {
                         <div class="stat-icon">
                             <i class="fas fa-video"></i>
                         </div>
-                        <div class="stat-number" data-target="1000">0</div>
+                        <div class="stat-number" data-target="1000">٠</div>
                         <div class="stat-unit">+</div>
                         <div class="stat-label">ڤیدیۆیێن بەلاڤکرین</div>
                     </div>
@@ -973,7 +973,7 @@ function animateCounters() {
             const progress = Math.min(elapsed / duration, 1);
             const easeOutCubic = 1 - Math.pow(1 - progress, 3);
             const current = Math.floor(easeOutCubic * target);
-            counter.textContent = current;
+            counter.textContent = KurdishNumbers.toKurdish(current);
             if (progress < 1) {
                 requestAnimationFrame(updateCounter);
             }
