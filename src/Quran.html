@@ -3021,7 +3021,7 @@
                             <div style="display: flex; align-items: center; gap: 16px;">
                                 <div id="streakEmoji" style="font-size: 2.5rem;">🌱</div>
                                 <div style="display: flex; flex-direction: column;">
-                                    <div style="font-size: 2rem; font-weight: 800; color: white; line-height: 1;" id="streakDays">0</div>
+                                    <div style="font-size: 2rem; font-weight: 800; color: white; line-height: 1;" id="streakDays">٠</div>
                                     <a href="/goals" style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.9); font-weight: 600; text-decoration: none; display: block;">day streak <span style="color: rgba(255, 255, 255, 0.6);">›</span></a>
                                 </div>
                             </div>
@@ -5404,7 +5404,7 @@
             const streakContainer = document.getElementById('streakBadgeContainer');
 
             if (streakDaysEl) {
-                streakDaysEl.textContent = streak;
+                streakDaysEl.textContent = KurdishNumbers.toKurdish(streak);
             }
 
             // Update emoji based on streak
