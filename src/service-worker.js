@@ -1,22 +1,38 @@
-const CACHE_NAME = 'tafsir-kurd-v6';
+const CACHE_NAME = 'tafsir-kurd-v10-optimized';
 const urlsToCache = [
   '/',
-  '/Quran.html',
-  '/bookmarks.html',
   '/index.html',
+  '/Quran.html',
+  '/Dashboard.html',
+  '/bookmarks.html',
+  '/profile.html',
+  '/goals.html',
+  '/settings.html',
+  '/login.html',
+  '/onboarding.html',
+  '/complete-signup.html',
+  '/privacy-policy.html',
+  '/terms-and-conditions.html',
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
+  '/styles/Style.css',
+  '/assets/fonts/fonts.css',
+  '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2',
+  '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.woff2',
+  '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2',
+  '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2',
+  '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-700.woff2',
+  '/assets/fonts/amiri-quran-v1-arabic-regular.woff2',
   '/assets/fonts/SurahName.ttf',
-  'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap',
-  'https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+  '/assets/fontawesome/all.min.css',
+  '/assets/images/logo.png',
+  '/manifest.json'
 ];
 
-// Install event - cache resources
+// Install event - cache resources aggressively
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v6 - clearing all old caches');
+  console.log('[ServiceWorker] Installing v10-optimized - aggressive caching enabled');
   event.waitUntil(
-    // First, delete ALL old caches
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
@@ -27,58 +43,69 @@ self.addEventListener('install', event => {
         })
       );
     }).then(() => {
-      // Then cache new resources
       return caches.open(CACHE_NAME);
     }).then(cache => {
-      console.log('[ServiceWorker] Opened new cache');
+      console.log('[ServiceWorker] Caching all resources for offline support');
       return cache.addAll(urlsToCache.map(url => {
         return new Request(url, { cache: 'reload' });
       })).catch(error => {
-        console.error('[ServiceWorker] Failed to cache:', error);
+        console.error('[ServiceWorker] Failed to cache some resources:', error);
+        // Continue even if some resources fail
       });
     })
   );
   self.skipWaiting();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - Cache First strategy for maximum speed
 self.addEventListener('fetch', event => {
-  // Skip caching for Google OAuth and API requests - let browser handle natively
+  // Skip service worker for API requests
   if (event.request.url.includes('googleapis.com') ||
       event.request.url.includes('accounts.google.com') ||
-      event.request.url.includes('supabase.co')) {
-    return; // Don't intercept these requests at all
+      event.request.url.includes('supabase.co') ||
+      event.request.url.includes('netlify/functions')) {
+    return;
   }
 
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Cache hit - return response
+        // Cache hit - serve immediately for instant performance
         if (response) {
+          // Update cache in background for HTML pages
+          if (event.request.mode === 'navigate') {
+            fetch(event.request).then(freshResponse => {
+              if (freshResponse && freshResponse.status === 200) {
+                caches.open(CACHE_NAME).then(cache => {
+                  cache.put(event.request, freshResponse);
+                });
+              }
+            }).catch(() => {});
+          }
           return response;
         }
 
-        return fetch(event.request).then(
-          response => {
-            // Check if valid response
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-
-            // Clone the response
-            const responseToCache = response.clone();
-
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
-
+        // No cache - fetch from network
+        return fetch(event.request).then(response => {
+          // Only cache valid responses
+          if (!response || response.status !== 200) {
             return response;
           }
-        );
+
+          // Cache for future offline use
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+
+          return response;
+        });
       }).catch(() => {
-        // Return offline page if available
-        return caches.match('/Quran.html');
+        // Offline fallback
+        if (event.request.mode === 'navigate') {
+          return caches.match('/Quran.html');
+        }
+        return new Response('Offline', { status: 503 });
       })
   );
 });
