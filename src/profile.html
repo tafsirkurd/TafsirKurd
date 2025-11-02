@@ -1013,6 +1013,25 @@
 
         function signOut() {
             if (confirm('ئایا دڵنیایت لە دەرچوون؟')) {
+                // Save user data before logging out
+                const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+                const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
+
+                if (isAuthenticated && user) {
+                    const userKey = 'quran_data_' + user.sub;
+                    const saved = localStorage.getItem(userKey);
+                    const existingData = saved ? JSON.parse(saved) : {};
+
+                    // Save reading goal with user data
+                    const readingGoal = localStorage.getItem('readingGoal');
+                    if (readingGoal) {
+                        existingData.readingGoal = JSON.parse(readingGoal);
+                        localStorage.setItem(userKey, JSON.stringify(existingData));
+                        console.log('✅ User data saved before logout');
+                    }
+                }
+
+                // Now logout
                 localStorage.removeItem('isAuthenticated');
                 localStorage.removeItem('user');
                 window.location.href = '/login';
