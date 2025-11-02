@@ -48,6 +48,14 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
+        @font-face {
+            font-family: "SurahName";
+            src: url("/assets/fonts/SurahName.ttf") format("truetype");
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
         /* Force KFGQPC Hafs Uthmanic Script for Quran ayah text */
         .ayah-arabic,
         .arabic-text {
@@ -610,9 +618,9 @@
         }
 
         .surah-arabic-sidebar {
-            font-family: 'IBM Plex Sans Arabic', 'Scheherazade New', 'Traditional Arabic', serif;
+            font-family: 'SurahName', 'Scheherazade New', 'Traditional Arabic', serif;
             font-size: 1.6rem;
-            font-weight: 700;
+            font-weight: normal;
             color: var(--primary);
             margin-bottom: 3px;
             white-space: nowrap;
@@ -1406,9 +1414,9 @@
         }
 
         .surah-card-arabic {
-            font-family: 'IBM Plex Sans Arabic', 'Scheherazade New', 'Traditional Arabic', serif;
+            font-family: 'SurahName', 'Scheherazade New', 'Traditional Arabic', serif;
             font-size: 2.8rem;
-            font-weight: 700;
+            font-weight: normal;
             color: var(--primary);
             margin-bottom: 5px;
         }
