@@ -75,7 +75,7 @@
             --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
             --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             --sidebar-width: 350px;
-            --arabic-font: 'Scheherazade New';
+            --arabic-font: 'Amiri Quran';
             --tafsir-font: 'IBM Plex Sans Arabic';
             --arabic-size: 2.2rem;
             --tafsir-size: 1.1rem;
@@ -1205,7 +1205,7 @@
         }
 
         .search-result-text {
-            font-family: 'Scheherazade New', serif;
+            font-family: 'Amiri Quran', 'Scheherazade New', serif;
             font-size: 1.5rem;
             line-height: 1.8;
             color: var(--text);
@@ -2976,7 +2976,7 @@
                         </div>
                     </div>
 
-                    <div id="randomAyahArabic" style="font-family: 'Scheherazade New', serif; font-size: 2.2rem; line-height: 2; text-align: center; margin-bottom: 20px; padding: 25px; background: var(--bg); border-radius: 12px; min-height: 100px; display: flex; align-items: center; justify-content: center;">
+                    <div id="randomAyahArabic" style="font-family: 'Amiri Quran', 'Scheherazade New', serif; font-size: 2.2rem; line-height: 2; text-align: center; margin-bottom: 20px; padding: 25px; background: var(--bg); border-radius: 12px; min-height: 100px; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
                     </div>
 
@@ -3759,7 +3759,7 @@
             localStorage.setItem('theme', theme);
 
             // Load saved settings
-            const savedArabicFont = localStorage.getItem('arabicFont') || 'Scheherazade New';
+            const savedArabicFont = localStorage.getItem('arabicFont') || 'Amiri Quran';
             const savedArabicSize = localStorage.getItem('arabicSize') || '2.2';
             const savedTafsirFont = localStorage.getItem('tafsirFont') || 'IBM Plex Sans Arabic';
             const savedTafsirSize = localStorage.getItem('tafsirSize') || '1.1';
@@ -4103,14 +4103,14 @@
             localStorage.removeItem('tafsirSize');
             localStorage.removeItem('theme');
 
-            document.getElementById('arabicFontSelect').value = 'Scheherazade New';
+            document.getElementById('arabicFontSelect').value = 'Amiri Quran';
             document.getElementById('arabicSizeSlider').value = '2.2';
             document.getElementById('arabicSizeValue').textContent = '2.2';
             document.getElementById('tafsirFontSelect').value = 'IBM Plex Sans Arabic';
             document.getElementById('tafsirSizeSlider').value = '1.1';
             document.getElementById('tafsirSizeValue').textContent = '1.1';
 
-            document.documentElement.style.setProperty('--arabic-font', 'Scheherazade New');
+            document.documentElement.style.setProperty('--arabic-font', 'Amiri Quran');
             document.documentElement.style.setProperty('--arabic-size', '2.2rem');
             document.documentElement.style.setProperty('--tafsir-font', 'IBM Plex Sans Arabic');
             document.documentElement.style.setProperty('--tafsir-size', '1.1rem');
