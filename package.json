@@ -1,19 +1,45 @@
 {
-    "name": "tafsir-kurd-dashboard",
-    "version": "1.0.0",
-    "description": "Admin dashboard for Tafsir Kurd website",
+    "name": "tafsir-kurd",
+    "version": "2.0.0",
+    "description": "Modern, fast, and offline-capable Quran platform with Kurdish Tafsir - قورئانا پیرۆز ب تەفسیرا کوردی",
     "main": "index.js",
     "scripts": {
-        "build": "echo 'No build step required'",
         "dev": "netlify dev",
+        "build": "echo 'No build step required - Static site'",
         "deploy": "netlify deploy",
-        "deploy:prod": "netlify deploy --prod"
+        "deploy:prod": "netlify deploy --prod",
+        "test": "echo 'No tests configured yet'",
+        "lint": "echo 'Linting...'",
+        "format": "echo 'Formatting code...'"
     },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tafsirkurd/tafsir-kurd.git"
+    },
+    "keywords": [
+        "quran",
+        "tafsir",
+        "kurdish",
+        "islamic",
+        "pwa",
+        "offline-first",
+        "supabase"
+    ],
+    "author": "Tafsir Kurd Team",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/tafsirkurd/tafsir-kurd/issues"
+    },
+    "homepage": "https://tafsirkurd.com",
     "dependencies": {
         "@supabase/supabase-js": "^2.55.0",
         "jsonwebtoken": "^9.0.2"
     },
     "devDependencies": {
         "netlify-cli": "^17.0.0"
+    },
+    "engines": {
+        "node": ">=16.0.0",
+        "npm": ">=8.0.0"
     }
 }

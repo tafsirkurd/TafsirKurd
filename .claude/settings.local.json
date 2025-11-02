@@ -26,7 +26,12 @@
       "Bash(echo:*)",
       "Bash(fi)",
       "Bash(node -c:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(netlify functions:list:*)",
+      "Bash(mkdir:*)",
+      "Bash(find:*)",
+      "Bash(for file in D:WEBSITEsrc/*.html)",
+      "Bash(do echo '=== $(basename $file) ===')"
     ],
     "deny": [],
     "ask": []
