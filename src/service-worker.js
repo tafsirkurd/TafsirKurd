@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v16-hafs-font';
+const CACHE_NAME = 'tafsir-kurd-v17-google-fix';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -35,7 +35,7 @@ const urlsToCache = [
 
 // Install event - cache resources aggressively
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v16-hafs-font - KFGQPC Hafs Uthmanic Script');
+  console.log('[ServiceWorker] Installing v17-google-fix - Skip Google profile images');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
@@ -65,6 +65,7 @@ self.addEventListener('install', event => {
 self.addEventListener('fetch', event => {
   // Skip service worker for API requests and external images
   if (event.request.url.includes('googleapis.com') ||
+      event.request.url.includes('googleusercontent.com') ||
       event.request.url.includes('accounts.google.com') ||
       event.request.url.includes('supabase.co') ||
       event.request.url.includes('unsplash.com') ||
