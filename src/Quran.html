@@ -48,18 +48,8 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
-        @font-face {
-            font-family: "SurahName";
-            src: url("/assets/fonts/surah-name-v4.woff2") format("woff2");
-            font-weight: normal;
-            font-style: normal;
-            font-display: swap;
-        }
-
-        /* Force KFGQPC Hafs Uthmanic Script for all Quran text */
+        /* Force KFGQPC Hafs Uthmanic Script for Quran ayah text */
         .ayah-arabic,
-        .surah-card-arabic,
-        .surah-arabic-sidebar,
         .arabic-text {
             font-family: 'KFGQPC Hafs', 'Scheherazade New', 'Traditional Arabic', serif !important;
         }
@@ -620,9 +610,9 @@
         }
 
         .surah-arabic-sidebar {
-            font-family: 'SurahName', serif;
+            font-family: 'IBM Plex Sans Arabic', 'Scheherazade New', 'Traditional Arabic', serif;
             font-size: 1.6rem;
-            font-weight: normal;
+            font-weight: 700;
             color: var(--primary);
             margin-bottom: 3px;
             white-space: nowrap;
@@ -1416,9 +1406,9 @@
         }
 
         .surah-card-arabic {
-            font-family: 'SurahName', serif;
+            font-family: 'IBM Plex Sans Arabic', 'Scheherazade New', 'Traditional Arabic', serif;
             font-size: 2.8rem;
-            font-weight: normal;
+            font-weight: 700;
             color: var(--primary);
             margin-bottom: 5px;
         }
@@ -2515,14 +2505,6 @@
         .hidden {
             display: none;
         }
-
-        /* Use SurahName decorative font for all Surah names */
-        .surah-card-arabic,
-        .surah-arabic-sidebar {
-            font-family: "SurahName", serif !important;
-            font-weight: normal;
-            font-style: normal;
-        }
     </style>
 </head>
 <body>
@@ -3326,12 +3308,6 @@
         };
 
         // Surah Names - ALL 114 SURAHS
-        // Helper function to get decorative surah name code for SurahName font
-        function getDecorativeSurahCode(surahNumber) {
-            // SurahName font uses codes like "surah001", "surah002", etc.
-            return `surah${String(surahNumber).padStart(3, '0')}`;
-        }
-
         const surahNames = {
             1: { arabic: "الفاتحة", english: "Al-Fatihah", ayahs: 7 },
             2: { arabic: "البقرة", english: "Al-Baqarah", ayahs: 286 },
@@ -4179,12 +4155,11 @@
                     const card = document.createElement('div');
                     card.className = 'surah-card';
                     card.onclick = () => openSurah(i);
-                    const decorativeCode = getDecorativeSurahCode(i);
                     card.innerHTML = `
                         <div class="surah-card-header">
                             <div class="surah-card-number">${KurdishNumbers.toKurdish(i)}</div>
                             <div class="surah-card-info">
-                                <div class="surah-card-arabic">${decorativeCode}</div>
+                                <div class="surah-card-arabic">${info.arabic}</div>
                                 <div class="surah-card-english">${info.english}</div>
                             </div>
                         </div>
@@ -4242,11 +4217,10 @@
                 item.className = 'surah-item-sidebar';
                 item.dataset.surah = i;
 
-                const decorativeCode = getDecorativeSurahCode(i);
                 const surahContent = `
                     <div class="surah-num-sidebar">${KurdishNumbers.toKurdish(i)}</div>
                     <div class="surah-info-sidebar">
-                        <div class="surah-arabic-sidebar">${decorativeCode}</div>
+                        <div class="surah-arabic-sidebar">${info.arabic}</div>
                         <div class="surah-name-sidebar">${info.english}</div>
                     </div>
                 `;
