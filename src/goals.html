@@ -567,6 +567,7 @@
         let dailyGoalMinutes = 10;
         let streakDays = 0;
         let currentUser = null;
+        let currentGoal = null; // Store the full goal object
 
         const daysOfWeek = ['یەکشەممە', 'دووشەممە', 'سێشەممە', 'چوارشەممە', 'پێنجشەممە', 'هەینی', 'شەممە'];
         const monthNames = ['کانوونی دووەم', 'شوبات', 'ئازار', 'نیسان', 'ئایار', 'حوزەیران', 'تەممووز', 'ئاب', 'ئەیلوول', 'تشرینی یەکەم', 'تشرینی دووەم', 'کانوونی یەکەم'];
@@ -589,8 +590,19 @@
             }
 
             // Load goal settings from reading-goal setup
-            const goal = JSON.parse(readingGoal);
-            const goalMinutes = goal.target || 10;
+            currentGoal = JSON.parse(readingGoal);
+
+            // Convert goal to minutes based on criteria
+            let goalMinutes = 10;
+            if (currentGoal.criteria === 'time') {
+                goalMinutes = currentGoal.target || 10;
+            } else if (currentGoal.criteria === 'pages') {
+                // Estimate: 1 page ≈ 3 minutes
+                goalMinutes = (currentGoal.target || 10) * 3;
+            } else {
+                // For ayahs/surahs, use a default estimation
+                goalMinutes = currentGoal.target || 10;
+            }
 
             loadData();
 
@@ -784,18 +796,27 @@
 
             document.getElementById('progressFill').style.width = percent + '%';
             document.getElementById('goalPercent').textContent = percent + '%';
-            document.getElementById('goalText').textContent =
-                `ئامانجی ئەمڕۆ: ${dailyGoalMinutes} خولەک خوێندنەوە (${todayMinutes} خولەک تەواوکراوە)`;
+
+            // Display goal based on criteria from reading-goal
+            let goalText = '';
+            if (currentGoal && currentGoal.criteria === 'pages') {
+                const pagesRead = Math.floor(todayMinutes / 3); // Estimate: 1 page ≈ 3 minutes
+                goalText = `ئامانجی ئەمڕۆ: ${currentGoal.target} لاپەڕە خوێندنەوە (${pagesRead} لاپەڕە تەواوکراوە)`;
+            } else if (currentGoal && currentGoal.criteria === 'verses') {
+                goalText = `ئامانجی ئەمڕۆ: ${currentGoal.target} ئایەت خوێندنەوە (${todayMinutes} خولەک تەواوکراوە)`;
+            } else {
+                // Default to time-based (minutes)
+                const targetMinutes = currentGoal ? currentGoal.target : dailyGoalMinutes;
+                goalText = `ئامانجی ئەمڕۆ: ${targetMinutes} خولەک خوێندنەوە (${todayMinutes} خولەک تەواوکراوە)`;
+            }
+
+            document.getElementById('goalText').textContent = goalText;
         }
 
         function editGoal() {
-            const newGoal = prompt('خولەکی ئامانج بۆ هەر ڕۆژێک:', dailyGoalMinutes);
-            if (newGoal && !isNaN(newGoal) && newGoal > 0) {
-                dailyGoalMinutes = parseInt(newGoal);
-                saveData();
-                renderWeekProgress();
-                updateTodayProgress();
-                alert('ئامانج نوێکرایەوە');
+            // Redirect to reading-goal page to edit with full options
+            if (confirm('ئایا تو دێت ئامانجا خوە بگوهورینی؟ تو دێ بەری لاپەڕێ دانانا ئامانجێ بشێت.')) {
+                window.location.href = '/reading-goal';
             }
         }
 
@@ -820,10 +841,14 @@
 
                 localStorage.setItem(userKey, JSON.stringify(data));
 
+                // Clear reading goal
+                localStorage.removeItem('readingGoal');
+
                 // Reset local data
                 readingData = {};
                 dailyGoalMinutes = 10;
                 streakDays = 0;
+                currentGoal = null;
 
                 renderCalendar();
                 renderWeekProgress();
