@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v10-optimized';
+const CACHE_NAME = 'tafsir-kurd-v11-fixed';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -25,13 +25,16 @@ const urlsToCache = [
   '/assets/fonts/amiri-quran-v1-arabic-regular.woff2',
   '/assets/fonts/SurahName.ttf',
   '/assets/fontawesome/all.min.css',
+  '/assets/fontawesome/webfonts/fa-solid-900.woff2',
+  '/assets/fontawesome/webfonts/fa-regular-400.woff2',
+  '/assets/fontawesome/webfonts/fa-brands-400.woff2',
   '/assets/images/logo.png',
   '/manifest.json'
 ];
 
 // Install event - cache resources aggressively
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v10-optimized - aggressive caching enabled');
+  console.log('[ServiceWorker] Installing v11-fixed - all assets properly cached');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(

@@ -17,9 +17,23 @@
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
     # Permissions Policy - Restrict browser features
     Permissions-Policy = "geolocation=(), microphone=(), camera=(), payment=()"
-    # Content Security Policy - Prevent XSS and injection attacks
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com https://fonts.googleapis.com https://cdnjs.cloudflare.com https://www.google-analytics.com https://static.cloudflareinsights.com; frame-src 'self' https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;"
+    # Content Security Policy - Prevent XSS and injection attacks (self-hosted fonts!)
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://cdn.jsdelivr.net https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com https://www.google-analytics.com https://static.cloudflareinsights.com; frame-src 'self' https://accounts.google.com https://www.instagram.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;"
     Cache-Control = "public, max-age=3600"
+
+# Font files - Aggressive caching for self-hosted fonts
+[[headers]]
+  for = "/assets/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Access-Control-Allow-Origin = "*"
+
+# Font Awesome - Aggressive caching
+[[headers]]
+  for = "/assets/fontawesome/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Access-Control-Allow-Origin = "*"
 
 [[headers]]
   for = "/*.{png,jpg,jpeg,gif,webp,svg,ico}"
@@ -109,11 +123,6 @@
 [[redirects]]
   from = "/terms-and-conditions"
   to = "/terms-and-conditions.html"
-  status = 200
-
-[[redirects]]
-  from = "/debug"
-  to = "/debug.html"
   status = 200
 
 [[redirects]]
