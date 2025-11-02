@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v4';
+const CACHE_NAME = 'tafsir-kurd-v5';
 const urlsToCache = [
   '/',
   '/Quran.html',
@@ -14,7 +14,7 @@ const urlsToCache = [
 
 // Install event - cache resources
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v4 - clearing all old caches');
+  console.log('[ServiceWorker] Installing v5 - clearing all old caches');
   event.waitUntil(
     // First, delete ALL old caches
     caches.keys().then(cacheNames => {
@@ -43,6 +43,13 @@ self.addEventListener('install', event => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', event => {
+  // Skip caching for Google OAuth and API requests
+  if (event.request.url.includes('googleapis.com') ||
+      event.request.url.includes('accounts.google.com') ||
+      event.request.url.includes('supabase.co')) {
+    return event.respondWith(fetch(event.request));
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {
