@@ -11,7 +11,8 @@
     <link rel="manifest" href="manifest.json">
     <title>قوورئان - تەفسیر کوورد</title>
 
-    <!-- Favicons -->
+    <!-- Favicons - Big site sizes for better visibility -->
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/logo.png">
     <link rel="shortcut icon" href="assets/images/favicon.ico" type="image/x-icon">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
@@ -5210,12 +5211,12 @@
                 return;
             }
 
-            // Prevent multiple calls
-            if (dailyAyahLoaded) return;
-
-            // Get today's date as string (YYYY-MM-DD)
+            // Get today's date as string (YYYY-MM-DD) - using local timezone
             const today = new Date();
-            const dateStr = today.toISOString().split('T')[0];
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
 
             // Check if we have ayah for today in localStorage
             const storedData = localStorage.getItem('dailyAyah');
@@ -5226,12 +5227,19 @@
                     dailyAyah = JSON.parse(storedData);
                     // Check if it's still today's ayah
                     if (dailyAyah.date !== dateStr) {
+                        console.log('[Daily Ayah] Date changed from', dailyAyah.date, 'to', dateStr, '- loading new ayah');
                         dailyAyah = null; // Expired, need new ayah
+                        dailyAyahLoaded = false; // Reset flag so we can load new ayah
                     }
                 } catch (e) {
+                    console.log('[Daily Ayah] Error parsing stored data:', e);
                     dailyAyah = null;
+                    dailyAyahLoaded = false;
                 }
             }
+
+            // Prevent multiple calls only if we already have today's ayah
+            if (dailyAyahLoaded && dailyAyah) return;
 
             // Generate new ayah if we don't have one for today
             if (!dailyAyah) {
@@ -5306,8 +5314,16 @@
                 const minutes = Math.floor((diff / 1000 / 60) % 60);
                 const seconds = Math.floor((diff / 1000) % 60);
 
-                document.getElementById('randomTimer').textContent =
-                    `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                // Convert time to Kurdish numerals for display
+                const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                // Direct conversion to Kurdish numerals
+                const kurdishDigits = {'0':'٠','1':'١','2':'٢','3':'٣','4':'٤','5':'٥','6':'٦','7':'٧','8':'٨','9':'٩'};
+                const kurdishTime = timeStr.split('').map(c => kurdishDigits[c] || c).join('');
+                const timerEl = document.getElementById('randomTimer');
+                if (timerEl) {
+                    timerEl.textContent = kurdishTime;
+                    console.log('Timer updated:', timeStr, '->', kurdishTime);
+                }
 
                 // Check if we passed midnight (diff is very small means we just passed)
                 if (diff < 2000) {

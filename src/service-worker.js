@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v19-kurdish-numbers';
+const CACHE_NAME = 'tafsir-kurd-v21-large-favicon';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -38,7 +38,7 @@ const urlsToCache = [
 
 // Install event - cache resources aggressively
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v19-kurdish-numbers - Kurdish numerals with IBM Plex Arabic font');
+  console.log('[ServiceWorker] Installing v21-large-favicon - Large 192x192 favicon for better visibility');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
