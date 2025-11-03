@@ -1029,7 +1029,8 @@ function updateVideoSection(videoUrls) {
                         allowfullscreen
                         scrolling="no"
                         loading="lazy"
-                        allow="autoplay; encrypted-media"
+                        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                        referrerpolicy="strict-origin-when-cross-origin"
                         title="Tafsir Kurd Video">
                 </iframe>
             </div>
@@ -1044,11 +1045,11 @@ function convertToEmbedUrl(url) {
         const postMatch = url.match(/\/p\/([^\/\?]+)/);
 
         if (reelMatch) {
-            // For reels, use reel embed with captioned view
-            return `https://www.instagram.com/reel/${reelMatch[1]}/embed/captioned/?cr=1&v=14`;
+            // For reels, try the TV format which sometimes works better
+            return `https://www.instagram.com/tv/${reelMatch[1]}/embed/?cr=1&v=14&rd=https%3A%2F%2Ftafsirkurd.com`;
         } else if (postMatch) {
             // For regular posts
-            return `https://www.instagram.com/p/${postMatch[1]}/embed/captioned/?cr=1&v=14`;
+            return `https://www.instagram.com/p/${postMatch[1]}/embed/?cr=1&v=14&rd=https%3A%2F%2Ftafsirkurd.com`;
         }
 
         return url;
