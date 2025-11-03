@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v26-quran-ultra-compact';
+const CACHE_NAME = 'tafsir-kurd-v27-all-pages-compact';
 const urlsToCache = [
   '/',
   '/index.html',
