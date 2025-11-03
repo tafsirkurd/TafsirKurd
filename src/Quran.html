@@ -2950,17 +2950,17 @@
                 </div>
             </section>
 
-            <!-- Popular Searches Section -->
-            <section style="max-width: 1400px; margin: 40px auto; padding: 0 30px;">
-                <div style="background: var(--card-bg); border-radius: 20px; padding: 35px; box-shadow: var(--shadow-md); border: 2px solid var(--border);">
-                    <div style="font-size: 1.6rem; font-weight: 700; color: var(--primary); margin-bottom: 25px; display: flex; align-items: center; gap: 12px;">
+            <!-- Popular Searches Section - Hidden by default, shown on search focus -->
+            <section id="popularSearchesSection" style="display: none; max-width: 1400px; margin: 0 auto; padding: 0 30px; position: absolute; top: 100%; left: 0; right: 0; z-index: 100; margin-top: 10px;">
+                <div style="background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: var(--shadow-lg); border: 2px solid var(--border);">
+                    <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
                         <i class="fas fa-fire"></i>
                         <span>گەڕانە بەناوبانگەکان</span>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
                         <!-- Popular Surahs -->
-                        <button onclick="openSurah(67)" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
+                        <button onclick="openSurah(67); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-bookmark" style="color: var(--primary); font-size: 1.2rem;"></i>
                             <div style="text-align: right; flex: 1;">
                                 <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">67. Al-Mulk</div>
@@ -2968,7 +2968,7 @@
                             </div>
                         </button>
 
-                        <button onclick="openSurah(18)" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
+                        <button onclick="openSurah(18); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-bookmark" style="color: var(--primary); font-size: 1.2rem;"></i>
                             <div style="text-align: right; flex: 1;">
                                 <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">18. Al-Kahf</div>
@@ -2976,7 +2976,7 @@
                             </div>
                         </button>
 
-                        <button onclick="openSurah(36)" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
+                        <button onclick="openSurah(36); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-bookmark" style="color: var(--primary); font-size: 1.2rem;"></i>
                             <div style="text-align: right; flex: 1;">
                                 <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">36. Ya-Sin</div>
@@ -2984,7 +2984,7 @@
                             </div>
                         </button>
 
-                        <button onclick="openSurahWithAyah(2, 255)" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
+                        <button onclick="openSurahWithAyah(2, 255); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-star" style="color: var(--primary); font-size: 1.2rem;"></i>
                             <div style="text-align: right; flex: 1;">
                                 <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">Ayatul Kursi</div>
@@ -2992,7 +2992,7 @@
                             </div>
                         </button>
 
-                        <button onclick="openSurahWithAyah(2, 285)" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
+                        <button onclick="openSurahWithAyah(2, 285); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-moon" style="color: var(--primary); font-size: 1.2rem;"></i>
                             <div style="text-align: right; flex: 1;">
                                 <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">Last Verses</div>
@@ -3000,7 +3000,7 @@
                             </div>
                         </button>
 
-                        <button onclick="openSurah(55)" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
+                        <button onclick="openSurah(55); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-heart" style="color: var(--primary); font-size: 1.2rem;"></i>
                             <div style="text-align: right; flex: 1;">
                                 <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">55. Ar-Rahman</div>
@@ -3905,6 +3905,16 @@
             // Hero Search - Real-time search as you type
             let searchTimeout;
             const searchInput = document.getElementById('heroSearchInput');
+            const popularSearches = document.getElementById('popularSearchesSection');
+
+            // Show popular searches when input is focused (if empty)
+            searchInput.addEventListener('focus', (e) => {
+                const query = e.target.value.trim();
+                if (!query) {
+                    popularSearches.style.display = 'block';
+                    hideSearchResults(); // Hide search results dropdown
+                }
+            });
 
             searchInput.addEventListener('input', (e) => {
                 const query = e.target.value.trim();
@@ -3914,8 +3924,13 @@
 
                 if (!query) {
                     hideSearchResults();
+                    // Show popular searches when input is cleared
+                    popularSearches.style.display = 'block';
                     return;
                 }
+
+                // Hide popular searches when user starts typing
+                popularSearches.style.display = 'none';
 
                 // Debounce: wait 300ms after user stops typing
                 searchTimeout = setTimeout(() => {
@@ -3932,10 +3947,11 @@
                 }
             });
 
-            // Close dropdown when clicking outside
+            // Close dropdown and popular searches when clicking outside
             document.addEventListener('click', (e) => {
-                if (!e.target.closest('.hero-search')) {
+                if (!e.target.closest('.hero-search') && !e.target.closest('#popularSearchesSection')) {
                     hideSearchResults();
+                    popularSearches.style.display = 'none';
                 }
             });
 
