@@ -19,98 +19,51 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const username = 'tafsirkurd'; // Your Instagram username
+    const username = 'tafsirkurd';
 
-    // Fetch Instagram profile page
-    const instagramData = await fetchInstagramProfile(username);
+    // Use RSS bridge service (free, no API key needed)
+    const posts = await fetchInstagramViaRSS(username);
 
-    if (!instagramData || !instagramData.edge_owner_to_timeline_media) {
-      throw new Error('Failed to fetch Instagram data');
+    if (posts && posts.length > 0) {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          posts: posts,
+          cached_at: new Date().toISOString()
+        })
+      };
     }
 
-    // Get latest 3 posts
-    const posts = instagramData.edge_owner_to_timeline_media.edges
-      .slice(0, 3)
-      .map(edge => {
-        const node = edge.node;
-        const shortcode = node.shortcode;
-
-        // Determine if it's a reel or regular post
-        const isReel = node.is_video && node.product_type === 'clips';
-        const postType = isReel ? 'reel' : 'p';
-
-        return {
-          url: `https://www.instagram.com/${postType}/${shortcode}/`,
-          shortcode: shortcode,
-          type: postType,
-          thumbnail: node.thumbnail_src || node.display_url,
-          caption: node.edge_media_to_caption.edges[0]?.node.text || '',
-          likes: node.edge_liked_by?.count || 0,
-          comments: node.edge_media_to_comment?.count || 0,
-          timestamp: node.taken_at_timestamp,
-          isVideo: node.is_video
-        };
-      });
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        success: true,
-        posts: posts,
-        cached_at: new Date().toISOString()
-      })
-    };
+    throw new Error('No posts found');
 
   } catch (error) {
     console.error('Instagram fetch error:', error);
 
-    // Return fallback data
+    // Return fallback - let client use Supabase
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: false,
         error: error.message,
-        posts: [
-          {
-            url: "https://www.instagram.com/reel/DFOAsUFo653/",
-            shortcode: "DFOAsUFo653",
-            type: "reel"
-          },
-          {
-            url: "https://www.instagram.com/reel/DCxIb3sI7gm/",
-            shortcode: "DCxIb3sI7gm",
-            type: "reel"
-          },
-          {
-            url: "https://www.instagram.com/reel/DExsA5lIBVl/",
-            shortcode: "DExsA5lIBVl",
-            type: "reel"
-          }
-        ]
+        use_supabase: true,
+        posts: []
       })
     };
   }
 };
 
-function fetchInstagramProfile(username) {
+async function fetchInstagramViaRSS(username) {
   return new Promise((resolve, reject) => {
+    // Use RSS.app bridge service
     const options = {
-      hostname: 'www.instagram.com',
-      path: `/${username}/?__a=1&__d=dis`,
+      hostname: 'rss.app',
+      path: `/feeds/v1.1/_${Buffer.from(`https://www.instagram.com/${username}/`).toString('base64')}.rss`,
       method: 'GET',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Cache-Control': 'max-age=0'
+        'User-Agent': 'Mozilla/5.0'
       }
     };
 
@@ -123,43 +76,45 @@ function fetchInstagramProfile(username) {
 
       res.on('end', () => {
         try {
-          // Try to parse JSON response
-          const jsonData = JSON.parse(data);
+          // Parse RSS XML
+          const items = [];
+          const itemMatches = data.matchAll(/<item>(.*?)<\/item>/gs);
 
-          if (jsonData.graphql && jsonData.graphql.user) {
-            resolve(jsonData.graphql.user);
-          } else if (jsonData.data && jsonData.data.user) {
-            resolve(jsonData.data.user);
-          } else {
-            // Try to extract JSON from HTML
-            const scriptMatch = data.match(/window\._sharedData\s*=\s*({.+?});/);
-            if (scriptMatch) {
-              const sharedData = JSON.parse(scriptMatch[1]);
-              const userPage = sharedData.entry_data?.ProfilePage?.[0];
-              if (userPage?.graphql?.user) {
-                resolve(userPage.graphql.user);
-              } else {
-                reject(new Error('Could not find user data in shared data'));
+          for (const match of itemMatches) {
+            const item = match[1];
+            const linkMatch = item.match(/<link>(.*?)<\/link>/);
+
+            if (linkMatch && items.length < 3) {
+              const url = linkMatch[1].trim();
+              const reelMatch = url.match(/\/reel\/([A-Za-z0-9_-]+)/);
+              const postMatch = url.match(/\/p\/([A-Za-z0-9_-]+)/);
+
+              if (reelMatch || postMatch) {
+                items.push({
+                  url: url,
+                  shortcode: (reelMatch || postMatch)[1],
+                  type: reelMatch ? 'reel' : 'p'
+                });
               }
-            } else {
-              reject(new Error('Could not parse Instagram response'));
             }
           }
+
+          if (items.length > 0) {
+            resolve(items);
+          } else {
+            reject(new Error('No items found in RSS'));
+          }
         } catch (error) {
-          reject(new Error(`Parse error: ${error.message}`));
+          reject(error);
         }
       });
     });
 
-    req.on('error', (error) => {
-      reject(error);
-    });
-
+    req.on('error', reject);
     req.setTimeout(10000, () => {
       req.destroy();
-      reject(new Error('Request timeout'));
+      reject(new Error('Timeout'));
     });
-
     req.end();
   });
 }
