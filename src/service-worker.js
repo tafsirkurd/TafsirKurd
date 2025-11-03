@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v22-svg-favicon';
+const CACHE_NAME = 'tafsir-kurd-v23-mobile-optimize';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -16,6 +16,7 @@ const urlsToCache = [
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
   '/styles/Style.css',
+  '/styles/mobile-optimize.css',
   '/utils/console-cleaner.js',
   '/utils/kurdish-numbers.js',
   '/utils/auto-kurdish-numbers.js',
@@ -38,7 +39,7 @@ const urlsToCache = [
 
 // Install event - cache resources aggressively
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v22-svg-favicon - High quality SVG favicon with 512x512 PNG fallbacks');
+  console.log('[ServiceWorker] Installing v23-mobile-optimize - Ultra smooth mobile experience with GPU acceleration');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(

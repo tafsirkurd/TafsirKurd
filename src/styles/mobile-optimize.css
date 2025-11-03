@@ -1,0 +1,294 @@
+/**
+ * Mobile Optimization CSS
+ * Ultra-smooth scrolling, touch interactions, and performance
+ */
+
+/* ===== SMOOTH SCROLLING & PERFORMANCE ===== */
+* {
+  /* Hardware acceleration for all elements */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+}
+
+html {
+  /* Smooth momentum scrolling for iOS */
+  -webkit-overflow-scrolling: touch;
+  /* Prevent text size adjustment on orientation change */
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+}
+
+body {
+  /* Prevent bounce scrolling on mobile */
+  overscroll-behavior-y: none;
+  /* Smooth touch scrolling */
+  -webkit-overflow-scrolling: touch;
+  /* Prevent layout shift */
+  overflow-x: hidden;
+}
+
+/* ===== TOUCH OPTIMIZATION ===== */
+* {
+  /* Remove tap highlight on mobile */
+  -webkit-tap-highlight-color: transparent;
+  /* Better touch event handling */
+  touch-action: manipulation;
+}
+
+/* Better touch targets for buttons and links */
+a, button, input, select, textarea, [role="button"], [onclick] {
+  /* Minimum touch target size */
+  min-height: 44px;
+  min-width: 44px;
+  /* Remove delay on tap */
+  touch-action: manipulation;
+  -ms-touch-action: manipulation;
+  /* Smooth transitions */
+  transition: all 0.15s ease-in-out;
+  /* Hardware acceleration */
+  will-change: transform;
+}
+
+/* ===== SMOOTH ANIMATIONS ===== */
+/* Apply to all animated elements */
+.animated, [class*="transition"], [class*="animate"] {
+  /* Use GPU for animations */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  /* Smooth animation timing */
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Optimize transitions */
+* {
+  /* Smooth transitions with GPU acceleration */
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== PREVENT LAYOUT SHIFTS ===== */
+img, video, iframe {
+  /* Prevent layout shift when loading */
+  max-width: 100%;
+  height: auto;
+  /* Smooth image rendering */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* ===== SMOOTH SCROLLING CONTAINERS ===== */
+.scroll-container, [style*="overflow"], div[class*="scroll"] {
+  /* Momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  /* Hardware acceleration */
+  will-change: scroll-position;
+}
+
+/* ===== FIX DESIGN CUTTING/SPLITTING ===== */
+/* Prevent content from being cut off */
+.container, .content, section, article, main {
+  /* Ensure content doesn't overflow */
+  overflow-x: hidden;
+  /* Prevent word breaking issues */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* Better text rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fix viewport issues */
+@viewport {
+  width: device-width;
+  zoom: 1.0;
+}
+
+/* ===== MOBILE-SPECIFIC OPTIMIZATIONS ===== */
+@media (max-width: 768px) {
+  /* Better touch scrolling */
+  body {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
+  }
+
+  /* Optimize font rendering on mobile */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Prevent horizontal scroll issues */
+  html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Better spacing for mobile */
+  * {
+    /* Prevent elements from going outside viewport */
+    max-width: 100%;
+  }
+
+  /* Optimize images for mobile */
+  img {
+    /* Prevent image overflow */
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Better button touch areas */
+  button, a, input[type="submit"], input[type="button"] {
+    /* Larger touch targets */
+    padding: 12px 20px;
+    min-height: 48px;
+  }
+
+  /* Prevent zoom on input focus (iOS) */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ===== PERFORMANCE OPTIMIZATIONS ===== */
+/* Optimize expensive CSS properties */
+* {
+  /* Reduce paint operations */
+  contain: layout style paint;
+}
+
+/* Optimize transforms and animations */
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    /* Enable smooth animations */
+    transition-duration: 0.2s;
+  }
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    /* Disable animations for users who prefer reduced motion */
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ===== FIX COMMON MOBILE ISSUES ===== */
+/* Prevent text selection issues */
+* {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Better input handling */
+input, textarea, select {
+  /* Prevent zoom on iOS */
+  font-size: max(16px, 1rem);
+  /* Smooth appearance */
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 8px;
+}
+
+/* Fix sticky elements */
+.sticky, .fixed, [style*="position: sticky"], [style*="position: fixed"] {
+  /* Better performance for fixed elements */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* ===== SMOOTH CARD INTERACTIONS ===== */
+.card, [class*="card"], .box, [class*="box"] {
+  /* Smooth card animations */
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Hardware acceleration */
+  will-change: transform;
+  /* Prevent layout shift */
+  backface-visibility: hidden;
+}
+
+/* Active state for touch */
+.card:active, [class*="card"]:active, button:active, a:active {
+  /* Smooth press feedback */
+  transform: scale(0.98);
+  transition-duration: 0.1s;
+}
+
+/* ===== FIX SAFARI MOBILE ISSUES ===== */
+/* Fix 100vh issue on iOS Safari */
+.full-height, [style*="100vh"] {
+  /* Better mobile vh handling */
+  min-height: -webkit-fill-available;
+  min-height: fill-available;
+}
+
+/* Fix iOS input shadows */
+input, textarea, select {
+  /* Remove default iOS styling */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* ===== LOADING OPTIMIZATION ===== */
+/* Optimize images and media loading */
+img, video {
+  /* Lazy loading hint */
+  loading: lazy;
+  /* Smooth loading */
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* ===== PREVENT LAYOUT THRASHING ===== */
+* {
+  /* Minimize reflows */
+  box-sizing: border-box;
+}
+
+/* Better containment for performance */
+section, article, aside, nav, main {
+  contain: layout style;
+}
+
+/* ===== SMOOTH NAVIGATION ===== */
+nav, .nav, [role="navigation"] {
+  /* Smooth nav interactions */
+  -webkit-overflow-scrolling: touch;
+  will-change: transform;
+}
+
+/* ===== FIX ANDROID CHROME ISSUES ===== */
+/* Better scrolling on Android */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fix Android input focus zoom */
+@media screen and (max-width: 767px) {
+  input:focus, textarea:focus, select:focus {
+    font-size: 16px !important;
+  }
+}
+
+/* ===== GPU ACCELERATION FOR COMMON ELEMENTS ===== */
+.modal, .popup, .dropdown, .menu, .sidebar, .drawer {
+  /* Force GPU acceleration */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+}
