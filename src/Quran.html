@@ -2258,22 +2258,28 @@
         @media (max-width: 768px) {
             :root {
                 --sidebar-width: 85%;
-                --arabic-size: 1.5rem;
-                --tafsir-size: 0.9rem;
+                --arabic-size: 1.3rem;
+                --tafsir-size: 0.8rem;
             }
 
             .header-container {
-                padding: 0 15px;
+                padding: 0 10px;
+                height: 55px;
             }
 
             .header-title {
-                font-size: 1.2rem;
+                font-size: 0.95rem;
             }
 
             .header-logo-img {
-                width: 55px;
-                height: 55px;
+                width: 40px;
+                height: 40px;
                 object-fit: contain;
+            }
+
+            .header-btn {
+                padding: 6px 10px;
+                font-size: 0.85rem;
             }
 
             .header-btn span {
@@ -2281,25 +2287,25 @@
             }
 
             .hero-section {
-                padding: 60px 20px;
+                padding: 30px 10px;
             }
 
             .hero-search-input {
-                padding: 16px 50px 16px 20px;
-                font-size: 1rem;
+                padding: 10px 40px 10px 15px;
+                font-size: 0.85rem;
             }
 
             /* Two Column Grid - Mobile Reorder */
             div[style*="grid-template-columns: 1fr 1.5fr"] {
                 grid-template-columns: 1fr !important;
-                gap: 20px !important;
-                padding: 0 15px !important;
+                gap: 10px !important;
+                padding: 0 10px !important;
             }
 
             /* Continue Reading Card - Mobile Fix & Position */
             #continueReadingCard {
-                padding: 20px 15px !important;
-                min-height: 180px !important;
+                padding: 12px 10px !important;
+                min-height: 120px !important;
                 margin-bottom: 0 !important;
                 order: -1 !important; /* Show first on mobile */
             }
@@ -2309,48 +2315,50 @@
                 order: 0 !important;
                 display: flex;
                 flex-direction: column;
-                gap: 20px;
+                gap: 10px;
             }
 
             #continueReadingSurahName {
-                font-size: 2.2rem !important;
-                margin: 10px 0 !important;
+                font-size: 1.5rem !important;
+                margin: 5px 0 !important;
             }
 
             #continueReadingInfo {
-                font-size: 0.85rem !important;
+                font-size: 0.75rem !important;
             }
 
             #continueReadingCard > div:last-child {
-                margin-top: 15px !important;
+                margin-top: 8px !important;
             }
 
             #continueReadingCard > div:last-child > div:last-child {
-                padding: 6px 12px !important;
-                font-size: 0.8rem !important;
+                padding: 4px 10px !important;
+                font-size: 0.7rem !important;
             }
 
             .hero-chip {
-                font-size: 0.9rem;
-                padding: 10px 18px;
+                font-size: 0.75rem;
+                padding: 6px 12px;
             }
 
             .surah-list-container {
-                padding: 0 15px;
+                padding: 0 10px;
             }
 
             .surah-list-title {
-                font-size: 1.8rem;
+                font-size: 1.3rem;
             }
 
             .surah-grid {
                 grid-template-columns: 1fr;
                 justify-items: center;
+                gap: 10px;
             }
 
             .surah-card {
-                max-width: 400px;
+                max-width: 100%;
                 width: 100%;
+                padding: 12px;
             }
 
             .main-content.shifted {
@@ -2358,49 +2366,52 @@
             }
 
             .sidebar-toggle {
-                width: 35px;
-                height: 70px;
+                width: 30px;
+                height: 60px;
+                font-size: 0.9rem;
             }
 
             .scroll-to-top {
-                bottom: 20px;
-                right: 20px;
-                width: 56px;
-                height: 56px;
+                bottom: 15px;
+                right: 15px;
+                width: 45px;
+                height: 45px;
+                font-size: 1rem;
             }
 
             .surah-reader-page {
-                padding: 15px;
+                padding: 10px;
             }
 
             .reader-surah-name {
-                font-size: 1.5rem;
+                font-size: 1.2rem;
             }
 
             .ayah-arabic {
-                font-size: 1.8rem;
+                font-size: 1.4rem;
+                line-height: 2;
             }
 
             .ayah-header {
                 flex-wrap: wrap;
-                gap: 10px;
+                gap: 6px;
             }
 
             .ayah-number {
-                width: 40px;
-                height: 40px;
-                font-size: 1rem;
+                width: 32px;
+                height: 32px;
+                font-size: 0.85rem;
             }
 
             .ayah-action-btn {
-                width: 32px;
-                height: 32px;
-                font-size: 0.9rem;
+                width: 28px;
+                height: 28px;
+                font-size: 0.75rem;
             }
 
             .surah-navigation {
                 flex-direction: column;
-                gap: 10px;
+                gap: 8px;
             }
 
             .filter-sort-controls {
@@ -2499,17 +2510,57 @@
             /* Login Required Mobile */
             .login-required-content {
                 width: 95%;
-                padding: 30px 20px;
+                padding: 20px 15px;
             }
 
             .login-required-title {
-                font-size: 1.3rem;
+                font-size: 1.1rem;
+            }
+
+            .login-required-icon {
+                font-size: 2.5rem;
+            }
+
+            .login-required-text {
+                font-size: 0.9rem;
+            }
+
+            .login-required-btn {
+                padding: 10px 20px;
+                font-size: 0.85rem;
             }
 
             /* Navigation Menu Mobile */
             .nav-menu-item {
-                padding: 14px 18px;
-                font-size: 0.95rem;
+                padding: 10px 12px;
+                font-size: 0.85rem;
+            }
+
+            /* Make all cards more compact */
+            [style*="background: var(--card-bg)"] {
+                padding: 10px !important;
+                margin: 8px 0 !important;
+            }
+
+            /* Reduce all gaps and margins */
+            * {
+                gap: 8px !important;
+            }
+
+            /* Compact all buttons */
+            button, .btn, [role="button"] {
+                padding: 8px 12px !important;
+                font-size: 0.8rem !important;
+            }
+
+            /* Make body padding smaller */
+            body {
+                padding: 0 !important;
+            }
+
+            /* Compact main sections */
+            section, .section {
+                padding: 15px 10px !important;
             }
 
         }
