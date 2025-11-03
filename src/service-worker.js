@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v21-large-favicon';
+const CACHE_NAME = 'tafsir-kurd-v22-svg-favicon';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -38,7 +38,7 @@ const urlsToCache = [
 
 // Install event - cache resources aggressively
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v21-large-favicon - Large 192x192 favicon for better visibility');
+  console.log('[ServiceWorker] Installing v22-svg-favicon - High quality SVG favicon with 512x512 PNG fallbacks');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
