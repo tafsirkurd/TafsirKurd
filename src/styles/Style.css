@@ -1519,6 +1519,7 @@ textarea.form-control {
     align-items: center;
     justify-content: center;
     gap: 10px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
 }
 
 .btn:hover {

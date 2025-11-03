@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v31-fix-dropdown-zindex';
+const CACHE_NAME = 'tafsir-kurd-v32-instagram-improvements';
 const urlsToCache = [
   '/',
   '/index.html',

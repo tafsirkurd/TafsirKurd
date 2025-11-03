@@ -1027,7 +1027,9 @@ function updateVideoSection(videoUrls) {
                 <iframe src="${embedUrl}"
                         frameborder="0"
                         allowfullscreen
+                        scrolling="no"
                         loading="lazy"
+                        allow="autoplay; encrypted-media"
                         title="Tafsir Kurd Video">
                 </iframe>
             </div>
@@ -1038,7 +1040,8 @@ function updateVideoSection(videoUrls) {
 function convertToEmbedUrl(url) {
     try {
         const postId = url.match(/\/reel\/([^\/\?]+)/)?.[1] || url.match(/\/p\/([^\/\?]+)/)?.[1];
-        return postId ? `https://www.instagram.com/p/${postId}/embed` : url;
+        // Add captioned=1 to show likes/views on embed
+        return postId ? `https://www.instagram.com/p/${postId}/embed/captioned/?cr=1&v=14` : url;
     } catch {
         return url;
     }
