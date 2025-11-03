@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v23-mobile-optimize';
+const CACHE_NAME = 'tafsir-kurd-v24-instant-refresh';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -37,10 +37,11 @@ const urlsToCache = [
   '/manifest.json'
 ];
 
-// Install event - cache resources aggressively
+// Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v23-mobile-optimize - Ultra smooth mobile experience with GPU acceleration');
+  console.log('[ServiceWorker] Installing v24-instant-refresh - INSTANT updates on refresh with network-first strategy');
   event.waitUntil(
+    // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
@@ -51,58 +52,78 @@ self.addEventListener('install', event => {
         })
       );
     }).then(() => {
+      // Open new cache and add resources with reload (bypass cache)
       return caches.open(CACHE_NAME);
     }).then(cache => {
-      console.log('[ServiceWorker] Caching all resources for offline support');
+      console.log('[ServiceWorker] Caching resources with INSTANT update strategy');
+      // Use cache: 'reload' to always fetch fresh content
       return cache.addAll(urlsToCache.map(url => {
         return new Request(url, { cache: 'reload' });
       })).catch(error => {
         console.error('[ServiceWorker] Failed to cache some resources:', error);
-        // Continue even if some resources fail
       });
     })
   );
+  // INSTANT activation - don't wait
   self.skipWaiting();
 });
 
-// Fetch event - Cache First strategy for maximum speed
+// Fetch event - NETWORK FIRST for HTML, CACHE FIRST for assets (instant updates!)
 self.addEventListener('fetch', event => {
-  // Skip service worker for API requests and external images
+  // Skip service worker for API requests and external resources
   if (event.request.url.includes('googleapis.com') ||
       event.request.url.includes('googleusercontent.com') ||
       event.request.url.includes('accounts.google.com') ||
       event.request.url.includes('supabase.co') ||
       event.request.url.includes('unsplash.com') ||
-      event.request.url.includes('netlify/functions')) {
+      event.request.url.includes('netlify/functions') ||
+      event.request.url.includes('cdnjs.cloudflare.com')) {
     return;
   }
 
+  // NETWORK FIRST for HTML pages (instant updates on refresh!)
+  if (event.request.mode === 'navigate' ||
+      event.request.destination === 'document' ||
+      event.request.url.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request, { cache: 'reload' })
+        .then(response => {
+          // Cache the fresh HTML for offline use
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Offline - serve cached version
+          return caches.match(event.request).then(cached => {
+            return cached || caches.match('/Quran.html');
+          });
+        })
+    );
+    return;
+  }
+
+  // CACHE FIRST for CSS, JS, fonts, images (maximum speed!)
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Cache hit - serve immediately for instant performance
         if (response) {
-          // Update cache in background for HTML pages
-          if (event.request.mode === 'navigate') {
-            fetch(event.request).then(freshResponse => {
-              if (freshResponse && freshResponse.status === 200) {
-                caches.open(CACHE_NAME).then(cache => {
-                  cache.put(event.request, freshResponse);
-                });
-              }
-            }).catch(() => {});
-          }
+          // Serve from cache immediately
           return response;
         }
 
-        // No cache - fetch from network
+        // Not in cache - fetch from network
         return fetch(event.request).then(response => {
           // Only cache valid responses
           if (!response || response.status !== 200) {
             return response;
           }
 
-          // Cache for future offline use
+          // Cache for future use
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, responseToCache);
@@ -112,9 +133,6 @@ self.addEventListener('fetch', event => {
         });
       }).catch(() => {
         // Offline fallback
-        if (event.request.mode === 'navigate') {
-          return caches.match('/Quran.html');
-        }
         return new Response('Offline', { status: 503 });
       })
   );
@@ -127,19 +145,25 @@ self.addEventListener('message', event => {
   }
 });
 
-// Activate event - clean up old caches
+// Activate event - INSTANT takeover and cleanup
 self.addEventListener('activate', event => {
+  console.log('[ServiceWorker] Activating new version - INSTANT takeover!');
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
+    // Clean up old caches immediately
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
+            console.log('[ServiceWorker] Removing old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
+    }).then(() => {
+      console.log('[ServiceWorker] New version active and controlling all pages!');
+      // Take control of all pages IMMEDIATELY
+      return self.clients.claim();
     })
   );
-  self.clients.claim();
 });
