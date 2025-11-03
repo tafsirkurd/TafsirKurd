@@ -1039,9 +1039,19 @@ function updateVideoSection(videoUrls) {
 
 function convertToEmbedUrl(url) {
     try {
-        const postId = url.match(/\/reel\/([^\/\?]+)/)?.[1] || url.match(/\/p\/([^\/\?]+)/)?.[1];
-        // Add captioned=1 to show likes/views on embed
-        return postId ? `https://www.instagram.com/p/${postId}/embed/captioned/?cr=1&v=14` : url;
+        // Check if it's a reel or regular post
+        const reelMatch = url.match(/\/reel\/([^\/\?]+)/);
+        const postMatch = url.match(/\/p\/([^\/\?]+)/);
+
+        if (reelMatch) {
+            // For reels, use reel embed with captioned view
+            return `https://www.instagram.com/reel/${reelMatch[1]}/embed/captioned/?cr=1&v=14`;
+        } else if (postMatch) {
+            // For regular posts
+            return `https://www.instagram.com/p/${postMatch[1]}/embed/captioned/?cr=1&v=14`;
+        }
+
+        return url;
     } catch {
         return url;
     }

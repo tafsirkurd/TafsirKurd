@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v32-instagram-improvements';
+const CACHE_NAME = 'tafsir-kurd-v33-fix-reel-embeds';
 const urlsToCache = [
   '/',
   '/index.html',
