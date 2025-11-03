@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v34-instagram-tv-format';
+const CACHE_NAME = 'tafsir-kurd-v35-auto-instagram-feed';
 const urlsToCache = [
   '/',
   '/index.html',
