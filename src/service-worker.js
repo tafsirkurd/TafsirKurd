@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v29-search-dropdown';
+const CACHE_NAME = 'tafsir-kurd-v30-fix-dropdown-position';
 const urlsToCache = [
   '/',
   '/index.html',
