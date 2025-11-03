@@ -292,3 +292,157 @@ nav, .nav, [role="navigation"] {
   transform: translate3d(0, 0, 0);
   will-change: transform, opacity;
 }
+
+/* ===== MOBILE SIZE OPTIMIZATION - MAKE EVERYTHING SMALLER ===== */
+@media (max-width: 768px) {
+  /* Reduce all font sizes by 10% on mobile */
+  html {
+    font-size: 90%;
+  }
+
+  /* Reduce headings */
+  h1 { font-size: 1.6rem !important; }
+  h2 { font-size: 1.4rem !important; }
+  h3 { font-size: 1.2rem !important; }
+  h4 { font-size: 1.1rem !important; }
+  h5 { font-size: 1rem !important; }
+  h6 { font-size: 0.9rem !important; }
+
+  /* Reduce padding and margins */
+  .card, [class*="card"], .box, [class*="box"] {
+    padding: 12px !important;
+    margin: 8px !important;
+  }
+
+  /* Reduce container padding */
+  .container, .content, section, article, main {
+    padding: 12px !important;
+  }
+
+  /* Smaller buttons */
+  button, .btn, [class*="button"], a[class*="btn"] {
+    padding: 10px 16px !important;
+    font-size: 0.9rem !important;
+    min-height: 40px !important;
+  }
+
+  /* Smaller inputs */
+  input, select, textarea {
+    padding: 10px !important;
+    font-size: 14px !important;
+  }
+
+  /* Reduce spacing between elements */
+  * + * {
+    margin-top: 0.75rem !important;
+  }
+
+  /* Smaller icons */
+  i, .icon, [class*="icon"] {
+    font-size: 0.9em !important;
+  }
+
+  /* Compact lists */
+  ul, ol {
+    padding-right: 20px !important;
+  }
+
+  li {
+    margin-bottom: 6px !important;
+  }
+
+  /* Smaller badges and tags */
+  .badge, .tag, [class*="badge"], [class*="tag"] {
+    padding: 3px 8px !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Reduce border radius for more space */
+  * {
+    border-radius: 8px !important;
+  }
+
+  button, .btn, input, select, textarea {
+    border-radius: 8px !important;
+  }
+
+  /* Smaller images and logos */
+  img:not([class*="hero"]):not([class*="banner"]) {
+    max-width: 90% !important;
+  }
+
+  /* Compact navigation */
+  nav, .nav, [role="navigation"] {
+    padding: 8px !important;
+  }
+
+  /* Smaller modal/popup */
+  .modal, .popup, [class*="modal"], [class*="popup"] {
+    padding: 16px !important;
+    margin: 16px !important;
+  }
+
+  /* Reduce line height for compact layout */
+  * {
+    line-height: 1.4 !important;
+  }
+
+  /* Smaller shadows */
+  * {
+    box-shadow: none !important;
+  }
+
+  .card:hover, button:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  }
+}
+
+/* Extra small phones - even more compact */
+@media (max-width: 480px) {
+  html {
+    font-size: 85%;
+  }
+
+  h1 { font-size: 1.4rem !important; }
+  h2 { font-size: 1.2rem !important; }
+  h3 { font-size: 1.1rem !important; }
+
+  .card, [class*="card"], .box, [class*="box"] {
+    padding: 10px !important;
+    margin: 6px !important;
+  }
+
+  .container, .content, section, article, main {
+    padding: 10px !important;
+  }
+
+  button, .btn, [class*="button"] {
+    padding: 8px 14px !important;
+    font-size: 0.85rem !important;
+  }
+
+  * + * {
+    margin-top: 0.5rem !important;
+  }
+}
+
+/* Very small phones - ultra compact */
+@media (max-width: 360px) {
+  html {
+    font-size: 80%;
+  }
+
+  .card, [class*="card"] {
+    padding: 8px !important;
+    margin: 4px !important;
+  }
+
+  .container, .content {
+    padding: 8px !important;
+  }
+
+  button, .btn {
+    padding: 7px 12px !important;
+    font-size: 0.8rem !important;
+  }
+}
