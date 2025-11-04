@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v42-clean-bw-admin';
+const CACHE_NAME = 'tafsir-kurd-v43-add-google-analytics';
 const urlsToCache = [
   '/',
   '/index.html',
