@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v46-admin-panel-with-charts';
+const CACHE_NAME = 'tafsir-kurd-v47-fix-sw-external-resources';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -78,7 +78,12 @@ self.addEventListener('fetch', event => {
       event.request.url.includes('supabase.co') ||
       event.request.url.includes('unsplash.com') ||
       event.request.url.includes('netlify/functions') ||
-      event.request.url.includes('cdnjs.cloudflare.com')) {
+      event.request.url.includes('cdnjs.cloudflare.com') ||
+      event.request.url.includes('cdn.jsdelivr.net') ||
+      event.request.url.includes('googletagmanager.com') ||
+      event.request.url.includes('google-analytics.com') ||
+      event.request.url.includes('cloudflareinsights.com') ||
+      event.request.url.includes('instagram.com')) {
     return;
   }
 
