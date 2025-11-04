@@ -1150,7 +1150,7 @@
                                         <th>ناو</th>
                                         <th>ئیمەیڵ</th>
                                         <th>پەیام</th>
-                                        <th>بەروار</th>
+                                        <th>دۆخ</th>
                                         <th>کردارەکان</th>
                                     </tr>
                                 </thead>
@@ -1687,8 +1687,15 @@
             tbody.innerHTML = '<tr><td colspan="5" class="loading"><div class="loading-spinner"></div><p>بارکردنی پەیامەکان...</p></td></tr>';
 
             try {
+                console.log('[Admin] Loading messages from contact_messages table...');
                 const { data, error } = await supabase.from('contact_messages').select('*');
-                if (error) throw error;
+
+                if (error) {
+                    console.error('[Admin] Supabase error:', error);
+                    throw error;
+                }
+
+                console.log('[Admin] Messages loaded:', data?.length || 0, 'messages');
 
                 if (!data || data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><div class="empty-state-icon">📧</div><div class="empty-state-text">هیچ پەیامێک نییە</div></td></tr>';
@@ -1700,18 +1707,18 @@
                         <td>${msg.name || '-'}</td>
                         <td>${msg.email || '-'}</td>
                         <td>${(msg.message || '').substring(0, 50)}${msg.message?.length > 50 ? '...' : ''}</td>
-                        <td>-</td>
+                        <td><span class="badge ${msg.status === 'read' ? 'success' : 'warning'}">${msg.status || 'unread'}</span></td>
                         <td>
                             <div class="table-actions">
-                                <button class="btn-icon" onclick="viewMessage(${msg.id})" title="بینین">👁️</button>
+                                <button class="btn-icon" onclick="viewMessage(${msg.id}, '${(msg.message || '').replace(/'/g, "\\'")}', '${msg.name}', '${msg.email}', '${msg.subject || ''}')" title="بینین">👁️</button>
                                 <button class="btn-icon danger" onclick="deleteMessage(${msg.id})" title="سڕینەوە">🗑️</button>
                             </div>
                         </td>
                     </tr>
                 `).join('');
             } catch (error) {
-                console.error('Error loading messages:', error);
-                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">هەڵە لە بارکردنی پەیامەکان</td></tr>';
+                console.error('[Admin] Error loading messages:', error);
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color: var(--danger);">هەڵە: ${error.message}</td></tr>`;
             }
         }
 
@@ -1788,8 +1795,20 @@
             }
         }
 
-        function viewUser(id) { alert('بینینی بەکارهێنەر: ' + id); }
-        function viewMessage(id) { alert('بینینی پەیام: ' + id); }
+        function viewUser(id) {
+            alert('بینینی بەکارهێنەر: ' + id);
+        }
+
+        function viewMessage(id, message, name, email, subject) {
+            alert(`
+پەیام لە: ${name}
+ئیمەیڵ: ${email}
+بابەت: ${subject}
+
+پەیام:
+${message}
+            `.trim());
+        }
         function refreshUsers() { loadUsers(); }
         function refreshMessages() { loadMessages(); }
         function exportUsers() { alert('هەناردەکردنی بەکارهێنەران...'); }
