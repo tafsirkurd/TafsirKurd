@@ -1029,8 +1029,8 @@ function updateVideoSection(videoUrls) {
     const videosContainer = document.getElementById('dynamic-videos');
     if (!videosContainer) return;
 
-    const displayVideos = videoUrls.slice(0, 3);
-    videosContainer.innerHTML = displayVideos.map(url => {
+    // Display all videos from database (no limit)
+    videosContainer.innerHTML = videoUrls.map(url => {
         const embedUrl = convertToEmbedUrl(url);
         return `
             <div class="video-container">
