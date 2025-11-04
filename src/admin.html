@@ -1710,7 +1710,10 @@
                         <td><span class="badge ${msg.status === 'read' ? 'success' : 'warning'}">${msg.status || 'unread'}</span></td>
                         <td>
                             <div class="table-actions">
-                                <button class="btn-icon" onclick="viewMessage(${msg.id}, '${(msg.message || '').replace(/'/g, "\\'")}', '${msg.name}', '${msg.email}', '${msg.subject || ''}')" title="بینین">👁️</button>
+                                <button class="btn-icon" onclick="viewMessage(${msg.id}, \`${(msg.message || '').replace(/`/g, "\\`")}\`, '${(msg.name || '').replace(/'/g, "\\'")}', '${(msg.email || '').replace(/'/g, "\\'")}', '${(msg.subject || '').replace(/'/g, "\\'")}')" title="بینین">👁️</button>
+                                <button class="btn-icon ${msg.status === 'read' ? 'warning' : 'success'}" onclick="toggleMessageStatus(${msg.id}, '${msg.status || 'unread'}')" title="${msg.status === 'read' ? 'نیشانکردن وەک نەخوێندراوە' : 'نیشانکردن وەک خوێندراوە'}">
+                                    ${msg.status === 'read' ? '📧' : '✓'}
+                                </button>
                                 <button class="btn-icon danger" onclick="deleteMessage(${msg.id})" title="سڕینەوە">🗑️</button>
                             </div>
                         </td>
@@ -1799,7 +1802,19 @@
             alert('بینینی بەکارهێنەر: ' + id);
         }
 
-        function viewMessage(id, message, name, email, subject) {
+        async function viewMessage(id, message, name, email, subject) {
+            // Mark as read when viewing
+            try {
+                const { error } = await supabase
+                    .from('contact_messages')
+                    .update({ status: 'read' })
+                    .eq('id', id);
+
+                if (error) console.error('Error marking as read:', error);
+            } catch (err) {
+                console.error('Error updating status:', err);
+            }
+
             alert(`
 پەیام لە: ${name}
 ئیمەیڵ: ${email}
@@ -1808,6 +1823,29 @@
 پەیام:
 ${message}
             `.trim());
+
+            // Reload messages to show updated status
+            await loadMessages();
+            await loadMessagesStats();
+        }
+
+        async function toggleMessageStatus(id, currentStatus) {
+            try {
+                const newStatus = currentStatus === 'read' ? 'unread' : 'read';
+                const { error } = await supabase
+                    .from('contact_messages')
+                    .update({ status: newStatus })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                // Reload messages to show updated status
+                await loadMessages();
+                await loadMessagesStats();
+            } catch (error) {
+                console.error('Error toggling message status:', error);
+                alert('هەڵە لە گۆڕینی دۆخی پەیام');
+            }
         }
         function refreshUsers() { loadUsers(); }
         function refreshMessages() { loadMessages(); }
