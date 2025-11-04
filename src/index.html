@@ -1010,15 +1010,22 @@ async function loadWebsiteContent() {
             }
         }
 
-        const { data: videosData } = await supabase
+        const { data: videosData, error: videosError } = await supabase
             .from('featured_videos')
             .select('*')
             .order('position', { ascending: true });
+
+        if (videosError) {
+            console.error('[Homepage] Error loading videos:', videosError);
+        }
+
+        console.log('[Homepage] Videos loaded from database:', videosData);
 
         const content = {
             videos: videosData?.length ? videosData.map(v => v.video_url) : fallbackContent.videos
         };
 
+        console.log('[Homepage] Video URLs to display:', content.videos);
         updateVideoSection(content.videos);
     } catch (error) {
         loadFallbackContent();
