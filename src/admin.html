@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بەڕێوەبەرایەتی - Tafsir Kurd Admin</title>
     <link rel="stylesheet" href="/styles/Style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/assets/fontawesome/all.min.css">
     <style>
         * {
             margin: 0;
@@ -834,7 +834,15 @@
             try {
                 const response = await fetch('/.netlify/functions/config');
                 const config = await response.json();
-                supabase = createClient(config.supabaseUrl, config.supabaseAnonKey);
+
+                // The config function returns 'supabaseKey', not 'supabaseAnonKey'
+                const anonKey = config.supabaseAnonKey || config.supabaseKey;
+
+                if (!config.supabaseUrl || !anonKey) {
+                    throw new Error('Missing Supabase configuration');
+                }
+
+                supabase = createClient(config.supabaseUrl, anonKey);
                 return supabase;
             } catch (error) {
                 console.error('Failed to initialize Supabase:', error);
@@ -852,6 +860,10 @@
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> چاوەڕێ بە...';
 
             try {
+                if (!supabase) {
+                    throw new Error('Supabase not initialized');
+                }
+
                 // Sign in with Google
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
@@ -864,7 +876,7 @@
 
             } catch (error) {
                 console.error('Login error:', error);
-                errorMsg.textContent = 'هەڵە لە چوونە ژوورەوە';
+                errorMsg.textContent = 'هەڵە لە چوونە ژوورەوە: ' + error.message;
                 errorMsg.style.display = 'block';
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = '<i class="fab fa-google"></i> چوونە ژوورەوە بە Google';
@@ -874,6 +886,11 @@
         // Check if already logged in
         async function checkAuth() {
             try {
+                if (!supabase) {
+                    document.getElementById('loginPage').style.display = 'flex';
+                    return;
+                }
+
                 // Check Supabase session
                 const { data: { session } } = await supabase.auth.getSession();
 
