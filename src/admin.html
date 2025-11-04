@@ -757,10 +757,14 @@
 
         async function loadUsers() {
             try {
-                const { data } = await supabase
+                const { data, error } = await supabase
                     .from('user_data')
-                    .select('*')
-                    .order('last_read', { ascending: false });
+                    .select('*');
+
+                if (error) {
+                    console.error('Supabase error:', error);
+                    throw error;
+                }
 
                 const tbody = document.getElementById('usersTable');
                 if (data && data.length > 0) {
@@ -768,8 +772,8 @@
                         <tr>
                             <td>${user.total_read || 0}</td>
                             <td style="direction: ltr; text-align: right;">${user.email || '-'}</td>
-                            <td>${user.display_name || '-'}</td>
-                            <td>${user.last_read ? new Date(user.last_read).toLocaleDateString('ku') : '-'}</td>
+                            <td>${user.display_name || user.name || '-'}</td>
+                            <td>${user.last_read || user.created_at ? new Date(user.last_read || user.created_at).toLocaleDateString('ku') : '-'}</td>
                         </tr>
                     `).join('');
                 } else {
@@ -777,6 +781,8 @@
                 }
             } catch (error) {
                 console.error('Error loading users:', error);
+                const tbody = document.getElementById('usersTable');
+                tbody.innerHTML = '<tr><td colspan="4" class="empty-state"><div class="empty-icon"><i class="fas fa-exclamation-triangle"></i></div><div>هەڵە لە بارکردنی بەکارهێنەران</div></td></tr>';
             }
         }
 

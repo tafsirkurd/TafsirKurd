@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v44-fix-admin-visibility';
+const CACHE_NAME = 'tafsir-kurd-v45-fix-user-data-query';
 const urlsToCache = [
   '/',
   '/index.html',
