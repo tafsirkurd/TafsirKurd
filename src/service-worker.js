@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v50-math-max-position';
+const CACHE_NAME = 'tafsir-kurd-v51-homepage-4-videos';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -40,7 +40,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v50-math-max-position - INSTANT updates on refresh with network-first strategy');
+  console.log('[ServiceWorker] Installing v51-homepage-4-videos - INSTANT updates on refresh with network-first strategy');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
