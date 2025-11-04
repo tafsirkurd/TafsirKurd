@@ -510,15 +510,30 @@
                 ئەم ئیمەیڵە مۆڵەتی بەڕێوەبەرایەتی نییە
             </div>
 
-            <div class="login-form">
+            <form class="login-form" id="loginForm">
                 <p style="color: #718096; margin-bottom: 25px; text-align: center;">
                     تەنها saman26d@gmail.com و tefsirkurd@gmail.com دەتوانن بچنە ژوورەوە
                 </p>
 
-                <button type="button" class="btn-login" id="googleLoginBtn">
-                    <i class="fab fa-google"></i> چوونە ژوورەوە بە Google
+                <div class="form-group">
+                    <label class="form-label">ئیمەیڵ</label>
+                    <input type="email" class="form-input" id="emailInput"
+                           placeholder="admin@gmail.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">کۆدی تایبەت</label>
+                    <input type="password" class="form-input" id="passwordInput"
+                           placeholder="کۆدی نهێنی" required>
+                    <p style="font-size: 0.75rem; color: #a0aec0; margin-top: 5px;">
+                        کۆدی تایبەت: <strong style="direction: ltr; display: inline-block;">TafsirKurd2024Admin</strong>
+                    </p>
+                </div>
+
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> چوونە ژوورەوە
                 </button>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -850,9 +865,15 @@
             }
         }
 
-        // Login handling with Google
-        document.getElementById('googleLoginBtn').addEventListener('click', async () => {
-            const loginBtn = document.getElementById('googleLoginBtn');
+        // Simple password-based login with hardcoded admin password
+        const ADMIN_PASSWORD = 'TafsirKurd2024Admin';
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('emailInput').value.toLowerCase().trim();
+            const password = document.getElementById('passwordInput').value;
+            const loginBtn = document.getElementById('loginBtn');
             const errorMsg = document.getElementById('loginError');
 
             errorMsg.style.display = 'none';
@@ -860,58 +881,54 @@
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> چاوەڕێ بە...';
 
             try {
-                if (!supabase) {
-                    throw new Error('Supabase not initialized');
+                // Check if email is in whitelist
+                if (!ADMIN_EMAILS.includes(email)) {
+                    errorMsg.textContent = 'ئەم ئیمەیڵە مۆڵەتی بەڕێوەبەرایەتی نییە';
+                    errorMsg.style.display = 'block';
+                    return;
                 }
 
-                // Sign in with Google
-                const { data, error } = await supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                        redirectTo: window.location.href
-                    }
-                });
+                // Check password
+                if (password !== ADMIN_PASSWORD) {
+                    errorMsg.textContent = 'کۆدی نهێنی هەڵەیە';
+                    errorMsg.style.display = 'block';
+                    return;
+                }
 
-                if (error) throw error;
+                // Login successful
+                currentAdmin = { email: email, uid: 'admin-' + Date.now() };
+                localStorage.setItem('adminUser', JSON.stringify(currentAdmin));
+
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('adminDashboard').style.display = 'block';
+                document.getElementById('adminEmail').textContent = email;
+
+                await loadDashboardData();
 
             } catch (error) {
                 console.error('Login error:', error);
-                errorMsg.textContent = 'هەڵە لە چوونە ژوورەوە: ' + error.message;
+                errorMsg.textContent = 'هەڵە لە چوونە ژوورەوە';
                 errorMsg.style.display = 'block';
+            } finally {
                 loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fab fa-google"></i> چوونە ژوورەوە بە Google';
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> چوونە ژوورەوە';
             }
         });
 
         // Check if already logged in
         async function checkAuth() {
             try {
-                if (!supabase) {
-                    document.getElementById('loginPage').style.display = 'flex';
-                    return;
-                }
+                const savedAdmin = localStorage.getItem('adminUser');
+                if (savedAdmin) {
+                    currentAdmin = JSON.parse(savedAdmin);
+                    const email = currentAdmin.email.toLowerCase();
 
-                // Check Supabase session
-                const { data: { session } } = await supabase.auth.getSession();
-
-                if (session && session.user) {
-                    const email = session.user.email.toLowerCase();
-
-                    // Check if email is in whitelist
                     if (ADMIN_EMAILS.includes(email)) {
-                        currentAdmin = { email: email, uid: session.user.id };
-                        localStorage.setItem('adminUser', JSON.stringify(currentAdmin));
-
                         document.getElementById('loginPage').style.display = 'none';
                         document.getElementById('adminDashboard').style.display = 'block';
                         document.getElementById('adminEmail').textContent = email;
                         await loadDashboardData();
                         return;
-                    } else {
-                        // Not in whitelist - sign out
-                        await supabase.auth.signOut();
-                        document.getElementById('loginError').textContent = 'ئەم ئیمەیڵە مۆڵەتی بەڕێوەبەرایەتی نییە';
-                        document.getElementById('loginError').style.display = 'block';
                     }
                 }
             } catch (error) {
@@ -923,7 +940,6 @@
 
         // Logout
         document.getElementById('logoutBtn').addEventListener('click', async () => {
-            await supabase.auth.signOut();
             localStorage.removeItem('adminUser');
             location.reload();
         });
