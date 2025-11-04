@@ -8,7 +8,7 @@
 
     // Detect environment
     const hostname = window.location.hostname;
-    const isProduction = hostname === 'tafsirkurd.com' || hostname === 'www.tafsirkurd.com';
+    const isProduction = false; // TEMPORARILY DISABLED FOR DEBUGGING - hostname === 'tafsirkurd.com' || hostname === 'www.tafsirkurd.com';
     const isDevelopment = hostname === 'localhost'
         || hostname === '127.0.0.1'
         || hostname.includes('127.0.0.1')
