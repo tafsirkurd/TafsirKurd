@@ -1159,15 +1159,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         setInterval(loadWebsiteContent, 300000);
     }
 
-    // Register Service Worker for offline support
+    // TEMPORARILY UNREGISTER SERVICE WORKER FOR DEBUGGING
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(registration => {
-                console.log('✅ Service Worker registered successfully:', registration.scope);
-            })
-            .catch(error => {
-                console.log('❌ Service Worker registration failed:', error);
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            registrations.forEach(registration => {
+                registration.unregister();
+                console.log('🗑️ Unregistered old service worker');
             });
+        });
+
+        // Then register the new one
+        setTimeout(() => {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => {
+                    console.log('✅ Service Worker registered successfully:', registration.scope);
+                })
+                .catch(error => {
+                    console.log('❌ Service Worker registration failed:', error);
+                });
+        }, 1000);
     }
 });
 
