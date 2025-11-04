@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v36-fix-instagram-scraper';
+const CACHE_NAME = 'tafsir-kurd-v37-admin-videos-page';
 const urlsToCache = [
   '/',
   '/index.html',

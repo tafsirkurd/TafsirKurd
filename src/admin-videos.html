@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بەڕێوەبردنی ڤیدیۆکان - Tafsir Kurd</title>
+    <link rel="stylesheet" href="/styles/Style.css">
+    <style>
+        body {
+            background: var(--background);
+            color: var(--text);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .admin-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--shadow-lg);
+            border: 2px solid var(--border);
+        }
+
+        .admin-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .admin-subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .video-input-group {
+            margin-bottom: 25px;
+        }
+
+        .video-label {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .video-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--background);
+            color: var(--text);
+            font-size: 1rem;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .video-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn-save {
+            background: var(--primary);
+            color: var(--accent);
+            border: none;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-save:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .success-message {
+            background: #10b981;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message {
+            background: #ef4444;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .current-videos {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 2px solid var(--border);
+        }
+
+        .current-videos-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .video-preview {
+            background: var(--background);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .video-preview-number {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .video-preview-url {
+            flex: 1;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            direction: ltr;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .login-required {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .login-btn {
+            background: var(--primary);
+            color: var(--accent);
+            border: none;
+            padding: 15px 35px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div id="loginRequired" class="login-required" style="display: none;">
+            <h2>پێویستە بچیتە ژوورەوە</h2>
+            <p>تەنها بەڕێوەبەران دەتوانن ڤیدیۆکان نوێ بکەنەوە</p>
+            <button class="login-btn" onclick="window.location.href='/login.html'">چوونە ژوورەوە</button>
+        </div>
+
+        <div id="adminPanel" style="display: none;">
+            <h1 class="admin-title">بەڕێوەبردنی ڤیدیۆکانی ئینستاگرام</h1>
+            <p class="admin-subtitle">تازەترین ٣ ڤیدیۆ/ڕیلی ئینستاگرامت لێرە دابنێ</p>
+
+            <div class="success-message" id="successMessage">
+                ✓ ڤیدیۆکان بە سەرکەوتوویی نوێ کرانەوە!
+            </div>
+
+            <div class="error-message" id="errorMessage">
+                هەڵەیەک ڕوویدا. تکایە دووبارە هەوڵ بدەرەوە.
+            </div>
+
+            <form id="videoForm">
+                <div class="video-input-group">
+                    <label class="video-label">ڤیدیۆی یەکەم (تازەترین)</label>
+                    <input type="url" class="video-input" id="video1"
+                           placeholder="https://www.instagram.com/reel/..." required>
+                </div>
+
+                <div class="video-input-group">
+                    <label class="video-label">ڤیدیۆی دووەم</label>
+                    <input type="url" class="video-input" id="video2"
+                           placeholder="https://www.instagram.com/reel/..." required>
+                </div>
+
+                <div class="video-input-group">
+                    <label class="video-label">ڤیدیۆی سێیەم</label>
+                    <input type="url" class="video-input" id="video3"
+                           placeholder="https://www.instagram.com/reel/..." required>
+                </div>
+
+                <button type="submit" class="btn-save" id="saveBtn">
+                    پاشەکەوتکردنی گۆڕانکارییەکان
+                </button>
+            </form>
+
+            <div class="current-videos">
+                <h2 class="current-videos-title">ڤیدیۆکانی ئێستا</h2>
+                <div id="currentVideos"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/utils/console-cleaner.js"></script>
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/+esm';
+
+        let supabase;
+
+        async function initSupabase() {
+            try {
+                const response = await fetch('/.netlify/functions/config');
+                const config = await response.json();
+
+                supabase = createClient(config.supabaseUrl, config.supabaseAnonKey);
+                return supabase;
+            } catch (error) {
+                console.error('Failed to initialize Supabase:', error);
+                return null;
+            }
+        }
+
+        async function checkAuth() {
+            const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+            if (!user || !user.uid) {
+                document.getElementById('loginRequired').style.display = 'block';
+                return false;
+            }
+
+            document.getElementById('adminPanel').style.display = 'block';
+            return true;
+        }
+
+        async function loadCurrentVideos() {
+            try {
+                const { data, error } = await supabase
+                    .from('featured_videos')
+                    .select('*')
+                    .order('position', { ascending: true });
+
+                if (error) throw error;
+
+                const container = document.getElementById('currentVideos');
+
+                if (data && data.length > 0) {
+                    container.innerHTML = data.map((video, index) => `
+                        <div class="video-preview">
+                            <span class="video-preview-number">${index + 1}</span>
+                            <span class="video-preview-url">${video.video_url}</span>
+                        </div>
+                    `).join('');
+
+                    // Populate form with current values
+                    data.forEach((video, index) => {
+                        const input = document.getElementById(`video${index + 1}`);
+                        if (input) input.value = video.video_url;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading videos:', error);
+            }
+        }
+
+        async function saveVideos(event) {
+            event.preventDefault();
+
+            const saveBtn = document.getElementById('saveBtn');
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'پاشەکەوت دەکرێت...';
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+
+            try {
+                const videos = [
+                    { position: 1, video_url: document.getElementById('video1').value },
+                    { position: 2, video_url: document.getElementById('video2').value },
+                    { position: 3, video_url: document.getElementById('video3').value }
+                ];
+
+                // Delete all existing videos
+                await supabase
+                    .from('featured_videos')
+                    .delete()
+                    .neq('position', 0);
+
+                // Insert new videos
+                const { error } = await supabase
+                    .from('featured_videos')
+                    .insert(videos);
+
+                if (error) throw error;
+
+                successMessage.style.display = 'block';
+                await loadCurrentVideos();
+
+                // Hide success message after 3 seconds
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+
+            } catch (error) {
+                console.error('Error saving videos:', error);
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'هەڵە: ' + error.message;
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'پاشەکەوتکردنی گۆڕانکارییەکان';
+            }
+        }
+
+        // Initialize
+        (async () => {
+            await initSupabase();
+            const isAuthenticated = await checkAuth();
+
+            if (isAuthenticated) {
+                await loadCurrentVideos();
+                document.getElementById('videoForm').addEventListener('submit', saveVideos);
+            }
+        })();
+    </script>
+</body>
+</html>
