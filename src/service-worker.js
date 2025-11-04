@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v45-fix-user-data-query';
+const CACHE_NAME = 'tafsir-kurd-v46-admin-panel-with-charts';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -13,6 +13,7 @@ const urlsToCache = [
   '/complete-signup.html',
   '/privacy-policy.html',
   '/terms-and-conditions.html',
+  '/admin.html',
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
   '/styles/Style.css',
