@@ -3,12 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="description" content="تەفسیرا کوردی - بەردەستکرنا شرۆڤەکا ڕوون و ڕەسەن یا قورئانێ ب زمانێ کوردی ب ڕێکا وانێن کورت و هویربینیێن تەفسیرێ.">
   <meta name="keywords" content="تەفسیر، قورئان، کوردی، خواندنا ئیسلامی، شرۆڤەکرنا قورئانێ">
   <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>تەفسیر کورد - شرۆڤەکرنا قورئانێ ب زمانێ کوردی</title>
+  <title>تەفسیر کورد v51 - شرۆڤەکرنا قورئانێ ب زمانێ کوردی</title>
 
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-WVQC0MKLFN"></script>
@@ -1019,13 +1022,15 @@ async function loadWebsiteContent() {
             console.error('[Homepage] Error loading videos:', videosError);
         }
 
-        console.log('[Homepage] Videos loaded from database:', videosData);
+        console.log('[Homepage] V51 - Videos loaded from database:', videosData);
+        console.log('[Homepage] V51 - Number of videos:', videosData?.length || 0);
 
         const content = {
             videos: videosData?.length ? videosData.map(v => v.video_url) : fallbackContent.videos
         };
 
-        console.log('[Homepage] Video URLs to display:', content.videos);
+        console.log('[Homepage] V51 - Video URLs to display:', content.videos);
+        console.log('[Homepage] V51 - Number of URLs:', content.videos.length);
         updateVideoSection(content.videos);
     } catch (error) {
         loadFallbackContent();
