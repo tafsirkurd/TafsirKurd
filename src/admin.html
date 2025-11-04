@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ku" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>پانێڵی بەڕێوەبەر - تەفسیری کورد</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Panel - Tafsir Kurd</title>
 
     <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
@@ -22,7 +22,6 @@
 
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <style>
         :root {
@@ -34,15 +33,13 @@
             --text-muted: #666666;
             --text-light: #999999;
             --border: #e8e8e8;
-            --border-light: #f0f0f0;
             --success: #2ecc71;
             --warning: #f39c12;
             --danger: #e74c3c;
             --info: #3498db;
             --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
             --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
-            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
@@ -56,8 +53,7 @@
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
-            position: relative;
-            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* Islamic Pattern Background */
@@ -77,7 +73,7 @@
             pointer-events: none;
         }
 
-        /* Login Container */
+        /* Login Screen */
         .login-container {
             min-height: 100vh;
             display: flex;
@@ -90,53 +86,53 @@
             background: var(--card-bg);
             border: 2px solid var(--border);
             border-radius: 20px;
-            padding: 50px;
-            max-width: 500px;
+            padding: 40px 30px;
+            max-width: 400px;
             width: 100%;
-            box-shadow: var(--shadow-lg);
+            box-shadow: var(--shadow-md);
         }
 
         .login-logo {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
 
         .login-logo img {
-            width: 100px;
-            height: 100px;
-            margin-bottom: 20px;
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
         }
 
         .login-logo h1 {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 700;
             color: var(--primary);
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
 
         .login-logo p {
-            font-size: 15px;
+            font-size: 14px;
             color: var(--text-muted);
         }
 
         .form-group {
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             font-weight: 600;
-            font-size: 15px;
+            font-size: 14px;
             color: var(--text);
         }
 
         .form-group input {
             width: 100%;
-            padding: 14px 18px;
+            padding: 12px 16px;
             background: var(--bg);
             border: 2px solid var(--border);
-            border-radius: 12px;
+            border-radius: 10px;
             color: var(--text);
             font-size: 15px;
             font-family: inherit;
@@ -146,42 +142,35 @@
         .form-group input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
         }
 
         .btn {
             width: 100%;
-            padding: 16px;
+            padding: 14px;
             background: var(--primary);
             color: var(--accent);
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 15px;
             font-weight: 700;
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
             cursor: pointer;
             transition: all var(--transition);
+            font-family: inherit;
         }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
+        .btn:active {
+            transform: scale(0.98);
         }
 
         .error-message {
             background: rgba(231, 76, 60, 0.1);
             border: 2px solid var(--danger);
             color: var(--danger);
-            padding: 14px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-            font-size: 14px;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 13px;
             text-align: center;
             font-weight: 500;
         }
@@ -195,468 +184,280 @@
             display: block;
         }
 
-        /* Header */
+        /* Mobile Header */
         .admin-header {
             background: var(--card-bg);
             border-bottom: 2px solid var(--border);
-            padding: 20px 0;
+            padding: 15px 20px;
             position: sticky;
             top: 0;
             z-index: 100;
             box-shadow: var(--shadow-sm);
         }
 
-        .admin-header-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 30px;
+        .admin-header-content {
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
 
-        .admin-header-left {
+        .admin-logo {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 10px;
         }
 
-        .admin-header-logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+        .admin-logo img {
+            width: 35px;
+            height: 35px;
         }
 
-        .admin-header-logo img {
-            width: 45px;
-            height: 45px;
-        }
-
-        .admin-header-logo h1 {
-            font-size: 20px;
+        .admin-logo h1 {
+            font-size: 16px;
             font-weight: 700;
             color: var(--primary);
         }
 
-        .admin-header-right {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-
-        .admin-user-email {
-            font-size: 14px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        .btn-logout {
-            padding: 10px 24px;
-            background: var(--primary);
-            color: var(--accent);
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all var(--transition);
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
-        }
-
-        .btn-logout:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-sm);
-        }
-
-        /* Layout */
-        .admin-layout {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 30px;
-            display: flex;
-            gap: 30px;
-        }
-
-        /* Sidebar */
-        .admin-sidebar {
-            width: 280px;
-            flex-shrink: 0;
-        }
-
-        .sidebar-nav {
-            background: var(--card-bg);
-            border: 2px solid var(--border);
-            border-radius: 16px;
-            padding: 12px;
-            box-shadow: var(--shadow-sm);
-            position: sticky;
-            top: 110px;
-        }
-
-        .sidebar-nav-item {
-            padding: 14px 18px;
-            cursor: pointer;
-            transition: all var(--transition);
+        .admin-user {
             display: flex;
             align-items: center;
             gap: 12px;
-            font-size: 15px;
+        }
+
+        .admin-email {
+            font-size: 12px;
             color: var(--text-muted);
-            border-radius: 10px;
-            margin-bottom: 6px;
-            font-weight: 500;
-        }
-
-        .sidebar-nav-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .sidebar-nav-item:hover {
-            background: var(--bg);
-            color: var(--primary);
-        }
-
-        .sidebar-nav-item.active {
-            background: var(--primary);
-            color: var(--accent);
-            font-weight: 600;
-        }
-
-        .sidebar-nav-icon {
-            font-size: 18px;
-            width: 24px;
-            text-align: center;
-        }
-
-        /* Main Content */
-        .admin-main {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .admin-section {
             display: none;
         }
 
-        .admin-section.active {
+        .btn-logout {
+            padding: 8px 16px;
+            background: var(--primary);
+            color: var(--accent);
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        /* Mobile Navigation Tabs */
+        .mobile-nav {
+            background: var(--card-bg);
+            border-bottom: 2px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            position: sticky;
+            top: 67px;
+            z-index: 99;
+        }
+
+        .mobile-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-tabs {
+            display: flex;
+            padding: 10px 15px;
+            gap: 10px;
+            min-width: max-content;
+        }
+
+        .nav-tab {
+            padding: 8px 16px;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all var(--transition);
+        }
+
+        .nav-tab.active {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+        }
+
+        /* Content */
+        .admin-content {
+            padding: 20px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
             display: block;
         }
 
-        .section-header {
-            margin-bottom: 30px;
-        }
-
-        .section-title {
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 8px;
-        }
-
-        .section-subtitle {
-            font-size: 15px;
-            color: var(--text-muted);
-        }
-
-        /* Cards Grid */
-        .cards-grid {
+        /* Stats Cards */
+        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
         }
 
         .stat-card {
             background: var(--card-bg);
             border: 2px solid var(--border);
-            border-radius: 16px;
-            padding: 28px;
-            transition: all var(--transition);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-md);
-            border-color: var(--primary);
-        }
-
-        .stat-card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .stat-card-title {
-            font-size: 13px;
-            color: var(--text-light);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            font-weight: 600;
-        }
-
-        .stat-card-icon {
-            width: 48px;
-            height: 48px;
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
+            padding: 20px 15px;
+            box-shadow: var(--shadow-sm);
+            text-align: center;
         }
 
-        .stat-card-icon.success {
-            background: rgba(46, 204, 113, 0.1);
-            color: var(--success);
+        .stat-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
         }
 
-        .stat-card-icon.warning {
-            background: rgba(243, 156, 18, 0.1);
-            color: var(--warning);
-        }
-
-        .stat-card-icon.danger {
-            background: rgba(231, 76, 60, 0.1);
-            color: var(--danger);
-        }
-
-        .stat-card-icon.info {
-            background: rgba(52, 152, 219, 0.1);
-            color: var(--info);
-        }
-
-        .stat-card-value {
-            font-size: 36px;
+        .stat-value {
+            font-size: 24px;
             font-weight: 700;
             color: var(--primary);
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
-        .stat-card-label {
-            font-size: 14px;
+        .stat-label {
+            font-size: 12px;
             color: var(--text-muted);
             font-weight: 500;
         }
 
-        .stat-card-change {
-            font-size: 13px;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-
-        .stat-card-change.positive {
-            color: var(--success);
-        }
-
-        .stat-card-change.negative {
-            color: var(--danger);
-        }
-
-        /* Content Box */
-        .content-box {
+        /* Table Container */
+        .table-container {
             background: var(--card-bg);
             border: 2px solid var(--border);
-            border-radius: 16px;
-            padding: 28px;
-            margin-bottom: 24px;
+            border-radius: 12px;
+            overflow: hidden;
             box-shadow: var(--shadow-sm);
         }
 
-        .content-box-header {
+        .table-header {
+            padding: 15px;
+            border-bottom: 2px solid var(--border);
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            margin-bottom: 24px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid var(--border-light);
+            align-items: center;
         }
 
-        .content-box-title {
-            font-size: 20px;
+        .table-title {
+            font-size: 16px;
             font-weight: 700;
             color: var(--primary);
         }
 
-        /* Table */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .data-table thead {
-            background: var(--bg);
-            border-radius: 10px;
-        }
-
-        .data-table th {
-            padding: 14px 16px;
-            text-align: right;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .data-table td {
-            padding: 18px 16px;
-            border-bottom: 1px solid var(--border-light);
-            font-size: 14px;
-        }
-
-        .data-table tbody tr {
-            transition: all var(--transition);
-        }
-
-        .data-table tbody tr:hover {
-            background: var(--bg);
-        }
-
-        .data-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        .table-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-icon {
-            width: 36px;
-            height: 36px;
-            border: 2px solid var(--border);
-            background: var(--card-bg);
-            color: var(--text-muted);
-            cursor: pointer;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all var(--transition);
-            font-size: 15px;
-        }
-
-        .btn-icon:hover {
-            background: var(--primary);
-            color: var(--accent);
-            border-color: var(--primary);
-            transform: translateY(-2px);
-        }
-
-        .btn-icon.danger:hover {
-            background: var(--danger);
-            border-color: var(--danger);
-            color: var(--accent);
-        }
-
-        /* Buttons */
-        .btn-primary {
-            padding: 12px 24px;
+        .btn-add {
+            padding: 8px 16px;
             background: var(--primary);
             color: var(--accent);
             border: none;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 700;
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all var(--transition);
+            font-family: inherit;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
+        /* Mobile Table - Card Style */
+        .mobile-table {
+            padding: 10px;
         }
 
-        .btn-secondary {
-            padding: 12px 24px;
-            background: var(--card-bg);
-            color: var(--primary);
+        .table-card {
+            background: var(--bg);
             border: 2px solid var(--border);
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 700;
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .table-card-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .table-card-label {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .table-card-value {
+            color: var(--text);
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .table-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 2px solid var(--border);
+        }
+
+        .btn-icon {
+            padding: 8px 12px;
+            border: 2px solid var(--border);
+            background: var(--card-bg);
+            border-radius: 8px;
+            font-size: 16px;
             cursor: pointer;
+            flex: 1;
             transition: all var(--transition);
         }
 
-        .btn-secondary:hover {
-            background: var(--primary);
-            color: var(--accent);
-            border-color: var(--primary);
-            transform: translateY(-2px);
+        .btn-icon.success {
+            border-color: var(--success);
+            color: var(--success);
         }
 
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
+        .btn-icon.warning {
+            border-color: var(--warning);
+            color: var(--warning);
         }
 
-        .empty-state-icon {
-            font-size: 56px;
-            margin-bottom: 16px;
-            opacity: 0.4;
+        .btn-icon.danger {
+            border-color: var(--danger);
+            color: var(--danger);
         }
 
-        .empty-state-text {
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-muted);
-        }
-
-        .loading-spinner {
-            width: 48px;
-            height: 48px;
-            border: 4px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 16px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .btn-icon:active {
+            transform: scale(0.95);
         }
 
         /* Badge */
         .badge {
             display: inline-block;
-            padding: 6px 14px;
-            border-radius: 10px;
-            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
             font-weight: 700;
-            letter-spacing: 0.3px;
+            text-transform: uppercase;
         }
 
         .badge.success {
-            background: rgba(46, 204, 113, 0.1);
+            background: rgba(46, 204, 113, 0.15);
             color: var(--success);
         }
 
         .badge.warning {
-            background: rgba(243, 156, 18, 0.1);
+            background: rgba(243, 156, 18, 0.15);
             color: var(--warning);
         }
 
         .badge.danger {
-            background: rgba(231, 76, 60, 0.1);
+            background: rgba(231, 76, 60, 0.15);
             color: var(--danger);
-        }
-
-        .badge.info {
-            background: rgba(52, 152, 219, 0.1);
-            color: var(--info);
         }
 
         /* Modal */
@@ -672,7 +473,6 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            backdrop-filter: blur(4px);
         }
 
         .modal.active {
@@ -681,1052 +481,507 @@
 
         .modal-content {
             background: var(--card-bg);
-            border: 2px solid var(--border);
-            border-radius: 20px;
-            max-width: 600px;
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 400px;
             width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow-lg);
+            box-shadow: var(--shadow-md);
         }
 
         .modal-header {
-            padding: 28px;
-            border-bottom: 2px solid var(--border-light);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .modal-title {
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 700;
+            margin-bottom: 20px;
             color: var(--primary);
         }
 
-        .modal-close {
-            width: 36px;
-            height: 36px;
-            border: none;
-            background: var(--bg);
-            color: var(--text-muted);
-            cursor: pointer;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all var(--transition);
-            font-size: 22px;
-            font-weight: 700;
-        }
-
-        .modal-close:hover {
-            background: var(--primary);
-            color: var(--accent);
-        }
-
-        .modal-body {
-            padding: 28px;
-        }
-
         .modal-footer {
-            padding: 28px;
-            border-top: 2px solid var(--border-light);
             display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-        }
-
-        /* Search Bar */
-        .search-bar {
-            position: relative;
-            margin-bottom: 20px;
-        }
-
-        .search-bar input {
-            width: 100%;
-            padding: 14px 18px 14px 50px;
-            background: var(--bg);
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            color: var(--text);
-            font-size: 14px;
-            font-family: inherit;
-            transition: all var(--transition);
-        }
-
-        .search-bar input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-light);
-            font-size: 16px;
-        }
-
-        /* Chart Container */
-        .chart-container {
-            position: relative;
-            height: 320px;
+            gap: 10px;
             margin-top: 20px;
         }
 
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .admin-layout {
-                flex-direction: column;
-            }
-
-            .admin-sidebar {
-                width: 100%;
-            }
-
-            .sidebar-nav {
-                position: static;
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            }
-
-            .sidebar-nav-item {
-                margin-bottom: 0;
-            }
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
         }
 
-        @media (max-width: 768px) {
-            .admin-header-container {
-                padding: 0 20px;
+        /* Loading */
+        .loading {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Desktop Styles */
+        @media (min-width: 768px) {
+            .admin-email {
+                display: block;
             }
 
-            .admin-layout {
-                padding: 20px;
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 20px;
             }
 
-            .login-box {
+            .mobile-nav {
+                top: 69px;
+            }
+
+            .nav-tabs {
+                padding: 15px 30px;
+                gap: 15px;
+                justify-content: center;
+            }
+
+            .nav-tab {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .admin-content {
+                max-width: 1200px;
+                margin: 0 auto;
                 padding: 30px;
             }
 
-            .section-title {
-                font-size: 26px;
+            .mobile-table {
+                padding: 15px;
             }
-
-            .cards-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .content-box {
-                padding: 20px;
-            }
-
-            .data-table {
-                font-size: 13px;
-            }
-
-            .data-table th,
-            .data-table td {
-                padding: 12px 10px;
-            }
-
-            .sidebar-nav {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-muted);
         }
     </style>
 </head>
 <body>
-    <!-- Login Container -->
-    <div class="login-container" id="loginContainer">
+    <!-- Login Screen -->
+    <div id="loginContainer" class="login-container">
         <div class="login-box">
             <div class="login-logo">
-                <img src="/assets/images/logo.png" alt="تەفسیری کورد" onerror="this.src='/assets/images/logo.svg'">
-                <h1>پانێڵی بەڕێوەبەر</h1>
-                <p>Admin Panel - تەفسیری کورد</p>
+                <img src="/assets/images/logo.png" alt="Logo">
+                <h1>Admin Panel</h1>
+                <p>Tafsir Kurd</p>
             </div>
-
-            <div id="loginError" class="error-message" style="display: none;"></div>
-
+            <div id="loginError" class="error-message" style="display:none;"></div>
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="email">ئیمەیڵ / Email</label>
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        placeholder="admin@tafsirkurd.com"
-                        required
-                        autocomplete="email"
-                    >
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required autocomplete="email">
                 </div>
-
                 <div class="form-group">
-                    <label for="password">وشەی نهێنی / Password</label>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        placeholder="••••••••"
-                        required
-                        autocomplete="current-password"
-                    >
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required autocomplete="current-password">
                 </div>
-
-                <button type="submit" class="btn" id="loginBtn">
-                    چوونەژوورەوە / Login
-                </button>
+                <button type="submit" class="btn">Sign In</button>
             </form>
         </div>
     </div>
 
-    <!-- Admin Dashboard Container -->
-    <div class="admin-container" id="adminContainer">
+    <!-- Admin Dashboard -->
+    <div id="adminContainer" class="admin-container">
         <!-- Header -->
         <header class="admin-header">
-            <div class="admin-header-container">
-                <div class="admin-header-left">
-                    <div class="admin-header-logo">
-                        <img src="/assets/images/logo.png" alt="تەفسیری کورد" onerror="this.src='/assets/images/logo.svg'">
-                        <h1>پانێڵی بەڕێوەبەر</h1>
-                    </div>
+            <div class="admin-header-content">
+                <div class="admin-logo">
+                    <img src="/assets/images/logo.png" alt="Logo">
+                    <h1>Admin Panel</h1>
                 </div>
-                <div class="admin-header-right">
-                    <span class="admin-user-email" id="userEmail">admin@tafsirkurd.com</span>
-                    <button class="btn-logout" id="logoutBtn">دەرچوون / Logout</button>
+                <div class="admin-user">
+                    <span id="adminEmail" class="admin-email"></span>
+                    <button class="btn-logout" onclick="logout()">Logout</button>
                 </div>
             </div>
         </header>
 
-        <!-- Layout -->
-        <div class="admin-layout">
-            <!-- Sidebar -->
-            <aside class="admin-sidebar">
-                <nav class="sidebar-nav">
-                    <div class="sidebar-nav-item active" data-section="dashboard">
-                        <span class="sidebar-nav-icon">📊</span>
-                        <span>داشبۆرد</span>
-                    </div>
-                    <div class="sidebar-nav-item" data-section="analytics">
-                        <span class="sidebar-nav-icon">📈</span>
-                        <span>شیکاری</span>
-                    </div>
-                    <div class="sidebar-nav-item" data-section="users">
-                        <span class="sidebar-nav-icon">👥</span>
-                        <span>بەکارهێنەران</span>
-                    </div>
-                    <div class="sidebar-nav-item" data-section="videos">
-                        <span class="sidebar-nav-icon">📹</span>
-                        <span>ڤیدیۆکان</span>
-                    </div>
-                    <div class="sidebar-nav-item" data-section="messages">
-                        <span class="sidebar-nav-icon">📧</span>
-                        <span>پەیامەکان</span>
-                    </div>
-                    <div class="sidebar-nav-item" data-section="database">
-                        <span class="sidebar-nav-icon">💾</span>
-                        <span>بنکەی دراوە</span>
-                    </div>
-                    <div class="sidebar-nav-item" data-section="settings">
-                        <span class="sidebar-nav-icon">⚙️</span>
-                        <span>ڕێکخستنەکان</span>
-                    </div>
-                </nav>
-            </aside>
+        <!-- Mobile Navigation -->
+        <nav class="mobile-nav">
+            <div class="nav-tabs">
+                <div class="nav-tab active" onclick="switchSection('dashboard')">📊 Dashboard</div>
+                <div class="nav-tab" onclick="switchSection('messages')">📧 Messages</div>
+                <div class="nav-tab" onclick="switchSection('videos')">🎥 Videos</div>
+                <div class="nav-tab" onclick="switchSection('users')">👥 Users</div>
+                <div class="nav-tab" onclick="switchSection('database')">💾 Database</div>
+            </div>
+        </nav>
 
-            <!-- Main Content -->
-            <main class="admin-main">
-                <!-- Dashboard Section -->
-                <section class="admin-section active" id="dashboardSection">
-                    <div class="section-header">
-                        <h2 class="section-title">داشبۆرد</h2>
-                        <p class="section-subtitle">پوختەی گشتی سایت</p>
+        <!-- Content -->
+        <div class="admin-content">
+            <!-- Dashboard Section -->
+            <section id="dashboardSection" class="section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-value" id="totalUsers">0</div>
+                        <div class="stat-label">Total Users</div>
                     </div>
-
-                    <div class="cards-grid">
-                        <div class="stat-card">
-                            <div class="stat-card-header">
-                                <span class="stat-card-title">بەکارهێنەران</span>
-                                <div class="stat-card-icon success">👥</div>
-                            </div>
-                            <div class="stat-card-value" id="totalUsers">0</div>
-                            <div class="stat-card-label">کۆی گشتی بەکارهێنەران</div>
-                            <div class="stat-card-change positive" id="usersChange">+0 ئەم هەفتەیە</div>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-card-header">
-                                <span class="stat-card-title">خوێندنەوە</span>
-                                <div class="stat-card-icon info">📖</div>
-                            </div>
-                            <div class="stat-card-value" id="totalReadings">0</div>
-                            <div class="stat-card-label">ئایەتی خوێندراوە</div>
-                            <div class="stat-card-change positive" id="readingsChange">+0 ئەمڕۆ</div>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-card-header">
-                                <span class="stat-card-title">پەیامەکان</span>
-                                <div class="stat-card-icon warning">📧</div>
-                            </div>
-                            <div class="stat-card-value" id="totalMessages">0</div>
-                            <div class="stat-card-label">پەیامی نوێ</div>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-card-header">
-                                <span class="stat-card-title">ڤیدیۆکان</span>
-                                <div class="stat-card-icon danger">📹</div>
-                            </div>
-                            <div class="stat-card-value" id="totalVideos">0</div>
-                            <div class="stat-card-label">ڤیدیۆی تایبەت</div>
-                        </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📧</div>
+                        <div class="stat-value" id="totalMessages">0</div>
+                        <div class="stat-label">Messages</div>
                     </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎥</div>
+                        <div class="stat-value" id="totalVideos">0</div>
+                        <div class="stat-label">Videos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📖</div>
+                        <div class="stat-value" id="totalReading">0</div>
+                        <div class="stat-label">Active Readers</div>
+                    </div>
+                </div>
+            </section>
 
-                    <div class="content-box">
-                        <div class="content-box-header">
-                            <h3 class="content-box-title">چالاکیی دوایی</h3>
-                        </div>
-                        <div id="recentActivity" class="loading">
+            <!-- Messages Section -->
+            <section id="messagesSection" class="section">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h2 class="table-title">Contact Messages</h2>
+                    </div>
+                    <div id="messagesTable" class="mobile-table">
+                        <div class="loading">
                             <div class="loading-spinner"></div>
-                            <p>بارکردنی داتا...</p>
+                            <div class="loading-text">Loading messages...</div>
                         </div>
                     </div>
-                </section>
+                </div>
+            </section>
 
-                <!-- Analytics Section -->
-                <section class="admin-section" id="analyticsSection">
-                    <div class="section-header">
-                        <h2 class="section-title">شیکاری</h2>
-                        <p class="section-subtitle">Google Analytics - G-WVQC0MKLFN</p>
+            <!-- Videos Section -->
+            <section id="videosSection" class="section">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h2 class="table-title">Featured Videos</h2>
+                        <button class="btn-add" onclick="openAddVideoModal()">+ Add</button>
                     </div>
-
-                    <div class="content-box">
-                        <div class="content-box-header">
-                            <h3 class="content-box-title">هێڵکاری بەکارهێنەران</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="userGrowthChart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="content-box">
-                        <div class="content-box-header">
-                            <h3 class="content-box-title">سوورەتە خوێندراوەکان</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="popularSurahsChart"></canvas>
+                    <div id="videosTable" class="mobile-table">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <div class="loading-text">Loading videos...</div>
                         </div>
                     </div>
-                </section>
+                </div>
+            </section>
 
-                <!-- Users Section -->
-                <section class="admin-section" id="usersSection">
-                    <div class="section-header">
-                        <h2 class="section-title">بەکارهێنەران</h2>
-                        <p class="section-subtitle">بەڕێوەبردنی بەکارهێنەران</p>
+            <!-- Users Section -->
+            <section id="usersSection" class="section">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h2 class="table-title">Users</h2>
                     </div>
-
-                    <div class="content-box">
-                        <div class="content-box-header">
-                            <h3 class="content-box-title">لیستی بەکارهێنەران</h3>
-                            <div style="display: flex; gap: 12px;">
-                                <button class="btn-secondary" onclick="exportUsers()">هەناردەکردن</button>
-                                <button class="btn-primary" onclick="refreshUsers()">نوێکردنەوە</button>
-                            </div>
-                        </div>
-
-                        <div class="search-bar">
-                            <span class="search-icon">🔍</span>
-                            <input type="text" id="userSearch" placeholder="گەڕان بە ئیمەیڵ یان ناو...">
-                        </div>
-
-                        <div style="overflow-x: auto;">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>ئیمەیڵ</th>
-                                        <th>ناو</th>
-                                        <th>دوایین خوێندنەوە</th>
-                                        <th>بەروار</th>
-                                        <th>کردارەکان</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="usersTable">
-                                    <tr>
-                                        <td colspan="5" class="loading">
-                                            <div class="loading-spinner"></div>
-                                            <p>بارکردنی بەکارهێنەران...</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    <div id="usersTable" class="mobile-table">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <div class="loading-text">Loading users...</div>
                         </div>
                     </div>
-                </section>
+                </div>
+            </section>
 
-                <!-- Videos Section -->
-                <section class="admin-section" id="videosSection">
-                    <div class="section-header">
-                        <h2 class="section-title">ڤیدیۆکان</h2>
-                        <p class="section-subtitle">بەڕێوەبردنی ڤیدیۆی ئینستاگرام</p>
+            <!-- Database Section -->
+            <section id="databaseSection" class="section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-value" id="dbUsersCount">0</div>
+                        <div class="stat-label">Users</div>
+                        <button class="btn-add" style="margin-top: 12px; width: 100%;" onclick="backupTable('user_data')">Backup</button>
                     </div>
-
-                    <div class="content-box">
-                        <div class="content-box-header">
-                            <h3 class="content-box-title">ڤیدیۆی تایبەت</h3>
-                            <button class="btn-primary" onclick="openAddVideoModal()">زیادکردنی ڤیدیۆ</button>
-                        </div>
-
-                        <div style="overflow-x: auto;">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>لینک</th>
-                                        <th>جۆر</th>
-                                        <th>بەروار</th>
-                                        <th>کردارەکان</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="videosTable">
-                                    <tr>
-                                        <td colspan="4" class="loading">
-                                            <div class="loading-spinner"></div>
-                                            <p>بارکردنی ڤیدیۆکان...</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎥</div>
+                        <div class="stat-value" id="dbVideosCount">0</div>
+                        <div class="stat-label">Videos</div>
+                        <button class="btn-add" style="margin-top: 12px; width: 100%;" onclick="backupTable('featured_videos')">Backup</button>
                     </div>
-                </section>
-
-                <!-- Messages Section -->
-                <section class="admin-section" id="messagesSection">
-                    <div class="section-header">
-                        <h2 class="section-title">پەیامەکان</h2>
-                        <p class="section-subtitle">پەیامەکانی پەیوەندیکردن</p>
+                    <div class="stat-card">
+                        <div class="stat-icon">📧</div>
+                        <div class="stat-value" id="dbMessagesCount">0</div>
+                        <div class="stat-label">Messages</div>
+                        <button class="btn-add" style="margin-top: 12px; width: 100%;" onclick="backupTable('contact_messages')">Backup</button>
                     </div>
-
-                    <div class="content-box">
-                        <div class="content-box-header">
-                            <h3 class="content-box-title">لیستی پەیامەکان</h3>
-                            <div style="display: flex; gap: 12px;">
-                                <button class="btn-secondary" onclick="exportMessages()">هەناردەکردن</button>
-                                <button class="btn-primary" onclick="refreshMessages()">نوێکردنەوە</button>
-                            </div>
-                        </div>
-
-                        <div class="search-bar">
-                            <span class="search-icon">🔍</span>
-                            <input type="text" id="messageSearch" placeholder="گەڕان بە ناو یان ئیمەیڵ...">
-                        </div>
-
-                        <div style="overflow-x: auto;">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>ناو</th>
-                                        <th>ئیمەیڵ</th>
-                                        <th>پەیام</th>
-                                        <th>دۆخ</th>
-                                        <th>کردارەکان</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="messagesTable">
-                                    <tr>
-                                        <td colspan="5" class="loading">
-                                            <div class="loading-spinner"></div>
-                                            <p>بارکردنی پەیامەکان...</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💾</div>
+                        <div class="stat-value">All</div>
+                        <div class="stat-label">Backup All</div>
+                        <button class="btn-add" style="margin-top: 12px; width: 100%;" onclick="backupAllTables()">Backup</button>
                     </div>
-                </section>
-
-                <!-- Database Section -->
-                <section class="admin-section" id="databaseSection">
-                    <div class="section-header">
-                        <h2 class="section-title">بنکەی دراوە</h2>
-                        <p class="section-subtitle">بەڕێوەبردن و پاشەکەوتکردن</p>
-                    </div>
-
-                    <div class="cards-grid">
-                        <div class="stat-card">
-                            <div class="stat-card-header">
-                                <span class="stat-card-title">user_data</span>
-                                <div class="stat-card-icon info">👥</div>
-                            </div>
-                            <div class="stat-card-value" id="dbUsersCount">0</div>
-                            <div class="stat-card-label">تۆمار</div>
-                            <button class="btn-secondary" style="margin-top: 16px; width: 100%;" onclick="backupTable('user_data')">
-                                پاشەکەوتکردن
-                            </button>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-card-header">
-                                <span class="stat-card-title">featured_videos</span>
-                                <div class="stat-card-icon warning">📹</div>
-                            </div>
-                            <div class="stat-card-value" id="dbVideosCount">0</div>
-                            <div class="stat-card-label">تۆمار</div>
-                            <button class="btn-secondary" style="margin-top: 16px; width: 100%;" onclick="backupTable('featured_videos')">
-                                پاشەکەوتکردن
-                            </button>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-card-header">
-                                <span class="stat-card-title">contact_messages</span>
-                                <div class="stat-card-icon success">📧</div>
-                            </div>
-                            <div class="stat-card-value" id="dbMessagesCount">0</div>
-                            <div class="stat-card-label">تۆمار</div>
-                            <button class="btn-secondary" style="margin-top: 16px; width: 100%;" onclick="backupTable('contact_messages')">
-                                پاشەکەوتکردن
-                            </button>
-                        </div>
-
-                        <div class="stat-card">
-                            <div class="stat-card-header">
-                                <span class="stat-card-title">هەموو خشتەکان</span>
-                                <div class="stat-card-icon danger">💾</div>
-                            </div>
-                            <div class="stat-card-value">-</div>
-                            <div class="stat-card-label">پاشەکەوتی تەواو</div>
-                            <button class="btn-primary" style="margin-top: 16px; width: 100%;" onclick="backupAllTables()">
-                                پاشەکەوتی هەموو
-                            </button>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Settings Section -->
-                <section class="admin-section" id="settingsSection">
-                    <div class="section-header">
-                        <h2 class="section-title">ڕێکخستنەکان</h2>
-                        <p class="section-subtitle">ڕێکخستنەکانی سایت</p>
-                    </div>
-
-                    <div class="content-box">
-                        <div class="content-box-header">
-                            <h3 class="content-box-title">Service Worker</h3>
-                        </div>
-                        <div style="padding: 20px 0;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px solid var(--border-light);">
-                                <div>
-                                    <div style="font-weight: 700; margin-bottom: 6px; font-size: 15px;">وەشانی ئێستا</div>
-                                    <div style="color: var(--text-muted); font-size: 14px;" id="swVersion">v46-admin-panel-with-charts</div>
-                                </div>
-                                <button class="btn-secondary" onclick="updateServiceWorker()">نوێکردنەوە</button>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <div style="font-weight: 700; margin-bottom: 6px; font-size: 15px;">پاککردنەوەی کاش</div>
-                                    <div style="color: var(--text-muted); font-size: 14px;">سڕینەوەی هەموو کاشەکان</div>
-                                </div>
-                                <button class="btn-primary" onclick="clearAllCaches()">پاککردنەوە</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="content-box">
-                        <div class="content-box-header">
-                            <h3 class="content-box-title">Google Analytics</h3>
-                        </div>
-                        <div style="padding: 20px 0;">
-                            <div style="margin-bottom: 20px;">
-                                <div style="font-weight: 700; margin-bottom: 10px; font-size: 15px;">Measurement ID</div>
-                                <div style="background: var(--bg); padding: 16px; border-radius: 12px; font-family: monospace; border: 2px solid var(--border); font-size: 14px; font-weight: 600;">
-                                    G-WVQC0MKLFN
-                                </div>
-                            </div>
-                            <div>
-                                <div style="font-weight: 700; margin-bottom: 10px; font-size: 15px;">Stream ID</div>
-                                <div style="background: var(--bg); padding: 16px; border-radius: 12px; font-family: monospace; border: 2px solid var(--border); font-size: 14px; font-weight: 600;">
-                                    12367767836
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="content-box">
-                        <div class="content-box-header">
-                            <h3 class="content-box-title">زانیاری سایت</h3>
-                        </div>
-                        <div style="padding: 20px 0;">
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
-                                <div>
-                                    <div style="font-weight: 700; margin-bottom: 6px; font-size: 14px;">دۆمەین</div>
-                                    <div style="color: var(--text-muted); font-size: 14px;">tafsirkurd.com</div>
-                                </div>
-                                <div>
-                                    <div style="font-weight: 700; margin-bottom: 6px; font-size: 14px;">ژێدەر</div>
-                                    <div style="color: var(--text-muted); font-size: 14px;">Netlify</div>
-                                </div>
-                                <div>
-                                    <div style="font-weight: 700; margin-bottom: 6px; font-size: 14px;">بنکەی دراوە</div>
-                                    <div style="color: var(--text-muted); font-size: 14px;">Supabase</div>
-                                </div>
-                                <div>
-                                    <div style="font-weight: 700; margin-bottom: 6px; font-size: 14px;">شیکاری</div>
-                                    <div style="color: var(--text-muted); font-size: 14px;">Google Analytics 4</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </main>
+                </div>
+            </section>
         </div>
     </div>
 
     <!-- Add Video Modal -->
-    <div class="modal" id="addVideoModal">
+    <div id="addVideoModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">زیادکردنی ڤیدیۆ</h3>
-                <button class="modal-close" onclick="closeAddVideoModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>لینکی ئینستاگرام</label>
-                    <input
-                        type="url"
-                        id="videoUrl"
-                        placeholder="https://www.instagram.com/reel/..."
-                        style="width: 100%;"
-                    >
-                </div>
+            <h3 class="modal-header">Add New Video</h3>
+            <div class="form-group">
+                <label>Instagram Post URL</label>
+                <input type="url" id="videoUrl" placeholder="https://www.instagram.com/p/...">
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeAddVideoModal()">پاشگەزبوونەوە</button>
-                <button class="btn-primary" onclick="addVideo()">زیادکردن</button>
+                <button class="btn btn-secondary" onclick="closeAddVideoModal()">Cancel</button>
+                <button class="btn" onclick="addVideo()">Add Video</button>
             </div>
         </div>
     </div>
 
     <script>
         // Configuration
+        const SUPABASE_URL = 'https://gijupzejtbpifjzwadee.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanVwemVqdGJwaWZqendh ZGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYyNjA4OTMsImV4cCI6MjA1MTgzNjg5M30.eO_SZc5sQ-FTuKhHOQYN-RZvx7jQv0V1d6bZv3KvUbc';
         const ADMIN_EMAILS = ['saman26d@gmail.com', 'tefsirkurd@gmail.com'];
         const ADMIN_PASSWORD = 'TafsirKurd2024Admin';
 
-        let supabase = null;
-        let currentUser = null;
-        let userGrowthChart = null;
-        let popularSurahsChart = null;
-
         // Initialize Supabase
-        async function initSupabase() {
-            try {
-                const response = await fetch('/.netlify/functions/config');
-                const config = await response.json();
-                const anonKey = config.supabaseAnonKey || config.supabaseKey;
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('Supabase initialized successfully');
 
-                if (!config.supabaseUrl || !anonKey) {
-                    throw new Error('Missing Supabase configuration');
-                }
-
-                supabase = window.supabase.createClient(config.supabaseUrl, anonKey);
-                console.log('Supabase initialized successfully');
-            } catch (error) {
-                console.error('Failed to initialize Supabase:', error);
-                showLoginError('فشڵبوو لە پەیوەستبوون بە بنکەی دراوە');
-            }
+        // Check if already logged in
+        const adminSession = sessionStorage.getItem('adminSession');
+        if (adminSession) {
+            const session = JSON.parse(adminSession);
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('adminContainer').classList.add('active');
+            document.getElementById('adminEmail').textContent = session.email;
+            loadDashboardData();
         }
 
-        // Login
+        // Login Form
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const loginBtn = document.getElementById('loginBtn');
-
-            document.getElementById('loginError').style.display = 'none';
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
 
             if (!ADMIN_EMAILS.includes(email)) {
-                showLoginError('ئیمەیڵەکە ڕێگەپێدراو نییە');
+                errorDiv.textContent = 'Access denied: Email not authorized';
+                errorDiv.style.display = 'block';
                 return;
             }
 
             if (password !== ADMIN_PASSWORD) {
-                showLoginError('وشەی نهێنی هەڵەیە');
+                errorDiv.textContent = 'Incorrect password';
+                errorDiv.style.display = 'block';
                 return;
             }
 
-            loginBtn.disabled = true;
-            loginBtn.textContent = 'چوونەژوورەوە...';
-
-            try {
-                currentUser = { email };
-                sessionStorage.setItem('adminUser', JSON.stringify(currentUser));
-
-                document.getElementById('loginContainer').style.display = 'none';
-                document.getElementById('adminContainer').classList.add('active');
-                document.getElementById('userEmail').textContent = email;
-
-                await loadDashboardData();
-
-            } catch (error) {
-                console.error('Login error:', error);
-                showLoginError('هەڵەیەک ڕوویدا');
-            } finally {
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'چوونەژوورەوە / Login';
-            }
+            // Store session
+            sessionStorage.setItem('adminSession', JSON.stringify({ email }));
+            document.getElementById('adminEmail').textContent = email;
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('adminContainer').classList.add('active');
+            loadDashboardData();
         });
 
         // Logout
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            currentUser = null;
-            sessionStorage.removeItem('adminUser');
-            document.getElementById('adminContainer').classList.remove('active');
-            document.getElementById('loginContainer').style.display = 'flex';
-            document.getElementById('email').value = '';
-            document.getElementById('password').value = '';
-        });
-
-        function showLoginError(message) {
-            const errorDiv = document.getElementById('loginError');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
+        function logout() {
+            sessionStorage.removeItem('adminSession');
+            location.reload();
         }
 
-        // Check session
-        async function checkSession() {
-            const savedUser = sessionStorage.getItem('adminUser');
-            if (savedUser) {
-                try {
-                    currentUser = JSON.parse(savedUser);
-                    document.getElementById('loginContainer').style.display = 'none';
-                    document.getElementById('adminContainer').classList.add('active');
-                    document.getElementById('userEmail').textContent = currentUser.email;
-                    await loadDashboardData();
-                } catch (error) {
-                    console.error('Session restore error:', error);
-                    sessionStorage.removeItem('adminUser');
-                }
+        // Switch Section
+        function switchSection(section) {
+            // Update tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update sections
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(section + 'Section').classList.add('active');
+
+            // Load data
+            loadSectionData(section);
+        }
+
+        async function loadSectionData(section) {
+            switch(section) {
+                case 'messages': await loadMessages(); break;
+                case 'videos': await loadVideos(); break;
+                case 'users': await loadUsers(); break;
+                case 'database': await loadDatabaseStats(); break;
             }
         }
-
-        // Navigation
-        document.querySelectorAll('.sidebar-nav-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const section = item.dataset.section;
-
-                document.querySelectorAll('.sidebar-nav-item').forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-
-                document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
-                document.getElementById(section + 'Section').classList.add('active');
-
-                loadSectionData(section);
-            });
-        });
 
         // Load Dashboard Data
         async function loadDashboardData() {
             try {
-                await Promise.all([
-                    loadUsersStats(),
-                    loadVideosStats(),
-                    loadMessagesStats(),
-                    loadReadingStats()
-                ]);
-                await loadRecentActivity();
+                // Load users
+                const { data: users } = await supabase.from('user_data').select('*');
+                document.getElementById('totalUsers').textContent = users?.length || 0;
+                document.getElementById('dbUsersCount').textContent = users?.length || 0;
+
+                // Load messages
+                const { data: messages } = await supabase.from('contact_messages').select('*');
+                document.getElementById('totalMessages').textContent = messages?.length || 0;
+                document.getElementById('dbMessagesCount').textContent = messages?.length || 0;
+
+                // Load videos
+                const { data: videos } = await supabase.from('featured_videos').select('*');
+                document.getElementById('totalVideos').textContent = videos?.length || 0;
+                document.getElementById('dbVideosCount').textContent = videos?.length || 0;
+
+                // Count active readers
+                const activeReaders = users?.filter(u => u.current_surah || u.current_ayah).length || 0;
+                document.getElementById('totalReading').textContent = activeReaders;
             } catch (error) {
                 console.error('Error loading dashboard:', error);
             }
         }
 
-        async function loadUsersStats() {
-            try {
-                const { data, error } = await supabase.from('user_data').select('*');
-                if (error) throw error;
-                document.getElementById('totalUsers').textContent = data?.length || 0;
-                document.getElementById('dbUsersCount').textContent = data?.length || 0;
-                document.getElementById('usersChange').textContent = '+' + Math.floor((data?.length || 0) * 0.1) + ' ئەم هەفتەیە';
-            } catch (error) {
-                console.error('Error loading users stats:', error);
-            }
-        }
-
-        async function loadVideosStats() {
-            try {
-                const { data, error } = await supabase.from('featured_videos').select('*');
-                if (error) throw error;
-                document.getElementById('totalVideos').textContent = data?.length || 0;
-                document.getElementById('dbVideosCount').textContent = data?.length || 0;
-            } catch (error) {
-                console.error('Error loading videos stats:', error);
-            }
-        }
-
-        async function loadMessagesStats() {
-            try {
-                const { data, error } = await supabase.from('contact_messages').select('*');
-                if (error) throw error;
-                document.getElementById('totalMessages').textContent = data?.length || 0;
-                document.getElementById('dbMessagesCount').textContent = data?.length || 0;
-            } catch (error) {
-                console.error('Error loading messages stats:', error);
-            }
-        }
-
-        async function loadReadingStats() {
-            try {
-                const { data, error } = await supabase.from('user_data').select('*');
-                if (error) throw error;
-                // Calculate based on user count (simplified)
-                const totalReadings = (data?.length || 0) * 50; // Estimate: 50 ayahs per user
-                document.getElementById('totalReadings').textContent = totalReadings;
-                document.getElementById('readingsChange').textContent = '+' + Math.floor(totalReadings * 0.05) + ' ئەمڕۆ';
-            } catch (error) {
-                console.error('Error loading reading stats:', error);
-            }
-        }
-
-        async function loadRecentActivity() {
-            const activityDiv = document.getElementById('recentActivity');
-            activityDiv.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">هیچ چالاکییەکی تازە نییە</div></div>';
-        }
-
-        async function loadSectionData(section) {
-            switch(section) {
-                case 'analytics': await loadAnalytics(); break;
-                case 'users': await loadUsers(); break;
-                case 'videos': await loadVideos(); break;
-                case 'messages': await loadMessages(); break;
-                case 'database': await loadDatabaseStats(); break;
-            }
-        }
-
-        async function loadAnalytics() {
-            try {
-                const { data: users, error } = await supabase.from('user_data').select('*');
-                if (error) throw error;
-                createUserGrowthChart(users);
-                createPopularSurahsChart(users);
-            } catch (error) {
-                console.error('Error loading analytics:', error);
-            }
-        }
-
-        function createUserGrowthChart(users) {
-            const ctx = document.getElementById('userGrowthChart');
-            if (!ctx) return;
-            if (userGrowthChart) userGrowthChart.destroy();
-
-            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-            const data = labels.map((_, i) => Math.floor((users?.length || 0) * (i + 1) / 6));
-
-            userGrowthChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'بەکارهێنەران',
-                        data: data,
-                        borderColor: '#000000',
-                        backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                        tension: 0.4,
-                        fill: true,
-                        borderWidth: 3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { labels: { color: '#000000', font: { weight: '600' } } }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: '#666666' },
-                            grid: { color: '#e8e8e8' }
-                        },
-                        x: {
-                            ticks: { color: '#666666' },
-                            grid: { color: '#e8e8e8' }
-                        }
-                    }
-                }
-            });
-        }
-
-        function createPopularSurahsChart(users) {
-            const ctx = document.getElementById('popularSurahsChart');
-            if (!ctx) return;
-            if (popularSurahsChart) popularSurahsChart.destroy();
-
-            popularSurahsChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة'],
-                    datasets: [{
-                        label: 'خوێندنەوە',
-                        data: [45, 38, 32, 28, 25],
-                        backgroundColor: '#000000',
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { labels: { color: '#000000', font: { weight: '600' } } }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: '#666666' },
-                            grid: { color: '#e8e8e8' }
-                        },
-                        x: {
-                            ticks: { color: '#666666' },
-                            grid: { display: false }
-                        }
-                    }
-                }
-            });
-        }
-
-        async function loadUsers() {
-            const tbody = document.getElementById('usersTable');
-            tbody.innerHTML = '<tr><td colspan="5" class="loading"><div class="loading-spinner"></div><p>بارکردنی بەکارهێنەران...</p></td></tr>';
+        // Load Messages
+        async function loadMessages() {
+            const container = document.getElementById('messagesTable');
+            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading messages...</div></div>';
 
             try {
-                const { data, error } = await supabase.from('user_data').select('*');
+                const { data, error } = await supabase.from('contact_messages').select('*').order('id', { ascending: false });
                 if (error) throw error;
 
                 if (!data || data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-text">هیچ بەکارهێنەرێک نییە</div></td></tr>';
+                    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📧</div><div class="empty-text">No messages yet</div></div>';
                     return;
                 }
 
-                tbody.innerHTML = data.map(user => `
-                    <tr>
-                        <td>${user.email || '-'}</td>
-                        <td>${user.display_name || user.name || '-'}</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>
-                            <div class="table-actions">
-                                <button class="btn-icon" onclick="viewUser('${user.id}')" title="بینین">👁️</button>
-                                <button class="btn-icon danger" onclick="deleteUser('${user.id}')" title="سڕینەوە">🗑️</button>
-                            </div>
-                        </td>
-                    </tr>
+                container.innerHTML = data.map(msg => `
+                    <div class="table-card">
+                        <div class="table-card-row">
+                            <span class="table-card-label">Name:</span>
+                            <span class="table-card-value">${msg.name || '-'}</span>
+                        </div>
+                        <div class="table-card-row">
+                            <span class="table-card-label">Email:</span>
+                            <span class="table-card-value">${msg.email || '-'}</span>
+                        </div>
+                        <div class="table-card-row">
+                            <span class="table-card-label">Subject:</span>
+                            <span class="table-card-value">${msg.subject || '-'}</span>
+                        </div>
+                        <div class="table-card-row">
+                            <span class="table-card-label">Message:</span>
+                            <span class="table-card-value">${(msg.message || '').substring(0, 50)}...</span>
+                        </div>
+                        <div class="table-card-row">
+                            <span class="table-card-label">Status:</span>
+                            <span class="badge ${msg.status === 'read' ? 'success' : 'warning'}">${msg.status || 'unread'}</span>
+                        </div>
+                        <div class="table-card-actions">
+                            <button class="btn-icon" onclick='viewMessage(${msg.id}, \`${(msg.message || '').replace(/`/g, '\\`')}\`, "${(msg.name || '').replace(/"/g, '\\"')}", "${(msg.email || '').replace(/"/g, '\\"')}", "${(msg.subject || '').replace(/"/g, '\\"')}")'>👁️ View</button>
+                            <button class="btn-icon ${msg.status === 'read' ? 'warning' : 'success'}" onclick="toggleMessageStatus(${msg.id}, '${msg.status || 'unread'}')">
+                                ${msg.status === 'read' ? '📧 Unread' : '✓ Read'}
+                            </button>
+                            <button class="btn-icon danger" onclick="deleteMessage(${msg.id})">🗑️ Delete</button>
+                        </div>
+                    </div>
                 `).join('');
             } catch (error) {
-                console.error('Error loading users:', error);
-                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">هەڵە لە بارکردنی بەکارهێنەران</td></tr>';
+                console.error('Error loading messages:', error);
+                container.innerHTML = '<div class="empty-state"><div class="empty-text" style="color: var(--danger);">Error loading messages</div></div>';
             }
         }
 
+        async function viewMessage(id, message, name, email, subject) {
+            // Mark as read
+            try {
+                await supabase.from('contact_messages').update({ status: 'read' }).eq('id', id);
+            } catch (err) {
+                console.error('Error marking as read:', err);
+            }
+
+            alert(`From: ${name}\nEmail: ${email}\nSubject: ${subject}\n\nMessage:\n${message}`);
+            await loadMessages();
+            await loadDashboardData();
+        }
+
+        async function toggleMessageStatus(id, currentStatus) {
+            try {
+                const newStatus = currentStatus === 'read' ? 'unread' : 'read';
+                const { error } = await supabase.from('contact_messages').update({ status: newStatus }).eq('id', id);
+                if (error) throw error;
+                await loadMessages();
+                await loadDashboardData();
+            } catch (error) {
+                console.error('Error toggling status:', error);
+                alert('Error updating status');
+            }
+        }
+
+        async function deleteMessage(id) {
+            if (!confirm('Delete this message?')) return;
+            try {
+                const { error } = await supabase.from('contact_messages').delete().eq('id', id);
+                if (error) throw error;
+                await loadMessages();
+                await loadDashboardData();
+            } catch (error) {
+                console.error('Error deleting message:', error);
+                alert('Error deleting message');
+            }
+        }
+
+        // Load Videos
         async function loadVideos() {
-            const tbody = document.getElementById('videosTable');
-            tbody.innerHTML = '<tr><td colspan="4" class="loading"><div class="loading-spinner"></div><p>بارکردنی ڤیدیۆکان...</p></td></tr>';
+            const container = document.getElementById('videosTable');
+            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading videos...</div></div>';
 
             try {
-                const { data, error } = await supabase.from('featured_videos').select('*');
+                const { data, error } = await supabase.from('featured_videos').select('*').order('id', { ascending: false });
                 if (error) throw error;
 
                 if (!data || data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="empty-state"><div class="empty-state-icon">📹</div><div class="empty-state-text">هیچ ڤیدیۆیەک نییە</div></td></tr>';
+                    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🎥</div><div class="empty-text">No videos yet</div></div>';
                     return;
                 }
 
-                tbody.innerHTML = data.map(video => {
-                    const url = video.video_url || video.url || '-';
-                    return `
-                    <tr>
-                        <td><a href="${url}" target="_blank" style="color: var(--info); text-decoration: none;">${url.substring(0, 50)}...</a></td>
-                        <td><span class="badge info">${url.includes('/reel/') ? 'Reel' : 'Post'}</span></td>
-                        <td>-</td>
-                        <td>
-                            <div class="table-actions">
-                                <button class="btn-icon danger" onclick="deleteVideo(${video.id})" title="سڕینەوە">🗑️</button>
-                            </div>
-                        </td>
-                    </tr>
-                `}).join('');
+                container.innerHTML = data.map(video => `
+                    <div class="table-card">
+                        <div class="table-card-row">
+                            <span class="table-card-label">URL:</span>
+                            <span class="table-card-value">${(video.video_url || '').substring(0, 30)}...</span>
+                        </div>
+                        <div class="table-card-actions">
+                            <button class="btn-icon" onclick="window.open('${video.video_url}', '_blank')">🔗 Open</button>
+                            <button class="btn-icon danger" onclick="deleteVideo(${video.id})">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `).join('');
             } catch (error) {
                 console.error('Error loading videos:', error);
-                tbody.innerHTML = '<tr><td colspan="4" class="empty-state">هەڵە لە بارکردنی ڤیدیۆکان</td></tr>';
+                container.innerHTML = '<div class="empty-state"><div class="empty-text" style="color: var(--danger);">Error loading videos</div></div>';
             }
-        }
-
-        async function loadMessages() {
-            const tbody = document.getElementById('messagesTable');
-            tbody.innerHTML = '<tr><td colspan="5" class="loading"><div class="loading-spinner"></div><p>بارکردنی پەیامەکان...</p></td></tr>';
-
-            try {
-                console.log('[Admin] Loading messages from contact_messages table...');
-                const { data, error } = await supabase.from('contact_messages').select('*');
-
-                if (error) {
-                    console.error('[Admin] Supabase error:', error);
-                    throw error;
-                }
-
-                console.log('[Admin] Messages loaded:', data?.length || 0, 'messages');
-
-                if (!data || data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><div class="empty-state-icon">📧</div><div class="empty-state-text">هیچ پەیامێک نییە</div></td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = data.map(msg => `
-                    <tr>
-                        <td>${msg.name || '-'}</td>
-                        <td>${msg.email || '-'}</td>
-                        <td>${(msg.message || '').substring(0, 50)}${msg.message?.length > 50 ? '...' : ''}</td>
-                        <td><span class="badge ${msg.status === 'read' ? 'success' : 'warning'}">${msg.status || 'unread'}</span></td>
-                        <td>
-                            <div class="table-actions">
-                                <button class="btn-icon" onclick="viewMessage(${msg.id}, \`${(msg.message || '').replace(/`/g, "\\`")}\`, '${(msg.name || '').replace(/'/g, "\\'")}', '${(msg.email || '').replace(/'/g, "\\'")}', '${(msg.subject || '').replace(/'/g, "\\'")}')" title="بینین">👁️</button>
-                                <button class="btn-icon ${msg.status === 'read' ? 'warning' : 'success'}" onclick="toggleMessageStatus(${msg.id}, '${msg.status || 'unread'}')" title="${msg.status === 'read' ? 'نیشانکردن وەک نەخوێندراوە' : 'نیشانکردن وەک خوێندراوە'}">
-                                    ${msg.status === 'read' ? '📧' : '✓'}
-                                </button>
-                                <button class="btn-icon danger" onclick="deleteMessage(${msg.id})" title="سڕینەوە">🗑️</button>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (error) {
-                console.error('[Admin] Error loading messages:', error);
-                tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color: var(--danger);">هەڵە: ${error.message}</td></tr>`;
-            }
-        }
-
-        async function loadDatabaseStats() {
-            await Promise.all([loadUsersStats(), loadVideosStats(), loadMessagesStats()]);
         }
 
         function openAddVideoModal() {
@@ -1741,116 +996,92 @@
         async function addVideo() {
             const url = document.getElementById('videoUrl').value.trim();
             if (!url) {
-                alert('تکایە لینکێک دابنێ');
+                alert('Please enter a URL');
                 return;
             }
 
             try {
-                // Use video_url column name to match index.html expectations
-                const { data, error } = await supabase.from('featured_videos').insert([{ video_url: url }]);
+                const { error } = await supabase.from('featured_videos').insert([{ video_url: url }]);
                 if (error) throw error;
                 closeAddVideoModal();
                 await loadVideos();
-                await loadVideosStats();
-                alert('ڤیدیۆکە بە سەرکەوتوویی زیادکرا');
+                await loadDashboardData();
+                alert('Video added successfully');
             } catch (error) {
                 console.error('Error adding video:', error);
-                alert('هەڵە لە زیادکردنی ڤیدیۆ');
+                alert('Error adding video');
             }
         }
 
         async function deleteVideo(id) {
-            if (!confirm('دڵنیای لە سڕینەوەی ئەم ڤیدیۆیە؟')) return;
+            if (!confirm('Delete this video?')) return;
             try {
                 const { error } = await supabase.from('featured_videos').delete().eq('id', id);
                 if (error) throw error;
                 await loadVideos();
-                await loadVideosStats();
+                await loadDashboardData();
             } catch (error) {
                 console.error('Error deleting video:', error);
-                alert('هەڵە لە سڕینەوەی ڤیدیۆ');
+                alert('Error deleting video');
             }
         }
 
-        async function deleteMessage(id) {
-            if (!confirm('دڵنیای لە سڕینەوەی ئەم پەیامە؟')) return;
+        // Load Users
+        async function loadUsers() {
+            const container = document.getElementById('usersTable');
+            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading users...</div></div>';
+
             try {
-                const { error } = await supabase.from('contact_messages').delete().eq('id', id);
+                const { data, error } = await supabase.from('user_data').select('*').order('id', { ascending: false });
                 if (error) throw error;
-                await loadMessages();
-                await loadMessagesStats();
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">No users yet</div></div>';
+                    return;
+                }
+
+                container.innerHTML = data.map(user => `
+                    <div class="table-card">
+                        <div class="table-card-row">
+                            <span class="table-card-label">Name:</span>
+                            <span class="table-card-value">${user.name || '-'}</span>
+                        </div>
+                        <div class="table-card-row">
+                            <span class="table-card-label">Email:</span>
+                            <span class="table-card-value">${user.email || '-'}</span>
+                        </div>
+                        <div class="table-card-row">
+                            <span class="table-card-label">Reading:</span>
+                            <span class="table-card-value">Surah ${user.current_surah || '-'}, Ayah ${user.current_ayah || '-'}</span>
+                        </div>
+                        <div class="table-card-actions">
+                            <button class="btn-icon danger" onclick="deleteUser(${user.id})">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `).join('');
             } catch (error) {
-                console.error('Error deleting message:', error);
-                alert('هەڵە لە سڕینەوەی پەیام');
+                console.error('Error loading users:', error);
+                container.innerHTML = '<div class="empty-state"><div class="empty-text" style="color: var(--danger);">Error loading users</div></div>';
             }
         }
 
         async function deleteUser(id) {
-            if (!confirm('دڵنیای لە سڕینەوەی ئەم بەکارهێنەرە؟')) return;
+            if (!confirm('Delete this user? This cannot be undone.')) return;
             try {
                 const { error } = await supabase.from('user_data').delete().eq('id', id);
                 if (error) throw error;
                 await loadUsers();
-                await loadUsersStats();
+                await loadDashboardData();
             } catch (error) {
                 console.error('Error deleting user:', error);
-                alert('هەڵە لە سڕینەوەی بەکارهێنەر');
+                alert('Error deleting user');
             }
         }
 
-        function viewUser(id) {
-            alert('بینینی بەکارهێنەر: ' + id);
+        // Database Functions
+        async function loadDatabaseStats() {
+            await loadDashboardData();
         }
-
-        async function viewMessage(id, message, name, email, subject) {
-            // Mark as read when viewing
-            try {
-                const { error } = await supabase
-                    .from('contact_messages')
-                    .update({ status: 'read' })
-                    .eq('id', id);
-
-                if (error) console.error('Error marking as read:', error);
-            } catch (err) {
-                console.error('Error updating status:', err);
-            }
-
-            alert(`
-پەیام لە: ${name}
-ئیمەیڵ: ${email}
-بابەت: ${subject}
-
-پەیام:
-${message}
-            `.trim());
-
-            // Reload messages to show updated status
-            await loadMessages();
-            await loadMessagesStats();
-        }
-
-        async function toggleMessageStatus(id, currentStatus) {
-            try {
-                const newStatus = currentStatus === 'read' ? 'unread' : 'read';
-                const { error } = await supabase
-                    .from('contact_messages')
-                    .update({ status: newStatus })
-                    .eq('id', id);
-
-                if (error) throw error;
-
-                // Reload messages to show updated status
-                await loadMessages();
-                await loadMessagesStats();
-            } catch (error) {
-                console.error('Error toggling message status:', error);
-                alert('هەڵە لە گۆڕینی دۆخی پەیام');
-            }
-        }
-        function refreshUsers() { loadUsers(); }
-        function refreshMessages() { loadMessages(); }
-        function exportUsers() { alert('هەناردەکردنی بەکارهێنەران...'); }
-        function exportMessages() { alert('هەناردەکردنی پەیامەکان...'); }
 
         async function backupTable(tableName) {
             try {
@@ -1863,10 +1094,10 @@ ${message}
                 a.download = `${tableName}_backup_${new Date().toISOString().split('T')[0]}.json`;
                 a.click();
                 URL.revokeObjectURL(url);
-                alert('پاشەکەوتکردن سەرکەوتووبوو');
+                alert('Backup downloaded successfully');
             } catch (error) {
                 console.error('Error backing up table:', error);
-                alert('هەڵە لە پاشەکەوتکردن');
+                alert('Error backing up table');
             }
         }
 
@@ -1883,55 +1114,15 @@ ${message}
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `tafsirkurd_full_backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.download = `full_backup_${new Date().toISOString().split('T')[0]}.json`;
                 a.click();
                 URL.revokeObjectURL(url);
-                alert('پاشەکەوتی تەواو سەرکەوتووبوو');
+                alert('Full backup downloaded successfully');
             } catch (error) {
                 console.error('Error backing up all tables:', error);
-                alert('هەڵە لە پاشەکەوتکردنی تەواو');
+                alert('Error backing up database');
             }
         }
-
-        function updateServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistration().then(registration => {
-                    if (registration) {
-                        registration.update();
-                        alert('Service Worker نوێکرایەوە');
-                    }
-                });
-            }
-        }
-
-        function clearAllCaches() {
-            if (confirm('دڵنیای لە سڕینەوەی هەموو کاشەکان؟')) {
-                caches.keys().then(names => {
-                    return Promise.all(names.map(name => caches.delete(name)));
-                }).then(() => {
-                    alert('هەموو کاشەکان سڕانەوە');
-                });
-            }
-        }
-
-        document.getElementById('userSearch')?.addEventListener('input', (e) => {
-            const search = e.target.value.toLowerCase();
-            document.querySelectorAll('#usersTable tr').forEach(row => {
-                row.style.display = row.textContent.toLowerCase().includes(search) ? '' : 'none';
-            });
-        });
-
-        document.getElementById('messageSearch')?.addEventListener('input', (e) => {
-            const search = e.target.value.toLowerCase();
-            document.querySelectorAll('#messagesTable tr').forEach(row => {
-                row.style.display = row.textContent.toLowerCase().includes(search) ? '' : 'none';
-            });
-        });
-
-        window.addEventListener('DOMContentLoaded', async () => {
-            await initSupabase();
-            await checkSession();
-        });
     </script>
 </body>
 </html>
