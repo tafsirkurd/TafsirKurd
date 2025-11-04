@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v48-admin-video-position-fix';
+const CACHE_NAME = 'tafsir-kurd-v49-admin-position-unique-fix';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -40,7 +40,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v48-admin-video-position-fix - INSTANT updates on refresh with network-first strategy');
+  console.log('[ServiceWorker] Installing v49-admin-position-unique-fix - INSTANT updates on refresh with network-first strategy');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

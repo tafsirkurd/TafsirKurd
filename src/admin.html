@@ -1683,14 +1683,22 @@
             }
 
             try {
-                // Get the next position number
-                const { data: videos } = await supabase
+                // Get all positions to find the highest
+                const { data: videos, error: fetchError } = await supabase
                     .from('featured_videos')
                     .select('position')
-                    .order('position', { ascending: false })
-                    .limit(1);
+                    .order('position', { ascending: false });
 
-                const nextPosition = videos && videos.length > 0 ? videos[0].position + 1 : 1;
+                if (fetchError) throw fetchError;
+
+                // Find the next available position
+                let nextPosition = 1;
+                if (videos && videos.length > 0) {
+                    const positions = videos.map(v => v.position).sort((a, b) => b - a);
+                    nextPosition = positions[0] + 1;
+                }
+
+                console.log('[Admin] Adding video with position:', nextPosition);
 
                 // Insert video with position
                 const { error } = await supabase.from('featured_videos').insert([{
@@ -1711,7 +1719,7 @@
                 }
             } catch (error) {
                 console.error('Error adding video:', error);
-                alert('Error adding video');
+                alert(`Error adding video: ${error.message || 'Unknown error'}`);
             }
         }
 
