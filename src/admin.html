@@ -1683,7 +1683,20 @@
             }
 
             try {
-                const { error } = await supabase.from('featured_videos').insert([{ video_url: url }]);
+                // Get the next position number
+                const { data: videos } = await supabase
+                    .from('featured_videos')
+                    .select('position')
+                    .order('position', { ascending: false })
+                    .limit(1);
+
+                const nextPosition = videos && videos.length > 0 ? videos[0].position + 1 : 1;
+
+                // Insert video with position
+                const { error } = await supabase.from('featured_videos').insert([{
+                    video_url: url,
+                    position: nextPosition
+                }]);
                 if (error) throw error;
                 closeAddVideoModal();
                 await loadVideos();
