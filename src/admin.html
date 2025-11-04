@@ -1662,10 +1662,12 @@
                     return;
                 }
 
-                tbody.innerHTML = data.map(video => `
+                tbody.innerHTML = data.map(video => {
+                    const url = video.video_url || video.url || '-';
+                    return `
                     <tr>
-                        <td><a href="${video.url}" target="_blank" style="color: var(--info); text-decoration: none;">${video.url.substring(0, 50)}...</a></td>
-                        <td><span class="badge info">${video.url.includes('/reel/') ? 'Reel' : 'Post'}</span></td>
+                        <td><a href="${url}" target="_blank" style="color: var(--info); text-decoration: none;">${url.substring(0, 50)}...</a></td>
+                        <td><span class="badge info">${url.includes('/reel/') ? 'Reel' : 'Post'}</span></td>
                         <td>-</td>
                         <td>
                             <div class="table-actions">
@@ -1673,7 +1675,7 @@
                             </div>
                         </td>
                     </tr>
-                `).join('');
+                `}).join('');
             } catch (error) {
                 console.error('Error loading videos:', error);
                 tbody.innerHTML = '<tr><td colspan="4" class="empty-state">هەڵە لە بارکردنی ڤیدیۆکان</td></tr>';
@@ -1734,7 +1736,8 @@
             }
 
             try {
-                const { data, error } = await supabase.from('featured_videos').insert([{ url }]);
+                // Use video_url column name to match index.html expectations
+                const { data, error } = await supabase.from('featured_videos').insert([{ video_url: url }]);
                 if (error) throw error;
                 closeAddVideoModal();
                 await loadVideos();
