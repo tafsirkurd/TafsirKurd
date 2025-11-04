@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v43-add-google-analytics';
+const CACHE_NAME = 'tafsir-kurd-v44-fix-admin-visibility';
 const urlsToCache = [
   '/',
   '/index.html',
