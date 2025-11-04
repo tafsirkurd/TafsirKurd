@@ -510,23 +510,15 @@
                 ئەم ئیمەیڵە مۆڵەتی بەڕێوەبەرایەتی نییە
             </div>
 
-            <form class="login-form" id="loginForm">
-                <div class="form-group">
-                    <label class="form-label">ئیمەیڵ</label>
-                    <input type="email" class="form-input" id="emailInput"
-                           placeholder="admin@example.com" required>
-                </div>
+            <div class="login-form">
+                <p style="color: #718096; margin-bottom: 25px; text-align: center;">
+                    تەنها saman26d@gmail.com و tefsirkurd@gmail.com دەتوانن بچنە ژوورەوە
+                </p>
 
-                <div class="form-group">
-                    <label class="form-label">وشەی نهێنی</label>
-                    <input type="password" class="form-input" id="passwordInput"
-                           placeholder="••••••••" required>
-                </div>
-
-                <button type="submit" class="btn-login" id="loginBtn">
-                    <i class="fas fa-sign-in-alt"></i> چوونە ژوورەوە
+                <button type="button" class="btn-login" id="googleLoginBtn">
+                    <i class="fab fa-google"></i> چوونە ژوورەوە بە Google
                 </button>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -850,68 +842,63 @@
             }
         }
 
-        // Login handling
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const email = document.getElementById('emailInput').value.toLowerCase().trim();
-            const password = document.getElementById('passwordInput').value;
-            const loginBtn = document.getElementById('loginBtn');
+        // Login handling with Google
+        document.getElementById('googleLoginBtn').addEventListener('click', async () => {
+            const loginBtn = document.getElementById('googleLoginBtn');
             const errorMsg = document.getElementById('loginError');
 
             errorMsg.style.display = 'none';
             loginBtn.disabled = true;
-            loginBtn.textContent = 'چاوەڕێ بە...';
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> چاوەڕێ بە...';
 
             try {
-                // Check if email is in whitelist
-                if (!ADMIN_EMAILS.includes(email)) {
-                    errorMsg.textContent = 'ئەم ئیمەیڵە مۆڵەتی بەڕێوەبەرایەتی نییە';
-                    errorMsg.style.display = 'block';
-                    return;
-                }
-
-                // Sign in with Supabase
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
+                // Sign in with Google
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.href
+                    }
                 });
 
                 if (error) throw error;
 
-                currentAdmin = { email: email, uid: data.user.id };
-                localStorage.setItem('adminUser', JSON.stringify(currentAdmin));
-
-                document.getElementById('loginPage').style.display = 'none';
-                document.getElementById('adminDashboard').style.display = 'block';
-                document.getElementById('adminEmail').textContent = email;
-
-                await loadDashboardData();
-
             } catch (error) {
                 console.error('Login error:', error);
-                errorMsg.textContent = 'ئیمەیڵ یان وشەی نهێنی هەڵەیە';
+                errorMsg.textContent = 'هەڵە لە چوونە ژوورەوە';
                 errorMsg.style.display = 'block';
-            } finally {
                 loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> چوونە ژوورەوە';
+                loginBtn.innerHTML = '<i class="fab fa-google"></i> چوونە ژوورەوە بە Google';
             }
         });
 
         // Check if already logged in
         async function checkAuth() {
-            const savedAdmin = localStorage.getItem('adminUser');
-            if (savedAdmin) {
-                currentAdmin = JSON.parse(savedAdmin);
-                const email = currentAdmin.email.toLowerCase();
+            try {
+                // Check Supabase session
+                const { data: { session } } = await supabase.auth.getSession();
 
-                if (ADMIN_EMAILS.includes(email)) {
-                    document.getElementById('loginPage').style.display = 'none';
-                    document.getElementById('adminDashboard').style.display = 'block';
-                    document.getElementById('adminEmail').textContent = email;
-                    await loadDashboardData();
-                    return;
+                if (session && session.user) {
+                    const email = session.user.email.toLowerCase();
+
+                    // Check if email is in whitelist
+                    if (ADMIN_EMAILS.includes(email)) {
+                        currentAdmin = { email: email, uid: session.user.id };
+                        localStorage.setItem('adminUser', JSON.stringify(currentAdmin));
+
+                        document.getElementById('loginPage').style.display = 'none';
+                        document.getElementById('adminDashboard').style.display = 'block';
+                        document.getElementById('adminEmail').textContent = email;
+                        await loadDashboardData();
+                        return;
+                    } else {
+                        // Not in whitelist - sign out
+                        await supabase.auth.signOut();
+                        document.getElementById('loginError').textContent = 'ئەم ئیمەیڵە مۆڵەتی بەڕێوەبەرایەتی نییە';
+                        document.getElementById('loginError').style.display = 'block';
+                    }
                 }
+            } catch (error) {
+                console.error('Auth check error:', error);
             }
 
             document.getElementById('loginPage').style.display = 'flex';
