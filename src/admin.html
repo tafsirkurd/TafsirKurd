@@ -1198,7 +1198,16 @@
                     supabase.from('featured_videos').select('*')
                 ]);
 
-                allUsers = usersResult.data || [];
+                // Parse user data from JSON
+                allUsers = (usersResult.data || []).map(user => ({
+                    ...user,
+                    ...(user.data || {}),  // Spread the JSON data to top level
+                    name: user.data?.name || user.name,
+                    email: user.data?.email || user.email,
+                    current_surah: user.data?.current_surah,
+                    current_ayah: user.data?.current_ayah,
+                    daily_goal: user.data?.daily_goal
+                }));
                 allMessages = messagesResult.data || [];
                 allVideos = videosResult.data || [];
 
@@ -1715,7 +1724,16 @@
                 const { data, error } = await supabase.from('user_data').select('*').order('id', { ascending: false });
                 if (error) throw error;
 
-                allUsers = data || [];
+                // Parse user data from JSON
+                allUsers = (data || []).map(user => ({
+                    ...user,
+                    ...(user.data || {}),
+                    name: user.data?.name || user.name,
+                    email: user.data?.email || user.email,
+                    current_surah: user.data?.current_surah,
+                    current_ayah: user.data?.current_ayah,
+                    daily_goal: user.data?.daily_goal
+                }));
                 displayUsers(allUsers);
             } catch (error) {
                 console.error('Error loading users:', error);
