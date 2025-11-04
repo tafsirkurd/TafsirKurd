@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Admin Panel v49 - Tafsir Kurd</title>
+    <title>Admin Panel v50 - Tafsir Kurd</title>
 
     <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
@@ -1686,25 +1686,28 @@
             }
 
             try {
-                // Get all positions to find the highest
+                // Get ALL videos with their positions and IDs
                 const { data: videos, error: fetchError } = await supabase
                     .from('featured_videos')
-                    .select('position')
-                    .order('position', { ascending: false });
+                    .select('id, position')
+                    .order('position', { ascending: true });
 
                 if (fetchError) throw fetchError;
 
-                console.log('[Admin] Existing videos:', videos);
+                console.log('[Admin] V50 - Existing videos:', videos);
 
-                // Find the next available position
+                // Find the next available position (handle gaps and ensure unique)
                 let nextPosition = 1;
                 if (videos && videos.length > 0) {
-                    const positions = videos.map(v => v.position).sort((a, b) => b - a);
-                    console.log('[Admin] All positions:', positions);
-                    nextPosition = positions[0] + 1;
+                    const positions = videos.map(v => v.position).filter(p => p != null).sort((a, b) => a - b);
+                    console.log('[Admin] All positions sorted:', positions);
+
+                    // Find the highest position and add 1
+                    const maxPosition = Math.max(...positions, 0);
+                    nextPosition = maxPosition + 1;
                 }
 
-                console.log('[Admin] V49 - Adding video with position:', nextPosition);
+                console.log('[Admin] V50 - Next position will be:', nextPosition);
 
                 // Insert video with position
                 const { error } = await supabase.from('featured_videos').insert([{
