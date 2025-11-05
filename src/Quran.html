@@ -5591,6 +5591,11 @@
             const readingGoal = localStorage.getItem('readingGoal');
 
             const data = {
+                // User profile
+                userName: currentUser.name,
+                userEmail: currentUser.email,
+                userPicture: currentUser.picture,
+                // Reading data
                 stats: userStats,
                 bookmarks: bookmarkedAyahs,
                 lastRead: lastReadPosition,

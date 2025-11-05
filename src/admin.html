@@ -1274,8 +1274,9 @@
 
                     return {
                         ...user,
-                        name: user.user_id?.split('|')[0] || 'User',
-                        email: user.user_id || '-',
+                        name: userData.userName || user.user_id?.split('|')[0] || 'User',
+                        email: userData.userEmail || user.user_id || '-',
+                        picture: userData.userPicture || null,
                         current_surah: currentPos.surah || stats.currentSurah || null,
                         current_ayah: currentPos.ayah || stats.currentAyah || null,
                         daily_goal: readingGoal.dailyTarget || readingGoal.goal || null,
@@ -1888,8 +1889,9 @@
 
                     return {
                         ...user,
-                        name: user.user_id?.split('|')[0] || 'User',
-                        email: user.user_id || '-',
+                        name: userData.userName || user.user_id?.split('|')[0] || 'User',
+                        email: userData.userEmail || user.user_id || '-',
+                        picture: userData.userPicture || null,
                         current_surah: currentPos.surah || stats.currentSurah || '-',
                         current_ayah: currentPos.ayah || stats.currentAyah || '-',
                         daily_goal: readingGoal.dailyTarget || readingGoal.goal || '-',
