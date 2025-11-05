@@ -241,8 +241,12 @@ exports.handler = async (event, context) => {
             const clientIP = getClientIP(event);
             const body = JSON.parse(event.body || '{}');
 
+            console.log('📍 Tracking visit from IP:', clientIP);
+
             // Get geographic data
             const geoData = await getGeoLocation(clientIP);
+
+            console.log('✅ Geo data retrieved:', geoData);
 
             // Insert visit record
             const { error: insertError } = await supabase
@@ -261,7 +265,12 @@ exports.handler = async (event, context) => {
                     referrer: body.referrer || null
                 });
 
-            if (insertError) throw insertError;
+            if (insertError) {
+                console.error('❌ Insert error:', insertError);
+                throw insertError;
+            }
+
+            console.log('💾 Visit saved successfully');
 
             return {
                 statusCode: 200,
@@ -269,7 +278,8 @@ exports.handler = async (event, context) => {
                 body: JSON.stringify({
                     success: true,
                     message: 'Visit tracked',
-                    location: geoData
+                    location: geoData,
+                    ip: clientIP
                 })
             };
         }

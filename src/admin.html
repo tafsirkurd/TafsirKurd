@@ -1562,13 +1562,16 @@
                     document.getElementById('totalCities').textContent = data.cities.length;
                     document.getElementById('totalGeoVisits').textContent = data.total_visits.toLocaleString();
 
-                    // Populate countries table
+                    // Populate countries table (filter out Unknown)
                     const countriesBody = document.getElementById('countriesTableBody');
-                    if (data.countries.length === 0) {
+                    const validCountries = data.countries.filter(c => c.country !== 'Unknown' && c.country !== 'Local/Private Network');
+
+                    if (validCountries.length === 0) {
                         countriesBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No data yet. Visit tracking will start automatically.</td></tr>';
                     } else {
-                        countriesBody.innerHTML = data.countries.slice(0, 10).map((country, index) => {
-                            const percentage = ((country.visits / data.total_visits) * 100).toFixed(1);
+                        const validTotal = validCountries.reduce((sum, c) => sum + c.visits, 0);
+                        countriesBody.innerHTML = validCountries.slice(0, 10).map((country, index) => {
+                            const percentage = ((country.visits / validTotal) * 100).toFixed(1);
                             const flag = getCountryFlag(country.country_code);
                             return `
                                 <tr>
@@ -1583,12 +1586,14 @@
                         }).join('');
                     }
 
-                    // Populate regions table
+                    // Populate regions table (filter out Unknown)
                     const regionsBody = document.getElementById('regionsTableBody');
-                    if (data.regions.length === 0) {
+                    const validRegions = data.regions.filter(r => r.region !== 'Unknown' && r.region !== 'Private');
+
+                    if (validRegions.length === 0) {
                         regionsBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No data yet</td></tr>';
                     } else {
-                        regionsBody.innerHTML = data.regions.slice(0, 10).map((region, index) => `
+                        regionsBody.innerHTML = validRegions.slice(0, 10).map((region, index) => `
                             <tr>
                                 <td>${index + 1}</td>
                                 <td>${region.region}</td>
@@ -1599,12 +1604,14 @@
                         `).join('');
                     }
 
-                    // Populate cities table
+                    // Populate cities table (filter out Unknown)
                     const citiesBody = document.getElementById('citiesTableBody');
-                    if (data.cities.length === 0) {
+                    const validCities = data.cities.filter(c => c.city !== 'Unknown' && c.city !== 'Localhost');
+
+                    if (validCities.length === 0) {
                         citiesBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No data yet</td></tr>';
                     } else {
-                        citiesBody.innerHTML = data.cities.slice(0, 10).map((city, index) => `
+                        citiesBody.innerHTML = validCities.slice(0, 10).map((city, index) => `
                             <tr>
                                 <td>${index + 1}</td>
                                 <td>${city.city}</td>
