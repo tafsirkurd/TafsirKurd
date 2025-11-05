@@ -101,12 +101,19 @@ async function getGeoLocation(ip) {
     }
 }
 
-// Get client IP from request
+// Get client IP from request (Netlify-specific headers)
 function getClientIP(event) {
-    return event.headers['x-forwarded-for']?.split(',')[0].trim() ||
-           event.headers['client-ip'] ||
-           event.headers['x-real-ip'] ||
-           '127.0.0.1';
+    // Try Netlify-specific client IP header first
+    const clientIP = event.headers['x-nf-client-connection-ip'] ||
+                     event.headers['x-forwarded-for']?.split(',')[0].trim() ||
+                     event.headers['client-ip'] ||
+                     event.headers['x-real-ip'] ||
+                     '127.0.0.1';
+
+    console.log('🔍 Detected IP:', clientIP);
+    console.log('📋 All headers:', JSON.stringify(event.headers, null, 2));
+
+    return clientIP;
 }
 
 exports.handler = async (event, context) => {
