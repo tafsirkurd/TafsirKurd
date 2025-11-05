@@ -1265,16 +1265,24 @@
                     supabase.from('featured_videos').select('*')
                 ]);
 
-                // Parse user data from JSON
-                allUsers = (usersResult.data || []).map(user => ({
-                    ...user,
-                    ...(user.data || {}),  // Spread the JSON data to top level
-                    name: user.data?.name || user.name,
-                    email: user.data?.email || user.email,
-                    current_surah: user.data?.current_surah,
-                    current_ayah: user.data?.current_ayah,
-                    daily_goal: user.data?.daily_goal
-                }));
+                // Parse user data from JSON (match Quran.html structure)
+                allUsers = (usersResult.data || []).map(user => {
+                    const userData = user.data || {};
+                    const currentPos = userData.currentPosition || {};
+                    const stats = userData.stats || {};
+                    const readingGoal = userData.readingGoal || {};
+
+                    return {
+                        ...user,
+                        name: user.user_id?.split('|')[0] || 'User',
+                        email: user.user_id || '-',
+                        current_surah: currentPos.surah || stats.currentSurah || null,
+                        current_ayah: currentPos.ayah || stats.currentAyah || null,
+                        daily_goal: readingGoal.dailyTarget || readingGoal.goal || null,
+                        total_read: stats.totalAyahsRead || 0,
+                        completion: stats.completionPercentage || 0
+                    };
+                });
                 allMessages = messagesResult.data || [];
                 allVideos = videosResult.data || [];
 
@@ -1288,8 +1296,8 @@
                 document.getElementById('messagesChange').textContent = `${unreadCount} unread`;
                 document.getElementById('messagesChange').className = unreadCount > 0 ? 'stat-change warning' : 'stat-change';
 
-                // Active readers
-                const activeReaders = allUsers.filter(u => u.current_surah || u.current_ayah).length;
+                // Active readers (users who have read at least something)
+                const activeReaders = allUsers.filter(u => u.total_read > 0 || u.current_surah).length;
                 document.getElementById('totalReading').textContent = activeReaders;
 
                 // Database counts
@@ -1872,14 +1880,21 @@
                     console.log('[Admin] Processing user:', user);
                     console.log('[Admin] User data field:', user.data);
 
+                    // Extract data from the actual structure used by Quran.html
+                    const userData = user.data || {};
+                    const currentPos = userData.currentPosition || {};
+                    const stats = userData.stats || {};
+                    const readingGoal = userData.readingGoal || {};
+
                     return {
                         ...user,
-                        ...(user.data || {}),
-                        name: user.data?.name || user.data?.userName || user.user_id || '-',
-                        email: user.data?.email || user.data?.userEmail || '-',
-                        current_surah: user.data?.currentSurah || user.data?.current_surah || null,
-                        current_ayah: user.data?.currentAyah || user.data?.current_ayah || null,
-                        daily_goal: user.data?.dailyGoal || user.data?.daily_goal || null
+                        name: user.user_id?.split('|')[0] || 'User',
+                        email: user.user_id || '-',
+                        current_surah: currentPos.surah || stats.currentSurah || '-',
+                        current_ayah: currentPos.ayah || stats.currentAyah || '-',
+                        daily_goal: readingGoal.dailyTarget || readingGoal.goal || '-',
+                        total_read: stats.totalAyahsRead || 0,
+                        completion: stats.completionPercentage || 0
                     };
                 });
 
