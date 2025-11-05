@@ -1865,16 +1865,25 @@
                 const { data, error } = await supabase.from('user_data').select('*').order('id', { ascending: false });
                 if (error) throw error;
 
+                console.log('[Admin] Raw user data from database:', data);
+
                 // Parse user data from JSON
-                allUsers = (data || []).map(user => ({
-                    ...user,
-                    ...(user.data || {}),
-                    name: user.data?.name || user.name,
-                    email: user.data?.email || user.email,
-                    current_surah: user.data?.current_surah,
-                    current_ayah: user.data?.current_ayah,
-                    daily_goal: user.data?.daily_goal
-                }));
+                allUsers = (data || []).map(user => {
+                    console.log('[Admin] Processing user:', user);
+                    console.log('[Admin] User data field:', user.data);
+
+                    return {
+                        ...user,
+                        ...(user.data || {}),
+                        name: user.data?.name || user.data?.userName || user.user_id || '-',
+                        email: user.data?.email || user.data?.userEmail || '-',
+                        current_surah: user.data?.currentSurah || user.data?.current_surah || null,
+                        current_ayah: user.data?.currentAyah || user.data?.current_ayah || null,
+                        daily_goal: user.data?.dailyGoal || user.data?.daily_goal || null
+                    };
+                });
+
+                console.log('[Admin] Processed users:', allUsers);
                 displayUsers(allUsers);
             } catch (error) {
                 console.error('Error loading users:', error);
