@@ -1,34 +1,103 @@
 // netlify/functions/geo-analytics.js
 const { createClient } = require('@supabase/supabase-js');
 
-// Get geographic data from IP
+// Get geographic data from IP with multiple fallback providers
 async function getGeoLocation(ip) {
-    try {
-        // Use ipapi.co for geolocation (1000 requests/day free)
-        const response = await fetch(`https://ipapi.co/${ip}/json/`);
-        if (!response.ok) throw new Error('Geo API failed');
+    console.log('🌍 Getting geo location for IP:', ip);
 
-        const data = await response.json();
+    // Skip localhost and private IPs
+    if (ip === '127.0.0.1' || ip === 'localhost' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
+        console.log('⚠️ Private IP detected, using default location');
         return {
-            country: data.country_name || 'Unknown',
-            country_code: data.country_code || 'XX',
-            region: data.region || 'Unknown',
-            city: data.city || 'Unknown',
-            latitude: data.latitude || 0,
-            longitude: data.longitude || 0,
-            timezone: data.timezone || 'Unknown'
-        };
-    } catch (error) {
-        console.error('Geo location error:', error);
-        return {
-            country: 'Unknown',
+            country: 'Local/Private Network',
             country_code: 'XX',
-            region: 'Unknown',
-            city: 'Unknown',
+            region: 'Private',
+            city: 'Localhost',
             latitude: 0,
             longitude: 0,
             timezone: 'Unknown'
         };
+    }
+
+    // Try multiple providers in order
+    const providers = [
+        // Provider 1: ipapi.co (1000/day free, detailed data)
+        async () => {
+            const response = await fetch(`https://ipapi.co/${ip}/json/`, { timeout: 3000 });
+            if (!response.ok) throw new Error('ipapi.co failed');
+            const data = await response.json();
+            if (data.error) throw new Error(data.reason || 'API error');
+            console.log('✅ ipapi.co success:', data);
+            return {
+                country: data.country_name || 'Unknown',
+                country_code: data.country_code || 'XX',
+                region: data.region || 'Unknown',
+                city: data.city || 'Unknown',
+                latitude: data.latitude || 0,
+                longitude: data.longitude || 0,
+                timezone: data.timezone || 'Unknown'
+            };
+        },
+
+        // Provider 2: ip-api.com (free, unlimited for non-commercial)
+        async () => {
+            const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,countryCode,region,regionName,city,lat,lon,timezone`, { timeout: 3000 });
+            if (!response.ok) throw new Error('ip-api.com failed');
+            const data = await response.json();
+            if (data.status !== 'success') throw new Error('API returned fail status');
+            console.log('✅ ip-api.com success:', data);
+            return {
+                country: data.country || 'Unknown',
+                country_code: data.countryCode || 'XX',
+                region: data.regionName || 'Unknown',
+                city: data.city || 'Unknown',
+                latitude: data.lat || 0,
+                longitude: data.lon || 0,
+                timezone: data.timezone || 'Unknown'
+            };
+        },
+
+        // Provider 3: ipwhois.app (free, 10k/month)
+        async () => {
+            const response = await fetch(`https://ipwhois.app/json/${ip}`, { timeout: 3000 });
+            if (!response.ok) throw new Error('ipwhois.app failed');
+            const data = await response.json();
+            if (!data.success) throw new Error('API returned fail status');
+            console.log('✅ ipwhois.app success:', data);
+            return {
+                country: data.country || 'Unknown',
+                country_code: data.country_code || 'XX',
+                region: data.region || 'Unknown',
+                city: data.city || 'Unknown',
+                latitude: data.latitude || 0,
+                longitude: data.longitude || 0,
+                timezone: data.timezone || 'Unknown'
+            };
+        }
+    ];
+
+    // Try each provider until one succeeds
+    for (let i = 0; i < providers.length; i++) {
+        try {
+            const result = await providers[i]();
+            console.log(`✅ Provider ${i + 1} succeeded`);
+            return result;
+        } catch (error) {
+            console.error(`❌ Provider ${i + 1} failed:`, error.message);
+            if (i === providers.length - 1) {
+                // All providers failed
+                console.error('❌ All geo providers failed, using Unknown');
+                return {
+                    country: 'Unknown',
+                    country_code: 'XX',
+                    region: 'Unknown',
+                    city: 'Unknown',
+                    latitude: 0,
+                    longitude: 0,
+                    timezone: 'Unknown'
+                };
+            }
+        }
     }
 }
 
