@@ -854,100 +854,113 @@
                     </div>
                 </div>
 
-                <!-- Geographic Analytics Section -->
-                <div class="info-box" style="margin-top: 20px;">
-                    <div class="info-box-title">🌍 Geographic Analytics</div>
-                    <div class="info-box-text">
-                        Real-time visitor tracking by country, region, and city. Understand where your audience is coming from.
+                <!-- Geographic Analytics Section - Separate Container -->
+                <div style="margin-top: 40px; padding: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                    <div style="text-align: center; color: white; margin-bottom: 30px;">
+                        <h2 style="font-size: 32px; font-weight: 800; margin: 0 0 10px 0;">🌍 Geographic Analytics</h2>
+                        <p style="font-size: 16px; opacity: 0.95; margin: 0;">Track where your visitors are coming from around the world</p>
                     </div>
-                </div>
 
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">🌎</div>
-                        <div class="stat-value" id="totalCountries">-</div>
-                        <div class="stat-label">Countries</div>
+                    <!-- Stats Grid - White Cards on Purple Background -->
+                    <div class="stats-grid" style="margin-bottom: 30px;">
+                        <div class="stat-card" style="background: white; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                            <div class="stat-icon">🌎</div>
+                            <div class="stat-value" id="totalCountries" style="color: #667eea;">-</div>
+                            <div class="stat-label" style="color: #666;">Countries Reached</div>
+                        </div>
+                        <div class="stat-card" style="background: white; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                            <div class="stat-icon">📍</div>
+                            <div class="stat-value" id="totalRegions" style="color: #667eea;">-</div>
+                            <div class="stat-label" style="color: #666;">Total Regions</div>
+                        </div>
+                        <div class="stat-card" style="background: white; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                            <div class="stat-icon">🏙️</div>
+                            <div class="stat-value" id="totalCities" style="color: #667eea;">-</div>
+                            <div class="stat-label" style="color: #666;">Cities Visited</div>
+                        </div>
+                        <div class="stat-card" style="background: white; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-value" id="totalGeoVisits" style="color: #667eea;">-</div>
+                            <div class="stat-label" style="color: #666;">Global Visits</div>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📍</div>
-                        <div class="stat-value" id="totalRegions">-</div>
-                        <div class="stat-label">Regions</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">🏙️</div>
-                        <div class="stat-value" id="totalCities">-</div>
-                        <div class="stat-label">Cities</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">👥</div>
-                        <div class="stat-value" id="totalGeoVisits">-</div>
-                        <div class="stat-label">Total Visits</div>
-                    </div>
-                </div>
 
-                <!-- Top Countries Table -->
-                <div class="table-container" style="margin-top: 20px;">
-                    <h3 class="table-header">🌍 Top Countries</h3>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Country</th>
-                                <th>Flag</th>
-                                <th>Visits</th>
-                                <th>Unique Visitors</th>
-                                <th>% of Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="countriesTableBody">
-                            <tr>
-                                <td colspan="6" style="text-align: center; padding: 20px;">Loading...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                    <!-- Three Column Layout for Tables -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
 
-                <!-- Top Regions Table -->
-                <div class="table-container" style="margin-top: 20px;">
-                    <h3 class="table-header">📍 Top Regions</h3>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Region</th>
-                                <th>Country</th>
-                                <th>Visits</th>
-                                <th>Unique Visitors</th>
-                            </tr>
-                        </thead>
-                        <tbody id="regionsTableBody">
-                            <tr>
-                                <td colspan="5" style="text-align: center; padding: 20px;">Loading...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                        <!-- Top Countries -->
+                        <div class="table-container" style="background: white; margin: 0;">
+                            <h3 class="table-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; margin: 0; border-radius: 12px 12px 0 0; font-size: 18px; font-weight: 700;">
+                                🌍 Top Countries
+                            </h3>
+                            <div style="max-height: 400px; overflow-y: auto;">
+                                <table class="data-table" style="margin: 0;">
+                                    <thead style="position: sticky; top: 0; background: #f8f9fa; z-index: 10;">
+                                        <tr>
+                                            <th style="padding: 12px 8px; font-size: 13px;">#</th>
+                                            <th style="padding: 12px 8px; font-size: 13px;">Country</th>
+                                            <th style="padding: 12px 8px; font-size: 13px;">Visits</th>
+                                            <th style="padding: 12px 8px; font-size: 13px;">%</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="countriesTableBody">
+                                        <tr>
+                                            <td colspan="4" style="text-align: center; padding: 20px; font-size: 14px; color: #999;">Loading...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
-                <!-- Top Cities Table -->
-                <div class="table-container" style="margin-top: 20px;">
-                    <h3 class="table-header">🏙️ Top Cities</h3>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>City</th>
-                                <th>Region</th>
-                                <th>Country</th>
-                                <th>Visits</th>
-                                <th>Unique Visitors</th>
-                            </tr>
-                        </thead>
-                        <tbody id="citiesTableBody">
-                            <tr>
-                                <td colspan="6" style="text-align: center; padding: 20px;">Loading...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                        <!-- Top Regions -->
+                        <div class="table-container" style="background: white; margin: 0;">
+                            <h3 class="table-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; margin: 0; border-radius: 12px 12px 0 0; font-size: 18px; font-weight: 700;">
+                                📍 Top Regions
+                            </h3>
+                            <div style="max-height: 400px; overflow-y: auto;">
+                                <table class="data-table" style="margin: 0;">
+                                    <thead style="position: sticky; top: 0; background: #f8f9fa; z-index: 10;">
+                                        <tr>
+                                            <th style="padding: 12px 8px; font-size: 13px;">#</th>
+                                            <th style="padding: 12px 8px; font-size: 13px;">Region</th>
+                                            <th style="padding: 12px 8px; font-size: 13px;">Country</th>
+                                            <th style="padding: 12px 8px; font-size: 13px;">Visits</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="regionsTableBody">
+                                        <tr>
+                                            <td colspan="4" style="text-align: center; padding: 20px; font-size: 14px; color: #999;">Loading...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Top Cities -->
+                        <div class="table-container" style="background: white; margin: 0;">
+                            <h3 class="table-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; margin: 0; border-radius: 12px 12px 0 0; font-size: 18px; font-weight: 700;">
+                                🏙️ Top Cities
+                            </h3>
+                            <div style="max-height: 400px; overflow-y: auto;">
+                                <table class="data-table" style="margin: 0;">
+                                    <thead style="position: sticky; top: 0; background: #f8f9fa; z-index: 10;">
+                                        <tr>
+                                            <th style="padding: 12px 8px; font-size: 13px;">#</th>
+                                            <th style="padding: 12px 8px; font-size: 13px;">City</th>
+                                            <th style="padding: 12px 8px; font-size: 13px;">Region</th>
+                                            <th style="padding: 12px 8px; font-size: 13px;">Visits</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="citiesTableBody">
+                                        <tr>
+                                            <td colspan="4" style="text-align: center; padding: 20px; font-size: 14px; color: #999;">Loading...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
 
                 <div class="analytics-grid">
@@ -1567,20 +1580,28 @@
                     const validCountries = data.countries.filter(c => c.country !== 'Unknown' && c.country !== 'Local/Private Network');
 
                     if (validCountries.length === 0) {
-                        countriesBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No data yet. Visit tracking will start automatically.</td></tr>';
+                        countriesBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #999; font-size: 14px;">No visitors yet</td></tr>';
                     } else {
                         const validTotal = validCountries.reduce((sum, c) => sum + c.visits, 0);
                         countriesBody.innerHTML = validCountries.slice(0, 10).map((country, index) => {
                             const percentage = ((country.visits / validTotal) * 100).toFixed(1);
                             const flag = getCountryFlag(country.country_code);
                             return `
-                                <tr>
-                                    <td>${index + 1}</td>
-                                    <td>${country.country}</td>
-                                    <td style="font-size: 24px;">${flag}</td>
-                                    <td>${country.visits.toLocaleString()}</td>
-                                    <td>${country.unique_visitors.toLocaleString()}</td>
-                                    <td>${percentage}%</td>
+                                <tr style="border-bottom: 1px solid #f0f0f0;">
+                                    <td style="padding: 12px 8px; font-weight: 600; color: #667eea;">${index + 1}</td>
+                                    <td style="padding: 12px 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 20px;">${flag}</span>
+                                            <span style="font-weight: 500;">${country.country}</span>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 12px 8px; font-weight: 600;">${country.visits.toLocaleString()}</td>
+                                    <td style="padding: 12px 8px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="background: #667eea; height: 6px; border-radius: 3px; width: ${percentage}%; min-width: 20px;"></div>
+                                            <span style="font-size: 13px; color: #666;">${percentage}%</span>
+                                        </div>
+                                    </td>
                                 </tr>
                             `;
                         }).join('');
@@ -1591,15 +1612,14 @@
                     const validRegions = data.regions.filter(r => r.region !== 'Unknown' && r.region !== 'Private');
 
                     if (validRegions.length === 0) {
-                        regionsBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No data yet</td></tr>';
+                        regionsBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #999; font-size: 14px;">No data yet</td></tr>';
                     } else {
                         regionsBody.innerHTML = validRegions.slice(0, 10).map((region, index) => `
-                            <tr>
-                                <td>${index + 1}</td>
-                                <td>${region.region}</td>
-                                <td>${region.country}</td>
-                                <td>${region.visits.toLocaleString()}</td>
-                                <td>${region.unique_visitors.toLocaleString()}</td>
+                            <tr style="border-bottom: 1px solid #f0f0f0;">
+                                <td style="padding: 12px 8px; font-weight: 600; color: #667eea;">${index + 1}</td>
+                                <td style="padding: 12px 8px; font-weight: 600;">${region.region}</td>
+                                <td style="padding: 12px 8px; color: #666; font-size: 13px;">${region.country}</td>
+                                <td style="padding: 12px 8px; font-weight: 600;">${region.visits.toLocaleString()}</td>
                             </tr>
                         `).join('');
                     }
@@ -1609,16 +1629,14 @@
                     const validCities = data.cities.filter(c => c.city !== 'Unknown' && c.city !== 'Localhost');
 
                     if (validCities.length === 0) {
-                        citiesBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No data yet</td></tr>';
+                        citiesBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #999; font-size: 14px;">No data yet</td></tr>';
                     } else {
                         citiesBody.innerHTML = validCities.slice(0, 10).map((city, index) => `
-                            <tr>
-                                <td>${index + 1}</td>
-                                <td>${city.city}</td>
-                                <td>${city.region}</td>
-                                <td>${city.country}</td>
-                                <td>${city.visits.toLocaleString()}</td>
-                                <td>${city.unique_visitors.toLocaleString()}</td>
+                            <tr style="border-bottom: 1px solid #f0f0f0;">
+                                <td style="padding: 12px 8px; font-weight: 600; color: #667eea;">${index + 1}</td>
+                                <td style="padding: 12px 8px; font-weight: 600;">${city.city}</td>
+                                <td style="padding: 12px 8px; color: #666; font-size: 13px;">${city.region}</td>
+                                <td style="padding: 12px 8px; font-weight: 600;">${city.visits.toLocaleString()}</td>
                             </tr>
                         `).join('');
                     }
