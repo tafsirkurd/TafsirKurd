@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v51-homepage-4-videos';
+const CACHE_NAME = 'tafsir-kurd-v52-fix-post-caching';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -94,8 +94,8 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(event.request, { cache: 'reload' })
         .then(response => {
-          // Cache the fresh HTML for offline use
-          if (response && response.status === 200) {
+          // Cache the fresh HTML for offline use (only GET requests)
+          if (response && response.status === 200 && event.request.method === 'GET') {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME).then(cache => {
               cache.put(event.request, responseToCache);
@@ -114,6 +114,11 @@ self.addEventListener('fetch', event => {
   }
 
   // CACHE FIRST for CSS, JS, fonts, images (maximum speed!)
+  // Only cache GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {
@@ -124,8 +129,8 @@ self.addEventListener('fetch', event => {
 
         // Not in cache - fetch from network
         return fetch(event.request).then(response => {
-          // Only cache valid responses
-          if (!response || response.status !== 200) {
+          // Only cache valid responses from GET requests
+          if (!response || response.status !== 200 || event.request.method !== 'GET') {
             return response;
           }
 
