@@ -1,0 +1,153 @@
+// netlify/functions/admin-auth.js
+const crypto = require('crypto');
+
+// Store admin credentials in environment variables for security
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@tafsirkurd.com';
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || hashPassword('TafsirKurd@2025!');
+
+// Simple password hashing function (use bcrypt in production for better security)
+function hashPassword(password) {
+    return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+// Generate a simple session token
+function generateSessionToken() {
+    return crypto.randomBytes(32).toString('hex');
+}
+
+// Store active sessions (in production, use Redis or database)
+const activeSessions = new Map();
+
+exports.handler = async (event, context) => {
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Content-Type': 'application/json'
+    };
+
+    // Handle preflight
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 200, headers, body: '' };
+    }
+
+    if (event.httpMethod !== 'POST') {
+        return {
+            statusCode: 405,
+            headers,
+            body: JSON.stringify({ success: false, error: 'Method not allowed' })
+        };
+    }
+
+    try {
+        const body = JSON.parse(event.body || '{}');
+        const { action, email, password, token } = body;
+
+        // LOGIN
+        if (action === 'login') {
+            if (!email || !password) {
+                return {
+                    statusCode: 400,
+                    headers,
+                    body: JSON.stringify({ success: false, error: 'Email and password required' })
+                };
+            }
+
+            const passwordHash = hashPassword(password);
+
+            if (email === ADMIN_EMAIL && passwordHash === ADMIN_PASSWORD_HASH) {
+                const sessionToken = generateSessionToken();
+                const expiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+
+                activeSessions.set(sessionToken, {
+                    email: email,
+                    expiresAt: expiresAt
+                });
+
+                // Clean up expired sessions
+                for (const [key, value] of activeSessions.entries()) {
+                    if (value.expiresAt < Date.now()) {
+                        activeSessions.delete(key);
+                    }
+                }
+
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({
+                        success: true,
+                        token: sessionToken,
+                        expiresAt: expiresAt
+                    })
+                };
+            } else {
+                return {
+                    statusCode: 401,
+                    headers,
+                    body: JSON.stringify({ success: false, error: 'Invalid credentials' })
+                };
+            }
+        }
+
+        // VERIFY TOKEN
+        if (action === 'verify') {
+            if (!token) {
+                return {
+                    statusCode: 400,
+                    headers,
+                    body: JSON.stringify({ success: false, error: 'Token required' })
+                };
+            }
+
+            const session = activeSessions.get(token);
+
+            if (session && session.expiresAt > Date.now()) {
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({
+                        success: true,
+                        email: session.email,
+                        expiresAt: session.expiresAt
+                    })
+                };
+            } else {
+                activeSessions.delete(token);
+                return {
+                    statusCode: 401,
+                    headers,
+                    body: JSON.stringify({ success: false, error: 'Invalid or expired token' })
+                };
+            }
+        }
+
+        // LOGOUT
+        if (action === 'logout') {
+            if (token) {
+                activeSessions.delete(token);
+            }
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({ success: true, message: 'Logged out successfully' })
+            };
+        }
+
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ success: false, error: 'Invalid action' })
+        };
+
+    } catch (error) {
+        console.error('Admin auth error:', error);
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({
+                success: false,
+                error: 'Authentication error'
+            })
+        };
+    }
+};

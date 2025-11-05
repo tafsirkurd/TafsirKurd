@@ -1062,6 +1062,21 @@
         </div>
     </div>
 
+    <!-- Edit Video Modal -->
+    <div id="editVideoModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-header">Edit Video URL</h3>
+            <div class="form-group">
+                <label>Instagram Post URL</label>
+                <input type="url" id="editVideoUrl" placeholder="https://www.instagram.com/p/...">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditVideoModal()">Cancel</button>
+                <button class="btn" onclick="saveVideoEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <!-- View Message Modal -->
     <div id="viewMessageModal" class="modal">
         <div class="modal-content">
@@ -1092,8 +1107,6 @@
         // Configuration
         const SUPABASE_URL = 'https://gijupzejtbpifjzwadee.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanVwemVqdGJwaWZqendhZGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDAyOTcsImV4cCI6MjA3MTExNjI5N30.-d33o2dDpfD6ywubBcc51srvf1VUewAJwpnd0OOo51M';
-        const ADMIN_EMAILS = ['admin@tafsirkurd.com'];
-        const ADMIN_PASSWORD = 'TafsirKurd@2025!';
 
         // Initialize Supabase
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1104,55 +1117,106 @@
         let allMessages = [];
         let allVideos = [];
 
-        // Check if already logged in
-        const adminSession = sessionStorage.getItem('adminSession');
-        if (adminSession) {
-            const session = JSON.parse(adminSession);
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('adminContainer').classList.add('active');
-            document.getElementById('adminEmail').textContent = session.email;
-            loadDashboardData();
+        // Check if already logged in with secure token
+        const adminToken = sessionStorage.getItem('adminToken');
+        if (adminToken) {
+            verifySession(adminToken);
         }
 
-        // Login Form
+        // Verify session token with backend
+        async function verifySession(token) {
+            try {
+                const response = await fetch('/.netlify/functions/admin-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'verify', token })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('loginContainer').style.display = 'none';
+                    document.getElementById('adminContainer').classList.add('active');
+                    document.getElementById('adminEmail').textContent = data.email;
+                    loadDashboardData();
+                } else {
+                    sessionStorage.removeItem('adminToken');
+                }
+            } catch (error) {
+                console.error('Session verification error:', error);
+                sessionStorage.removeItem('adminToken');
+            }
+        }
+
+        // Secure Login Form
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
             const errorDiv = document.getElementById('loginError');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
 
-            if (!ADMIN_EMAILS.includes(email)) {
-                errorDiv.textContent = 'Access denied: Email not authorized';
-                errorDiv.style.display = 'block';
-                return;
-            }
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Authenticating...';
 
-            if (password !== ADMIN_PASSWORD) {
-                errorDiv.textContent = 'Incorrect password';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            // Store session
-            sessionStorage.setItem('adminSession', JSON.stringify({ email }));
-            document.getElementById('adminEmail').textContent = email;
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('adminContainer').classList.add('active');
-
-            // Track admin login in Google Analytics
-            if (typeof gtag !== 'undefined') {
-                gtag('event', 'admin_login', {
-                    'event_category': 'authentication',
-                    'event_label': email
+            try {
+                const response = await fetch('/.netlify/functions/admin-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'login',
+                        email,
+                        password
+                    })
                 });
-            }
 
-            loadDashboardData();
+                const data = await response.json();
+
+                if (data.success) {
+                    // Store secure token
+                    sessionStorage.setItem('adminToken', data.token);
+                    document.getElementById('adminEmail').textContent = email;
+                    document.getElementById('loginContainer').style.display = 'none';
+                    document.getElementById('adminContainer').classList.add('active');
+
+                    // Track admin login in Google Analytics
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'admin_login', {
+                            'event_category': 'authentication',
+                            'event_label': email
+                        });
+                    }
+
+                    loadDashboardData();
+                } else {
+                    errorDiv.textContent = data.error || 'Authentication failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errorDiv.textContent = 'Connection error. Please try again.';
+                errorDiv.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Login';
+            }
         });
 
-        // Logout
-        function logout() {
-            sessionStorage.removeItem('adminSession');
+        // Secure Logout
+        async function logout() {
+            const token = sessionStorage.getItem('adminToken');
+
+            try {
+                await fetch('/.netlify/functions/admin-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'logout', token })
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+
+            sessionStorage.removeItem('adminToken');
             location.reload();
         }
 
@@ -1659,6 +1723,7 @@
                         </div>
                         <div class="table-card-actions">
                             <button class="btn-icon info" onclick="window.open('${video.video_url}', '_blank')">🔗 Open</button>
+                            <button class="btn-icon warning" onclick="openEditVideoModal(${video.id}, '${video.video_url}')">✏️ Edit</button>
                             <button class="btn-icon danger" onclick="deleteVideo(${video.id})">🗑️ Delete</button>
                         </div>
                     </div>
@@ -1742,6 +1807,52 @@
             } catch (error) {
                 console.error('Error deleting video:', error);
                 alert('Error deleting video');
+            }
+        }
+
+        let currentEditVideoId = null;
+
+        function openEditVideoModal(id, url) {
+            currentEditVideoId = id;
+            document.getElementById('editVideoUrl').value = url;
+            document.getElementById('editVideoModal').classList.add('active');
+        }
+
+        function closeEditVideoModal() {
+            document.getElementById('editVideoModal').classList.remove('active');
+            document.getElementById('editVideoUrl').value = '';
+            currentEditVideoId = null;
+        }
+
+        async function saveVideoEdit() {
+            const url = document.getElementById('editVideoUrl').value.trim();
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            try {
+                const { error } = await supabase
+                    .from('featured_videos')
+                    .update({ video_url: url })
+                    .eq('id', currentEditVideoId);
+
+                if (error) throw error;
+
+                closeEditVideoModal();
+                await loadVideos();
+                await loadDashboardData();
+                alert('Video updated successfully!');
+
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'admin_video_edited', {
+                        'event_category': 'content',
+                        'event_label': url
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating video:', error);
+                alert(`Error updating video: ${error.message || 'Unknown error'}`);
             }
         }
 
