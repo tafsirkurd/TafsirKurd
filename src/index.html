@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>تەفسیر کورد v51 - شرۆڤەکرنا قورئانێ ب زمانێ کوردی</title>
+  <title>تەفسیر کورد - شرۆڤەکرنا قورئانێ ب زمانێ کوردی</title>
 
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-WVQC0MKLFN"></script>
@@ -1041,8 +1041,9 @@ function updateVideoSection(videoUrls) {
     const videosContainer = document.getElementById('dynamic-videos');
     if (!videosContainer) return;
 
-    // Display all videos from database (no limit)
-    videosContainer.innerHTML = videoUrls.map(url => {
+    // Display exactly 3 videos
+    const displayVideos = videoUrls.slice(0, 3);
+    videosContainer.innerHTML = displayVideos.map(url => {
         const embedUrl = convertToEmbedUrl(url);
         return `
             <div class="video-container">
