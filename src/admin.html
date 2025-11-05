@@ -2339,29 +2339,81 @@
                 return;
             }
 
-            container.innerHTML = filtered.map(user => `
-                <div class="table-card">
-                    <div class="table-card-row">
-                        <span class="table-card-label">Name:</span>
-                        <span class="table-card-value">${user.name || '-'}</span>
+            container.innerHTML = filtered.map(user => {
+                // Get Surah name
+                const surahInfo = surahNames[user.current_surah];
+                const surahDisplay = surahInfo ? `${surahInfo.english} (${surahInfo.arabic})` : `Surah ${user.current_surah || '-'}`;
+
+                // Calculate completion percentage
+                const completion = user.completion || 0;
+
+                // Format created date
+                const createdDate = user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                }) : '-';
+
+                // Profile picture
+                const profilePic = user.picture || '';
+
+                return `
+                <div class="table-card" style="position: relative;">
+                    ${profilePic ? `
+                        <div style="position: absolute; top: 15px; right: 15px;">
+                            <img src="${profilePic}" alt="${user.name}" style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid #667eea;" />
+                        </div>
+                    ` : ''}
+
+                    <div class="table-card-row" style="margin-bottom: 10px;">
+                        <span class="table-card-label">👤 Name:</span>
+                        <span class="table-card-value" style="font-weight: 600; font-size: 16px;">${user.name || '-'}</span>
                     </div>
                     <div class="table-card-row">
-                        <span class="table-card-label">Email:</span>
+                        <span class="table-card-label">📧 Email:</span>
                         <span class="table-card-value">${user.email || '-'}</span>
                     </div>
                     <div class="table-card-row">
-                        <span class="table-card-label">Reading:</span>
-                        <span class="table-card-value">Surah ${user.current_surah || '-'}, Ayah ${user.current_ayah || '-'}</span>
+                        <span class="table-card-label">📅 Joined:</span>
+                        <span class="table-card-value">${createdDate}</span>
+                    </div>
+
+                    <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
+
+                    <div class="table-card-row">
+                        <span class="table-card-label">📖 Current Surah:</span>
+                        <span class="table-card-value">${surahDisplay}</span>
                     </div>
                     <div class="table-card-row">
-                        <span class="table-card-label">Goal:</span>
+                        <span class="table-card-label">📍 Current Ayah:</span>
+                        <span class="table-card-value">${user.current_ayah || '-'}</span>
+                    </div>
+                    <div class="table-card-row">
+                        <span class="table-card-label">📊 Total Ayahs Read:</span>
+                        <span class="table-card-value">${user.total_read || 0} ayahs</span>
+                    </div>
+                    <div class="table-card-row">
+                        <span class="table-card-label">✅ Completion:</span>
+                        <span class="table-card-value">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="flex: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
+                                    <div style="background: #667eea; height: 100%; width: ${completion}%; transition: width 0.3s;"></div>
+                                </div>
+                                <span style="font-weight: 600; min-width: 45px;">${completion}%</span>
+                            </div>
+                        </span>
+                    </div>
+                    <div class="table-card-row">
+                        <span class="table-card-label">🎯 Daily Goal:</span>
                         <span class="table-card-value">${user.daily_goal || '-'} verses/day</span>
                     </div>
-                    <div class="table-card-actions">
-                        <button class="btn-icon danger" onclick="deleteUser(${user.id})">🗑️ Delete</button>
+
+                    <div class="table-card-actions" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                        <button class="btn-icon danger" onclick="deleteUser(${user.id})">🗑️ Delete User</button>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         // Search users

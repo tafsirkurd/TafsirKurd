@@ -1,6 +1,26 @@
 // netlify/functions/geo-analytics.js
 const { createClient } = require('@supabase/supabase-js');
 
+// Normalize city and region names (fix common spelling variations)
+function normalizeLocationName(name) {
+    if (!name) return name;
+
+    const normalizations = {
+        // Kurdish cities
+        'arbil': 'Erbil',
+        'hawler': 'Erbil',
+        'hewler': 'Erbil',
+        'duhok': 'Duhok',
+        'dihok': 'Duhok',
+        'slemani': 'Sulaymaniyah',
+        'silêmanî': 'Sulaymaniyah',
+        // Add more as needed
+    };
+
+    const lowerName = name.toLowerCase();
+    return normalizations[lowerName] || name;
+}
+
 // Get geographic data from IP with multiple fallback providers
 async function getGeoLocation(ip) {
     console.log('🌍 Getting geo location for IP:', ip);
@@ -31,8 +51,8 @@ async function getGeoLocation(ip) {
             return {
                 country: data.country_name || 'Unknown',
                 country_code: data.country_code || 'XX',
-                region: data.region || 'Unknown',
-                city: data.city || 'Unknown',
+                region: normalizeLocationName(data.region || 'Unknown'),
+                city: normalizeLocationName(data.city || 'Unknown'),
                 latitude: data.latitude || 0,
                 longitude: data.longitude || 0,
                 timezone: data.timezone || 'Unknown'
@@ -49,8 +69,8 @@ async function getGeoLocation(ip) {
             return {
                 country: data.country || 'Unknown',
                 country_code: data.countryCode || 'XX',
-                region: data.regionName || 'Unknown',
-                city: data.city || 'Unknown',
+                region: normalizeLocationName(data.regionName || 'Unknown'),
+                city: normalizeLocationName(data.city || 'Unknown'),
                 latitude: data.lat || 0,
                 longitude: data.lon || 0,
                 timezone: data.timezone || 'Unknown'
@@ -67,8 +87,8 @@ async function getGeoLocation(ip) {
             return {
                 country: data.country || 'Unknown',
                 country_code: data.country_code || 'XX',
-                region: data.region || 'Unknown',
-                city: data.city || 'Unknown',
+                region: normalizeLocationName(data.region || 'Unknown'),
+                city: normalizeLocationName(data.city || 'Unknown'),
                 latitude: data.latitude || 0,
                 longitude: data.longitude || 0,
                 timezone: data.timezone || 'Unknown'
