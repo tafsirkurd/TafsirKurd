@@ -622,6 +622,28 @@
             to { transform: rotate(360deg); }
         }
 
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 6px 15px rgba(102, 126, 234, 0.5);
+            }
+        }
+
         .loading-text {
             color: var(--text-muted);
             font-size: 14px;
@@ -1618,6 +1640,24 @@
             createActivityTimelineChart();
         }
 
+        // Normalize location names (client-side for old data)
+        function normalizeLocationName(name) {
+            if (!name) return name;
+
+            const normalizations = {
+                'arbil': 'Erbil',
+                'hawler': 'Erbil',
+                'hewler': 'Erbil',
+                'duhok': 'Duhok',
+                'dihok': 'Duhok',
+                'slemani': 'Sulaymaniyah',
+                'silêmanî': 'Sulaymaniyah',
+            };
+
+            const lowerName = name.toLowerCase();
+            return normalizations[lowerName] || name;
+        }
+
         // Load Geographic Analytics
         async function loadGeoAnalytics() {
             try {
@@ -1625,7 +1665,62 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    const { data } = result;
+                    let { data } = result;
+
+                    // Normalize all location data client-side to handle old data
+                    data.countries = data.countries.map(c => ({
+                        ...c,
+                        country: normalizeLocationName(c.country)
+                    }));
+
+                    data.regions = data.regions.map(r => ({
+                        ...r,
+                        region: normalizeLocationName(r.region)
+                    }));
+
+                    data.cities = data.cities.map(c => ({
+                        ...c,
+                        city: normalizeLocationName(c.city),
+                        region: normalizeLocationName(c.region)
+                    }));
+
+                    // Re-aggregate after normalization
+                    const countryMap = {};
+                    const regionMap = {};
+                    const cityMap = {};
+
+                    data.countries.forEach(c => {
+                        if (!countryMap[c.country]) {
+                            countryMap[c.country] = { ...c };
+                        } else {
+                            countryMap[c.country].visits += c.visits;
+                            countryMap[c.country].unique_visitors += c.unique_visitors;
+                        }
+                    });
+
+                    data.regions.forEach(r => {
+                        const key = `${r.region}|${r.country}`;
+                        if (!regionMap[key]) {
+                            regionMap[key] = { ...r };
+                        } else {
+                            regionMap[key].visits += r.visits;
+                            regionMap[key].unique_visitors += r.unique_visitors;
+                        }
+                    });
+
+                    data.cities.forEach(c => {
+                        const key = `${c.city}|${c.region}`;
+                        if (!cityMap[key]) {
+                            cityMap[key] = { ...c };
+                        } else {
+                            cityMap[key].visits += c.visits;
+                            cityMap[key].unique_visitors += c.unique_visitors;
+                        }
+                    });
+
+                    data.countries = Object.values(countryMap).sort((a, b) => b.visits - a.visits);
+                    data.regions = Object.values(regionMap).sort((a, b) => b.visits - a.visits);
+                    data.cities = Object.values(cityMap).sort((a, b) => b.visits - a.visits);
 
                     // Update summary stats
                     document.getElementById('totalCountries').textContent = data.countries.length;
@@ -2358,21 +2453,25 @@
                 const profilePic = user.picture || '';
 
                 return `
-                <div class="table-card" style="position: relative;">
+                <div class="table-card" style="position: relative; overflow: visible; animation: fadeInUp 0.5s ease-out;">
                     ${profilePic ? `
-                        <div style="position: absolute; top: 15px; right: 15px;">
-                            <img src="${profilePic}" alt="${user.name}" style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid #667eea;" />
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
+                            <img src="${profilePic}" alt="${user.name}" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid #667eea; box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3); animation: pulse 2s ease-in-out infinite;" />
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; font-size: 18px; color: #333; margin-bottom: 4px;">👤 ${user.name || '-'}</div>
+                                <div style="font-size: 13px; color: #666;">📧 ${user.email || '-'}</div>
+                            </div>
                         </div>
-                    ` : ''}
-
-                    <div class="table-card-row" style="margin-bottom: 10px;">
-                        <span class="table-card-label">👤 Name:</span>
-                        <span class="table-card-value" style="font-weight: 600; font-size: 16px;">${user.name || '-'}</span>
-                    </div>
-                    <div class="table-card-row">
-                        <span class="table-card-label">📧 Email:</span>
-                        <span class="table-card-value">${user.email || '-'}</span>
-                    </div>
+                    ` : `
+                        <div class="table-card-row" style="margin-bottom: 10px;">
+                            <span class="table-card-label">👤 Name:</span>
+                            <span class="table-card-value" style="font-weight: 600; font-size: 16px;">${user.name || '-'}</span>
+                        </div>
+                        <div class="table-card-row">
+                            <span class="table-card-label">📧 Email:</span>
+                            <span class="table-card-value">${user.email || '-'}</span>
+                        </div>
+                    `}
                     <div class="table-card-row">
                         <span class="table-card-label">📅 Joined:</span>
                         <span class="table-card-value">${createdDate}</span>
