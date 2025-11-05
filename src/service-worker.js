@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v52-fix-post-caching';
+const CACHE_NAME = 'tafsir-kurd-v53-geo-analytics';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -40,7 +40,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v51-homepage-4-videos - INSTANT updates on refresh with network-first strategy');
+  console.log('[ServiceWorker] Installing v53-geo-analytics - Geographic tracking with INSTANT updates');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

@@ -6269,7 +6269,31 @@
                     .catch(error => {
                         console.log('❌ Service Worker registration failed:', error);
                     });
+
+                // Track geographic visit
+                trackGeoVisit();
             });
+
+            // Track Geographic Visit
+            async function trackGeoVisit() {
+                try {
+                    // Only track once per session to avoid duplicate tracking
+                    if (sessionStorage.getItem('geo_tracked')) return;
+
+                    await fetch('/.netlify/functions/geo-analytics', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            page_url: window.location.pathname,
+                            referrer: document.referrer || null
+                        })
+                    });
+
+                    sessionStorage.setItem('geo_tracked', 'true');
+                } catch (error) {
+                    console.error('Geo tracking failed:', error);
+                }
+            }
 
             // When service worker updates, reload the page
             let refreshing;

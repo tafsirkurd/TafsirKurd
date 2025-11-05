@@ -854,6 +854,102 @@
                     </div>
                 </div>
 
+                <!-- Geographic Analytics Section -->
+                <div class="info-box" style="margin-top: 20px;">
+                    <div class="info-box-title">🌍 Geographic Analytics</div>
+                    <div class="info-box-text">
+                        Real-time visitor tracking by country, region, and city. Understand where your audience is coming from.
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🌎</div>
+                        <div class="stat-value" id="totalCountries">-</div>
+                        <div class="stat-label">Countries</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📍</div>
+                        <div class="stat-value" id="totalRegions">-</div>
+                        <div class="stat-label">Regions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🏙️</div>
+                        <div class="stat-value" id="totalCities">-</div>
+                        <div class="stat-label">Cities</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-value" id="totalGeoVisits">-</div>
+                        <div class="stat-label">Total Visits</div>
+                    </div>
+                </div>
+
+                <!-- Top Countries Table -->
+                <div class="table-container" style="margin-top: 20px;">
+                    <h3 class="table-header">🌍 Top Countries</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Country</th>
+                                <th>Flag</th>
+                                <th>Visits</th>
+                                <th>Unique Visitors</th>
+                                <th>% of Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="countriesTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 20px;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Top Regions Table -->
+                <div class="table-container" style="margin-top: 20px;">
+                    <h3 class="table-header">📍 Top Regions</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Region</th>
+                                <th>Country</th>
+                                <th>Visits</th>
+                                <th>Unique Visitors</th>
+                            </tr>
+                        </thead>
+                        <tbody id="regionsTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 20px;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Top Cities Table -->
+                <div class="table-container" style="margin-top: 20px;">
+                    <h3 class="table-header">🏙️ Top Cities</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>City</th>
+                                <th>Region</th>
+                                <th>Country</th>
+                                <th>Visits</th>
+                                <th>Unique Visitors</th>
+                            </tr>
+                        </thead>
+                        <tbody id="citiesTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 20px;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
                 <div class="analytics-grid">
                     <div class="chart-container">
                         <h3 class="chart-header">Popular Surahs</h3>
@@ -1438,6 +1534,9 @@
             document.getElementById('analyticsAvgTime').textContent = '5m 30s';
             document.getElementById('analyticsMobile').textContent = '75%';
 
+            // Load geographic analytics
+            await loadGeoAnalytics();
+
             // Create popular surahs chart
             createPopularSurahsChart();
 
@@ -1446,6 +1545,97 @@
 
             // Create activity timeline
             createActivityTimelineChart();
+        }
+
+        // Load Geographic Analytics
+        async function loadGeoAnalytics() {
+            try {
+                const response = await fetch('/.netlify/functions/geo-analytics');
+                const result = await response.json();
+
+                if (result.success) {
+                    const { data } = result;
+
+                    // Update summary stats
+                    document.getElementById('totalCountries').textContent = data.countries.length;
+                    document.getElementById('totalRegions').textContent = data.regions.length;
+                    document.getElementById('totalCities').textContent = data.cities.length;
+                    document.getElementById('totalGeoVisits').textContent = data.total_visits.toLocaleString();
+
+                    // Populate countries table
+                    const countriesBody = document.getElementById('countriesTableBody');
+                    if (data.countries.length === 0) {
+                        countriesBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No data yet. Visit tracking will start automatically.</td></tr>';
+                    } else {
+                        countriesBody.innerHTML = data.countries.slice(0, 10).map((country, index) => {
+                            const percentage = ((country.visits / data.total_visits) * 100).toFixed(1);
+                            const flag = getCountryFlag(country.country_code);
+                            return `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${country.country}</td>
+                                    <td style="font-size: 24px;">${flag}</td>
+                                    <td>${country.visits.toLocaleString()}</td>
+                                    <td>${country.unique_visitors.toLocaleString()}</td>
+                                    <td>${percentage}%</td>
+                                </tr>
+                            `;
+                        }).join('');
+                    }
+
+                    // Populate regions table
+                    const regionsBody = document.getElementById('regionsTableBody');
+                    if (data.regions.length === 0) {
+                        regionsBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No data yet</td></tr>';
+                    } else {
+                        regionsBody.innerHTML = data.regions.slice(0, 10).map((region, index) => `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${region.region}</td>
+                                <td>${region.country}</td>
+                                <td>${region.visits.toLocaleString()}</td>
+                                <td>${region.unique_visitors.toLocaleString()}</td>
+                            </tr>
+                        `).join('');
+                    }
+
+                    // Populate cities table
+                    const citiesBody = document.getElementById('citiesTableBody');
+                    if (data.cities.length === 0) {
+                        citiesBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No data yet</td></tr>';
+                    } else {
+                        citiesBody.innerHTML = data.cities.slice(0, 10).map((city, index) => `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${city.city}</td>
+                                <td>${city.region}</td>
+                                <td>${city.country}</td>
+                                <td>${city.visits.toLocaleString()}</td>
+                                <td>${city.unique_visitors.toLocaleString()}</td>
+                            </tr>
+                        `).join('');
+                    }
+                } else {
+                    console.error('Geo analytics error:', result.error);
+                }
+            } catch (error) {
+                console.error('Failed to load geo analytics:', error);
+                // Set default values on error
+                document.getElementById('totalCountries').textContent = '0';
+                document.getElementById('totalRegions').textContent = '0';
+                document.getElementById('totalCities').textContent = '0';
+                document.getElementById('totalGeoVisits').textContent = '0';
+            }
+        }
+
+        // Get country flag emoji from country code
+        function getCountryFlag(countryCode) {
+            if (!countryCode || countryCode === 'XX') return '🌍';
+            const codePoints = countryCode
+                .toUpperCase()
+                .split('')
+                .map(char => 127397 + char.charCodeAt());
+            return String.fromCodePoint(...codePoints);
         }
 
         // Create Popular Surahs Chart

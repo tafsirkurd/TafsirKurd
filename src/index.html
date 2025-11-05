@@ -1160,6 +1160,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         setInterval(loadWebsiteContent, 300000);
     }
 
+    // Track geographic visit
+    trackGeoVisit();
+
     // SERVICE WORKER COMPLETELY DISABLED FOR DEBUGGING
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(registrations => {
@@ -1172,6 +1175,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('⚠️ SERVICE WORKER DISABLED - No caching active');
     }
 });
+
+// Track Geographic Visit
+async function trackGeoVisit() {
+    try {
+        // Only track once per session to avoid duplicate tracking
+        if (sessionStorage.getItem('geo_tracked')) return;
+
+        await fetch('/.netlify/functions/geo-analytics', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                page_url: window.location.pathname,
+                referrer: document.referrer || null
+            })
+        });
+
+        sessionStorage.setItem('geo_tracked', 'true');
+    } catch (error) {
+        console.error('Geo tracking failed:', error);
+    }
+}
 
 </script>
 </body>
