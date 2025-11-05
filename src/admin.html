@@ -674,6 +674,64 @@
         }
 
         /* Desktop Styles */
+        /* Mobile Styles for Geographic Analytics */
+        @media (max-width: 767px) {
+            #geoAnalyticsContainer {
+                padding: 20px 15px !important;
+                margin-top: 20px !important;
+                border-radius: 12px !important;
+            }
+
+            #geoAnalyticsContainer h2 {
+                font-size: 24px !important;
+            }
+
+            #geoAnalyticsContainer p {
+                font-size: 14px !important;
+            }
+
+            /* Stack stat cards 2x2 on mobile */
+            #geoAnalyticsContainer .stats-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 10px !important;
+            }
+
+            #geoAnalyticsContainer .stat-card {
+                padding: 15px 10px !important;
+            }
+
+            #geoAnalyticsContainer .stat-value {
+                font-size: 24px !important;
+            }
+
+            #geoAnalyticsContainer .stat-label {
+                font-size: 11px !important;
+            }
+
+            /* Single column for tables on mobile */
+            #geoAnalyticsContainer > div:last-child {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+            }
+
+            /* Smaller table text on mobile */
+            #geoAnalyticsContainer table th,
+            #geoAnalyticsContainer table td {
+                font-size: 12px !important;
+                padding: 10px 6px !important;
+            }
+
+            #geoAnalyticsContainer .table-header {
+                font-size: 16px !important;
+                padding: 12px !important;
+            }
+
+            /* Smaller progress bars on mobile */
+            #geoAnalyticsContainer table td > div > div {
+                height: 4px !important;
+            }
+        }
+
         @media (min-width: 768px) {
             .admin-email {
                 display: block;
@@ -855,7 +913,7 @@
                 </div>
 
                 <!-- Geographic Analytics Section - Separate Container -->
-                <div style="margin-top: 40px; padding: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                <div id="geoAnalyticsContainer" style="margin-top: 40px; padding: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
                     <div style="text-align: center; color: white; margin-bottom: 30px;">
                         <h2 style="font-size: 32px; font-weight: 800; margin: 0 0 10px 0;">🌍 Geographic Analytics</h2>
                         <p style="font-size: 16px; opacity: 0.95; margin: 0;">Track where your visitors are coming from around the world</p>
