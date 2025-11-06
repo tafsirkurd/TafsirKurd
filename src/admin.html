@@ -1158,19 +1158,6 @@
 
             <!-- Users Section -->
             <section id="usersSection" class="section">
-                <!-- Top 10 Readers Leaderboard -->
-                <div id="topReadersLeaderboard" class="table-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; margin-bottom: 30px;">
-                    <h3 style="margin: 0 0 20px 0; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 36px;">🏆</span> Top 10 Readers - Leaderboard
-                    </h3>
-                    <div id="topReadersLeaderboardContent">
-                        <div class="loading" style="color: white;">
-                            <div class="loading-spinner" style="border-color: rgba(255,255,255,0.3); border-top-color: white;"></div>
-                            <div class="loading-text">Loading top readers...</div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="table-container">
                     <div class="table-header">
                         <h2 class="table-title">👥 All Registered Users - Detailed Information</h2>
@@ -3138,95 +3125,11 @@
                 });
 
                 console.log('[Admin] Processed users:', allUsers);
-                displayTopReadersLeaderboard(allUsers);
                 displayUsers(allUsers);
             } catch (error) {
                 console.error('Error loading users:', error);
                 container.innerHTML = '<div class="empty-state"><div class="empty-text" style="color: var(--danger);">Error loading users</div></div>';
             }
-        }
-
-        // Display Top 10 Readers Leaderboard in Users Section
-        function displayTopReadersLeaderboard(users) {
-            const container = document.getElementById('topReadersLeaderboardContent');
-            if (!container) return;
-
-            // Get top readers
-            const topReaders = [...users]
-                .filter(u => u.total_read > 0)
-                .sort((a, b) => b.total_read - a.total_read)
-                .slice(0, 10);
-
-            if (topReaders.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; opacity: 0.9;">
-                        <div style="font-size: 48px; margin-bottom: 15px;">📚</div>
-                        <div style="font-size: 18px;">No readers yet</div>
-                        <div style="font-size: 14px; margin-top: 8px; opacity: 0.8;">Start reading to appear on the leaderboard!</div>
-                    </div>
-                `;
-                return;
-            }
-
-            // Calculate statistics
-            const activeReaders = users.filter(u => u.total_read > 0 || u.current_surah);
-            const recentReaders = users.filter(u => {
-                if (!u.last_read) return false;
-                const daysSince = (Date.now() - new Date(u.last_read).getTime()) / (1000 * 60 * 60 * 24);
-                return daysSince <= 7;
-            });
-            const completedUsers = users.filter(u => u.completion >= 100);
-            const readingVelocity = activeReaders.reduce((sum, u) => {
-                const daysActive = u.created_at ? Math.max(1, (Date.now() - new Date(u.created_at).getTime()) / (1000 * 60 * 60 * 24)) : 1;
-                return sum + (u.total_read / daysActive);
-            }, 0) / Math.max(activeReaders.length, 1);
-
-            container.innerHTML = `
-                <div style="display: grid; gap: 10px;">
-                    ${topReaders.map((reader, i) => `
-                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; transition: transform 0.2s, box-shadow 0.2s;"
-                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.2)';"
-                             onmouseout="this.style.transform=''; this.style.boxShadow='';">
-                            <div style="background: ${i < 3 ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)' : 'rgba(255,255,255,0.2)'}; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; color: ${i < 3 ? '#333' : 'white'}; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-                                ${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
-                            </div>
-                            <img src="${reader.picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(reader.full_name || 'User')}&background=667eea&color=fff&size=128"
-                                 style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.4); object-fit: cover; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.2);"
-                                 onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(reader.full_name || 'User')}&background=667eea&color=fff&size=128'">
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="font-weight: 700; font-size: 18px; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    ${reader.full_name || 'Anonymous User'}
-                                </div>
-                                <div style="font-size: 13px; opacity: 0.95; display: flex; gap: 15px; flex-wrap: wrap;">
-                                    <span>📖 ${reader.total_read || 0} ayahs</span>
-                                    <span>✅ ${Math.round(reader.completion || 0)}%</span>
-                                    ${reader.current_surah ? `<span>📍 Surah ${reader.current_surah}:${reader.current_ayah || 1}</span>` : ''}
-                                    ${reader.daily_goal ? `<span>🎯 ${reader.daily_goal}/day</span>` : ''}
-                                </div>
-                            </div>
-                            <div style="text-align: right; flex-shrink: 0;">
-                                <div style="font-size: 28px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.3);">${reader.total_read || 0}</div>
-                                <div style="font-size: 11px; opacity: 0.9; font-weight: 600;">AYAHS</div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-
-                <div style="margin-top: 25px; padding-top: 25px; border-top: 1px solid rgba(255,255,255,0.2); display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px;">
-                    <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
-                        <div style="font-size: 32px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.2);">${Math.round(readingVelocity * 10) / 10}</div>
-                        <div style="font-size: 13px; opacity: 0.95; margin-top: 4px;">Avg Ayahs/Day</div>
-                    </div>
-                    <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
-                        <div style="font-size: 32px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.2);">${recentReaders.length}</div>
-                        <div style="font-size: 13px; opacity: 0.95; margin-top: 4px;">Active This Week</div>
-                    </div>
-                    <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
-                        <div style="font-size: 32px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.2);">${completedUsers.length}</div>
-                        <div style="font-size: 13px; opacity: 0.95; margin-top: 4px;">Completed Quran</div>
-                    </div>
-                </div>
-            `;
         }
 
         function displayUsers(users) {
