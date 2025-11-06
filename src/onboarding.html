@@ -665,8 +665,37 @@
             completeOnboarding();
         }
 
-        function completeOnboarding() {
+        async function completeOnboarding() {
+            // Save to localStorage
             localStorage.setItem('onboardingCompleted', 'true');
+
+            // Save to database so it persists after logout
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user && user.sub) {
+                    const userKey = 'quran_data_' + user.sub;
+                    const saved = localStorage.getItem(userKey);
+                    const userData = saved ? JSON.parse(saved) : {};
+
+                    // Mark onboarding as completed in database
+                    userData.onboardingCompleted = true;
+
+                    await fetch('/.netlify/functions/user-data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: user.sub,
+                            action: 'save',
+                            data: userData
+                        })
+                    });
+
+                    console.log('✅ Onboarding completion saved to database');
+                }
+            } catch (error) {
+                console.error('Error saving onboarding completion:', error);
+            }
+
             window.location.href = '/complete-signup';
         }
 

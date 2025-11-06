@@ -926,8 +926,18 @@
             }
 
             // Check if this user has completed signup before (returning user)
-            const hasCompletedSignup = needsSetup ? false : localStorage.getItem('signupCompleted');
-            const hasCompletedOnboarding = needsSetup ? false : localStorage.getItem('onboardingCompleted');
+            // IMPORTANT: Check DATABASE first, then localStorage as fallback
+            const hasCompletedSignup = needsSetup ? false : (userData.signupCompleted === true || localStorage.getItem('signupCompleted') === 'true');
+            const hasCompletedOnboarding = needsSetup ? false : (userData.onboardingCompleted === true || localStorage.getItem('onboardingCompleted') === 'true');
+            const hasCompletedProfile = needsSetup ? false : (userData.profileCompleted === true);
+
+            // Sync database flags to localStorage for consistent state
+            if (userData.signupCompleted === true) {
+                localStorage.setItem('signupCompleted', 'true');
+            }
+            if (userData.onboardingCompleted === true) {
+                localStorage.setItem('onboardingCompleted', 'true');
+            }
 
             // Redirect based on user status - STRICT FLOW: Onboarding → Complete Signup → Quran
             setTimeout(() => {
@@ -938,11 +948,11 @@
                     localStorage.removeItem('signupCompleted'); // Clear to enforce flow
                     localStorage.removeItem('onboardingCompleted'); // Clear to enforce flow
                     window.location.href = '/onboarding';
-                } else if (hasCompletedSignup === 'true') {
+                } else if (hasCompletedSignup && hasCompletedProfile) {
                     // Returning user with complete profile - go straight to Quran
-                    console.log('✅ Returning user - Going to Quran');
+                    console.log('✅ Returning user with complete profile - Going to Quran');
                     window.location.href = '/quran';
-                } else if (hasCompletedOnboarding === 'true') {
+                } else if (hasCompletedOnboarding) {
                     // User completed onboarding but not signup - go to signup
                     console.log('⏭️ Onboarding done - Going to complete signup');
                     window.location.href = '/complete-signup';

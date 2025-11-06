@@ -719,8 +719,32 @@
             btn.classList.add('loading');
 
             try {
-                // Save completion status
+                // Save to localStorage
                 localStorage.setItem('signupCompleted', 'true');
+
+                // Save to database so it persists after logout
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user && user.sub) {
+                    const userKey = 'quran_data_' + user.sub;
+                    const saved = localStorage.getItem(userKey);
+                    const userData = saved ? JSON.parse(saved) : {};
+
+                    // Mark signup and profile as completed in database
+                    userData.signupCompleted = true;
+                    userData.profileCompleted = true;
+
+                    await fetch('/.netlify/functions/user-data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: user.sub,
+                            action: 'save',
+                            data: userData
+                        })
+                    });
+
+                    console.log('✅ Signup completion saved to database');
+                }
 
                 // Try to clear service worker caches (non-blocking)
                 clearAllCaches().catch(err => console.error('Cache clear error:', err));
@@ -746,6 +770,30 @@
                 };
                 localStorage.setItem('userPreferences', JSON.stringify(defaultPrefs));
                 localStorage.setItem('signupCompleted', 'true');
+
+                // Save to database so it persists after logout
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user && user.sub) {
+                    const userKey = 'quran_data_' + user.sub;
+                    const saved = localStorage.getItem(userKey);
+                    const userData = saved ? JSON.parse(saved) : {};
+
+                    // Mark signup and profile as completed in database
+                    userData.signupCompleted = true;
+                    userData.profileCompleted = true;
+
+                    await fetch('/.netlify/functions/user-data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: user.sub,
+                            action: 'save',
+                            data: userData
+                        })
+                    });
+
+                    console.log('✅ Signup completion saved to database (skipped)');
+                }
 
                 // Try to clear service worker caches (non-blocking)
                 clearAllCaches().catch(err => console.error('Cache clear error:', err));
