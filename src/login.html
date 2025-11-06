@@ -867,6 +867,9 @@
                 userData.email = currentUser.email;      // ← Correct field
                 userData.picture = currentUser.picture;  // ← Correct field
 
+                // Check if this is a brand new user (no existing data)
+                const isNewUser = !result.data || Object.keys(result.data).length === 0 || needsSetup;
+
                 // Save to database
                 await fetch('/.netlify/functions/user-data', {
                     method: 'POST',
@@ -879,6 +882,36 @@
                 });
 
                 console.log('✅ User profile auto-saved with Google data');
+
+                // Send instant Telegram notification for new users
+                if (isNewUser) {
+                    console.log('🎉 New user detected - sending Telegram notification');
+                    fetch('/.netlify/functions/telegram-notify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'new_user',
+                            title: '🎉 New User Just Joined!',
+                            message: `${currentUser.name} just completed signup`,
+                            details: null,
+                            data: {
+                                userName: currentUser.name,
+                                email: currentUser.email,
+                                picture: currentUser.picture,
+                                profilePicture: currentUser.picture,
+                                location: 'Not set yet',
+                                city: 'Unknown',
+                                region: 'Unknown',
+                                country: 'Unknown',
+                                dailyGoal: 'Not set',
+                                currentSurah: 'Not started',
+                                currentAyah: '-',
+                                totalRead: 0,
+                                completion: 0
+                            }
+                        })
+                    }).catch(err => console.error('Notification error:', err));
+                }
             } catch (error) {
                 console.error('Error saving Google user info:', error);
             }
