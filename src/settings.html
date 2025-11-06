@@ -69,6 +69,12 @@
             color: var(--text);
             line-height: 1.6;
             transition: background-color var(--transition), color var(--transition);
+            opacity: 0;
+        }
+
+        body.ready {
+            opacity: 1;
+            transition: opacity 0.3s ease;
         }
 
         .header {
@@ -603,6 +609,16 @@
     <script>
         // Initialize settings from localStorage
         window.addEventListener('load', () => {
+            // Check authentication first
+            const user = localStorage.getItem('user');
+            if (!user) {
+                window.location.href = '/login';
+                return;
+            }
+
+            // Auth check passed - show the page
+            document.body.classList.add('ready');
+
             loadSettings();
         });
 

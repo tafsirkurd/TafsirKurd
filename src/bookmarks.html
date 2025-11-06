@@ -58,6 +58,12 @@
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        body.ready {
+            opacity: 1;
         }
 
         .header {
@@ -707,6 +713,16 @@
         }
 
         window.addEventListener('load', async () => {
+            // Check authentication first
+            const user = localStorage.getItem('user');
+            if (!user) {
+                window.location.href = '/login';
+                return;
+            }
+
+            // Auth check passed - show the page
+            document.body.classList.add('ready');
+
             await loadQuranData();
             loadBookmarks();
             renderBookmarks();
