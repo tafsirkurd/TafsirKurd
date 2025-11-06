@@ -5772,9 +5772,22 @@
 
         // Calculate real stats from session history
         function calculateRealStats(data) {
+            // CRITICAL FIX: Don't recalculate if we already have valid saved stats
+            // This prevents losing streak and progress data
+            const hasSavedStats = data.stats && Object.keys(data.stats).length > 0;
+
+            if (hasSavedStats) {
+                console.log('✅ Using saved stats from database:', data.stats);
+                // Use saved stats - don't recalculate
+                return;
+            }
+
+            // Only recalculate if no saved stats exist (new user)
             if (!data.sessions || data.sessions.length === 0) {
                 return;
             }
+
+            console.log('📊 Calculating stats from session data (no saved stats found)');
 
             // Calculate total active minutes
             let totalMinutes = 0;
