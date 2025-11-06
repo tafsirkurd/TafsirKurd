@@ -1,5 +1,38 @@
 // netlify/functions/user-data.js
 const { createClient } = require('@supabase/supabase-js');
+const https = require('https');
+
+// Helper function to send Telegram notifications
+async function sendTelegramNotification(type, title, message, details, data) {
+    try {
+        const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+        const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+        if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+            return; // Telegram not configured, skip
+        }
+
+        const notificationData = {
+            type,
+            title,
+            message,
+            details,
+            data
+        };
+
+        const response = await fetch('https://tafsirkurd.com/.netlify/functions/telegram-notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(notificationData)
+        });
+
+        if (!response.ok) {
+            console.error('Failed to send Telegram notification');
+        }
+    } catch (error) {
+        console.error('Error sending Telegram notification:', error);
+    }
+}
 
 exports.handler = async (event, context) => {
     const headers = {
@@ -39,6 +72,15 @@ exports.handler = async (event, context) => {
 
         // SAVE user data
         if (action === 'save' && event.httpMethod === 'POST') {
+            // Check if this is a new user (first save)
+            const { data: existingData } = await supabase
+                .from('user_data')
+                .select('data, created_at')
+                .eq('user_id', userId)
+                .single();
+
+            const isNewUser = !existingData;
+
             const { error } = await supabase
                 .from('user_data')
                 .upsert({
@@ -56,6 +98,63 @@ exports.handler = async (event, context) => {
                     headers,
                     body: JSON.stringify({ success: false, error: error.message })
                 };
+            }
+
+            // Send notifications for important events (don't await, run async)
+            if (data) {
+                // New user notification
+                if (isNewUser) {
+                    const userName = data.full_name || data.email || 'New User';
+                    const location = data.city || data.region || data.country || 'Unknown';
+                    const isDuhok = location.toLowerCase().includes('duhok') ||
+                                   location.toLowerCase().includes('dihok');
+
+                    sendTelegramNotification(
+                        isDuhok ? 'duhok_user' : 'new_user',
+                        isDuhok ? '📍 New User from Duhok!' : '🎉 New User Joined!',
+                        `${userName} just joined the platform`,
+                        `Location: ${location}`,
+                        {
+                            userName,
+                            location,
+                            email: data.email
+                        }
+                    ).catch(err => console.error('Notification error:', err));
+                }
+
+                // Quran completion notification
+                if (data.completion >= 100 && (!existingData?.data?.completion || existingData.data.completion < 100)) {
+                    const userName = data.full_name || 'A user';
+                    sendTelegramNotification(
+                        'quran_complete',
+                        '🏆 Quran Completed!',
+                        `${userName} has completed reading the entire Quran!`,
+                        `Total ayahs read: ${data.total_read || 0}`,
+                        {
+                            userName,
+                            ayahsRead: data.total_read
+                        }
+                    ).catch(err => console.error('Notification error:', err));
+                }
+
+                // Milestone notifications (every 1000 ayahs)
+                if (data.total_read && existingData?.data?.total_read) {
+                    const oldMilestone = Math.floor(existingData.data.total_read / 1000);
+                    const newMilestone = Math.floor(data.total_read / 1000);
+                    if (newMilestone > oldMilestone) {
+                        const userName = data.full_name || 'A user';
+                        sendTelegramNotification(
+                            'milestone',
+                            '⭐ Reading Milestone!',
+                            `${userName} reached ${newMilestone * 1000}+ ayahs!`,
+                            `Current progress: ${data.total_read} ayahs`,
+                            {
+                                userName,
+                                ayahsRead: data.total_read
+                            }
+                        ).catch(err => console.error('Notification error:', err));
+                    }
+                }
             }
 
             return {
