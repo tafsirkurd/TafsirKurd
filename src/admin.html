@@ -1131,12 +1131,21 @@
                 </div>
 
                 <div class="table-container">
-                    <div class="table-header">
-                        <h2 class="table-title">📧 Contact Messages - Detailed View</h2>
-                        <div class="table-actions">
-                            <input type="text" id="messageSearch" class="search-box" placeholder="Search messages...">
-                            <button class="btn-filter" onclick="filterMessages('all')">All</button>
-                            <button class="btn-filter" onclick="filterMessages('unread')">Unread</button>
+                    <div class="table-header" style="background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%); border: 2px solid #e8ebf7; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                            <div>
+                                <h2 class="table-title" style="margin: 0 0 8px 0;">📧 Contact Messages - Detailed View</h2>
+                                <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 13px; color: #666;">
+                                    <span id="messagesHeaderTotal" style="background: #f0f9ff; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📊 Total: 0</span>
+                                    <span id="messagesHeaderUnread" style="background: #fef3c7; padding: 6px 12px; border-radius: 6px; font-weight: 600;">⚠️ Unread: 0</span>
+                                    <span id="messagesHeaderToday" style="background: #f0fdf4; padding: 6px 12px; border-radius: 6px; font-weight: 600;">🆕 Today: 0</span>
+                                </div>
+                            </div>
+                            <div class="table-actions">
+                                <input type="text" id="messageSearch" class="search-box" placeholder="Search messages...">
+                                <button class="btn-filter" onclick="filterMessages('all')">All</button>
+                                <button class="btn-filter" onclick="filterMessages('unread')">Unread</button>
+                            </div>
                         </div>
                     </div>
                     <div id="messagesTable" class="mobile-table">
@@ -1159,9 +1168,18 @@
                 </div>
 
                 <div class="table-container">
-                    <div class="table-header">
-                        <h2 class="table-title">🎥 Featured Videos - Detailed Management</h2>
-                        <button class="btn-add" onclick="openAddVideoModal()">+ Add Video</button>
+                    <div class="table-header" style="background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%); border: 2px solid #fde047; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                            <div>
+                                <h2 class="table-title" style="margin: 0 0 8px 0;">🎥 Featured Videos - Detailed Management</h2>
+                                <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 13px; color: #666;">
+                                    <span id="videosHeaderTotal" style="background: #f0f9ff; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📊 Total: 0</span>
+                                    <span id="videosHeaderInstagram" style="background: #fce7f3; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📸 Instagram: 0</span>
+                                    <span id="videosHeaderYouTube" style="background: #fee2e2; padding: 6px 12px; border-radius: 6px; font-weight: 600;">▶️ YouTube: 0</span>
+                                </div>
+                            </div>
+                            <button class="btn-add" onclick="openAddVideoModal()">+ Add Video</button>
+                        </div>
                     </div>
                     <div id="videosTable" class="mobile-table">
                         <div class="loading">
@@ -1175,9 +1193,18 @@
             <!-- Users Section -->
             <section id="usersSection" class="section">
                 <div class="table-container">
-                    <div class="table-header">
-                        <h2 class="table-title">👥 All Registered Users - Detailed Information</h2>
-                        <input type="text" id="userSearch" class="search-box" placeholder="Search users...">
+                    <div class="table-header" style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #86efac; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                            <div>
+                                <h2 class="table-title" style="margin: 0 0 8px 0;">👥 All Registered Users - Detailed Information</h2>
+                                <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 13px; color: #666;">
+                                    <span id="usersHeaderTotal" style="background: #f0f9ff; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📊 Total: 0</span>
+                                    <span id="usersHeaderActive" style="background: #f0fdf4; padding: 6px 12px; border-radius: 6px; font-weight: 600;">✅ Active: 0</span>
+                                    <span id="usersHeaderReading" style="background: #fef3c7; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📖 Reading: 0</span>
+                                </div>
+                            </div>
+                            <input type="text" id="userSearch" class="search-box" placeholder="Search users...">
+                        </div>
                     </div>
                     <div id="usersTable" class="mobile-table">
                         <div class="loading">
@@ -1219,8 +1246,15 @@
                 </div>
 
                 <div class="table-container">
-                    <div class="table-header">
-                        <h2 class="table-title">🏆 Top Readers Leaderboard</h2>
+                    <div class="table-header" style="background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%); border: 2px solid #fde047; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                        <div>
+                            <h2 class="table-title" style="margin: 0 0 8px 0;">🏆 Top Readers Leaderboard</h2>
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 13px; color: #666;">
+                                <span id="readersHeaderTotal" style="background: #f0f9ff; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📊 Total Readers: 0</span>
+                                <span id="readersHeaderCompleted" style="background: #f0fdf4; padding: 6px 12px; border-radius: 6px; font-weight: 600;">🏆 Completed: 0</span>
+                                <span id="readersHeaderAvgAyahs" style="background: #fce7f3; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📖 Avg: 0 ayahs</span>
+                            </div>
+                        </div>
                     </div>
                     <div id="topReadersTable" class="mobile-table">
                         <div class="loading">
@@ -2849,7 +2883,6 @@
         // Load Messages Statistics
         function loadMessagesStats(messages) {
             const container = document.getElementById('messagesStats');
-            if (!container) return;
 
             const now = Date.now();
             const oneDayAgo = now - (24 * 60 * 60 * 1000);
@@ -2859,6 +2892,16 @@
             const totalMessages = messages.length;
             const unreadMessages = messages.filter(m => m.status !== 'read').length;
             const messages24h = messages.filter(m => m.created_at && new Date(m.created_at).getTime() > oneDayAgo).length;
+
+            // Update header stats
+            const headerTotal = document.getElementById('messagesHeaderTotal');
+            const headerUnread = document.getElementById('messagesHeaderUnread');
+            const headerToday = document.getElementById('messagesHeaderToday');
+            if (headerTotal) headerTotal.textContent = `📊 Total: ${totalMessages}`;
+            if (headerUnread) headerUnread.textContent = `⚠️ Unread: ${unreadMessages}`;
+            if (headerToday) headerToday.textContent = `🆕 Today: ${messages24h}`;
+
+            if (!container) return;
             const messagesWeek = messages.filter(m => m.created_at && new Date(m.created_at).getTime() > oneWeekAgo).length;
             const messagesMonth = messages.filter(m => m.created_at && new Date(m.created_at).getTime() > oneMonthAgo).length;
 
@@ -3075,7 +3118,6 @@
         // Load Videos Statistics
         function loadVideosStats(videos) {
             const container = document.getElementById('videoStats');
-            if (!container) return;
 
             const now = Date.now();
             const oneWeekAgo = now - (7 * 24 * 60 * 60 * 1000);
@@ -3098,6 +3140,16 @@
                 else if (url.includes('youtube.com') || url.includes('youtu.be')) platformCounts.youtube++;
                 else platformCounts.other++;
             });
+
+            // Update header stats
+            const headerTotal = document.getElementById('videosHeaderTotal');
+            const headerInstagram = document.getElementById('videosHeaderInstagram');
+            const headerYouTube = document.getElementById('videosHeaderYouTube');
+            if (headerTotal) headerTotal.textContent = `📊 Total: ${totalVideos}`;
+            if (headerInstagram) headerInstagram.textContent = `📸 Instagram: ${platformCounts.instagram}`;
+            if (headerYouTube) headerYouTube.textContent = `▶️ YouTube: ${platformCounts.youtube}`;
+
+            if (!container) return;
 
             container.innerHTML = `
                 <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);">
@@ -3348,6 +3400,21 @@
                 });
 
                 console.log('[Admin] Processed users:', allUsers);
+
+                // Update users header stats
+                const now = Date.now();
+                const oneWeekAgo = now - (7 * 24 * 60 * 60 * 1000);
+                const totalUsers = allUsers.length;
+                const activeUsers = allUsers.filter(u => u.last_read && new Date(u.last_read).getTime() > oneWeekAgo).length;
+                const readingUsers = allUsers.filter(u => u.total_read > 0 || u.current_surah).length;
+
+                const headerTotal = document.getElementById('usersHeaderTotal');
+                const headerActive = document.getElementById('usersHeaderActive');
+                const headerReading = document.getElementById('usersHeaderReading');
+                if (headerTotal) headerTotal.textContent = `📊 Total: ${totalUsers}`;
+                if (headerActive) headerActive.textContent = `✅ Active: ${activeUsers}`;
+                if (headerReading) headerReading.textContent = `📖 Reading: ${readingUsers}`;
+
                 displayUsers(allUsers);
             } catch (error) {
                 console.error('Error loading users:', error);
@@ -3603,6 +3670,18 @@
         function loadTopReaders() {
             const container = document.getElementById('topReadersTable');
             if (!container) return;
+
+            // Update readers header stats
+            const totalReaders = allUsers.filter(u => u.total_read > 0 || u.current_surah).length;
+            const completedReaders = allUsers.filter(u => u.completion >= 100).length;
+            const avgAyahs = totalReaders > 0 ? Math.round(allUsers.reduce((sum, u) => sum + (u.total_read || 0), 0) / totalReaders) : 0;
+
+            const headerTotal = document.getElementById('readersHeaderTotal');
+            const headerCompleted = document.getElementById('readersHeaderCompleted');
+            const headerAvgAyahs = document.getElementById('readersHeaderAvgAyahs');
+            if (headerTotal) headerTotal.textContent = `📊 Total Readers: ${totalReaders}`;
+            if (headerCompleted) headerCompleted.textContent = `🏆 Completed: ${completedReaders}`;
+            if (headerAvgAyahs) headerAvgAyahs.textContent = `📖 Avg: ${avgAyahs} ayahs`;
 
             const topReaders = allUsers
                 .filter(u => u.current_surah)
