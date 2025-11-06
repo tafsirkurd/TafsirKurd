@@ -1204,13 +1204,29 @@
 
                 <div class="table-container">
                     <div class="table-header">
-                        <h2 class="table-title">Top Readers</h2>
+                        <h2 class="table-title">🏆 Top Readers Leaderboard</h2>
                     </div>
                     <div id="topReadersTable" class="mobile-table">
                         <div class="loading">
                             <div class="loading-spinner"></div>
                             <div class="loading-text">Loading readers...</div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Reading Analytics -->
+                <div id="detailedReadingAnalytics" style="margin-top: 30px;">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Loading detailed analytics...</div>
+                    </div>
+                </div>
+
+                <!-- Reading Milestones -->
+                <div id="readingMilestones" style="margin-top: 30px;">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Loading milestones...</div>
                     </div>
                 </div>
             </section>
@@ -3406,6 +3422,259 @@
                     </div>
                 `;
             }).join('');
+
+            // Load detailed analytics
+            loadDetailedReadingAnalytics();
+            loadReadingMilestones();
+        }
+
+        // Load Detailed Reading Analytics
+        function loadDetailedReadingAnalytics() {
+            const container = document.getElementById('detailedReadingAnalytics');
+            if (!container) return;
+
+            const now = Date.now();
+            const oneDayAgo = now - (24 * 60 * 60 * 1000);
+            const oneWeekAgo = now - (7 * 24 * 60 * 60 * 1000);
+            const oneMonthAgo = now - (30 * 24 * 60 * 60 * 1000);
+
+            // Active readers by time period
+            const activeToday = allUsers.filter(u => u.last_read && new Date(u.last_read).getTime() > oneDayAgo).length;
+            const activeWeek = allUsers.filter(u => u.last_read && new Date(u.last_read).getTime() > oneWeekAgo).length;
+            const activeMonth = allUsers.filter(u => u.last_read && new Date(u.last_read).getTime() > oneMonthAgo).length;
+
+            // Reading velocity tiers
+            const speedReaders = allUsers.filter(u => {
+                const daysActive = u.created_at ? Math.max(1, (now - new Date(u.created_at).getTime()) / (1000 * 60 * 60 * 24)) : 1;
+                return (u.total_read / daysActive) >= 20;
+            });
+
+            const regularReaders = allUsers.filter(u => {
+                const daysActive = u.created_at ? Math.max(1, (now - new Date(u.created_at).getTime()) / (1000 * 60 * 60 * 24)) : 1;
+                const velocity = u.total_read / daysActive;
+                return velocity >= 5 && velocity < 20;
+            });
+
+            const casualReaders = allUsers.filter(u => {
+                const daysActive = u.created_at ? Math.max(1, (now - new Date(u.created_at).getTime()) / (1000 * 60 * 60 * 24)) : 1;
+                const velocity = u.total_read / daysActive;
+                return velocity > 0 && velocity < 5;
+            });
+
+            // Goal achievers
+            const withGoals = allUsers.filter(u => u.daily_goal);
+            const onTrack = withGoals.filter(u => {
+                if (!u.last_read) return false;
+                const daysSince = (now - new Date(u.last_read).getTime()) / (1000 * 60 * 60 * 24);
+                return daysSince <= 1;
+            });
+
+            // Most read Surahs
+            const surahCounts = {};
+            allUsers.forEach(u => {
+                if (u.current_surah) {
+                    surahCounts[u.current_surah] = (surahCounts[u.current_surah] || 0) + 1;
+                }
+            });
+            const topSurahs = Object.entries(surahCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            container.innerHTML = `
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);">
+                    <h2 style="color: white; margin: 0 0 25px 0; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 32px;">📊</span> Detailed Reading Analytics
+                    </h2>
+
+                    <!-- Activity Timeline -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 36px; font-weight: 700; color: white;">${activeToday}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 6px;">Active Today</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 36px; font-weight: 700; color: white;">${activeWeek}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 6px;">Active This Week</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 36px; font-weight: 700; color: white;">${activeMonth}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 6px;">Active This Month</div>
+                        </div>
+                    </div>
+
+                    <!-- Reader Types -->
+                    <div style="background: rgba(255,255,255,0.95); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px; font-weight: 700;">⚡ Reader Types by Velocity</h3>
+                        <div style="display: grid; gap: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #22c55e;">
+                                <div>
+                                    <div style="font-weight: 600; color: #166534;">🚀 Speed Readers</div>
+                                    <div style="font-size: 12px; color: #16a34a;">20+ ayahs/day</div>
+                                </div>
+                                <div style="font-size: 24px; font-weight: 700; color: #22c55e;">${speedReaders.length}</div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #eff6ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                                <div>
+                                    <div style="font-weight: 600; color: #1e40af;">📚 Regular Readers</div>
+                                    <div style="font-size: 12px; color: #2563eb;">5-19 ayahs/day</div>
+                                </div>
+                                <div style="font-size: 24px; font-weight: 700; color: #3b82f6;">${regularReaders.length}</div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                                <div>
+                                    <div style="font-weight: 600; color: #92400e;">☕ Casual Readers</div>
+                                    <div style="font-size: 12px; color: #d97706;">1-4 ayahs/day</div>
+                                </div>
+                                <div style="font-size: 24px; font-weight: 700; color: #f59e0b;">${casualReaders.length}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Goal Progress -->
+                    ${withGoals.length > 0 ? `
+                    <div style="background: rgba(255,255,255,0.95); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px; font-weight: 700;">🎯 Goal Achievement</h3>
+                        <div style="display: flex; justify-content: space-around; align-items: center;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 40px; font-weight: 700; color: #667eea;">${withGoals.length}</div>
+                                <div style="font-size: 13px; color: #666; margin-top: 4px;">Users with Goals</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 40px; font-weight: 700; color: #22c55e;">${onTrack.length}</div>
+                                <div style="font-size: 13px; color: #666; margin-top: 4px;">On Track</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 40px; font-weight: 700; color: #ef4444;">${withGoals.length - onTrack.length}</div>
+                                <div style="font-size: 13px; color: #666; margin-top: 4px;">Need Motivation</div>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <!-- Popular Surahs -->
+                    ${topSurahs.length > 0 ? `
+                    <div style="background: rgba(255,255,255,0.95); padding: 20px; border-radius: 12px;">
+                        <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px; font-weight: 700;">📖 Most Read Surahs</h3>
+                        <div style="display: grid; gap: 10px;">
+                            ${topSurahs.map(([ surahNum, count], idx) => {
+                                const surahInfo = surahNames[surahNum];
+                                return `
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: ${idx === 0 ? '#fef3c7' : '#f8f9ff'}; border-radius: 8px; border-left: 4px solid ${idx === 0 ? '#f59e0b' : '#667eea'};">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="font-size: 24px; font-weight: 700; color: #999; min-width: 30px;">${idx + 1}</div>
+                                        <div>
+                                            <div style="font-weight: 600; color: #333;">${surahInfo ? surahInfo.english : `Surah ${surahNum}`}</div>
+                                            <div style="font-size: 12px; color: #666;">${surahInfo ? surahInfo.arabic : ''}</div>
+                                        </div>
+                                    </div>
+                                    <div style="font-size: 20px; font-weight: 700; color: #667eea;">${count} readers</div>
+                                </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Load Reading Milestones
+        function loadReadingMilestones() {
+            const container = document.getElementById('readingMilestones');
+            if (!container) return;
+
+            // Find milestone achievers
+            const completedQuran = allUsers.filter(u => u.completion >= 100);
+            const halfwayThere = allUsers.filter(u => u.completion >= 50 && u.completion < 100);
+            const firstJuz = allUsers.filter(u => u.total_read >= 148 && u.total_read < 296); // Juz 1 is ~148 ayahs
+            const streakHeroes = allUsers.filter(u => {
+                if (!u.last_read) return false;
+                const daysSince = (Date.now() - new Date(u.last_read).getTime()) / (1000 * 60 * 60 * 24);
+                return daysSince <= 1 && u.total_read > 100;
+            });
+
+            const milestones = [];
+
+            if (completedQuran.length > 0) {
+                milestones.push({
+                    icon: '🏆',
+                    title: 'Quran Completed!',
+                    count: completedQuran.length,
+                    color: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                    users: completedQuran.slice(0, 3)
+                });
+            }
+
+            if (halfwayThere.length > 0) {
+                milestones.push({
+                    icon: '🎯',
+                    title: 'Halfway There',
+                    count: halfwayThere.length,
+                    color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    users: halfwayThere.slice(0, 3)
+                });
+            }
+
+            if (firstJuz.length > 0) {
+                milestones.push({
+                    icon: '📗',
+                    title: 'First Juz Completed',
+                    count: firstJuz.length,
+                    color: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                    users: firstJuz.slice(0, 3)
+                });
+            }
+
+            if (streakHeroes.length > 0) {
+                milestones.push({
+                    icon: '🔥',
+                    title: 'Active Streak Heroes',
+                    count: streakHeroes.length,
+                    color: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                    users: streakHeroes.slice(0, 3)
+                });
+            }
+
+            if (milestones.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background: #f8f9ff; border-radius: 16px; border: 2px dashed #e8ebf7;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🎯</div>
+                        <div style="font-size: 18px; color: #666;">No milestones achieved yet</div>
+                        <div style="font-size: 14px; color: #999; margin-top: 8px;">Keep reading to unlock achievements!</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <h2 style="margin: 0 0 20px 0; font-size: 24px; font-weight: 700; color: #333; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 32px;">🎖️</span> Reading Milestones & Achievements
+                </h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    ${milestones.map(milestone => `
+                        <div style="background: ${milestone.color}; border-radius: 16px; padding: 20px; color: white; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                                <div style="font-size: 48px;">${milestone.icon}</div>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">${milestone.title}</div>
+                                    <div style="font-size: 14px; opacity: 0.9;">${milestone.count} ${milestone.count === 1 ? 'user' : 'users'} achieved</div>
+                                </div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 12px;">
+                                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 10px; text-transform: uppercase; font-weight: 600;">Recent Achievers:</div>
+                                ${milestone.users.map(user => `
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                        <img src="${user.picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.full_name || 'User')}&background=ffffff&color=667eea&size=64"
+                                             style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5);"
+                                             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}&background=ffffff&color=667eea&size=64'">
+                                        <div style="font-weight: 600; font-size: 14px;">${user.full_name || 'Anonymous'}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
         }
 
         // Database Functions
