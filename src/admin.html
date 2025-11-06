@@ -1122,9 +1122,17 @@
 
             <!-- Messages Section -->
             <section id="messagesSection" class="section">
+                <!-- Messages Statistics -->
+                <div id="messagesStats" style="margin-bottom: 30px;">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Loading message statistics...</div>
+                    </div>
+                </div>
+
                 <div class="table-container">
                     <div class="table-header">
-                        <h2 class="table-title">Contact Messages</h2>
+                        <h2 class="table-title">📧 Contact Messages - Detailed View</h2>
                         <div class="table-actions">
                             <input type="text" id="messageSearch" class="search-box" placeholder="Search messages...">
                             <button class="btn-filter" onclick="filterMessages('all')">All</button>
@@ -1142,9 +1150,17 @@
 
             <!-- Videos Section -->
             <section id="videosSection" class="section">
+                <!-- Video Statistics -->
+                <div id="videoStats" style="margin-bottom: 30px;">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Loading video statistics...</div>
+                    </div>
+                </div>
+
                 <div class="table-container">
                     <div class="table-header">
-                        <h2 class="table-title">Featured Videos</h2>
+                        <h2 class="table-title">🎥 Featured Videos - Detailed Management</h2>
                         <button class="btn-add" onclick="openAddVideoModal()">+ Add Video</button>
                     </div>
                     <div id="videosTable" class="mobile-table">
@@ -1233,58 +1249,86 @@
 
             <!-- Database Section -->
             <section id="databaseSection" class="section">
-                <div class="info-box">
-                    <div class="info-box-title">💾 Database Management</div>
-                    <div class="info-box-text">
+                <div class="info-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                    <div class="info-box-title" style="color: white; font-size: 22px; font-weight: 700;">💾 Database Management & Backup Center</div>
+                    <div class="info-box-text" style="color: rgba(255,255,255,0.95);">
                         Backup your Supabase data regularly. All backups are downloaded as JSON files
                         that can be restored if needed. Keep these files in a safe location.
                     </div>
                 </div>
 
+                <!-- Database Statistics -->
+                <div id="databaseStats" style="margin: 30px 0;">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Loading database statistics...</div>
+                    </div>
+                </div>
+
                 <div class="stats-grid">
-                    <div class="stat-card">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid #bfdbfe;">
                         <div class="stat-icon">👥</div>
                         <div class="stat-value" id="dbUsersCount">0</div>
                         <div class="stat-label">Users Table</div>
-                        <button class="btn-add" style="margin-top: 12px; width: 100%;" onclick="backupTable('user_data')">Backup</button>
+                        <button class="btn-add" style="margin-top: 12px; width: 100%;" onclick="backupTable('user_data')">📥 Backup Users</button>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%); border: 2px solid #fde047;">
                         <div class="stat-icon">🎥</div>
                         <div class="stat-value" id="dbVideosCount">0</div>
                         <div class="stat-label">Videos Table</div>
-                        <button class="btn-add" style="margin-top: 12px; width: 100%;" onclick="backupTable('featured_videos')">Backup</button>
+                        <button class="btn-add" style="margin-top: 12px; width: 100%;" onclick="backupTable('featured_videos')">📥 Backup Videos</button>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); border: 2px solid #86efac;">
                         <div class="stat-icon">📧</div>
                         <div class="stat-value" id="dbMessagesCount">0</div>
                         <div class="stat-label">Messages Table</div>
-                        <button class="btn-add" style="margin-top: 12px; width: 100%;" onclick="backupTable('contact_messages')">Backup</button>
+                        <button class="btn-add" style="margin-top: 12px; width: 100%;" onclick="backupTable('contact_messages')">📥 Backup Messages</button>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">💾</div>
-                        <div class="stat-value">All</div>
-                        <div class="stat-label">Full Backup</div>
-                        <button class="btn-add" style="margin-top: 12px; width: 100%;" onclick="backupAllTables()">Backup All</button>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white;">
+                        <div class="stat-icon" style="filter: brightness(0) invert(1);">💾</div>
+                        <div class="stat-value" style="color: white;">All</div>
+                        <div class="stat-label" style="color: rgba(255,255,255,0.9);">Full Backup</div>
+                        <button class="btn-add" style="margin-top: 12px; width: 100%; background: white; color: #667eea;" onclick="backupAllTables()">🚀 Backup All</button>
                     </div>
                 </div>
 
                 <div class="table-container">
                     <div class="table-header">
-                        <h2 class="table-title">Database Health</h2>
+                        <h2 class="table-title">📊 Database Health & Status</h2>
                     </div>
                     <div class="mobile-table">
-                        <div class="table-card">
+                        <div class="table-card" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%); border: 2px solid #e8ebf7;">
                             <div class="table-card-row">
-                                <span class="table-card-label">Status:</span>
-                                <span class="badge success">Connected</span>
+                                <span class="table-card-label">🔌 Connection Status:</span>
+                                <span class="badge success" style="font-size: 14px;">✅ Connected</span>
                             </div>
                             <div class="table-card-row">
-                                <span class="table-card-label">Tables:</span>
-                                <span class="table-card-value">3 tables</span>
+                                <span class="table-card-label">📊 Total Tables:</span>
+                                <span class="table-card-value" style="font-weight: 700; color: #667eea;">3 tables</span>
                             </div>
                             <div class="table-card-row">
-                                <span class="table-card-label">Last Backup:</span>
-                                <span class="table-card-value" id="lastBackupTime">Never</span>
+                                <span class="table-card-label">🕒 Last Backup:</span>
+                                <span class="table-card-value" id="lastBackupTime" style="font-weight: 600;">Never</span>
+                            </div>
+                            <div class="table-card-row">
+                                <span class="table-card-label">💾 Total Records:</span>
+                                <span class="table-card-value" id="totalRecordsCount" style="font-weight: 700; color: #22c55e;">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backup History -->
+                <div id="backupHistory" style="margin-top: 30px;">
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h2 class="table-title">📜 Recent Backup Activity</h2>
+                        </div>
+                        <div class="mobile-table">
+                            <div class="table-card" style="text-align: center; padding: 40px;">
+                                <div style="font-size: 48px; margin-bottom: 15px;">📦</div>
+                                <div style="font-size: 16px; color: #666;">Backup history will appear here</div>
+                                <div style="font-size: 14px; color: #999; margin-top: 8px;">Create your first backup to see activity</div>
                             </div>
                         </div>
                     </div>
@@ -2794,11 +2838,91 @@
                 if (error) throw error;
 
                 allMessages = data || [];
+                loadMessagesStats(allMessages);
                 displayMessages(allMessages);
             } catch (error) {
                 console.error('Error loading messages:', error);
                 container.innerHTML = '<div class="empty-state"><div class="empty-text" style="color: var(--danger);">Error loading messages</div></div>';
             }
+        }
+
+        // Load Messages Statistics
+        function loadMessagesStats(messages) {
+            const container = document.getElementById('messagesStats');
+            if (!container) return;
+
+            const now = Date.now();
+            const oneDayAgo = now - (24 * 60 * 60 * 1000);
+            const oneWeekAgo = now - (7 * 24 * 60 * 60 * 1000);
+            const oneMonthAgo = now - (30 * 24 * 60 * 60 * 1000);
+
+            const totalMessages = messages.length;
+            const unreadMessages = messages.filter(m => m.status !== 'read').length;
+            const messages24h = messages.filter(m => m.created_at && new Date(m.created_at).getTime() > oneDayAgo).length;
+            const messagesWeek = messages.filter(m => m.created_at && new Date(m.created_at).getTime() > oneWeekAgo).length;
+            const messagesMonth = messages.filter(m => m.created_at && new Date(m.created_at).getTime() > oneMonthAgo).length;
+
+            // Most active senders
+            const senderCounts = {};
+            messages.forEach(m => {
+                if (m.email) {
+                    senderCounts[m.email] = (senderCounts[m.email] || 0) + 1;
+                }
+            });
+            const topSenders = Object.entries(senderCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            container.innerHTML = `
+                <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px rgba(240, 147, 251, 0.3);">
+                    <h2 style="color: white; margin: 0 0 25px 0; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 32px;">📧</span> Message Analytics
+                    </h2>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 36px; font-weight: 700; color: white;">${totalMessages}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 6px;">Total Messages</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 36px; font-weight: 700; color: white;">${unreadMessages}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 6px;">Unread</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 36px; font-weight: 700; color: white;">${messages24h}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 6px;">Last 24 Hours</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 36px; font-weight: 700; color: white;">${messagesWeek}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 6px;">This Week</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 36px; font-weight: 700; color: white;">${messagesMonth}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 6px;">This Month</div>
+                        </div>
+                    </div>
+
+                    ${topSenders.length > 0 ? `
+                    <div style="background: rgba(255,255,255,0.95); padding: 20px; border-radius: 12px;">
+                        <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px; font-weight: 700;">👥 Most Active Senders</h3>
+                        <div style="display: grid; gap: 10px;">
+                            ${topSenders.map(([email, count], idx) => {
+                                const sender = messages.find(m => m.email === email);
+                                return `
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: ${idx === 0 ? '#fef3c7' : '#f8f9ff'}; border-radius: 8px; border-left: 4px solid ${idx === 0 ? '#f59e0b' : '#667eea'};">
+                                    <div>
+                                        <div style="font-weight: 600; color: #333;">${sender?.name || 'Anonymous'}</div>
+                                        <div style="font-size: 12px; color: #666;">${email}</div>
+                                    </div>
+                                    <div style="font-size: 20px; font-weight: 700; color: #667eea;">${count} ${count === 1 ? 'message' : 'messages'}</div>
+                                </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
         }
 
         function displayMessages(messages) {
@@ -2918,6 +3042,7 @@
                 if (error) throw error;
 
                 allVideos = data || [];
+                loadVideosStats(allVideos);
 
                 if (allVideos.length === 0) {
                     container.innerHTML = '<div class="empty-state"><div class="empty-icon">🎥</div><div class="empty-text">No videos yet</div></div>';
@@ -2945,6 +3070,88 @@
                 console.error('Error loading videos:', error);
                 container.innerHTML = '<div class="empty-state"><div class="empty-text" style="color: var(--danger);">Error loading videos</div></div>';
             }
+        }
+
+        // Load Videos Statistics
+        function loadVideosStats(videos) {
+            const container = document.getElementById('videoStats');
+            if (!container) return;
+
+            const now = Date.now();
+            const oneWeekAgo = now - (7 * 24 * 60 * 60 * 1000);
+
+            const totalVideos = videos.length;
+            const recentVideos = videos.filter(v => v.created_at && new Date(v.created_at).getTime() > oneWeekAgo).length;
+            const oldestVideo = videos.length > 0 ? videos[videos.length - 1] : null;
+            const newestVideo = videos.length > 0 ? videos[0] : null;
+
+            // Extract platform from URLs
+            const platformCounts = {
+                instagram: 0,
+                youtube: 0,
+                other: 0
+            };
+
+            videos.forEach(v => {
+                const url = v.video_url || '';
+                if (url.includes('instagram.com')) platformCounts.instagram++;
+                else if (url.includes('youtube.com') || url.includes('youtu.be')) platformCounts.youtube++;
+                else platformCounts.other++;
+            });
+
+            container.innerHTML = `
+                <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);">
+                    <h2 style="color: white; margin: 0 0 25px 0; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 32px;">🎥</span> Video Library Statistics
+                    </h2>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 40px; font-weight: 700; color: white;">${totalVideos}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 6px;">Total Videos</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 40px; font-weight: 700; color: white;">${recentVideos}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 6px;">Added This Week</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 40px; font-weight: 700; color: white;">${platformCounts.instagram}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 6px;">Instagram</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 40px; font-weight: 700; color: white;">${platformCounts.youtube}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 6px;">YouTube</div>
+                        </div>
+                    </div>
+
+                    ${newestVideo || oldestVideo ? `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                        ${newestVideo ? `
+                        <div style="background: rgba(255,255,255,0.95); padding: 20px; border-radius: 12px;">
+                            <h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px; font-weight: 700;">🆕 Newest Video</h3>
+                            <div style="font-size: 13px; color: #666; word-break: break-all; margin-bottom: 10px;">
+                                ${newestVideo.video_url ? newestVideo.video_url.substring(0, 50) + '...' : 'N/A'}
+                            </div>
+                            <div style="font-size: 12px; color: #999;">
+                                ${newestVideo.created_at ? 'Added: ' + new Date(newestVideo.created_at).toLocaleDateString() : 'Date unknown'}
+                            </div>
+                        </div>
+                        ` : ''}
+                        ${oldestVideo ? `
+                        <div style="background: rgba(255,255,255,0.95); padding: 20px; border-radius: 12px;">
+                            <h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px; font-weight: 700;">📜 Oldest Video</h3>
+                            <div style="font-size: 13px; color: #666; word-break: break-all; margin-bottom: 10px;">
+                                ${oldestVideo.video_url ? oldestVideo.video_url.substring(0, 50) + '...' : 'N/A'}
+                            </div>
+                            <div style="font-size: 12px; color: #999;">
+                                ${oldestVideo.created_at ? 'Added: ' + new Date(oldestVideo.created_at).toLocaleDateString() : 'Date unknown'}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                    ` : ''}
+                </div>
+            `;
         }
 
         function openAddVideoModal() {
@@ -3680,6 +3887,91 @@
         // Database Functions
         async function loadDatabaseStats() {
             await loadDashboardData();
+            // Update total records count
+            const totalRecords = (allUsers?.length || 0) + (allVideos?.length || 0) + (allMessages?.length || 0);
+            const totalRecordsEl = document.getElementById('totalRecordsCount');
+            if (totalRecordsEl) {
+                totalRecordsEl.textContent = totalRecords.toLocaleString();
+            }
+
+            // Load detailed database statistics
+            loadDetailedDatabaseStats();
+        }
+
+        // Load Detailed Database Statistics
+        function loadDetailedDatabaseStats() {
+            const container = document.getElementById('databaseStats');
+            if (!container) return;
+
+            const usersCount = allUsers?.length || 0;
+            const videosCount = allVideos?.length || 0;
+            const messagesCount = allMessages?.length || 0;
+            const totalRecords = usersCount + videosCount + messagesCount;
+
+            // Calculate estimated sizes (rough estimate: 1KB per user, 0.5KB per video, 0.3KB per message)
+            const estimatedUserSize = (usersCount * 1).toFixed(2);
+            const estimatedVideoSize = (videosCount * 0.5).toFixed(2);
+            const estimatedMessageSize = (messagesCount * 0.3).toFixed(2);
+            const totalEstimatedSize = (parseFloat(estimatedUserSize) + parseFloat(estimatedVideoSize) + parseFloat(estimatedMessageSize)).toFixed(2);
+
+            container.innerHTML = `
+                <div style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);">
+                    <h2 style="color: white; margin: 0 0 25px 0; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 32px;">💾</span> Database Storage Statistics
+                    </h2>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 40px; font-weight: 700; color: white;">${totalRecords}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 6px;">Total Records</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 40px; font-weight: 700; color: white;">${totalEstimatedSize}</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 6px;">Est. Size (KB)</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 40px; font-weight: 700; color: white;">3</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 6px;">Active Tables</div>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.95); padding: 20px; border-radius: 12px;">
+                        <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px; font-weight: 700;">📊 Table Breakdown</h3>
+                        <div style="display: grid; gap: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                                <div>
+                                    <div style="font-weight: 600; color: #1e40af; font-size: 16px;">👥 user_data</div>
+                                    <div style="font-size: 12px; color: #3b82f6; margin-top: 4px;">Estimated: ~${estimatedUserSize} KB</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 28px; font-weight: 700; color: #3b82f6;">${usersCount}</div>
+                                    <div style="font-size: 11px; color: #64748b;">records</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                                <div>
+                                    <div style="font-weight: 600; color: #92400e; font-size: 16px;">🎥 featured_videos</div>
+                                    <div style="font-size: 12px; color: #d97706; margin-top: 4px;">Estimated: ~${estimatedVideoSize} KB</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 28px; font-weight: 700; color: #f59e0b;">${videosCount}</div>
+                                    <div style="font-size: 11px; color: #64748b;">records</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #22c55e;">
+                                <div>
+                                    <div style="font-weight: 600; color: #166534; font-size: 16px;">📧 contact_messages</div>
+                                    <div style="font-size: 12px; color: #16a34a; margin-top: 4px;">Estimated: ~${estimatedMessageSize} KB</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 28px; font-weight: 700; color: #22c55e;">${messagesCount}</div>
+                                    <div style="font-size: 11px; color: #64748b;">records</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         async function backupTable(tableName) {
