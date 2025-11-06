@@ -62,6 +62,13 @@
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
+            /* Hide body until auth check is complete - prevents flash */
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        body.ready {
+            opacity: 1;
         }
 
         .header {
@@ -869,9 +876,13 @@
         function loadUserProfile() {
             const user = localStorage.getItem('user');
             if (!user) {
+                // Redirect immediately without showing page
                 window.location.href = '/login';
                 return;
             }
+
+            // Auth check passed - show the page
+            document.body.classList.add('ready');
 
             currentUser = JSON.parse(user);
             document.getElementById('profileAvatar').src = currentUser.picture;
