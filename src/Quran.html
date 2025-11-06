@@ -5590,6 +5590,17 @@
                 calculateRealStats(data);
 
                 console.log('✅ Final userStats after load:', userStats);
+
+                // DEBUG: Show data in alert for Saman
+                if (currentUser.email === 'saman26d@gmail.com') {
+                    alert('DEBUG DATA LOADED:\n\n' +
+                        'Streak: ' + userStats.streak + '\n' +
+                        'Level: ' + userStats.level + '\n' +
+                        'Ayahs Read: ' + userStats.ayahsRead + '\n' +
+                        'Position: ' + data.currentPosition?.surah + ':' + data.currentPosition?.ayah + '\n\n' +
+                        'Data has stats: ' + !!data.stats + '\n' +
+                        'From cloud: ' + loadedFromCloud);
+                }
             } else {
                 console.warn('⚠️ No saved data found in localStorage');
             }
