@@ -837,6 +837,7 @@
             localStorage.setItem('isAuthenticated', 'true');
 
             // IMPORTANT: Save Google user info to database immediately with correct field names
+            let needsSetup = false;
             try {
                 const response = await fetch('/.netlify/functions/user-data', {
                     method: 'POST',
@@ -849,6 +850,17 @@
 
                 const result = await response.json();
                 let userData = result.data || {};
+
+                // Check if user needs profile setup (was reset)
+                if (userData.needsProfileSetup === true) {
+                    needsSetup = true;
+                    console.log('⚠️ User needs profile setup - clearing local flags');
+                    // Clear all completion flags
+                    localStorage.removeItem('signupCompleted');
+                    localStorage.removeItem('onboardingCompleted');
+                    // Remove the flag from database
+                    delete userData.needsProfileSetup;
+                }
 
                 // Always update with Google info (ensure correct field names)
                 userData.full_name = currentUser.name;  // ← Correct field
@@ -872,8 +884,8 @@
             }
 
             // Check if this user has completed signup before (returning user)
-            const hasCompletedSignup = localStorage.getItem('signupCompleted');
-            const hasCompletedOnboarding = localStorage.getItem('onboardingCompleted');
+            const hasCompletedSignup = needsSetup ? false : localStorage.getItem('signupCompleted');
+            const hasCompletedOnboarding = needsSetup ? false : localStorage.getItem('onboardingCompleted');
 
             // Redirect based on user status
             setTimeout(() => {

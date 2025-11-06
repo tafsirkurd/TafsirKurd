@@ -15,7 +15,8 @@
       "Bash(curl -X POST \"https://api.telegram.org/bot8546537386:AAHVo4BPadrtO2uKsIALdwQ9abB_M3x8ENE/sendMessage\" -H \"Content-Type: application/json\" -d '{\"\"chat_id\"\": 5737599664, \"\"text\"\": \"\"🤖 Bot is now active!\\n\\nTry these commands:\\n/start - Welcome message\\n/help - Show help\\n/status - Check status\\n\\nYour notifications are ready!\"\", \"\"parse_mode\"\": \"\"Markdown\"\"}')",
       "Bash(curl -X POST \"https://api.telegram.org/bot8546537386:AAHVo4BPadrtO2uKsIALdwQ9abB_M3x8ENE/deleteMyCommands\")",
       "Bash(node check-users.js:*)",
-      "Bash(node migrate-users.js:*)"
+      "Bash(node migrate-users.js:*)",
+      "Bash(node reset-anonymous-users.js:*)"
     ],
     "deny": [],
     "ask": []
