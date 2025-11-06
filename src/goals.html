@@ -61,6 +61,13 @@
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
+            /* Hide body until auth check is complete - prevents flash */
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        body.ready {
+            opacity: 1;
         }
 
         .header {
@@ -713,6 +720,9 @@
                 window.location.href = '/reading-goal';
                 return;
             }
+
+            // Auth check passed - show the page
+            document.body.classList.add('ready');
 
             // Load goal settings from reading-goal setup
             currentGoal = JSON.parse(readingGoal);

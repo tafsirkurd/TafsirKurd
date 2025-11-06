@@ -1705,9 +1705,9 @@
 
                     return {
                         ...user,
-                        name: userData.userName || user.user_id?.split('|')[0] || 'User',
-                        email: userData.userEmail || user.user_id || '-',
-                        picture: userData.userPicture || null,
+                        name: userData.full_name || userData.userName || user.user_id?.split('|')[0] || 'User',
+                        email: userData.email || userData.userEmail || user.user_id || '-',
+                        picture: userData.picture || userData.userPicture || null,
                         current_surah: currentPos.surah || stats.currentSurah || null,
                         current_ayah: currentPos.ayah || stats.currentAyah || null,
                         daily_goal: readingGoal.dailyTarget || readingGoal.goal || null,
@@ -3545,10 +3545,10 @@
 
                     return {
                         ...user,
-                        full_name: userData.userName || user.user_id?.split('|')[0] || 'User',
-                        name: userData.userName || user.user_id?.split('|')[0] || 'User',
-                        email: userData.userEmail || user.user_id || '-',
-                        picture: userData.userPicture || null,
+                        full_name: userData.full_name || userData.userName || user.user_id?.split('|')[0] || 'User',
+                        name: userData.full_name || userData.userName || user.user_id?.split('|')[0] || 'User',
+                        email: userData.email || userData.userEmail || user.user_id || '-',
+                        picture: userData.picture || userData.userPicture || null,
                         current_surah: currentPos.surah || stats.currentSurah || null,
                         current_ayah: currentPos.ayah || stats.currentAyah || null,
                         daily_goal: readingGoal.dailyTarget || readingGoal.goal || null,
