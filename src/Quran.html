@@ -5607,6 +5607,17 @@
 
             updateStatsUI();
             updateContinueReading();
+
+            // DEBUG: Check if stats changed after UI update
+            if (currentUser && currentUser.email === 'saman26d@gmail.com') {
+                setTimeout(() => {
+                    alert('AFTER UI UPDATE:\n\n' +
+                        'Streak: ' + userStats.streak + '\n' +
+                        'Level: ' + userStats.level + '\n' +
+                        'Ayahs: ' + userStats.ayahsRead + '\n\n' +
+                        'Check the page - do you see these numbers?');
+                }, 500);
+            }
         }
 
         function saveUserData() {
@@ -5707,6 +5718,22 @@
             if (data.stats.streak < 0 || data.stats.ayahsRead < 0 || data.stats.level < 0) {
                 console.error('❌ Invalid data detected, skipping save:', data.stats);
                 return;
+            }
+
+            // CRITICAL: Don't save if we're about to overwrite good data with zeros
+            if (existingData.stats) {
+                const wouldLoseData = (
+                    (existingData.stats.streak > 0 && data.stats.streak === 0) ||
+                    (existingData.stats.ayahsRead > 10 && data.stats.ayahsRead < existingData.stats.ayahsRead) ||
+                    (existingData.stats.level > 1 && data.stats.level === 1)
+                );
+
+                if (wouldLoseData) {
+                    console.error('❌ BLOCKED: Attempting to overwrite good data with worse data!');
+                    console.error('   Existing:', existingData.stats);
+                    console.error('   Attempted:', data.stats);
+                    return; // DON'T SAVE!
+                }
             }
 
             if (data.currentPosition.surah < 1 || data.currentPosition.ayah < 1) {
