@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v53-geo-analytics';
+const CACHE_NAME = 'tafsir-kurd-v54-data-protection';
 const urlsToCache = [
   '/',
   '/index.html',
