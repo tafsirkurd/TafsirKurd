@@ -102,7 +102,7 @@
     // Preload critical pages on idle
     if ('requestIdleCallback' in window) {
         requestIdleCallback(() => {
-            const criticalPages = ['/Quran.html', '/Dashboard.html', '/profile.html'];
+            const criticalPages = ['/Quran.html', '/profile.html', '/bookmarks.html', '/settings.html'];
             criticalPages.forEach(page => {
                 const link = document.createElement('link');
                 link.rel = 'prefetch';
