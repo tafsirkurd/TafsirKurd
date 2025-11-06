@@ -126,7 +126,8 @@ exports.handler = async (event, context) => {
                             currentAyah: data.current_ayah || '-',
                             totalRead: data.total_read || 0,
                             completion: data.completion || 0,
-                            picture: data.picture ? 'Yes' : 'No'
+                            picture: data.picture || null, // Send actual URL instead of Yes/No
+                            profilePicture: data.picture || null
                         }
                     ).catch(err => console.error('Notification error:', err));
                 }

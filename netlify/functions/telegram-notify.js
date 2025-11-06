@@ -27,8 +27,17 @@ exports.handler = async (event, context) => {
         // Format the notification message
         let telegramMessage = formatNotificationMessage(type, title, message, details, data);
 
-        // Send to Telegram
-        const result = await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, telegramMessage);
+        // Check if there's a photo to send
+        const photoUrl = data?.picture || data?.profilePicture;
+
+        let result;
+        if (photoUrl && (photoUrl.startsWith('http://') || photoUrl.startsWith('https://'))) {
+            // Send photo with caption
+            result = await sendTelegramPhoto(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, photoUrl, telegramMessage);
+        } else {
+            // Send text message only
+            result = await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, telegramMessage);
+        }
 
         return {
             statusCode: 200,
@@ -88,7 +97,7 @@ function formatNotificationMessage(type, title, message, details, data) {
         if (data.currentAyah) formattedMessage += `📝 Current Ayah: ${escapeMarkdown(String(data.currentAyah))}\n`;
         if (data.totalRead !== undefined) formattedMessage += `📊 Total Ayahs Read: ${data.totalRead}\n`;
         if (data.completion !== undefined) formattedMessage += `✅ Completion: ${data.completion}%\n`;
-        if (data.picture) formattedMessage += `🖼️ Profile Picture: ${escapeMarkdown(data.picture)}\n`;
+        // Don't show picture URL in text if we're sending it as a photo
         if (data.ayahsRead) formattedMessage += `📖 Ayahs Read: ${data.ayahsRead}\n`;
         if (data.surah) formattedMessage += `📚 Current: Surah ${data.surah}, Ayah ${data.ayah}\n`;
         if (data.messageContent) formattedMessage += `💬 Message: "${escapeMarkdown(data.messageContent.substring(0, 150))}${data.messageContent.length > 150 ? '...' : ''}"\n`;
@@ -145,6 +154,60 @@ function sendTelegramMessage(botToken, chatId, message) {
                         resolve(response.result);
                     } else {
                         reject(new Error(`Telegram API error: ${response.description}`));
+                    }
+                } catch (error) {
+                    reject(new Error(`Failed to parse Telegram response: ${error.message}`));
+                }
+            });
+        });
+
+        req.on('error', (error) => {
+            reject(error);
+        });
+
+        req.write(data);
+        req.end();
+    });
+}
+
+function sendTelegramPhoto(botToken, chatId, photoUrl, caption) {
+    return new Promise((resolve, reject) => {
+        const data = JSON.stringify({
+            chat_id: chatId,
+            photo: photoUrl,
+            caption: caption,
+            parse_mode: 'MarkdownV2'
+        });
+
+        const options = {
+            hostname: 'api.telegram.org',
+            port: 443,
+            path: `/bot${botToken}/sendPhoto`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': data.length
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            let body = '';
+
+            res.on('data', (chunk) => {
+                body += chunk;
+            });
+
+            res.on('end', () => {
+                try {
+                    const response = JSON.parse(body);
+                    if (response.ok) {
+                        resolve(response.result);
+                    } else {
+                        // If photo fails, fallback to text message
+                        console.error('Photo send failed, falling back to text:', response.description);
+                        sendTelegramMessage(botToken, chatId, caption)
+                            .then(resolve)
+                            .catch(reject);
                     }
                 } catch (error) {
                     reject(new Error(`Failed to parse Telegram response: ${error.message}`));
