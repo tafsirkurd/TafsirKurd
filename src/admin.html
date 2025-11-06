@@ -849,6 +849,7 @@
                 <div class="nav-tab" onclick="switchSection('users')">👥 Users</div>
                 <div class="nav-tab" onclick="switchSection('reading')">📖 Reading</div>
                 <div class="nav-tab" onclick="switchSection('database')">💾 Database</div>
+                <div class="nav-tab" onclick="switchSection('telegram')">📱 Telegram</div>
             </div>
         </nav>
 
@@ -1364,6 +1365,100 @@
                                 <div style="font-size: 16px; color: #666;">Backup history will appear here</div>
                                 <div style="font-size: 14px; color: #999; margin-top: 8px;">Create your first backup to see activity</div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Telegram Notifications Section -->
+            <section id="telegramSection" class="section">
+                <div class="info-box" style="background: linear-gradient(135deg, #0088cc 0%, #0066cc 100%); color: white; border: none;">
+                    <div class="info-box-title" style="color: white; font-size: 22px; font-weight: 700;">📱 Telegram Notifications</div>
+                    <div class="info-box-text" style="color: rgba(255,255,255,0.95);">
+                        Receive instant notifications on your phone via Telegram when important events happen.
+                        Get alerted about new users, messages, Duhok readers, and more!
+                    </div>
+                </div>
+
+                <!-- Status Card -->
+                <div class="table-card" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid #0088cc; margin-bottom: 30px;">
+                    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
+                        <div style="font-size: 64px;">📱</div>
+                        <div style="flex: 1;">
+                            <h3 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 700;">Telegram Bot Status</h3>
+                            <div id="telegramStatus" style="display: flex; align-items: center; gap: 10px;">
+                                <span class="badge" id="telegramStatusBadge" style="background: #ef4444; font-size: 14px;">⚠️ Not Configured</span>
+                                <button class="btn" style="padding: 8px 16px; font-size: 14px;" onclick="toggleTelegramNotifications()">
+                                    <span id="toggleButtonText">Enable Notifications</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Setup Instructions -->
+                    <div id="setupInstructions" style="background: #fffbeb; border: 2px solid #fbbf24; border-radius: 12px; padding: 20px; margin-top: 20px;">
+                        <h4 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 700; color: #92400e;">
+                            🤖 Setup Instructions
+                        </h4>
+                        <div style="color: #78350f; line-height: 1.8; font-size: 14px;">
+                            <p style="margin: 0 0 15px 0;"><strong>Step 1:</strong> Create a Telegram Bot</p>
+                            <ol style="margin: 0 0 15px 0; padding-left: 20px;">
+                                <li>Open Telegram and search for <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">@BotFather</code></li>
+                                <li>Send the command <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">/newbot</code></li>
+                                <li>Follow the instructions to create your bot</li>
+                                <li>Copy the <strong>Bot Token</strong> (looks like: 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11)</li>
+                            </ol>
+
+                            <p style="margin: 0 0 15px 0;"><strong>Step 2:</strong> Get Your Chat ID</p>
+                            <ol style="margin: 0 0 15px 0; padding-left: 20px;">
+                                <li>Search for your bot in Telegram and start a conversation with <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">/start</code></li>
+                                <li>Go to <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">@userinfobot</code> and send <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">/start</code></li>
+                                <li>Copy your <strong>Chat ID</strong> (a number like: 123456789)</li>
+                            </ol>
+
+                            <p style="margin: 0 0 15px 0;"><strong>Step 3:</strong> Add to Netlify Environment Variables</p>
+                            <ol style="margin: 0 0 0 0; padding-left: 20px;">
+                                <li>Go to your <a href="https://app.netlify.com/sites/tafsirkurd/settings/deploys#environment" target="_blank" style="color: #0088cc; text-decoration: underline;">Netlify Dashboard → Site Settings → Environment Variables</a></li>
+                                <li>Add variable: <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">TELEGRAM_BOT_TOKEN</code> = (your bot token)</li>
+                                <li>Add variable: <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">TELEGRAM_CHAT_ID</code> = (your chat ID)</li>
+                                <li>Redeploy your site for changes to take effect</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Test Notification -->
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+                        <button class="btn" style="width: 100%;" onclick="sendTestNotification()">
+                            🧪 Send Test Notification
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Notification Settings -->
+                <div class="table-container">
+                    <div class="table-header">
+                        <h2 class="table-title">🔔 What You'll Get Notified About</h2>
+                    </div>
+                    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                        <div class="table-card" style="background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); border: 2px solid #86efac;">
+                            <div style="font-size: 48px; margin-bottom: 12px;">🎉</div>
+                            <h4 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 700;">New Users</h4>
+                            <p style="margin: 0; font-size: 13px; color: #666;">Get notified when new users join the platform</p>
+                        </div>
+                        <div class="table-card" style="background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%); border: 2px solid #fde047;">
+                            <div style="font-size: 48px; margin-bottom: 12px;">📍</div>
+                            <h4 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 700;">Duhok Readers</h4>
+                            <p style="margin: 0; font-size: 13px; color: #666;">Special alerts for users from Duhok and Kurdish regions</p>
+                        </div>
+                        <div class="table-card" style="background: linear-gradient(135deg, #ffffff 0%, #ede9fe 100%); border: 2px solid #c084fc;">
+                            <div style="font-size: 48px; margin-bottom: 12px;">📧</div>
+                            <h4 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 700;">New Messages</h4>
+                            <p style="margin: 0; font-size: 13px; color: #666;">Instant alerts for new contact messages</p>
+                        </div>
+                        <div class="table-card" style="background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%); border: 2px solid #fca5a5;">
+                            <div style="font-size: 48px; margin-bottom: 12px;">🏆</div>
+                            <h4 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 700;">Quran Completed</h4>
+                            <p style="margin: 0; font-size: 13px; color: #666;">Celebrate when users complete reading the Quran</p>
                         </div>
                     </div>
                 </div>
@@ -2024,6 +2119,9 @@
 
             // Display notifications
             displayNotifications();
+
+            // Send important notifications to Telegram
+            sendNotificationsToTelegram();
         }
 
         function displayNotifications() {
@@ -2072,6 +2170,53 @@
         function dismissAllNotifications() {
             adminNotifications = [];
             document.getElementById('adminNotifications').style.display = 'none';
+        }
+
+        // Send notification to Telegram
+        async function sendTelegramNotification(notification) {
+            try {
+                // Check if Telegram is enabled in localStorage
+                const telegramEnabled = localStorage.getItem('telegramNotificationsEnabled');
+                if (telegramEnabled !== 'true') {
+                    return; // Telegram notifications disabled
+                }
+
+                // Prepare notification data
+                const notificationData = {
+                    type: notification.type || 'info',
+                    title: notification.title || 'Admin Notification',
+                    message: notification.message || '',
+                    details: notification.details || notification.users || notification.suggestion || notification.action || '',
+                    data: notification.data || {}
+                };
+
+                // Send to Netlify function
+                const response = await fetch('/.netlify/functions/telegram-notify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(notificationData)
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to send Telegram notification:', await response.text());
+                }
+            } catch (error) {
+                console.error('Error sending Telegram notification:', error);
+            }
+        }
+
+        // Send all important notifications to Telegram
+        function sendNotificationsToTelegram() {
+            // Only send important notifications (not warnings about inactive users)
+            const importantNotifications = adminNotifications.filter(n =>
+                n.type !== 'warning' && n.type !== 'motivation'
+            );
+
+            importantNotifications.forEach(notif => {
+                sendTelegramNotification(notif);
+            });
         }
 
         // Add CSS animation for notifications
@@ -4111,6 +4256,77 @@
                 alert('Error backing up database');
             }
         }
+
+        // Telegram Notification Functions
+        function toggleTelegramNotifications() {
+            const currentStatus = localStorage.getItem('telegramNotificationsEnabled');
+            const newStatus = currentStatus === 'true' ? 'false' : 'true';
+            localStorage.setItem('telegramNotificationsEnabled', newStatus);
+            updateTelegramStatus();
+
+            if (newStatus === 'true') {
+                alert('✅ Telegram notifications enabled!\n\nMake sure you have configured the TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID environment variables in Netlify.');
+            } else {
+                alert('🔕 Telegram notifications disabled.');
+            }
+        }
+
+        function updateTelegramStatus() {
+            const enabled = localStorage.getItem('telegramNotificationsEnabled') === 'true';
+            const statusBadge = document.getElementById('telegramStatusBadge');
+            const toggleButton = document.getElementById('toggleButtonText');
+
+            if (enabled) {
+                statusBadge.textContent = '✅ Enabled';
+                statusBadge.style.background = '#22c55e';
+                toggleButton.textContent = 'Disable Notifications';
+            } else {
+                statusBadge.textContent = '⚠️ Disabled';
+                statusBadge.style.background = '#ef4444';
+                toggleButton.textContent = 'Enable Notifications';
+            }
+        }
+
+        async function sendTestNotification() {
+            try {
+                const enabled = localStorage.getItem('telegramNotificationsEnabled');
+                if (enabled !== 'true') {
+                    alert('⚠️ Please enable Telegram notifications first!');
+                    return;
+                }
+
+                const response = await fetch('/.netlify/functions/telegram-notify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'info',
+                        title: 'Test Notification',
+                        message: 'This is a test notification from your Tafsir Kurd admin panel!',
+                        details: 'If you received this message on Telegram, your notifications are working correctly! 🎉',
+                        data: {
+                            location: 'Admin Panel'
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    alert('✅ Test notification sent!\n\nCheck your Telegram to see if you received it.');
+                } else {
+                    const error = await response.text();
+                    alert('❌ Failed to send test notification.\n\nPlease check:\n1. TELEGRAM_BOT_TOKEN is set in Netlify\n2. TELEGRAM_CHAT_ID is set in Netlify\n3. You have started a conversation with your bot\n\nError: ' + error);
+                }
+            } catch (error) {
+                console.error('Error sending test notification:', error);
+                alert('❌ Error sending test notification: ' + error.message);
+            }
+        }
+
+        // Initialize Telegram status on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateTelegramStatus();
+        });
     </script>
 </body>
 </html>

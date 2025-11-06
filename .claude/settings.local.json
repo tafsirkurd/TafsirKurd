@@ -1,32 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(perl -pi -e 's|/assets/fonts/fonts\\.css\\?v=12|/assets/fonts/fonts.css?v=13|g':*)",
-      "Bash(perl -pi -e 's|/assets/fontawesome/all\\.min\\.css\\?v=12|/assets/fontawesome/all.min.css?v=13|g':*)",
-      "Bash(perl -pi -e 's|href=\"/assets/fonts/([^\"?]+\\.woff2)\"|href=\"/assets/fonts/$1?v=13\"|g':*)",
-      "Bash(python -m json.tool:*)",
-      "Bash(/dev/null)",
-      "Bash(python:*)",
-      "Bash(gzip:*)",
-      "Bash(perl:*)",
-      "WebSearch",
-      "WebFetch(domain:www.fontspace.com)",
+      "Bash(npm run build:*)",
       "Bash(cat:*)",
-      "Bash(for file in \"D:\\WEBSITE\\src\\Dashboard.html\" \"D:\\WEBSITE\\src\\profile.html\" \"D:\\WEBSITE\\src\\goals.html\" \"D:\\WEBSITE\\src\\bookmarks.html\" \"D:\\WEBSITE\\src\\settings.html\" \"D:\\WEBSITE\\src\\index.html\")",
-      "Bash(if grep -q \"kurdish-numbers.js\" \"$file\")",
-      "Bash(else)",
-      "Bash(for file in \"D:\\WEBSITE\\src\\profile.html\" \"D:\\WEBSITE\\src\\goals.html\" \"D:\\WEBSITE\\src\\bookmarks.html\" \"D:\\WEBSITE\\src\\settings.html\" \"D:\\WEBSITE\\src\\index.html\" \"D:\\WEBSITE\\src\\complete-signup.html\" \"D:\\WEBSITE\\src\\onboarding.html\" \"D:\\WEBSITE\\src\\login.html\" \"D:\\WEBSITE\\src\\reading-goal.html\")",
-      "Bash(for:*)",
-      "Bash(if ! grep -q \"kurdish-numbers.js\" \"$file\")",
-      "WebFetch(domain:qul.tarteel.ai)",
-      "Bash(do if [ -f \"$file\" ])",
-      "Bash(then echo \"=== $file ===\")",
-      "Bash(identify:*)",
-      "Bash(python3:*)",
-      "Bash(if grep -q \"<!-- Favicons -->\" \"$file\")",
-      "Bash(if grep -q \"<!-- Favicons\" \"$file\")",
-      "Bash(awk:*)",
-      "Bash(encrypted-media\" for better playback\n- Videos now show likes, views, and caption on the site\n- No need to redirect to Instagram to see engagement\n\nSUBMIT BUTTON:\n- Added font-family: ''IBM Plex Sans Arabic'' to .btn class\n- Submit button now uses Kurdish-friendly IBM font\n- Matches the rest of the site''s typography\n\nEMBED URL FORMAT:\nBefore: https://www.instagram.com/p/{POST_ID}/embed\nAfter:  https://www.instagram.com/p/{POST_ID}/embed/captioned/?cr=1&v=14\n\nThis makes the Instagram embeds look professional with:\n✓ Clean playback controls\n✓ Visible likes/views count\n✓ Caption text shown\n✓ Plays directly on the site\n\nUpdate service worker to v32-instagram-improvements\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm run deploy:prod:*)"
     ],
     "deny": [],
     "ask": []
