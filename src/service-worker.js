@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v54-data-protection';
+const CACHE_NAME = 'tafsir-kurd-v55-post-fix';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -40,7 +40,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v53-geo-analytics - Geographic tracking with INSTANT updates');
+  console.log('[ServiceWorker] Installing v55-post-fix - Fixed POST request caching error');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
@@ -91,14 +91,23 @@ self.addEventListener('fetch', event => {
   if (event.request.mode === 'navigate' ||
       event.request.destination === 'document' ||
       event.request.url.endsWith('.html')) {
+
+    // Skip caching for POST requests
+    if (event.request.method !== 'GET') {
+      event.respondWith(fetch(event.request));
+      return;
+    }
+
     event.respondWith(
       fetch(event.request, { cache: 'reload' })
         .then(response => {
-          // Cache the fresh HTML for offline use (only GET requests)
-          if (response && response.status === 200 && event.request.method === 'GET') {
+          // Cache the fresh HTML for offline use
+          if (response && response.status === 200) {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, responseToCache);
+              cache.put(event.request, responseToCache).catch(err => {
+                console.log('[ServiceWorker] Failed to cache:', err);
+              });
             });
           }
           return response;
@@ -129,15 +138,17 @@ self.addEventListener('fetch', event => {
 
         // Not in cache - fetch from network
         return fetch(event.request).then(response => {
-          // Only cache valid responses from GET requests
-          if (!response || response.status !== 200 || event.request.method !== 'GET') {
+          // Only cache valid responses
+          if (!response || response.status !== 200) {
             return response;
           }
 
           // Cache for future use
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache);
+            cache.put(event.request, responseToCache).catch(err => {
+              console.log('[ServiceWorker] Failed to cache:', err);
+            });
           });
 
           return response;
