@@ -1043,6 +1043,41 @@
                     </div>
                 </div>
 
+                <!-- Kurdish Region Detailed Analytics -->
+                <div id="kurdishRegionAnalytics" style="margin-top: 30px; padding: 25px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 16px; box-shadow: 0 10px 30px rgba(217,119,6,0.3); display: none;">
+                    <div style="text-align: center; color: white; margin-bottom: 25px;">
+                        <h2 style="font-size: 28px; font-weight: 800; margin: 0 0 8px 0; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <span style="font-size: 36px;">🏛️</span> Kurdish Region Analytics
+                        </h2>
+                        <p style="font-size: 15px; opacity: 0.95; margin: 0;">Detailed statistics for Iraqi Kurdistan readers</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                        <div style="background: rgba(255,255,255,0.95); padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <div style="font-size: 14px; color: #666; margin-bottom: 8px; font-weight: 600;">📍 Duhok Readers</div>
+                            <div id="duhokReadersCount" style="font-size: 36px; font-weight: 700; color: #d97706;">-</div>
+                            <div id="duhokReadersPercent" style="font-size: 12px; color: #999; margin-top: 4px;">-</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.95); padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <div style="font-size: 14px; color: #666; margin-bottom: 8px; font-weight: 600;">🏛️ Erbil Readers</div>
+                            <div id="erbilReadersCount" style="font-size: 36px; font-weight: 700; color: #d97706;">-</div>
+                            <div id="erbilReadersPercent" style="font-size: 12px; color: #999; margin-top: 4px;">-</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.95); padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <div style="font-size: 14px; color: #666; margin-bottom: 8px; font-weight: 600;">🌆 Sulaymaniyah Readers</div>
+                            <div id="sulaymaniyahReadersCount" style="font-size: 36px; font-weight: 700; color: #d97706;">-</div>
+                            <div id="sulaymaniyahReadersPercent" style="font-size: 12px; color: #999; margin-top: 4px;">-</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.95); padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <div style="font-size: 14px; color: #666; margin-bottom: 8px; font-weight: 600;">🎯 Total Kurdish Region</div>
+                            <div id="totalKurdishReaders" style="font-size: 36px; font-weight: 700; color: #d97706;">-</div>
+                            <div id="totalKurdishPercent" style="font-size: 12px; color: #999; margin-top: 4px;">-</div>
+                        </div>
+                    </div>
+
+                    <div id="kurdishRegionDetails" style="background: rgba(255,255,255,0.95); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></div>
+                </div>
+
                 <div class="analytics-grid">
                     <div class="chart-container">
                         <h3 class="chart-header">Popular Surahs</h3>
@@ -1060,20 +1095,26 @@
                     <canvas id="activityTimelineChart" class="chart-canvas"></canvas>
                 </div>
 
+                <!-- Admin Notifications Panel -->
+                <div id="adminNotifications" style="margin-bottom: 30px; display: none;">
+                    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 16px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                            <h3 style="color: white; margin: 0; font-size: 20px; font-weight: 700;">🔔 Admin Notifications</h3>
+                            <button onclick="dismissAllNotifications()" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">Clear All</button>
+                        </div>
+                        <div id="notificationsList"></div>
+                    </div>
+                </div>
+
                 <div class="table-container">
-                    <div class="table-header">
-                        <h2 class="table-title">Top Pages</h2>
+                    <div class="table-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <h2 class="table-title">📄 Top Pages & Detailed Reader Activity</h2>
+                        <button onclick="refreshPageAnalytics()" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">🔄 Refresh</button>
                     </div>
                     <div id="topPagesTable" class="mobile-table">
-                        <div class="table-card">
-                            <div class="table-card-row">
-                                <span class="table-card-label">Page:</span>
-                                <span class="table-card-value">/quran</span>
-                            </div>
-                            <div class="table-card-row">
-                                <span class="table-card-label">Views:</span>
-                                <span class="table-card-value">Based on user data</span>
-                            </div>
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <div class="loading-text">Loading detailed page analytics...</div>
                         </div>
                     </div>
                 </div>
@@ -1460,6 +1501,18 @@
                     const currentPos = userData.currentPosition || {};
                     const stats = userData.stats || {};
                     const readingGoal = userData.readingGoal || {};
+                    const readAyahs = userData.readAyahs || [];
+
+                    // Calculate total ayahs read from multiple possible sources
+                    const totalRead = stats.totalAyahsRead ||
+                                     stats.ayahsRead ||
+                                     readAyahs.length ||
+                                     0;
+
+                    // Calculate completion percentage
+                    const totalAyahs = 6236; // Total ayahs in Quran
+                    const completion = stats.completionPercentage ||
+                                      (totalRead > 0 ? Math.round((totalRead / totalAyahs) * 100) : 0);
 
                     return {
                         ...user,
@@ -1469,8 +1522,8 @@
                         current_surah: currentPos.surah || stats.currentSurah || null,
                         current_ayah: currentPos.ayah || stats.currentAyah || null,
                         daily_goal: readingGoal.dailyTarget || readingGoal.goal || null,
-                        total_read: stats.totalAyahsRead || 0,
-                        completion: stats.completionPercentage || 0
+                        total_read: totalRead,
+                        completion: completion
                     };
                 });
                 allMessages = messagesResult.data || [];
@@ -1501,11 +1554,497 @@
                 // Load recent activity
                 await loadRecentActivity();
 
+                // Load top pages analytics
+                loadTopPagesAnalytics();
+
                 console.log('✅ Dashboard loaded successfully');
             } catch (error) {
                 console.error('❌ Error loading dashboard:', error);
             }
         }
+
+        // Load Top Pages Analytics with Detailed Reader Information
+        function loadTopPagesAnalytics() {
+            const container = document.getElementById('topPagesTable');
+            if (!container) return;
+
+            // Calculate detailed reader statistics
+            const activeReaders = allUsers.filter(u => u.total_read > 0 || u.current_surah);
+            const completedUsers = allUsers.filter(u => u.completion >= 100);
+            const goalSetters = allUsers.filter(u => u.daily_goal);
+            const recentReaders = allUsers.filter(u => {
+                if (!u.last_read) return false;
+                const daysSince = (Date.now() - new Date(u.last_read).getTime()) / (1000 * 60 * 60 * 24);
+                return daysSince <= 7;
+            });
+
+            // Top readers by ayahs read
+            const topReaders = [...allUsers]
+                .filter(u => u.total_read > 0)
+                .sort((a, b) => b.total_read - a.total_read)
+                .slice(0, 10);
+
+            // Calculate reading velocity (ayahs per day for active users)
+            const readingVelocity = activeReaders.reduce((sum, u) => {
+                const daysActive = u.created_at ? Math.max(1, (Date.now() - new Date(u.created_at).getTime()) / (1000 * 60 * 60 * 24)) : 1;
+                return sum + (u.total_read / daysActive);
+            }, 0) / Math.max(activeReaders.length, 1);
+
+            // Page statistics with detailed reader info
+            const pages = [
+                {
+                    name: '🕌 Quran Reading Page',
+                    url: '/Quran.html',
+                    icon: '📖',
+                    activeUsers: activeReaders.length,
+                    totalUsers: allUsers.length,
+                    avgProgress: allUsers.reduce((sum, u) => sum + (u.completion || 0), 0) / Math.max(allUsers.length, 1),
+                    topActivity: 'Reading & Progress Tracking',
+                    details: {
+                        recentReaders: recentReaders.length,
+                        completedUsers: completedUsers.length,
+                        avgAyahsRead: allUsers.reduce((sum, u) => sum + (u.total_read || 0), 0) / Math.max(allUsers.length, 1),
+                        topSurah: getMostReadSurah()
+                    }
+                },
+                {
+                    name: '🏠 Homepage',
+                    url: '/index.html',
+                    icon: '🌟',
+                    activeUsers: allUsers.length,
+                    totalUsers: allUsers.length,
+                    avgProgress: 100,
+                    topActivity: 'Entry Point & Video Content',
+                    details: {
+                        newUsers24h: getNewUsersLast24Hours(),
+                        newUsers7d: getNewUsersLast7Days(),
+                        returnRate: (recentReaders.length / Math.max(allUsers.length, 1)) * 100
+                    }
+                },
+                {
+                    name: '👤 User Profile',
+                    url: '/profile.html',
+                    icon: '⚙️',
+                    activeUsers: allUsers.filter(u => u.picture || u.email).length,
+                    totalUsers: allUsers.length,
+                    avgProgress: (allUsers.filter(u => u.picture).length / Math.max(allUsers.length, 1)) * 100,
+                    topActivity: 'Profile Management',
+                    details: {
+                        withPicture: allUsers.filter(u => u.picture).length,
+                        withEmail: allUsers.filter(u => u.email).length,
+                        completedProfiles: allUsers.filter(u => u.picture && u.email && u.full_name).length
+                    }
+                },
+                {
+                    name: '🎯 Goals & Progress',
+                    url: '/goals.html',
+                    icon: '📊',
+                    activeUsers: goalSetters.length,
+                    totalUsers: allUsers.length,
+                    avgProgress: (goalSetters.length / Math.max(allUsers.length, 1)) * 100,
+                    topActivity: 'Goal Setting',
+                    details: {
+                        avgGoal: goalSetters.reduce((sum, u) => sum + (u.daily_goal || 0), 0) / Math.max(goalSetters.length, 1),
+                        highestGoal: Math.max(...goalSetters.map(u => u.daily_goal || 0), 0),
+                        onTrack: goalSetters.filter(u => isOnTrack(u)).length
+                    }
+                }
+            ];
+
+            // Generate enhanced cards with detailed information
+            container.innerHTML = pages.map((page, index) => `
+                <div class="table-card" style="animation: fadeInUp ${0.1 * (index + 1)}s ease-out; background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%); border: 2px solid #e8ebf7; position: relative; overflow: hidden;">
+                    <!-- Decorative corner -->
+                    <div style="position: absolute; top: 0; right: 0; width: 100px; height: 100px; background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%); border-radius: 0 0 0 100%;"></div>
+
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e8ebf7; position: relative; z-index: 1;">
+                        <div style="font-size: 48px; animation: pulse 2s ease-in-out infinite;">${page.icon}</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; font-size: 18px; color: #333; margin-bottom: 4px;">${page.name}</div>
+                            <div style="font-size: 12px; color: #999; font-family: monospace;">${page.url}</div>
+                        </div>
+                    </div>
+
+                    <!-- Main Stats -->
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 15px;">
+                        <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #e8ebf7;">
+                            <div style="font-size: 11px; color: #999; text-transform: uppercase; margin-bottom: 4px;">👥 Active Users</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #667eea;">${page.activeUsers}</div>
+                            <div style="font-size: 11px; color: #666;">of ${page.totalUsers} total</div>
+                        </div>
+                        <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #e8ebf7;">
+                            <div style="font-size: 11px; color: #999; text-transform: uppercase; margin-bottom: 4px;">📊 Engagement</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #764ba2;">${Math.round(page.avgProgress)}%</div>
+                            <div style="height: 4px; background: #e0e0e0; border-radius: 2px; margin-top: 6px; overflow: hidden;">
+                                <div style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); height: 100%; width: ${Math.round(page.avgProgress)}%; transition: width 0.3s;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Information -->
+                    ${generateDetailedInfo(page)}
+
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #e8ebf7;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 11px; color: #999; text-transform: uppercase;">⚡ Top Activity:</span>
+                            <span style="font-weight: 600; color: #667eea; font-size: 13px;">${page.topActivity}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Add summary card for top readers
+            if (topReaders.length > 0) {
+                container.innerHTML += `
+                    <div class="table-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white;">
+                        <h3 style="margin: 0 0 20px 0; font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 32px;">🏆</span> Top 10 Readers - Detailed Stats
+                        </h3>
+                        <div style="display: grid; gap: 10px;">
+                            ${topReaders.map((reader, i) => `
+                                <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px;">
+                                    <div style="background: ${i < 3 ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)' : 'rgba(255,255,255,0.2)'}; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; color: ${i < 3 ? '#333' : 'white'};">
+                                        ${i + 1}
+                                    </div>
+                                    <img src="${reader.picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(reader.full_name || 'User')}"
+                                         style="width: 50px; height: 50px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3); object-fit: cover;"
+                                         onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(reader.full_name || 'User')}'">
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 700; font-size: 15px; margin-bottom: 4px;">${reader.full_name || 'Anonymous User'}</div>
+                                        <div style="font-size: 12px; opacity: 0.9; display: flex; gap: 15px; flex-wrap: wrap;">
+                                            <span>📖 ${reader.total_read || 0} ayahs</span>
+                                            <span>✅ ${Math.round(reader.completion || 0)}% complete</span>
+                                            ${reader.current_surah ? `<span>📍 Surah ${reader.current_surah}:${reader.current_ayah || 1}</span>` : ''}
+                                            ${reader.daily_goal ? `<span>🎯 Goal: ${reader.daily_goal}/day</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 24px; font-weight: 700;">${reader.total_read || 0}</div>
+                                        <div style="font-size: 11px; opacity: 0.8;">AYAHS</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 28px; font-weight: 700;">${Math.round(readingVelocity * 10) / 10}</div>
+                                <div style="font-size: 12px; opacity: 0.9;">Avg Ayahs/Day</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 28px; font-weight: 700;">${recentReaders.length}</div>
+                                <div style="font-size: 12px; opacity: 0.9;">Active This Week</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 28px; font-weight: 700;">${completedUsers.length}</div>
+                                <div style="font-size: 12px; opacity: 0.9;">Completed Quran</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Check and show admin notifications
+            checkAndShowNotifications();
+        }
+
+        // Generate detailed information based on page type
+        function generateDetailedInfo(page) {
+            if (!page.details) return '';
+
+            if (page.name.includes('Quran')) {
+                return `
+                    <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #e8ebf7;">
+                        <div style="font-weight: 600; color: #667eea; margin-bottom: 12px; font-size: 14px;">📚 Reading Statistics</div>
+                        <div style="display: grid; gap: 8px; font-size: 13px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">📅 Active This Week:</span>
+                                <span style="font-weight: 600; color: #333;">${page.details.recentReaders} readers</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">✅ Completed Quran:</span>
+                                <span style="font-weight: 600; color: #333;">${page.details.completedUsers} users</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">📊 Avg Ayahs Read:</span>
+                                <span style="font-weight: 600; color: #333;">${Math.round(page.details.avgAyahsRead)} ayahs</span>
+                            </div>
+                            ${page.details.topSurah ? `
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">⭐ Most Read Surah:</span>
+                                <span style="font-weight: 600; color: #667eea;">${page.details.topSurah}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            } else if (page.name.includes('Homepage')) {
+                return `
+                    <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #e8ebf7;">
+                        <div style="font-weight: 600; color: #667eea; margin-bottom: 12px; font-size: 14px;">🌟 User Growth</div>
+                        <div style="display: grid; gap: 8px; font-size: 13px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">🆕 New Users (24h):</span>
+                                <span style="font-weight: 600; color: #333;">${page.details.newUsers24h} users</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">📈 New Users (7d):</span>
+                                <span style="font-weight: 600; color: #333;">${page.details.newUsers7d} users</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">🔄 Return Rate:</span>
+                                <span style="font-weight: 600; color: #333;">${Math.round(page.details.returnRate)}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (page.name.includes('Profile')) {
+                return `
+                    <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #e8ebf7;">
+                        <div style="font-weight: 600; color: #667eea; margin-bottom: 12px; font-size: 14px;">👤 Profile Completion</div>
+                        <div style="display: grid; gap: 8px; font-size: 13px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">🖼️ With Picture:</span>
+                                <span style="font-weight: 600; color: #333;">${page.details.withPicture} users</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">📧 With Email:</span>
+                                <span style="font-weight: 600; color: #333;">${page.details.withEmail} users</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">✨ Fully Complete:</span>
+                                <span style="font-weight: 600; color: #333;">${page.details.completedProfiles} users</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (page.name.includes('Goals')) {
+                return `
+                    <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #e8ebf7;">
+                        <div style="font-weight: 600; color: #667eea; margin-bottom: 12px; font-size: 14px;">🎯 Goal Statistics</div>
+                        <div style="display: grid; gap: 8px; font-size: 13px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">📊 Avg Daily Goal:</span>
+                                <span style="font-weight: 600; color: #333;">${Math.round(page.details.avgGoal)} ayahs/day</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">🔥 Highest Goal:</span>
+                                <span style="font-weight: 600; color: #333;">${page.details.highestGoal} ayahs/day</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">✅ On Track:</span>
+                                <span style="font-weight: 600; color: #333;">${page.details.onTrack} users</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            return '';
+        }
+
+        // Helper functions for detailed analytics
+        function getMostReadSurah() {
+            const surahCounts = {};
+            allUsers.forEach(u => {
+                if (u.current_surah) {
+                    surahCounts[u.current_surah] = (surahCounts[u.current_surah] || 0) + 1;
+                }
+            });
+            const mostRead = Object.entries(surahCounts).sort((a, b) => b[1] - a[1])[0];
+            return mostRead ? `Surah ${mostRead[0]}` : null;
+        }
+
+        function getNewUsersLast24Hours() {
+            const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+            return allUsers.filter(u => u.created_at && new Date(u.created_at).getTime() > oneDayAgo).length;
+        }
+
+        function getNewUsersLast7Days() {
+            const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+            return allUsers.filter(u => u.created_at && new Date(u.created_at).getTime() > sevenDaysAgo).length;
+        }
+
+        function isOnTrack(user) {
+            if (!user.daily_goal || !user.last_read) return false;
+            const daysSince = (Date.now() - new Date(user.last_read).getTime()) / (1000 * 60 * 60 * 24);
+            return daysSince <= 1;
+        }
+
+        // Refresh page analytics
+        function refreshPageAnalytics() {
+            loadTopPagesAnalytics();
+        }
+
+        // Admin Notification System
+        let adminNotifications = [];
+
+        function checkAndShowNotifications() {
+            adminNotifications = [];
+
+            // Check for new users in last 24 hours
+            const newUsers24h = getNewUsersLast24Hours();
+            if (newUsers24h > 0) {
+                adminNotifications.push({
+                    type: 'success',
+                    icon: '🎉',
+                    title: 'New Users!',
+                    message: `${newUsers24h} new ${newUsers24h === 1 ? 'user' : 'users'} joined in the last 24 hours`,
+                    time: 'Just now'
+                });
+            }
+
+            // Check for completed Quran readers
+            const completedUsers = allUsers.filter(u => u.completion >= 100);
+            if (completedUsers.length > 0) {
+                const recentlyCompleted = completedUsers.filter(u => {
+                    if (!u.updated_at) return false;
+                    const daysSince = (Date.now() - new Date(u.updated_at).getTime()) / (1000 * 60 * 60 * 24);
+                    return daysSince <= 7;
+                });
+                if (recentlyCompleted.length > 0) {
+                    adminNotifications.push({
+                        type: 'achievement',
+                        icon: '🏆',
+                        title: 'Quran Completed!',
+                        message: `${recentlyCompleted.length} ${recentlyCompleted.length === 1 ? 'user' : 'users'} completed the Quran this week!`,
+                        time: 'This week',
+                        users: recentlyCompleted.slice(0, 3).map(u => u.full_name || 'Anonymous').join(', ')
+                    });
+                }
+            }
+
+            // Check for users from Duhok
+            const duhokUsers = allUsers.filter(u => {
+                const city = (u.city || '').toLowerCase().trim();
+                const region = (u.region || '').toLowerCase().trim();
+                return city.includes('duhok') || city.includes('dihok') ||
+                       region.includes('duhok') || region.includes('dihok');
+            });
+            if (duhokUsers.length > 0) {
+                adminNotifications.push({
+                    type: 'info',
+                    icon: '📍',
+                    title: 'Duhok Readers',
+                    message: `${duhokUsers.length} ${duhokUsers.length === 1 ? 'user' : 'users'} from Duhok ${duhokUsers.length === 1 ? 'is' : 'are'} using the platform`,
+                    time: 'Active',
+                    details: duhokUsers.map(u => `${u.full_name || 'User'} - ${u.total_read || 0} ayahs read`).join(' • ')
+                });
+            }
+
+            // Check for users with high goals
+            const highGoalUsers = allUsers.filter(u => u.daily_goal && u.daily_goal >= 50);
+            if (highGoalUsers.length > 0) {
+                adminNotifications.push({
+                    type: 'motivation',
+                    icon: '🔥',
+                    title: 'High Achievers',
+                    message: `${highGoalUsers.length} ${highGoalUsers.length === 1 ? 'user has' : 'users have'} set daily goals of 50+ ayahs`,
+                    time: 'Active',
+                    users: highGoalUsers.slice(0, 3).map(u => `${u.full_name || 'User'} (${u.daily_goal} ayahs/day)`).join(', ')
+                });
+            }
+
+            // Check for inactive users (no activity in 30 days)
+            const inactiveUsers = allUsers.filter(u => {
+                if (!u.last_read && !u.updated_at) return false;
+                const lastActivity = u.last_read || u.updated_at;
+                const daysSince = (Date.now() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24);
+                return daysSince > 30 && (u.total_read > 0 || u.current_surah);
+            });
+            if (inactiveUsers.length > 5) {
+                adminNotifications.push({
+                    type: 'warning',
+                    icon: '⚠️',
+                    title: 'Inactive Users',
+                    message: `${inactiveUsers.length} active readers haven't used the app in 30+ days`,
+                    time: 'Action needed',
+                    suggestion: 'Consider sending re-engagement notifications'
+                });
+            }
+
+            // Check for new messages
+            const recentMessages = allMessages.filter(m => {
+                if (!m.created_at) return false;
+                const daysSince = (Date.now() - new Date(m.created_at).getTime()) / (1000 * 60 * 60 * 24);
+                return daysSince <= 1;
+            });
+            if (recentMessages.length > 0) {
+                adminNotifications.push({
+                    type: 'message',
+                    icon: '📧',
+                    title: 'New Messages',
+                    message: `You have ${recentMessages.length} new ${recentMessages.length === 1 ? 'message' : 'messages'} in the last 24 hours`,
+                    time: 'Recent',
+                    action: 'Check Messages Section'
+                });
+            }
+
+            // Display notifications
+            displayNotifications();
+        }
+
+        function displayNotifications() {
+            const container = document.getElementById('adminNotifications');
+            const listContainer = document.getElementById('notificationsList');
+
+            if (!container || !listContainer) return;
+
+            if (adminNotifications.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+
+            const typeColors = {
+                success: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                achievement: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                info: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                motivation: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                warning: 'linear-gradient(135deg, #FA8BFF 0%, #2BD2FF 100%)',
+                message: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+            };
+
+            listContainer.innerHTML = adminNotifications.map((notif, index) => `
+                <div style="background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); animation: slideIn 0.3s ease-out ${index * 0.1}s backwards; position: relative; overflow: hidden;">
+                    <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: ${typeColors[notif.type]};"></div>
+                    <div style="display: flex; align-items: start; gap: 12px; margin-left: 10px;">
+                        <div style="font-size: 32px;">${notif.icon}</div>
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
+                                <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #333;">${notif.title}</h4>
+                                <span style="font-size: 11px; color: #999; white-space: nowrap;">${notif.time}</span>
+                            </div>
+                            <p style="margin: 0 0 8px 0; font-size: 14px; color: #666; line-height: 1.5;">${notif.message}</p>
+                            ${notif.users ? `<div style="font-size: 12px; color: #667eea; background: #f0f3ff; padding: 8px; border-radius: 6px; margin-top: 8px;">👥 ${notif.users}</div>` : ''}
+                            ${notif.details ? `<div style="font-size: 12px; color: #555; background: #f8f9fa; padding: 8px; border-radius: 6px; margin-top: 8px;">ℹ️ ${notif.details}</div>` : ''}
+                            ${notif.suggestion ? `<div style="font-size: 12px; color: #764ba2; background: #f9f0ff; padding: 8px; border-radius: 6px; margin-top: 8px;">💡 ${notif.suggestion}</div>` : ''}
+                            ${notif.action ? `<div style="font-size: 12px; color: #11998e; background: #e6fff9; padding: 8px; border-radius: 6px; margin-top: 8px; font-weight: 600;">→ ${notif.action}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function dismissAllNotifications() {
+            adminNotifications = [];
+            document.getElementById('adminNotifications').style.display = 'none';
+        }
+
+        // Add CSS animation for notifications
+        const notifStyle = document.createElement('style');
+        notifStyle.textContent = `
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateX(-20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
+        `;
+        document.head.appendChild(notifStyle);
 
         // Create User Growth Chart
         let userGrowthChartInstance = null;
@@ -1645,16 +2184,43 @@
             if (!name) return name;
 
             const normalizations = {
+                // Erbil variations
                 'arbil': 'Erbil',
                 'hawler': 'Erbil',
                 'hewler': 'Erbil',
+                'hewlêr': 'Erbil',
+                'irbil': 'Erbil',
+
+                // Duhok variations
                 'duhok': 'Duhok',
                 'dihok': 'Duhok',
+                'dihuk': 'Duhok',
+                'dahuk': 'Duhok',
+                'duhuk': 'Duhok',
+                'dehok': 'Duhok',
+                'dihôk': 'Duhok',
+
+                // Sulaymaniyah variations
                 'slemani': 'Sulaymaniyah',
                 'silêmanî': 'Sulaymaniyah',
+                'sulaimani': 'Sulaymaniyah',
+                'suleymaniye': 'Sulaymaniyah',
+                'slemânî': 'Sulaymaniyah',
+
+                // Halabja
+                'halabja': 'Halabja',
+                'helebce': 'Halabja',
+
+                // Zakho
+                'zakho': 'Zakho',
+                'zaxo': 'Zakho',
+
+                // Kirkuk
+                'kirkuk': 'Kirkuk',
+                'kerkûk': 'Kirkuk',
             };
 
-            const lowerName = name.toLowerCase();
+            const lowerName = name.toLowerCase().trim();
             return normalizations[lowerName] || name;
         }
 
@@ -1777,21 +2343,48 @@
                         `).join('');
                     }
 
-                    // Populate cities table (filter out Unknown)
+                    // Populate cities table (filter out Unknown) with enhanced details
                     const citiesBody = document.getElementById('citiesTableBody');
                     const validCities = data.cities.filter(c => c.city !== 'Unknown' && c.city !== 'Localhost');
 
                     if (validCities.length === 0) {
                         citiesBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #999; font-size: 14px;">No data yet</td></tr>';
                     } else {
-                        citiesBody.innerHTML = validCities.slice(0, 10).map((city, index) => `
-                            <tr style="border-bottom: 1px solid #f0f0f0;">
-                                <td style="padding: 12px 8px; font-weight: 600; color: #667eea;">${index + 1}</td>
-                                <td style="padding: 12px 8px; font-weight: 600;">${city.city}</td>
-                                <td style="padding: 12px 8px; color: #666; font-size: 13px;">${city.region}</td>
-                                <td style="padding: 12px 8px; font-weight: 600;">${city.visits.toLocaleString()}</td>
-                            </tr>
-                        `).join('');
+                        // Highlight Kurdish cities
+                        const kurdishCities = ['Erbil', 'Duhok', 'Sulaymaniyah', 'Halabja', 'Zakho', 'Kirkuk'];
+
+                        citiesBody.innerHTML = validCities.slice(0, 15).map((city, index) => {
+                            const isKurdish = kurdishCities.includes(city.city);
+                            const percentage = ((city.visits / data.total_visits) * 100).toFixed(2);
+
+                            return `
+                                <tr style="border-bottom: 1px solid #f0f0f0; background: ${isKurdish ? '#fff9e6' : 'white'};">
+                                    <td style="padding: 12px 8px;">
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <span style="font-weight: 600; color: #667eea;">${index + 1}</span>
+                                            ${isKurdish ? '<span style="font-size: 16px;" title="Kurdish Region">🏛️</span>' : ''}
+                                        </div>
+                                    </td>
+                                    <td style="padding: 12px 8px;">
+                                        <div style="font-weight: 600; color: ${isKurdish ? '#d97706' : '#333'};">${city.city}</div>
+                                        ${city.unique_visitors ? `<div style="font-size: 11px; color: #999; margin-top: 2px;">👥 ${city.unique_visitors} unique</div>` : ''}
+                                    </td>
+                                    <td style="padding: 12px 8px;">
+                                        <div style="color: #666; font-size: 13px;">${city.region}</div>
+                                        <div style="font-size: 10px; color: #999; margin-top: 2px;">${percentage}% of traffic</div>
+                                    </td>
+                                    <td style="padding: 12px 8px;">
+                                        <div style="font-weight: 600; color: ${isKurdish ? '#d97706' : '#333'};">${city.visits.toLocaleString()}</div>
+                                        <div style="background: #e0e0e0; height: 4px; border-radius: 2px; margin-top: 4px; width: 60px;">
+                                            <div style="background: ${isKurdish ? 'linear-gradient(90deg, #f59e0b 0%, #d97706 100%)' : 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)'}; height: 100%; width: ${Math.min(percentage * 2, 100)}%; border-radius: 2px;"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
+
+                        // Load Kurdish Region detailed analytics
+                        loadKurdishRegionAnalytics(data);
                     }
                 } else {
                     console.error('Geo analytics error:', result.error);
@@ -1803,6 +2396,140 @@
                 document.getElementById('totalRegions').textContent = '0';
                 document.getElementById('totalCities').textContent = '0';
                 document.getElementById('totalGeoVisits').textContent = '0';
+            }
+        }
+
+        // Load Kurdish Region Detailed Analytics
+        function loadKurdishRegionAnalytics(geoData) {
+            const container = document.getElementById('kurdishRegionAnalytics');
+            if (!container) return;
+
+            // Extract Kurdish cities data
+            const duhokVisits = geoData.cities.filter(c => c.city === 'Duhok');
+            const erbilVisits = geoData.cities.filter(c => c.city === 'Erbil');
+            const sulaymaniyahVisits = geoData.cities.filter(c => c.city === 'Sulaymaniyah');
+            const kurdishCities = ['Erbil', 'Duhok', 'Sulaymaniyah', 'Halabja', 'Zakho', 'Kirkuk'];
+            const allKurdishVisits = geoData.cities.filter(c => kurdishCities.includes(c.city));
+
+            const duhokTotal = duhokVisits.reduce((sum, c) => sum + c.visits, 0);
+            const erbilTotal = erbilVisits.reduce((sum, c) => sum + c.visits, 0);
+            const sulaymaniyahTotal = sulaymaniyahVisits.reduce((sum, c) => sum + c.visits, 0);
+            const kurdishTotal = allKurdishVisits.reduce((sum, c) => sum + c.visits, 0);
+
+            // Only show if there are Kurdish region visitors
+            if (kurdishTotal > 0) {
+                container.style.display = 'block';
+
+                const totalVisits = geoData.total_visits;
+
+                document.getElementById('duhokReadersCount').textContent = duhokTotal.toLocaleString();
+                document.getElementById('duhokReadersPercent').textContent = `${((duhokTotal / totalVisits) * 100).toFixed(1)}% of total traffic`;
+
+                document.getElementById('erbilReadersCount').textContent = erbilTotal.toLocaleString();
+                document.getElementById('erbilReadersPercent').textContent = `${((erbilTotal / totalVisits) * 100).toFixed(1)}% of total traffic`;
+
+                document.getElementById('sulaymaniyahReadersCount').textContent = sulaymaniyahTotal.toLocaleString();
+                document.getElementById('sulaymaniyahReadersPercent').textContent = `${((sulaymaniyahTotal / totalVisits) * 100).toFixed(1)}% of total traffic`;
+
+                document.getElementById('totalKurdishReaders').textContent = kurdishTotal.toLocaleString();
+                document.getElementById('totalKurdishPercent').textContent = `${((kurdishTotal / totalVisits) * 100).toFixed(1)}% of total traffic`;
+
+                // Get registered users from Kurdish regions
+                const kurdishUsers = allUsers.filter(u => {
+                    const city = (u.city || '').toLowerCase().trim();
+                    const region = (u.region || '').toLowerCase().trim();
+                    return kurdishCities.some(kc => city.includes(kc.toLowerCase()) || region.includes(kc.toLowerCase()));
+                });
+
+                const duhokUsers = kurdishUsers.filter(u => {
+                    const city = (u.city || '').toLowerCase().trim();
+                    const region = (u.region || '').toLowerCase().trim();
+                    return city.includes('duhok') || city.includes('dihok') ||
+                           region.includes('duhok') || region.includes('dihok');
+                });
+
+                // Populate detailed table
+                const detailsContainer = document.getElementById('kurdishRegionDetails');
+                detailsContainer.innerHTML = `
+                    <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #333; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 24px;">👥</span> Registered Users from Kurdish Region
+                    </h3>
+
+                    ${kurdishUsers.length > 0 ? `
+                        <div style="margin-bottom: 20px; padding: 15px; background: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 8px;">
+                            <div style="font-size: 14px; color: #166534; font-weight: 600; margin-bottom: 8px;">
+                                📊 Summary: ${kurdishUsers.length} registered users from Kurdish region
+                            </div>
+                            ${duhokUsers.length > 0 ? `
+                                <div style="font-size: 13px; color: #15803d; margin-top: 6px;">
+                                    🎯 Including ${duhokUsers.length} users from Duhok specifically
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div style="max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead style="position: sticky; top: 0; background: #f9fafb; z-index: 10;">
+                                    <tr>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb; font-size: 13px; color: #666;">User</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb; font-size: 13px; color: #666;">Location</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb; font-size: 13px; color: #666;">Progress</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb; font-size: 13px; color: #666;">Activity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${kurdishUsers.map((user, index) => {
+                                        const isDuhok = duhokUsers.includes(user);
+                                        const city = user.city || 'Unknown';
+                                        const region = user.region || 'Unknown';
+
+                                        return `
+                                            <tr style="border-bottom: 1px solid #f3f4f6; background: ${isDuhok ? '#fef3c7' : index % 2 === 0 ? '#ffffff' : '#f9fafb'};">
+                                                <td style="padding: 12px;">
+                                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                                        <img src="${user.picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.full_name || 'User')}"
+                                                             style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid ${isDuhok ? '#f59e0b' : '#e5e7eb'}; object-fit: cover;"
+                                                             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}'">
+                                                        <div>
+                                                            <div style="font-weight: 600; color: ${isDuhok ? '#d97706' : '#333'}; font-size: 14px;">
+                                                                ${user.full_name || 'Anonymous User'}
+                                                                ${isDuhok ? ' 🌟' : ''}
+                                                            </div>
+                                                            <div style="font-size: 11px; color: #999;">${user.email || 'No email'}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td style="padding: 12px;">
+                                                    <div style="font-size: 13px; color: #333; font-weight: 500;">${city}</div>
+                                                    <div style="font-size: 11px; color: #999;">${region}</div>
+                                                </td>
+                                                <td style="padding: 12px;">
+                                                    <div style="font-size: 13px; color: #333; font-weight: 600;">${user.total_read || 0} ayahs</div>
+                                                    <div style="font-size: 11px; color: #999;">${Math.round(user.completion || 0)}% complete</div>
+                                                    ${user.daily_goal ? `<div style="font-size: 11px; color: #d97706; margin-top: 2px;">🎯 Goal: ${user.daily_goal}/day</div>` : ''}
+                                                </td>
+                                                <td style="padding: 12px;">
+                                                    ${user.current_surah ? `
+                                                        <div style="font-size: 13px; color: #333;">📖 Surah ${user.current_surah}</div>
+                                                        <div style="font-size: 11px; color: #999;">Ayah ${user.current_ayah || 1}</div>
+                                                    ` : '<div style="font-size: 12px; color: #999;">Not started</div>'}
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : `
+                        <div style="text-align: center; padding: 40px; color: #999;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">📭</div>
+                            <div style="font-size: 16px;">No registered users from Kurdish region yet</div>
+                            <div style="font-size: 13px; margin-top: 8px;">Geographic data shows ${kurdishTotal} visits from the region</div>
+                        </div>
+                    `}
+                `;
+            } else {
+                container.style.display = 'none';
             }
         }
 
