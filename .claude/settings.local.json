@@ -6,7 +6,14 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(npm run deploy:prod:*)"
+      "Bash(npm run deploy:prod:*)",
+      "Bash(curl -X POST \"https://api.telegram.org/bot8546537386:AAHVo4BPadrtO2uKsIALdwQ9abB_M3x8ENE/setWebhook\" -H \"Content-Type: application/json\" -d \"{\"\"url\"\": \"\"https://tafsirkurd.com/.netlify/functions/telegram-webhook\"\"}\")",
+      "Bash(curl \"https://api.telegram.org/bot8546537386:AAHVo4BPadrtO2uKsIALdwQ9abB_M3x8ENE/getWebhookInfo\")",
+      "Bash(curl -X POST \"https://tafsirkurd.com/.netlify/functions/telegram-webhook\" -H \"Content-Type: application/json\" -d '{\"\"message\"\":{\"\"chat\"\":{\"\"id\"\":5737599664},\"\"text\"\":\"\"/start\"\"}}')",
+      "Bash(curl -X POST \"https://api.telegram.org/bot8546537386:AAHVo4BPadrtO2uKsIALdwQ9abB_M3x8ENE/deleteWebhook\")",
+      "Bash(curl -X POST \"https://api.telegram.org/bot8546537386:AAHVo4BPadrtO2uKsIALdwQ9abB_M3x8ENE/setWebhook\" -H \"Content-Type: application/json\" -d '{\"\"url\"\": \"\"https://tafsirkurd.com/.netlify/functions/telegram-webhook\"\"}')",
+      "Bash(curl -X POST \"https://api.telegram.org/bot8546537386:AAHVo4BPadrtO2uKsIALdwQ9abB_M3x8ENE/sendMessage\" -H \"Content-Type: application/json\" -d '{\"\"chat_id\"\": 5737599664, \"\"text\"\": \"\"🤖 Bot is now active!\\n\\nTry these commands:\\n/start - Welcome message\\n/help - Show help\\n/status - Check status\\n\\nYour notifications are ready!\"\", \"\"parse_mode\"\": \"\"Markdown\"\"}')",
+      "Bash(curl -X POST \"https://api.telegram.org/bot8546537386:AAHVo4BPadrtO2uKsIALdwQ9abB_M3x8ENE/deleteMyCommands\")"
     ],
     "deny": [],
     "ask": []

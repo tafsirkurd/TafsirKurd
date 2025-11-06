@@ -3397,6 +3397,23 @@
                     position: nextPosition
                 }]);
                 if (error) throw error;
+
+                // Send Telegram notification (async, don't wait)
+                fetch('/.netlify/functions/telegram-notify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'new_video',
+                        title: '🎥 New Video Added!',
+                        message: 'A new featured video has been added to the platform',
+                        details: `URL: ${url}`,
+                        data: {
+                            videoUrl: url,
+                            position: nextPosition
+                        }
+                    })
+                }).catch(err => console.error('Notification error:', err));
+
                 closeAddVideoModal();
                 await loadVideos();
                 await loadDashboardData();

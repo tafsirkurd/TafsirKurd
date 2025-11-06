@@ -1098,7 +1098,43 @@ function setupContactForm() {
         submitButton.disabled = true;
         submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
-        setTimeout(() => {
+        try {
+            const formData = new FormData(this);
+            const name = formData.get('name');
+            const email = formData.get('email');
+            const subject = formData.get('subject');
+            const message = formData.get('message');
+
+            // Save to Supabase
+            const { error } = await supabase
+                .from('contact_messages')
+                .insert([{
+                    name: name,
+                    email: email,
+                    subject: subject,
+                    message: message,
+                    created_at: new Date().toISOString()
+                }]);
+
+            if (error) throw error;
+
+            // Send Telegram notification (don't await, send async)
+            fetch('/.netlify/functions/telegram-notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'new_message',
+                    title: '📧 New Contact Message!',
+                    message: `From: ${name} (${email})`,
+                    details: `Subject: ${subject}`,
+                    data: {
+                        userName: name,
+                        email: email,
+                        messageContent: message
+                    }
+                })
+            }).catch(err => console.error('Notification error:', err));
+
             formMessage.textContent = 'نامە گەهشت، ل نێزیک دێ بەرسڤا تە هێتە دان.';
             formMessage.className = 'form-message success';
             formMessage.style.display = 'block';
@@ -1108,9 +1144,15 @@ function setupContactForm() {
                 formMessage.style.display = 'none';
             }, 5000);
 
+        } catch (error) {
+            console.error('Error submitting message:', error);
+            formMessage.textContent = 'هەڵەیەک ڕوویدا. تکایە دووبارە هەوڵ بدەرەوە.';
+            formMessage.className = 'form-message error';
+            formMessage.style.display = 'block';
+        } finally {
             submitButton.disabled = false;
             submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
-        }, 1500);
+        }
     });
 }
 
