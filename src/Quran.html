@@ -5533,6 +5533,8 @@
 
             const userKey = 'quran_data_' + currentUser.sub;
 
+            console.log('🔄 Loading user data for:', currentUser.sub);
+
             // Try loading from cloud backup first (in case localStorage was cleared)
             const loadedFromCloud = await loadFromDatabase();
 
@@ -5541,7 +5543,21 @@
 
             if (saved) {
                 const data = JSON.parse(saved);
-                userStats = data.stats || userStats;
+
+                console.log('📦 Data loaded from localStorage:', {
+                    hasStats: !!data.stats,
+                    stats: data.stats,
+                    currentPosition: data.currentPosition
+                });
+
+                // CRITICAL: Load stats properly
+                if (data.stats) {
+                    userStats = { ...data.stats }; // Create new object to avoid reference issues
+                    console.log('✅ userStats set to:', userStats);
+                } else {
+                    console.warn('⚠️ No stats in loaded data, keeping defaults');
+                }
+
                 bookmarkedAyahs = data.bookmarks || [];
                 lastReadPosition = data.lastRead || { surah: 1, ayah: 1 };
 
@@ -5570,8 +5586,12 @@
                     localStorage.setItem('readingGoal', JSON.stringify(data.readingGoal));
                 }
 
-                // Calculate real stats from session data
+                // Calculate real stats from session data (only if no saved stats)
                 calculateRealStats(data);
+
+                console.log('✅ Final userStats after load:', userStats);
+            } else {
+                console.warn('⚠️ No saved data found in localStorage');
             }
 
             updateStatsUI();
@@ -5732,6 +5752,8 @@
             if (!isUserAuthenticated || !currentUser) return false;
 
             try {
+                console.log('☁️ Loading from database for user:', currentUser.sub);
+
                 const response = await fetch('/.netlify/functions/user-data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -5743,18 +5765,26 @@
 
                 const result = await response.json();
 
+                console.log('📥 Database response:', {
+                    success: result.success,
+                    hasData: !!result.data,
+                    stats: result.data?.stats,
+                    position: result.data?.currentPosition
+                });
+
                 if (result.success && result.data) {
                     // Restore from cloud to localStorage
                     const userKey = 'quran_data_' + currentUser.sub;
                     localStorage.setItem(userKey, JSON.stringify(result.data));
                     console.log('✅ Data restored from cloud backup');
+                    console.log('💾 Saved to localStorage with key:', userKey);
                     return true;
                 } else {
                     console.log('ℹ️ No cloud backup found');
                     return false;
                 }
             } catch (error) {
-                console.warn('⚠️ Cloud restore error:', error.message);
+                console.error('⚠️ Cloud restore error:', error);
                 return false;
             }
         }
