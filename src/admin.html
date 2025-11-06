@@ -1158,9 +1158,22 @@
 
             <!-- Users Section -->
             <section id="usersSection" class="section">
+                <!-- Top 10 Readers Leaderboard -->
+                <div id="topReadersLeaderboard" class="table-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; margin-bottom: 30px;">
+                    <h3 style="margin: 0 0 20px 0; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 36px;">🏆</span> Top 10 Readers - Leaderboard
+                    </h3>
+                    <div id="topReadersLeaderboardContent">
+                        <div class="loading" style="color: white;">
+                            <div class="loading-spinner" style="border-color: rgba(255,255,255,0.3); border-top-color: white;"></div>
+                            <div class="loading-text">Loading top readers...</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="table-container">
                     <div class="table-header">
-                        <h2 class="table-title">Registered Users</h2>
+                        <h2 class="table-title">👥 All Registered Users - Detailed Information</h2>
                         <input type="text" id="userSearch" class="search-box" placeholder="Search users...">
                     </div>
                     <div id="usersTable" class="mobile-table">
@@ -1692,56 +1705,6 @@
                     </div>
                 </div>
             `).join('');
-
-            // Add summary card for top readers
-            if (topReaders.length > 0) {
-                container.innerHTML += `
-                    <div class="table-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white;">
-                        <h3 style="margin: 0 0 20px 0; font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 32px;">🏆</span> Top 10 Readers - Detailed Stats
-                        </h3>
-                        <div style="display: grid; gap: 10px;">
-                            ${topReaders.map((reader, i) => `
-                                <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px;">
-                                    <div style="background: ${i < 3 ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)' : 'rgba(255,255,255,0.2)'}; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; color: ${i < 3 ? '#333' : 'white'};">
-                                        ${i + 1}
-                                    </div>
-                                    <img src="${reader.picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(reader.full_name || 'User')}"
-                                         style="width: 50px; height: 50px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3); object-fit: cover;"
-                                         onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(reader.full_name || 'User')}'">
-                                    <div style="flex: 1;">
-                                        <div style="font-weight: 700; font-size: 15px; margin-bottom: 4px;">${reader.full_name || 'Anonymous User'}</div>
-                                        <div style="font-size: 12px; opacity: 0.9; display: flex; gap: 15px; flex-wrap: wrap;">
-                                            <span>📖 ${reader.total_read || 0} ayahs</span>
-                                            <span>✅ ${Math.round(reader.completion || 0)}% complete</span>
-                                            ${reader.current_surah ? `<span>📍 Surah ${reader.current_surah}:${reader.current_ayah || 1}</span>` : ''}
-                                            ${reader.daily_goal ? `<span>🎯 Goal: ${reader.daily_goal}/day</span>` : ''}
-                                        </div>
-                                    </div>
-                                    <div style="text-align: right;">
-                                        <div style="font-size: 24px; font-weight: 700;">${reader.total_read || 0}</div>
-                                        <div style="font-size: 11px; opacity: 0.8;">AYAHS</div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
-                            <div style="text-align: center;">
-                                <div style="font-size: 28px; font-weight: 700;">${Math.round(readingVelocity * 10) / 10}</div>
-                                <div style="font-size: 12px; opacity: 0.9;">Avg Ayahs/Day</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 28px; font-weight: 700;">${recentReaders.length}</div>
-                                <div style="font-size: 12px; opacity: 0.9;">Active This Week</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 28px; font-weight: 700;">${completedUsers.length}</div>
-                                <div style="font-size: 12px; opacity: 0.9;">Completed Quran</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
 
             // Check and show admin notifications
             checkAndShowNotifications();
@@ -3124,26 +3087,146 @@
                     const currentPos = userData.currentPosition || {};
                     const stats = userData.stats || {};
                     const readingGoal = userData.readingGoal || {};
+                    const readAyahs = userData.readAyahs || [];
+
+                    // Calculate total ayahs read from multiple possible sources
+                    let totalRead = stats.totalAyahsRead || stats.ayahsRead || 0;
+
+                    // If no stats but has readAyahs array, use that
+                    if (totalRead === 0 && readAyahs.length > 0) {
+                        totalRead = readAyahs.length;
+                    }
+
+                    // If still 0 but has current position, estimate from current position
+                    if (totalRead === 0 && currentPos.surah && currentPos.ayah) {
+                        // Simple estimation: assume they read from beginning to current position
+                        // This is a rough estimate, better than showing 0
+                        const ayahCounts = {
+                            1: 7, 2: 286, 3: 200, 4: 176, 5: 120, 6: 165, 7: 206, 8: 75, 9: 129, 10: 109,
+                            11: 123, 12: 111, 13: 43, 14: 52, 15: 99, 16: 128, 17: 111, 18: 110, 19: 98, 20: 135
+                            // Add more as needed or calculate dynamically
+                        };
+
+                        let estimated = 0;
+                        for (let i = 1; i < currentPos.surah; i++) {
+                            estimated += ayahCounts[i] || 0;
+                        }
+                        estimated += parseInt(currentPos.ayah) || 0;
+                        totalRead = estimated;
+                    }
+
+                    // Calculate completion percentage
+                    const totalAyahs = 6236; // Total ayahs in Quran
+                    const completion = stats.completionPercentage ||
+                                      (totalRead > 0 ? Math.round((totalRead / totalAyahs) * 100) : 0);
 
                     return {
                         ...user,
+                        full_name: userData.userName || user.user_id?.split('|')[0] || 'User',
                         name: userData.userName || user.user_id?.split('|')[0] || 'User',
                         email: userData.userEmail || user.user_id || '-',
                         picture: userData.userPicture || null,
-                        current_surah: currentPos.surah || stats.currentSurah || '-',
-                        current_ayah: currentPos.ayah || stats.currentAyah || '-',
-                        daily_goal: readingGoal.dailyTarget || readingGoal.goal || '-',
-                        total_read: stats.totalAyahsRead || 0,
-                        completion: stats.completionPercentage || 0
+                        current_surah: currentPos.surah || stats.currentSurah || null,
+                        current_ayah: currentPos.ayah || stats.currentAyah || null,
+                        daily_goal: readingGoal.dailyTarget || readingGoal.goal || null,
+                        total_read: totalRead,
+                        completion: completion,
+                        last_read: userData.lastRead || stats.lastReadDate || null,
+                        city: userData.city || null,
+                        region: userData.region || null
                     };
                 });
 
                 console.log('[Admin] Processed users:', allUsers);
+                displayTopReadersLeaderboard(allUsers);
                 displayUsers(allUsers);
             } catch (error) {
                 console.error('Error loading users:', error);
                 container.innerHTML = '<div class="empty-state"><div class="empty-text" style="color: var(--danger);">Error loading users</div></div>';
             }
+        }
+
+        // Display Top 10 Readers Leaderboard in Users Section
+        function displayTopReadersLeaderboard(users) {
+            const container = document.getElementById('topReadersLeaderboardContent');
+            if (!container) return;
+
+            // Get top readers
+            const topReaders = [...users]
+                .filter(u => u.total_read > 0)
+                .sort((a, b) => b.total_read - a.total_read)
+                .slice(0, 10);
+
+            if (topReaders.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; opacity: 0.9;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">📚</div>
+                        <div style="font-size: 18px;">No readers yet</div>
+                        <div style="font-size: 14px; margin-top: 8px; opacity: 0.8;">Start reading to appear on the leaderboard!</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Calculate statistics
+            const activeReaders = users.filter(u => u.total_read > 0 || u.current_surah);
+            const recentReaders = users.filter(u => {
+                if (!u.last_read) return false;
+                const daysSince = (Date.now() - new Date(u.last_read).getTime()) / (1000 * 60 * 60 * 24);
+                return daysSince <= 7;
+            });
+            const completedUsers = users.filter(u => u.completion >= 100);
+            const readingVelocity = activeReaders.reduce((sum, u) => {
+                const daysActive = u.created_at ? Math.max(1, (Date.now() - new Date(u.created_at).getTime()) / (1000 * 60 * 60 * 24)) : 1;
+                return sum + (u.total_read / daysActive);
+            }, 0) / Math.max(activeReaders.length, 1);
+
+            container.innerHTML = `
+                <div style="display: grid; gap: 10px;">
+                    ${topReaders.map((reader, i) => `
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; transition: transform 0.2s, box-shadow 0.2s;"
+                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.2)';"
+                             onmouseout="this.style.transform=''; this.style.boxShadow='';">
+                            <div style="background: ${i < 3 ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)' : 'rgba(255,255,255,0.2)'}; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; color: ${i < 3 ? '#333' : 'white'}; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                                ${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
+                            </div>
+                            <img src="${reader.picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(reader.full_name || 'User')}&background=667eea&color=fff&size=128"
+                                 style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.4); object-fit: cover; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.2);"
+                                 onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(reader.full_name || 'User')}&background=667eea&color=fff&size=128'">
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: 700; font-size: 18px; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    ${reader.full_name || 'Anonymous User'}
+                                </div>
+                                <div style="font-size: 13px; opacity: 0.95; display: flex; gap: 15px; flex-wrap: wrap;">
+                                    <span>📖 ${reader.total_read || 0} ayahs</span>
+                                    <span>✅ ${Math.round(reader.completion || 0)}%</span>
+                                    ${reader.current_surah ? `<span>📍 Surah ${reader.current_surah}:${reader.current_ayah || 1}</span>` : ''}
+                                    ${reader.daily_goal ? `<span>🎯 ${reader.daily_goal}/day</span>` : ''}
+                                </div>
+                            </div>
+                            <div style="text-align: right; flex-shrink: 0;">
+                                <div style="font-size: 28px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.3);">${reader.total_read || 0}</div>
+                                <div style="font-size: 11px; opacity: 0.9; font-weight: 600;">AYAHS</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div style="margin-top: 25px; padding-top: 25px; border-top: 1px solid rgba(255,255,255,0.2); display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px;">
+                    <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
+                        <div style="font-size: 32px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.2);">${Math.round(readingVelocity * 10) / 10}</div>
+                        <div style="font-size: 13px; opacity: 0.95; margin-top: 4px;">Avg Ayahs/Day</div>
+                    </div>
+                    <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
+                        <div style="font-size: 32px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.2);">${recentReaders.length}</div>
+                        <div style="font-size: 13px; opacity: 0.95; margin-top: 4px;">Active This Week</div>
+                    </div>
+                    <div style="text-align: center; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px;">
+                        <div style="font-size: 32px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.2);">${completedUsers.length}</div>
+                        <div style="font-size: 13px; opacity: 0.95; margin-top: 4px;">Completed Quran</div>
+                    </div>
+                </div>
+            `;
         }
 
         function displayUsers(users) {
@@ -3164,77 +3247,123 @@
             container.innerHTML = filtered.map(user => {
                 // Get Surah name
                 const surahInfo = surahNames[user.current_surah];
-                const surahDisplay = surahInfo ? `${surahInfo.english} (${surahInfo.arabic})` : `Surah ${user.current_surah || '-'}`;
+                const surahDisplay = surahInfo ? `${surahInfo.english} (${surahInfo.arabic})` : (user.current_surah ? `Surah ${user.current_surah}` : 'Not started');
 
                 // Calculate completion percentage
                 const completion = user.completion || 0;
 
-                // Format created date
+                // Format dates
                 const createdDate = user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric'
                 }) : '-';
 
-                // Profile picture
-                const profilePic = user.picture || '';
+                const lastReadDate = user.last_read ? new Date(user.last_read).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                }) : '-';
+
+                // Days since last read
+                const daysSinceLastRead = user.last_read ? Math.floor((Date.now() - new Date(user.last_read).getTime()) / (1000 * 60 * 60 * 24)) : null;
+                const activityStatus = !user.last_read ? '🔴 Never active' :
+                                      daysSinceLastRead === 0 ? '🟢 Active today' :
+                                      daysSinceLastRead <= 7 ? `🟡 Active ${daysSinceLastRead}d ago` :
+                                      daysSinceLastRead <= 30 ? `🟠 Active ${daysSinceLastRead}d ago` :
+                                      `🔴 Inactive ${daysSinceLastRead}d ago`;
+
+                // Location info
+                const locationDisplay = user.city && user.region ? `${user.city}, ${user.region}` :
+                                       user.city ? user.city :
+                                       user.region ? user.region : 'Unknown';
+
+                // Profile picture with fallback
+                const profilePic = user.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=667eea&color=fff&size=128`;
+
+                // Calculate reading velocity
+                const daysActive = user.created_at ? Math.max(1, (Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24)) : 1;
+                const velocity = (user.total_read / daysActive).toFixed(1);
 
                 return `
-                <div class="table-card" style="position: relative; overflow: visible; animation: fadeInUp 0.5s ease-out;">
-                    ${profilePic ? `
-                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
-                            <img src="${profilePic}" alt="${user.name}" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid #667eea; box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3); animation: pulse 2s ease-in-out infinite;" />
-                            <div style="flex: 1;">
-                                <div style="font-weight: 700; font-size: 18px; color: #333; margin-bottom: 4px;">👤 ${user.name || '-'}</div>
-                                <div style="font-size: 13px; color: #666;">📧 ${user.email || '-'}</div>
+                <div class="table-card" style="position: relative; overflow: hidden; animation: fadeInUp 0.5s ease-out; background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%); border: 2px solid #e8ebf7;">
+                    <!-- Status badge -->
+                    <div style="position: absolute; top: 15px; right: 15px; padding: 6px 12px; background: ${daysSinceLastRead === null || daysSinceLastRead > 7 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)'}; border-radius: 20px; font-size: 12px; font-weight: 600; color: ${daysSinceLastRead === null || daysSinceLastRead > 7 ? '#dc2626' : '#16a34a'}; border: 2px solid ${daysSinceLastRead === null || daysSinceLastRead > 7 ? '#fecaca' : '#bbf7d0'};">
+                        ${activityStatus}
+                    </div>
+
+                    <!-- User header with picture -->
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e8ebf7;">
+                        <img src="${profilePic}" alt="${user.name}"
+                             style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid #667eea; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); object-fit: cover;"
+                             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=667eea&color=fff&size=128'" />
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 700; font-size: 20px; color: #333; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis;">
+                                👤 ${user.name || 'Anonymous User'}
                             </div>
+                            <div style="font-size: 13px; color: #666; overflow: hidden; text-overflow: ellipsis;">📧 ${user.email || 'No email'}</div>
+                            ${user.city || user.region ? `<div style="font-size: 12px; color: #999; margin-top: 4px;">📍 ${locationDisplay}</div>` : ''}
                         </div>
-                    ` : `
-                        <div class="table-card-row" style="margin-bottom: 10px;">
-                            <span class="table-card-label">👤 Name:</span>
-                            <span class="table-card-value" style="font-weight: 600; font-size: 16px;">${user.name || '-'}</span>
-                        </div>
-                        <div class="table-card-row">
-                            <span class="table-card-label">📧 Email:</span>
-                            <span class="table-card-value">${user.email || '-'}</span>
-                        </div>
-                    `}
-                    <div class="table-card-row">
-                        <span class="table-card-label">📅 Joined:</span>
-                        <span class="table-card-value">${createdDate}</span>
                     </div>
 
-                    <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
+                    <!-- Reading Progress Section -->
+                    <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #e8ebf7;">
+                        <div style="font-weight: 600; color: #667eea; margin-bottom: 12px; font-size: 15px;">📊 Reading Progress</div>
 
-                    <div class="table-card-row">
-                        <span class="table-card-label">📖 Current Surah:</span>
-                        <span class="table-card-value">${surahDisplay}</span>
-                    </div>
-                    <div class="table-card-row">
-                        <span class="table-card-label">📍 Current Ayah:</span>
-                        <span class="table-card-value">${user.current_ayah || '-'}</span>
-                    </div>
-                    <div class="table-card-row">
-                        <span class="table-card-label">📊 Total Ayahs Read:</span>
-                        <span class="table-card-value">${user.total_read || 0} ayahs</span>
-                    </div>
-                    <div class="table-card-row">
-                        <span class="table-card-label">✅ Completion:</span>
-                        <span class="table-card-value">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div style="flex: 1; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
-                                    <div style="background: #667eea; height: 100%; width: ${completion}%; transition: width 0.3s;"></div>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px;">
+                            <div style="background: #f8f9ff; padding: 12px; border-radius: 8px;">
+                                <div style="font-size: 11px; color: #999; margin-bottom: 4px;">📖 TOTAL READ</div>
+                                <div style="font-size: 22px; font-weight: 700; color: #667eea;">${user.total_read || 0}</div>
+                                <div style="font-size: 10px; color: #999;">ayahs</div>
+                            </div>
+                            <div style="background: #f8f9ff; padding: 12px; border-radius: 8px;">
+                                <div style="font-size: 11px; color: #999; margin-bottom: 4px;">✅ COMPLETION</div>
+                                <div style="font-size: 22px; font-weight: 700; color: #764ba2;">${Math.round(completion)}%</div>
+                                <div style="width: 100%; height: 4px; background: #e0e0e0; border-radius: 2px; margin-top: 4px;">
+                                    <div style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); height: 100%; width: ${completion}%; border-radius: 2px; transition: width 0.3s;"></div>
                                 </div>
-                                <span style="font-weight: 600; min-width: 45px;">${completion}%</span>
                             </div>
-                        </span>
-                    </div>
-                    <div class="table-card-row">
-                        <span class="table-card-label">🎯 Daily Goal:</span>
-                        <span class="table-card-value">${user.daily_goal || '-'} verses/day</span>
+                        </div>
+
+                        <div style="display: grid; gap: 8px; font-size: 13px;">
+                            <div style="display: flex; justify-content: space-between; padding: 8px; background: #f8f9ff; border-radius: 6px;">
+                                <span style="color: #666;">📖 Current Position:</span>
+                                <span style="font-weight: 600; color: #333;">${user.current_surah ? `${surahDisplay} - Ayah ${user.current_ayah || 1}` : 'Not started'}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 8px; background: #f8f9ff; border-radius: 6px;">
+                                <span style="color: #666;">⚡ Reading Velocity:</span>
+                                <span style="font-weight: 600; color: #333;">${velocity} ayahs/day</span>
+                            </div>
+                            ${user.daily_goal ? `
+                            <div style="display: flex; justify-content: space-between; padding: 8px; background: #fff3cd; border-radius: 6px; border-left: 3px solid #ffc107;">
+                                <span style="color: #856404;">🎯 Daily Goal:</span>
+                                <span style="font-weight: 700; color: #856404;">${user.daily_goal} ayahs/day</span>
+                            </div>
+                            ` : ''}
+                        </div>
                     </div>
 
-                    <div class="table-card-actions" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                    <!-- Account Information -->
+                    <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #e8ebf7;">
+                        <div style="font-weight: 600; color: #667eea; margin-bottom: 12px; font-size: 15px;">ℹ️ Account Information</div>
+                        <div style="display: grid; gap: 8px; font-size: 13px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">📅 Joined:</span>
+                                <span style="font-weight: 600; color: #333;">${createdDate}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">🕒 Last Activity:</span>
+                                <span style="font-weight: 600; color: #333;">${lastReadDate}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">🔢 User ID:</span>
+                                <span style="font-size: 11px; color: #999; font-family: monospace;">#${user.id}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="table-card-actions" style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #e8ebf7;">
                         <button class="btn-icon danger" onclick="deleteUser(${user.id})">🗑️ Delete User</button>
                     </div>
                 </div>
