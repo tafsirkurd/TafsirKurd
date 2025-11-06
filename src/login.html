@@ -822,7 +822,7 @@
             }
         }
 
-        function handleUserInfo(userInfo) {
+        async function handleUserInfo(userInfo) {
             currentUser = {
                 name: userInfo.name,
                 email: userInfo.email,
@@ -835,6 +835,41 @@
             // Store user data
             localStorage.setItem('user', JSON.stringify(currentUser));
             localStorage.setItem('isAuthenticated', 'true');
+
+            // IMPORTANT: Save Google user info to database immediately with correct field names
+            try {
+                const response = await fetch('/.netlify/functions/user-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.sub,
+                        action: 'load'
+                    })
+                });
+
+                const result = await response.json();
+                let userData = result.data || {};
+
+                // Always update with Google info (ensure correct field names)
+                userData.full_name = currentUser.name;  // ← Correct field
+                userData.email = currentUser.email;      // ← Correct field
+                userData.picture = currentUser.picture;  // ← Correct field
+
+                // Save to database
+                await fetch('/.netlify/functions/user-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.sub,
+                        action: 'save',
+                        data: userData
+                    })
+                });
+
+                console.log('✅ User profile auto-saved with Google data');
+            } catch (error) {
+                console.error('Error saving Google user info:', error);
+            }
 
             // Check if this user has completed signup before (returning user)
             const hasCompletedSignup = localStorage.getItem('signupCompleted');
