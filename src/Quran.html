@@ -5828,6 +5828,15 @@
         }
 
         function updateStatsUI() {
+            // DEBUG for Saman
+            if (currentUser && currentUser.email === 'saman26d@gmail.com') {
+                alert('updateStatsUI() called!\n\n' +
+                    'userStats.streak = ' + userStats.streak + '\n' +
+                    'userStats.level = ' + userStats.level + '\n' +
+                    'userStats.ayahsRead = ' + userStats.ayahsRead + '\n\n' +
+                    'About to update UI elements...');
+            }
+
             document.getElementById('statDays').textContent = KurdishNumbers.toKurdish(userStats.daysActive);
             document.getElementById('statSurahs').textContent = KurdishNumbers.toKurdish(userStats.surahsCompleted);
             document.getElementById('statAyahs').textContent = KurdishNumbers.toKurdish(userStats.ayahsRead);
