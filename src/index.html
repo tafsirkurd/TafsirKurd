@@ -9,6 +9,7 @@
   <meta name="description" content="تەفسیرا کوردی - بەردەستکرنا شرۆڤەکا ڕوون و ڕەسەن یا قورئانێ ب زمانێ کوردی ب ڕێکا وانێن کورت و هویربینیێن تەفسیرێ.">
   <meta name="keywords" content="تەفسیر، قورئان، کوردی، خواندنا ئیسلامی، شرۆڤەکرنا قورئانێ">
   <meta name="theme-color" content="#000000">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>تەفسیر کورد - شرۆڤەکرنا قورئانێ ب زمانێ کوردی</title>
@@ -34,10 +35,9 @@
   <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 
-  <!-- Critical Font Preloading - Instant font display, zero FOIT/FOUT -->
+  <!-- Critical Font Preloading - Only preload fonts actually used on this page -->
   <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=16" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/assets/fonts/amiri-quran-v1-arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
 
   <!-- Local Fonts - Zero external requests, instant loading -->
   <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
@@ -51,7 +51,6 @@
   <!-- Prefetch key pages for instant navigation -->
   <link rel="prefetch" href="/Quran.html">
   <link rel="prefetch" href="/profile.html">
-  <link rel="prefetch" href="/Dashboard.html">
 
   <!-- Console Cleaner - Clean console in production -->
   <script src="utils/console-cleaner.js"></script>
