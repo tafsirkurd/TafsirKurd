@@ -72,20 +72,86 @@ exports.handler = async (event, context) => {
 
         // SAVE user data
         if (action === 'save' && event.httpMethod === 'POST') {
-            // Check if this is a new user (first save)
-            const { data: existingData } = await supabase
+            // Load existing data first to merge properly
+            const { data: existingRecord } = await supabase
                 .from('user_data')
                 .select('data, created_at')
                 .eq('user_id', userId)
                 .single();
 
-            const isNewUser = !existingData;
+            const isNewUser = !existingRecord;
+            const existingData = existingRecord?.data || {};
+
+            // Deep merge function to preserve all existing data
+            function deepMerge(target, source) {
+                const output = { ...target };
+                for (const key in source) {
+                    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+                        output[key] = deepMerge(target[key] || {}, source[key]);
+                    } else if (Array.isArray(source[key])) {
+                        // For arrays, prefer source if it has data, otherwise keep target
+                        output[key] = source[key].length > 0 ? source[key] : (target[key] || []);
+                    } else {
+                        // For primitives, prefer source if defined and not null, otherwise keep target
+                        output[key] = (source[key] !== undefined && source[key] !== null) ? source[key] : target[key];
+                    }
+                }
+                return output;
+            }
+
+            // Merge new data with existing data to prevent data loss
+            let mergedData = deepMerge(existingData, data);
+
+            // Critical data protection: Don't reset important fields to defaults
+            if (!isNewUser) {
+                // Protect reading position from being reset
+                if (existingData.currentPosition && existingData.currentPosition.surah > 1) {
+                    if (mergedData.currentPosition && mergedData.currentPosition.surah === 1 && mergedData.currentPosition.ayah === 1) {
+                        console.log('⚠️ Prevented currentPosition reset to default');
+                        mergedData.currentPosition = existingData.currentPosition;
+                    }
+                }
+
+                // Protect streak from being reset to 0
+                if (existingData.stats && existingData.stats.streak > 0) {
+                    if (!mergedData.stats || !mergedData.stats.streak || mergedData.stats.streak === 0) {
+                        console.log('⚠️ Prevented streak reset to 0');
+                        mergedData.stats = mergedData.stats || {};
+                        mergedData.stats.streak = existingData.stats.streak;
+                    }
+                }
+
+                // Protect ayahsRead from decreasing
+                if (existingData.stats && existingData.stats.ayahsRead > 0) {
+                    if (!mergedData.stats || !mergedData.stats.ayahsRead || mergedData.stats.ayahsRead < existingData.stats.ayahsRead) {
+                        console.log('⚠️ Prevented ayahsRead from decreasing');
+                        mergedData.stats = mergedData.stats || {};
+                        mergedData.stats.ayahsRead = Math.max(existingData.stats.ayahsRead, mergedData.stats.ayahsRead || 0);
+                    }
+                }
+
+                // Protect level from decreasing
+                if (existingData.stats && existingData.stats.level > 0) {
+                    if (!mergedData.stats || !mergedData.stats.level || mergedData.stats.level < existingData.stats.level) {
+                        console.log('⚠️ Prevented level from decreasing');
+                        mergedData.stats = mergedData.stats || {};
+                        mergedData.stats.level = Math.max(existingData.stats.level, mergedData.stats.level || 0);
+                    }
+                }
+
+                // Merge readAyahs arrays (union)
+                if (existingData.readAyahs && Array.isArray(existingData.readAyahs)) {
+                    const existingSet = new Set(existingData.readAyahs);
+                    const newSet = new Set(mergedData.readAyahs || []);
+                    mergedData.readAyahs = Array.from(new Set([...existingSet, ...newSet]));
+                }
+            }
 
             const { error } = await supabase
                 .from('user_data')
                 .upsert({
                     user_id: userId,
-                    data: data,
+                    data: mergedData,  // Use merged data instead of raw data
                     updated_at: new Date().toISOString()
                 }, {
                     onConflict: 'user_id'
@@ -98,6 +164,11 @@ exports.handler = async (event, context) => {
                     headers,
                     body: JSON.stringify({ success: false, error: error.message })
                 };
+            }
+
+            console.log(`✅ Saved user data with merge protection (isNewUser: ${isNewUser})`);
+            if (!isNewUser) {
+                console.log(`   Preserved: streak=${mergedData.stats?.streak}, position=${mergedData.currentPosition?.surah}:${mergedData.currentPosition?.ayah}`);
             }
 
             // Send notifications for important events (don't await, run async)

@@ -5590,28 +5590,109 @@
             // Get reading goal from localStorage (saved separately)
             const readingGoal = localStorage.getItem('readingGoal');
 
+            // CRITICAL FIX: Deep merge to preserve all existing data
+            // Never overwrite existing data with empty/default values
             const data = {
-                // User profile
+                // Start with all existing data
+                ...existingData,
+
+                // User profile - always update with current Google info
                 userName: currentUser.name,
                 userEmail: currentUser.email,
                 userPicture: currentUser.picture,
-                // Reading data
-                stats: userStats,
-                bookmarks: bookmarkedAyahs,
-                lastRead: lastReadPosition,
-                readAyahs: Array.from(activityTracker.readAyahs), // Convert Set to Array for storage
-                ayahReadTimes: activityTracker.ayahReadTimes, // Object with timestamps
+
+                // Also save with correct field names for consistency
+                full_name: currentUser.name,
+                email: currentUser.email,
+                picture: currentUser.picture,
+
+                // Merge stats - never decrease values
+                stats: {
+                    ...(existingData.stats || {}),
+                    level: Math.max(userStats.level || 0, existingData.stats?.level || 0),
+                    streak: Math.max(userStats.streak || 0, existingData.stats?.streak || 0),
+                    ayahsRead: Math.max(userStats.ayahsRead || 0, existingData.stats?.ayahsRead || 0),
+                    daysActive: Math.max(userStats.daysActive || 0, existingData.stats?.daysActive || 0),
+                    surahsCompleted: Math.max(userStats.surahsCompleted || 0, existingData.stats?.surahsCompleted || 0),
+                    totalActiveMinutes: Math.max(userStats.totalActiveMinutes || 0, existingData.stats?.totalActiveMinutes || 0)
+                },
+
+                // Only update if we have valid data
+                bookmarks: bookmarkedAyahs && bookmarkedAyahs.length > 0 ? bookmarkedAyahs : (existingData.bookmarks || []),
+                lastRead: lastReadPosition && lastReadPosition.surah > 0 ? lastReadPosition : (existingData.lastRead || { surah: 1, ayah: 1 }),
+
+                // Merge read ayahs (union of old and new)
+                readAyahs: Array.from(new Set([
+                    ...(existingData.readAyahs || []),
+                    ...Array.from(activityTracker.readAyahs || [])
+                ])),
+
+                // Merge ayah read times
+                ayahReadTimes: {
+                    ...(existingData.ayahReadTimes || {}),
+                    ...(activityTracker.ayahReadTimes || {})
+                },
+
+                // Preserve arrays - never overwrite
                 completedSurahs: existingData.completedSurahs || [],
                 sessions: existingData.sessions || [],
                 dailyActivity: existingData.dailyActivity || {},
-                currentPosition: existingData.currentPosition || { surah: 1, ayah: 1, scrollPosition: 0, timestamp: Date.now() },
                 notes: existingData.notes || [],
-                readingGoal: readingGoal ? JSON.parse(readingGoal) : null // Save reading goal with user data
+
+                // CRITICAL: Only update currentPosition if it's valid and better than existing
+                currentPosition: (() => {
+                    const existing = existingData.currentPosition;
+                    const current = {
+                        surah: currentSurahNumber || 1,
+                        ayah: lastReadPosition?.ayah || 1,
+                        scrollPosition: window.scrollY || 0,
+                        timestamp: Date.now()
+                    };
+
+                    // If existing position is further ahead, keep it
+                    if (existing && existing.surah > 1) {
+                        if (current.surah > existing.surah) {
+                            return current;
+                        } else if (current.surah === existing.surah && current.ayah > existing.ayah) {
+                            return current;
+                        } else {
+                            return existing;
+                        }
+                    }
+
+                    // If current is valid (not default), use it
+                    if (current.surah > 1 || current.ayah > 1) {
+                        return current;
+                    }
+
+                    // Otherwise keep existing or default
+                    return existing || current;
+                })(),
+
+                readingGoal: readingGoal ? JSON.parse(readingGoal) : (existingData.readingGoal || null)
             };
+
+            // Validate critical data before saving
+            if (data.stats.streak < 0 || data.stats.ayahsRead < 0 || data.stats.level < 0) {
+                console.error('❌ Invalid data detected, skipping save:', data.stats);
+                return;
+            }
+
+            if (data.currentPosition.surah < 1 || data.currentPosition.ayah < 1) {
+                console.error('❌ Invalid currentPosition detected, skipping save:', data.currentPosition);
+                return;
+            }
+
+            console.log('💾 Saving user data:', {
+                streak: data.stats.streak,
+                position: `${data.currentPosition.surah}:${data.currentPosition.ayah}`,
+                ayahsRead: data.stats.ayahsRead,
+                level: data.stats.level
+            });
 
             localStorage.setItem(userKey, JSON.stringify(data));
 
-            // Also save to database (cloud backup)
+            // Also save to database (cloud backup) - backend will merge safely
             saveToDatabase();
         }
 
