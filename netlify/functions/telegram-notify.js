@@ -27,9 +27,23 @@ exports.handler = async (event, context) => {
         // Format the notification message
         let telegramMessage = formatNotificationMessage(type, title, message, details, data);
 
-        // ALWAYS send text-only messages for better readability
-        // Photos can be cut off and have poor quality in notifications
-        let result = await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, telegramMessage);
+        // Check if there's a photo to send (use high quality version)
+        let photoUrl = data?.picture || data?.profilePicture;
+
+        // For Google profile pictures, request high quality version
+        if (photoUrl && photoUrl.includes('googleusercontent.com')) {
+            // Replace size parameters for high quality
+            photoUrl = photoUrl.replace(/=s\d+-c/, '=s400-c'); // 400x400 high quality
+        }
+
+        let result;
+        if (photoUrl && (photoUrl.startsWith('http://') || photoUrl.startsWith('https://'))) {
+            // Send photo with caption for better visual presentation
+            result = await sendTelegramPhoto(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, photoUrl, telegramMessage);
+        } else {
+            // Send text message only if no photo available
+            result = await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, telegramMessage);
+        }
 
         return {
             statusCode: 200,
@@ -69,7 +83,7 @@ function formatNotificationMessage(type, title, message, details, data) {
 
     // Create a clean, readable message format
     let formattedMessage = `${emoji} *${escapeMarkdown(title)}*\n`;
-    formattedMessage += `${'━'.repeat(30)}\n\n`;
+    formattedMessage += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
     // Main message
     if (message) {
@@ -81,18 +95,18 @@ function formatNotificationMessage(type, title, message, details, data) {
         // User Information Section
         if (data.userName || data.email) {
             formattedMessage += `👤 *User Information:*\n`;
-            if (data.userName) formattedMessage += `   • Name: ${escapeMarkdown(data.userName)}\n`;
-            if (data.email) formattedMessage += `   • Email: ${escapeMarkdown(data.email)}\n`;
+            if (data.userName) formattedMessage += `• Name: ${escapeMarkdown(data.userName)}\n`;
+            if (data.email) formattedMessage += `• Email: ${escapeMarkdown(data.email)}\n`;
             formattedMessage += '\n';
         }
 
         // Location Section
         if (data.city || data.region || data.country || data.location) {
             formattedMessage += `📍 *Location:*\n`;
-            if (data.city && data.city !== 'Unknown') formattedMessage += `   • City: ${escapeMarkdown(data.city)}\n`;
-            if (data.region && data.region !== 'Unknown') formattedMessage += `   • Region: ${escapeMarkdown(data.region)}\n`;
-            if (data.country && data.country !== 'Unknown') formattedMessage += `   • Country: ${escapeMarkdown(data.country)}\n`;
-            if (data.location && !data.city) formattedMessage += `   • ${escapeMarkdown(data.location)}\n`;
+            if (data.city && data.city !== 'Unknown') formattedMessage += `• City: ${escapeMarkdown(data.city)}\n`;
+            if (data.region && data.region !== 'Unknown') formattedMessage += `• Region: ${escapeMarkdown(data.region)}\n`;
+            if (data.country && data.country !== 'Unknown') formattedMessage += `• Country: ${escapeMarkdown(data.country)}\n`;
+            if (data.location && !data.city) formattedMessage += `• ${escapeMarkdown(data.location)}\n`;
             formattedMessage += '\n';
         }
 
@@ -100,20 +114,20 @@ function formatNotificationMessage(type, title, message, details, data) {
         if (data.currentSurah || data.currentAyah || data.totalRead !== undefined || data.dailyGoal) {
             formattedMessage += `📖 *Reading Progress:*\n`;
             if (data.currentSurah && data.currentSurah !== 'Not started') {
-                formattedMessage += `   • Current: ${escapeMarkdown(String(data.currentSurah))}`;
+                formattedMessage += `• Current: ${escapeMarkdown(String(data.currentSurah))}`;
                 if (data.currentAyah && data.currentAyah !== '-') {
                     formattedMessage += `:${escapeMarkdown(String(data.currentAyah))}`;
                 }
                 formattedMessage += '\n';
             }
             if (data.totalRead !== undefined && data.totalRead > 0) {
-                formattedMessage += `   • Ayahs Read: ${data.totalRead}\n`;
+                formattedMessage += `• Ayahs Read: ${data.totalRead}\n`;
             }
             if (data.completion !== undefined && data.completion > 0) {
-                formattedMessage += `   • Completion: ${data.completion}%\n`;
+                formattedMessage += `• Completion: ${data.completion}%\n`;
             }
             if (data.dailyGoal && data.dailyGoal !== 'Not set') {
-                formattedMessage += `   • Daily Goal: ${escapeMarkdown(String(data.dailyGoal))}\n`;
+                formattedMessage += `• Daily Goal: ${escapeMarkdown(String(data.dailyGoal))}\n`;
             }
             formattedMessage += '\n';
         }
@@ -121,7 +135,7 @@ function formatNotificationMessage(type, title, message, details, data) {
         // Additional data for other notification types
         if (data.ayahsRead) formattedMessage += `📚 Ayahs Read: ${data.ayahsRead}\n`;
         if (data.surah) formattedMessage += `📖 Position: Surah ${data.surah}, Ayah ${data.ayah}\n`;
-        if (data.messageContent) formattedMessage += `💬 Message: "${escapeMarkdown(data.messageContent.substring(0, 200))}${data.messageContent.length > 200 ? '...' : ''}"\n`;
+        if (data.messageContent) formattedMessage += `💬 Message: "${escapeMarkdown(data.messageContent.substring(0, 150))}${data.messageContent.length > 150 ? '...' : ''}"\n`;
         if (data.videoUrl) formattedMessage += `🎥 Video: ${escapeMarkdown(data.videoUrl)}\n`;
     }
 
@@ -136,7 +150,7 @@ function formatNotificationMessage(type, title, message, details, data) {
         dateStyle: 'short',
         timeStyle: 'short'
     });
-    formattedMessage += `\n${'━'.repeat(30)}\n`;
+    formattedMessage += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     formattedMessage += `🕐 ${timestamp} \\(Iraq Time\\)`;
 
     return formattedMessage;
