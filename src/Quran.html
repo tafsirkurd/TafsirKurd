@@ -5590,34 +5590,12 @@
                 calculateRealStats(data);
 
                 console.log('✅ Final userStats after load:', userStats);
-
-                // DEBUG: Show data in alert for Saman
-                if (currentUser.email === 'saman26d@gmail.com') {
-                    alert('DEBUG DATA LOADED:\n\n' +
-                        'Streak: ' + userStats.streak + '\n' +
-                        'Level: ' + userStats.level + '\n' +
-                        'Ayahs Read: ' + userStats.ayahsRead + '\n' +
-                        'Position: ' + data.currentPosition?.surah + ':' + data.currentPosition?.ayah + '\n\n' +
-                        'Data has stats: ' + !!data.stats + '\n' +
-                        'From cloud: ' + loadedFromCloud);
-                }
             } else {
                 console.warn('⚠️ No saved data found in localStorage');
             }
 
             updateStatsUI();
             updateContinueReading();
-
-            // DEBUG: Check if stats changed after UI update
-            if (currentUser && currentUser.email === 'saman26d@gmail.com') {
-                setTimeout(() => {
-                    alert('AFTER UI UPDATE:\n\n' +
-                        'Streak: ' + userStats.streak + '\n' +
-                        'Level: ' + userStats.level + '\n' +
-                        'Ayahs: ' + userStats.ayahsRead + '\n\n' +
-                        'Check the page - do you see these numbers?');
-                }, 500);
-            }
         }
 
         function saveUserData() {
@@ -5828,15 +5806,6 @@
         }
 
         function updateStatsUI() {
-            // DEBUG for Saman
-            if (currentUser && currentUser.email === 'saman26d@gmail.com') {
-                alert('updateStatsUI() called!\n\n' +
-                    'userStats.streak = ' + userStats.streak + '\n' +
-                    'userStats.level = ' + userStats.level + '\n' +
-                    'userStats.ayahsRead = ' + userStats.ayahsRead + '\n\n' +
-                    'About to update UI elements...');
-            }
-
             document.getElementById('statDays').textContent = KurdishNumbers.toKurdish(userStats.daysActive);
             document.getElementById('statSurahs').textContent = KurdishNumbers.toKurdish(userStats.surahsCompleted);
             document.getElementById('statAyahs').textContent = KurdishNumbers.toKurdish(userStats.ayahsRead);
