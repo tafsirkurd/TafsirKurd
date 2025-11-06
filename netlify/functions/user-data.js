@@ -105,19 +105,28 @@ exports.handler = async (event, context) => {
                 // New user notification
                 if (isNewUser) {
                     const userName = data.full_name || data.email || 'New User';
-                    const location = data.city || data.region || data.country || 'Unknown';
+                    const location = [data.city, data.region, data.country].filter(Boolean).join(', ') || 'Unknown';
                     const isDuhok = location.toLowerCase().includes('duhok') ||
                                    location.toLowerCase().includes('dihok');
 
                     sendTelegramNotification(
                         isDuhok ? 'duhok_user' : 'new_user',
                         isDuhok ? '📍 New User from Duhok!' : '🎉 New User Joined!',
-                        `${userName} just joined the platform`,
-                        `Location: ${location}`,
+                        `${userName} just registered`,
+                        null,
                         {
-                            userName,
-                            location,
-                            email: data.email
+                            userName: data.full_name || 'Not provided',
+                            email: data.email || 'Not provided',
+                            location: location,
+                            city: data.city || 'Unknown',
+                            region: data.region || 'Unknown',
+                            country: data.country || 'Unknown',
+                            dailyGoal: data.daily_goal || 'Not set',
+                            currentSurah: data.current_surah || 'Not started',
+                            currentAyah: data.current_ayah || '-',
+                            totalRead: data.total_read || 0,
+                            completion: data.completion || 0,
+                            picture: data.picture ? 'Yes' : 'No'
                         }
                     ).catch(err => console.error('Notification error:', err));
                 }

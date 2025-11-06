@@ -75,14 +75,25 @@ function formatNotificationMessage(type, title, message, details, data) {
 
     // Add structured data if available
     if (data) {
-        formattedMessage += '\n📋 *Details:*\n';
+        formattedMessage += '\n📋 *Full Details:*\n';
 
-        if (data.userName) formattedMessage += `👤 User: ${escapeMarkdown(data.userName)}\n`;
-        if (data.location) formattedMessage += `📍 Location: ${escapeMarkdown(data.location)}\n`;
+        if (data.userName) formattedMessage += `👤 Name: ${escapeMarkdown(data.userName)}\n`;
         if (data.email) formattedMessage += `✉️ Email: ${escapeMarkdown(data.email)}\n`;
+        if (data.city) formattedMessage += `🏙️ City: ${escapeMarkdown(data.city)}\n`;
+        if (data.region) formattedMessage += `🗺️ Region: ${escapeMarkdown(data.region)}\n`;
+        if (data.country) formattedMessage += `🌍 Country: ${escapeMarkdown(data.country)}\n`;
+        if (data.location && !data.city) formattedMessage += `📍 Location: ${escapeMarkdown(data.location)}\n`;
+        if (data.dailyGoal) formattedMessage += `🎯 Daily Goal: ${escapeMarkdown(String(data.dailyGoal))}\n`;
+        if (data.currentSurah) formattedMessage += `📖 Current Surah: ${escapeMarkdown(String(data.currentSurah))}\n`;
+        if (data.currentAyah) formattedMessage += `📝 Current Ayah: ${escapeMarkdown(String(data.currentAyah))}\n`;
+        if (data.totalRead !== undefined) formattedMessage += `📊 Total Ayahs Read: ${data.totalRead}\n`;
+        if (data.completion !== undefined) formattedMessage += `✅ Completion: ${data.completion}%\n`;
+        if (data.picture) formattedMessage += `🖼️ Profile Picture: ${escapeMarkdown(data.picture)}\n`;
         if (data.ayahsRead) formattedMessage += `📖 Ayahs Read: ${data.ayahsRead}\n`;
         if (data.surah) formattedMessage += `📚 Current: Surah ${data.surah}, Ayah ${data.ayah}\n`;
-        if (data.messageContent) formattedMessage += `💬 Message: "${escapeMarkdown(data.messageContent.substring(0, 100))}${data.messageContent.length > 100 ? '...' : ''}"\n`;
+        if (data.messageContent) formattedMessage += `💬 Message: "${escapeMarkdown(data.messageContent.substring(0, 150))}${data.messageContent.length > 150 ? '...' : ''}"\n`;
+        if (data.videoUrl) formattedMessage += `🎥 Video URL: ${escapeMarkdown(data.videoUrl)}\n`;
+        if (data.position) formattedMessage += `#️⃣ Position: ${data.position}\n`;
     }
 
     // Add timestamp

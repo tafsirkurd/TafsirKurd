@@ -2120,8 +2120,7 @@
             // Display notifications
             displayNotifications();
 
-            // Send important notifications to Telegram
-            sendNotificationsToTelegram();
+            // Don't send Telegram notifications from admin panel - only real-time events trigger notifications
         }
 
         function displayNotifications() {
