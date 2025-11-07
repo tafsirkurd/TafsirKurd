@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v75-keep-english-numbers';
+const CACHE_NAME = 'tafsir-kurd-v76-disable-auto-convert';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v75-keep-english-numbers - Keep English numbers in username and email (data-no-convert)');
+  console.log('[ServiceWorker] Installing v76-disable-auto-convert - Disabled auto-kurdish-numbers.js on complete-signup page');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
