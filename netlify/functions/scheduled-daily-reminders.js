@@ -1,5 +1,6 @@
 // Scheduled function to send daily Quran reminders via email
 // Runs daily at 8 PM Iraq time (17:00 UTC)
+// Environment variable BREVO_API_KEY configured in Netlify
 
 const { createClient } = require('@supabase/supabase-js');
 const https = require('https');
