@@ -631,11 +631,10 @@
 
             // Display user info (prevent Kurdish number conversion on email)
             const userInfoDiv = document.getElementById('userInfo');
-            // Convert numbers in name to Kurdish
-            const userNameKurdish = KurdishNumbers.toKurdish(user.name);
+            // Keep numbers in English for both name and email - don't convert
             userInfoDiv.innerHTML = `
                 <img src="${user.picture}" alt="${user.name}" class="user-avatar">
-                <div class="user-name">${userNameKurdish}</div>
+                <div class="user-name" data-no-convert="true">${user.name}</div>
                 <div class="user-email" data-no-convert="true">${user.email}</div>
             `;
 
