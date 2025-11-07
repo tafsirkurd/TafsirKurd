@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v65-fix-duplicate-variable-force-update';
+const CACHE_NAME = 'tafsir-kurd-v66-invisible-turnstile';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v65-fix-duplicate-variable-force-update - Fixed duplicate readingGoal variable (FORCE UPDATE)');
+  console.log('[ServiceWorker] Installing v66-invisible-turnstile - Changed Cloudflare Turnstile to invisible mode (automatic verification)');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

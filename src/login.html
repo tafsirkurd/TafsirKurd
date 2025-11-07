@@ -740,24 +740,22 @@
                 </div>
             </div>
 
-            <!-- Cloudflare Turnstile Widget -->
-            <!-- Get your FREE site key at: https://dash.cloudflare.com/turnstile -->
-            <div id="turnstile-container" style="display: flex; justify-content: center; margin: 20px 0;">
+            <!-- Cloudflare Turnstile Widget - INVISIBLE MODE -->
+            <!-- Automatically verifies in background, no user interaction needed -->
+            <div id="turnstile-container" style="position: absolute; left: -9999px;">
                 <div class="cf-turnstile"
                      data-sitekey="0x4AAAAAAAzFla9sl4nZBNvQ"
                      data-callback="onTurnstileSuccess"
-                     data-theme="light">
+                     data-theme="light"
+                     data-size="invisible">
                 </div>
             </div>
 
-            <button class="google-signin-btn" id="googleSignInBtn" onclick="startGoogleSignIn()" disabled style="opacity: 0.5; cursor: not-allowed;">
+            <button class="google-signin-btn" id="googleSignInBtn" onclick="startGoogleSignIn()">
                 <div class="loading-spinner"></div>
                 <i class="fab fa-google"></i>
                 <span>چوونەژوورەوە بە Google</span>
             </button>
-            <p id="turnstile-message" style="text-align: center; color: #666; font-size: 0.9rem; margin-top: 10px;">
-                تکایە پشتڕاستکردنەوە تەواو بکە
-            </p>
 
             <div class="divider">
                 <span class="divider-text">یان</span>
@@ -785,22 +783,10 @@
         let tokenClient = null;
         let turnstileToken = null;
 
-        // Turnstile success callback
+        // Turnstile success callback - INVISIBLE MODE
         function onTurnstileSuccess(token) {
             turnstileToken = token;
-            const btn = document.getElementById('googleSignInBtn');
-            const message = document.getElementById('turnstile-message');
-
-            // Enable Google sign-in button
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            btn.style.cursor = 'pointer';
-
-            // Update message
-            message.textContent = '✓ پشتڕاستکردنەوە سەرکەوتوو بوو';
-            message.style.color = '#10b981';
-
-            console.log('✅ Turnstile verification successful');
+            console.log('✅ Turnstile verification successful (invisible mode)');
         }
 
         function initGoogleSignIn() {
@@ -813,9 +799,18 @@
         }
 
         function startGoogleSignIn() {
-            // Check if Turnstile is verified
+            // INVISIBLE MODE: Turnstile verification happens automatically in background
+            // We still check it, but users won't see any prompt
             if (!turnstileToken) {
-                showNotification('تکایە سەرەتا پشتڕاستکردنەوە تەواو بکە');
+                showNotification('پشتڕاستکردنەوە...');
+                // Wait a moment for invisible turnstile to complete
+                setTimeout(() => {
+                    if (turnstileToken) {
+                        startGoogleSignIn();
+                    } else {
+                        showNotification('هەڵەیەک ڕوویدا لە پشتڕاستکردنەوە');
+                    }
+                }, 1000);
                 return;
             }
 
