@@ -6444,20 +6444,10 @@
                 }
             }
 
-            // When service worker updates, reload the page (only once)
-            let refreshing;
+            // Service worker controller change - don't auto-reload to prevent loops
+            // Users will get updates on next manual page visit
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (refreshing) return;
-                // Check if we recently reloaded to prevent loops
-                const lastReload = sessionStorage.getItem('sw_reload_time');
-                const now = Date.now();
-                if (lastReload && (now - parseInt(lastReload)) < 5000) {
-                    console.log('⏭️ Skipping reload - too recent');
-                    return;
-                }
-                refreshing = true;
-                sessionStorage.setItem('sw_reload_time', now.toString());
-                window.location.reload();
+                console.log('✅ Service worker updated - changes will apply on next visit');
             });
         }
 
