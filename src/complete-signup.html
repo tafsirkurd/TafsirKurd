@@ -629,12 +629,12 @@
                 return;
             }
 
-            // Display user info
+            // Display user info (prevent Kurdish number conversion on email)
             const userInfoDiv = document.getElementById('userInfo');
             userInfoDiv.innerHTML = `
                 <img src="${user.picture}" alt="${user.name}" class="user-avatar">
                 <div class="user-name">${user.name}</div>
-                <div class="user-email">${user.email}</div>
+                <div class="user-email" data-no-convert="true">${user.email}</div>
             `;
 
             // Load saved preferences

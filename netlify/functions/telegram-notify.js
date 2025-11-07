@@ -38,8 +38,11 @@ exports.handler = async (event, context) => {
 
         let result;
         if (photoUrl && (photoUrl.startsWith('http://') || photoUrl.startsWith('https://'))) {
+            // Telegram caption limit is 1024 characters
+            const caption = telegramMessage.length > 1000 ? telegramMessage.substring(0, 997) + '...' : telegramMessage;
+
             // Send photo with caption for better visual presentation
-            result = await sendTelegramPhoto(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, photoUrl, telegramMessage);
+            result = await sendTelegramPhoto(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, photoUrl, caption);
         } else {
             // Send text message only if no photo available
             result = await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, telegramMessage);

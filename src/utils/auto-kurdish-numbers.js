@@ -47,6 +47,10 @@
                         if (parent.classList && parent.classList.contains('no-kurdish-convert')) {
                             return NodeFilter.FILTER_REJECT;
                         }
+                        // Skip elements with data-no-convert attribute (for emails, URLs, etc.)
+                        if (parent.hasAttribute && parent.hasAttribute('data-no-convert')) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
                         parent = parent.parentElement;
                     }
                     // Only process if contains digits
