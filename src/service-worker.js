@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v56-notifications';
+const CACHE_NAME = 'tafsir-kurd-v57-streak-fix';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v56-notifications - Added notification system');
+  console.log('[ServiceWorker] Installing v57-streak-fix - Fixed streak badge visibility');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
