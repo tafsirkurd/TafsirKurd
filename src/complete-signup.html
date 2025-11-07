@@ -42,6 +42,10 @@
     <!-- Local Font Awesome - Zero external requests -->
     <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
 
+    <!-- Notification System -->
+    <script src="/utils/notification-messages.js"></script>
+    <script src="/utils/notification-scheduler.js"></script>
+
     <style>
         :root {
             --primary: #000000;
@@ -667,8 +671,22 @@
             });
         }
 
-        function togglePreference(item, prefName) {
+        async function togglePreference(item, prefName) {
             const toggle = item.querySelector('.toggle-switch');
+            const wasActive = toggle.classList.contains('active');
+            const willBeActive = !wasActive;
+
+            // Special handling for notifications
+            if (prefName === 'notifications' && willBeActive) {
+                // Request browser notification permission
+                const granted = await window.notificationScheduler.requestPermission();
+
+                if (!granted) {
+                    showNotification('Please enable notifications in your browser settings to receive reminders');
+                    return; // Don't toggle if permission denied
+                }
+            }
+
             toggle.classList.toggle('active');
             const isActive = toggle.classList.contains('active');
 
@@ -676,6 +694,25 @@
             const prefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
             prefs[prefName] = isActive;
             localStorage.setItem('userPreferences', JSON.stringify(prefs));
+
+            // Handle notification preference
+            if (prefName === 'notifications') {
+                if (isActive) {
+                    // Save notification settings
+                    window.notificationScheduler.saveSettings({
+                        enabled: true,
+                        dailyReminder: true,
+                        streakReminder: true,
+                        goalReminder: true,
+                        fridayReminder: true
+                    });
+
+                    showNotification('Daily Qur\'an reminders enabled! You\'ll be notified to maintain your streak 🌙');
+                } else {
+                    window.notificationScheduler.saveSettings({ enabled: false });
+                    showNotification('Notifications disabled');
+                }
+            }
 
             // If darkMode, apply theme immediately and save in Quran.html format
             if (prefName === 'darkMode') {

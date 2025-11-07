@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v55-post-fix';
+const CACHE_NAME = 'tafsir-kurd-v56-notifications';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -21,6 +21,8 @@ const urlsToCache = [
   '/utils/console-cleaner.js',
   '/utils/kurdish-numbers.js',
   '/utils/auto-kurdish-numbers.js',
+  '/utils/notification-messages.js',
+  '/utils/notification-scheduler.js',
   '/assets/fonts/fonts.css',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.woff2',
@@ -40,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v55-post-fix - Fixed POST request caching error');
+  console.log('[ServiceWorker] Installing v56-notifications - Added notification system');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
