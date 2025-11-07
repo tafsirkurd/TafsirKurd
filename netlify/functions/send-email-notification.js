@@ -25,7 +25,7 @@ exports.handler = async (event, context) => {
         const emailData = {
             sender: {
                 name: "TafsirKurd",
-                email: "notifications@tafsirkurd.com" // Will use your verified sender
+                email: "notifications@tafsirkurd.com" // Authenticated domain sender
             },
             to: [
                 {

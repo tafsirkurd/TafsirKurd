@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v57-streak-fix';
+const CACHE_NAME = 'tafsir-kurd-v58-email-fix';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v57-streak-fix - Fixed streak badge visibility');
+  console.log('[ServiceWorker] Installing v58-email-fix - Fixed mobile refresh loop and email system');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
@@ -58,11 +58,8 @@ self.addEventListener('install', event => {
       // Open new cache and add resources with reload (bypass cache)
       return caches.open(CACHE_NAME);
     }).then(cache => {
-      console.log('[ServiceWorker] Caching resources with INSTANT update strategy');
-      // Use cache: 'reload' to always fetch fresh content
-      return cache.addAll(urlsToCache.map(url => {
-        return new Request(url, { cache: 'reload' });
-      })).catch(error => {
+      console.log('[ServiceWorker] Caching resources');
+      return cache.addAll(urlsToCache).catch(error => {
         console.error('[ServiceWorker] Failed to cache some resources:', error);
       });
     })
@@ -101,7 +98,7 @@ self.addEventListener('fetch', event => {
     }
 
     event.respondWith(
-      fetch(event.request, { cache: 'reload' })
+      fetch(event.request)
         .then(response => {
           // Cache the fresh HTML for offline use
           if (response && response.status === 200) {
