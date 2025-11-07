@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v78-fix-juz-ayah-count';
+const CACHE_NAME = 'tafsir-kurd-v79-juz-redesign';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v78-fix-juz-ayah-count - Fixed undefined error when getting ayah count from surahNames');
+  console.log('[ServiceWorker] Installing v79-juz-redesign - Beautiful card-based Juz layout with hover effects');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

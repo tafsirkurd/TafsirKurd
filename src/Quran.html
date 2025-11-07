@@ -4274,72 +4274,48 @@
                 // Render Juz cards
                 juzNumbers.forEach(juzNum => {
                     const surahs = juzMapping[juzNum];
-                    const juzId = `juz-${juzNum}`;
 
                     const card = document.createElement('div');
-                    card.className = 'surah-card juz-card';
-                    card.style.display = 'block';
-                    card.style.width = '100%';
+                    card.className = 'juz-container';
+                    card.style.cssText = 'background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);';
 
-                    // Build surah table rows
-                    const surahRows = surahs.map(surahNum => {
+                    // Build surah cards
+                    const surahCards = surahs.map(surahNum => {
                         const surah = surahNames[surahNum];
-                        // Get ayah count from surah metadata (no need to access quranData)
-                        const ayahCount = surah.ayahs || surah.verses || 0;
+                        const ayahCount = surah.ayahs || 0;
                         return `
-                            <tr onclick="openSurah(${surahNum})" style="cursor: pointer; transition: background 0.2s;">
-                                <td style="padding: 12px; text-align: center; font-weight: 600;">${KurdishNumbers.toKurdish(surahNum)}</td>
-                                <td style="padding: 12px; font-weight: 600;">${surah.english}</td>
-                                <td style="padding: 12px; text-align: right; font-size: 1.2rem;">${surah.arabic}</td>
-                                <td style="padding: 12px; text-align: center;">${KurdishNumbers.toKurdish(ayahCount)}</td>
-                            </tr>
+                            <div onclick="openSurah(${surahNum})" style="background: var(--bg-secondary); border-radius: 8px; padding: 15px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 15px; border: 1px solid transparent;"
+                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(139, 92, 246, 0.2)'; this.style.borderColor='var(--primary)';"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.borderColor='transparent';">
+                                <div style="background: var(--primary); color: white; width: 45px; height: 45px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; flex-shrink: 0;">
+                                    ${KurdishNumbers.toKurdish(surahNum)}
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; font-size: 1rem; margin-bottom: 3px; color: var(--text-primary);">${surah.english}</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-muted);">${surah.revelation || 'The Opener'}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 1.3rem; font-family: 'Amiri Quran', serif; margin-bottom: 3px; color: var(--text-primary);">${surah.arabic}</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-muted);">${KurdishNumbers.toKurdish(ayahCount)} Ayahs</div>
+                                </div>
+                            </div>
                         `;
                     }).join('');
 
                     card.innerHTML = `
-                        <div class="surah-card-header" style="cursor: pointer; background: linear-gradient(135deg, var(--primary) 0%, #6f42c1 100%); padding: 20px; border-radius: 12px; margin-bottom: 15px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div style="display: flex; align-items: center; gap: 15px;">
-                                    <div class="surah-card-number" style="background: rgba(255,255,255,0.2); font-size: 1.5rem;">
-                                        ${KurdishNumbers.toKurdish(juzNum)}
-                                    </div>
-                                    <div>
-                                        <div style="font-weight: 700; font-size: 1.3rem; color: white;">جوزی ${KurdishNumbers.toKurdish(juzNum)}</div>
-                                        <div style="font-size: 0.9rem; color: rgba(255,255,255,0.8); margin-top: 3px;">${KurdishNumbers.toKurdish(surahs.length)} سوورە</div>
-                                    </div>
-                                </div>
-                                <button onclick="event.stopPropagation(); readFullJuz(${juzNum})" style="background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
-                                    خوێندنەوەی تەواوی جوز
-                                </button>
-                            </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700; color: var(--text-primary);">Juz ${KurdishNumbers.toKurdish(juzNum)}</h3>
+                            <button onclick="readFullJuz(${juzNum})"
+                                style="background: var(--primary); border: none; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.9rem;"
+                                onmouseover="this.style.background='#7c3aed'; this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(139, 92, 246, 0.4)';"
+                                onmouseout="this.style.background='var(--primary)'; this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                                <i class="fas fa-play-circle" style="margin-right: 5px;"></i> Read Juz
+                            </button>
                         </div>
-                        <div id="${juzId}-content" style="display: none; background: var(--card-bg); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <thead>
-                                    <tr style="background: var(--primary); color: white;">
-                                        <th style="padding: 15px; text-align: center;">#</th>
-                                        <th style="padding: 15px; text-align: left;">ناو</th>
-                                        <th style="padding: 15px; text-align: right;">العربية</th>
-                                        <th style="padding: 15px; text-align: center;">ئایەتەکان</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${surahRows}
-                                </tbody>
-                            </table>
+                        <div>
+                            ${surahCards}
                         </div>
                     `;
-
-                    // Toggle expansion on header click
-                    const header = card.querySelector('.surah-card-header');
-                    header.onclick = () => {
-                        const content = document.getElementById(`${juzId}-content`);
-                        if (content.style.display === 'none') {
-                            content.style.display = 'block';
-                        } else {
-                            content.style.display = 'none';
-                        }
-                    };
 
                     container.appendChild(card);
                 });
