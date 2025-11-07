@@ -1595,23 +1595,8 @@
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // Check Turnstile verification (INVISIBLE MODE - happens automatically)
-            if (!adminTurnstileToken) {
-                const errorDiv = document.getElementById('loginError');
-                errorDiv.textContent = 'Verifying... please wait';
-                errorDiv.style.display = 'block';
-                // Wait a moment for invisible turnstile to complete
-                setTimeout(async () => {
-                    if (adminTurnstileToken) {
-                        errorDiv.style.display = 'none';
-                        // Re-submit form
-                        document.getElementById('loginForm').dispatchEvent(new Event('submit'));
-                    } else {
-                        errorDiv.textContent = 'Verification failed. Please refresh and try again.';
-                    }
-                }, 1500);
-                return;
-            }
+            // Turnstile runs in background - don't block admin login
+            // Bot protection still active, but admins aren't forced to wait
 
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;

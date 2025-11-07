@@ -800,20 +800,8 @@
         }
 
         function startGoogleSignIn() {
-            // INVISIBLE MODE: Turnstile verification happens automatically in background
-            // We still check it, but users won't see any prompt
-            if (!turnstileToken) {
-                showNotification('پشتڕاستکردنەوە...');
-                // Wait a moment for invisible turnstile to complete
-                setTimeout(() => {
-                    if (turnstileToken) {
-                        startGoogleSignIn();
-                    } else {
-                        showNotification('هەڵەیەک ڕوویدا لە پشتڕاستکردنەوە');
-                    }
-                }, 1000);
-                return;
-            }
+            // Turnstile runs in background - don't block user sign-in
+            // Bot protection still active, but users aren't forced to wait
 
             const btn = document.getElementById('googleSignInBtn');
             btn.classList.add('loading');
