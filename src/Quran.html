@@ -3503,38 +3503,38 @@
             114: { arabic: "الناس", english: "An-Nas", ayahs: 6 }
         };
 
-        // Juz (Parts) mapping - which surahs START in each Juz (accurate Quran division)
+        // Juz (Parts) mapping - ALL surahs that appear in each Juz
         const juzMapping = {
-            1: [1],      // Al-Fatiha starts Juz 1
-            2: [2],      // Al-Baqarah continues from Juz 1
-            3: [3],      // Al-Imran starts Juz 3
-            4: [4],      // An-Nisa starts Juz 4
-            5: [5],      // Al-Ma'idah starts Juz 5 (mid-surah)
-            6: [6],      // Al-An'am starts Juz 6 (mid-surah)
-            7: [7],      // Al-A'raf starts Juz 7 (mid-surah)
-            8: [8],      // Al-Anfal starts Juz 8
-            9: [9],      // At-Tawbah starts Juz 9 (mid-surah)
-            10: [10],    // Yunus starts Juz 10 (mid-surah)
-            11: [11],    // Hud starts Juz 11
-            12: [12],    // Yusuf starts Juz 12
-            13: [13],    // Ar-Ra'd starts Juz 13
-            14: [15],    // Al-Hijr starts Juz 14
-            15: [17],    // Al-Isra starts Juz 15
-            16: [18],    // Al-Kahf starts Juz 16
-            17: [21],    // Al-Anbiya starts Juz 17
-            18: [23],    // Al-Mu'minun starts Juz 18
-            19: [25],    // Al-Furqan starts Juz 19
-            20: [27],    // An-Naml starts Juz 20
-            21: [29],    // Al-Ankabut starts Juz 21
-            22: [33],    // Al-Ahzab starts Juz 22
-            23: [36],    // Ya-Sin starts Juz 23
-            24: [39],    // Az-Zumar starts Juz 24
-            25: [41],    // Fussilat starts Juz 25
-            26: [46],    // Al-Ahqaf starts Juz 26
-            27: [51],    // Adh-Dhariyat starts Juz 27
-            28: [58],    // Al-Mujadila starts Juz 28
-            29: [67],    // Al-Mulk starts Juz 29
-            30: [78]     // An-Naba starts Juz 30
+            1: [1, 2],
+            2: [2],
+            3: [2, 3],
+            4: [3, 4],
+            5: [4],
+            6: [4, 5],
+            7: [5, 6],
+            8: [6, 7],
+            9: [7, 8],
+            10: [8, 9],
+            11: [9, 10, 11],
+            12: [11, 12],
+            13: [12, 13, 14, 15],
+            14: [15, 16],
+            15: [17, 18],
+            16: [18, 19, 20],
+            17: [21, 22],
+            18: [23, 24, 25],
+            19: [25, 26, 27],
+            20: [27, 28, 29],
+            21: [29, 30, 31, 32, 33],
+            22: [33, 34, 35, 36],
+            23: [36, 37, 38, 39],
+            24: [39, 40, 41],
+            25: [41, 42, 43, 44, 45],
+            26: [46, 47, 48, 49, 50, 51],
+            27: [51, 52, 53, 54, 55, 56, 57],
+            28: [58, 59, 60, 61, 62, 63, 64, 65, 66],
+            29: [67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77],
+            30: [78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114]
         };
 
         // Filter and sort state
@@ -4263,7 +4263,7 @@
                     container.appendChild(card);
                 });
             } else {
-                // Display by Juz - simple cards like surah cards
+                // Display by Juz - table layout like screenshot
                 let juzNumbers = Object.keys(juzMapping).map(Number);
 
                 // Apply sorting
@@ -4271,28 +4271,51 @@
                     juzNumbers.reverse();
                 }
 
-                // Render Juz cards
+                // Render Juz tables
                 juzNumbers.forEach(juzNum => {
-                    const startingSurahNum = juzMapping[juzNum][0];
-                    const startingSurah = surahNames[startingSurahNum];
+                    const surahs = juzMapping[juzNum];
 
-                    const card = document.createElement('div');
-                    card.className = 'surah-card juz-card';
-                    card.onclick = () => readFullJuz(juzNum);
+                    // Create container for this Juz
+                    const juzContainer = document.createElement('div');
+                    juzContainer.style.cssText = 'background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px;';
 
-                    card.innerHTML = `
-                        <div class="surah-card-header">
-                            <div class="surah-card-number">${KurdishNumbers.toKurdish(juzNum)}</div>
-                            <div class="surah-card-info">
-                                <div class="surah-card-arabic" style="font-family: 'Amiri Quran', serif; font-size: 1.5rem;">جُزْءُ ${KurdishNumbers.toKurdish(juzNum)}</div>
-                                <div class="surah-card-english">دەستپێدەکات بە ${startingSurah.arabic}</div>
-                            </div>
-                        </div>
-                        <div class="surah-card-ayahs">
-                            <i class="fas fa-play-circle"></i> خوێندنەوەی جوزء
-                        </div>
+                    // Header with Juz title and Read button
+                    const header = document.createElement('div');
+                    header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;';
+                    header.innerHTML = `
+                        <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">بەشی ${KurdishNumbers.toKurdish(juzNum)}</h3>
+                        <button onclick="readFullJuz(${juzNum})" style="background: var(--primary); border: none; color: white; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem;">
+                            خوێندنەوە
+                        </button>
                     `;
-                    container.appendChild(card);
+                    juzContainer.appendChild(header);
+
+                    // Create table of surahs
+                    surahs.forEach(surahNum => {
+                        const surah = surahNames[surahNum];
+                        const surahRow = document.createElement('div');
+                        surahRow.onclick = () => openSurah(surahNum);
+                        surahRow.style.cssText = 'background: var(--bg-secondary); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: all 0.2s;';
+                        surahRow.onmouseover = function() { this.style.background = 'var(--hover-bg)'; };
+                        surahRow.onmouseout = function() { this.style.background = 'var(--bg-secondary)'; };
+
+                        surahRow.innerHTML = `
+                            <div style="background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; flex-shrink: 0;">
+                                ${KurdishNumbers.toKurdish(surahNum)}
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; font-size: 1rem; color: var(--text-primary); margin-bottom: 2px;">${surah.english}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">${surah.revelation || 'The Opener'}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 1.3rem; font-family: 'Amiri Quran', serif; color: var(--text-primary); margin-bottom: 2px;">${surah.arabic}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">${KurdishNumbers.toKurdish(surah.ayahs)} ئایەت</div>
+                            </div>
+                        `;
+                        juzContainer.appendChild(surahRow);
+                    });
+
+                    container.appendChild(juzContainer);
                 });
             }
         }
