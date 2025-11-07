@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v77-juz-continuous-reading';
+const CACHE_NAME = 'tafsir-kurd-v78-fix-juz-ayah-count';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v77-juz-continuous-reading - Added Juz tables with continuous reading feature');
+  console.log('[ServiceWorker] Installing v78-fix-juz-ayah-count - Fixed undefined error when getting ayah count from surahNames');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

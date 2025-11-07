@@ -4284,12 +4284,14 @@
                     // Build surah table rows
                     const surahRows = surahs.map(surahNum => {
                         const surah = surahNames[surahNum];
+                        // Get ayah count from surah metadata (no need to access quranData)
+                        const ayahCount = surah.ayahs || surah.verses || 0;
                         return `
                             <tr onclick="openSurah(${surahNum})" style="cursor: pointer; transition: background 0.2s;">
                                 <td style="padding: 12px; text-align: center; font-weight: 600;">${KurdishNumbers.toKurdish(surahNum)}</td>
                                 <td style="padding: 12px; font-weight: 600;">${surah.english}</td>
                                 <td style="padding: 12px; text-align: right; font-size: 1.2rem;">${surah.arabic}</td>
-                                <td style="padding: 12px; text-align: center;">${KurdishNumbers.toKurdish(quranData.surahs.find(s => s.number === surahNum).ayahs.length)}</td>
+                                <td style="padding: 12px; text-align: center;">${KurdishNumbers.toKurdish(ayahCount)}</td>
                             </tr>
                         `;
                     }).join('');
