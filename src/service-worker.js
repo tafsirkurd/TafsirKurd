@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v67-production-turnstile';
+const CACHE_NAME = 'tafsir-kurd-v68-fix-turnstile-compact';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v67-production-turnstile - Using production Cloudflare Turnstile site key');
+  console.log('[ServiceWorker] Installing v68-fix-turnstile-compact - Fixed Turnstile size (compact instead of invisible) and POST caching');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
@@ -100,8 +100,8 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(event.request)
         .then(response => {
-          // Cache the fresh HTML for offline use
-          if (response && response.status === 200) {
+          // Cache the fresh HTML for offline use (only GET requests)
+          if (response && response.status === 200 && event.request.method === 'GET') {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME).then(cache => {
               cache.put(event.request, responseToCache).catch(err => {

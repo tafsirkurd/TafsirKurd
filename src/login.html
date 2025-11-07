@@ -740,14 +740,14 @@
                 </div>
             </div>
 
-            <!-- Cloudflare Turnstile Widget - INVISIBLE MODE -->
-            <!-- Automatically verifies in background, no user interaction needed -->
-            <div id="turnstile-container" style="position: absolute; left: -9999px;">
+            <!-- Cloudflare Turnstile Widget - HIDDEN MODE -->
+            <!-- Auto-verifies in background, hidden from view -->
+            <div id="turnstile-container" style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;">
                 <div class="cf-turnstile"
                      data-sitekey="0x4AAAAAAB_upPnAMJiWukSQ"
                      data-callback="onTurnstileSuccess"
                      data-theme="light"
-                     data-size="invisible">
+                     data-size="compact">
                 </div>
             </div>
 
