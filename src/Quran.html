@@ -4283,7 +4283,7 @@
                     const header = document.createElement('div');
                     header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;';
                     header.innerHTML = `
-                        <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">بەشی ${KurdishNumbers.toKurdish(juzNum)}</h3>
+                        <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">جوز ${KurdishNumbers.toKurdish(juzNum)}</h3>
                         <button onclick="readFullJuz(${juzNum})" style="background: var(--primary); border: none; color: white; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem;">
                             خوێندنەوە
                         </button>
@@ -4293,6 +4293,7 @@
                     // Create table of surahs
                     surahs.forEach(surahNum => {
                         const surah = surahNames[surahNum];
+                        const decorativeCode = getDecorativeSurahCode(surahNum);
                         const surahRow = document.createElement('div');
                         surahRow.onclick = () => openSurah(surahNum);
                         surahRow.style.cssText = 'background: var(--bg-secondary); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: all 0.2s;';
@@ -4308,7 +4309,7 @@
                                 <div style="font-size: 0.85rem; color: var(--text-muted);">${surah.revelation || 'The Opener'}</div>
                             </div>
                             <div style="text-align: right;">
-                                <div style="font-size: 1.3rem; font-family: 'Amiri Quran', serif; color: var(--text-primary); margin-bottom: 2px;">${surah.arabic}</div>
+                                <div class="surah-card-arabic no-kurdish-convert" style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 2px;">${decorativeCode}</div>
                                 <div style="font-size: 0.85rem; color: var(--text-muted);">${KurdishNumbers.toKurdish(surah.ayahs)} ئایەت</div>
                             </div>
                         `;
