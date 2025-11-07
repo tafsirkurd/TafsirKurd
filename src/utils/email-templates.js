@@ -46,12 +46,17 @@ const EmailTemplates = {
             left: 0;
             width: 100%;
             height: 100%;
-            opacity: 0.03;
+            opacity: 0.05;
             background-image:
-                repeating-linear-gradient(45deg, transparent, transparent 35px, #ffffff 35px, #ffffff 36px),
-                repeating-linear-gradient(-45deg, transparent, transparent 35px, #ffffff 35px, #ffffff 36px);
+                repeating-linear-gradient(45deg, transparent, transparent 35px, #ffd700 35px, #ffd700 36px),
+                repeating-linear-gradient(-45deg, transparent, transparent 35px, #ffd700 35px, #ffd700 36px);
             background-size: 50px 50px;
             pointer-events: none;
+            animation: patternShift 30s linear infinite;
+        }
+        @keyframes patternShift {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
         }
         .logo {
             font-size: 36px;
@@ -82,10 +87,19 @@ const EmailTemplates = {
         }
         .message-box {
             background: #fafafa;
-            border-right: 3px solid #000000;
+            border-right: 4px solid #ffd700;
             padding: 25px;
             border-radius: 0;
             margin: 25px 0;
+            position: relative;
+        }
+        .message-box::before {
+            content: '✨';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            opacity: 0.3;
         }
         .message {
             font-size: 20px;
@@ -97,16 +111,35 @@ const EmailTemplates = {
         }
         .quran-verse {
             font-family: 'Amiri Quran', serif;
-            font-size: 26px;
-            color: #000000;
+            font-size: 28px;
+            color: #27ae60;
             text-align: center;
             margin: 30px 0;
-            padding: 25px;
-            background: #fafafa;
+            padding: 30px;
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
             border-radius: 0;
-            line-height: 2.2;
-            border-top: 1px solid #e8e8e8;
-            border-bottom: 1px solid #e8e8e8;
+            line-height: 2.4;
+            border-top: 2px solid #ffd700;
+            border-bottom: 2px solid #ffd700;
+            position: relative;
+        }
+        .quran-verse::before {
+            content: '☪';
+            position: absolute;
+            top: 5px;
+            right: 15px;
+            font-size: 18px;
+            color: #ffd700;
+            opacity: 0.4;
+        }
+        .quran-verse::after {
+            content: '☪';
+            position: absolute;
+            bottom: 5px;
+            left: 15px;
+            font-size: 18px;
+            color: #ffd700;
+            opacity: 0.4;
         }
         .cta-container {
             text-align: center;
@@ -142,10 +175,11 @@ const EmailTemplates = {
             margin: 0 10px;
         }
         .stat-number {
-            font-size: 48px;
+            font-size: 56px;
             font-weight: 700;
-            color: #000000;
+            color: #ffd700;
             margin: 0;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
         }
         .stat-label {
             font-size: 14px;
@@ -184,9 +218,28 @@ const EmailTemplates = {
             margin: 35px 0;
         }
         .moon-icon {
-            font-size: 50px;
+            font-size: 60px;
             margin: 20px 0;
             display: block;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
+            animation: moonGlow 3s ease-in-out infinite;
+        }
+        @keyframes moonGlow {
+            0%, 100% {
+                filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
+                transform: scale(1);
+            }
+            50% {
+                filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.9));
+                transform: scale(1.1);
+            }
+        }
+        .quran-decoration {
+            text-align: center;
+            font-size: 80px;
+            opacity: 0.08;
+            margin: 20px 0;
+            color: #ffd700;
         }
     </style>
 </head>
@@ -239,7 +292,9 @@ const EmailTemplates = {
 
         const content = `
             <span class="moon-icon">🌙</span>
-            <h2 style="color: #667eea; text-align: center; margin: 0 0 20px 0; font-size: 28px;">بیرئینانا رۆژانە</h2>
+            <h2 style="color: #000000; text-align: center; margin: 0 0 30px 0; font-size: 32px; font-weight: 700;">بیرئینانا رۆژانە</h2>
+
+            <div class="quran-decoration">📖</div>
 
             <div class="message-box">
                 <p class="message">${selected.text}</p>
@@ -248,17 +303,26 @@ const EmailTemplates = {
             <div class="quran-verse">${selected.verse}</div>
 
             ${streak > 0 ? `
-            <div style="text-align: center; margin: 30px 0;">
-                <p style="font-size: 16px; color: #7f8c8d; margin: 5px 0;">تۆ د رۆژا</p>
-                <p style="font-size: 42px; font-weight: bold; color: #667eea; margin: 5px 0;">${dayCount}</p>
-                <p style="font-size: 16px; color: #7f8c8d; margin: 5px 0;">یێ دا یێ ل سەر رێکا خوە یا قورئانێ</p>
+            <div style="text-align: center; margin: 40px 0; padding: 30px; background: #fafafa;">
+                <p style="font-size: 18px; color: #000000; margin: 5px 0; font-weight: 600;">تۆ د رۆژا</p>
+                <p class="stat-number">${dayCount}</p>
+                <p style="font-size: 18px; color: #000000; margin: 5px 0; font-weight: 600;">یێ دا یێ ل سەر رێکا خوە یا قورئانێ</p>
+                <div style="margin-top: 20px;">
+                    <span style="font-size: 30px;">⭐</span>
+                </div>
             </div>
             ` : ''}
 
             <div class="divider"></div>
 
             <div class="cta-container">
-                <a href="https://tafsirkurd.com/Quran.html" class="cta-button">هەر نها بخوینە ←</a>
+                <a href="https://tafsirkurd.com/Quran.html" class="cta-button" style="background: #27ae60; border-color: #27ae60; color: #ffffff;">هەر نها بخوینە ←</a>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0; opacity: 0.3;">
+                <span style="font-size: 24px;">☪️</span>
+                <span style="font-size: 24px; margin: 0 15px;">✨</span>
+                <span style="font-size: 24px;">☪️</span>
             </div>
         `;
 

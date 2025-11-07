@@ -31,22 +31,28 @@ const htmlContent = `
         .email-wrapper { padding: 40px 20px; }
         .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 0; overflow: hidden; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06); border: 1px solid #e8e8e8; }
         .header { background: #000000; padding: 50px 30px; text-align: center; position: relative; overflow: hidden; }
-        .header::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.03; background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, #ffffff 35px, #ffffff 36px), repeating-linear-gradient(-45deg, transparent, transparent 35px, #ffffff 35px, #ffffff 36px); background-size: 50px 50px; pointer-events: none; }
+        .header::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.05; background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, #ffd700 35px, #ffd700 36px), repeating-linear-gradient(-45deg, transparent, transparent 35px, #ffd700 35px, #ffd700 36px); background-size: 50px 50px; pointer-events: none; animation: patternShift 30s linear infinite; }
+        @keyframes patternShift { 0% { transform: translate(0, 0); } 100% { transform: translate(50px, 50px); } }
         .logo { font-size: 36px; font-weight: bold; color: #ffffff; margin: 0 0 10px 0; position: relative; z-index: 1; }
         .header-subtitle { color: rgba(255,255,255,0.8); font-size: 16px; margin: 0; position: relative; z-index: 1; font-weight: 300; }
         .content { padding: 50px 40px; background: #ffffff; }
-        .message-box { background: #fafafa; border-right: 3px solid #000000; padding: 25px; border-radius: 0; margin: 25px 0; }
+        .message-box { background: #fafafa; border-right: 4px solid #ffd700; padding: 25px; border-radius: 0; margin: 25px 0; position: relative; }
+        .message-box::before { content: '✨'; position: absolute; top: 10px; left: 10px; font-size: 24px; opacity: 0.3; }
         .message { font-size: 20px; line-height: 2; color: #000000; margin: 0; text-align: center; font-weight: 400; }
-        .quran-verse { font-family: 'Amiri Quran', serif; font-size: 26px; color: #000000; text-align: center; margin: 30px 0; padding: 25px; background: #fafafa; border-radius: 0; line-height: 2.2; border-top: 1px solid #e8e8e8; border-bottom: 1px solid #e8e8e8; }
+        .quran-verse { font-family: 'Amiri Quran', serif; font-size: 28px; color: #27ae60; text-align: center; margin: 30px 0; padding: 30px; background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); border-radius: 0; line-height: 2.4; border-top: 2px solid #ffd700; border-bottom: 2px solid #ffd700; position: relative; }
+        .quran-verse::before { content: '☪'; position: absolute; top: 5px; right: 15px; font-size: 18px; color: #ffd700; opacity: 0.4; }
+        .quran-verse::after { content: '☪'; position: absolute; bottom: 5px; left: 15px; font-size: 18px; color: #ffd700; opacity: 0.4; }
         .cta-container { text-align: center; margin: 40px 0; }
-        .cta-button { display: inline-block; background: #000000; color: #ffffff; padding: 16px 45px; text-decoration: none; border-radius: 0; font-weight: 600; font-size: 17px; border: 2px solid #000000; }
+        .cta-button { display: inline-block; background: #27ae60; color: #ffffff; padding: 16px 45px; text-decoration: none; border-radius: 0; font-weight: 600; font-size: 17px; border: 2px solid #27ae60; }
         .footer { background: #000000; padding: 40px 30px; text-align: center; color: rgba(255,255,255,0.8); border-top: 1px solid #333333; }
         .footer-text { margin: 10px 0; font-size: 14px; color: rgba(255,255,255,0.6); }
         .footer-link { color: #ffffff; text-decoration: none; font-weight: 500; }
         .divider { height: 1px; background: #e8e8e8; margin: 35px 0; }
-        .moon-icon { font-size: 50px; margin: 20px 0; display: block; }
+        .moon-icon { font-size: 60px; margin: 20px 0; display: block; filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); animation: moonGlow 3s ease-in-out infinite; }
+        @keyframes moonGlow { 0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); transform: scale(1); } 50% { filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.9)); transform: scale(1.1); } }
+        .quran-decoration { text-align: center; font-size: 80px; opacity: 0.08; margin: 20px 0; color: #ffd700; }
         .stats { text-align: center; margin: 30px 0; }
-        .stat-number { font-size: 48px; font-weight: 700; color: #000000; margin: 5px 0; }
+        .stat-number { font-size: 56px; font-weight: 700; color: #ffd700; margin: 5px 0; text-shadow: 2px 2px 0px rgba(0,0,0,0.1); }
         .stat-label { font-size: 16px; color: #666666; margin: 5px 0; }
     </style>
 </head>
@@ -59,7 +65,9 @@ const htmlContent = `
             </div>
             <div class="content">
                 <span class="moon-icon">🌙</span>
-                <h2 style="color: #667eea; text-align: center; margin: 0 0 20px 0; font-size: 28px;">بیرئینانا رۆژانە</h2>
+                <h2 style="color: #000000; text-align: center; margin: 0 0 30px 0; font-size: 32px; font-weight: 700;">بیرئینانا رۆژانە</h2>
+
+                <div class="quran-decoration">📖</div>
 
                 <div class="message-box">
                     <p class="message">خشتەیا تە گەش و پر رۆناهی یە — نەئێخە. ئەڤرۆ بتنێ ئایەتەکێ بخوینە 🌸</p>
@@ -67,16 +75,25 @@ const htmlContent = `
 
                 <div class="quran-verse">وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا</div>
 
-                <div class="stats">
-                    <p class="stat-label">تۆ د رۆژا</p>
+                <div style="text-align: center; margin: 40px 0; padding: 30px; background: #fafafa;">
+                    <p style="font-size: 18px; color: #000000; margin: 5px 0; font-weight: 600;">تۆ د رۆژا</p>
                     <p class="stat-number">٧</p>
-                    <p class="stat-label">یێ دا یێ ل سەر رێکا خوە یا قورئانێ</p>
+                    <p style="font-size: 18px; color: #000000; margin: 5px 0; font-weight: 600;">یێ دا یێ ل سەر رێکا خوە یا قورئانێ</p>
+                    <div style="margin-top: 20px;">
+                        <span style="font-size: 30px;">⭐</span>
+                    </div>
                 </div>
 
                 <div class="divider"></div>
 
                 <div class="cta-container">
                     <a href="https://tafsirkurd.com/Quran.html" class="cta-button">هەر نها بخوینە ←</a>
+                </div>
+
+                <div style="text-align: center; margin: 30px 0; opacity: 0.3;">
+                    <span style="font-size: 24px;">☪️</span>
+                    <span style="font-size: 24px; margin: 0 15px;">✨</span>
+                    <span style="font-size: 24px;">☪️</span>
                 </div>
             </div>
             <div class="footer">
