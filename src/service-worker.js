@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v85-juz-ayah-start';
+const CACHE_NAME = 'tafsir-kurd-v86-juz-continuous';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v85-juz-ayah-start - Juz opens at correct starting ayah position');
+  console.log('[ServiceWorker] Installing v86-juz-continuous - Continuous Juz reading + hover animations');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

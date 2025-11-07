@@ -4331,8 +4331,16 @@
                         const surahRow = document.createElement('div');
                         surahRow.onclick = () => openSurah(surahNum);
                         surahRow.style.cssText = 'background: var(--bg-secondary); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: all 0.2s;';
-                        surahRow.onmouseover = function() { this.style.background = 'var(--hover-bg)'; };
-                        surahRow.onmouseout = function() { this.style.background = 'var(--bg-secondary)'; };
+                        surahRow.onmouseover = function() {
+                            this.style.background = 'var(--hover-bg)';
+                            this.style.transform = 'translateY(-2px)';
+                            this.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.2)';
+                        };
+                        surahRow.onmouseout = function() {
+                            this.style.background = 'var(--bg-secondary)';
+                            this.style.transform = 'translateY(0)';
+                            this.style.boxShadow = 'none';
+                        };
 
                         surahRow.innerHTML = `
                             <div style="background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; flex-shrink: 0;">
@@ -4479,18 +4487,66 @@
             });
         }
 
-        // Read Full Juz - open the starting surah of the Juz
+        // Read Full Juz - open the starting surah of the Juz with continuous reading
+        let currentJuzSurahs = [];
+        let currentJuzIndex = 0;
+
         function readFullJuz(juzNum) {
             // Get starting position of this Juz (surah + ayah)
             const startPosition = juzStartPositions[juzNum];
             const startingSurah = startPosition.surah;
             const startingAyah = startPosition.ayah;
 
+            // Get all surahs in this Juz for continuous reading
+            currentJuzSurahs = juzMapping[juzNum];
+            currentJuzIndex = 0;
+
+            // Store in localStorage for continuous reading
+            localStorage.setItem('readingFullJuz', 'true');
+            localStorage.setItem('currentJuzNumber', juzNum.toString());
+            localStorage.setItem('currentJuzSurahs', JSON.stringify(currentJuzSurahs));
+            localStorage.setItem('currentJuzIndex', '0');
+
             // Open the surah at the specific ayah where this Juz starts
             openSurahWithAyah(startingSurah, startingAyah);
 
             // Show notification
-            showNotification(`جوزی ${KurdishNumbers.toKurdish(juzNum)} - ${surahNames[startingSurah].arabic} ${KurdishNumbers.toKurdish(startingAyah)}:${KurdishNumbers.toKurdish(startingSurah)}`);
+            showNotification(`دەست پێکردنی جوزی ${KurdishNumbers.toKurdish(juzNum)} - ${currentJuzSurahs.length} سوورە`);
+        }
+
+        // Check if we should continue to next surah in Juz
+        function checkJuzContinuation() {
+            const readingFullJuz = localStorage.getItem('readingFullJuz') === 'true';
+            if (!readingFullJuz) return false;
+
+            const juzSurahs = JSON.parse(localStorage.getItem('currentJuzSurahs') || '[]');
+            let juzIndex = parseInt(localStorage.getItem('currentJuzIndex') || '0');
+
+            // Move to next surah
+            juzIndex++;
+
+            if (juzIndex < juzSurahs.length) {
+                // More surahs in this Juz
+                localStorage.setItem('currentJuzIndex', juzIndex.toString());
+                const nextSurah = juzSurahs[juzIndex];
+
+                showNotification(`درێژەپێدان... سوورەی ${surahNames[nextSurah].english}`);
+
+                setTimeout(() => {
+                    openSurah(nextSurah);
+                }, 1500);
+
+                return true;
+            } else {
+                // Finished all surahs in Juz
+                localStorage.removeItem('readingFullJuz');
+                localStorage.removeItem('currentJuzNumber');
+                localStorage.removeItem('currentJuzSurahs');
+                localStorage.removeItem('currentJuzIndex');
+
+                showNotification('✅ جوزەکە تەواو بوو! ئافەرین');
+                return false;
+            }
         }
 
 
@@ -4661,8 +4717,17 @@
         function navigateSurah(direction) {
             if (direction === 'prev' && currentSurahNumber > 1) {
                 openSurah(currentSurahNumber - 1);
-            } else if (direction === 'next' && currentSurahNumber < 114) {
-                openSurah(currentSurahNumber + 1);
+            } else if (direction === 'next') {
+                // Check if we're reading a full Juz
+                const readingFullJuz = localStorage.getItem('readingFullJuz') === 'true';
+
+                if (readingFullJuz) {
+                    // Continue to next surah in Juz
+                    checkJuzContinuation();
+                } else if (currentSurahNumber < 114) {
+                    // Normal next surah navigation
+                    openSurah(currentSurahNumber + 1);
+                }
             }
         }
 
