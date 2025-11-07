@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v83-juz-clean';
+const CACHE_NAME = 'tafsir-kurd-v84-juz-final';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v83-juz-clean - Clean Juz layout with Arabic names and ayah count only');
+  console.log('[ServiceWorker] Installing v84-juz-final - Large Arabic names on left, English on right, IBM font');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
