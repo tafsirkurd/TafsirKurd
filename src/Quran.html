@@ -4274,28 +4274,71 @@
                 // Render Juz cards
                 juzNumbers.forEach(juzNum => {
                     const surahs = juzMapping[juzNum];
-                    const surahList = surahs.map(s => surahNames[s].english).join(', ');
+                    const juzId = `juz-${juzNum}`;
 
                     const card = document.createElement('div');
                     card.className = 'surah-card juz-card';
-                    card.onclick = () => {
-                        // Open first surah in this Juz
-                        openSurah(surahs[0]);
-                    };
+                    card.style.display = 'block';
+                    card.style.width = '100%';
+
+                    // Build surah table rows
+                    const surahRows = surahs.map(surahNum => {
+                        const surah = surahNames[surahNum];
+                        return `
+                            <tr onclick="openSurah(${surahNum})" style="cursor: pointer; transition: background 0.2s;">
+                                <td style="padding: 12px; text-align: center; font-weight: 600;">${KurdishNumbers.toKurdish(surahNum)}</td>
+                                <td style="padding: 12px; font-weight: 600;">${surah.english}</td>
+                                <td style="padding: 12px; text-align: right; font-size: 1.2rem;">${surah.arabic}</td>
+                                <td style="padding: 12px; text-align: center;">${KurdishNumbers.toKurdish(quranData.surahs.find(s => s.number === surahNum).ayahs.length)}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
                     card.innerHTML = `
-                        <div class="surah-card-header">
-                            <div class="surah-card-number" style="background: linear-gradient(135deg, var(--primary) 0%, #555 100%);">
-                                ${KurdishNumbers.toKurdish(juzNum)}
-                            </div>
-                            <div class="surah-card-info">
-                                <div class="surah-card-english" style="font-weight: 700;">جوزی ${KurdishNumbers.toKurdish(juzNum)}</div>
-                                <div class="surah-card-arabic" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">
-                                    ${surahList.substring(0, 50)}${surahList.length > 50 ? '...' : ''}
+                        <div class="surah-card-header" style="cursor: pointer; background: linear-gradient(135deg, var(--primary) 0%, #6f42c1 100%); padding: 20px; border-radius: 12px; margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 15px;">
+                                    <div class="surah-card-number" style="background: rgba(255,255,255,0.2); font-size: 1.5rem;">
+                                        ${KurdishNumbers.toKurdish(juzNum)}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 700; font-size: 1.3rem; color: white;">جوزی ${KurdishNumbers.toKurdish(juzNum)}</div>
+                                        <div style="font-size: 0.9rem; color: rgba(255,255,255,0.8); margin-top: 3px;">${KurdishNumbers.toKurdish(surahs.length)} سوورە</div>
+                                    </div>
                                 </div>
+                                <button onclick="event.stopPropagation(); readFullJuz(${juzNum})" style="background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                                    خوێندنەوەی تەواوی جوز
+                                </button>
                             </div>
                         </div>
-                        <div class="surah-card-ayahs">${KurdishNumbers.toKurdish(surahs.length)} سوورە</div>
+                        <div id="${juzId}-content" style="display: none; background: var(--card-bg); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: var(--primary); color: white;">
+                                        <th style="padding: 15px; text-align: center;">#</th>
+                                        <th style="padding: 15px; text-align: left;">ناو</th>
+                                        <th style="padding: 15px; text-align: right;">العربية</th>
+                                        <th style="padding: 15px; text-align: center;">ئایەتەکان</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${surahRows}
+                                </tbody>
+                            </table>
+                        </div>
                     `;
+
+                    // Toggle expansion on header click
+                    const header = card.querySelector('.surah-card-header');
+                    header.onclick = () => {
+                        const content = document.getElementById(`${juzId}-content`);
+                        if (content.style.display === 'none') {
+                            content.style.display = 'block';
+                        } else {
+                            content.style.display = 'none';
+                        }
+                    };
+
                     container.appendChild(card);
                 });
             }
@@ -4424,6 +4467,60 @@
                     ayahList.style.display = isVisible ? 'block' : 'none';
                 }
             });
+        }
+
+        // Read Full Juz - Continuously read all surahs in a Juz
+        let currentJuzSurahs = [];
+        let currentJuzIndex = 0;
+
+        function readFullJuz(juzNum) {
+            currentJuzSurahs = juzMapping[juzNum];
+            currentJuzIndex = 0;
+
+            // Store in localStorage so we can continue after surah ends
+            localStorage.setItem('readingFullJuz', 'true');
+            localStorage.setItem('currentJuzSurahs', JSON.stringify(currentJuzSurahs));
+            localStorage.setItem('currentJuzIndex', '0');
+
+            // Open first surah in the Juz
+            openSurah(currentJuzSurahs[0]);
+
+            // Show notification
+            showNotification(`دەست پێکردنی جوزی ${KurdishNumbers.toKurdish(juzNum)} - ${currentJuzSurahs.length} سوورە`);
+        }
+
+        // Check if we're reading a full Juz and advance to next surah
+        function checkJuzContinuation() {
+            const readingFullJuz = localStorage.getItem('readingFullJuz') === 'true';
+            if (!readingFullJuz) return false;
+
+            const juzSurahs = JSON.parse(localStorage.getItem('currentJuzSurahs') || '[]');
+            let juzIndex = parseInt(localStorage.getItem('currentJuzIndex') || '0');
+
+            // Move to next surah
+            juzIndex++;
+
+            if (juzIndex < juzSurahs.length) {
+                // More surahs in this Juz
+                localStorage.setItem('currentJuzIndex', juzIndex.toString());
+                const nextSurah = juzSurahs[juzIndex];
+
+                showNotification(`درێژەپێدان... سوورەی ${surahNames[nextSurah].english}`);
+
+                setTimeout(() => {
+                    openSurah(nextSurah);
+                }, 1500);
+
+                return true;
+            } else {
+                // Finished all surahs in Juz
+                localStorage.removeItem('readingFullJuz');
+                localStorage.removeItem('currentJuzSurahs');
+                localStorage.removeItem('currentJuzIndex');
+
+                showNotification('✅ جوزەکە تەواو بوو! ئافەرین');
+                return false;
+            }
         }
 
         // Open Surah
@@ -4593,8 +4690,17 @@
         function navigateSurah(direction) {
             if (direction === 'prev' && currentSurahNumber > 1) {
                 openSurah(currentSurahNumber - 1);
-            } else if (direction === 'next' && currentSurahNumber < 114) {
-                openSurah(currentSurahNumber + 1);
+            } else if (direction === 'next') {
+                // Check if we're reading a full Juz
+                const readingFullJuz = localStorage.getItem('readingFullJuz') === 'true';
+
+                if (readingFullJuz) {
+                    // Continue to next surah in Juz
+                    checkJuzContinuation();
+                } else if (currentSurahNumber < 114) {
+                    // Normal next surah navigation
+                    openSurah(currentSurahNumber + 1);
+                }
             }
         }
 
