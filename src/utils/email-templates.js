@@ -31,38 +31,18 @@ const EmailTemplates = {
             border: 1px solid #e8e8e8;
         }
         .header {
-            background: #000000;
-            padding: 50px 30px;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+            padding: 40px 30px;
             text-align: center;
             position: relative;
-            overflow: hidden;
-        }
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0.03;
-            background-image:
-                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,0.1) 35px, rgba(255,255,255,0.1) 36px),
-                repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255,255,255,0.1) 35px, rgba(255,255,255,0.1) 36px);
-            background-size: 50px 50px;
-            pointer-events: none;
-            animation: patternShift 40s linear infinite;
-        }
-        @keyframes patternShift {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
+            border-bottom: 3px solid #ffd700;
         }
         .logo {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 600;
             color: #ffffff;
             margin: 0;
-            position: relative;
-            z-index: 1;
+            letter-spacing: 1px;
         }
         .islamic-pattern {
             text-align: center;
@@ -72,18 +52,19 @@ const EmailTemplates = {
             line-height: 1;
         }
         .content {
-            padding: 50px 40px;
+            padding: 40px 30px;
             background: #ffffff;
         }
         .message-box {
-            background: #ffffff;
-            border: 1px solid #e8e8e8;
-            padding: 20px;
-            margin: 20px 0;
+            background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
+            border-left: 4px solid #27ae60;
+            padding: 25px;
+            margin: 25px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         .message {
             font-size: 16px;
-            line-height: 1.8;
+            line-height: 1.9;
             color: #000000;
             margin: 0;
             text-align: right;
@@ -91,15 +72,16 @@ const EmailTemplates = {
         }
         .quran-verse {
             font-family: 'IBM Plex Sans Arabic', sans-serif;
-            font-size: 18px;
-            color: #000000;
+            font-size: 20px;
+            color: #27ae60;
             text-align: center;
-            margin: 20px 0;
-            padding: 20px;
-            background: #fafafa;
-            line-height: 2;
-            border-top: 1px solid #e8e8e8;
-            border-bottom: 1px solid #e8e8e8;
+            margin: 30px 0;
+            padding: 30px;
+            background: linear-gradient(135deg, #f0f9f4 0%, #ffffff 100%);
+            line-height: 2.2;
+            border-top: 2px solid #ffd700;
+            border-bottom: 2px solid #ffd700;
+            font-weight: 500;
         }
         .cta-container {
             text-align: center;
@@ -107,13 +89,19 @@ const EmailTemplates = {
         }
         .cta-button {
             display: inline-block;
-            background: #000000;
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
             color: #ffffff;
-            padding: 12px 30px;
+            padding: 14px 35px;
             text-decoration: none;
-            font-weight: 500;
-            font-size: 14px;
-            border: 1px solid #000000;
+            font-weight: 600;
+            font-size: 15px;
+            border: none;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+            transition: all 0.3s ease;
+        }
+        .cta-button:hover {
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+            transform: translateY(-2px);
         }
         .stats-row {
             display: table;
@@ -129,15 +117,28 @@ const EmailTemplates = {
             margin: 0 10px;
         }
         .stat-number {
-            font-size: 32px;
-            font-weight: 600;
-            color: #000000;
+            font-size: 48px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin: 10px 0;
         }
         .stat-label {
             font-size: 14px;
             color: #000000;
             margin: 5px 0;
+            font-weight: 500;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #fffbea 0%, #ffffff 100%);
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.15);
         }
         .footer {
             background: #000000;
@@ -219,7 +220,7 @@ const EmailTemplates = {
         const selected = messages[Math.floor(Math.random() * messages.length)];
 
         const content = `
-            <h2 style="color: #000000; margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">بیرئینانا رۆژانە</h2>
+            <h2 style="color: #000000; margin: 0 0 25px 0; font-size: 20px; font-weight: 600; padding-bottom: 10px; border-bottom: 2px solid #ffd700;">بیرئینانا رۆژانە</h2>
 
             <div class="message-box">
                 <p class="message">${selected.text}</p>
@@ -228,10 +229,10 @@ const EmailTemplates = {
             <div class="quran-verse">${selected.verse}</div>
 
             ${streak > 0 ? `
-            <div style="margin: 20px 0; padding: 20px; border: 1px solid #e8e8e8; background: #fafafa;">
-                <p style="font-size: 14px; color: #000000; margin: 5px 0;">تۆ د رۆژا</p>
+            <div class="stat-box">
+                <p style="font-size: 14px; color: #000000; margin: 5px 0; font-weight: 500;">تۆ د رۆژا</p>
                 <p class="stat-number">${dayCount}</p>
-                <p style="font-size: 14px; color: #000000; margin: 5px 0;">یێ دا یێ ل سەر رێکا خوە یا قورئانێ</p>
+                <p style="font-size: 14px; color: #000000; margin: 5px 0; font-weight: 500;">یێ دا یێ ل سەر رێکا خوە یا قورئانێ</p>
             </div>
             ` : ''}
 
