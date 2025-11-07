@@ -698,7 +698,7 @@
             // Handle notification preference
             if (prefName === 'notifications') {
                 if (isActive) {
-                    // Save notification settings
+                    // Save notification settings to browser
                     window.notificationScheduler.saveSettings({
                         enabled: true,
                         dailyReminder: true,
@@ -707,10 +707,62 @@
                         fridayReminder: true
                     });
 
-                    showNotification('Daily Qur\'an reminders enabled! You\'ll be notified to maintain your streak 🌙');
+                    // Save to database so email reminders work
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    if (user.sub) {
+                        const userKey = 'quran_data_' + user.sub;
+                        const saved = localStorage.getItem(userKey);
+                        const userData = saved ? JSON.parse(saved) : {};
+
+                        userData.notificationSettings = {
+                            enabled: true,
+                            emailReminders: true,
+                            dailyReminder: true,
+                            streakReminder: true,
+                            goalReminder: true,
+                            fridayReminder: true
+                        };
+
+                        fetch('/.netlify/functions/user-data', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                userId: user.sub,
+                                action: 'save',
+                                data: userData
+                            })
+                        }).catch(err => console.error('Failed to save notification settings:', err));
+                    }
+
+                    showNotification('Email reminders enabled! You\'ll receive daily Quran reminders in your inbox 📧🌙');
                 } else {
+                    // Disable notifications
                     window.notificationScheduler.saveSettings({ enabled: false });
-                    showNotification('Notifications disabled');
+
+                    // Save to database
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    if (user.sub) {
+                        const userKey = 'quran_data_' + user.sub;
+                        const saved = localStorage.getItem(userKey);
+                        const userData = saved ? JSON.parse(saved) : {};
+
+                        userData.notificationSettings = {
+                            enabled: false,
+                            emailReminders: false
+                        };
+
+                        fetch('/.netlify/functions/user-data', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                userId: user.sub,
+                                action: 'save',
+                                data: userData
+                            })
+                        }).catch(err => console.error('Failed to save notification settings:', err));
+                    }
+
+                    showNotification('Email reminders disabled');
                 }
             }
 
