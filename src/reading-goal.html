@@ -600,6 +600,15 @@
     </div>
 
     <script>
+        // Authentication check - Prevent unauthorized access
+        (function() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                window.location.href = '/login';
+                return;
+            }
+        })();
+
         let currentStep = 1;
         let selectedGoal = null;
         let selectedFrequency = 'daily';

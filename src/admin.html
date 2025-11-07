@@ -27,6 +27,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
+    <!-- Cloudflare Turnstile - Bot Protection -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-F2QMXE80WJ"></script>
     <script>
@@ -818,7 +821,21 @@
                     <label>Password</label>
                     <input type="password" id="loginPassword" required autocomplete="current-password">
                 </div>
-                <button type="submit" class="btn">Sign In</button>
+
+                <!-- Cloudflare Turnstile Widget -->
+                <!-- Get your FREE site key at: https://dash.cloudflare.com/turnstile -->
+                <div style="display: flex; justify-content: center; margin: 15px 0;">
+                    <div class="cf-turnstile"
+                         data-sitekey="0x4AAAAAAAzFla9sl4nZBNvQ"
+                         data-callback="onAdminTurnstileSuccess"
+                         data-theme="light">
+                    </div>
+                </div>
+                <p id="admin-turnstile-message" style="text-align: center; color: #666; font-size: 0.9rem; margin-bottom: 15px;">
+                    Please complete verification
+                </p>
+
+                <button type="submit" class="btn" id="adminSignInBtn" disabled style="opacity: 0.5; cursor: not-allowed;">Sign In</button>
             </form>
         </div>
     </div>
@@ -1567,9 +1584,39 @@
             }
         }
 
+        // Admin Turnstile verification
+        let adminTurnstileToken = null;
+
+        function onAdminTurnstileSuccess(token) {
+            adminTurnstileToken = token;
+            const btn = document.getElementById('adminSignInBtn');
+            const message = document.getElementById('admin-turnstile-message');
+
+            // Enable sign-in button
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+
+            // Update message
+            message.textContent = '✓ Verification successful';
+            message.style.color = '#2ecc71';
+
+            console.log('✅ Admin Turnstile verification successful');
+        }
+
         // Secure Login Form
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            // Check Turnstile verification
+            if (!adminTurnstileToken) {
+                const errorDiv = document.getElementById('loginError');
+                errorDiv.textContent = 'Please complete the verification first';
+                errorDiv.style.display = 'block';
+                setTimeout(() => errorDiv.style.display = 'none', 3000);
+                return;
+            }
+
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
             const errorDiv = document.getElementById('loginError');

@@ -589,6 +589,40 @@
                 </div>
             </div>
 
+            <!-- Notification Settings -->
+            <div class="settings-card">
+                <h2 class="settings-card-title">
+                    <i class="fas fa-bell"></i>
+                    بیرئینان
+                </h2>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-envelope"></i>
+                            بیرئینانێن ئیمەیلێ
+                        </div>
+                        <div class="setting-description">وەرگرتنا بیرئینانێن رۆژانە ب رێیا ئیمەیلێ</div>
+                    </div>
+                    <div class="setting-toggle active" id="emailNotificationsToggle" onclick="toggleEmailNotifications()">
+                        <div class="setting-toggle-knob"></div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-desktop"></i>
+                            بیرئینانێن گەڕۆکێ
+                        </div>
+                        <div class="setting-description">وەرگرتنا بیرئینانێن گەڕۆکێ</div>
+                    </div>
+                    <div class="setting-toggle active" id="browserNotificationsToggle" onclick="toggleBrowserNotifications()">
+                        <div class="setting-toggle-knob"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Reset Settings -->
             <div class="settings-card">
                 <h2 class="settings-card-title">
@@ -606,7 +640,15 @@
         </div>
     </div>
 
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://hztgjjctxchmzhncimyj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6dGdqamN0eGNobXpobmNpbXlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQyOTY3MDksImV4cCI6MjA0OTg3MjcwOX0.vaxgOgH6FnbXWJm-kERi1R32mwZjJyC2TzV1_MHn79g';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         // Initialize settings from localStorage
         window.addEventListener('load', () => {
             // Check authentication first
@@ -620,6 +662,7 @@
             document.body.classList.add('ready');
 
             loadSettings();
+            loadNotificationSettings();
         });
 
         function loadSettings() {
@@ -793,6 +836,147 @@
             notif.textContent = msg;
             document.body.appendChild(notif);
             setTimeout(() => notif.remove(), 3000);
+        }
+
+        // Load notification settings from Supabase
+        async function loadNotificationSettings() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (!user || !user.id) return;
+
+                // Fetch user data from Supabase
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('notificationSettings')
+                    .eq('id', user.id)
+                    .single();
+
+                if (error) {
+                    console.error('Error loading notification settings:', error);
+                    return;
+                }
+
+                // Update toggles based on database values
+                const notifSettings = data?.notificationSettings || {
+                    enabled: true,
+                    emailReminders: true,
+                    browserNotifications: true
+                };
+
+                const emailToggle = document.getElementById('emailNotificationsToggle');
+                const browserToggle = document.getElementById('browserNotificationsToggle');
+
+                if (notifSettings.emailReminders) {
+                    emailToggle.classList.add('active');
+                } else {
+                    emailToggle.classList.remove('active');
+                }
+
+                if (notifSettings.browserNotifications) {
+                    browserToggle.classList.add('active');
+                } else {
+                    browserToggle.classList.remove('active');
+                }
+            } catch (err) {
+                console.error('Error loading notification settings:', err);
+            }
+        }
+
+        // Toggle email notifications
+        async function toggleEmailNotifications() {
+            const toggle = document.getElementById('emailNotificationsToggle');
+            const willBeActive = !toggle.classList.contains('active');
+
+            toggle.classList.toggle('active');
+
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (!user || !user.id) return;
+
+                // Update database
+                const { data: currentData } = await supabase
+                    .from('users')
+                    .select('notificationSettings')
+                    .eq('id', user.id)
+                    .single();
+
+                const updatedSettings = {
+                    ...(currentData?.notificationSettings || {}),
+                    emailReminders: willBeActive,
+                    enabled: willBeActive || currentData?.notificationSettings?.browserNotifications || false
+                };
+
+                const { error } = await supabase
+                    .from('users')
+                    .update({ notificationSettings: updatedSettings })
+                    .eq('id', user.id);
+
+                if (error) {
+                    console.error('Error updating email notifications:', error);
+                    toggle.classList.toggle('active'); // Revert on error
+                    showNotification('هەڵەیەک ڕوویدا');
+                    return;
+                }
+
+                showNotification(willBeActive ? 'بیرئینانێن ئیمەیلێ چالاککران' : 'بیرئینانێن ئیمەیلێ ناچالاککران');
+            } catch (err) {
+                console.error('Error toggling email notifications:', err);
+                toggle.classList.toggle('active'); // Revert on error
+                showNotification('هەڵەیەک ڕوویدا');
+            }
+        }
+
+        // Toggle browser notifications
+        async function toggleBrowserNotifications() {
+            const toggle = document.getElementById('browserNotificationsToggle');
+            const willBeActive = !toggle.classList.contains('active');
+
+            // Request permission if enabling
+            if (willBeActive && 'Notification' in window) {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    showNotification('مافی بیرئینانێن گەڕۆکێ نەهاتە دان');
+                    return;
+                }
+            }
+
+            toggle.classList.toggle('active');
+
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (!user || !user.id) return;
+
+                // Update database
+                const { data: currentData } = await supabase
+                    .from('users')
+                    .select('notificationSettings')
+                    .eq('id', user.id)
+                    .single();
+
+                const updatedSettings = {
+                    ...(currentData?.notificationSettings || {}),
+                    browserNotifications: willBeActive,
+                    enabled: willBeActive || currentData?.notificationSettings?.emailReminders || false
+                };
+
+                const { error } = await supabase
+                    .from('users')
+                    .update({ notificationSettings: updatedSettings })
+                    .eq('id', user.id);
+
+                if (error) {
+                    console.error('Error updating browser notifications:', error);
+                    toggle.classList.toggle('active'); // Revert on error
+                    showNotification('هەڵەیەک ڕوویدا');
+                    return;
+                }
+
+                showNotification(willBeActive ? 'بیرئینانێن گەڕۆکێ چالاککران' : 'بیرئینانێن گەڕۆکێ ناچالاککران');
+            } catch (err) {
+                console.error('Error toggling browser notifications:', err);
+                toggle.classList.toggle('active'); // Revert on error
+                showNotification('هەڵەیەک ڕوویدا');
+            }
         }
 
         // Register Service Worker for offline support

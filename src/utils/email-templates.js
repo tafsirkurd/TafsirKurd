@@ -2,199 +2,35 @@
 // With Islamic geometric patterns and Kurdish Badini text
 
 const EmailTemplates = {
-    // Base template with beautiful Quranic design
+    // Base template with simple, clean design - consistent across all devices
     getBaseTemplate: (content, preheader = '') => `
 <!DOCTYPE html>
 <html lang="ku" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TafsirKurd - بیرئینانا قورئانێ</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif;
-            background: #fafafa;
-            direction: rtl;
-        }
-        .email-wrapper {
-            padding: 40px 20px;
-        }
-        .email-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 0;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-            border: 1px solid #e8e8e8;
-        }
-        .header {
-            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
-            padding: 40px 30px;
-            text-align: center;
-            position: relative;
-            border-bottom: 3px solid #ffd700;
-        }
-        .logo {
-            font-size: 22px;
-            font-weight: 600;
-            color: #ffffff;
-            margin: 0;
-            letter-spacing: 1px;
-        }
-        .islamic-pattern {
-            text-align: center;
-            font-size: 60px;
-            margin: 30px 0;
-            opacity: 0.1;
-            line-height: 1;
-        }
-        .content {
-            padding: 40px 30px;
-            background: #ffffff;
-        }
-        .message-box {
-            background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
-            border-left: 4px solid #27ae60;
-            padding: 25px;
-            margin: 25px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .message {
-            font-size: 16px;
-            line-height: 1.9;
-            color: #000000;
-            margin: 0;
-            text-align: right;
-            font-weight: 400;
-        }
-        .quran-verse {
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
-            font-size: 20px;
-            color: #27ae60;
-            text-align: center;
-            margin: 30px 0;
-            padding: 30px;
-            background: linear-gradient(135deg, #f0f9f4 0%, #ffffff 100%);
-            line-height: 2.2;
-            border-top: 2px solid #ffd700;
-            border-bottom: 2px solid #ffd700;
-            font-weight: 500;
-        }
-        .cta-container {
-            text-align: center;
-            margin: 40px 0;
-        }
-        .cta-button {
-            display: inline-block;
-            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-            color: #ffffff;
-            padding: 14px 35px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 15px;
-            border: none;
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
-            transition: all 0.3s ease;
-        }
-        .cta-button:hover {
-            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
-            transform: translateY(-2px);
-        }
-        .stats-row {
-            display: table;
-            width: 100%;
-            margin: 30px 0;
-        }
-        .stat-box {
-            display: table-cell;
-            text-align: center;
-            padding: 20px;
-            background: white;
-            border-radius: 12px;
-            margin: 0 10px;
-        }
-        .stat-number {
-            font-size: 48px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin: 10px 0;
-        }
-        .stat-label {
-            font-size: 14px;
-            color: #000000;
-            margin: 5px 0;
-            font-weight: 500;
-        }
-        .stat-box {
-            background: linear-gradient(135deg, #fffbea 0%, #ffffff 100%);
-            border: 2px solid #ffd700;
-            border-radius: 8px;
-            padding: 25px;
-            margin: 25px 0;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.15);
-        }
-        .footer {
-            background: #000000;
-            padding: 40px 30px;
-            text-align: center;
-            color: rgba(255,255,255,0.8);
-            border-top: 1px solid #333333;
-        }
-        .footer-text {
-            margin: 10px 0;
-            font-size: 14px;
-            color: rgba(255,255,255,0.6);
-        }
-        .footer-link {
-            color: #ffffff;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .unsubscribe {
-            color: rgba(255,255,255,0.4);
-            font-size: 12px;
-            margin-top: 25px;
-        }
-        .unsubscribe a {
-            color: rgba(255,255,255,0.6);
-            text-decoration: underline;
-        }
-        .divider {
-            height: 1px;
-            background: #e8e8e8;
-            margin: 35px 0;
-        }
-    </style>
+    <title>TafsirKurd</title>
 </head>
-<body>
-    <div style="display:none;font-size:1px;color:#ffffff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background-color: #f5f5f5; direction: rtl;">
+    <div style="display:none;font-size:1px;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
         ${preheader}
     </div>
-    <div class="email-wrapper">
-        <div class="email-container">
-            <div class="header">
-                <h1 class="logo">تەفسیرکورد</h1>
+    <div style="padding: 20px; background-color: #f5f5f5;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="padding: 24px; text-align: center; border-bottom: 1px solid #e0e0e0;">
+                <p style="font-family: 'Segoe UI', Tahoma, Arial, sans-serif; font-size: 22px; font-weight: 700; color: #000000; margin: 0; text-align: center; letter-spacing: 0.5px;">تەفسیر کورد</p>
             </div>
-            <div class="content">
-                ${content}
-            </div>
-            <div class="footer">
-                <p class="footer-text">© ٢٠٢٥ تەفسیرکورد</p>
-                <p class="footer-text">هاوڕێیا تە د رێکا قورئانێ دا</p>
-                <p class="footer-text">
-                    <a href="https://tafsirkurd.com" class="footer-link">tafsirkurd.com</a>
+            ${content}
+            <div style="padding: 24px; text-align: center; border-top: 1px solid #e0e0e0;">
+                <p style="margin: 4px 0; font-size: 12px; color: #5f6368; line-height: 1.5;">© ٢٠٢٥ تەفسیر کورد - هەمی ماف د پاراستینە</p>
+                <p style="margin: 8px 0 4px 0; font-size: 12px; color: #5f6368; line-height: 1.5;">
+                    <a href="https://tafsirkurd.com" style="color: #1a73e8; text-decoration: none;">tafsirkurd.com</a>
                 </p>
-                <div class="unsubscribe">
-                    <p>ئەگەر نەخوازی ئەڤ بیرئینانێن وەربگری،
-                    <a href="https://tafsirkurd.com/settings">ڕێکخستنان بگۆهۆرە</a></p>
-                </div>
+                <p style="margin: 12px 0 4px 0; font-size: 12px; color: #5f6368; line-height: 1.5;">
+                    <a href="https://tafsirkurd.com/settings" style="color: #1a73e8; text-decoration: none;">ڕێکخستنان</a> ·
+                    <a href="https://tafsirkurd.com/privacy-policy" style="color: #1a73e8; text-decoration: none;">پارێزراوی تایبەتمەندی</a>
+                </p>
+            </div>
         </div>
     </div>
 </body>
@@ -205,7 +41,7 @@ const EmailTemplates = {
     dailyStreak: (userName, streak, dayCount) => {
         const messages = [
             {
-                text: `خشتەیا تە گەش و پر رۆناهی یە — نەئێخە. ئەڤرۆ بتنێ ئایەتەکێ بخوینە 🌸`,
+                text: `خشتەیا تە گەش و پر رۆناهی یە — نەئێخە. ئەڤرۆ بتنێ ئایەتەکێ بخوینە`,
                 verse: `وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا`
             },
             {
@@ -213,33 +49,29 @@ const EmailTemplates = {
                 verse: `وَاذْكُر رَّبَّكَ كَثِيرًا`
             },
             {
-                text: `بەردەوامبوون پەرستنە — قورئانا خوە ڤەکە و پێشکەفتنا خوە بەردەوام کە 🌿`,
+                text: `بەردەوامبوون پەرستنە — قورئانا خوە ڤەکە و پێشکەفتنا خوە بەردەوام کە`,
                 verse: `إِنَّ اللَّهَ مَعَ الصَّابِرِينَ`
             }
         ];
         const selected = messages[Math.floor(Math.random() * messages.length)];
 
         const content = `
-            <h2 style="color: #000000; margin: 0 0 25px 0; font-size: 20px; font-weight: 600; padding-bottom: 10px; border-bottom: 2px solid #ffd700;">بیرئینانا رۆژانە</h2>
+            <div style="padding: 32px 24px;">
+                <h1 style="font-family: 'Segoe UI', Tahoma, Arial, sans-serif; font-size: 20px; font-weight: 500; color: #202124; margin: 0 0 16px 0; text-align: center;">بیرئینانا قورئانێ</h1>
 
-            <div class="message-box">
-                <p class="message">${selected.text}</p>
-            </div>
+                <p style="font-family: 'Segoe UI', Tahoma, Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #5f6368; margin: 16px 0; text-align: center;">${selected.text}</p>
 
-            <div class="quran-verse">${selected.verse}</div>
+                <div style="font-family: 'KFGQPC Hafs', 'Scheherazade New', 'Traditional Arabic', serif; font-size: 28px; color: #202124; text-align: center; margin: 24px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px; line-height: 2.4; direction: rtl;">${selected.verse}</div>
 
-            ${streak > 0 ? `
-            <div class="stat-box">
-                <p style="font-size: 14px; color: #000000; margin: 5px 0; font-weight: 500;">تۆ د رۆژا</p>
-                <p class="stat-number">${dayCount}</p>
-                <p style="font-size: 14px; color: #000000; margin: 5px 0; font-weight: 500;">یێ دا یێ ل سەر رێکا خوە یا قورئانێ</p>
-            </div>
-            ` : ''}
+                ${streak > 0 ? `
+                <div style="background-color: #f8f9fa; border-radius: 8px; padding: 24px; margin: 24px 0; text-align: center;">
+                    <p style="font-family: 'Segoe UI', Tahoma, Arial, sans-serif; font-size: 14px; color: #5f6368; margin: 0;">تۆ د رۆژا ${dayCount} یێ دا یێ ل سەر رێکا خوە یا قورئانێ</p>
+                </div>
+                ` : ''}
 
-            <div class="divider"></div>
-
-            <div class="cta-container">
-                <a href="https://tafsirkurd.com/Quran.html" class="cta-button">بخوینە</a>
+                <div style="text-align: center; margin: 32px 0;">
+                    <a href="https://tafsirkurd.com/Quran.html" style="display: inline-block; background-color: #000000; color: #ffffff; padding: 10px 24px; text-decoration: none; font-weight: 500; font-size: 14px; border-radius: 4px; font-family: 'Segoe UI', Tahoma, Arial, sans-serif;">بخوینە</a>
+                </div>
             </div>
         `;
 
