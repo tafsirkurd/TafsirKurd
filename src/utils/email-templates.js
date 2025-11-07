@@ -11,12 +11,10 @@ const EmailTemplates = {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TafsirKurd - بیرئینانا قورئانێ</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap');
-
         body {
             margin: 0;
             padding: 0;
-            font-family: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
+            font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif;
             background: #fafafa;
             direction: rtl;
         }
@@ -59,20 +57,12 @@ const EmailTemplates = {
             100% { transform: translate(50px, 50px); }
         }
         .logo {
-            font-size: 36px;
-            font-weight: bold;
+            font-size: 20px;
+            font-weight: 600;
             color: #ffffff;
-            margin: 0 0 10px 0;
-            position: relative;
-            z-index: 1;
-        }
-        .header-subtitle {
-            color: rgba(255,255,255,0.8);
-            font-size: 16px;
             margin: 0;
             position: relative;
             z-index: 1;
-            font-weight: 300;
         }
         .islamic-pattern {
             text-align: center;
@@ -87,66 +77,29 @@ const EmailTemplates = {
         }
         .message-box {
             background: #ffffff;
-            border: 2px solid #000000;
-            padding: 30px;
-            margin: 30px 0;
-            position: relative;
-            animation: fadeInUp 0.8s ease;
-        }
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            border: 1px solid #e8e8e8;
+            padding: 20px;
+            margin: 20px 0;
         }
         .message {
-            font-size: 20px;
-            line-height: 2;
+            font-size: 16px;
+            line-height: 1.8;
             color: #000000;
             margin: 0;
-            text-align: center;
+            text-align: right;
             font-weight: 400;
         }
         .quran-verse {
-            font-family: 'Amiri Quran', serif;
-            font-size: 32px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-size: 18px;
             color: #000000;
             text-align: center;
-            margin: 40px 0;
-            padding: 40px;
-            background: #000000;
-            color: #ffffff;
-            line-height: 2.5;
-            position: relative;
-            animation: fadeIn 1s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .quran-verse::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
-            background: #ffffff;
-        }
-        .quran-verse::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
-            background: #ffffff;
+            margin: 20px 0;
+            padding: 20px;
+            background: #fafafa;
+            line-height: 2;
+            border-top: 1px solid #e8e8e8;
+            border-bottom: 1px solid #e8e8e8;
         }
         .cta-container {
             text-align: center;
@@ -156,24 +109,11 @@ const EmailTemplates = {
             display: inline-block;
             background: #000000;
             color: #ffffff;
-            padding: 18px 50px;
+            padding: 12px 30px;
             text-decoration: none;
-            font-weight: 700;
-            font-size: 18px;
-            border: 3px solid #000000;
-            position: relative;
-            overflow: hidden;
-            animation: pulse 2s ease infinite;
-        }
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
-            }
-            50% {
-                transform: scale(1.02);
-                box-shadow: 0 0 20px 10px rgba(0, 0, 0, 0);
-            }
+            font-weight: 500;
+            font-size: 14px;
+            border: 1px solid #000000;
         }
         .stats-row {
             display: table;
@@ -189,26 +129,15 @@ const EmailTemplates = {
             margin: 0 10px;
         }
         .stat-number {
-            font-size: 72px;
-            font-weight: 900;
+            font-size: 32px;
+            font-weight: 600;
             color: #000000;
             margin: 10px 0;
-            animation: scaleIn 0.6s ease;
-        }
-        @keyframes scaleIn {
-            from {
-                transform: scale(0);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
         }
         .stat-label {
             font-size: 14px;
-            color: #666666;
-            margin: 5px 0 0 0;
+            color: #000000;
+            margin: 5px 0;
         }
         .footer {
             background: #000000;
@@ -241,30 +170,6 @@ const EmailTemplates = {
             background: #e8e8e8;
             margin: 35px 0;
         }
-        .moon-icon {
-            font-size: 70px;
-            margin: 20px 0;
-            display: block;
-            animation: float 4s ease-in-out infinite;
-        }
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0px) rotate(0deg);
-            }
-            50% {
-                transform: translateY(-15px) rotate(5deg);
-            }
-        }
-        .icon-decoration {
-            font-size: 40px;
-            opacity: 0.15;
-            display: inline-block;
-            animation: rotate 20s linear infinite;
-        }
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
@@ -274,8 +179,7 @@ const EmailTemplates = {
     <div class="email-wrapper">
         <div class="email-container">
             <div class="header">
-                <h1 class="logo">📖 تەفسیرکورد</h1>
-                <p class="header-subtitle">رێکا تە بەرەڤ نورا قورئانێ</p>
+                <h1 class="logo">تەفسیرکورد</h1>
             </div>
             <div class="content">
                 ${content}
@@ -315,13 +219,7 @@ const EmailTemplates = {
         const selected = messages[Math.floor(Math.random() * messages.length)];
 
         const content = `
-            <div style="text-align: center;">
-                <span class="icon-decoration">📖</span>
-            </div>
-
-            <span class="moon-icon">🌙</span>
-
-            <h2 style="color: #000000; text-align: center; margin: 0 0 40px 0; font-size: 36px; font-weight: 900; letter-spacing: 1px;">بیرئینانا رۆژانە</h2>
+            <h2 style="color: #000000; margin: 0 0 20px 0; font-size: 18px; font-weight: 600;">بیرئینانا رۆژانە</h2>
 
             <div class="message-box">
                 <p class="message">${selected.text}</p>
@@ -330,17 +228,17 @@ const EmailTemplates = {
             <div class="quran-verse">${selected.verse}</div>
 
             ${streak > 0 ? `
-            <div style="text-align: center; margin: 50px 0; padding: 40px 20px; border: 3px solid #000000; background: #ffffff;">
-                <p style="font-size: 16px; color: #000000; margin: 5px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">تۆ د رۆژا</p>
+            <div style="margin: 20px 0; padding: 20px; border: 1px solid #e8e8e8; background: #fafafa;">
+                <p style="font-size: 14px; color: #000000; margin: 5px 0;">تۆ د رۆژا</p>
                 <p class="stat-number">${dayCount}</p>
-                <p style="font-size: 16px; color: #000000; margin: 5px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">یێ دا یێ ل سەر رێکا خوە یا قورئانێ</p>
+                <p style="font-size: 14px; color: #000000; margin: 5px 0;">یێ دا یێ ل سەر رێکا خوە یا قورئانێ</p>
             </div>
             ` : ''}
 
             <div class="divider"></div>
 
             <div class="cta-container">
-                <a href="https://tafsirkurd.com/Quran.html" class="cta-button">هەر نها بخوینە ←</a>
+                <a href="https://tafsirkurd.com/Quran.html" class="cta-button">بخوینە</a>
             </div>
         `;
 
