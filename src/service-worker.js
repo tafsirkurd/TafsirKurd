@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v64-fix-duplicate-variable';
+const CACHE_NAME = 'tafsir-kurd-v65-fix-duplicate-variable-force-update';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v64-fix-duplicate-variable - Fixed duplicate readingGoal variable declaration in Quran.html');
+  console.log('[ServiceWorker] Installing v65-fix-duplicate-variable-force-update - Fixed duplicate readingGoal variable (FORCE UPDATE)');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
