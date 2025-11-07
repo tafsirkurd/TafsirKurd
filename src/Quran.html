@@ -5505,24 +5505,33 @@
                 }
             }
 
-            // Change design based on streak
+            // Hide streak badge if user hasn't set reading goal yet
+            const readingGoal = localStorage.getItem('readingGoal');
             if (streakContainer) {
-                if (streak === 0) {
-                    // No streak - gray/neutral design
-                    streakContainer.style.background = 'linear-gradient(135deg, #6c757d 0%, #495057 100%)';
-                    streakContainer.style.boxShadow = '0 4px 12px rgba(108, 117, 125, 0.3)';
-                } else if (streak < 7) {
-                    // Short streak - green
-                    streakContainer.style.background = 'linear-gradient(135deg, #58cc02 0%, #46a302 100%)';
-                    streakContainer.style.boxShadow = '0 4px 12px rgba(88, 204, 2, 0.3)';
-                } else if (streak < 30) {
-                    // Medium streak - gold
-                    streakContainer.style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
-                    streakContainer.style.boxShadow = '0 4px 12px rgba(255, 193, 7, 0.4)';
+                if (!readingGoal) {
+                    // User hasn't set reading goal - hide the streak badge
+                    streakContainer.style.display = 'none';
                 } else {
-                    // Long streak - rainbow/fire
-                    streakContainer.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 50%, #c44569 100%)';
-                    streakContainer.style.boxShadow = '0 4px 12px rgba(255, 107, 107, 0.4)';
+                    // User has reading goal - show and update design
+                    streakContainer.style.display = 'flex';
+
+                    if (streak === 0) {
+                        // No streak - gray/neutral design
+                        streakContainer.style.background = 'linear-gradient(135deg, #6c757d 0%, #495057 100%)';
+                        streakContainer.style.boxShadow = '0 4px 12px rgba(108, 117, 125, 0.3)';
+                    } else if (streak < 7) {
+                        // Short streak - green
+                        streakContainer.style.background = 'linear-gradient(135deg, #58cc02 0%, #46a302 100%)';
+                        streakContainer.style.boxShadow = '0 4px 12px rgba(88, 204, 2, 0.3)';
+                    } else if (streak < 30) {
+                        // Medium streak - gold
+                        streakContainer.style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
+                        streakContainer.style.boxShadow = '0 4px 12px rgba(255, 193, 7, 0.4)';
+                    } else {
+                        // Long streak - rainbow/fire
+                        streakContainer.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 50%, #c44569 100%)';
+                        streakContainer.style.boxShadow = '0 4px 12px rgba(255, 107, 107, 0.4)';
+                    }
                 }
             }
         }
