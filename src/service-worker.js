@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v66-invisible-turnstile';
+const CACHE_NAME = 'tafsir-kurd-v67-production-turnstile';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v66-invisible-turnstile - Changed Cloudflare Turnstile to invisible mode (automatic verification)');
+  console.log('[ServiceWorker] Installing v67-production-turnstile - Using production Cloudflare Turnstile site key');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
