@@ -27,27 +27,27 @@ const htmlContent = `
     <title>TafsirKurd - بیرئینانا قورئانێ</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap');
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); direction: rtl; }
+        body { margin: 0; padding: 0; font-family: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif; background: #fafafa; direction: rtl; }
         .email-wrapper { padding: 40px 20px; }
-        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 50px 30px; text-align: center; position: relative; overflow: hidden; }
-        .header::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,0.05) 35px, rgba(255,255,255,0.05) 70px), repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255,255,255,0.05) 35px, rgba(255,255,255,0.05) 70px); }
-        .logo { font-size: 36px; font-weight: bold; color: #ffffff; margin: 0 0 10px 0; position: relative; z-index: 1; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .header-subtitle { color: rgba(255,255,255,0.95); font-size: 16px; margin: 0; position: relative; z-index: 1; }
-        .content { padding: 50px 40px; background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%); }
-        .message-box { background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border-right: 4px solid #667eea; padding: 25px; border-radius: 15px; margin: 25px 0; }
-        .message { font-size: 20px; line-height: 2; color: #2c3e50; margin: 0; text-align: center; font-weight: 500; }
-        .quran-verse { font-family: 'Amiri Quran', serif; font-size: 24px; color: #667eea; text-align: center; margin: 30px 0; padding: 20px; background: rgba(102, 126, 234, 0.05); border-radius: 10px; line-height: 2.2; }
+        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 0; overflow: hidden; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06); border: 1px solid #e8e8e8; }
+        .header { background: #000000; padding: 50px 30px; text-align: center; position: relative; overflow: hidden; }
+        .header::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.03; background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, #ffffff 35px, #ffffff 36px), repeating-linear-gradient(-45deg, transparent, transparent 35px, #ffffff 35px, #ffffff 36px); background-size: 50px 50px; pointer-events: none; }
+        .logo { font-size: 36px; font-weight: bold; color: #ffffff; margin: 0 0 10px 0; position: relative; z-index: 1; }
+        .header-subtitle { color: rgba(255,255,255,0.8); font-size: 16px; margin: 0; position: relative; z-index: 1; font-weight: 300; }
+        .content { padding: 50px 40px; background: #ffffff; }
+        .message-box { background: #fafafa; border-right: 3px solid #000000; padding: 25px; border-radius: 0; margin: 25px 0; }
+        .message { font-size: 20px; line-height: 2; color: #000000; margin: 0; text-align: center; font-weight: 400; }
+        .quran-verse { font-family: 'Amiri Quran', serif; font-size: 26px; color: #000000; text-align: center; margin: 30px 0; padding: 25px; background: #fafafa; border-radius: 0; line-height: 2.2; border-top: 1px solid #e8e8e8; border-bottom: 1px solid #e8e8e8; }
         .cta-container { text-align: center; margin: 40px 0; }
-        .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; padding: 18px 50px; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 18px; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); }
-        .footer { background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); padding: 40px 30px; text-align: center; color: rgba(255,255,255,0.8); }
-        .footer-text { margin: 10px 0; font-size: 14px; }
-        .footer-link { color: #667eea; text-decoration: none; font-weight: 500; }
-        .divider { height: 2px; background: linear-gradient(90deg, transparent, #667eea, transparent); margin: 30px 0; }
-        .moon-icon { font-size: 60px; margin: 20px 0; display: block; }
+        .cta-button { display: inline-block; background: #000000; color: #ffffff; padding: 16px 45px; text-decoration: none; border-radius: 0; font-weight: 600; font-size: 17px; border: 2px solid #000000; }
+        .footer { background: #000000; padding: 40px 30px; text-align: center; color: rgba(255,255,255,0.8); border-top: 1px solid #333333; }
+        .footer-text { margin: 10px 0; font-size: 14px; color: rgba(255,255,255,0.6); }
+        .footer-link { color: #ffffff; text-decoration: none; font-weight: 500; }
+        .divider { height: 1px; background: #e8e8e8; margin: 35px 0; }
+        .moon-icon { font-size: 50px; margin: 20px 0; display: block; }
         .stats { text-align: center; margin: 30px 0; }
-        .stat-number { font-size: 42px; font-weight: bold; color: #667eea; margin: 5px 0; }
-        .stat-label { font-size: 16px; color: #7f8c8d; margin: 5px 0; }
+        .stat-number { font-size: 48px; font-weight: 700; color: #000000; margin: 5px 0; }
+        .stat-label { font-size: 16px; color: #666666; margin: 5px 0; }
     </style>
 </head>
 <body>

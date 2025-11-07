@@ -16,8 +16,8 @@ const EmailTemplates = {
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
+            background: #fafafa;
             direction: rtl;
         }
         .email-wrapper {
@@ -27,12 +27,13 @@ const EmailTemplates = {
             max-width: 600px;
             margin: 0 auto;
             background-color: #ffffff;
-            border-radius: 20px;
+            border-radius: 0;
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e8e8e8;
         }
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #000000;
             padding: 50px 30px;
             text-align: center;
             position: relative;
@@ -41,18 +42,16 @@ const EmailTemplates = {
         .header::before {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
             background-image:
-                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,0.05) 35px, rgba(255,255,255,0.05) 70px),
-                repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255,255,255,0.05) 35px, rgba(255,255,255,0.05) 70px);
-            animation: shimmer 20s linear infinite;
-        }
-        @keyframes shimmer {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50%, 50%); }
+                repeating-linear-gradient(45deg, transparent, transparent 35px, #ffffff 35px, #ffffff 36px),
+                repeating-linear-gradient(-45deg, transparent, transparent 35px, #ffffff 35px, #ffffff 36px);
+            background-size: 50px 50px;
+            pointer-events: none;
         }
         .logo {
             font-size: 36px;
@@ -61,14 +60,14 @@ const EmailTemplates = {
             margin: 0 0 10px 0;
             position: relative;
             z-index: 1;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
         .header-subtitle {
-            color: rgba(255,255,255,0.95);
+            color: rgba(255,255,255,0.8);
             font-size: 16px;
             margin: 0;
             position: relative;
             z-index: 1;
+            font-weight: 300;
         }
         .islamic-pattern {
             text-align: center;
@@ -79,33 +78,35 @@ const EmailTemplates = {
         }
         .content {
             padding: 50px 40px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+            background: #ffffff;
         }
         .message-box {
-            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-            border-right: 4px solid #667eea;
+            background: #fafafa;
+            border-right: 3px solid #000000;
             padding: 25px;
-            border-radius: 15px;
+            border-radius: 0;
             margin: 25px 0;
         }
         .message {
             font-size: 20px;
             line-height: 2;
-            color: #2c3e50;
+            color: #000000;
             margin: 0;
             text-align: center;
-            font-weight: 500;
+            font-weight: 400;
         }
         .quran-verse {
             font-family: 'Amiri Quran', serif;
-            font-size: 24px;
-            color: #667eea;
+            font-size: 26px;
+            color: #000000;
             text-align: center;
             margin: 30px 0;
-            padding: 20px;
-            background: rgba(102, 126, 234, 0.05);
-            border-radius: 10px;
+            padding: 25px;
+            background: #fafafa;
+            border-radius: 0;
             line-height: 2.2;
+            border-top: 1px solid #e8e8e8;
+            border-bottom: 1px solid #e8e8e8;
         }
         .cta-container {
             text-align: center;
@@ -113,15 +114,19 @@ const EmailTemplates = {
         }
         .cta-button {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #000000;
             color: #ffffff;
-            padding: 18px 50px;
+            padding: 16px 45px;
             text-decoration: none;
-            border-radius: 50px;
-            font-weight: bold;
-            font-size: 18px;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-            transition: transform 0.3s;
+            border-radius: 0;
+            font-weight: 600;
+            font-size: 17px;
+            border: 2px solid #000000;
+            transition: all 0.3s;
+        }
+        .cta-button:hover {
+            background: #ffffff;
+            color: #000000;
         }
         .stats-row {
             display: table;
@@ -137,54 +142,51 @@ const EmailTemplates = {
             margin: 0 10px;
         }
         .stat-number {
-            font-size: 32px;
-            font-weight: bold;
-            color: #667eea;
+            font-size: 48px;
+            font-weight: 700;
+            color: #000000;
             margin: 0;
         }
         .stat-label {
             font-size: 14px;
-            color: #7f8c8d;
+            color: #666666;
             margin: 5px 0 0 0;
         }
         .footer {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            background: #000000;
             padding: 40px 30px;
             text-align: center;
             color: rgba(255,255,255,0.8);
+            border-top: 1px solid #333333;
         }
         .footer-text {
             margin: 10px 0;
             font-size: 14px;
+            color: rgba(255,255,255,0.6);
         }
         .footer-link {
-            color: #667eea;
+            color: #ffffff;
             text-decoration: none;
             font-weight: 500;
         }
         .unsubscribe {
-            color: rgba(255,255,255,0.5);
+            color: rgba(255,255,255,0.4);
             font-size: 12px;
             margin-top: 25px;
         }
         .unsubscribe a {
-            color: rgba(255,255,255,0.7);
+            color: rgba(255,255,255,0.6);
             text-decoration: underline;
         }
         .divider {
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #667eea, transparent);
-            margin: 30px 0;
+            height: 1px;
+            background: #e8e8e8;
+            margin: 35px 0;
         }
         .moon-icon {
-            font-size: 60px;
+            font-size: 50px;
             margin: 20px 0;
             display: block;
-            animation: glow 2s ease-in-out infinite;
-        }
-        @keyframes glow {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.05); }
         }
     </style>
 </head>
