@@ -740,15 +740,14 @@
                 </div>
             </div>
 
-            <!-- Cloudflare Turnstile - Managed Mode -->
-            <!-- Auto-verifies for real users (no challenge needed) -->
-            <div id="turnstile-container" style="display: flex; justify-content: center; margin: 20px 0;">
+            <!-- Cloudflare Turnstile - Hidden bot protection -->
+            <!-- Runs in background, completely invisible to users -->
+            <div id="turnstile-container" style="display: none;">
                 <div class="cf-turnstile"
                      data-sitekey="0x4AAAAAAB_upPnAMJiWukSQ"
                      data-callback="onTurnstileSuccess"
                      data-theme="light"
-                     data-size="normal"
-                     data-appearance="interaction-only">
+                     data-size="compact">
                 </div>
             </div>
 

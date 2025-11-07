@@ -822,15 +822,14 @@
                     <input type="password" id="loginPassword" required autocomplete="current-password">
                 </div>
 
-                <!-- Cloudflare Turnstile - Managed Mode -->
-                <!-- Auto-verifies for real users (no challenge needed) -->
-                <div style="display: flex; justify-content: center; margin: 15px 0;">
+                <!-- Cloudflare Turnstile - Hidden bot protection -->
+                <!-- Runs in background, completely invisible to users -->
+                <div style="display: none;">
                     <div class="cf-turnstile"
                          data-sitekey="0x4AAAAAAB_upPnAMJiWukSQ"
                          data-callback="onAdminTurnstileSuccess"
                          data-theme="light"
-                         data-size="normal"
-                         data-appearance="interaction-only">
+                         data-size="compact">
                     </div>
                 </div>
 

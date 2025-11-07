@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v70-turnstile-non-blocking';
+const CACHE_NAME = 'tafsir-kurd-v71-turnstile-hidden';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v70-turnstile-non-blocking - Removed Turnstile wait requirement, users can sign in immediately');
+  console.log('[ServiceWorker] Installing v71-turnstile-hidden - Turnstile completely hidden (display: none), bot protection runs silently');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
