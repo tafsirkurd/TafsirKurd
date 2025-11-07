@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v68-fix-turnstile-compact';
+const CACHE_NAME = 'tafsir-kurd-v69-turnstile-visible-managed';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v68-fix-turnstile-compact - Fixed Turnstile size (compact instead of invisible) and POST caching');
+  console.log('[ServiceWorker] Installing v69-turnstile-visible-managed - Turnstile now visible with managed mode (auto-verifies for real users)');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

@@ -740,14 +740,15 @@
                 </div>
             </div>
 
-            <!-- Cloudflare Turnstile Widget - HIDDEN MODE -->
-            <!-- Auto-verifies in background, hidden from view -->
-            <div id="turnstile-container" style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;">
+            <!-- Cloudflare Turnstile - Managed Mode -->
+            <!-- Auto-verifies for real users (no challenge needed) -->
+            <div id="turnstile-container" style="display: flex; justify-content: center; margin: 20px 0;">
                 <div class="cf-turnstile"
                      data-sitekey="0x4AAAAAAB_upPnAMJiWukSQ"
                      data-callback="onTurnstileSuccess"
                      data-theme="light"
-                     data-size="compact">
+                     data-size="normal"
+                     data-appearance="interaction-only">
                 </div>
             </div>
 
