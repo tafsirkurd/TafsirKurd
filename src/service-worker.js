@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v72-instant-redirect';
+const CACHE_NAME = 'tafsir-kurd-v73-force-redirect';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v72-instant-redirect - Removed setTimeout delays, instant redirect after sign-in');
+  console.log('[ServiceWorker] Installing v73-force-redirect - Added error handling to FORCE redirect even if errors occur');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

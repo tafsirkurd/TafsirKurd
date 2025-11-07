@@ -848,23 +848,26 @@
         }
 
         async function handleUserInfo(userInfo) {
-            currentUser = {
-                name: userInfo.name,
-                email: userInfo.email,
-                picture: userInfo.picture,
-                sub: userInfo.sub
-            };
-
-            showNotification('بەخێربێیت ' + currentUser.name.split(' ')[0] + '! ئێستا دەتگەیەنینە لاپەڕەی بەخێربێیت...');
-
-            // Store user data
-            localStorage.setItem('user', JSON.stringify(currentUser));
-            localStorage.setItem('isAuthenticated', 'true');
-
-            // IMPORTANT: Save Google user info to database immediately with correct field names
-            let needsSetup = false;
-            let isNewUser = false;  // Declare outside try block so it's accessible in redirect logic
             try {
+                currentUser = {
+                    name: userInfo.name,
+                    email: userInfo.email,
+                    picture: userInfo.picture,
+                    sub: userInfo.sub
+                };
+
+                // Store user data IMMEDIATELY
+                localStorage.setItem('user', JSON.stringify(currentUser));
+                localStorage.setItem('isAuthenticated', 'true');
+
+                console.log('✅ User authenticated:', currentUser.name);
+
+                // IMPORTANT: Save Google user info to database immediately with correct field names
+                let needsSetup = false;
+                let isNewUser = false;  // Declare outside try block so it's accessible in redirect logic
+                let userData = {};
+
+                try {
                 const response = await fetch('/.netlify/functions/user-data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -996,6 +999,20 @@
                 console.log('🔄 Unknown state - Starting onboarding');
                 sessionStorage.setItem('fromLogin', 'true');
                 window.location.href = '/onboarding';
+            }
+            } catch (error) {
+                console.error('❌ Error in handleUserInfo:', error);
+                // ALWAYS redirect even if there's an error
+                // For returning users, try to go to quran
+                const hasCompletedSignup = localStorage.getItem('signupCompleted') === 'true';
+                if (hasCompletedSignup) {
+                    console.log('🔄 Error occurred but user has completed signup - redirecting to quran');
+                    window.location.href = '/quran';
+                } else {
+                    console.log('🔄 Error occurred - redirecting to onboarding');
+                    sessionStorage.setItem('fromLogin', 'true');
+                    window.location.href = '/onboarding';
+                }
             }
         }
 
