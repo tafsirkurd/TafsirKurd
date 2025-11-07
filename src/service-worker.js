@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v60-disable-auto-reload';
+const CACHE_NAME = 'tafsir-kurd-v61-remove-force-update';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v60-disable-auto-reload - Disabled auto-reload to prevent loops');
+  console.log('[ServiceWorker] Installing v61-remove-force-update - Removed forced update checks');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

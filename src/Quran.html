@@ -6399,21 +6399,8 @@
                 navigator.serviceWorker.register('/service-worker.js')
                     .then(registration => {
                         console.log('✅ Service Worker registered successfully:', registration.scope);
-
-                        // Check for updates every time the page loads
-                        registration.update();
-
-                        // When a new service worker is waiting, skip waiting and reload
-                        registration.addEventListener('updatefound', () => {
-                            const newWorker = registration.installing;
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    // New service worker available, skip waiting (will reload via controllerchange)
-                                    newWorker.postMessage({ type: 'SKIP_WAITING' });
-                                    // Don't reload here - let controllerchange handle it
-                                }
-                            });
-                        });
+                        // Service worker will auto-update in background (default browser behavior)
+                        // No need to force updates on every page load
                     })
                     .catch(error => {
                         console.log('❌ Service Worker registration failed:', error);
