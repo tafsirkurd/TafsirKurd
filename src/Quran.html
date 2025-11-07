@@ -4530,11 +4530,10 @@
                 localStorage.setItem('currentJuzIndex', juzIndex.toString());
                 const nextSurah = juzSurahs[juzIndex];
 
-                showNotification(`درێژەپێدان... سوورەی ${surahNames[nextSurah].english}`);
+                showNotification(`درێژەپێدان بۆ ${surahNames[nextSurah].english}`);
 
-                setTimeout(() => {
-                    openSurah(nextSurah);
-                }, 1500);
+                // Open next surah immediately (no delay)
+                openSurah(nextSurah);
 
                 return true;
             } else {
@@ -6179,6 +6178,19 @@
 
             // Update surah progress indicator
             updateSurahProgressIndicator(surahNumber);
+
+            // Check if reading Juz and reached last ayah of current surah
+            const readingFullJuz = localStorage.getItem('readingFullJuz') === 'true';
+            if (readingFullJuz) {
+                const totalAyahs = surahNames[surahNumber].ayahs;
+                // If reached last ayah of this surah, auto-continue to next
+                if (ayahNumber === totalAyahs) {
+                    // Small delay to ensure user sees the last ayah
+                    setTimeout(() => {
+                        checkJuzContinuation();
+                    }, 2000);
+                }
+            }
 
             // Check if surah is completed (scrolled through 80% of ayahs)
             checkSurahCompletion(surahNumber);
