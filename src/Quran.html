@@ -5505,8 +5505,7 @@
                 }
             }
 
-            // Hide streak badge if user hasn't set reading goal yet
-            const readingGoal = localStorage.getItem('readingGoal');
+            // readingGoal already declared at line 5425, reusing it here
             if (streakContainer) {
                 if (!readingGoal) {
                     // User hasn't set reading goal - hide the streak badge
