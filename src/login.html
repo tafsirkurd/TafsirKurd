@@ -872,6 +872,16 @@
                 // Check if this is a brand new user (no existing data)
                 isNewUser = !result.data || Object.keys(result.data).length === 0 || needsSetup;
 
+                // CRITICAL: Clear any leftover localStorage for brand new users
+                if (isNewUser) {
+                    console.log('🆕 Brand new user - clearing any leftover localStorage');
+                    localStorage.removeItem('readingGoal');
+                    localStorage.removeItem('signupCompleted');
+                    localStorage.removeItem('onboardingCompleted');
+                    localStorage.removeItem('userPreferences');
+                    // Don't clear user data or user key as we need those
+                }
+
                 // Only save if this is a new user OR if Google info was missing
                 const needsGoogleInfoUpdate = !result.data?.full_name || !result.data?.email || !result.data?.picture;
 
