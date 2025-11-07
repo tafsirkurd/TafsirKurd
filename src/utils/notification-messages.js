@@ -1,77 +1,77 @@
 // Notification Messages System for TafsirKurd
-// English version - will be replaced with Kurdish later
+// Kurdish Badini version
 
 const NotificationMessages = {
-    // 🌅 Daily Qur'an Progress & Streak
+    // 🌅 پێشکەفتن و خشتەی رۆژانە یێ قورئانێ
     dailyProgress: {
-        streakCompleted: "Masha'Allah! You've completed today's reading — your streak lives on 🌙.",
+        streakCompleted: "ماشاءالله! تە خواندنا ئەڤرۆ ب دووماهی ئینایە — خشتەیا تە هەر بەردەوامە 🌙.",
 
-        journeyDay: (dayCount) => `You're on day ${dayCount} of your Qur'an journey. Keep the light alive!`,
+        journeyDay: (dayCount) => `تۆ د رۆژا ${dayCount} ێ دا یێ ل سەر رێکا خوە یا قورئانێ. بلا رۆناهی هەر بمینیت!`,
 
-        streakGlowing: "Your streak is glowing — don't let it fade. Read just one ayah today 🌸.",
+        streakGlowing: "خشتەیا تە گەش و پر رۆناهی یە — نەئێخە. ئەڤرۆ بتنێ ئایەتەکێ بخوینە 🌸.",
 
-        oneVerseReminder: "Reminder: even one verse brings you closer to Allah. Continue your streak now.",
+        oneVerseReminder: "بیرئینان: هەتا ئایەتەک بتنێ ژی تە نێزیکێ خودێ دکەت. نها خشتەیا خوە بەردەوام کە.",
 
-        consistencyWorship: "Consistency is worship — open your Qur'an and continue your progress 🌿."
+        consistencyWorship: "بەردەوامبوون پەرستنە — قورئانا خوە ڤەکە و پێشکەفتنا خوە بەردەوام کە 🌿."
     },
 
-    // 🌙 Missed / Late Reminder
+    // 🌙 بیرئینانا ژ دەستچوویی / درەنگ
     missedReminder: {
-        endOfDay: "It's almost the end of the day! Read one ayah to keep your streak unbroken 🌖.",
+        endOfDay: "نێزیکی دووماهیا رۆژێ یە! ئایەتەکێ بخوینە دا خشتەیا تە نەشکێت 🌖.",
 
-        streakPaused: "Your Qur'an reading streak paused — start again today for new blessings ✨.",
+        streakPaused: "خشتەیا تە یا خواندنا قورئانێ راوەستیا — ئەڤرۆ ژ نوی دەستپێبکە بۆ خێر و قازانجێن نوی ✨.",
 
-        missedYesterday: "Don't worry if you missed yesterday. Restart today — Allah loves consistency ❤️.",
+        missedYesterday: "خەم نەبە ئەگەر تە د دیرۆکێ دا ژ دەست دایە. ئەڤرۆ ژ نوی دەستپێبکە — خودێ حەز ژ بەردەوامیێ دکەت ❤️.",
 
-        newChance: "A new day, a new chance to reconnect with the Qur'an 🌅."
+        newChance: "رۆژەک نوی، دەرفەتەک نوی بۆ ڤەگۆهارتن ب قورئانێ 🌅."
     },
 
-    // 📖 Goal & Achievement
+    // 📖 ئارمانج و دەستکەفت
     goalAchievement: {
-        goalReached: (goalName) => `Goal reached! You completed ${goalName} — may Allah reward your effort 🤍.`,
+        goalReached: (goalName) => `ئارمانج هاتە ب دەستڤەئینان! تە ${goalName} ب دووماهی ئینایە — خودێ خێرا خوە بدەتە تە 🤍.`,
 
-        gettingCloser: "You're getting closer to your goal every day — barakAllahu feek!",
+        gettingCloser: "تۆ رۆژ ب رۆژ نێزیکتر دبیت ژ ئارمانجا خوە — بارک الله فیک!",
 
-        stepsRemaining: (remaining) => `Only ${remaining} steps left to complete your goal. Keep going, you've got this 💪.`,
+        stepsRemaining: (remaining) => `بتنێ ${remaining} ئاستێن مای بۆ ب دووماهی ئینانا ئارمانجا خوە. هەر بەردەوام بە، تۆ دشێی 💪.`,
 
-        progressSaved: "Progress saved successfully ✅. Continue your journey whenever you're ready."
+        progressSaved: "پێشکەفتن ب سەرکەفتی هاتە پاشکەفتن ✅. هەر دەمێ تۆ ئامادە بی رێکا خوە بەردەوام کە."
     },
 
-    // 💌 Inspirational / Weekly Motivation
+    // 💌 هاندان / هاندانەکا حەفتیانە
     inspirational: {
-        friday: "Friday reminder: increase your Qur'an recitation — it's the best dhikr on Jumu'ah 🌸.",
+        friday: "بیرئینانا ئەینیێ: خواندنا خوە یا قورئانێ زێدە بکە — ئەڤە باشترین زکرە د رۆژا ئەینیێ دا 🌸.",
 
-        littleDaily: "A little Qur'an daily is better than much rarely. Keep your heart connected 💫.",
+        littleDaily: "هندەک قورئان رۆژانە باشترە ژ گەلەک بتنێ جاران. دلی خوە گرێدە ب قورئانێ 💫.",
 
-        healsHearts: "The Qur'an heals hearts — even one verse changes everything 💖.",
+        healsHearts: "قورئان دلا ساخ دکەت — هەتا ئایەتەک بتنێ ژی هەر تشتەکی دگۆهۆریت 💖.",
 
-        addsLight: "Every ayah you read adds light to your life. Keep reading, believer 🌙.",
+        addsLight: "هەر ئایەتەکێ تۆ دخوینی رۆناهیێ ل ژیانا تە زێدە دکەت. هەر بخوینە، ئەی باوەردار 🌙.",
 
-        neverDisappoints: "When your heart feels heavy, open the Book that never disappoints 📖."
+        neverDisappoints: "دەما دلی تە گران هەست پێدکەت، کتێبا خوە ڤەکە یا کو چ جاران بێ هیڤی ناکەت 📖."
     },
 
-    // ⚙️ System or General Alerts
+    // ⚙️ سیستەم یان ئاگەهدارکێن گشتی
     system: {
-        progressSaved: "Your progress was saved successfully ✅.",
+        progressSaved: "پێشکەفتنا تە ب سەرکەفتی هاتە پاشکەفتن ✅.",
 
-        loadError: "We couldn't load your streak data. Please refresh the page.",
+        loadError: "مە نەشیایە داتایێن خشتەیا تە بار بکەین. لطفەن پەنجەرێ تازە بکە.",
 
-        newVersion: "New version of TafsirKurd is available. Refresh to see updates 🔁.",
+        newVersion: "ڤێرژنەکا نوی یا تەفسیرکورد بەردەستە. تازە بکە بۆ دیتنا نویکرنان 🔁.",
 
-        notificationUpdated: "Notification settings updated successfully 📨.",
+        notificationUpdated: "سێتینگێن ئاگەهدارکرنێ ب سەرکەفتی هاتنە نویکرن 📨.",
 
-        emailSubscribed: "Email reminder subscribed — you'll receive updates soon."
+        emailSubscribed: "ئیمەیلێ بیرئینانێ هاتە سەبسکرایبکرن — دێ د زووترین دەم دا نویکرنان وەرگری."
     },
 
-    // 🌿 Special Events / Ramadan / Milestones
+    // 🌿 بۆنەیێن تایبەت / رەمەزان / قۆناغێن گرنگ
     specialEvents: {
-        ramadanNear: "Ramadan is near! Set your Qur'an goal now and prepare your heart 🌙.",
+        ramadanNear: "رەمەزان نێزیکە! نها ئارمانجا خوە یا قورئانێ دیارکە و دلی خوە ئامادە کە 🌙.",
 
-        milestone: (count) => `Alhamdulillah! You've reached ${count} verses — keep it going 🌿.`,
+        milestone: (count) => `الحمدلله! تە گەهاندیە ${count} ئایەتان — هەر بەردەوام بە 🌿.`,
 
-        newTafsir: "New tafsir section added! Explore deeper meanings at tafsirkurd.com/quran 📜.",
+        newTafsir: "پشکەکا نوی یا تەفسیرێ هاتە زێدەکرن! رامانێن دێرینتر ل tafsirkurd.com/quran ڤەکۆلین بکە 📜.",
 
-        reflectToday: "Special reminder: Reflect on today's verse — it might be the one that changes your day ✨."
+        reflectToday: "بیرئینانەکا تایبەت: ل سەر ئایەتا ئەڤرۆ راوەستە و رامان لێ بکە — دبیت ئەڤە یاکو رۆژا تە بگۆهۆریت ✨."
     },
 
     // Helper function to get random message from a category
