@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v87-juz-auto';
+const CACHE_NAME = 'tafsir-kurd-v88-juz-continuous-page';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v87-juz-auto - Auto-advance to next surah when reaching end');
+  console.log('[ServiceWorker] Installing v88-juz-continuous-page - All Juz surahs in one continuous page');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

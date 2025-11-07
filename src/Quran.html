@@ -4487,65 +4487,126 @@
             });
         }
 
-        // Read Full Juz - open the starting surah of the Juz with continuous reading
-        let currentJuzSurahs = [];
-        let currentJuzIndex = 0;
-
+        // Read Full Juz - load all surahs in one continuous page
         function readFullJuz(juzNum) {
-            // Get starting position of this Juz (surah + ayah)
+            // Get all surahs in this Juz
+            const juzSurahs = juzMapping[juzNum];
             const startPosition = juzStartPositions[juzNum];
-            const startingSurah = startPosition.surah;
-            const startingAyah = startPosition.ayah;
 
-            // Get all surahs in this Juz for continuous reading
-            currentJuzSurahs = juzMapping[juzNum];
-            currentJuzIndex = 0;
-
-            // Store in localStorage for continuous reading
+            // Mark that we're reading a Juz
             localStorage.setItem('readingFullJuz', 'true');
             localStorage.setItem('currentJuzNumber', juzNum.toString());
-            localStorage.setItem('currentJuzSurahs', JSON.stringify(currentJuzSurahs));
-            localStorage.setItem('currentJuzIndex', '0');
 
-            // Open the surah at the specific ayah where this Juz starts
-            openSurahWithAyah(startingSurah, startingAyah);
+            // Show reader page
+            document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('surahReaderPage').classList.add('visible');
+
+            // Set initial header to first surah
+            currentSurahNumber = startPosition.surah;
+            const firstSurah = surahNames[startPosition.surah];
+            document.getElementById('readerSurahName').textContent = `${firstSurah.english} (${firstSurah.arabic})`;
+            document.getElementById('readerSurahInfo').textContent = `${KurdishNumbers.toKurdish(firstSurah.ayahs)} ئایەت`;
+
+            // Load all surahs in continuous format
+            loadJuzContinuous(juzNum, juzSurahs, startPosition);
 
             // Show notification
-            showNotification(`دەست پێکردنی جوزی ${KurdishNumbers.toKurdish(juzNum)} - ${currentJuzSurahs.length} سوورە`);
+            showNotification(`جوزی ${KurdishNumbers.toKurdish(juzNum)} - ${juzSurahs.length} سوورە`);
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Check if we should continue to next surah in Juz
-        function checkJuzContinuation() {
-            const readingFullJuz = localStorage.getItem('readingFullJuz') === 'true';
-            if (!readingFullJuz) return false;
+        // Load all surahs of a Juz in one continuous page
+        async function loadJuzContinuous(juzNum, juzSurahs, startPosition) {
+            const ayahsContainer = document.getElementById('ayahsContainer');
+            ayahsContainer.innerHTML = '';
 
-            const juzSurahs = JSON.parse(localStorage.getItem('currentJuzSurahs') || '[]');
-            let juzIndex = parseInt(localStorage.getItem('currentJuzIndex') || '0');
+            for (let i = 0; i < juzSurahs.length; i++) {
+                const surahNum = juzSurahs[i];
+                const surah = quranData.surahs.find(s => s.number === surahNum);
+                if (!surah) continue;
 
-            // Move to next surah
-            juzIndex++;
+                // Determine starting ayah (first surah starts at Juz position, others at 1)
+                const startAyah = (i === 0) ? startPosition.ayah : 1;
 
-            if (juzIndex < juzSurahs.length) {
-                // More surahs in this Juz
-                localStorage.setItem('currentJuzIndex', juzIndex.toString());
-                const nextSurah = juzSurahs[juzIndex];
+                // Add all ayahs from this surah
+                for (let j = startAyah; j <= surah.ayahs.length; j++) {
+                    const ayahData = surah.ayahs[j - 1];
+                    if (!ayahData) continue;
 
-                showNotification(`درێژەپێدان بۆ ${surahNames[nextSurah].english}`);
+                    const ayahDiv = document.createElement('div');
+                    ayahDiv.className = 'ayah';
+                    ayahDiv.setAttribute('data-surah', surahNum);
+                    ayahDiv.setAttribute('data-ayah', j);
+                    ayahDiv.id = `ayah-${surahNum}-${j}`;
 
-                // Open next surah immediately (no delay)
-                openSurah(nextSurah);
+                    ayahDiv.innerHTML = `
+                        <div class="ayah-number">${KurdishNumbers.toKurdish(j)}</div>
+                        <div class="ayah-arabic">${ayahData.text}</div>
+                        <div class="ayah-tafsir">
+                            <div class="tafsir-content"></div>
+                        </div>
+                    `;
 
-                return true;
-            } else {
-                // Finished all surahs in Juz
-                localStorage.removeItem('readingFullJuz');
-                localStorage.removeItem('currentJuzNumber');
-                localStorage.removeItem('currentJuzSurahs');
-                localStorage.removeItem('currentJuzIndex');
+                    ayahsContainer.appendChild(ayahDiv);
 
-                showNotification('✅ جوزەکە تەواو بوو! ئافەرین');
-                return false;
+                    // Load tafsir
+                    loadAyahTafsir(surahNum, j, ayahDiv.querySelector('.tafsir-content'));
+                }
             }
+
+            // Setup scroll tracking to update header
+            setupJuzHeaderTracking(juzSurahs);
+
+            // Initialize activity tracking
+            if (isUserAuthenticated) {
+                initializeActivityTracking();
+                setupScrollTracking();
+            }
+
+            // Update navigation
+            updateNavigation(startPosition.surah);
+        }
+
+        // Setup header tracking for Juz reading - updates header based on scroll
+        function setupJuzHeaderTracking(juzSurahs) {
+            let currentDisplayedSurah = juzSurahs[0];
+
+            // Create intersection observer to detect which surah is currently visible
+            const headerObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const ayahElement = entry.target;
+                        const surahNum = parseInt(ayahElement.getAttribute('data-surah'));
+
+                        if (surahNum && surahNum !== currentDisplayedSurah) {
+                            currentDisplayedSurah = surahNum;
+                            currentSurahNumber = surahNum;
+
+                            // Update header to show current surah
+                            const surah = surahNames[surahNum];
+                            document.getElementById('readerSurahName').textContent = `${surah.english} (${surah.arabic})`;
+                            document.getElementById('readerSurahInfo').textContent = `${KurdishNumbers.toKurdish(surah.ayahs)} ئایەت`;
+
+                            // Update navigation
+                            updateNavigation(surahNum);
+                        }
+                    }
+                });
+            }, {
+                root: null,
+                rootMargin: '-40% 0px -40% 0px',
+                threshold: 0.1
+            });
+
+            // Observe all ayah elements
+            setTimeout(() => {
+                const ayahElements = document.querySelectorAll('.ayah[data-surah]');
+                ayahElements.forEach(ayah => {
+                    headerObserver.observe(ayah);
+                });
+            }, 500);
         }
 
 
@@ -6178,19 +6239,6 @@
 
             // Update surah progress indicator
             updateSurahProgressIndicator(surahNumber);
-
-            // Check if reading Juz and reached last ayah of current surah
-            const readingFullJuz = localStorage.getItem('readingFullJuz') === 'true';
-            if (readingFullJuz) {
-                const totalAyahs = surahNames[surahNumber].ayahs;
-                // If reached last ayah of this surah, auto-continue to next
-                if (ayahNumber === totalAyahs) {
-                    // Small delay to ensure user sees the last ayah
-                    setTimeout(() => {
-                        checkJuzContinuation();
-                    }, 2000);
-                }
-            }
 
             // Check if surah is completed (scrolled through 80% of ayahs)
             checkSurahCompletion(surahNumber);
