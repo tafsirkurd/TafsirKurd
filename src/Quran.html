@@ -1543,6 +1543,7 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 30px;
+            padding-top: 110px; /* Space for fixed sticky progress header */
         }
 
         .surah-reader-page.visible {
@@ -1574,24 +1575,28 @@
 
         /* Sticky Progress Header - Quran.com style */
         .sticky-progress-header {
-            position: sticky;
+            position: fixed;
             top: 70px;
+            left: 0;
+            right: 0;
+            width: 100%;
             z-index: 1000;
             background: var(--card-bg);
             border-bottom: 2px solid var(--border);
             padding: 12px 0;
-            margin: 0 -30px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
             transition: top 0.3s ease-in-out, box-shadow 0.3s ease;
         }
 
         .sticky-progress-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
             display: grid;
             grid-template-columns: 1fr auto 1fr;
             align-items: center;
             gap: 20px;
-            padding: 0 30px;
         }
 
         .sticky-progress-left {
@@ -2491,7 +2496,6 @@
             .sticky-progress-header {
                 padding: 8px 0;
                 top: 55px;
-                margin: 0 -15px;
             }
 
             .sticky-progress-content {
@@ -6743,19 +6747,15 @@
             const ayahElements = container.querySelectorAll('.ayah[data-ayah]');
             if (ayahElements.length === 0) return;
 
-            let visibleAyahs = 0;
-            const viewportHeight = window.innerHeight;
+            // Get total scrollable height
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercentage = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
 
-            ayahElements.forEach(ayah => {
-                const rect = ayah.getBoundingClientRect();
-                // Count ayah as read if it's passed the middle of viewport
-                if (rect.top < viewportHeight / 2) {
-                    visibleAyahs++;
-                }
-            });
-
+            // Calculate ayahs read based on scroll percentage
             const totalAyahs = ayahElements.length;
-            const percentage = Math.round((visibleAyahs / totalAyahs) * 100);
+            const ayahsRead = Math.floor((scrollPercentage / 100) * totalAyahs);
+            const percentage = Math.min(100, Math.round(scrollPercentage));
 
             // Update sticky progress bar
             const progressFillSticky = document.getElementById('progressFillSticky');
@@ -6769,7 +6769,7 @@
                 progressPercentage.textContent = KurdishNumbers.toKurdish(percentage) + '٪';
             }
             if (stickyAyahCount) {
-                stickyAyahCount.textContent = `${KurdishNumbers.toKurdish(visibleAyahs)} / ${KurdishNumbers.toKurdish(totalAyahs)} ئایەت`;
+                stickyAyahCount.textContent = `${KurdishNumbers.toKurdish(ayahsRead)} / ${KurdishNumbers.toKurdish(totalAyahs)} ئایەت`;
             }
         }
 
