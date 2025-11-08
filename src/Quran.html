@@ -1583,7 +1583,7 @@
             z-index: 1000;
             background: var(--card-bg);
             border-bottom: 2px solid var(--border);
-            padding: 12px 20px;
+            padding: 12px 0;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
             transition: top 0.3s ease-in-out, box-shadow 0.3s ease;
@@ -1591,9 +1591,9 @@
 
         .sticky-progress-content {
             display: grid;
-            grid-template-columns: 180px 1fr 180px;
+            grid-template-columns: 1fr auto 1fr;
             align-items: center;
-            gap: 30px;
+            gap: 20px;
             max-width: 1400px;
             margin: 0 auto;
             padding: 0 30px;
@@ -1616,15 +1616,15 @@
             align-items: center;
             gap: 15px;
             justify-content: center;
+            min-width: 400px;
         }
 
         .progress-bar-sticky {
-            flex: 1;
+            width: 300px;
             height: 6px;
             background: var(--border);
             border-radius: 3px;
             overflow: hidden;
-            max-width: 600px;
         }
 
         .progress-fill-sticky {
@@ -2500,11 +2500,11 @@
 
             .sticky-progress-content {
                 gap: 10px;
-                padding: 0 12px;
+                padding: 0 15px;
             }
 
-            .sticky-progress-left {
-                min-width: 80px;
+            .sticky-progress-center {
+                min-width: 250px;
             }
 
             .sticky-surah-name {
@@ -2516,15 +2516,12 @@
                 min-width: 35px;
             }
 
-            .sticky-progress-right {
-                min-width: 90px;
-            }
-
             .sticky-ayah-count {
                 font-size: 0.75rem;
             }
 
             .progress-bar-sticky {
+                width: 180px;
                 height: 4px;
             }
 
