@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v105-proper-alignment';
+const CACHE_NAME = 'tafsir-kurd-v106-contained-progress';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v105-proper-alignment - Fixed Grid columns to match page layout exactly');
+  console.log('[ServiceWorker] Installing v106-contained-progress - Removed full-width, contained within page for proper alignment');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
