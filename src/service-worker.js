@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v107-fixed-fullwidth';
+const CACHE_NAME = 'tafsir-kurd-v108-nav-fix';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v107-fixed-fullwidth - Fixed position full-width like header + scroll-based progress calculation');
+  console.log('[ServiceWorker] Installing v108-nav-fix - Fixed surah navigation by clearing Juz mode + added debug logging');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

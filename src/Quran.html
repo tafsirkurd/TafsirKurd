@@ -4980,19 +4980,20 @@
         }
 
         function navigateSurah(direction) {
-            if (direction === 'prev' && currentSurahNumber > 1) {
-                openSurah(currentSurahNumber - 1);
-            } else if (direction === 'next') {
-                // Check if we're reading a full Juz
-                const readingFullJuz = localStorage.getItem('readingFullJuz') === 'true';
+            console.log('Navigate Surah:', direction, 'Current:', currentSurahNumber);
 
-                if (readingFullJuz) {
-                    // Continue to next surah in Juz
-                    checkJuzContinuation();
-                } else if (currentSurahNumber < 114) {
-                    // Normal next surah navigation
-                    openSurah(currentSurahNumber + 1);
-                }
+            // Clear Juz reading mode when manually navigating
+            localStorage.removeItem('readingFullJuz');
+            localStorage.removeItem('currentJuzNumber');
+
+            if (direction === 'prev' && currentSurahNumber > 1) {
+                console.log('Going to previous surah:', currentSurahNumber - 1);
+                openSurah(currentSurahNumber - 1);
+            } else if (direction === 'next' && currentSurahNumber < 114) {
+                console.log('Going to next surah:', currentSurahNumber + 1);
+                openSurah(currentSurahNumber + 1);
+            } else {
+                console.log('Navigation blocked - at boundary');
             }
         }
 
