@@ -1572,12 +1572,87 @@
             color: var(--text-muted);
         }
 
-        .surah-progress-indicator {
-            margin-top: 20px;
-            padding: 15px 20px;
-            background: var(--bg);
-            border-radius: 12px;
-            border: 2px solid var(--border);
+        /* Sticky Progress Header - Quran.com style */
+        .sticky-progress-header {
+            position: sticky;
+            top: 70px;
+            left: 0;
+            right: 0;
+            width: 100vw;
+            margin-left: calc(-50vw + 50%);
+            z-index: 1000;
+            background: var(--card-bg);
+            border-bottom: 2px solid var(--border);
+            padding: 12px 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            transition: top 0.3s ease-in-out, box-shadow 0.3s ease;
+        }
+
+        .sticky-progress-content {
+            display: grid;
+            grid-template-columns: 180px 1fr 180px;
+            align-items: center;
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
+        }
+
+        .sticky-progress-left {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .sticky-surah-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        .sticky-progress-center {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .progress-bar-sticky {
+            flex: 1;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            max-width: 600px;
+        }
+
+        .progress-fill-sticky {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-percentage {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary);
+            min-width: 45px;
+            text-align: center;
+        }
+
+        .sticky-progress-right {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .sticky-ayah-count {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            white-space: nowrap;
         }
 
         .progress-bar-mini {
@@ -2418,6 +2493,41 @@
                 font-size: 0.75rem;
             }
 
+            .sticky-progress-header {
+                padding: 8px 0;
+                top: 55px;
+            }
+
+            .sticky-progress-content {
+                gap: 10px;
+                padding: 0 12px;
+            }
+
+            .sticky-progress-left {
+                min-width: 80px;
+            }
+
+            .sticky-surah-name {
+                font-size: 0.85rem;
+            }
+
+            .progress-percentage {
+                font-size: 0.75rem;
+                min-width: 35px;
+            }
+
+            .sticky-progress-right {
+                min-width: 90px;
+            }
+
+            .sticky-ayah-count {
+                font-size: 0.75rem;
+            }
+
+            .progress-bar-sticky {
+                height: 4px;
+            }
+
             .surah-navigation {
                 flex-direction: column;
                 gap: 8px;
@@ -3184,11 +3294,23 @@
             <div class="reader-header">
                 <h2 class="reader-surah-name" id="readerSurahName">Al-Fatihah (الفاتحة)</h2>
                 <p class="reader-surah-info" id="readerSurahInfo">7 ئایەت</p>
-                <div class="surah-progress-indicator" id="surahProgressIndicator" style="display: none;">
-                    <div class="progress-bar-mini">
-                        <div class="progress-fill-mini" id="surahProgressFill"></div>
+            </div>
+
+            <!-- Sticky progress header -->
+            <div class="sticky-progress-header" id="stickyProgressHeader">
+                <div class="sticky-progress-content">
+                    <div class="sticky-progress-left">
+                        <span class="sticky-surah-name" id="stickySurahName">Al-Fatihah</span>
                     </div>
-                    <div class="progress-text-mini" id="surahProgressText">0 / 7 ئایەت خوێندراوە</div>
+                    <div class="sticky-progress-center">
+                        <div class="progress-bar-sticky">
+                            <div class="progress-fill-sticky" id="progressFillSticky"></div>
+                        </div>
+                        <span class="progress-percentage" id="progressPercentage">٠٪</span>
+                    </div>
+                    <div class="sticky-progress-right">
+                        <span class="sticky-ayah-count" id="stickyAyahCount">٠ / ٧ ئایەت</span>
+                    </div>
                 </div>
             </div>
 
@@ -4311,7 +4433,17 @@
 
                     // Create container for this Juz
                     const juzContainer = document.createElement('div');
-                    juzContainer.style.cssText = 'background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px;';
+                    juzContainer.style.cssText = 'background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: all 0.3s ease; cursor: pointer;';
+
+                    // Add hover effects to Juz container
+                    juzContainer.onmouseover = function() {
+                        this.style.transform = 'translateY(-4px)';
+                        this.style.boxShadow = '0 8px 24px rgba(139, 92, 246, 0.3)';
+                    };
+                    juzContainer.onmouseout = function() {
+                        this.style.transform = 'translateY(0)';
+                        this.style.boxShadow = 'none';
+                    };
 
                     // Header with Juz title and Read button
                     const header = document.createElement('div');
@@ -4519,41 +4651,110 @@
 
         // Load all surahs of a Juz in one continuous page
         async function loadJuzContinuous(juzNum, juzSurahs, startPosition) {
-            const ayahsContainer = document.getElementById('ayahsContainer');
-            ayahsContainer.innerHTML = '';
+            const container = document.getElementById('ayahContainer');
+            if (!container) {
+                console.error('Ayah container not found');
+                return;
+            }
 
+            // Show loading
+            container.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>بارکردنی جوزی ' + KurdishNumbers.toKurdish(juzNum) + '...</p></div>';
+
+            // Check if data is loaded
+            if (!quranData) {
+                container.innerHTML = '<p style="text-align: center; padding: 40px;">زانیاری بەردەست نییە</p>';
+                return;
+            }
+
+            // Clear container
+            container.innerHTML = '';
+
+            // Load all surahs in this Juz
             for (let i = 0; i < juzSurahs.length; i++) {
                 const surahNum = juzSurahs[i];
-                const surah = quranData.surahs.find(s => s.number === surahNum);
-                if (!surah) continue;
+                const data = quranData[surahNum];
+
+                if (!data || !data.verses || data.verses.length === 0) continue;
 
                 // Determine starting ayah (first surah starts at Juz position, others at 1)
                 const startAyah = (i === 0) ? startPosition.ayah : 1;
 
-                // Add all ayahs from this surah
-                for (let j = startAyah; j <= surah.ayahs.length; j++) {
-                    const ayahData = surah.ayahs[j - 1];
-                    if (!ayahData) continue;
+                // Add surah header for each new surah (including first one if not starting from ayah 1)
+                if (i > 0 || startAyah > 1) {
+                    const surahInfo = surahNames[surahNum];
+                    const decorativeCode = getDecorativeSurahCode(surahNum);
+                    const surahHeaderDiv = document.createElement('div');
+                    surahHeaderDiv.className = 'juz-surah-header';
+                    surahHeaderDiv.setAttribute('data-surah-header', surahNum);
+                    surahHeaderDiv.style.cssText = `
+                        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+                        padding: 24px 20px;
+                        margin: 40px 0 30px 0;
+                        border-radius: 16px;
+                        text-align: center;
+                        box-shadow: 0 8px 20px rgba(139, 92, 246, 0.25);
+                        border: 2px solid rgba(255, 255, 255, 0.1);
+                    `;
+                    surahHeaderDiv.innerHTML = `
+                        <div class="surah-card-arabic no-kurdish-convert" style="font-size: 2.5rem; color: white; margin-bottom: 12px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);">
+                            ${decorativeCode}
+                        </div>
+                        <h3 style="margin: 0 0 6px 0; font-size: 1.4rem; font-weight: 700; color: white; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                            ${surahInfo.english}
+                        </h3>
+                        <p style="margin: 0; font-size: 1rem; color: rgba(255, 255, 255, 0.95); font-weight: 500;">
+                            ${KurdishNumbers.toKurdish(surahInfo.ayahs)} ئایەت
+                        </p>
+                    `;
+                    container.appendChild(surahHeaderDiv);
+                }
+
+                // Add all ayahs from this surah (starting from the correct position)
+                data.verses.forEach(verse => {
+                    // Skip ayahs before the starting position for first surah
+                    if (i === 0 && verse.verse < startAyah) return;
+
+                    const key = `${surahNum}-${verse.verse}`;
+                    const tafsir = tafsirData[key] || '';
+                    const isBookmarked = bookmarkedAyahs.includes(key);
 
                     const ayahDiv = document.createElement('div');
                     ayahDiv.className = 'ayah';
+                    ayahDiv.id = `ayah-${verse.verse}`;
+                    ayahDiv.setAttribute('data-ayah', verse.verse);
                     ayahDiv.setAttribute('data-surah', surahNum);
-                    ayahDiv.setAttribute('data-ayah', j);
-                    ayahDiv.id = `ayah-${surahNum}-${j}`;
+
+                    // Check if this ayah was already read
+                    const ayahKey = `${surahNum}:${verse.verse}`;
+                    if (isUserAuthenticated && activityTracker.readAyahs && activityTracker.readAyahs.has(ayahKey)) {
+                        ayahDiv.classList.add('ayah-read');
+                    }
 
                     ayahDiv.innerHTML = `
-                        <div class="ayah-number">${KurdishNumbers.toKurdish(j)}</div>
-                        <div class="ayah-arabic">${ayahData.text}</div>
-                        <div class="ayah-tafsir">
-                            <div class="tafsir-content"></div>
+                        <div class="ayah-header">
+                            <div class="ayah-number">${KurdishNumbers.toKurdish(verse.verse)}</div>
+                            <div class="ayah-actions">
+                                <button class="ayah-action-btn"
+                                        onclick="openCopyModal(${surahNum}, ${verse.verse})"
+                                        title="کۆپیکردن">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <button class="ayah-action-btn ${isBookmarked ? 'bookmarked' : ''}"
+                                        onclick="toggleBookmark(${surahNum}, ${verse.verse})"
+                                        title="نیشانەکردن">
+                                    <i class="fas fa-bookmark"></i>
+                                </button>
+                            </div>
                         </div>
+                        <div class="ayah-arabic">${verse.text}</div>
+                        ${tafsir ? `
+                            <div class="tafsir-label">تەفسیری سەناحی:</div>
+                            <div class="tafsir-content">${tafsir}</div>
+                        ` : '<div class="tafsir-content"><span class="no-translation">تەفسیر بەردەست نییە.</span></div>'}
                     `;
 
-                    ayahsContainer.appendChild(ayahDiv);
-
-                    // Load tafsir
-                    loadAyahTafsir(surahNum, j, ayahDiv.querySelector('.tafsir-content'));
-                }
+                    container.appendChild(ayahDiv);
+                });
             }
 
             // Setup scroll tracking to update header
@@ -4567,6 +4768,9 @@
 
             // Update navigation
             updateNavigation(startPosition.surah);
+
+            // Update progress indicator for first surah
+            updateSurahProgressIndicator(startPosition.surah);
         }
 
         // Setup header tracking for Juz reading - updates header based on scroll
@@ -4591,6 +4795,9 @@
 
                             // Update navigation
                             updateNavigation(surahNum);
+
+                            // Update progress indicator for new surah
+                            updateSurahProgressIndicator(surahNum);
                         }
                     }
                 });
@@ -4744,10 +4951,11 @@
                     }, 300);
                 }
 
-                // Update progress indicator after loading ayahs
-                if (isUserAuthenticated) {
-                    updateSurahProgressIndicator(surahNum);
-                }
+                // Update progress indicator after loading ayahs (always show)
+                updateSurahProgressIndicator(surahNum);
+
+                // Setup scroll progress tracking for all users
+                setupScrollProgress();
             }
         }
 
@@ -6246,30 +6454,41 @@
 
         // Update surah progress indicator in reader header
         function updateSurahProgressIndicator(surahNumber) {
-            if (!surahNames[surahNumber] || !isUserAuthenticated) return;
+            if (!surahNames[surahNumber]) return;
 
-            const totalAyahs = surahNames[surahNumber].ayahs;
+            const surahInfo = surahNames[surahNumber];
+            const totalAyahs = surahInfo.ayahs;
             let readCount = 0;
 
-            // Count how many ayahs in this surah have been read
-            for (let i = 1; i <= totalAyahs; i++) {
-                const ayahKey = `${surahNumber}:${i}`;
-                if (activityTracker.readAyahs.has(ayahKey)) {
-                    readCount++;
+            // Count how many ayahs in this surah have been read (only if authenticated)
+            if (isUserAuthenticated && activityTracker.readAyahs) {
+                for (let i = 1; i <= totalAyahs; i++) {
+                    const ayahKey = `${surahNumber}:${i}`;
+                    if (activityTracker.readAyahs.has(ayahKey)) {
+                        readCount++;
+                    }
                 }
             }
 
-            // Show indicator only if user is authenticated
-            const indicator = document.getElementById('surahProgressIndicator');
-            const fillBar = document.getElementById('surahProgressFill');
-            const textElement = document.getElementById('surahProgressText');
+            const percentage = Math.round((readCount / totalAyahs) * 100);
 
-            if (indicator && fillBar && textElement) {
-                indicator.style.display = 'block';
+            // Update sticky progress header
+            const stickySurahName = document.getElementById('stickySurahName');
+            const progressFillSticky = document.getElementById('progressFillSticky');
+            const progressPercentage = document.getElementById('progressPercentage');
+            const stickyAyahCount = document.getElementById('stickyAyahCount');
 
-                const percentage = Math.round((readCount / totalAyahs) * 100);
-                fillBar.style.width = percentage + '%';
-                textElement.textContent = `${KurdishNumbers.toKurdish(readCount)} / ${KurdishNumbers.toKurdish(totalAyahs)} ئایەت خوێندراوە (${KurdishNumbers.toKurdish(percentage)}%)`;
+            if (stickySurahName) {
+                stickySurahName.textContent = surahInfo.english;
+            }
+            if (progressFillSticky) {
+                progressFillSticky.style.width = percentage + '%';
+            }
+            if (progressPercentage) {
+                progressPercentage.textContent = KurdishNumbers.toKurdish(percentage) + '٪';
+            }
+            if (stickyAyahCount) {
+                stickyAyahCount.textContent = `${KurdishNumbers.toKurdish(readCount)} / ${KurdishNumbers.toKurdish(totalAyahs)} ئایەت`;
             }
         }
 
@@ -6464,6 +6683,9 @@
 
         // Setup IntersectionObserver for precise ayah tracking
         function setupScrollTracking() {
+            // Setup scroll-based progress for everyone
+            setupScrollProgress();
+
             if (!isUserAuthenticated || !currentUser) return;
 
             // Disconnect existing observer if any
@@ -6500,6 +6722,62 @@
                     activityTracker.ayahObserver.observe(ayah);
                 });
             }, 500); // Small delay to ensure elements are rendered
+        }
+
+        // Setup scroll-based progress update (for all users)
+        function setupScrollProgress() {
+            let ticking = false;
+
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    window.requestAnimationFrame(() => {
+                        updateScrollBasedProgress();
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            });
+
+            // Initial update
+            updateScrollBasedProgress();
+        }
+
+        // Update progress based on scroll position
+        function updateScrollBasedProgress() {
+            const container = document.getElementById('ayahContainer');
+            if (!container) return;
+
+            const ayahElements = container.querySelectorAll('.ayah[data-ayah]');
+            if (ayahElements.length === 0) return;
+
+            let visibleAyahs = 0;
+            const viewportHeight = window.innerHeight;
+
+            ayahElements.forEach(ayah => {
+                const rect = ayah.getBoundingClientRect();
+                // Count ayah as read if it's passed the middle of viewport
+                if (rect.top < viewportHeight / 2) {
+                    visibleAyahs++;
+                }
+            });
+
+            const totalAyahs = ayahElements.length;
+            const percentage = Math.round((visibleAyahs / totalAyahs) * 100);
+
+            // Update sticky progress bar
+            const progressFillSticky = document.getElementById('progressFillSticky');
+            const progressPercentage = document.getElementById('progressPercentage');
+            const stickyAyahCount = document.getElementById('stickyAyahCount');
+
+            if (progressFillSticky) {
+                progressFillSticky.style.width = percentage + '%';
+            }
+            if (progressPercentage) {
+                progressPercentage.textContent = KurdishNumbers.toKurdish(percentage) + '٪';
+            }
+            if (stickyAyahCount) {
+                stickyAyahCount.textContent = `${KurdishNumbers.toKurdish(visibleAyahs)} / ${KurdishNumbers.toKurdish(totalAyahs)} ئایەت`;
+            }
         }
 
         // Detect which ayahs are currently visible (legacy fallback)
@@ -6671,6 +6949,7 @@
         let lastScrollTop = 0;
         let scrollTimeout;
         const header = document.querySelector('.professional-header');
+        const stickyProgress = document.getElementById('stickyProgressHeader');
 
         window.addEventListener('scroll', function() {
             clearTimeout(scrollTimeout);
@@ -6681,9 +6960,17 @@
                 if (scrollTop > lastScrollTop && scrollTop > 100) {
                     // Scrolling down & past 100px
                     header.classList.add('header-hidden');
+                    if (stickyProgress) {
+                        const isMobile = window.innerWidth <= 768;
+                        stickyProgress.style.top = '0px';
+                    }
                 } else {
                     // Scrolling up or at top
                     header.classList.remove('header-hidden');
+                    if (stickyProgress) {
+                        const isMobile = window.innerWidth <= 768;
+                        stickyProgress.style.top = isMobile ? '55px' : '70px';
+                    }
                 }
 
                 lastScrollTop = scrollTop;

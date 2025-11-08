@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v88-juz-continuous-page';
+const CACHE_NAME = 'tafsir-kurd-v104-grid-alignment';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v88-juz-continuous-page - All Juz surahs in one continuous page');
+  console.log('[ServiceWorker] Installing v104-grid-alignment - Converted to CSS Grid for precise column alignment');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
