@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v111-mobile-visible';
+const CACHE_NAME = 'tafsir-kurd-v112-mobile-hide';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v111-mobile-visible - Fixed mobile visibility: 10px top offset when scrolling, forced display');
+  console.log('[ServiceWorker] Installing v112-mobile-hide - Hide progress bar on mobile when scrolling down, show when scrolling up');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
