@@ -2346,6 +2346,11 @@
                 --tafsir-size: 0.8rem;
             }
 
+            .surah-reader-page {
+                padding: 15px;
+                padding-top: 95px; /* Space for fixed sticky progress header on mobile */
+            }
+
             .header-container {
                 padding: 0 10px;
                 height: 55px;
@@ -2499,29 +2504,33 @@
             }
 
             .sticky-progress-content {
-                gap: 10px;
-                padding: 0 15px;
+                gap: 8px;
+                padding: 0 10px;
+                grid-template-columns: auto 1fr auto;
             }
 
             .sticky-progress-center {
-                min-width: 250px;
+                min-width: 0;
+                gap: 8px;
             }
 
             .sticky-surah-name {
-                font-size: 0.85rem;
+                font-size: 0.75rem;
+                white-space: nowrap;
             }
 
             .progress-percentage {
-                font-size: 0.75rem;
-                min-width: 35px;
+                font-size: 0.7rem;
+                min-width: 30px;
             }
 
             .sticky-ayah-count {
-                font-size: 0.75rem;
+                font-size: 0.7rem;
+                white-space: nowrap;
             }
 
             .progress-bar-sticky {
-                width: 180px;
+                width: 120px;
                 height: 4px;
             }
 
