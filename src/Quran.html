@@ -2500,7 +2500,7 @@
 
             .sticky-progress-header {
                 padding: 8px 0;
-                top: 65px;
+                top: 60px;
             }
 
             .sticky-progress-content {
@@ -6967,20 +6967,13 @@
                     // Scrolling down & past 100px
                     header.classList.add('header-hidden');
                     if (stickyProgress) {
-                        if (isMobile) {
-                            // Hide progress bar on mobile when scrolling down
-                            stickyProgress.style.display = 'none';
-                        } else {
-                            stickyProgress.style.display = 'block';
-                            stickyProgress.style.top = '0px';
-                        }
+                        stickyProgress.style.top = isMobile ? '5px' : '0px';
                     }
                 } else {
                     // Scrolling up or at top
                     header.classList.remove('header-hidden');
                     if (stickyProgress) {
-                        stickyProgress.style.display = 'block';
-                        stickyProgress.style.top = isMobile ? '65px' : '85px';
+                        stickyProgress.style.top = isMobile ? '60px' : '85px';
                     }
                 }
 
