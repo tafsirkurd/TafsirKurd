@@ -2501,12 +2501,15 @@
             .sticky-progress-header {
                 padding: 8px 0;
                 top: 65px;
+                display: block !important;
+                visibility: visible !important;
             }
 
             .sticky-progress-content {
                 gap: 8px;
                 padding: 0 10px;
                 grid-template-columns: auto 1fr auto;
+                max-width: 100%;
             }
 
             .sticky-progress-center {
@@ -6960,18 +6963,19 @@
             scrollTimeout = setTimeout(function() {
                 let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
+                const isMobile = window.innerWidth <= 768;
+
                 if (scrollTop > lastScrollTop && scrollTop > 100) {
                     // Scrolling down & past 100px
                     header.classList.add('header-hidden');
                     if (stickyProgress) {
-                        const isMobile = window.innerWidth <= 768;
-                        stickyProgress.style.top = '0px';
+                        // On mobile, keep small gap even when header hidden
+                        stickyProgress.style.top = isMobile ? '10px' : '0px';
                     }
                 } else {
                     // Scrolling up or at top
                     header.classList.remove('header-hidden');
                     if (stickyProgress) {
-                        const isMobile = window.innerWidth <= 768;
                         stickyProgress.style.top = isMobile ? '65px' : '85px';
                     }
                 }
