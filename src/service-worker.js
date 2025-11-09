@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v114-mobile-fixed';
+const CACHE_NAME = 'tafsir-kurd-v115-mobile-spacing';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v114-mobile-fixed - Mobile positioning: 0px when scrolling down, 55px when scrolling up');
+  console.log('[ServiceWorker] Installing v115-mobile-spacing - Mobile: 10px when scrolling down, 60px when scrolling up to prevent cutoff');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
