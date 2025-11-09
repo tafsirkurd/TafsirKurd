@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v108-nav-fix';
+const CACHE_NAME = 'tafsir-kurd-v109-progress-spacing';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v108-nav-fix - Fixed surah navigation by clearing Juz mode + added debug logging');
+  console.log('[ServiceWorker] Installing v109-progress-spacing - Increased progress bar spacing when header visible (85px desktop, 65px mobile)');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
