@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v155-fix-search-cutoff';
+const CACHE_NAME = 'tafsir-kurd-v156-dropdown-padding';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v155-fix-search-cutoff - Fix search result decorative icon cutoff with better padding');
+  console.log('[ServiceWorker] Installing v156-dropdown-padding - Add top padding to search dropdown to prevent icon cutoff');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
