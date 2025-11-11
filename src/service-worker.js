@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v164-fixed-dropdown';
+const CACHE_NAME = 'tafsir-kurd-v165-dropdown-below-input';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v164-fixed-dropdown - Make search dropdowns fixed position to stay on screen');
+  console.log('[ServiceWorker] Installing v165-dropdown-below-input - Position dropdowns below input with mobile support');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
