@@ -6958,6 +6958,14 @@
         const header = document.querySelector('.professional-header');
         const stickyProgress = document.getElementById('stickyProgressHeader');
 
+        // Set initial position on page load
+        if (stickyProgress) {
+            const isMobile = window.innerWidth <= 768;
+            stickyProgress.style.top = isMobile ? '55px' : '85px';
+            stickyProgress.style.display = 'block';
+            stickyProgress.style.visibility = 'visible';
+        }
+
         window.addEventListener('scroll', function() {
             clearTimeout(scrollTimeout);
 
