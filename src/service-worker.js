@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v122-init-position';
+const CACHE_NAME = 'tafsir-kurd-v123-z-index-fix';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v122-init-position - Set initial position on page load (55px mobile, 85px desktop)');
+  console.log('[ServiceWorker] Installing v123-z-index-fix - Increased z-index to 1002 above header, added display/visibility to desktop CSS');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
