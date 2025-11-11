@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v157-increase-item-padding';
+const CACHE_NAME = 'tafsir-kurd-v158-hero-overflow-visible';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v157-increase-item-padding - Increase search result item padding to 30px/35px for first item');
+  console.log('[ServiceWorker] Installing v158-hero-overflow-visible - Change hero-section overflow from hidden to visible to prevent dropdown clipping');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
