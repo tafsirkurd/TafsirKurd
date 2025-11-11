@@ -1209,10 +1209,12 @@
         }
 
         .search-results-dropdown {
-            position: absolute;
-            top: calc(100% + 10px);
-            left: 0;
-            right: 0;
+            position: fixed;
+            top: 160px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 60px);
+            max-width: 1200px;
             background: var(--card-bg);
             border: 2px solid var(--border);
             border-radius: 16px;
@@ -1220,7 +1222,7 @@
             overflow-y: auto;
             overflow-x: visible;
             display: none;
-            z-index: 2000;
+            z-index: 10000;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             padding-top: 10px;
         }
@@ -3129,7 +3131,7 @@
                     <div class="search-results-dropdown" id="searchResultsDropdown"></div>
 
                     <!-- Popular Searches Dropdown - Hidden by default, shown on search focus -->
-                    <div id="popularSearchesSection" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; margin-top: 10px; width: 100%;">
+                    <div id="popularSearchesSection" style="display: none; position: fixed; top: 160px; left: 50%; transform: translateX(-50%); z-index: 10000; width: calc(100% - 60px); max-width: 1200px;">
                         <div style="background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: var(--shadow-lg); border: 2px solid var(--border);">
                             <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
                                 <i class="fas fa-fire"></i>
