@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v159-search-hover-icon';
+const CACHE_NAME = 'tafsir-kurd-v160-remove-inline-important';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v159-search-hover-icon - Add hover state for decorative surah icon to turn accent color');
+  console.log('[ServiceWorker] Installing v160-remove-inline-important - Remove !important from inline style to allow hover CSS to work');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
