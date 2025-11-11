@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v153-text-color-fix';
+const CACHE_NAME = 'tafsir-kurd-v154-add-surah-font';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v153-text-color-fix - Use text color for reader header icons instead of invert filter');
+  console.log('[ServiceWorker] Installing v154-add-surah-font - Add missing SurahName font definition to fonts.css');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
