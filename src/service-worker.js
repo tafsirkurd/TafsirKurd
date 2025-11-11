@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v161-hero-continuous-animation';
+const CACHE_NAME = 'tafsir-kurd-v162-hero-overflow-y-visible';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v161-hero-continuous-animation - Add continuous floating animation to hero background');
+  console.log('[ServiceWorker] Installing v162-hero-overflow-y-visible - Allow dropdown to extend vertically, hide horizontal overflow only');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
