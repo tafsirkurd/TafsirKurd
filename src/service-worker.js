@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v154-add-surah-font';
+const CACHE_NAME = 'tafsir-kurd-v155-fix-search-cutoff';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v154-add-surah-font - Add missing SurahName font definition to fonts.css');
+  console.log('[ServiceWorker] Installing v155-fix-search-cutoff - Fix search result decorative icon cutoff with better padding');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

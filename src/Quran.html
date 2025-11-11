@@ -1208,6 +1208,7 @@
             border-radius: 16px;
             max-height: 70vh;
             overflow-y: auto;
+            overflow-x: visible;
             display: none;
             z-index: 2000;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
@@ -1218,10 +1219,11 @@
         }
 
         .search-result-item {
-            padding: 15px 20px;
+            padding: 20px 20px 15px 20px;
             border-bottom: 1px solid var(--border);
             cursor: pointer;
             transition: all var(--transition);
+            overflow: visible;
         }
 
         .search-result-item:last-child {
