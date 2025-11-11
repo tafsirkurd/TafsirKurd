@@ -1580,15 +1580,17 @@
             left: 0;
             right: 0;
             width: 100%;
-            z-index: 999;
+            z-index: 1000;
             background: var(--card-bg);
             border-bottom: 2px solid var(--border);
+            border-top: 1px solid var(--border);
             padding: 12px 0;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
             transition: top 0.3s ease-in-out, box-shadow 0.3s ease;
             display: block !important;
             visibility: visible !important;
+            opacity: 1 !important;
         }
 
         .sticky-progress-content {
