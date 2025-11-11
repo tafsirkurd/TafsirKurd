@@ -4197,13 +4197,7 @@
                 popularSearches.style.top = dropdownTop + 'px';
             }
 
-            // Update position on scroll and resize
-            window.addEventListener('scroll', () => {
-                if (popularSearches.style.display === 'block' || searchResultsDropdown.classList.contains('active')) {
-                    positionDropdowns();
-                }
-            });
-
+            // Update position on resize only
             window.addEventListener('resize', () => {
                 if (popularSearches.style.display === 'block' || searchResultsDropdown.classList.contains('active')) {
                     positionDropdowns();

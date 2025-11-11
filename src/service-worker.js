@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v166-dynamic-dropdown-position';
+const CACHE_NAME = 'tafsir-kurd-v167-remove-scroll-reposition';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v166-dynamic-dropdown-position - Calculate dropdown position dynamically based on input location');
+  console.log('[ServiceWorker] Installing v167-remove-scroll-reposition - Remove scroll event listener, keep fixed position');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
