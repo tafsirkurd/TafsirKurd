@@ -1463,6 +1463,12 @@
             margin-bottom: 5px;
         }
 
+        /* Reader header decorative icon - always visible */
+        .reader-header .surah-card-arabic {
+            color: var(--text) !important;
+            filter: none !important;
+        }
+
         .surah-card-english {
             font-size: 1.1rem;
             font-weight: 600;
@@ -3340,7 +3346,7 @@
             </button>
 
             <div class="reader-header">
-                <div class="surah-card-arabic no-kurdish-convert" id="readerSurahIcon" style="margin-bottom: 15px; color: var(--primary) !important;">surah001</div>
+                <div class="surah-card-arabic no-kurdish-convert" id="readerSurahIcon" style="margin-bottom: 15px;">surah001</div>
                 <h2 class="reader-surah-name" id="readerSurahName">Al-Fatihah (الفاتحة)</h2>
                 <p class="reader-surah-info" id="readerSurahInfo">7 ئایەت</p>
             </div>
@@ -4765,7 +4771,7 @@
                     surahHeaderDiv.className = 'reader-header';
                     surahHeaderDiv.setAttribute('data-surah-header', surahNum);
                     surahHeaderDiv.innerHTML = `
-                        <div class="surah-card-arabic no-kurdish-convert" style="margin-bottom: 15px; color: var(--primary) !important;">${decorativeCode}</div>
+                        <div class="surah-card-arabic no-kurdish-convert" style="margin-bottom: 15px;">${decorativeCode}</div>
                         <h2 class="reader-surah-name">${surahInfo.english} (${surahInfo.arabic})</h2>
                         <p class="reader-surah-info">${KurdishNumbers.toKurdish(surahInfo.ayahs)} ئایەت</p>
                     `;

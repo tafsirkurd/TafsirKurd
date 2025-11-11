@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v151-fix-icon-color';
+const CACHE_NAME = 'tafsir-kurd-v153-text-color-fix';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v151-fix-icon-color - Fix decorative icon color to primary and improve hero animation');
+  console.log('[ServiceWorker] Installing v153-text-color-fix - Use text color for reader header icons instead of invert filter');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
