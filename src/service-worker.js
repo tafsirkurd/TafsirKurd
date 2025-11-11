@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v119-safe-area';
+const CACHE_NAME = 'tafsir-kurd-v120-smooth-top';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v119-safe-area - Added safe-area-inset-top padding for mobile notch/chrome');
+  console.log('[ServiceWorker] Installing v120-smooth-top - Mobile: smooth transition from 55px (header visible) to 0px (header hidden)');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

@@ -2499,9 +2499,9 @@
             }
 
             .sticky-progress-header {
-                padding: 15px 0 8px 0;
-                padding-top: max(15px, env(safe-area-inset-top));
-                top: 60px;
+                padding: 8px 0;
+                top: 55px;
+                transition: top 0.3s ease-in-out;
             }
 
             .sticky-progress-content {
@@ -6968,13 +6968,13 @@
                     // Scrolling down & past 100px
                     header.classList.add('header-hidden');
                     if (stickyProgress) {
-                        stickyProgress.style.top = isMobile ? '50px' : '0px';
+                        stickyProgress.style.top = isMobile ? '0px' : '0px';
                     }
                 } else {
                     // Scrolling up or at top
                     header.classList.remove('header-hidden');
                     if (stickyProgress) {
-                        stickyProgress.style.top = isMobile ? '60px' : '85px';
+                        stickyProgress.style.top = isMobile ? '55px' : '85px';
                     }
                 }
 
