@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v150-hero-animation';
+const CACHE_NAME = 'tafsir-kurd-v151-fix-icon-color';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v150-hero-animation - Add decorative icon with invert filter and hero hover animation');
+  console.log('[ServiceWorker] Installing v151-fix-icon-color - Fix decorative icon color to primary and improve hero animation');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
