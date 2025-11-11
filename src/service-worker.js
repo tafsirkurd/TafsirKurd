@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v120-smooth-top';
+const CACHE_NAME = 'tafsir-kurd-v121-always-visible';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v120-smooth-top - Mobile: smooth transition from 55px (header visible) to 0px (header hidden)');
+  console.log('[ServiceWorker] Installing v121-always-visible - Force display/visibility on mobile progress bar');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
