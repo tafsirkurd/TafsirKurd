@@ -745,6 +745,15 @@
             align-items: center;
             gap: 15px;
             cursor: pointer;
+            transition: opacity var(--transition);
+        }
+
+        .header-logo-section:hover {
+            opacity: 0.8;
+        }
+
+        .header-logo-section:hover .header-logo-img {
+            transform: rotate(10deg) scale(1.1);
         }
 
         .header-logo-img {
@@ -754,14 +763,11 @@
             object-fit: contain;
         }
 
-        .header-logo-img:hover {
-            transform: rotate(10deg) scale(1.1);
-        }
-
         .header-title {
             font-size: 1.8rem;
             font-weight: 700;
             color: var(--primary);
+            transition: color var(--transition);
         }
 
         .header-nav {
@@ -1132,6 +1138,13 @@
             padding: 80px 30px;
             text-align: center;
             z-index: 950;
+            background-size: cover;
+            transition: background-size 0.5s ease-in-out, box-shadow 0.3s ease;
+        }
+
+        .hero-section:hover {
+            background-size: 110%;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.3);
         }
 
         [data-theme="dark"] .hero-section {
@@ -1219,8 +1232,8 @@
         }
 
         .search-result-text {
-            font-family: var(--arabic-font, 'KFGQPC Hafs'), 'Scheherazade New', serif;
-            font-size: var(--arabic-size, 1.5rem);
+            font-family: 'KFGQPC Hafs', 'Amiri Quran', 'Traditional Arabic', serif;
+            font-size: 1.5rem;
             line-height: 1.8;
             color: var(--text);
             direction: rtl;
@@ -1229,6 +1242,10 @@
 
         .search-result-item:hover .search-result-text {
             color: var(--accent);
+        }
+
+        .search-result-item .surah-card-arabic {
+            color: var(--primary) !important;
         }
 
         .search-no-results {
@@ -2709,7 +2726,11 @@
         // This must run FIRST, before any DOM elements render
         (function() {
             const returningFromSettings = sessionStorage.getItem('returnToQuranReader');
-            if (returningFromSettings === 'true') {
+            const lastViewType = localStorage.getItem('lastViewType');
+            const lastScrollPosition = localStorage.getItem('lastScrollPosition');
+
+            // Hide home page instantly if returning from settings OR restoring scroll position
+            if (returningFromSettings === 'true' || (lastViewType && lastScrollPosition)) {
                 // Inject CSS immediately to hide home page
                 document.write('<style id="instant-hide">#homePage { display: none !important; } #surahReaderPage { display: block !important; }</style>');
             }
@@ -3306,6 +3327,7 @@
             </button>
 
             <div class="reader-header">
+                <div class="surah-card-arabic no-kurdish-convert" id="readerSurahIcon" style="margin-bottom: 15px; filter: invert(1);">surah001</div>
                 <h2 class="reader-surah-name" id="readerSurahName">Al-Fatihah (الفاتحة)</h2>
                 <p class="reader-surah-info" id="readerSurahInfo">7 ئایەت</p>
             </div>
@@ -3489,7 +3511,24 @@
         };
         let currentSurahNumber = 1;
         let bookmarkedAyahs = [];
+        // Initialize lastReadPosition - will be loaded from localStorage for guests or database for users
         let lastReadPosition = { surah: 1, ayah: 1 };
+
+        // Load guest reading position immediately if exists
+        (function initGuestPosition() {
+            const guestPosition = localStorage.getItem('guestLastReadPosition');
+            if (guestPosition) {
+                try {
+                    const position = JSON.parse(guestPosition);
+                    if (position.surah && position.ayah) {
+                        lastReadPosition = position;
+                        console.log('📖 Loaded guest reading position:', position);
+                    }
+                } catch (e) {
+                    console.error('Failed to parse guest position:', e);
+                }
+            }
+        })();
         let autoScrollEnabled = false;
         let autoScrollInterval = null;
 
@@ -3752,7 +3791,13 @@
                 loadRandomAyah();
                 startRandomAyahTimer();
                 updateStreakBadge(); // Update streak badge
-                updateContinueReading();
+
+                // Update continue reading - with extra delay for guest users to ensure surahNames is loaded
+                setTimeout(() => {
+                    updateContinueReading();
+                    console.log('📖 Continue reading card updated after data load');
+                }, 100);
+
                 handleUrlParameters();
 
                 // Restore state if returning from settings
@@ -4650,6 +4695,8 @@
             // Set initial header to first surah
             currentSurahNumber = startPosition.surah;
             const firstSurah = surahNames[startPosition.surah];
+            const firstSurahCode = getDecorativeSurahCode(startPosition.surah);
+            document.getElementById('readerSurahIcon').textContent = firstSurahCode;
             document.getElementById('readerSurahName').textContent = `${firstSurah.english} (${firstSurah.arabic})`;
             document.getElementById('readerSurahInfo').textContent = `${KurdishNumbers.toKurdish(firstSurah.ayahs)} ئایەت`;
 
@@ -4670,6 +4717,10 @@
                 console.error('Ayah container not found');
                 return;
             }
+
+            // Save current state for refresh persistence
+            localStorage.setItem('lastViewedJuz', juzNum);
+            localStorage.setItem('lastViewType', 'juz');
 
             // Show loading
             container.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>بارکردنی جوزی ' + KurdishNumbers.toKurdish(juzNum) + '...</p></div>';
@@ -4698,27 +4749,12 @@
                     const surahInfo = surahNames[surahNum];
                     const decorativeCode = getDecorativeSurahCode(surahNum);
                     const surahHeaderDiv = document.createElement('div');
-                    surahHeaderDiv.className = 'juz-surah-header';
+                    surahHeaderDiv.className = 'reader-header';
                     surahHeaderDiv.setAttribute('data-surah-header', surahNum);
-                    surahHeaderDiv.style.cssText = `
-                        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-                        padding: 24px 20px;
-                        margin: 40px 0 30px 0;
-                        border-radius: 16px;
-                        text-align: center;
-                        box-shadow: 0 8px 20px rgba(139, 92, 246, 0.25);
-                        border: 2px solid rgba(255, 255, 255, 0.1);
-                    `;
                     surahHeaderDiv.innerHTML = `
-                        <div class="surah-card-arabic no-kurdish-convert" style="font-size: 2.5rem; color: white; margin-bottom: 12px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);">
-                            ${decorativeCode}
-                        </div>
-                        <h3 style="margin: 0 0 6px 0; font-size: 1.4rem; font-weight: 700; color: white; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                            ${surahInfo.english}
-                        </h3>
-                        <p style="margin: 0; font-size: 1rem; color: rgba(255, 255, 255, 0.95); font-weight: 500;">
-                            ${KurdishNumbers.toKurdish(surahInfo.ayahs)} ئایەت
-                        </p>
+                        <div class="surah-card-arabic no-kurdish-convert" style="margin-bottom: 15px; filter: invert(1);">${decorativeCode}</div>
+                        <h2 class="reader-surah-name">${surahInfo.english} (${surahInfo.arabic})</h2>
+                        <p class="reader-surah-info">${KurdishNumbers.toKurdish(surahInfo.ayahs)} ئایەت</p>
                     `;
                     container.appendChild(surahHeaderDiv);
                 }
@@ -4777,8 +4813,10 @@
             // Initialize activity tracking
             if (isUserAuthenticated) {
                 initializeActivityTracking();
-                setupScrollTracking();
             }
+
+            // Setup scroll tracking for ALL users (authenticated and guests)
+            setupScrollTracking();
 
             // Update navigation
             updateNavigation(startPosition.surah);
@@ -4804,6 +4842,8 @@
 
                             // Update header to show current surah
                             const surah = surahNames[surahNum];
+                            const decorativeCode = getDecorativeSurahCode(surahNum);
+                            document.getElementById('readerSurahIcon').textContent = decorativeCode;
                             document.getElementById('readerSurahName').textContent = `${surah.english} (${surah.arabic})`;
                             document.getElementById('readerSurahInfo').textContent = `${KurdishNumbers.toKurdish(surah.ayahs)} ئایەت`;
 
@@ -4836,13 +4876,23 @@
             currentSurahNumber = surahNum;
             showSurahReader(surahNum);
 
+            // Add to browser history so back button works
+            const surahInfo = surahNames[surahNum];
+            const title = `${surahInfo.english} (${surahInfo.arabic}) - تەفسیر کوورد`;
+            history.pushState({ page: 'surah', surah: surahNum }, title, `?surah=${surahNum}`);
+
+            // Save current state for refresh persistence
+            localStorage.setItem('lastViewedSurah', surahNum);
+            localStorage.setItem('lastViewType', 'surah');
+
             // Initialize activity tracking for this surah
             if (isUserAuthenticated) {
                 initializeActivityTracking();
-
-                // Setup scroll tracking
-                setupScrollTracking();
             }
+
+            // Setup scroll tracking for ALL users (authenticated and guests)
+            setupScrollTracking();
+
             // Note: Reading position will be saved automatically when user scrolls and views ayahs
         }
 
@@ -4850,13 +4900,18 @@
             currentSurahNumber = surahNum;
             showSurahReader(surahNum, ayahNum);
 
+            // Add to browser history with ayah parameter
+            const surahInfo = surahNames[surahNum];
+            const title = `${surahInfo.english} (${surahInfo.arabic}) - ئایەت ${KurdishNumbers.toKurdish(ayahNum)} - تەفسیر کوورد`;
+            history.pushState({ page: 'surah', surah: surahNum, ayah: ayahNum }, title, `?surah=${surahNum}&ayah=${ayahNum}`);
+
             // Initialize activity tracking for this surah
             if (isUserAuthenticated) {
                 initializeActivityTracking();
-
-                // Setup scroll tracking
-                setupScrollTracking();
             }
+
+            // Setup scroll tracking for ALL users (authenticated and guests)
+            setupScrollTracking();
 
             if (window.innerWidth <= 768) {
                 closeSidebar();
@@ -4870,6 +4925,8 @@
             document.getElementById('surahReaderPage').classList.add('visible');
 
             const info = surahNames[surahNum];
+            const decorativeCode = getDecorativeSurahCode(surahNum);
+            document.getElementById('readerSurahIcon').textContent = decorativeCode;
             document.getElementById('readerSurahName').textContent = `${info.english} (${info.arabic})`;
             document.getElementById('readerSurahInfo').textContent = `${KurdishNumbers.toKurdish(info.ayahs)} ئایەت`;
 
@@ -4879,8 +4936,10 @@
             // Update navigation
             updateNavigation(surahNum);
 
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Only scroll to top if NOT restoring from refresh
+            if (!window.isRestoringScroll) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         }
 
         function loadAyahs(surahNum, highlightAyah) {
@@ -5015,8 +5074,29 @@
         }
 
         function showHomePage() {
+            // Clear persistence flags so we don't restore on refresh
+            localStorage.removeItem('lastViewType');
+            localStorage.removeItem('lastViewedSurah');
+            localStorage.removeItem('lastViewedJuz');
+            localStorage.removeItem('lastScrollPosition');
+
+            // Remove the instant-hide style if it exists
+            const instantHideStyle = document.getElementById('instant-hide');
+            if (instantHideStyle) {
+                instantHideStyle.remove();
+            }
+
+            // Show home page, hide reader
             document.getElementById('homePage').classList.remove('hidden');
             document.getElementById('surahReaderPage').classList.remove('visible');
+
+            // Force display changes
+            document.getElementById('homePage').style.display = '';
+            document.getElementById('surahReaderPage').style.display = '';
+
+            // Update browser history
+            history.pushState({ page: 'home' }, 'تەفسیر کوورد - Tafsir Kurd', '/');
+
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -5437,8 +5517,11 @@
                 return;
             }
 
-            const resultsHTML = results.map((result) => `
+            const resultsHTML = results.map((result) => {
+                const decorativeCode = getDecorativeSurahCode(result.surah);
+                return `
                 <div class="search-result-item" onclick="openSurahWithAyah(${result.surah}, ${result.ayah}); hideSearchResults();">
+                    <div class="surah-card-arabic no-kurdish-convert" style="font-size: 2.5rem; margin-bottom: 10px; color: var(--primary) !important;">${decorativeCode}</div>
                     <div class="search-result-header">
                         ${result.surahName} - ئایەت ${KurdishNumbers.toKurdish(result.ayah)}
                     </div>
@@ -5446,7 +5529,8 @@
                         ${result.text}
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
 
             dropdown.innerHTML = resultsHTML;
             dropdown.classList.add('active');
@@ -5608,9 +5692,31 @@
         }
 
         function continueReading() {
-            if (isUserAuthenticated && lastReadPosition.surah) {
+            console.log('📖 Continue reading clicked. Current position:', lastReadPosition);
+
+            // Check for guest reading position if not authenticated
+            if (!isUserAuthenticated) {
+                const guestPosition = localStorage.getItem('guestLastReadPosition');
+                if (guestPosition) {
+                    try {
+                        const position = JSON.parse(guestPosition);
+                        if (position.surah && position.ayah) {
+                            lastReadPosition = position;
+                            console.log('📖 Loaded guest position from localStorage:', position);
+                        }
+                    } catch (e) {
+                        console.error('Failed to parse guest position:', e);
+                    }
+                } else {
+                    console.log('ℹ️ No guest position found in localStorage');
+                }
+            }
+
+            if (lastReadPosition.surah && lastReadPosition.surah > 0) {
+                console.log('✅ Opening surah:', lastReadPosition.surah, 'ayah:', lastReadPosition.ayah);
                 openSurahWithAyah(lastReadPosition.surah, lastReadPosition.ayah);
             } else {
+                console.log('ℹ️ Opening default (Al-Fatihah)');
                 openSurah(1);
             }
         }
@@ -5620,14 +5726,52 @@
             const surahNameEl = document.getElementById('continueReadingSurahName');
             const infoEl = document.getElementById('continueReadingInfo');
 
-            if (isUserAuthenticated && lastReadPosition.surah) {
+            console.log('🔄 updateContinueReading called');
+            console.log('   isUserAuthenticated:', isUserAuthenticated);
+            console.log('   Current lastReadPosition:', lastReadPosition);
+
+            // Reload from localStorage for non-authenticated users (in case it changed)
+            if (!isUserAuthenticated) {
+                const guestPosition = localStorage.getItem('guestLastReadPosition');
+                console.log('   guestLastReadPosition from localStorage:', guestPosition);
+                if (guestPosition) {
+                    try {
+                        const position = JSON.parse(guestPosition);
+                        if (position.surah && position.ayah) {
+                            lastReadPosition = position;
+                            console.log('   ✅ Loaded position from localStorage:', lastReadPosition);
+                        }
+                    } catch (e) {
+                        console.error('   ❌ Failed to parse guest position:', e);
+                    }
+                } else {
+                    console.log('   ⚠️ No guest position in localStorage');
+                }
+            }
+
+            if (!surahNameEl || !infoEl) {
+                console.error('❌ Card elements not found!');
+                return;
+            }
+
+            console.log('   Checking surahNames:', typeof surahNames, surahNames ? 'exists' : 'null');
+
+            if (lastReadPosition.surah && lastReadPosition.surah > 0 && lastReadPosition.surah <= 114) {
                 const info = surahNames[lastReadPosition.surah];
-                const decorativeCode = getDecorativeSurahCode(lastReadPosition.surah);
-                surahNameEl.textContent = decorativeCode;
-                infoEl.textContent = `${KurdishNumbers.toKurdish(lastReadPosition.surah)}. ${info.english} - ئایەت ${KurdishNumbers.toKurdish(lastReadPosition.ayah)}`;
+                console.log('   Surah info for', lastReadPosition.surah, ':', info);
+                if (info) {
+                    const decorativeCode = getDecorativeSurahCode(lastReadPosition.surah);
+                    surahNameEl.textContent = decorativeCode;
+                    infoEl.textContent = `${KurdishNumbers.toKurdish(lastReadPosition.surah)}. ${info.english} - ئایەت ${KurdishNumbers.toKurdish(lastReadPosition.ayah)}`;
+                    console.log('✅ Continue reading card updated:', info.english, 'Ayah', lastReadPosition.ayah);
+                } else {
+                    console.error('❌ Surah info not found for:', lastReadPosition.surah);
+                    console.log('   surahNames keys:', Object.keys(surahNames || {}));
+                }
             } else {
                 surahNameEl.textContent = 'surah001';
-                infoEl.textContent = '١. Al-Fatihah';
+                infoEl.textContent = '١. الفاتحة';
+                console.log('ℹ️ Using default (Al-Fatihah), position:', lastReadPosition);
             }
         }
 
@@ -6413,9 +6557,40 @@
 
         // Track ayah scroll/view - Enhanced with visual feedback
         function trackAyahView(surahNumber, ayahNumber, ayahElement) {
-            if (!isUserAuthenticated || !currentUser) return;
-
             const ayahKey = `${surahNumber}:${ayahNumber}`;
+
+            // Track sequential reading for ALL users (authenticated and guests)
+            const isSequentialRead =
+                // Same surah, next ayah
+                (surahNumber === lastReadPosition.surah && ayahNumber === lastReadPosition.ayah + 1) ||
+                // Next surah, first ayah (finished previous surah)
+                (surahNumber === lastReadPosition.surah + 1 && ayahNumber === 1) ||
+                // Very first ayah (starting fresh)
+                (lastReadPosition.surah === 1 && lastReadPosition.ayah === 1 && surahNumber === 1);
+
+            if (isSequentialRead) {
+                lastReadPosition = { surah: surahNumber, ayah: ayahNumber };
+                console.log('📖 Sequential read detected. Position updated:', lastReadPosition);
+
+                // Update URL with current ayah position (without adding to history)
+                const surahInfo = surahNames[surahNumber];
+                if (surahInfo) {
+                    const title = `${surahInfo.english} (${surahInfo.arabic}) - ئایەت ${KurdishNumbers.toKurdish(ayahNumber)} - تەفسیر کوورد`;
+                    history.replaceState({ page: 'surah', surah: surahNumber, ayah: ayahNumber }, title, `?surah=${surahNumber}&ayah=${ayahNumber}`);
+                }
+
+                // Save to localStorage for non-authenticated users
+                if (!isUserAuthenticated) {
+                    localStorage.setItem('guestLastReadPosition', JSON.stringify(lastReadPosition));
+                    console.log('💾 Guest position saved to localStorage:', lastReadPosition);
+                }
+
+                // Update continue reading card in real-time
+                updateContinueReading();
+            }
+
+            // Authenticated user tracking only below this point
+            if (!isUserAuthenticated || !currentUser) return;
 
             // Check if this is a new ayah read
             const isNewRead = !activityTracker.readAyahs.has(ayahKey);
@@ -6436,22 +6611,6 @@
 
                 // Add a subtle animation effect
                 ayahElement.style.transition = 'all 0.5s ease';
-            }
-
-            // Update current position - ONLY if reading SEQUENTIALLY (consecutively)
-            const isSequentialRead =
-                // Same surah, next ayah
-                (surahNumber === lastReadPosition.surah && ayahNumber === lastReadPosition.ayah + 1) ||
-                // Next surah, first ayah (finished previous surah)
-                (surahNumber === lastReadPosition.surah + 1 && ayahNumber === 1) ||
-                // Very first ayah (starting fresh)
-                (lastReadPosition.surah === 1 && lastReadPosition.ayah === 1 && surahNumber === 1);
-
-            if (isSequentialRead) {
-                lastReadPosition = { surah: surahNumber, ayah: ayahNumber };
-
-                // Update continue reading card in real-time
-                updateContinueReading();
             }
 
             // Update stats display in real-time
@@ -6701,14 +6860,12 @@
             // Setup scroll-based progress for everyone
             setupScrollProgress();
 
-            if (!isUserAuthenticated || !currentUser) return;
-
-            // Disconnect existing observer if any
+            // Disconnect existing observer if any (for both authenticated and guest users)
             if (activityTracker.ayahObserver) {
                 activityTracker.ayahObserver.disconnect();
             }
 
-            // Create IntersectionObserver with precise options
+            // Create IntersectionObserver with precise options - FOR ALL USERS (authenticated and guests)
             const observerOptions = {
                 root: null, // viewport
                 rootMargin: '-20% 0px -20% 0px', // Trigger when ayah is 20% into viewport
@@ -6730,9 +6887,10 @@
                 });
             }, observerOptions);
 
-            // Observe all ayah elements
+            // Observe all ayah elements - FOR ALL USERS
             setTimeout(() => {
                 const ayahElements = document.querySelectorAll('.ayah[data-ayah]');
+                console.log('👁️ Setting up ayah observer for', ayahElements.length, 'ayahs');
                 ayahElements.forEach(ayah => {
                     activityTracker.ayahObserver.observe(ayah);
                 });
@@ -6970,6 +7128,7 @@
             stickyProgress.style.visibility = 'visible';
         }
 
+        let saveScrollTimeout;
         window.addEventListener('scroll', function() {
             clearTimeout(scrollTimeout);
 
@@ -6993,10 +7152,147 @@
                 }
 
                 lastScrollTop = scrollTop;
+
+                // Save scroll position for refresh persistence (debounced)
+                clearTimeout(saveScrollTimeout);
+                saveScrollTimeout = setTimeout(function() {
+                    const lastViewType = localStorage.getItem('lastViewType');
+                    if (lastViewType === 'surah' || lastViewType === 'juz') {
+                        localStorage.setItem('lastScrollPosition', scrollTop);
+                    }
+                }, 500);
             }, 10);
         });
 
+        // Restore last viewed page on refresh
+        const lastViewType = localStorage.getItem('lastViewType');
+        const lastViewedSurah = localStorage.getItem('lastViewedSurah');
+        const lastViewedJuz = localStorage.getItem('lastViewedJuz');
+        const lastScrollPosition = localStorage.getItem('lastScrollPosition');
+
+        if (lastViewType === 'surah' && lastViewedSurah) {
+            console.log('📖 Restoring last viewed surah:', lastViewedSurah);
+
+            // Set flag to prevent automatic scroll to top
+            if (lastScrollPosition) {
+                window.isRestoringScroll = true;
+            }
+
+            openSurah(parseInt(lastViewedSurah));
+
+            // Restore scroll position after content loads
+            if (lastScrollPosition) {
+                // Use requestAnimationFrame for smoother restoration
+                const restoreScroll = () => {
+                    setTimeout(() => {
+                        window.scrollTo({
+                            top: parseInt(lastScrollPosition),
+                            behavior: 'auto'
+                        });
+                        console.log('📍 Restored scroll position:', lastScrollPosition);
+                        window.isRestoringScroll = false;
+                    }, 600);
+                };
+                requestAnimationFrame(restoreScroll);
+            }
+        } else if (lastViewType === 'juz' && lastViewedJuz) {
+            console.log('📖 Restoring last viewed juz:', lastViewedJuz);
+
+            // Set flag to prevent automatic scroll to top
+            if (lastScrollPosition) {
+                window.isRestoringScroll = true;
+            }
+
+            loadJuzContinuous(parseInt(lastViewedJuz));
+
+            // Restore scroll position after content loads
+            if (lastScrollPosition) {
+                // Use requestAnimationFrame for smoother restoration
+                const restoreScroll = () => {
+                    setTimeout(() => {
+                        window.scrollTo({
+                            top: parseInt(lastScrollPosition),
+                            behavior: 'auto'
+                        });
+                        console.log('📍 Restored scroll position:', lastScrollPosition);
+                        window.isRestoringScroll = false;
+                    }, 600);
+                };
+                requestAnimationFrame(restoreScroll);
+            }
+        }
+
+        // Debug test function - accessible from console
+        window.testGuestReading = function(surahNum, ayahNum) {
+            console.log('🧪 Testing guest reading position...');
+            const testPosition = { surah: surahNum || 2, ayah: ayahNum || 50 };
+            localStorage.setItem('guestLastReadPosition', JSON.stringify(testPosition));
+            console.log('💾 Set localStorage:', testPosition);
+            lastReadPosition = testPosition;
+
+            // Direct DOM manipulation
+            const surahNameEl = document.getElementById('continueReadingSurahName');
+            const infoEl = document.getElementById('continueReadingInfo');
+            console.log('   Elements found:', !!surahNameEl, !!infoEl);
+
+            if (surahNameEl && infoEl && surahNames) {
+                const info = surahNames[testPosition.surah];
+                console.log('   Surah info:', info);
+                if (info) {
+                    const decorativeCode = getDecorativeSurahCode(testPosition.surah);
+                    surahNameEl.textContent = decorativeCode;
+                    infoEl.textContent = `${KurdishNumbers.toKurdish(testPosition.surah)}. ${info.english} - ئایەت ${KurdishNumbers.toKurdish(testPosition.ayah)}`;
+                    console.log('✅ Directly updated DOM');
+                }
+            }
+
+            updateContinueReading();
+            console.log('✅ Test complete - check the continue reading card');
+        };
+
+        window.checkGuestData = function() {
+            console.log('🔍 Checking guest reading data:');
+            console.log('   isUserAuthenticated:', isUserAuthenticated);
+            console.log('   lastReadPosition:', lastReadPosition);
+            console.log('   localStorage guestLastReadPosition:', localStorage.getItem('guestLastReadPosition'));
+            console.log('   surahNames loaded:', !!surahNames);
+            if (surahNames && lastReadPosition.surah) {
+                console.log('   Surah info:', surahNames[lastReadPosition.surah]);
+            }
+        };
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function(event) {
+            console.log('🔙 Browser back button clicked', event.state);
+
+            if (event.state && event.state.page === 'surah') {
+                // Going back to a surah page
+                if (event.state.ayah) {
+                    openSurahWithAyah(event.state.surah, event.state.ayah);
+                } else {
+                    openSurah(event.state.surah);
+                }
+            } else {
+                // Going back to home page or external site
+                showHomePage();
+            }
+        });
+
+        // Set initial history state for home page
+        if (!window.location.search) {
+            history.replaceState({ page: 'home' }, 'تەفسیر کوورد - Tafsir Kurd', '/');
+        }
+
         console.log('✅ تەفسیر کوورد - Quran Reader loaded successfully');
+        console.log('🧪 Debug functions available: testGuestReading(surah, ayah), checkGuestData()');
+
+        // Auto-check on load
+        setTimeout(() => {
+            if (!isUserAuthenticated) {
+                console.log('\n🔍 Auto-check for guest user:');
+                window.checkGuestData();
+            }
+        }, 2000);
     </script>
 </body>
 </html>

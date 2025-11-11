@@ -16,7 +16,9 @@
       "Bash(curl -X POST \"https://api.telegram.org/bot8546537386:AAHVo4BPadrtO2uKsIALdwQ9abB_M3x8ENE/deleteMyCommands\")",
       "Bash(node check-users.js:*)",
       "Bash(node migrate-users.js:*)",
-      "Bash(node reset-anonymous-users.js:*)"
+      "Bash(node reset-anonymous-users.js:*)",
+      "Bash(npm run build:prod:*)",
+      "Bash(npm run:*)"
     ],
     "deny": [],
     "ask": []
