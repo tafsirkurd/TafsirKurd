@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v160-remove-inline-important';
+const CACHE_NAME = 'tafsir-kurd-v161-hero-continuous-animation';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v160-remove-inline-important - Remove !important from inline style to allow hover CSS to work');
+  console.log('[ServiceWorker] Installing v161-hero-continuous-animation - Add continuous floating animation to hero background');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

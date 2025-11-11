@@ -1130,7 +1130,22 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        /* Hero Section */
+        /* Hero Section - Continuous subtle animation */
+        @keyframes heroFloat {
+            0%, 100% {
+                transform: translate(0, 0) scale(1.05);
+            }
+            25% {
+                transform: translate(-10px, -5px) scale(1.05);
+            }
+            50% {
+                transform: translate(-5px, 10px) scale(1.05);
+            }
+            75% {
+                transform: translate(10px, -5px) scale(1.05);
+            }
+        }
+
         .hero-section {
             position: relative;
             background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 100%),
@@ -1138,26 +1153,20 @@
             padding: 80px 30px;
             text-align: center;
             z-index: 950;
-            background-size: 100%;
-            transition: transform 0.3s ease;
-            overflow: visible;
+            overflow: hidden;
         }
 
         .hero-section::before {
             content: '';
             position: absolute;
-            top: -5%;
-            left: -5%;
-            right: -5%;
-            bottom: -5%;
+            top: -10%;
+            left: -10%;
+            right: -10%;
+            bottom: -10%;
             background: inherit;
             background-size: cover;
-            transition: transform 0.3s ease;
+            animation: heroFloat 20s ease-in-out infinite;
             z-index: -1;
-        }
-
-        .hero-section:hover::before {
-            transform: scale(1.05);
         }
 
         [data-theme="dark"] .hero-section {
