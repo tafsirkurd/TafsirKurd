@@ -651,18 +651,27 @@
 
         // Initialize settings from localStorage
         window.addEventListener('load', () => {
-            // Check authentication first
+            // Check authentication
             const user = localStorage.getItem('user');
-            if (!user) {
-                window.location.href = '/login';
-                return;
+            const isAuthenticated = !!user;
+
+            // Hide notification settings if not authenticated
+            if (!isAuthenticated) {
+                const notificationCard = document.querySelector('.settings-card:has(#emailNotificationsToggle)');
+                if (notificationCard) {
+                    notificationCard.style.display = 'none';
+                }
             }
 
-            // Auth check passed - show the page
+            // Show the page
             document.body.classList.add('ready');
 
             loadSettings();
-            loadNotificationSettings();
+
+            // Only load notification settings if authenticated
+            if (isAuthenticated) {
+                loadNotificationSettings();
+            }
         });
 
         function loadSettings() {
