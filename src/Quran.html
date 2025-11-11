@@ -4186,11 +4186,35 @@
             let searchTimeout;
             const searchInput = document.getElementById('heroSearchInput');
             const popularSearches = document.getElementById('popularSearchesSection');
+            const searchResultsDropdown = document.getElementById('searchResultsDropdown');
+
+            // Function to position dropdowns below search input
+            function positionDropdowns() {
+                const inputRect = searchInput.getBoundingClientRect();
+                const dropdownTop = inputRect.bottom + 10; // 10px gap below input
+
+                searchResultsDropdown.style.top = dropdownTop + 'px';
+                popularSearches.style.top = dropdownTop + 'px';
+            }
+
+            // Update position on scroll and resize
+            window.addEventListener('scroll', () => {
+                if (popularSearches.style.display === 'block' || searchResultsDropdown.classList.contains('active')) {
+                    positionDropdowns();
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                if (popularSearches.style.display === 'block' || searchResultsDropdown.classList.contains('active')) {
+                    positionDropdowns();
+                }
+            });
 
             // Show popular searches when input is focused (if empty)
             searchInput.addEventListener('focus', (e) => {
                 const query = e.target.value.trim();
                 if (!query) {
+                    positionDropdowns();
                     popularSearches.style.display = 'block';
                     hideSearchResults(); // Hide search results dropdown
                 }
@@ -5566,6 +5590,13 @@
         // Show search results in dropdown
         function showSearchResults(results, query) {
             const dropdown = document.getElementById('searchResultsDropdown');
+
+            // Position dropdown below search input
+            const searchInput = document.getElementById('heroSearchInput');
+            if (searchInput) {
+                const inputRect = searchInput.getBoundingClientRect();
+                dropdown.style.top = (inputRect.bottom + 10) + 'px';
+            }
 
             if (results.length === 0) {
                 dropdown.innerHTML = '<div class="search-no-results">هیچ ئەنجامێک نەدۆزرایەوە</div>';
