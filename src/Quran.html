@@ -1219,8 +1219,7 @@
             border: 2px solid var(--border);
             border-radius: 16px;
             max-height: calc(100vh - 220px);
-            overflow-y: auto;
-            overflow-x: visible;
+            overflow: hidden;
             display: none;
             z-index: 10000;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
@@ -3145,7 +3144,7 @@
                     <div class="search-results-dropdown" id="searchResultsDropdown"></div>
 
                     <!-- Popular Searches Dropdown - Hidden by default, shown on search focus -->
-                    <div id="popularSearchesSection" style="display: none; position: fixed; top: 200px; left: 50%; transform: translateX(-50%); z-index: 10000; width: calc(100% - 60px); max-width: 1200px; max-height: calc(100vh - 220px); overflow-y: auto;">
+                    <div id="popularSearchesSection" style="display: none; position: fixed; top: 200px; left: 50%; transform: translateX(-50%); z-index: 10000; width: calc(100% - 60px); max-width: 1200px; max-height: calc(100vh - 220px); overflow: hidden;">
                         <div style="background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: var(--shadow-lg); border: 2px solid var(--border);">
                             <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
                                 <i class="fas fa-fire"></i>

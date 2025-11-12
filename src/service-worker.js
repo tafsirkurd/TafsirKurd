@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v169-force-no-scroll';
+const CACHE_NAME = 'tafsir-kurd-v170-disable-dropdown-scroll';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v169-force-no-scroll - Force disable scroll with fixed position and overflow hidden on html and body');
+  console.log('[ServiceWorker] Installing v170-disable-dropdown-scroll - Disable scroll inside dropdown containers');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
