@@ -4211,8 +4211,11 @@
                     positionDropdowns();
                     popularSearches.style.display = 'block';
                     hideSearchResults(); // Hide search results dropdown
-                    // Disable body scroll
+                    // Disable body scroll completely
+                    document.documentElement.style.overflow = 'hidden';
                     document.body.style.overflow = 'hidden';
+                    document.body.style.position = 'fixed';
+                    document.body.style.width = '100%';
                 }
             });
 
@@ -4253,7 +4256,10 @@
                     hideSearchResults();
                     popularSearches.style.display = 'none';
                     // Re-enable body scroll
+                    document.documentElement.style.overflow = '';
                     document.body.style.overflow = '';
+                    document.body.style.position = '';
+                    document.body.style.width = '';
                 }
             });
 
@@ -5596,8 +5602,11 @@
                 dropdown.style.top = (inputRect.bottom + 10) + 'px';
             }
 
-            // Disable body scroll
+            // Disable body scroll completely
+            document.documentElement.style.overflow = 'hidden';
             document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
 
             if (results.length === 0) {
                 dropdown.innerHTML = '<div class="search-no-results">هیچ ئەنجامێک نەدۆزرایەوە</div>';
@@ -5630,7 +5639,10 @@
             dropdown.classList.remove('active');
             dropdown.innerHTML = '';
             // Re-enable body scroll
+            document.documentElement.style.overflow = '';
             document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
         }
 
         // Bookmark Functions
