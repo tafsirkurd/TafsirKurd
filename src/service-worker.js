@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v171-hero-overflow-hidden';
+const CACHE_NAME = 'tafsir-kurd-v172-restore-page-scroll';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v171-hero-overflow-hidden - Set hero section overflow to hidden, keep dropdown scrollable');
+  console.log('[ServiceWorker] Installing v172-restore-page-scroll - Remove all body scroll locking, only hero section overflow hidden');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
