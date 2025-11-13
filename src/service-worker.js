@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v172-restore-page-scroll';
+const CACHE_NAME = 'tafsir-kurd-v173-smart-search-top30';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v172-restore-page-scroll - Remove all body scroll locking, only hero section overflow hidden');
+  console.log('[ServiceWorker] Installing v173-smart-search-top30 - Show only top 30 most relevant results with duplicate filtering');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

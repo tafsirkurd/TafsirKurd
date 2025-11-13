@@ -5573,11 +5573,26 @@
                 }
             }
 
-            // Sort all results by similarity (highest first)
-            allResults.sort((a, b) => b.similarity - a.similarity);
+            // Remove duplicates (same surah:ayah)
+            const uniqueResults = [];
+            const seen = new Set();
+            allResults.forEach(result => {
+                const key = `${result.surah}:${result.ayah}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueResults.push(result);
+                }
+            });
 
-            // Show all results in dropdown (unlimited)
-            showSearchResults(allResults, query);
+            // Sort all results by similarity (highest first)
+            uniqueResults.sort((a, b) => b.similarity - a.similarity);
+
+            // Filter out weak matches (keep only good quality results)
+            const qualityResults = uniqueResults.filter(r => r.similarity > 50);
+
+            // Show only top 30 most relevant results
+            const top30Results = qualityResults.slice(0, 30);
+            showSearchResults(top30Results, query);
         }
 
         // Show search results in dropdown
