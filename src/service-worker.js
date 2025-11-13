@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v170-disable-dropdown-scroll';
+const CACHE_NAME = 'tafsir-kurd-v171-hero-overflow-hidden';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v170-disable-dropdown-scroll - Disable scroll inside dropdown containers');
+  console.log('[ServiceWorker] Installing v171-hero-overflow-hidden - Set hero section overflow to hidden, keep dropdown scrollable');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
