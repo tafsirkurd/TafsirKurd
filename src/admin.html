@@ -3690,7 +3690,7 @@
                     day: 'numeric'
                 }) : '-';
 
-                const lastReadDate = user.last_read ? new Date(user.last_read).toLocaleDateString('en-US', {
+                const lastReadDate = (user.updated_at || user.created_at) ? new Date(user.updated_at || user.created_at).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric'
