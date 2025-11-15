@@ -3675,7 +3675,8 @@
                 return;
             }
 
-            container.innerHTML = filtered.map(user => {
+            container.innerHTML = filtered.map((user, index) => {
+                const userNumber = index + 1; // Sequential user number (1, 2, 3...)
                 // Get Surah name
                 const surahInfo = surahNames[user.current_surah];
                 const surahDisplay = surahInfo ? `${surahInfo.english} (${surahInfo.arabic})` : (user.current_surah ? `Surah ${user.current_surah}` : 'Not started');
@@ -3788,8 +3789,8 @@
                                 <span style="font-weight: 600; color: #333;">${lastReadDate}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #666;">🔢 User ID:</span>
-                                <span style="font-size: 11px; color: #999; font-family: monospace;">#${user.id}</span>
+                                <span style="color: #666;">🔢 User Number:</span>
+                                <span style="font-weight: 600; color: #667eea; font-size: 16px;">#${userNumber}</span>
                             </div>
                         </div>
                     </div>
