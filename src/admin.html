@@ -3698,7 +3698,7 @@
 
                 // Days since last read
                 const daysSinceLastRead = user.last_read ? Math.floor((Date.now() - new Date(user.last_read).getTime()) / (1000 * 60 * 60 * 24)) : null;
-                const activityStatus = !user.last_read ? '🔴 Never active' :
+                const activityStatus = !user.last_read || daysSinceLastRead === null || isNaN(daysSinceLastRead) ? '🔴 Never active' :
                                       daysSinceLastRead === 0 ? '🟢 Active today' :
                                       daysSinceLastRead <= 7 ? `🟡 Active ${daysSinceLastRead}d ago` :
                                       daysSinceLastRead <= 30 ? `🟠 Active ${daysSinceLastRead}d ago` :
@@ -4416,9 +4416,29 @@
             }
         }
 
+        // Auto-refresh analytics stats every 30 seconds
+        let analyticsRefreshInterval = null;
+
+        function startAnalyticsAutoRefresh() {
+            // Clear any existing interval
+            if (analyticsRefreshInterval) {
+                clearInterval(analyticsRefreshInterval);
+            }
+
+            // Refresh analytics every 30 seconds when on analytics section
+            analyticsRefreshInterval = setInterval(() => {
+                const currentSection = document.querySelector('.menu-item.active')?.dataset?.section;
+                if (currentSection === 'analytics') {
+                    console.log('🔄 Auto-refreshing analytics...');
+                    loadAnalytics();
+                }
+            }, 30000); // 30 seconds
+        }
+
         // Initialize Telegram status on page load
         document.addEventListener('DOMContentLoaded', () => {
             updateTelegramStatus();
+            startAnalyticsAutoRefresh(); // Start auto-refresh on page load
         });
     </script>
 </body>
