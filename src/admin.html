@@ -3696,9 +3696,10 @@
                     day: 'numeric'
                 }) : '-';
 
-                // Days since last read
-                const daysSinceLastRead = user.last_read ? Math.floor((Date.now() - new Date(user.last_read).getTime()) / (1000 * 60 * 60 * 24)) : null;
-                const activityStatus = !user.last_read || daysSinceLastRead === null || isNaN(daysSinceLastRead) ? '🔴 Never active' :
+                // Days since last read (use updated_at timestamp from database)
+                const lastActivityDate = user.updated_at || user.created_at;
+                const daysSinceLastRead = lastActivityDate ? Math.floor((Date.now() - new Date(lastActivityDate).getTime()) / (1000 * 60 * 60 * 24)) : null;
+                const activityStatus = !lastActivityDate || daysSinceLastRead === null || isNaN(daysSinceLastRead) ? '🔴 Never active' :
                                       daysSinceLastRead === 0 ? '🟢 Active today' :
                                       daysSinceLastRead <= 7 ? `🟡 Active ${daysSinceLastRead}d ago` :
                                       daysSinceLastRead <= 30 ? `🟠 Active ${daysSinceLastRead}d ago` :

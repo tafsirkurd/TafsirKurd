@@ -21,7 +21,8 @@
       "Bash(npm run:*)",
       "Bash(dir:*)",
       "WebFetch(domain:gravatar.com)",
-      "Bash(certutil:*)"
+      "Bash(certutil:*)",
+      "Bash(netlify deploy:*)"
     ],
     "deny": [],
     "ask": []
