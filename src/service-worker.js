@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v173-smart-search-top30';
+const CACHE_NAME = 'tafsir-kurd-v187-hafs-font-fix';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v173-smart-search-top30 - Show only top 30 most relevant results with duplicate filtering');
+  console.log('[ServiceWorker] Installing v187-hafs-font-fix - Force cache refresh for Hafs font display');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
