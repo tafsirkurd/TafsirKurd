@@ -4,11 +4,9 @@
 
 # Scheduled Functions - Daily Quran Email Reminders
 [functions]
-  # Send daily email reminders at 8 PM Iraq time (17:00 UTC / 5 PM UTC)
-  # Iraq is UTC+3, so 8 PM Iraq time = 17:00 UTC
-  "scheduled-daily-reminders" = {schedule = "@daily"}
-  # Alternative: Use cron for specific time
-  # "scheduled-daily-reminders" = {schedule = "0 17 * * *"}  # 5 PM UTC = 8 PM Iraq
+  # Send daily email reminders at 8 PM Iraq time (17:00 UTC)
+  # Iraq is UTC+3, so 8 PM Iraq time = 17:00 UTC = 5 PM UTC
+  "scheduled-daily-reminders" = {schedule = "0 17 * * *"}  # 5 PM UTC = 8 PM Iraq time
 
 [[headers]]
   for = "/*"
@@ -85,6 +83,11 @@
   force = true
 
 # Serve clean URLs by looking for .html files
+[[redirects]]
+  from = "/Quran"
+  to = "/Quran.html"
+  status = 200
+
 [[redirects]]
   from = "/quran"
   to = "/Quran.html"
