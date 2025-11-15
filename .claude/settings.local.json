@@ -18,7 +18,10 @@
       "Bash(node migrate-users.js:*)",
       "Bash(node reset-anonymous-users.js:*)",
       "Bash(npm run build:prod:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(dir:*)",
+      "WebFetch(domain:gravatar.com)",
+      "Bash(certutil:*)"
     ],
     "deny": [],
     "ask": []

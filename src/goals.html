@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ku">
 <head>
+    <script src="/utils/theme-loader.js"></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#000000">
@@ -1069,15 +1070,28 @@
 
         function calculateStreak() {
             const today = new Date();
+            const todayKey = formatDate(today);
             let streak = 0;
             let checkDate = new Date(today);
 
+            // Start checking from today
             while (true) {
                 const dateKey = formatDate(checkDate);
-                if (readingData[dateKey] && readingData[dateKey] >= dailyGoalMinutes) {
+                const minutesRead = readingData[dateKey] || 0;
+
+                // Check if this day met the goal
+                if (minutesRead >= dailyGoalMinutes) {
                     streak++;
                     checkDate.setDate(checkDate.getDate() - 1);
                 } else {
+                    // Special case: If this is TODAY and hasn't been completed yet
+                    // Don't break the streak - give until midnight
+                    if (dateKey === todayKey) {
+                        // Today is incomplete but streak continues from yesterday
+                        checkDate.setDate(checkDate.getDate() - 1);
+                        continue;
+                    }
+                    // For any past day that didn't meet goal, break streak
                     break;
                 }
             }

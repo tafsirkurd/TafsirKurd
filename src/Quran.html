@@ -1289,6 +1289,11 @@
             color: var(--accent);
         }
 
+        .search-result-item:hover .search-result-text strong {
+            color: var(--accent) !important;
+            background: rgba(255, 255, 255, 0.1) !important;
+        }
+
         .search-result-item .surah-card-arabic {
             color: var(--primary) !important;
         }
@@ -5595,6 +5600,66 @@
             showSearchResults(top30Results, query);
         }
 
+        // Highlight matching text in search results
+        function highlightMatch(text, query) {
+            if (!query) return text;
+
+            const queryNorm = normalizeArabicText(query);
+            const textNorm = normalizeArabicText(text);
+
+            // Find the exact match position in normalized text
+            const matchIndex = textNorm.indexOf(queryNorm);
+
+            if (matchIndex === -1) {
+                // Try word-by-word highlighting
+                const queryWords = query.trim().split(/\s+/);
+                let highlightedText = text;
+
+                queryWords.forEach(word => {
+                    if (word.length >= 2) {
+                        // Create case-insensitive regex that matches the word
+                        const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const regex = new RegExp(`(${escapedWord})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<strong style="font-weight: 700; color: var(--primary); background: rgba(var(--primary-rgb), 0.1); padding: 2px 4px; border-radius: 4px;">$1</strong>');
+                    }
+                });
+
+                return highlightedText;
+            }
+
+            // Find corresponding position in original text
+            let charCount = 0;
+            let startPos = 0;
+            for (let i = 0; i < text.length; i++) {
+                const normChar = normalizeArabicText(text[i]);
+                if (normChar) charCount++;
+                if (charCount === matchIndex + 1) {
+                    startPos = i;
+                    break;
+                }
+            }
+
+            // Find end position
+            const matchLength = queryNorm.length;
+            charCount = 0;
+            let endPos = startPos;
+            for (let i = startPos; i < text.length; i++) {
+                const normChar = normalizeArabicText(text[i]);
+                if (normChar) charCount++;
+                if (charCount >= matchLength) {
+                    endPos = i + 1;
+                    break;
+                }
+            }
+
+            // Build highlighted text
+            const before = text.substring(0, startPos);
+            const match = text.substring(startPos, endPos);
+            const after = text.substring(endPos);
+
+            return `${before}<strong style="font-weight: 700; color: var(--primary); background: rgba(var(--primary-rgb), 0.1); padding: 2px 4px; border-radius: 4px;">${match}</strong>${after}`;
+        }
+
         // Show search results in dropdown
         function showSearchResults(results, query) {
             const dropdown = document.getElementById('searchResultsDropdown');
@@ -5614,6 +5679,8 @@
 
             const resultsHTML = results.map((result) => {
                 const decorativeCode = getDecorativeSurahCode(result.surah);
+                const highlightedText = highlightMatch(result.text, query);
+
                 return `
                 <div class="search-result-item" onclick="openSurahWithAyah(${result.surah}, ${result.ayah}); hideSearchResults();">
                     <div class="surah-card-arabic no-kurdish-convert" style="font-size: 2.5rem; margin-bottom: 10px;">${decorativeCode}</div>
@@ -5621,7 +5688,7 @@
                         ${result.surahName} - ئایەت ${KurdishNumbers.toKurdish(result.ayah)}
                     </div>
                     <div class="search-result-text">
-                        ${result.text}
+                        ${highlightedText}
                     </div>
                 </div>
             `;
@@ -7147,10 +7214,19 @@
             // Track Geographic Visit
             async function trackGeoVisit() {
                 try {
-                    // Only track once per session to avoid duplicate tracking
-                    if (sessionStorage.getItem('geo_tracked')) return;
+                    // Check if already tracked in this session
+                    const lastTracked = sessionStorage.getItem('geo_tracked_time');
+                    const now = Date.now();
 
-                    await fetch('/.netlify/functions/geo-analytics', {
+                    // Track once per day per user (24 hours = 86400000 ms)
+                    if (lastTracked && (now - parseInt(lastTracked)) < 86400000) {
+                        console.log('📍 Geo tracking: Already tracked in last 24 hours');
+                        return;
+                    }
+
+                    console.log('📍 Geo tracking: Sending visit data...');
+
+                    const response = await fetch('/.netlify/functions/geo-analytics', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -7159,9 +7235,13 @@
                         })
                     });
 
-                    sessionStorage.setItem('geo_tracked', 'true');
+                    const result = await response.json();
+                    console.log('✅ Geo tracking success:', result);
+
+                    // Store timestamp of last tracking
+                    sessionStorage.setItem('geo_tracked_time', now.toString());
                 } catch (error) {
-                    console.error('Geo tracking failed:', error);
+                    console.error('❌ Geo tracking failed:', error);
                 }
             }
 
