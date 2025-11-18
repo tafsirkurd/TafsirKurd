@@ -273,7 +273,7 @@
                             <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                                 <i class="fab fa-instagram"></i>
                             </a>
-                            <a href="https://www.youtube.com/@tefsirkurd" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                            <a href="https://www.youtube.com/@tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
                                 <i class="fab fa-youtube"></i>
                             </a>
                             <a href="https://t.me/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
