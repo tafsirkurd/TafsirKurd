@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v88-juz-continuous-page';
+const CACHE_NAME = 'tafsir-kurd-v338-production-deploy';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -23,6 +23,7 @@ const urlsToCache = [
   '/utils/auto-kurdish-numbers.js',
   '/utils/notification-messages.js',
   '/utils/notification-scheduler.js',
+  '/utils/theme-loader.js',
   '/assets/fonts/fonts.css',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.woff2',
@@ -42,7 +43,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v88-juz-continuous-page - All Juz surahs in one continuous page');
+  console.log('[ServiceWorker] Installing v338-production-deploy');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

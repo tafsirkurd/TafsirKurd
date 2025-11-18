@@ -428,7 +428,6 @@ nav.scrolled-nav {
     gap: 15px;
     text-decoration: none;
     transition: transform var(--transition-medium) var(--cubic), filter var(--transition-medium);
-    animation: logoFloat 3s ease-in-out infinite;
 }
 
 @keyframes logoFloat {
@@ -440,13 +439,18 @@ nav.scrolled-nav {
     }
 }
 
-.nav-logo:hover {
-    transform: scale(1.05);
-    animation: none;
-}
 
-.nav-logo:hover .logo-image {
-    transform: rotate(5deg) scale(1.1);
+.header-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary);
+    pointer-events: none;
+    opacity: 1 !important;
+    visibility: visible !important;
+    font-display: swap;
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .logo-image {
@@ -454,6 +458,16 @@ nav.scrolled-nav {
     height: 55px;
     object-fit: contain;
     transition: transform var(--transition-medium) var(--cubic);
+    animation: logoFloat 3s ease-in-out infinite;
+}
+
+.logo-image:hover {
+    transform: rotate(5deg) scale(1.1);
+    animation: none;
+}
+
+.hero-logo-static {
+    object-fit: contain;
 }
 
 .hamburger-menu {

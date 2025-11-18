@@ -6,15 +6,42 @@ function normalizeLocationName(name) {
     if (!name) return name;
 
     const normalizations = {
-        // Kurdish cities
+        // Erbil variations
         'arbil': 'Erbil',
         'hawler': 'Erbil',
         'hewler': 'Erbil',
+        'hewlêr': 'Erbil',
+        'irbil': 'Erbil',
+        'arbīl': 'Erbil',
+
+        // Duhok variations (all possible spellings)
         'duhok': 'Duhok',
         'dihok': 'Duhok',
+        'dihuk': 'Duhok',
+        'dahuk': 'Duhok',
+        'duhuk': 'Duhok',
+        'dehok': 'Duhok',
+        'dihôk': 'Duhok',
+        'dohuk': 'Duhok',
+        'dhok': 'Duhok',
+        'dahok': 'Duhok',
+        'duhoc': 'Duhok',
+        'dıhok': 'Duhok',
+
+        // Sulaymaniyah variations
         'slemani': 'Sulaymaniyah',
         'silêmanî': 'Sulaymaniyah',
-        // Add more as needed
+        'sulaimani': 'Sulaymaniyah',
+        'suleimaniyah': 'Sulaymaniyah',
+        'as-sulaymaniyah': 'Sulaymaniyah',
+
+        // Other Kurdish cities
+        'halabja': 'Halabja',
+        'halabjah': 'Halabja',
+        'zakho': 'Zakho',
+        'zaxo': 'Zakho',
+        'kirkuk': 'Kirkuk',
+        'kerkük': 'Kirkuk'
     };
 
     const lowerName = name.toLowerCase();

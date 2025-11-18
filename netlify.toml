@@ -2,13 +2,13 @@
   publish = "src"  # 👈 CHANGE THIS from "." to "src"
   functions = "netlify/functions"
 
-# Scheduled Functions - Daily Quran Email Reminders
+# Scheduled Functions - Weekly Quran Email Reminders
 [functions]
-  # Send daily email reminders at 8 PM Iraq time (17:00 UTC / 5 PM UTC)
-  # Iraq is UTC+3, so 8 PM Iraq time = 17:00 UTC
-  "scheduled-daily-reminders" = {schedule = "@daily"}
-  # Alternative: Use cron for specific time
-  # "scheduled-daily-reminders" = {schedule = "0 17 * * *"}  # 5 PM UTC = 8 PM Iraq
+  # Send weekly email reminders every Friday at 8 PM Iraq time (17:00 UTC)
+  # Iraq is UTC+3, so 8 PM Iraq time = 17:00 UTC = 5 PM UTC
+  # Cron format: minute hour day-of-month month day-of-week
+  # 0 17 * * 5 = Every Friday at 5 PM UTC (8 PM Iraq time)
+  "scheduled-daily-reminders" = {schedule = "0 17 * * 5"}  # Every Friday at 5 PM UTC = 8 PM Iraq time
 
 [[headers]]
   for = "/*"
@@ -76,15 +76,12 @@
   to = "/data/:splat"
   status = 200
 
-# Clean URLs - Remove .html extensions
-# Redirect .html to clean URLs (301 permanent redirect)
-[[redirects]]
-  from = "/*.html"
-  to = "/:splat"
-  status = 301
-  force = true
-
 # Serve clean URLs by looking for .html files
+[[redirects]]
+  from = "/Quran"
+  to = "/Quran.html"
+  status = 200
+
 [[redirects]]
   from = "/quran"
   to = "/Quran.html"

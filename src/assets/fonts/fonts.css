@@ -56,3 +56,12 @@
   font-display: swap;
   src: url('/assets/fonts/amiri-quran-v1-arabic-regular.woff2?v=16') format('woff2');
 }
+
+/* SurahName - Decorative surah icons font */
+@font-face {
+  font-family: 'SurahName';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/fonts/surah-name-v4.woff2?v=16') format('woff2');
+}
