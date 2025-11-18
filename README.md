@@ -289,7 +289,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Contact
 
-- Website: [tafsirkurd.com](https://tafsirkurd.com)
+- Website: [www.tafsirkurd.com](https://www.tafsirkurd.com)
 - Email: info@tafsirkurd.com
 - Instagram: [@tafsirkurd](https://instagram.com/tafsirkurd)
 - YouTube: [@tefsirkurd](https://youtube.com/@tefsirkurd)

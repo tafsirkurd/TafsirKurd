@@ -9,7 +9,8 @@
       "Bash(rm:*)",
       "Bash(cat:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nTranslate all alerts and notifications to Badini Kurdish\n\n- Updated all notifications from Sorani to proper Badini dialect\n- Fixed alerts in index.html, login.html, settings.html, goals.html, reading-goal.html\n- Improved mobile/desktop layout for reading-goal page\n- Fixed dark mode button styling in complete-signup.html\n- Updated time display from Sorani to Badini (لەمەوپێش → بەرێ)\n- Cleaned up root directory (removed temp files and old documentation)\n- Added translation scripts for Kurdish text management\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(git commit -m \"$(cat <<''EOF''\nTranslate all alerts and notifications to Badini Kurdish\n\n- Updated all notifications from Sorani to proper Badini dialect\n- Fixed alerts in index.html, login.html, settings.html, goals.html, reading-goal.html\n- Improved mobile/desktop layout for reading-goal page\n- Fixed dark mode button styling in complete-signup.html\n- Updated time display from Sorani to Badini (لەمەوپێش → بەرێ)\n- Cleaned up root directory (removed temp files and old documentation)\n- Added translation scripts for Kurdish text management\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
