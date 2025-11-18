@@ -20,7 +20,14 @@ exports.handler = async (event, context) => {
         }
 
         // Brevo API key from environment variable
-        const BREVO_API_KEY = process.env.BREVO_API_KEY || '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';
+        const BREVO_API_KEY = process.env.BREVO_API_KEY;
+
+        if (!BREVO_API_KEY) {
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ error: 'BREVO_API_KEY not configured' })
+            };
+        }
 
         const emailData = {
             sender: {
