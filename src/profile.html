@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ku">
 <head>
+    <script src="/utils/theme-loader.js"></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
-    <title>پڕۆفایل - تەفسیر کوورد</title>
+    <title>پرۆفایل - تەفسیر کورد</title>
 
     <!-- Favicons - High quality with SVG for perfect scaling -->
     <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
@@ -51,6 +52,19 @@
             --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        [data-theme="dark"] {
+            --primary: #ffffff;
+            --accent: #000000;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #ffffff;
+            --text-muted: #b0b0b0;
+            --border: #2a2a2a;
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.5);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -62,13 +76,6 @@
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
-            /* Hide body until auth check is complete - prevents flash */
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        body.ready {
-            opacity: 1;
         }
 
         .header {
@@ -596,6 +603,160 @@
                 font-size: 1.3rem;
             }
         }
+
+        /* Footer Styles */
+        footer {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            margin-top: 80px;
+            padding: 60px 20px 30px;
+            text-align: right;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            direction: rtl;
+        }
+
+        .footer-main {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .footer-logo-img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+        }
+
+        .footer-brand-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .footer-brand-tagline {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
+
+        .footer-social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .footer-social-icons a {
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            transition: all 0.4s;
+        }
+
+        .footer-social-icons a:hover {
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .footer-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .footer-contact-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .footer-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.4s;
+        }
+
+        .footer-link:hover {
+            color: var(--primary);
+            transform: translateX(-5px);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            padding-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .footer-copyright {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer-meta-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-meta-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        .footer-meta-link:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .footer-main {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .footer-main {
+                grid-template-columns: 1fr;
+            }
+            .footer-brand {
+                text-align: center;
+            }
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -603,11 +764,11 @@
         <div class="header-container">
             <h1 class="header-title">
                 <i class="fas fa-user-circle"></i>
-                پڕۆفایل
+                پرۆفایل
             </h1>
             <a href="/quran" class="back-btn">
                 <i class="fas fa-arrow-right"></i>
-                گەڕانەوە
+                گەڕیان ڤە
             </a>
         </div>
     </header>
@@ -618,20 +779,20 @@
             <div class="profile-content">
                 <img src="" alt="Profile" class="profile-avatar-large" id="profileAvatar">
                 <div class="profile-info">
-                    <h1 class="profile-name" id="profileName">ناو</h1>
+                    <h1 class="profile-name" id="profileName">ناڤ</h1>
                     <p class="profile-email" id="profileEmail">email@example.com</p>
                     <div class="profile-badges">
                         <div class="badge">
                             <i class="fas fa-calendar-check"></i>
-                            <span id="memberSince">ئەندام لە ...</span>
+                            <span id="memberSince">ئەندام ژ ...</span>
                         </div>
                         <div class="badge">
                             <i class="fas fa-fire"></i>
-                            <span id="streakBadge">0 ڕۆژ بەردەوام</span>
+                            <span id="streakBadge">٠ رۆژ بەردەوام</span>
                         </div>
                         <div class="badge">
                             <i class="fas fa-trophy"></i>
-                            <span id="levelBadge">ئاستی 1</span>
+                            <span id="levelBadge">ئاستا ١</span>
                         </div>
                     </div>
                 </div>
@@ -645,7 +806,7 @@
                     <i class="fas fa-book-open"></i>
                 </div>
                 <div class="stat-value" id="totalSurahs">0</div>
-                <div class="stat-label">سوورە تەواوکراوە</div>
+                <div class="stat-label">سوورەتا تەمامکری</div>
             </div>
 
             <div class="stat-card">
@@ -653,7 +814,7 @@
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="stat-value" id="totalAyahs">0</div>
-                <div class="stat-label">ئایەت خوێندراوە</div>
+                <div class="stat-label">ئایەتا هاتیە خواندن</div>
             </div>
 
             <div class="stat-card">
@@ -661,7 +822,7 @@
                     <i class="fas fa-bookmark"></i>
                 </div>
                 <div class="stat-value" id="totalBookmarks">0</div>
-                <div class="stat-label">نیشانەکراوە</div>
+                <div class="stat-label">نیشانەکری</div>
             </div>
 
             <div class="stat-card">
@@ -669,7 +830,7 @@
                     <i class="fas fa-clock"></i>
                 </div>
                 <div class="stat-value" id="totalTime">0</div>
-                <div class="stat-label">خولەک خوێندنەوە</div>
+                <div class="stat-label">خولەکێن خواندنێ</div>
             </div>
         </div>
 
@@ -677,7 +838,7 @@
         <div class="section-card">
             <h2 class="section-title">
                 <i class="fas fa-chart-bar"></i>
-                پێشکەوتنی قورئان
+                پێشکەفتنا قورئانێ
             </h2>
             <div class="progress-section">
                 <div class="progress-item">
@@ -692,7 +853,7 @@
 
                 <div class="progress-item">
                     <div class="progress-header">
-                        <span class="progress-label">ئامانجی مانگانە</span>
+                        <span class="progress-label">ئارمانجا هەیڤانە</span>
                         <span class="progress-value" id="monthlyProgress">0%</span>
                     </div>
                     <div class="progress-bar-container">
@@ -702,7 +863,7 @@
 
                 <div class="progress-item">
                     <div class="progress-header">
-                        <span class="progress-label">ئامانجی ساڵانە</span>
+                        <span class="progress-label">ئارمانجا سالانە</span>
                         <span class="progress-value" id="yearlyProgress">0%</span>
                     </div>
                     <div class="progress-bar-container">
@@ -716,28 +877,28 @@
         <div class="section-card">
             <h2 class="section-title">
                 <i class="fas fa-bolt"></i>
-                کردارە خێراکان
+                کارێن ب زوو
             </h2>
             <div class="quick-actions">
                 <a href="/goals" class="action-btn">
                     <div class="action-icon">🎯</div>
-                    <div class="action-label">ئامانجەکانم</div>
-                    <div class="action-desc">بینینی پێشکەوتن</div>
+                    <div class="action-label">ئارمانجێن من</div>
+                    <div class="action-desc">دیتنا پێشکەفتنێ</div>
                 </a>
                 <a href="/bookmarks" class="action-btn">
                     <div class="action-icon">📖</div>
-                    <div class="action-label">نیشانەکراوەکان</div>
-                    <div class="action-desc">ئایەتە پاشکەوتکراوەکان</div>
+                    <div class="action-label">نیشانەکریکان</div>
+                    <div class="action-desc">ئایەتێن پاشکەفتکری</div>
                 </a>
                 <a href="/quran" class="action-btn">
                     <div class="action-icon">📚</div>
-                    <div class="action-label">خوێندنەوە</div>
-                    <div class="action-desc">بەردەوامبە</div>
+                    <div class="action-label">خواندن</div>
+                    <div class="action-desc">بەردەوام بە</div>
                 </a>
                 <a href="#" class="action-btn" onclick="openSettings(); return false;">
                     <div class="action-icon">⚙️</div>
-                    <div class="action-label">ڕێکخستنەکان</div>
-                    <div class="action-desc">دەستکاری کردن</div>
+                    <div class="action-label">رێکخستن</div>
+                    <div class="action-desc">دەستکاری کرن</div>
                 </a>
             </div>
         </div>
@@ -746,48 +907,48 @@
         <div class="section-card">
             <h2 class="section-title">
                 <i class="fas fa-trophy"></i>
-                دەستکەوتەکان
+                دەستکەفتن
             </h2>
             <div class="achievements-grid">
                 <div class="achievement">
                     <div class="achievement-icon">🌟</div>
-                    <div class="achievement-name">یەکەم هەنگاو</div>
-                    <div class="achievement-desc">یەکەم ئایەت</div>
+                    <div class="achievement-name">ئێکەم پێنگاڤ</div>
+                    <div class="achievement-desc">ئێکەم ئایەت</div>
                 </div>
                 <div class="achievement">
                     <div class="achievement-icon">📚</div>
-                    <div class="achievement-name">خوێنەر</div>
-                    <div class="achievement-desc">10 سوورە</div>
+                    <div class="achievement-name">خوینەر</div>
+                    <div class="achievement-desc">١٠ سوورەت</div>
                 </div>
                 <div class="achievement">
                     <div class="achievement-icon">🔥</div>
                     <div class="achievement-name">بەردەوام</div>
-                    <div class="achievement-desc">7 ڕۆژ</div>
+                    <div class="achievement-desc">٧ رۆژ</div>
                 </div>
                 <div class="achievement locked">
                     <div class="achievement-icon">🏆</div>
-                    <div class="achievement-name">قارەمان</div>
-                    <div class="achievement-desc">50 سوورە</div>
+                    <div class="achievement-name">قەهرەمان</div>
+                    <div class="achievement-desc">٥٠ سوورەت</div>
                 </div>
                 <div class="achievement locked">
                     <div class="achievement-icon">💎</div>
                     <div class="achievement-name">ماستەر</div>
-                    <div class="achievement-desc">هەموو قورئان</div>
+                    <div class="achievement-desc">هەمی قورئان</div>
                 </div>
                 <div class="achievement">
                     <div class="achievement-icon">📝</div>
-                    <div class="achievement-name">نووسەر</div>
-                    <div class="achievement-desc">10 تێبینی</div>
+                    <div class="achievement-name">نڤیسەر</div>
+                    <div class="achievement-desc">١٠ تێبینی</div>
                 </div>
                 <div class="achievement locked">
                     <div class="achievement-icon">⭐</div>
-                    <div class="achievement-name">ستێرە</div>
-                    <div class="achievement-desc">30 ڕۆژ بەردەوام</div>
+                    <div class="achievement-name">ستێر</div>
+                    <div class="achievement-desc">٣٠ رۆژ بەردەوام</div>
                 </div>
                 <div class="achievement locked">
                     <div class="achievement-icon">👑</div>
                     <div class="achievement-name">پاشا</div>
-                    <div class="achievement-desc">100 ڕۆژ بەردەوام</div>
+                    <div class="achievement-desc">١٠٠ رۆژ بەردەوام</div>
                 </div>
             </div>
         </div>
@@ -796,7 +957,7 @@
         <div class="section-card">
             <h2 class="section-title">
                 <i class="fas fa-history"></i>
-                چالاکیی دوایی
+                چالاکیا دوماهیێ
             </h2>
             <div class="recent-activity" id="recentActivity">
                 <div class="activity-item">
@@ -804,8 +965,8 @@
                         <i class="fas fa-book"></i>
                     </div>
                     <div class="activity-content">
-                        <div class="activity-text">سوورەی البقرة خوێندرایەوە</div>
-                        <div class="activity-time">2 کاتژمێر لەمەوپێش</div>
+                        <div class="activity-text">سوورەتا البقرة هاتیە خواندن</div>
+                        <div class="activity-time">٢ دەمژمێر بەرێ</div>
                     </div>
                 </div>
                 <div class="activity-item">
@@ -813,8 +974,8 @@
                         <i class="fas fa-bookmark"></i>
                     </div>
                     <div class="activity-content">
-                        <div class="activity-text">ئایەتی 2:255 نیشانەکرا</div>
-                        <div class="activity-time">5 کاتژمێر لەمەوپێش</div>
+                        <div class="activity-text">ئایەتا ٢:٢٥٥ نیشانەکری</div>
+                        <div class="activity-time">٥ دەمژمێر بەرێ</div>
                     </div>
                 </div>
                 <div class="activity-item">
@@ -822,8 +983,8 @@
                         <i class="fas fa-bullseye"></i>
                     </div>
                     <div class="activity-content">
-                        <div class="activity-text">ئامانجی ڕۆژانە تەواوکرا</div>
-                        <div class="activity-time">دوێنێ</div>
+                        <div class="activity-text">ئارمانجا رۆژانە تەمامکری</div>
+                        <div class="activity-time">د وێنێ</div>
                     </div>
                 </div>
                 <div class="activity-item">
@@ -831,8 +992,8 @@
                         <i class="fas fa-fire"></i>
                     </div>
                     <div class="activity-content">
-                        <div class="activity-text">بەردەوامی 7 ڕۆژ بەدەستهێنا</div>
-                        <div class="activity-time">3 ڕۆژ لەمەوپێش</div>
+                        <div class="activity-text">بەردەوامیا ٧ رۆژان ب دەستڤە ئینا</div>
+                        <div class="activity-time">٣ رۆژ بەرێ</div>
                     </div>
                 </div>
             </div>
@@ -842,24 +1003,24 @@
         <div class="section-card">
             <h2 class="section-title">
                 <i class="fas fa-exclamation-triangle"></i>
-                ناوچەی مەترسی
+                ناڤچەیا مەترسی
             </h2>
             <div class="danger-zone">
                 <div class="danger-title">
                     <i class="fas fa-exclamation-circle"></i>
-                    کردارە مەترسیدارەکان
+                    کارێن مەترسیدار
                 </div>
                 <p class="danger-text">
-                    ئەم کردارانە هەمیشەییە و ناگەڕێتەوە. تکایە ئاگاداربە پێش ئەنجامدانیان.
+                    ئەڤ کارە هەردەمینە و ناگەڕیێتەڤە. تکایە ئاگەهدار بە پێش ب جهئینانا وان.
                 </p>
                 <div class="danger-buttons">
                     <button class="danger-btn secondary" onclick="signOut()">
                         <i class="fas fa-sign-out-alt"></i>
-                        دەرچوون
+                        دەرکەفتن
                     </button>
                     <button class="danger-btn" onclick="deleteAccount()">
                         <i class="fas fa-trash"></i>
-                        سڕینەوەی هەژمار
+                        سڕینەڤا هەژمارێ
                     </button>
                 </div>
             </div>
@@ -901,11 +1062,11 @@
                 document.getElementById('totalSurahs').textContent = stats.surahsCompleted || 0;
                 document.getElementById('totalAyahs').textContent = stats.ayahsRead || 0;
                 document.getElementById('totalBookmarks').textContent = (data.bookmarks || []).length;
-                document.getElementById('streakBadge').textContent = `${stats.streak || 0} ڕۆژ بەردەوام`;
+                document.getElementById('streakBadge').textContent = `${stats.streak || 0} رۆژ بەردەوام بە`;
 
                 // Calculate level based on ayahs read
                 const level = stats.level || Math.floor((stats.ayahsRead || 0) / 100) + 1;
-                document.getElementById('levelBadge').textContent = `ئاستی ${level}`;
+                document.getElementById('levelBadge').textContent = `ئاستا ${level}`;
 
                 // Update progress bars
                 const totalAyahs = 6236; // Total ayahs in Quran
@@ -983,7 +1144,7 @@
         function loadRecentActivity(data) {
             const activityContainer = document.getElementById('recentActivity');
             if (!data.sessions || data.sessions.length === 0) {
-                activityContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">هێشتا چالاکیت نییە</div>';
+                activityContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">هێشتا چالاکیا تە نینە</div>';
                 return;
             }
 
@@ -1001,7 +1162,7 @@
                             <i class="fas fa-book-open"></i>
                         </div>
                         <div class="activity-content">
-                            <div class="activity-text">${session.activeMinutes} خولەک لە ${surahName} خوێندرایەوە</div>
+                            <div class="activity-text">${session.activeMinutes} خولەک ژ ${surahName} هاتیە خواندن</div>
                             <div class="activity-time">${timeAgo}</div>
                         </div>
                     </div>
@@ -1017,8 +1178,8 @@
                             <i class="fas fa-fire"></i>
                         </div>
                         <div class="activity-content">
-                            <div class="activity-text">بەردەوامی ${stats.streak} ڕۆژ بەدەستهێنا</div>
-                            <div class="activity-time">ئێستا</div>
+                            <div class="activity-text">بەردەوامیا ${stats.streak} رۆژان ب دەستڤە ئینا</div>
+                            <div class="activity-time">نها</div>
                         </div>
                     </div>
                 ` + html;
@@ -1046,10 +1207,10 @@
             const hours = Math.floor(diff / 3600000);
             const days = Math.floor(diff / 86400000);
 
-            if (minutes < 60) return `${minutes} خولەک لەمەوپێش`;
-            if (hours < 24) return `${hours} کاتژمێر لەمەوپێش`;
-            if (days === 1) return 'دوێنێ';
-            return `${days} ڕۆژ لەمەوپێش`;
+            if (minutes < 60) return `${minutes} خولەک بەرێ`;
+            if (hours < 24) return `${hours} کاتژمێر بەرێ`;
+            if (days === 1) return 'د وێنێ';
+            return `${days} رۆژ بەرێ`;
         }
 
         function openSettings() {
@@ -1057,7 +1218,7 @@
         }
 
         function signOut() {
-            if (confirm('ئایا دڵنیایت لە دەرچوون؟')) {
+            if (confirm('ئایا دڵنیایت لە دەرکەفتن؟')) {
                 // Save user data before logging out
                 const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
                 const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
@@ -1084,7 +1245,7 @@
         }
 
         function deleteAccount() {
-            if (confirm('⚠️ ئاگاداربوونەوە: ئەم کردارە هەمیشەییە!\n\nهەموو زانیاریەکانت بە تەواوی دەسڕێتەوە و ناتوانیت بیگەڕێنیتەوە.\n\nئایا دڵنیایت لە سڕینەوەی هەژمار؟')) {
+            if (confirm('⚠️ ئاگاداربوونەوە: ئەم کردارە هەمیشەییە!\n\nهەموو زانیاریەکانت بە تەواوی دەسڕێتەوە و ناتوانیت بیگەڕێنیتەوە.\n\nئایا دڵنیایت لە سڕینەڤا هەژمارێ؟')) {
                 if (confirm('دڵنیایت؟ ئەم کارە ناگەڕێتەوە!')) {
                     // Delete all user data
                     const userKey = 'quran_data_' + currentUser.sub;
@@ -1093,7 +1254,7 @@
                     localStorage.removeItem('isAuthenticated');
                     localStorage.removeItem('user');
                     
-                    alert('هەژمارەکەت بە سەرکەوتوویی سڕایەوە');
+                    alert('هەژمارا تە ب سەرکەفتی هاتە سڕینەڤە');
                     window.location.href = '/login';
                 }
             }
@@ -1109,6 +1270,90 @@
                     console.log('❌ Service Worker registration failed:', error);
                 });
         }
+    </script>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-main">
+                <!-- Brand Section -->
+                <div class="footer-brand">
+                    <div class="footer-brand-header">
+                        <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image">
+                        <h2 class="footer-brand-name">تەفسیر کورد</h2>
+                    </div>
+                    <p class="footer-brand-tagline">
+                        پلاتفۆرمەکا ئارام بۆ خواندنێ، گەڕیان و رامان ل سەر قورئانا پیرۆز ب زمانێ کوردی (بادینی). قورئان بگەهیتە دەستێ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
+                    </p>
+                    <div class="footer-social-icons">
+                        <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://www.youtube.com/@tefsirkurd" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="https://t.me/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                            <i class="fab fa-telegram"></i>
+                        </a>
+                        <a href="https://www.pinterest.com/tafsirkurd/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest">
+                            <i class="fab fa-pinterest"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Navigate Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title">گەڕیان</h3>
+                    <div class="footer-links">
+                        <a href="/profile" class="footer-link">پرۆفایل</a>
+                        <a href="/goals" class="footer-link">ئارمانج</a>
+                        <a href="/bookmarks" class="footer-link">نیشانەکریکان</a>
+                        <a href="/settings" class="footer-link">رێکخستن</a>
+                    </div>
+                </div>
+
+                <!-- Resources Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title">رۆژپەڕێن دی</h3>
+                    <div class="footer-links">
+                        <a href="/" class="footer-link">مالپەڕێ سەرەکی</a>
+                        <a href="/quran" class="footer-link">قورئانا پیرۆز</a>
+                        <a href="/#features" class="footer-link">تایبەتمەندی</a>
+                        <a href="/#about" class="footer-link">دەربارەی مە</a>
+                    </div>
+                </div>
+
+                <!-- Connect Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title">پەیوەندی</h3>
+                    <div class="footer-links">
+                        <p class="footer-contact-text">ئەگەر تە پرسیارەک یان پێشنیارەک هەبیت، پەیوەندییێ ب مە بکە و ب زووترین دەم دێ بەرسڤا تە هێتە دان!</p>
+                        <a href="mailto:info@tafsirkurd.com" class="footer-link">
+                            <i class="fas fa-envelope"></i> info@tafsirkurd.com
+                        </a>
+                        <a href="/#contact" class="footer-link">
+                            <i class="fas fa-paper-plane"></i> فۆرمێ پڕ بکە
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <p class="footer-copyright">
+                    &copy; <span id="footer-year"></span> تەفسیر کورد. هەمی ماف پاراستی نە. خودایێ مەزن بەرەکەتێ بێخیتە هەول و ماندبوونا مە.
+                </p>
+                <div class="footer-meta-links">
+                    <a href="/privacy-policy" class="footer-meta-link">پاراستنا تایبەتمەندیێ</a>
+                    <a href="/terms-and-conditions" class="footer-meta-link">مەرج و رێسایان</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Set current year
+        document.getElementById('footer-year').textContent = new Date().getFullYear();
     </script>
 </body>
 </html>

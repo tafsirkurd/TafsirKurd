@@ -1,6 +1,5 @@
-// Scheduled function to send weekly Quran reminders via email
-// Runs every Friday at 8 PM Iraq time (17:00 UTC)
-// Environment variable BREVO_API_KEY configured in Netlify
+// Manual test function for daily reminders
+// Access via: https://tafsirkurd.com/.netlify/functions/test-daily-reminders?email=YOUR_EMAIL
 
 const { createClient } = require('@supabase/supabase-js');
 const https = require('https');
@@ -10,12 +9,41 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 
 exports.handler = async (event, context) => {
-    console.log('🕐 Running weekly reminder job (Friday)...');
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Content-Type': 'application/json'
+    };
+
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 200, headers, body: '' };
+    }
+
+    console.log('🧪 Running test daily reminder job...');
 
     try {
+        // Get test email from query parameter
+        const testEmail = event.queryStringParameters?.email;
+
+        if (testEmail) {
+            // Send to specific email
+            console.log(`📧 Sending test email to: ${testEmail}`);
+            await sendDailyReminderEmail(testEmail, 'Test User', 5, 10);
+
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({
+                    success: true,
+                    message: `Test email sent to ${testEmail}`,
+                    note: 'Check your inbox!'
+                })
+            };
+        }
+
+        // If no email specified, run the full job
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Get all users
         const { data: users, error } = await supabase
             .from('user_data')
             .select('*');
@@ -29,6 +57,7 @@ exports.handler = async (event, context) => {
         const today = new Date().toDateString();
         let sentCount = 0;
         let skippedCount = 0;
+        const results = [];
 
         for (const user of users) {
             try {
@@ -38,41 +67,41 @@ exports.handler = async (event, context) => {
                 const stats = userData.stats || {};
                 const lastReadDate = userData.lastReadDate;
 
-                // Check if user has email
                 if (!email || !email.includes('@')) {
                     skippedCount++;
+                    results.push({ email: 'N/A', status: 'skipped', reason: 'No email' });
                     continue;
                 }
 
-                // Check if user has notifications enabled
                 const notificationSettings = userData.notificationSettings || {};
                 if (notificationSettings.enabled === false) {
                     console.log(`⏭️  Skipping ${email} - notifications disabled`);
                     skippedCount++;
+                    results.push({ email, status: 'skipped', reason: 'Notifications disabled' });
                     continue;
                 }
 
-                // Check if user already read today
                 const lastRead = lastReadDate ? new Date(lastReadDate).toDateString() : null;
                 if (lastRead === today) {
                     console.log(`✅ Skipping ${email} - already read today`);
                     skippedCount++;
+                    results.push({ email, status: 'skipped', reason: 'Already read today' });
                     continue;
                 }
 
-                // User hasn't read today - send reminder!
                 const streak = stats.streak || 0;
                 const dayCount = stats.daysActive || 1;
 
                 await sendDailyReminderEmail(email, userName, streak, dayCount);
                 sentCount++;
+                results.push({ email, status: 'sent', userName, streak, dayCount });
                 console.log(`📧 Sent reminder to ${email}`);
 
-                // Small delay to avoid rate limiting
                 await sleep(100);
 
             } catch (userError) {
                 console.error(`Error processing user ${user.user_id}:`, userError);
+                results.push({ email: 'error', status: 'failed', error: userError.message });
             }
         }
 
@@ -80,20 +109,24 @@ exports.handler = async (event, context) => {
 
         return {
             statusCode: 200,
+            headers,
             body: JSON.stringify({
                 success: true,
                 sent: sentCount,
                 skipped: skippedCount,
-                total: users.length
-            })
+                total: users.length,
+                results: results
+            }, null, 2)
         };
 
     } catch (error) {
         console.error('❌ Job failed:', error);
         return {
             statusCode: 500,
+            headers,
             body: JSON.stringify({
-                error: error.message
+                error: error.message,
+                stack: error.stack
             })
         };
     }
@@ -103,16 +136,11 @@ async function sendDailyReminderEmail(email, userName, streak, dayCount) {
     const messages = [
         `خشتەیا تە گەش و پر رۆناهی یە — نەئێخە. ئەڤرۆ بتنێ ئایەتەکێ بخوینە`,
         `بیرئینانە: تەنانەت ئایەتەکێ تە نزیک دکەت ژ خودێ. ئێستا بەردەوام بە`,
-        `بەردەوامیی عیبادەتە — قورئانا خوە ڤەکە و پێشڤەچوونا خوە بەردەوام بکە`,
-        `هەفتەیەکا نوێ، هەولێکا نوێ — ئایەتەک یان دوو بخوینە و بەرکەتدار بە`,
-        `قورئان چارەسەرا دڵ و گیانە — هێشتا نەچوی دەر، دەستپێک و بخوینە`
+        `بەردەوامیی عیبادەتە — قورئانا خوە ڤەکە و پێشڤەچوونا خوە بەردەوام بکە`
     ];
     const message = messages[Math.floor(Math.random() * messages.length)];
 
-    const emojis = ['🌙', '📖', '✨', '🕌', '💫', '🌟', '🌿', '💚', '☪️', '🤲'];
-    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-
-    const htmlContent = getEmailTemplate(message, userName, streak, dayCount, randomEmoji);
+    const htmlContent = getEmailTemplate(message, userName, streak, dayCount);
 
     const emailData = {
         sender: {
@@ -125,14 +153,14 @@ async function sendDailyReminderEmail(email, userName, streak, dayCount) {
                 name: userName
             }
         ],
-        subject: `بیرئینانا هەفتانە ${randomEmoji}`,
+        subject: "بیرئینانا خواندنا قورئانێ 🌙",
         htmlContent: htmlContent
     };
 
     return sendBrevoEmail(emailData);
 }
 
-function getEmailTemplate(message, userName, streak, dayCount, emoji) {
+function getEmailTemplate(message, userName, streak, dayCount) {
     const streakSection = streak > 0
         ? `<p style="text-align:center;font-size:16px;color:#666;font-family:'IBM Plex Sans Arabic',-apple-system,sans-serif;margin:20px 0;">تو د رۆژا <strong style="color:#000000;font-size:24px;font-family:'IBM Plex Sans Arabic',-apple-system,sans-serif;">${dayCount}</strong> یێ دا یێ ل سەر رێکا خوە یا قورئانێ</p>`
         : '';
@@ -142,7 +170,7 @@ function getEmailTemplate(message, userName, streak, dayCount, emoji) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>بیرئینانا هەفتانە</title>
+    <title>بیرئینانا رۆژانە</title>
 </head>
 <body style="margin:0;padding:0;font-family:'IBM Plex Sans Arabic',sans-serif;background:#fafafa">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -153,8 +181,8 @@ function getEmailTemplate(message, userName, streak, dayCount, emoji) {
 <div style="height:2px;background:linear-gradient(90deg,transparent,#000000,transparent);width:100px;margin:0 auto"></div>
 </td></tr>
 <tr><td style="padding:0 20px;text-align:center">
-<div style="font-size:42px;margin:15px 0">${emoji}</div>
-<h2 style="margin:10px 0 20px;font-size:20px;font-weight:600;color:#333;font-family:'IBM Plex Sans Arabic',sans-serif">بیرئینانا هەفتانە</h2>
+<div style="font-size:42px;margin:15px 0">🌙</div>
+<h2 style="margin:10px 0 20px;font-size:20px;font-weight:600;color:#333;font-family:'IBM Plex Sans Arabic',sans-serif">بیرئینانا رۆژانە</h2>
 <p style="margin:0 0 20px;font-size:17px;line-height:1.6;color:#555;font-family:'IBM Plex Sans Arabic',sans-serif">${message}</p>
 ${streakSection}
 </td></tr>
@@ -174,6 +202,13 @@ ${streakSection}
 
 function sendBrevoEmail(emailData) {
     return new Promise((resolve, reject) => {
+        // Log what we're sending for debugging
+        console.log('📤 Sending email data:', {
+            to: emailData.to[0].email,
+            subject: emailData.subject,
+            htmlLength: emailData.htmlContent.length
+        });
+
         let data;
         try {
             data = JSON.stringify(emailData);
@@ -209,7 +244,7 @@ function sendBrevoEmail(emailData) {
                     if (res.statusCode === 201) {
                         resolve(response);
                     } else {
-                        reject(new Error(`Brevo API error: ${response.message || body}`));
+                        reject(new Error(`Brevo API error (${res.statusCode}): ${response.message || body}`));
                     }
                 } catch (error) {
                     reject(new Error(`Failed to parse Brevo response: ${error.message}`));

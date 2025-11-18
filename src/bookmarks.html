@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ku">
 <head>
+    <script src="/utils/theme-loader.js"></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
-    <title>نیشانەکراوەکان - تەفسیر کوورد</title>
+    <title>نیشانەکری - تەفسیر کورد</title>
 
     <!-- Favicons - High quality with SVG for perfect scaling -->
     <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
@@ -47,6 +48,18 @@
             --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        [data-theme="dark"] {
+            --primary: #ffffff;
+            --accent: #000000;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #ffffff;
+            --text-muted: #b0b0b0;
+            --border: #2a2a2a;
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.5);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -58,12 +71,6 @@
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        body.ready {
-            opacity: 1;
         }
 
         .header {
@@ -470,6 +477,160 @@
             }
         }
 
+        /* Footer Styles */
+        footer {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            margin-top: 80px;
+            padding: 60px 20px 30px;
+            text-align: right;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            direction: rtl;
+        }
+
+        .footer-main {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .footer-logo-img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+        }
+
+        .footer-brand-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .footer-brand-tagline {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
+
+        .footer-social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .footer-social-icons a {
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            transition: all 0.4s;
+        }
+
+        .footer-social-icons a:hover {
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .footer-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .footer-contact-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .footer-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.4s;
+        }
+
+        .footer-link:hover {
+            color: var(--primary);
+            transform: translateX(-5px);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            padding-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .footer-copyright {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer-meta-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-meta-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        .footer-meta-link:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .footer-main {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .footer-main {
+                grid-template-columns: 1fr;
+            }
+            .footer-brand {
+                text-align: center;
+            }
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -477,11 +638,11 @@
         <div class="header-container">
             <h1 class="header-title">
                 <i class="fas fa-bookmark"></i>
-                نیشانەکراوەکان
+                نیشانەکری
             </h1>
             <a href="/quran" class="back-btn">
                 <i class="fas fa-arrow-right"></i>
-                گەڕانەوە
+                گەڕیان ڤە
             </a>
         </div>
     </header>
@@ -491,7 +652,7 @@
         <div class="stats-bar" id="statsBar" style="display: none;">
             <div class="stat-item">
                 <div class="stat-value" id="totalBookmarks">0</div>
-                <div class="stat-label">نیشانەکراوە</div>
+                <div class="stat-label">نیشانەکری</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value" id="totalNotes">0</div>
@@ -499,19 +660,19 @@
             </div>
             <div class="stat-item">
                 <div class="stat-value" id="totalSurahs">0</div>
-                <div class="stat-label">سوورە</div>
+                <div class="stat-label">سوورەت</div>
             </div>
         </div>
 
         <!-- Controls Bar -->
         <div class="controls-bar" id="controlsBar" style="display: none;">
             <div class="search-box">
-                <input type="text" class="search-input" placeholder="گەڕان لە نیشانەکراوەکان..." id="searchInput">
+                <input type="text" class="search-input" placeholder="گەڕیان ل نیشانەکری..." id="searchInput">
             </div>
             <select class="sort-select" id="sortSelect">
-                <option value="newest">نوێترین</option>
-                <option value="oldest">کۆنترین</option>
-                <option value="surah">بەپێی سوورە</option>
+                <option value="newest">نووترین</option>
+                <option value="oldest">کەڤنترین</option>
+                <option value="surah">ب گۆری سوورەتان</option>
             </select>
         </div>
 
@@ -782,14 +943,14 @@
                         <div class="empty-icon">
                             <i class="far fa-bookmark"></i>
                         </div>
-                        <div class="empty-text">هێشتا هیچ ئایەتێکت نیشانە نەکردووە</div>
+                        <div class="empty-text">هێشتا تە چ ئایەت نیشانە نەکریە</div>
                         <div class="empty-desc">
-                            کاتێک ئایەتێک نیشانە دەکەیت، لێرە دەبینیتەوە.<br>
-                            دەتوانیت تێبینی و بیرەوەریشی تۆمار بکەیت.
+                            دەما تو ئایەتەکێ نیشانە دکەی، ل ڤێرێ دێ بینی.<br>
+                            تو دشێی تێبینی و بیرهاتنێن خۆ ژی تۆمار بکەی.
                         </div>
                         <a href="quran" class="back-btn">
                             <i class="fas fa-book-open"></i>
-                            دەستپێبکە بە خوێندنەوە
+                            دەستپێبکە ب خواندنێ
                         </a>
                     </div>
                 `;
@@ -829,18 +990,18 @@
                                 <div style="font-size: 0.9rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
                                     <span>${surahInfo.arabic}</span>
                                     <span>•</span>
-                                    <span>ئایەتی ${ayah}</span>
+                                    <span>ئایەتا ${ayah}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="bookmark-actions">
-                            <button class="action-btn" onclick="goToAyah(${surah}, ${ayah})" title="بڕۆ بۆ ئایەت">
+                            <button class="action-btn" onclick="goToAyah(${surah}, ${ayah})" title="بچە بۆ ئایەتێ">
                                 <i class="fas fa-external-link-alt"></i>
                             </button>
                             <button class="action-btn" onclick="toggleNote('${key}')" title="تێبینی">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="action-btn delete" onclick="removeBookmark('${key}')" title="سڕینەوە">
+                            <button class="action-btn delete" onclick="removeBookmark('${key}')" title="سڕینەڤە">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -858,14 +1019,14 @@
                         </div>
                     ` : ''}
                     <div id="note-editor-${key}" style="display: none;">
-                        <textarea class="note-input" id="note-input-${key}" placeholder="تێبینیەکەت لێرە بنووسە...">${note}</textarea>
+                        <textarea class="note-input" id="note-input-${key}" placeholder="تێبینییا خۆ ل ڤێرێ بنڤیسە...">${note}</textarea>
                         <button class="save-note-btn" onclick="saveNote('${key}')">
-                            <i class="fas fa-save"></i> پاشەکەوتکردن
+                            <i class="fas fa-save"></i> پاشکەفتکرن
                         </button>
                     </div>
                     <div class="timestamp">
                         <i class="far fa-clock"></i>
-                        نیشانەکرا ${formatTimestamp(timestamp)}
+                        نیشانەکری ${formatTimestamp(timestamp)}
                     </div>
                 `;
                 list.appendChild(card);
@@ -936,8 +1097,8 @@
                 list.innerHTML = `
                     <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
                         <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
-                        <p style="font-size: 1.2rem;">هیچ ئەنجامێک نەدۆزرایەوە</p>
-                        <p>تکایە گەڕانێکی تر تاقی بکەرەوە</p>
+                        <p style="font-size: 1.2rem;">چ ئەنجامەک نەهاتە دیتن</p>
+                        <p>تکایە گەڕیانەکا دی تاقی بکە</p>
                     </div>
                 `;
                 return;
@@ -962,18 +1123,18 @@
                                 <div style="font-size: 0.9rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
                                     <span>${surahInfo.arabic}</span>
                                     <span>•</span>
-                                    <span>ئایەتی ${ayah}</span>
+                                    <span>ئایەتا ${ayah}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="bookmark-actions">
-                            <button class="action-btn" onclick="goToAyah(${surah}, ${ayah})" title="بڕۆ بۆ ئایەت">
+                            <button class="action-btn" onclick="goToAyah(${surah}, ${ayah})" title="بچە بۆ ئایەتێ">
                                 <i class="fas fa-external-link-alt"></i>
                             </button>
                             <button class="action-btn" onclick="toggleNote('${key}')" title="تێبینی">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="action-btn delete" onclick="removeBookmark('${key}')" title="سڕینەوە">
+                            <button class="action-btn delete" onclick="removeBookmark('${key}')" title="سڕینەڤە">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -991,14 +1152,14 @@
                         </div>
                     ` : ''}
                     <div id="note-editor-${key}" style="display: none;">
-                        <textarea class="note-input" id="note-input-${key}" placeholder="تێبینیەکەت لێرە بنووسە...">${note}</textarea>
+                        <textarea class="note-input" id="note-input-${key}" placeholder="تێبینییا خۆ ل ڤێرێ بنڤیسە...">${note}</textarea>
                         <button class="save-note-btn" onclick="saveNote('${key}')">
-                            <i class="fas fa-save"></i> پاشەکەوتکردن
+                            <i class="fas fa-save"></i> پاشکەفتکرن
                         </button>
                     </div>
                     <div class="timestamp">
                         <i class="far fa-clock"></i>
-                        نیشانەکرا ${formatTimestamp(timestamp)}
+                        نیشانەکری ${formatTimestamp(timestamp)}
                     </div>
                 `;
                 list.appendChild(card);
@@ -1022,7 +1183,7 @@
 
             if (!quranData || !quranData[surah]) {
                 console.error(`Quran data not available for surah ${surah}`);
-                element.innerHTML = '<span style="color: #999;">تەکستی ئایەت بەردەست نییە</span>';
+                element.innerHTML = '<span style="color: #999;">تێکستێ ئایەتێ بەردەست نینە</span>';
                 return;
             }
 
@@ -1038,12 +1199,12 @@
                 element.textContent = verse.text;
             } else {
                 console.error(`Verse ${ayah} not found in surah ${surah}`);
-                element.innerHTML = '<span style="color: #999;">تەکستی ئایەت بەردەست نییە</span>';
+                element.innerHTML = '<span style="color: #999;">تێکستێ ئایەتێ بەردەست نینە</span>';
             }
         }
 
         function removeBookmark(key) {
-            if (confirm('ئایا دڵنیایت لە سڕینەوەی ئەم نیشانەیە؟')) {
+            if (confirm('ئایا دڵنیای ژ سڕینەڤەیا ڤێ نیشانەیێ؟')) {
                 bookmarkedAyahs = bookmarkedAyahs.filter(b => b !== key);
                 delete ayahNotes[key];
                 delete ayahTimestamps[key];
@@ -1065,7 +1226,7 @@
                 ayahNotes[key] = input.value;
                 saveBookmarks();
                 renderBookmarks();
-                showNotification('تێبینی پاشەکەوتکرا');
+                showNotification('تێبینییا پاشکەفتکری');
             }
         }
 
@@ -1080,10 +1241,10 @@
             const hours = Math.floor(diff / 3600000);
             const days = Math.floor(diff / 86400000);
 
-            if (minutes < 1) return 'ئێستا';
-            if (minutes < 60) return `${minutes} خولەک لەمەوپێش`;
-            if (hours < 24) return `${hours} کاتژمێر لەمەوپێش`;
-            if (days < 7) return `${days} ڕۆژ لەمەوپێش`;
+            if (minutes < 1) return 'نها';
+            if (minutes < 60) return `${minutes} خولەک بەرێ`;
+            if (hours < 24) return `${hours} کاتژمێر بەرێ`;
+            if (days < 7) return `${days} رۆژ بەرێ`;
             return new Date(timestamp).toLocaleDateString('ku');
         }
 
@@ -1096,7 +1257,7 @@
             const days = Math.floor(diff / 86400000);
 
             // Format: "پێش 5 خولەک" or "ڕۆژی 25/01/2025 لە کاتژمێری 14:30"
-            if (minutes < 1) return 'ئێستا';
+            if (minutes < 1) return 'نها';
             if (minutes < 60) return `پێش ${minutes} خولەک`;
             if (hours < 24) return `پێش ${hours} کاتژمێر`;
             if (days === 0) return 'ئەمڕۆ لە ' + date.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'});
@@ -1156,6 +1317,89 @@
                 }
             });
         }
+    </script>
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-main">
+                <!-- Brand Section -->
+                <div class="footer-brand">
+                    <div class="footer-brand-header">
+                        <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image">
+                        <h2 class="footer-brand-name">تەفسیر کورد</h2>
+                    </div>
+                    <p class="footer-brand-tagline">
+                        پلاتفۆرمەکا ئارام بۆ خواندنێ، گەڕیان و رامان ل سەر قورئانا پیرۆز ب زمانێ کوردی (بادینی). قورئان بگەهیتە دەستێ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
+                    </p>
+                    <div class="footer-social-icons">
+                        <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://www.youtube.com/@tefsirkurd" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="https://t.me/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                            <i class="fab fa-telegram"></i>
+                        </a>
+                        <a href="https://www.pinterest.com/tafsirkurd/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest">
+                            <i class="fab fa-pinterest"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Navigate Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title">گەڕیان</h3>
+                    <div class="footer-links">
+                        <a href="/profile" class="footer-link">پرۆفایل</a>
+                        <a href="/goals" class="footer-link">ئارمانج</a>
+                        <a href="/bookmarks" class="footer-link">نیشانەکری</a>
+                        <a href="/settings" class="footer-link">رێکخستن</a>
+                    </div>
+                </div>
+
+                <!-- Resources Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title">رۆژپەڕێن دی</h3>
+                    <div class="footer-links">
+                        <a href="/" class="footer-link">مالپەڕێ سەرەکی</a>
+                        <a href="/quran" class="footer-link">قورئانا پیرۆز</a>
+                        <a href="/#features" class="footer-link">تایبەتمەندی</a>
+                        <a href="/#about" class="footer-link">دەربارەی مە</a>
+                    </div>
+                </div>
+
+                <!-- Connect Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title">پەیوەندی</h3>
+                    <div class="footer-links">
+                        <p class="footer-contact-text">ئەگەر تە پرسیارەک یان پێشنیارەک هەبیت، پەیوەندییێ ب مە بکە و ب زووترین دەم دێ بەرسڤا تە هێتە دان!</p>
+                        <a href="mailto:info@tafsirkurd.com" class="footer-link">
+                            <i class="fas fa-envelope"></i> info@tafsirkurd.com
+                        </a>
+                        <a href="/#contact" class="footer-link">
+                            <i class="fas fa-paper-plane"></i> فۆرمێ پڕ بکە
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <p class="footer-copyright">
+                    &copy; <span id="footer-year"></span> تەفسیر کورد. هەمی ماف پاراستی نە. خودایێ مەزن بەرەکەتێ بێخیتە هەول و ماندبوونا مە.
+                </p>
+                <div class="footer-meta-links">
+                    <a href="/privacy-policy" class="footer-meta-link">پاراستنا تایبەتمەندیێ</a>
+                    <a href="/terms-and-conditions" class="footer-meta-link">مەرج و رێسایان</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Set current year
+        document.getElementById('footer-year').textContent = new Date().getFullYear();
     </script>
 </body>
 </html>

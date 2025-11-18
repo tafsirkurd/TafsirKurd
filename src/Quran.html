@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ku">
 <head>
+    <script src="/utils/theme-loader.js"></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="description" content="Quran - Read the Holy Quran with Kurdish translations - Tafsir Kurd">
@@ -9,7 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
-    <title>قوورئان - تەفسیر کوورد</title>
+    <title>قورئان - تەفسیر کورد</title>
 
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-WVQC0MKLFN"></script>
@@ -157,7 +158,8 @@
             align-items: center;
             justify-content: center;
             z-index: 10000;
-            transition: opacity 1s ease, visibility 1s ease;
+            opacity: 0;
+            transition: opacity 0.3s ease;
             overflow: hidden;
         }
 
@@ -257,13 +259,16 @@
 
         .main-content {
             opacity: 0;
-            transition: opacity 0.6s ease;
+            visibility: hidden;
             margin-left: 0;
-            transition: margin-left var(--transition), opacity 0.6s ease;
+            transition: margin-left 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease, visibility 0s linear 0.6s;
+            will-change: margin-left;
         }
 
         .main-content.loaded {
             opacity: 1;
+            visibility: visible;
+            transition: margin-left 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease, visibility 0s linear 0s;
         }
 
         .main-content.shifted {
@@ -466,8 +471,9 @@
             flex-direction: column;
             z-index: 999;
             transform: translateX(-100%);
-            transition: transform var(--transition);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: var(--shadow-lg);
+            will-change: transform;
         }
 
         .sidebar.visible {
@@ -529,6 +535,47 @@
             font-size: 1.3rem;
             font-weight: 700;
             color: var(--primary);
+        }
+
+        .sidebar-tabs {
+            display: flex;
+            gap: 8px;
+            margin: 15px 0 10px 0;
+            padding: 0;
+        }
+
+        .sidebar-tab {
+            flex: 1;
+            padding: 10px 15px;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        .sidebar-tab i {
+            font-size: 1rem;
+        }
+
+        .sidebar-tab:hover {
+            background: var(--border-light);
+            border-color: var(--primary);
+            color: var(--text);
+        }
+
+        .sidebar-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: var(--accent);
         }
 
         .search-container-sidebar {
@@ -648,6 +695,10 @@
             text-overflow: ellipsis;
         }
 
+        .surah-item-sidebar.active .surah-name-sidebar {
+            color: var(--accent);
+        }
+
         .surah-item-sidebar.active .surah-arabic-sidebar {
             color: var(--accent);
         }
@@ -678,6 +729,12 @@
             background: var(--primary);
             color: var(--accent);
             transform: translateX(3px);
+        }
+
+        .ayah-item-sidebar.active {
+            background: var(--primary);
+            color: var(--accent);
+            font-weight: 600;
         }
 
         .sidebar-toggle {
@@ -750,18 +807,14 @@
         .header-logo-img {
             width: 55px;
             height: 55px;
-            transition: transform var(--transition);
             object-fit: contain;
-        }
-
-        .header-logo-img:hover {
-            transform: rotate(10deg) scale(1.1);
         }
 
         .header-title {
             font-size: 1.8rem;
             font-weight: 700;
             color: var(--primary);
+            transition: color var(--transition);
         }
 
         .header-nav {
@@ -1124,14 +1177,43 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        /* Hero Section */
+        /* Hero Section - Continuous subtle animation */
+        @keyframes heroFloat {
+            0%, 100% {
+                transform: translate(0, 0) scale(1.05);
+            }
+            25% {
+                transform: translate(-10px, -5px) scale(1.05);
+            }
+            50% {
+                transform: translate(-5px, 10px) scale(1.05);
+            }
+            75% {
+                transform: translate(10px, -5px) scale(1.05);
+            }
+        }
+
         .hero-section {
             position: relative;
             background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 100%),
                 url('https://images.unsplash.com/photo-1535552081922-631f7dea1e9d?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1600') center/cover;
             padding: 80px 30px;
             text-align: center;
-            z-index: 950;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            right: -10%;
+            bottom: -10%;
+            background: inherit;
+            background-size: cover;
+            animation: heroFloat 20s ease-in-out infinite;
+            z-index: -1;
         }
 
         [data-theme="dark"] .hero-section {
@@ -1173,18 +1255,36 @@
         }
 
         .search-results-dropdown {
-            position: absolute;
-            top: calc(100% + 10px);
-            left: 0;
-            right: 0;
+            position: fixed;
+            top: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 60px);
+            max-width: 1200px;
             background: var(--card-bg);
             border: 2px solid var(--border);
             border-radius: 16px;
-            max-height: 70vh;
+            max-height: calc(100vh - 220px);
             overflow-y: auto;
+            overflow-x: hidden;
             display: none;
-            z-index: 2000;
+            z-index: 10000;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .search-results-dropdown {
+                top: 130px;
+                max-height: calc(100vh - 150px);
+                width: calc(100% - 30px);
+            }
+
+            #popularSearchesSection {
+                top: 130px !important;
+                max-height: calc(100vh - 150px) !important;
+                width: calc(100% - 30px) !important;
+            }
         }
 
         .search-results-dropdown.active {
@@ -1192,10 +1292,15 @@
         }
 
         .search-result-item {
-            padding: 15px 20px;
+            padding: 30px 20px 15px 20px;
             border-bottom: 1px solid var(--border);
             cursor: pointer;
             transition: all var(--transition);
+            overflow: visible;
+        }
+
+        .search-result-item:first-child {
+            padding-top: 35px;
         }
 
         .search-result-item:last-child {
@@ -1219,8 +1324,8 @@
         }
 
         .search-result-text {
-            font-family: var(--arabic-font, 'KFGQPC Hafs'), 'Scheherazade New', serif;
-            font-size: var(--arabic-size, 1.5rem);
+            font-family: 'KFGQPC Hafs', 'Amiri Quran', 'Traditional Arabic', serif;
+            font-size: 1.5rem;
             line-height: 1.8;
             color: var(--text);
             direction: rtl;
@@ -1229,6 +1334,19 @@
 
         .search-result-item:hover .search-result-text {
             color: var(--accent);
+        }
+
+        .search-result-item:hover .search-result-text strong {
+            color: var(--accent) !important;
+            background: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .search-result-item .surah-card-arabic {
+            color: var(--primary) !important;
+        }
+
+        .search-result-item:hover .surah-card-arabic {
+            color: var(--accent) !important;
         }
 
         .search-no-results {
@@ -1433,6 +1551,12 @@
             margin-bottom: 5px;
         }
 
+        /* Reader header decorative icon - always visible */
+        .reader-header .surah-card-arabic {
+            color: var(--text) !important;
+            filter: none !important;
+        }
+
         .surah-card-english {
             font-size: 1.1rem;
             font-weight: 600;
@@ -1543,6 +1667,7 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 30px;
+            padding-top: 110px; /* Space for fixed sticky progress header */
         }
 
         .surah-reader-page.visible {
@@ -1572,12 +1697,90 @@
             color: var(--text-muted);
         }
 
-        .surah-progress-indicator {
-            margin-top: 20px;
-            padding: 15px 20px;
-            background: var(--bg);
-            border-radius: 12px;
-            border: 2px solid var(--border);
+        /* Sticky Progress Header - Quran.com style */
+        .sticky-progress-header {
+            position: fixed;
+            top: 85px;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 998;
+            background: var(--card-bg);
+            border-bottom: 2px solid var(--border);
+            border-top: 1px solid var(--border);
+            padding: 12px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            transition: top 0.3s ease-in-out, box-shadow 0.3s ease;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        .sticky-progress-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .sticky-progress-left {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .sticky-surah-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        .sticky-progress-center {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+            min-width: 400px;
+        }
+
+        .progress-bar-sticky {
+            width: 300px;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill-sticky {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-percentage {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary);
+            min-width: 45px;
+            text-align: center;
+        }
+
+        .sticky-progress-right {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .sticky-ayah-count {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            white-space: nowrap;
         }
 
         .progress-bar-mini {
@@ -2271,6 +2474,11 @@
                 --tafsir-size: 0.8rem;
             }
 
+            .surah-reader-page {
+                padding: 15px;
+                padding-top: 95px; /* Space for fixed sticky progress header on mobile */
+            }
+
             .header-container {
                 padding: 0 10px;
                 height: 55px;
@@ -2283,7 +2491,6 @@
             .header-logo-img {
                 width: 40px;
                 height: 40px;
-                object-fit: contain;
             }
 
             .header-btn {
@@ -2416,6 +2623,46 @@
                 width: 28px;
                 height: 28px;
                 font-size: 0.75rem;
+            }
+
+            .sticky-progress-header {
+                padding: 8px 0;
+                top: 55px;
+                transition: top 0.3s ease-in-out;
+                display: block !important;
+                visibility: visible !important;
+            }
+
+            .sticky-progress-content {
+                gap: 8px;
+                padding: 0 10px;
+                grid-template-columns: auto 1fr auto;
+                max-width: 100%;
+            }
+
+            .sticky-progress-center {
+                min-width: 0;
+                gap: 8px;
+            }
+
+            .sticky-surah-name {
+                font-size: 0.75rem;
+                white-space: nowrap;
+            }
+
+            .progress-percentage {
+                font-size: 0.7rem;
+                min-width: 30px;
+            }
+
+            .sticky-ayah-count {
+                font-size: 0.7rem;
+                white-space: nowrap;
+            }
+
+            .progress-bar-sticky {
+                width: 120px;
+                height: 4px;
             }
 
             .surah-navigation {
@@ -2577,15 +2824,36 @@
         .hidden {
             display: none;
         }
+
+        /* Force content to be hidden on initial load */
+        .main-content {
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+
+        /* Only show content when loaded class is added */
+        .main-content.loaded {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        /* Ensure preloader is always on top */
+        .preloader {
+            z-index: 99999 !important;
+        }
     </style>
 </head>
-<body>
+<body class="no-scroll">
     <!-- Instant CSS to prevent home page flash -->
     <script>
         // This must run FIRST, before any DOM elements render
         (function() {
             const returningFromSettings = sessionStorage.getItem('returnToQuranReader');
-            if (returningFromSettings === 'true') {
+            const lastViewType = localStorage.getItem('lastViewType');
+            const lastScrollPosition = localStorage.getItem('lastScrollPosition');
+
+            // Hide home page instantly if returning from settings OR restoring scroll position
+            if (returningFromSettings === 'true' || (lastViewType && lastScrollPosition)) {
                 // Inject CSS immediately to hide home page
                 document.write('<style id="instant-hide">#homePage { display: none !important; } #surahReaderPage { display: block !important; }</style>');
             }
@@ -2604,8 +2872,8 @@
         </div>
         <div class="preloader-content">
             <img src="assets/images/logo.png" alt="Tafsir Kurd" class="preloader-logo logo-image">
-            <h1 class="preloader-title">تەفسیر کوورد</h1>
-            <p class="preloader-subtitle">چاوەڕێبە...</p>
+            <h1 class="preloader-title">تەفسیر کورد</h1>
+            <p class="preloader-subtitle">چاڤەرێ بە...</p>
             <div class="preloader-dots">
                 <div class="preloader-dot"></div>
                 <div class="preloader-dot"></div>
@@ -2619,9 +2887,9 @@
         // This runs immediately, before page render, to prevent flash
         (function() {
             const returningFromSettings = sessionStorage.getItem('returnToQuranReader');
-            const hasSeenPreloader = sessionStorage.getItem('hasSeenPreloader');
 
-            if (returningFromSettings || hasSeenPreloader) {
+            // Only skip preloader if returning from settings, not for regular refreshes
+            if (returningFromSettings) {
                 const preloader = document.getElementById('preloader');
                 const mainContent = document.getElementById('mainContent');
 
@@ -2640,7 +2908,7 @@
     <div class="settings-modal" id="settingsModal">
         <div class="settings-content">
             <div class="settings-header">
-                <h2 class="settings-title">ڕێکخستنەکان</h2>
+                <h2 class="settings-title">رێکخستن</h2>
                 <button class="settings-close" onclick="closeSettings()">
                     <i class="fas fa-times"></i>
                 </button>
@@ -2650,10 +2918,10 @@
             <div class="settings-section">
                 <h3 class="settings-section-title">
                     <i class="fas fa-palette"></i>
-                    ڕوکار
+                    رۆکار
                 </h3>
                 <div class="setting-item">
-                    <span class="setting-label">دۆخی تاریکی</span>
+                    <span class="setting-label">رەوشا تاریک</span>
                     <div class="setting-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
                         <div class="setting-toggle-knob"></div>
                     </div>
@@ -2664,14 +2932,14 @@
             <div class="settings-section">
                 <h3 class="settings-section-title">
                     <i class="fas fa-book-open"></i>
-                    ڕێکخستنی خوێندنەوە
+                    رێکخستنا خواندنێ
                 </h3>
 
                 <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <span class="setting-label">جۆری فۆنتی عەرەبی</span>
+                        <span class="setting-label">جۆرێ فۆنتا عەرەبی</span>
                         <select class="setting-select" id="arabicFontSelect" onchange="changeArabicFont()">
-                            <option value="KFGQPC Hafs">KFGQPC Hafs (هەفس)</option>
+                            <option value="KFGQPC Hafs">KFGQPC Hafs (حەفس)</option>
                             <option value="Scheherazade New">Scheherazade New</option>
                             <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
                         </select>
@@ -2683,7 +2951,7 @@
 
                 <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <span class="setting-label">قەبارەی فۆنتی عەرەبی</span>
+                        <span class="setting-label">قەبارەیا فۆنتا عەرەبی</span>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <input type="range" class="setting-slider" id="arabicSizeSlider"
                                    min="1.5" max="3.5" step="0.1" value="2.2"
@@ -2695,21 +2963,21 @@
 
                 <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <span class="setting-label">جۆری فۆنتی تەفسیر</span>
+                        <span class="setting-label">جۆرێ فۆنتا تەفسیرێ</span>
                         <select class="setting-select" id="tafsirFontSelect" onchange="changeTafsirFont()">
                             <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
                             <option value="Scheherazade New">Scheherazade New</option>
-                            <option value="KFGQPC Hafs">KFGQPC Hafs (هەفس)</option>
+                            <option value="KFGQPC Hafs">KFGQPC Hafs (حەفس)</option>
                         </select>
                     </div>
                     <div id="tafsirPreview" style="width: 100%; padding: 15px; background: var(--bg); border-radius: 8px; text-align: right; font-size: 1.1rem; color: var(--text); border: 2px solid var(--border); direction: rtl;">
-                        بە ناوی خوای بە بەزەیی و میهرەبان، ستایشی جێگای ستایش خوایە کە پەروەردگاری گشت دونیایە.
+                        ب ناڤێ خودایێ دلۆڤان و دلوڤین، هەمی سوپاس و ستایش بۆ خودایێ مەزن یێ کو خودانێ هەمی جیهان و گەردوونێ یە.
                     </div>
                 </div>
 
                 <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <span class="setting-label">قەبارەی فۆنتی تەفسیر</span>
+                        <span class="setting-label">قەبارەیا فۆنتا تەفسیرێ</span>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <input type="range" class="setting-slider" id="tafsirSizeSlider"
                                    min="0.9" max="1.8" step="0.05" value="1.1"
@@ -2720,14 +2988,14 @@
                 </div>
 
                 <div class="setting-item">
-                    <span class="setting-label">پیشاندانی تەفسیر</span>
+                    <span class="setting-label">نیشاندان و ڤەدیتنا تەفسیرێ</span>
                     <div class="setting-toggle active" id="tafsirToggle">
                         <div class="setting-toggle-knob"></div>
                     </div>
                 </div>
 
                 <div class="setting-item">
-                    <span class="setting-label">خولاندنی خۆکار</span>
+                    <span class="setting-label">زڤراندنا خۆکار</span>
                     <div class="setting-toggle" id="autoScrollToggle">
                         <div class="setting-toggle-knob"></div>
                     </div>
@@ -2737,7 +3005,7 @@
             <!-- Reset Settings -->
             <div class="settings-section">
                 <button onclick="resetSettings()" style="width: 100%; padding: 12px; background: transparent; color: #e74c3c; border: 2px solid #e74c3c; border-radius: 10px; font-weight: 600; cursor: pointer; font-family: 'IBM Plex Sans Arabic', sans-serif;">
-                    <i class="fas fa-redo"></i> گەڕاندنەوەی ڕێکخستنەکان
+                    <i class="fas fa-redo"></i> گەڕیاندنڤەیا رێکخستنێ
                 </button>
             </div>
         </div>
@@ -2746,22 +3014,22 @@
     <!-- Copy Modal -->
     <div class="copy-modal" id="copyModal">
         <div class="copy-modal-content">
-            <h3 class="copy-modal-title">کۆپیکردنی ئایەت</h3>
+            <h3 class="copy-modal-title">کۆپیکرنا ئایەتێ</h3>
             <div class="copy-options">
                 <button class="copy-option-btn" onclick="copyAyahWithTafsir()">
                     <i class="fas fa-copy"></i>
-                    <span>کۆپی لەگەڵ تەفسیر</span>
+                    <span>کۆپی دگەل تەفسیرێ</span>
                 </button>
                 <button class="copy-option-btn" onclick="copyAyahWithoutTafsir()">
                     <i class="fas fa-file-alt"></i>
-                    <span>کۆپی بەبێ تەفسیر</span>
+                    <span>کۆپی بێ تەفسیر</span>
                 </button>
                 <button class="copy-option-btn" onclick="copyJustTafsir()">
                     <i class="fas fa-language"></i>
-                    <span>کۆپی تەنها تەفسیر</span>
+                    <span>کۆپی ب تنێ تەفسیر</span>
                 </button>
             </div>
-            <button class="copy-cancel-btn" onclick="closeCopyModal()">پاشگەزبوونەوە</button>
+            <button class="copy-cancel-btn" onclick="closeCopyModal()">زڤڕین</button>
         </div>
     </div>
 
@@ -2771,16 +3039,16 @@
             <div class="login-required-icon">
                 <i class="fas fa-lock"></i>
             </div>
-            <h2 class="login-required-title">چوونەژووروەوە پێویستە</h2>
+            <h2 class="login-required-title">چوونە ژوورڤە پێتڤییە</h2>
             <p class="login-required-text">
-                بۆ بەکارهێنانی ئەم تایبەتمەندییە، تکایە چوونەژووروەوە بکە یان هەژماری نوێ دروست بکە.
+                ژ بۆ بکارئینانا ڤێ تایبەتمەندییێ، تکایە چوونە ژوورڤە بکە یان هەژمارەکا نوو دروست بکە.
             </p>
             <div class="login-required-buttons">
                 <button class="login-required-btn" onclick="goToLogin()">
-                    <i class="fas fa-sign-in-alt"></i> چوونەژووروەوە
+                    <i class="fas fa-sign-in-alt"></i> چوونە ژوورڤە
                 </button>
                 <button class="login-required-btn secondary" onclick="closeLoginRequired()">
-                    پاشگەزبوونەوە
+                    زڤڕین
                 </button>
             </div>
         </div>
@@ -2791,16 +3059,30 @@
         <div class="sidebar-header">
             <div class="sidebar-logo" onclick="showHomePage()">
                 <img src="assets/images/logo.png" alt="Tafsir Kurd" class="logo-image">
-                <div class="sidebar-title">قوورئان</div>
+                <div class="sidebar-title">قورئان</div>
             </div>
             <button class="sidebar-close-btn" onclick="closeSidebar()" title="داخستن">
                 <i class="fas fa-times"></i>
             </button>
+
+            <!-- Tabs for Surah and Juz -->
+            <div class="sidebar-tabs">
+                <button class="sidebar-tab active" onclick="switchSidebarTab('surah')" id="surahTab">
+                    <i class="fas fa-book"></i>
+                    <span>سوڕەت</span>
+                </button>
+                <button class="sidebar-tab" onclick="switchSidebarTab('juz')" id="juzTab">
+                    <i class="fas fa-layer-group"></i>
+                    <span>جوز</span>
+                </button>
+            </div>
+
             <div class="search-container-sidebar">
-                <input type="text" class="search-input-sidebar" placeholder="گەڕان: ٢:١٢٧ یان ناوی سوورە..." id="sidebarSearch">
+                <input type="text" class="search-input-sidebar" placeholder="لێگەریانا قورئانێ…" id="sidebarSearch">
             </div>
         </div>
         <div class="surah-list-sidebar" id="surahListSidebar"></div>
+        <div class="surah-list-sidebar" id="juzListSidebar" style="display: none;"></div>
     </div>
 
     <!-- Sidebar Toggle Button -->
@@ -2811,7 +3093,7 @@
     <!-- Feather Overlay -->
     <div class="feather-overlay" id="featherOverlay">
         <div class="feather-overlay-header">
-            <h2 class="feather-overlay-title">مێنیۆی بەکارهێنەر</h2>
+            <h2 class="feather-overlay-title">مێنیویا بکارئینەری</h2>
             <button class="feather-close-btn" onclick="closeFeatherOverlay()">
                 <i class="fas fa-times"></i>
             </button>
@@ -2822,7 +3104,7 @@
             <div class="profile-section" onclick="window.location.href='/profile'">
                 <img src="" alt="Profile" class="profile-avatar-large" id="profileAvatar">
                 <div class="profile-info">
-                    <div class="profile-name" id="profileName">ناو</div>
+                    <div class="profile-name" id="profileName">ناڤ</div>
                     <div class="profile-email" id="profileEmail">email@gmail.com</div>
                 </div>
             </div>
@@ -2837,19 +3119,19 @@
                 </a>
                 <a href="/bookmarks" class="nav-menu-item">
                     <i class="fas fa-bookmark"></i>
-                    <span>نیشانەکراوەکان</span>
+                    <span>نیشانەکری</span>
                 </a>
                 <a href="/goals" class="nav-menu-item">
                     <i class="fas fa-bullseye"></i>
-                    <span>ئامانجەکان</span>
+                    <span>ئارمانج</span>
                 </a>
                 <a href="/settings" class="nav-menu-item" onclick="saveStateBeforeSettings(event)">
                     <i class="fas fa-cog"></i>
-                    <span>ڕێکخستنەکان</span>
+                    <span>رێکخستن</span>
                 </a>
                 <div class="nav-menu-item" onclick="signOut()">
                     <i class="fas fa-sign-out-alt"></i>
-                    <span>دەرچوون</span>
+                    <span>دەرکەفتن</span>
                 </div>
             </div>
         </div>
@@ -2858,28 +3140,28 @@
         <div class="feather-section">
             <h3 class="feather-section-title">
                 <i class="fas fa-chart-line"></i>
-                پێشکەوتن
+                پێشکەفتن
             </h3>
             <div class="stat-grid">
                 <div class="stat-card">
                     <div class="stat-value" id="statDays">0</div>
-                    <div class="stat-label">ڕۆژ چالاک</div>
+                    <div class="stat-label">رۆژا چالاک</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statSurahs">0</div>
-                    <div class="stat-label">سوورە تەواو</div>
+                    <div class="stat-label">سوورەت تەمام</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statAyahs">0</div>
-                    <div class="stat-label">ئایەت خوێندراوە</div>
+                    <div class="stat-label">ئایەتا هاتیە خواندن</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statStreak">0</div>
-                    <div class="stat-label">🔥 بەردەوامی</div>
+                    <div class="stat-label">🔥 بەردەوامبە</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statTime">0</div>
-                    <div class="stat-label">خولەک خوێندنەوە</div>
+                    <div class="stat-label">خولەکێن خواندنێ</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statLevel">1</div>
@@ -2890,7 +3172,7 @@
             <!-- Reset Reading Progress Button -->
             <button onclick="resetReadingProgress()" style="width: 100%; margin-top: 20px; padding: 14px 20px; background: var(--bg); border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif; font-size: 1rem; font-weight: 600; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 10px;">
                 <i class="fas fa-redo"></i>
-                <span>دەستپێکردنەوە لە سەرەتاوە</span>
+                <span>دەستپێکرن ڤە ژ دەستپێکێ</span>
             </button>
         </div>
     </div>
@@ -2900,28 +3182,28 @@
         <i class="fas fa-arrow-up"></i>
     </div>
 
-    <div class="main-content" id="mainContent">
+    <div class="main-content" id="mainContent" style="opacity: 0; visibility: hidden;">
 
         <!-- Professional Header -->
         <header class="professional-header">
             <div class="header-container">
                 <div class="header-logo-section" onclick="showHomePage()">
                     <img src="assets/images/logo.png" alt="Logo" class="header-logo-img logo-image">
-                    <div class="header-title">تەفسیر کوورد</div>
+                    <div class="header-title">تەفسیر کورد</div>
                 </div>
                 <nav class="header-nav">
                     <a href="/" class="header-btn outline">
                         <i class="fas fa-globe"></i>
-                        <span>ماڵپەڕی سەرەکی</span>
+                        <span>مالپەڕێ سەرەکی</span>
                     </a>
                     <a href="/settings" class="header-btn outline" onclick="saveStateBeforeSettings(event)">
                         <i class="fas fa-cog"></i>
-                        <span>ڕێکخستنەکان</span>
+                        <span>رێکخستن</span>
                     </a>
                     <div id="authSection">
                         <button class="header-btn" onclick="goToLogin()">
                             <i class="fas fa-user"></i>
-                            <span>چوونەژووروەوە</span>
+                            <span>چوونە ژوورڤە</span>
                         </button>
                     </div>
                 </nav>
@@ -2932,11 +3214,12 @@
         <div class="home-page" id="homePage">
             <!-- Hero Section -->
             <section class="hero-section">
+                <img src="assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-logo-static" style="height: 150px; width: auto; margin-bottom: 30px; filter: brightness(0) invert(1);">
                 <div class="hero-search">
                     <input
                         type="text"
                         class="hero-search-input"
-                        placeholder="گەڕان لە قورئان..."
+                        placeholder="لێگەریانا قورئانێ…"
                         id="heroSearchInput"
                     >
                     <i class="fas fa-search hero-search-icon"></i>
@@ -2944,11 +3227,11 @@
                     <div class="search-results-dropdown" id="searchResultsDropdown"></div>
 
                     <!-- Popular Searches Dropdown - Hidden by default, shown on search focus -->
-                    <div id="popularSearchesSection" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; margin-top: 10px; width: 100%;">
+                    <div id="popularSearchesSection" style="display: none; position: fixed; top: 200px; left: 50%; transform: translateX(-50%); z-index: 10000; width: calc(100% - 60px); max-width: 1200px; max-height: calc(100vh - 220px); overflow-y: auto; overflow-x: hidden;">
                         <div style="background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: var(--shadow-lg); border: 2px solid var(--border);">
                             <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
                                 <i class="fas fa-fire"></i>
-                                <span>گەڕانە بەناوبانگەکان</span>
+                                <span>گەڕیانێن بناڤودەنگ</span>
                             </div>
 
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
@@ -2957,7 +3240,7 @@
                                     <i class="fas fa-bookmark" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">67. Al-Mulk</div>
-                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەی المُلک</div>
+                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەتا المُلک</div>
                                     </div>
                                 </button>
 
@@ -2965,7 +3248,7 @@
                                     <i class="fas fa-bookmark" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">18. Al-Kahf</div>
-                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەی الکهف</div>
+                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەتا الکهف</div>
                                     </div>
                                 </button>
 
@@ -2973,7 +3256,7 @@
                                     <i class="fas fa-bookmark" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">36. Ya-Sin</div>
-                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەی یسین</div>
+                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەتا یسین</div>
                                     </div>
                                 </button>
 
@@ -2997,7 +3280,7 @@
                                     <i class="fas fa-heart" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">55. Ar-Rahman</div>
-                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەی الرحمٰن</div>
+                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەتا الرحمٰن</div>
                                     </div>
                                 </button>
                             </div>
@@ -3007,15 +3290,15 @@
                 <div class="hero-actions">
                     <button class="hero-chip" id="heroSidebarBtn" type="button">
                         <i class="fas fa-list"></i>
-                        <span>لیستی سوورەکان</span>
+                        <span>لیستەیا سوورەتان</span>
                     </button>
                     <button class="hero-chip" id="heroContinueBtn" type="button">
                         <i class="fas fa-play-circle"></i>
-                        <span>بەردەوامبە لە خوێندنەوە</span>
+                        <span>بەردەوام بە د خواندنێ</span>
                     </button>
                     <button class="hero-chip" id="heroRandomBtn" type="button">
                         <i class="fas fa-star"></i>
-                        <span>ئایەتی ڕۆژانە</span>
+                        <span>ئایەتا رۆژانە</span>
                     </button>
                 </div>
             </section>
@@ -3026,7 +3309,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
                         <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 10px;">
                             <i class="fas fa-star"></i>
-                            ئایەتی ڕۆژانە
+                            ئایەتا رۆژانە
                         </div>
                         <div style="background: var(--bg); padding: 10px 20px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-clock"></i>
@@ -3044,7 +3327,7 @@
                         <div id="randomAyahRef" style="font-weight: 600; color: var(--primary); font-size: 1.1rem;"></div>
                         <button onclick="gotoRandomAyah()" style="padding: 12px 24px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; cursor: pointer; font-weight: 600; transition: all var(--transition); display: flex; align-items: center; gap: 10px; font-family: 'IBM Plex Sans Arabic', sans-serif;">
                             <i class="fas fa-arrow-left"></i>
-                            بڕۆ بۆ ئایەتەکە
+                            پتر ببیە
                         </button>
                     </div>
                 </div>
@@ -3058,14 +3341,14 @@
                     <div id="noGoalsCard" style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition);">
                         <h3 style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-bullseye"></i>
-                            ئامانجەکانت لە قورئان
+                            ئارمانجا تە د قورئانێدا:
                         </h3>
                         <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 25px;">
-                            شوێن کەوتنی پێشکەوتنەکەت بکە، ئامانجی تایبەتی خۆت دروست بکە، و بەردەوام بە.
+                            ل دویڤ پێشکەفتنا خۆ هەرە، ئارمانجێن تایبەت ب خۆ دیار بکە، و بەردەوام بە.
                         </p>
                         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                             <button onclick="requireLogin('goals')" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif;">
-                                <i class="fas fa-plus"></i> بینینی ئامانجەکان
+                                <i class="fas fa-plus"></i> دیتنا پێشکەفتنا تە:
                             </button>
                         </div>
                     </div>
@@ -3074,7 +3357,7 @@
                     <div id="goalsCardContainer" style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition); display: none;">
                         <h3 style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-bullseye"></i>
-                            ئامانجەکانت لە قورئان
+                            ئارمانجا تە د قورئانێدا:
                         </h3>
 
                         <!-- Streak Badge - Hidden by default until reading goal is set -->
@@ -3088,13 +3371,13 @@
                             </div>
                             <button onclick="event.stopPropagation(); requireLogin('reading-goal')" style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.3); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif; display: flex; align-items: center; gap: 6px;">
                                 <i class="fas fa-bullseye"></i>
-                                دانانا ئامانجێ
+                                دانانا ئارمانجەکێ
                             </button>
                         </div>
 
                         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                             <button onclick="requireLogin('goals')" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif;">
-                                <i class="fas fa-chart-line"></i> بینینی پێشکەوتن
+                                <i class="fas fa-chart-line"></i> دیتنا پێشکەفتنا تە:
                             </button>
                         </div>
                     </div>
@@ -3103,14 +3386,14 @@
                     <div style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition);">
                         <h3 style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-pencil-alt"></i>
-                            نیشانە و تێبینییەکانت
+                            نیشان و تێبینییێن تە:
                         </h3>
                         <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 25px;">
-                            ئایەتە دڵخوازەکانت پاشەکەوت بکە و تێبینییەکانت تۆمار بکە بە گەڕانەوەی دواتر.
+                            ئایەتێن تە یێن دلخواز پاشکەڤت بکە و تێبینییێن خۆ تۆمار بکە ب گەڕیانەکا داهاتی.
                         </p>
                         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                             <button onclick="requireLogin('bookmarks')" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif;">
-                                <i class="fas fa-bookmark"></i> کردنەوەی نیشانەکان
+                                <i class="fas fa-bookmark"></i> دیتنا نیشان و تێبینییێن تە:
                             </button>
                         </div>
                     </div>
@@ -3119,10 +3402,10 @@
                     <div style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition);">
                         <h3 style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-book-reader"></i>
-                            بەخێربێیت بۆ تەفسیری کوورد
+                            ب خێر بێی بۆ تەفسیر کورد
                         </h3>
                         <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 25px;">
-                            قورئانا پیرۆز بخوێنە بە تەفسیری سەناحی کوردی. هەموو ١١٤ سوورەکان لەگەڵ تەفسیری تەواو.
+                            قورئانا پیرۆز بخوێنە بە تەفسیری سەناحی کوردی. هەموو ١١٤ سوورەتکان لەگەڵ تەفسیری تەواو.
                         </p>
                         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                             <button onclick="scrollToSurahList()" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif;">
@@ -3137,7 +3420,7 @@
                     <div style="font-family: 'SurahName', 'Scheherazade New', serif; font-size: 20rem; text-align: center; margin: auto 0; color: var(--primary); line-height: 1;" class="no-kurdish-convert" id="continueReadingSurahName">surah001</div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px;">
                         <div style="font-size: 1.2rem; font-weight: 600; color: var(--text-muted);" id="continueReadingInfo">١. الفاتحة</div>
-                        <div style="background: var(--bg); padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.9rem;">بەردەوامبە</div>
+                        <div style="background: var(--bg); padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.9rem;">بەردەوام بە</div>
                     </div>
                 </div>
             </div>
@@ -3146,7 +3429,7 @@
             <section class="surah-list-container" id="surahListSection">
                 <h2 class="surah-list-title">
                     <i class="fas fa-book-open"></i>
-                    هەموو سوورەکانی قورئان
+                    هەمی سوڕەتێن قورئانێ
                 </h2>
 
                 <!-- Filter and Sort Controls -->
@@ -3154,7 +3437,7 @@
                     <div class="filter-group">
                         <button class="filter-btn active" data-filter="surah" onclick="changeFilter('surah')">
                             <i class="fas fa-book"></i>
-                            <span>سوورە</span>
+                            <span>سوڕەت</span>
                         </button>
                         <button class="filter-btn" data-filter="juz" onclick="changeFilter('juz')">
                             <i class="fas fa-bookmark"></i>
@@ -3162,10 +3445,10 @@
                         </button>
                     </div>
                     <div class="sort-group">
-                        <label style="font-weight: 600; color: var(--text); margin-right: 10px;">ڕیزکردن بەپێی:</label>
+                        <label style="font-weight: 600; color: var(--text); margin-right: 10px;">رێزکرن ب گۆرەی:</label>
                         <select class="sort-select" id="sortOrder" onchange="changeSortOrder()">
-                            <option value="asc">لە کەمەوە بۆ زۆر</option>
-                            <option value="desc">لە زۆرەوە بۆ کەم</option>
+                            <option value="asc">ژ کێمی بۆ زێدە</option>
+                            <option value="desc">ژ زێدەیی بۆ کێم</option>
                         </select>
                     </div>
                 </div>
@@ -3178,17 +3461,30 @@
         <div class="surah-reader-page" id="surahReaderPage">
             <button class="reader-back-btn" onclick="showHomePage()">
                 <i class="fas fa-arrow-right"></i>
-                گەڕانەوە بۆ لیست
+                گەڕیان ڤە بۆ لیستێ
             </button>
 
             <div class="reader-header">
+                <div class="surah-card-arabic no-kurdish-convert" id="readerSurahIcon" style="margin-bottom: 15px;">surah001</div>
                 <h2 class="reader-surah-name" id="readerSurahName">Al-Fatihah (الفاتحة)</h2>
-                <p class="reader-surah-info" id="readerSurahInfo">7 ئایەت</p>
-                <div class="surah-progress-indicator" id="surahProgressIndicator" style="display: none;">
-                    <div class="progress-bar-mini">
-                        <div class="progress-fill-mini" id="surahProgressFill"></div>
+                <p class="reader-surah-info" id="readerSurahInfo">٧ ئایەت</p>
+            </div>
+
+            <!-- Sticky progress header -->
+            <div class="sticky-progress-header" id="stickyProgressHeader">
+                <div class="sticky-progress-content">
+                    <div class="sticky-progress-left">
+                        <span class="sticky-surah-name" id="stickySurahName">Al-Fatihah</span>
                     </div>
-                    <div class="progress-text-mini" id="surahProgressText">0 / 7 ئایەت خوێندراوە</div>
+                    <div class="sticky-progress-center">
+                        <div class="progress-bar-sticky">
+                            <div class="progress-fill-sticky" id="progressFillSticky"></div>
+                        </div>
+                        <span class="progress-percentage" id="progressPercentage">٠٪</span>
+                    </div>
+                    <div class="sticky-progress-right">
+                        <span class="sticky-ayah-count" id="stickyAyahCount">٠ / ٧ ئایەت</span>
+                    </div>
                 </div>
             </div>
 
@@ -3199,11 +3495,11 @@
             <div class="surah-navigation">
                 <button class="nav-btn" id="prevSurahBtn" onclick="navigateSurah('prev')">
                     <i class="fas fa-arrow-right"></i>
-                    <span id="prevSurahName">سوورەی پێشوو</span>
+                    <span id="prevSurahName">سوورەتا پێشوو</span>
                 </button>
 
                 <button class="nav-btn" id="nextSurahBtn" onclick="navigateSurah('next')">
-                    <span id="nextSurahName">سوورەی دواتر</span>
+                    <span id="nextSurahName">سوورەتا دواتر</span>
                     <i class="fas fa-arrow-left"></i>
                 </button>
             </div>
@@ -3243,7 +3539,7 @@
                             <h2 class="footer-brand-name">تەفسیر کورد</h2>
                         </div>
                         <p class="footer-brand-tagline">
-                            پلاتفۆرمێکا بڤیسەر و ئارامە بۆ خواندنا، گوهدارکرنا، گەڕانا و رامانێ لسەر قورئانا پیرۆز ب زمانێ کوردی (سۆرانی). قورئان بهێتە دەستێ هەرکەسێ، هەرکو و هەردەم.
+                            پلاتفۆرمەکا ئارام بۆ خواندنێ، گەڕیان و رامان ل سەر قورئانا پیرۆز ب زمانێ کوردی (بادینی). قورئان بگەهیتە دەستێ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
                         </p>
                         <div class="footer-social-icons">
                             <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
@@ -3263,22 +3559,23 @@
 
                     <!-- Navigate Section -->
                     <div class="footer-section">
-                        <h3 class="footer-section-title">گەڕان</h3>
+                        <h3 class="footer-section-title">گەڕیان</h3>
                         <div class="footer-links">
                             <a href="/profile" class="footer-link">پرۆفایل</a>
-                            <a href="/goals" class="footer-link">ئامانجەکان</a>
-                            <a href="/bookmarks" class="footer-link">نیشانەکراوەکان</a>
-                            <a href="/settings" class="footer-link">ڕێکخستنەکان</a>
+                            <a href="/goals" class="footer-link">ئارمانج</a>
+                            <a href="/bookmarks" class="footer-link">نیشانەکری</a>
+                            <a href="/settings" class="footer-link">رێکخستن</a>
                         </div>
                     </div>
 
                     <!-- Resources Section -->
                     <div class="footer-section">
-                        <h3 class="footer-section-title">رۆژپەڕا دیکە</h3>
+                        <h3 class="footer-section-title">رۆژپەڕێن دی</h3>
                         <div class="footer-links">
-                            <a href="/" class="footer-link">ماڵپەڕی سەرەکی</a>
+                            <a href="/" class="footer-link">مالپەڕێ سەرەکی</a>
+                            <a href="/quran" class="footer-link">قورئانا پیرۆز</a>
                             <a href="/#features" class="footer-link">تایبەتمەندی</a>
-                            <a href="/#about" class="footer-link">دەربارەی ئێمە</a>
+                            <a href="/#about" class="footer-link">دەربارەی مە</a>
                         </div>
                     </div>
 
@@ -3286,12 +3583,12 @@
                     <div class="footer-section">
                         <h3 class="footer-section-title">پەیوەندی</h3>
                         <div class="footer-links">
-                            <p class="footer-contact-text">ئەگەر تە پسیارەک یان پێشنیارەک هەیە، پەیوەندیێ ب مە بکە و ب زویترین دەم دێ بەرسڤا تە هێتە دان!</p>
+                            <p class="footer-contact-text">ئەگەر تە پرسیارەک یان پێشنیارەک هەبیت، پەیوەندییێ ب مە بکە و ب زووترین دەم دێ بەرسڤا تە هێتە دان!</p>
                             <a href="mailto:info@tafsirkurd.com" class="footer-link">
                                 <i class="fas fa-envelope"></i> info@tafsirkurd.com
                             </a>
                             <a href="/#contact" class="footer-link">
-                                <i class="fas fa-paper-plane"></i> فۆرما پڕبکە
+                                <i class="fas fa-paper-plane"></i> فۆرمێ پڕ بکە
                             </a>
                         </div>
                     </div>
@@ -3300,11 +3597,11 @@
                 <!-- Footer Bottom -->
                 <div class="footer-bottom">
                     <p class="footer-copyright">
-                        &copy; <span id="year"></span> تەفسیر کورد. هەمی ماف د پاراستینە. خودایێ مەزن بەرەکەتێ بێخیتە هەوڵ و ماندیبوونا مە.
+                        &copy; <span id="year"></span> تەفسیر کورد. هەمی ماف پاراستی نە. خودایێ مەزن بەرەکەتێ بێخیتە هەول و ماندبوونا مە.
                     </p>
                     <div class="footer-meta-links">
-                        <a href="/privacy-policy" class="footer-meta-link">پارێزراوی تایبەتمەندی</a>
-                        <a href="/terms-and-conditions" class="footer-meta-link">مەرج و ڕێسا</a>
+                        <a href="/privacy-policy" class="footer-meta-link">پاراستنا تایبەتمەندیێ</a>
+                        <a href="/terms-and-conditions" class="footer-meta-link">مەرج و رێسایان</a>
                     </div>
                 </div>
             </div>
@@ -3353,7 +3650,24 @@
         };
         let currentSurahNumber = 1;
         let bookmarkedAyahs = [];
+        // Initialize lastReadPosition - will be loaded from localStorage for guests or database for users
         let lastReadPosition = { surah: 1, ayah: 1 };
+
+        // Load guest reading position immediately if exists
+        (function initGuestPosition() {
+            const guestPosition = localStorage.getItem('guestLastReadPosition');
+            if (guestPosition) {
+                try {
+                    const position = JSON.parse(guestPosition);
+                    if (position.surah && position.ayah) {
+                        lastReadPosition = position;
+                        console.log('📖 Loaded guest reading position:', position);
+                    }
+                } catch (e) {
+                    console.error('Failed to parse guest position:', e);
+                }
+            }
+        })();
         let autoScrollEnabled = false;
         let autoScrollInterval = null;
 
@@ -3370,6 +3684,7 @@
             readAyahs: new Set(), // All-time read ayahs as "surah:ayah"
             ayahObserver: null, // IntersectionObserver for ayah tracking
             ayahReadTimes: {}, // Track when each ayah was read
+            lastHighlightedAyah: null, // Track last highlighted ayah in sidebar
             sessionData: {
                 startTime: null,
                 endTime: null,
@@ -3604,11 +3919,18 @@
             initializeApp();
             initScrollToTop();
 
-            // Show loading skeleton immediately
-            renderSurahGrid();
+            // Set a maximum timeout for loading (10 seconds)
+            const loadTimeout = setTimeout(() => {
+                console.warn('⚠️ Loading timeout reached, showing page anyway');
+                if (preloaderHideCallback) {
+                    preloaderHideCallback();
+                }
+            }, 10000);
 
-            // Load data in background while showing UI
-            loadQuranData().then(() => {
+            try {
+                // Load data first before showing anything
+                await loadQuranData();
+
                 // Once data is loaded, render content
                 renderSurahGrid();
                 renderSidebarList();
@@ -3616,12 +3938,32 @@
                 loadRandomAyah();
                 startRandomAyahTimer();
                 updateStreakBadge(); // Update streak badge
-                updateContinueReading();
+
+                // Update continue reading - with extra delay for guest users to ensure surahNames is loaded
+                setTimeout(() => {
+                    updateContinueReading();
+                    console.log('📖 Continue reading card updated after data load');
+                }, 100);
+
                 handleUrlParameters();
+
+                // Clear timeout since loading succeeded
+                clearTimeout(loadTimeout);
+
+                // Hide preloader after everything is ready
+                if (preloaderHideCallback) {
+                    preloaderHideCallback();
+                }
 
                 // Restore state if returning from settings
                 restoreStateFromSettings();
-            });
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                clearTimeout(loadTimeout);
+                if (preloaderHideCallback) {
+                    preloaderHideCallback();
+                }
+            }
         });
 
         // Handle URL parameters for direct ayah navigation
@@ -3690,7 +4032,7 @@
             document.getElementById('authSection').innerHTML = `
                 <button class="header-btn" onclick="goToLogin()">
                     <i class="fas fa-user"></i>
-                    <span>چوونەژووروەوە</span>
+                    <span>چوونە ژوورڤە</span>
                 </button>
             `;
 
@@ -3704,31 +4046,51 @@
             lastReadPosition = { surah: 1, ayah: 1 };
 
             closeFeatherOverlay();
-            showNotification('بە سەرکەوتوویی دەرچوویت - هەموو پێشکەوتنەکانت پارێزراوە');
+            showNotification('ب سەرکەفتی دەرکەفتی - هەموو پێشکەفتنێن تە هاتنە پاشکەفتکرن');
             updateContinueReading();
         }
 
-        // Preloader
+        // Smart Preloader - Only shows if loading takes time
+        let preloaderHideCallback = null;
+        let preloaderShown = false;
+
         function initPreloader() {
             const preloader = document.getElementById('preloader');
             const mainContent = document.getElementById('mainContent');
 
-            // Check if preloader has already been shown in this session
-            const hasSeenPreloader = sessionStorage.getItem('hasSeenPreloader');
             // Check if returning from settings
             const returningFromSettings = sessionStorage.getItem('returnToQuranReader');
 
-            if (hasSeenPreloader || returningFromSettings || performance.navigation.type === 2) {
+            if (returningFromSettings) {
                 preloader.style.display = 'none';
                 mainContent.classList.add('loaded');
                 document.body.classList.remove('no-scroll');
                 return;
             }
 
-            const minLoadTime = 2000;
             const startTime = Date.now();
+            const showPreloaderDelay = 300; // Only show preloader if loading takes more than 300ms
+            const minLoadTime = 800; // Keep preloader visible for at least 800ms if shown
+
+            let preloaderTimeout = setTimeout(() => {
+                // Loading is taking time, show the preloader
+                preloaderShown = true;
+                preloader.style.opacity = '1';
+                document.body.classList.add('no-scroll');
+            }, showPreloaderDelay);
 
             function hidePreloader() {
+                clearTimeout(preloaderTimeout);
+
+                if (!preloaderShown) {
+                    // Loading was fast, never showed preloader
+                    preloader.style.display = 'none';
+                    mainContent.classList.add('loaded');
+                    document.body.classList.remove('no-scroll');
+                    return;
+                }
+
+                // Preloader was shown, ensure it stays visible for minimum time
                 const elapsed = Date.now() - startTime;
                 const remainingTime = Math.max(0, minLoadTime - elapsed);
 
@@ -3738,19 +4100,12 @@
                         preloader.style.display = 'none';
                         mainContent.classList.add('loaded');
                         document.body.classList.remove('no-scroll');
-                        // Mark that preloader has been shown in this session
-                        sessionStorage.setItem('hasSeenPreloader', 'true');
                     }, 1000);
                 }, remainingTime);
             }
 
-            document.body.classList.add('no-scroll');
-
-            if (document.readyState === 'complete') {
-                hidePreloader();
-            } else {
-                window.addEventListener('load', hidePreloader);
-            }
+            // Store the callback so we can call it when data is loaded
+            preloaderHideCallback = hidePreloader;
         }
 
         // Load Quran Data - OPTIMIZED FOR SPEED WITH CACHING
@@ -3823,7 +4178,7 @@
 
             } catch (error) {
                 console.error('Error loading data:', error);
-                showNotification('هەڵە لە بارکردنی زانیاریەکان');
+                showNotification('هەلە د بارکرنا زانیاریان دا');
             }
         }
 
@@ -3949,11 +4304,29 @@
             let searchTimeout;
             const searchInput = document.getElementById('heroSearchInput');
             const popularSearches = document.getElementById('popularSearchesSection');
+            const searchResultsDropdown = document.getElementById('searchResultsDropdown');
+
+            // Function to position dropdowns below search input
+            function positionDropdowns() {
+                const inputRect = searchInput.getBoundingClientRect();
+                const dropdownTop = inputRect.bottom + 10; // 10px gap below input
+
+                searchResultsDropdown.style.top = dropdownTop + 'px';
+                popularSearches.style.top = dropdownTop + 'px';
+            }
+
+            // Update position on resize only
+            window.addEventListener('resize', () => {
+                if (popularSearches.style.display === 'block' || searchResultsDropdown.classList.contains('active')) {
+                    positionDropdowns();
+                }
+            });
 
             // Show popular searches when input is focused (if empty)
             searchInput.addEventListener('focus', (e) => {
                 const query = e.target.value.trim();
                 if (!query) {
+                    positionDropdowns();
                     popularSearches.style.display = 'block';
                     hideSearchResults(); // Hide search results dropdown
                 }
@@ -4052,7 +4425,7 @@
             prefs.darkMode = (newTheme === 'dark');
             localStorage.setItem('userPreferences', JSON.stringify(prefs));
 
-            showNotification(newTheme === 'dark' ? 'دۆخی تاریکی چالاککرا' : 'دۆخی ڕوونایی چالاککرا');
+            showNotification(newTheme === 'dark' ? 'رەوشا تاریک چالاککر' : 'رەوشا رووناهیێ چالاککر');
         }
 
         function changeArabicFont() {
@@ -4067,7 +4440,7 @@
             // Update page
             document.documentElement.style.setProperty('--arabic-font', font);
             localStorage.setItem('arabicFont', font);
-            showNotification('فۆنتی عەرەبی گۆڕدرا');
+            showNotification('فۆنتا عەرەبی هاتە گوهۆڕین');
         }
 
         function changeArabicSize(value) {
@@ -4097,7 +4470,7 @@
             // Update page
             document.documentElement.style.setProperty('--tafsir-font', font);
             localStorage.setItem('tafsirFont', font);
-            showNotification('فۆنتی تەفسیر گۆڕدرا');
+            showNotification('فۆنتا تەفسیرێ هاتە گوهۆڕین');
         }
 
         function changeTafsirSize(value) {
@@ -4142,7 +4515,7 @@
             localStorage.setItem('showTafsir', isActive);
             console.log('Saved showTafsir to localStorage:', isActive);
 
-            showNotification(isActive ? 'تەفسیر پیشاندرا' : 'تەفسیر شاراوە');
+            showNotification(isActive ? 'تەفسیر هاتە نیشاندان' : 'تەفسیر شارای');
         }
 
         function toggleAutoScroll() {
@@ -4159,10 +4532,10 @@
 
             if (autoScrollEnabled) {
                 startAutoScroll();
-                showNotification('خولاندنی خۆکار چالاککرا - تکایە بچۆ بۆ خوێندنەوەی سوورە');
+                showNotification('زڤراندنا خۆکار چالاککر - تکایە بچە بۆ خواندنا سوورەتێ');
             } else {
                 stopAutoScroll();
-                showNotification('خولاندنی خۆکار ناچالاککرا');
+                showNotification('زڤراندنا خۆکار نەچالاککر');
             }
         }
 
@@ -4171,7 +4544,7 @@
             const readerPage = document.getElementById('surahReaderPage');
 
             if (!readerPage || !readerPage.classList.contains('visible')) {
-                showNotification('تکایە سوورەیەک بکەرەوە بۆ خولاندنی خۆکار');
+                showNotification('تکایە سوورەتەکێ ڤەکەرە بۆ زڤراندنا خۆکار');
                 autoScrollEnabled = false;
                 const toggle = document.getElementById('autoScrollToggle');
                 if (toggle) toggle.classList.remove('active');
@@ -4192,7 +4565,7 @@
                 // Stop at bottom
                 if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
                     stopAutoScroll();
-                    showNotification('گەیشتیت بە کۆتایی');
+                    showNotification('گەهشتیە دوماهیێ');
                 }
             }, 50);
         }
@@ -4230,7 +4603,7 @@
             document.documentElement.style.setProperty('--tafsir-size', '1.1rem');
             document.documentElement.setAttribute('data-theme', 'light');
 
-            showNotification('ڕێکخستنەکان گەڕانەوە بۆ بنەڕەت');
+            showNotification('رێکخستن گەڕیانڤە بۆ بنەڕەت');
         }
 
         // Scroll to Top functionality
@@ -4259,7 +4632,7 @@
 
             // Show loading skeleton if data not ready
             if (!quranData || Object.keys(quranData).length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 15px;"></i><div>دەستپێدەکرێت...</div></div>';
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 15px;"></i><div>دەستپێدکەت...</div></div>';
                 return;
             }
 
@@ -4311,15 +4684,25 @@
 
                     // Create container for this Juz
                     const juzContainer = document.createElement('div');
-                    juzContainer.style.cssText = 'background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px;';
+                    juzContainer.style.cssText = 'background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; transition: all 0.3s ease; cursor: pointer;';
+
+                    // Add hover effects to Juz container
+                    juzContainer.onmouseover = function() {
+                        this.style.transform = 'translateY(-4px)';
+                        this.style.boxShadow = '0 8px 24px rgba(139, 92, 246, 0.3)';
+                    };
+                    juzContainer.onmouseout = function() {
+                        this.style.transform = 'translateY(0)';
+                        this.style.boxShadow = 'none';
+                    };
 
                     // Header with Juz title and Read button
                     const header = document.createElement('div');
                     header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;';
                     header.innerHTML = `
-                        <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">جوز ${KurdishNumbers.toKurdish(juzNum)}</h3>
-                        <button onclick="readFullJuz(${juzNum})" style="background: var(--primary); border: none; color: white; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; font-family: 'IBM Plex Sans Arabic', sans-serif;">
-                            خوێندنەوە
+                        <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text);">جوزئ ${KurdishNumbers.toKurdish(juzNum)}</h3>
+                        <button onclick="readFullJuz(${juzNum})" style="background: var(--primary); border: none; color: var(--accent); padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; font-family: 'IBM Plex Sans Arabic', sans-serif;">
+                            خواندن
                         </button>
                     `;
                     juzContainer.appendChild(header);
@@ -4343,15 +4726,15 @@
                         };
 
                         surahRow.innerHTML = `
-                            <div style="background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; flex-shrink: 0;">
+                            <div style="background: var(--primary); color: var(--accent); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; flex-shrink: 0;">
                                 ${KurdishNumbers.toKurdish(surahNum)}
                             </div>
                             <div style="flex: 1;">
-                                <div class="surah-card-arabic no-kurdish-convert" style="font-size: 2rem; color: var(--text-primary); margin-bottom: 4px;">${decorativeCode}</div>
+                                <div class="surah-card-arabic no-kurdish-convert" style="font-size: 2rem; color: var(--text); margin-bottom: 4px;">${decorativeCode}</div>
                                 <div style="font-size: 0.85rem; color: var(--text-muted);">${KurdishNumbers.toKurdish(surah.ayahs)} ئایەت</div>
                             </div>
                             <div style="text-align: right;">
-                                <div style="font-weight: 600; font-size: 1rem; color: var(--text-primary);">${surah.english}</div>
+                                <div style="font-weight: 600; font-size: 1rem; color: var(--text);">${surah.english}</div>
                             </div>
                         `;
                         juzContainer.appendChild(surahRow);
@@ -4399,7 +4782,9 @@
                 for (let j = 1; j <= info.ayahs; j++) {
                     const ayahItem = document.createElement('div');
                     ayahItem.className = 'ayah-item-sidebar';
-                    ayahItem.textContent = `ئایەتی ${KurdishNumbers.toKurdish(j)}`;
+                    ayahItem.dataset.surah = i;
+                    ayahItem.dataset.ayah = j;
+                    ayahItem.textContent = `ئایەتا ${KurdishNumbers.toKurdish(j)}`;
                     ayahItem.onclick = (e) => {
                         e.stopPropagation();
                         openSurahWithAyah(i, j);
@@ -4418,18 +4803,174 @@
             }
         }
 
+        // Render Juz List in Sidebar
+        function renderJuzList() {
+            const container = document.getElementById('juzListSidebar');
+            container.innerHTML = '';
+
+            const juzData = {
+                1: [1, 2], 2: [2], 3: [2, 3], 4: [3, 4], 5: [4, 5], 6: [4, 5, 6],
+                7: [5, 6, 7], 8: [6, 7, 8], 9: [7, 8, 9], 10: [8, 9, 10, 11],
+                11: [9, 10, 11], 12: [10, 11, 12], 13: [11, 12, 13], 14: [12, 13, 14, 15],
+                15: [15, 16, 17], 16: [17, 18], 17: [18, 19, 20], 18: [21, 22],
+                19: [23, 24, 25], 20: [25, 26, 27], 21: [27, 28, 29], 22: [29, 30, 31, 32, 33],
+                23: [33, 34, 35, 36], 24: [36, 37, 38, 39], 25: [39, 40, 41], 26: [41, 42, 43, 44, 45],
+                27: [45, 46, 47, 48, 49, 50, 51], 28: [51, 52, 53, 54, 55, 56, 57], 29: [58, 59, 60, 61, 62, 63, 64, 65, 66],
+                30: [67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78]
+            };
+
+            for (let juzNum = 1; juzNum <= 30; juzNum++) {
+                const surahs = juzData[juzNum];
+
+                // Create Juz header item
+                const juzItem = document.createElement('div');
+                juzItem.className = 'surah-item-sidebar juz-item-sidebar';
+                juzItem.dataset.juz = juzNum;
+
+                juzItem.innerHTML = `
+                    <div class="surah-num-sidebar">${KurdishNumbers.toKurdish(juzNum)}</div>
+                    <div class="surah-info-sidebar">
+                        <div class="surah-name-sidebar" style="font-weight: 700;">جوزئی ${KurdishNumbers.toKurdish(juzNum)}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">${surahs.length} سوڕەت</div>
+                    </div>
+                    <i class="fas fa-chevron-down" style="color: var(--text-muted); transition: transform 0.3s;"></i>
+                `;
+
+                juzItem.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleJuzList(juzNum);
+                });
+
+                container.appendChild(juzItem);
+
+                // Create expandable Surah list for this Juz
+                const surahListContainer = document.createElement('div');
+                surahListContainer.className = 'juz-surah-list';
+                surahListContainer.id = `juz-surah-list-${juzNum}`;
+                surahListContainer.style.cssText = 'max-height: 0; overflow: hidden; transition: max-height 0.3s ease; padding-left: 15px;';
+
+                surahs.forEach(surahNum => {
+                    const surah = surahNames[surahNum];
+                    const decorativeCode = getDecorativeSurahCode(surahNum);
+
+                    // Surah item
+                    const surahItem = document.createElement('div');
+                    surahItem.className = 'surah-item-sidebar';
+                    surahItem.style.cssText = 'margin: 5px 0; background: var(--bg);';
+                    surahItem.dataset.surah = surahNum;
+
+                    surahItem.innerHTML = `
+                        <div class="surah-num-sidebar">${KurdishNumbers.toKurdish(surahNum)}</div>
+                        <div class="surah-info-sidebar">
+                            <div class="surah-arabic-sidebar no-kurdish-convert">${decorativeCode}</div>
+                            <div class="surah-name-sidebar">${surah.english}</div>
+                        </div>
+                    `;
+
+                    surahItem.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleJuzSurahAyahList(juzNum, surahNum);
+                    });
+
+                    surahListContainer.appendChild(surahItem);
+
+                    // Add ayah list for each surah
+                    const ayahList = document.createElement('div');
+                    ayahList.className = 'ayah-list-sidebar';
+                    ayahList.id = `juz-ayah-list-${juzNum}-${surahNum}`;
+
+                    for (let j = 1; j <= surah.ayahs; j++) {
+                        const ayahItem = document.createElement('div');
+                        ayahItem.className = 'ayah-item-sidebar';
+                        ayahItem.dataset.surah = surahNum;
+                        ayahItem.dataset.ayah = j;
+                        ayahItem.textContent = `ئایەتا ${KurdishNumbers.toKurdish(j)}`;
+                        ayahItem.onclick = (e) => {
+                            e.stopPropagation();
+                            openSurahWithAyah(surahNum, j);
+                            closeSidebar();
+                        };
+                        ayahList.appendChild(ayahItem);
+                    }
+
+                    surahListContainer.appendChild(ayahList);
+                });
+
+                container.appendChild(surahListContainer);
+            }
+        }
+
+        // Toggle Juz surah list
+        function toggleJuzList(juzNum) {
+            const surahList = document.getElementById(`juz-surah-list-${juzNum}`);
+            const juzItem = document.querySelector(`[data-juz="${juzNum}"]`);
+            const chevron = juzItem.querySelector('.fa-chevron-down');
+
+            if (surahList) {
+                const isExpanded = surahList.style.maxHeight !== '0px' && surahList.style.maxHeight !== '';
+
+                if (isExpanded) {
+                    surahList.style.maxHeight = '0';
+                    chevron.style.transform = 'rotate(0deg)';
+                } else {
+                    surahList.style.maxHeight = '1000px';
+                    chevron.style.transform = 'rotate(180deg)';
+                }
+            }
+        }
+
+        // Toggle ayah list within juz
+        function toggleJuzSurahAyahList(juzNum, surahNum) {
+            const ayahList = document.getElementById(`juz-ayah-list-${juzNum}-${surahNum}`);
+            if (ayahList) {
+                ayahList.classList.toggle('expanded');
+            }
+        }
+
+        // Switch between Surah and Juz tabs in sidebar
+        function switchSidebarTab(tab) {
+            const surahTab = document.getElementById('surahTab');
+            const juzTab = document.getElementById('juzTab');
+            const surahList = document.getElementById('surahListSidebar');
+            const juzList = document.getElementById('juzListSidebar');
+
+            if (tab === 'surah') {
+                surahTab.classList.add('active');
+                juzTab.classList.remove('active');
+                surahList.style.display = 'block';
+                juzList.style.display = 'none';
+            } else {
+                surahTab.classList.remove('active');
+                juzTab.classList.add('active');
+                surahList.style.display = 'none';
+                juzList.style.display = 'block';
+
+                // Render juz list if not already rendered
+                if (juzList.children.length === 0) {
+                    renderJuzList();
+                }
+            }
+        }
+
+
         // Sidebar Functions
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const toggle = document.getElementById('sidebarToggle');
             const mainContent = document.getElementById('mainContent');
 
-            sidebar.classList.toggle('visible');
-            toggle.classList.toggle('active');
+            // Use requestAnimationFrame for smoother animation
+            requestAnimationFrame(() => {
+                sidebar.classList.toggle('visible');
+                toggle.classList.toggle('active');
 
-            if (window.innerWidth > 768) {
-                mainContent.classList.toggle('shifted');
-            }
+                if (window.innerWidth > 768) {
+                    // Slight delay for content shift to sync with sidebar
+                    requestAnimationFrame(() => {
+                        mainContent.classList.toggle('shifted');
+                    });
+                }
+            });
         }
 
         function closeSidebar() {
@@ -4504,6 +5045,8 @@
             // Set initial header to first surah
             currentSurahNumber = startPosition.surah;
             const firstSurah = surahNames[startPosition.surah];
+            const firstSurahCode = getDecorativeSurahCode(startPosition.surah);
+            document.getElementById('readerSurahIcon').textContent = firstSurahCode;
             document.getElementById('readerSurahName').textContent = `${firstSurah.english} (${firstSurah.arabic})`;
             document.getElementById('readerSurahInfo').textContent = `${KurdishNumbers.toKurdish(firstSurah.ayahs)} ئایەت`;
 
@@ -4511,7 +5054,7 @@
             loadJuzContinuous(juzNum, juzSurahs, startPosition);
 
             // Show notification
-            showNotification(`جوزی ${KurdishNumbers.toKurdish(juzNum)} - ${juzSurahs.length} سوورە`);
+            showNotification(`جوزئی ${KurdishNumbers.toKurdish(juzNum)} - ${juzSurahs.length} سوورەت`);
 
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -4519,41 +5062,99 @@
 
         // Load all surahs of a Juz in one continuous page
         async function loadJuzContinuous(juzNum, juzSurahs, startPosition) {
-            const ayahsContainer = document.getElementById('ayahsContainer');
-            ayahsContainer.innerHTML = '';
+            const container = document.getElementById('ayahContainer');
+            if (!container) {
+                console.error('Ayah container not found');
+                return;
+            }
 
+            // Save current state for refresh persistence
+            localStorage.setItem('lastViewedJuz', juzNum);
+            localStorage.setItem('lastViewType', 'juz');
+
+            // Show loading
+            container.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>بارکردنی جوزئی ' + KurdishNumbers.toKurdish(juzNum) + '...</p></div>';
+
+            // Check if data is loaded
+            if (!quranData) {
+                container.innerHTML = '<p style="text-align: center; padding: 40px;">زانیاری بەردەست نینە</p>';
+                return;
+            }
+
+            // Clear container
+            container.innerHTML = '';
+
+            // Load all surahs in this Juz
             for (let i = 0; i < juzSurahs.length; i++) {
                 const surahNum = juzSurahs[i];
-                const surah = quranData.surahs.find(s => s.number === surahNum);
-                if (!surah) continue;
+                const data = quranData[surahNum];
+
+                if (!data || !data.verses || data.verses.length === 0) continue;
 
                 // Determine starting ayah (first surah starts at Juz position, others at 1)
                 const startAyah = (i === 0) ? startPosition.ayah : 1;
 
-                // Add all ayahs from this surah
-                for (let j = startAyah; j <= surah.ayahs.length; j++) {
-                    const ayahData = surah.ayahs[j - 1];
-                    if (!ayahData) continue;
+                // Add surah header for each new surah (including first one if not starting from ayah 1)
+                if (i > 0 || startAyah > 1) {
+                    const surahInfo = surahNames[surahNum];
+                    const decorativeCode = getDecorativeSurahCode(surahNum);
+                    const surahHeaderDiv = document.createElement('div');
+                    surahHeaderDiv.className = 'reader-header';
+                    surahHeaderDiv.setAttribute('data-surah-header', surahNum);
+                    surahHeaderDiv.innerHTML = `
+                        <div class="surah-card-arabic no-kurdish-convert" style="margin-bottom: 15px;">${decorativeCode}</div>
+                        <h2 class="reader-surah-name">${surahInfo.english} (${surahInfo.arabic})</h2>
+                        <p class="reader-surah-info">${KurdishNumbers.toKurdish(surahInfo.ayahs)} ئایەت</p>
+                    `;
+                    container.appendChild(surahHeaderDiv);
+                }
+
+                // Add all ayahs from this surah (starting from the correct position)
+                data.verses.forEach(verse => {
+                    // Skip ayahs before the starting position for first surah
+                    if (i === 0 && verse.verse < startAyah) return;
+
+                    const key = `${surahNum}-${verse.verse}`;
+                    const tafsir = tafsirData[key] || '';
+                    const isBookmarked = bookmarkedAyahs.includes(key);
 
                     const ayahDiv = document.createElement('div');
                     ayahDiv.className = 'ayah';
+                    ayahDiv.id = `ayah-${verse.verse}`;
+                    ayahDiv.setAttribute('data-ayah', verse.verse);
                     ayahDiv.setAttribute('data-surah', surahNum);
-                    ayahDiv.setAttribute('data-ayah', j);
-                    ayahDiv.id = `ayah-${surahNum}-${j}`;
+
+                    // Check if this ayah was already read
+                    const ayahKey = `${surahNum}:${verse.verse}`;
+                    if (isUserAuthenticated && activityTracker.readAyahs && activityTracker.readAyahs.has(ayahKey)) {
+                        ayahDiv.classList.add('ayah-read');
+                    }
 
                     ayahDiv.innerHTML = `
-                        <div class="ayah-number">${KurdishNumbers.toKurdish(j)}</div>
-                        <div class="ayah-arabic">${ayahData.text}</div>
-                        <div class="ayah-tafsir">
-                            <div class="tafsir-content"></div>
+                        <div class="ayah-header">
+                            <div class="ayah-number">${KurdishNumbers.toKurdish(verse.verse)}</div>
+                            <div class="ayah-actions">
+                                <button class="ayah-action-btn"
+                                        onclick="openCopyModal(${surahNum}, ${verse.verse})"
+                                        title="کۆپیکرن">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <button class="ayah-action-btn ${isBookmarked ? 'bookmarked' : ''}"
+                                        onclick="toggleBookmark(${surahNum}, ${verse.verse})"
+                                        title="نیشانەکرن">
+                                    <i class="fas fa-bookmark"></i>
+                                </button>
+                            </div>
                         </div>
+                        <div class="ayah-arabic">${verse.text}</div>
+                        ${tafsir ? `
+                            <div class="tafsir-label">تەفسیرا ساناهی:</div>
+                            <div class="tafsir-content">${tafsir}</div>
+                        ` : '<div class="tafsir-content"><span class="no-translation">تەفسیر بەردەست نینە.</span></div>'}
                     `;
 
-                    ayahsContainer.appendChild(ayahDiv);
-
-                    // Load tafsir
-                    loadAyahTafsir(surahNum, j, ayahDiv.querySelector('.tafsir-content'));
-                }
+                    container.appendChild(ayahDiv);
+                });
             }
 
             // Setup scroll tracking to update header
@@ -4562,11 +5163,16 @@
             // Initialize activity tracking
             if (isUserAuthenticated) {
                 initializeActivityTracking();
-                setupScrollTracking();
             }
+
+            // Setup scroll tracking for ALL users (authenticated and guests)
+            setupScrollTracking();
 
             // Update navigation
             updateNavigation(startPosition.surah);
+
+            // Update progress indicator for first surah
+            updateSurahProgressIndicator(startPosition.surah);
         }
 
         // Setup header tracking for Juz reading - updates header based on scroll
@@ -4586,11 +5192,16 @@
 
                             // Update header to show current surah
                             const surah = surahNames[surahNum];
+                            const decorativeCode = getDecorativeSurahCode(surahNum);
+                            document.getElementById('readerSurahIcon').textContent = decorativeCode;
                             document.getElementById('readerSurahName').textContent = `${surah.english} (${surah.arabic})`;
                             document.getElementById('readerSurahInfo').textContent = `${KurdishNumbers.toKurdish(surah.ayahs)} ئایەت`;
 
                             // Update navigation
                             updateNavigation(surahNum);
+
+                            // Update progress indicator for new surah
+                            updateSurahProgressIndicator(surahNum);
                         }
                     }
                 });
@@ -4615,13 +5226,23 @@
             currentSurahNumber = surahNum;
             showSurahReader(surahNum);
 
+            // Add to browser history so back button works
+            const surahInfo = surahNames[surahNum];
+            const title = `${surahInfo.english} (${surahInfo.arabic}) - تەفسیر کورد`;
+            history.pushState({ page: 'surah', surah: surahNum }, title, `?surah=${surahNum}`);
+
+            // Save current state for refresh persistence
+            localStorage.setItem('lastViewedSurah', surahNum);
+            localStorage.setItem('lastViewType', 'surah');
+
             // Initialize activity tracking for this surah
             if (isUserAuthenticated) {
                 initializeActivityTracking();
-
-                // Setup scroll tracking
-                setupScrollTracking();
             }
+
+            // Setup scroll tracking for ALL users (authenticated and guests)
+            setupScrollTracking();
+
             // Note: Reading position will be saved automatically when user scrolls and views ayahs
         }
 
@@ -4629,13 +5250,18 @@
             currentSurahNumber = surahNum;
             showSurahReader(surahNum, ayahNum);
 
+            // Add to browser history with ayah parameter
+            const surahInfo = surahNames[surahNum];
+            const title = `${surahInfo.english} (${surahInfo.arabic}) - ئایەت ${KurdishNumbers.toKurdish(ayahNum)} - تەفسیر کورد`;
+            history.pushState({ page: 'surah', surah: surahNum, ayah: ayahNum }, title, `?surah=${surahNum}&ayah=${ayahNum}`);
+
             // Initialize activity tracking for this surah
             if (isUserAuthenticated) {
                 initializeActivityTracking();
-
-                // Setup scroll tracking
-                setupScrollTracking();
             }
+
+            // Setup scroll tracking for ALL users (authenticated and guests)
+            setupScrollTracking();
 
             if (window.innerWidth <= 768) {
                 closeSidebar();
@@ -4649,6 +5275,8 @@
             document.getElementById('surahReaderPage').classList.add('visible');
 
             const info = surahNames[surahNum];
+            const decorativeCode = getDecorativeSurahCode(surahNum);
+            document.getElementById('readerSurahIcon').textContent = decorativeCode;
             document.getElementById('readerSurahName').textContent = `${info.english} (${info.arabic})`;
             document.getElementById('readerSurahInfo').textContent = `${KurdishNumbers.toKurdish(info.ayahs)} ئایەت`;
 
@@ -4658,16 +5286,18 @@
             // Update navigation
             updateNavigation(surahNum);
 
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Only scroll to top if NOT restoring from refresh
+            if (!window.isRestoringScroll) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         }
 
         function loadAyahs(surahNum, highlightAyah) {
             const container = document.getElementById('ayahContainer');
-            container.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>بارکردنی ئایەتەکان...</p></div>';
+            container.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>بارکرنا ئایەتان...</p></div>';
 
             if (!quranData || !quranData[surahNum]) {
-                container.innerHTML = '<p style="text-align: center; padding: 40px;">زانیاری بەردەست نییە</p>';
+                container.innerHTML = '<p style="text-align: center; padding: 40px;">زانیاری بەردەست نینە</p>';
                 return;
             }
 
@@ -4702,21 +5332,21 @@
                             <div class="ayah-actions">
                                 <button class="ayah-action-btn"
                                         onclick="openCopyModal(${surahNum}, ${verse.verse})"
-                                        title="کۆپیکردن">
+                                        title="کۆپیکرن">
                                     <i class="fas fa-copy"></i>
                                 </button>
                                 <button class="ayah-action-btn ${isBookmarked ? 'bookmarked' : ''}"
                                         onclick="toggleBookmark(${surahNum}, ${verse.verse})"
-                                        title="نیشانەکردن">
+                                        title="نیشانەکرن">
                                     <i class="fas fa-bookmark"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="ayah-arabic">${verse.text}</div>
                         ${tafsir ? `
-                            <div class="tafsir-label">تەفسیری سەناحی:</div>
+                            <div class="tafsir-label">تەفسیرا ساناهی:</div>
                             <div class="tafsir-content">${tafsir}</div>
-                        ` : '<div class="tafsir-content"><span class="no-translation">تەفسیر بەردەست نییە.</span></div>'}
+                        ` : '<div class="tafsir-content"><span class="no-translation">تەفسیر بەردەست نینە.</span></div>'}
                     `;
 
                     container.appendChild(ayahDiv);
@@ -4744,10 +5374,11 @@
                     }, 300);
                 }
 
-                // Update progress indicator after loading ayahs
-                if (isUserAuthenticated) {
-                    updateSurahProgressIndicator(surahNum);
-                }
+                // Update progress indicator after loading ayahs (always show)
+                updateSurahProgressIndicator(surahNum);
+
+                // Setup scroll progress tracking for all users
+                setupScrollProgress();
             }
         }
 
@@ -4762,7 +5393,7 @@
                 prevName.textContent = surahNames[surahNum - 1].english;
             } else {
                 prevBtn.disabled = true;
-                prevName.textContent = 'سوورەی پێشوو';
+                prevName.textContent = 'سوورەتا پێشوو';
             }
 
             if (surahNum < 114) {
@@ -4770,30 +5401,52 @@
                 nextName.textContent = surahNames[surahNum + 1].english;
             } else {
                 nextBtn.disabled = true;
-                nextName.textContent = 'سوورەی دواتر';
+                nextName.textContent = 'سوورەتا دواتر';
             }
         }
 
         function navigateSurah(direction) {
-            if (direction === 'prev' && currentSurahNumber > 1) {
-                openSurah(currentSurahNumber - 1);
-            } else if (direction === 'next') {
-                // Check if we're reading a full Juz
-                const readingFullJuz = localStorage.getItem('readingFullJuz') === 'true';
+            console.log('Navigate Surah:', direction, 'Current:', currentSurahNumber);
 
-                if (readingFullJuz) {
-                    // Continue to next surah in Juz
-                    checkJuzContinuation();
-                } else if (currentSurahNumber < 114) {
-                    // Normal next surah navigation
-                    openSurah(currentSurahNumber + 1);
-                }
+            // Clear Juz reading mode when manually navigating
+            localStorage.removeItem('readingFullJuz');
+            localStorage.removeItem('currentJuzNumber');
+
+            if (direction === 'prev' && currentSurahNumber > 1) {
+                console.log('Going to previous surah:', currentSurahNumber - 1);
+                openSurah(currentSurahNumber - 1);
+            } else if (direction === 'next' && currentSurahNumber < 114) {
+                console.log('Going to next surah:', currentSurahNumber + 1);
+                openSurah(currentSurahNumber + 1);
+            } else {
+                console.log('Navigation blocked - at boundary');
             }
         }
 
         function showHomePage() {
+            // Clear persistence flags so we don't restore on refresh
+            localStorage.removeItem('lastViewType');
+            localStorage.removeItem('lastViewedSurah');
+            localStorage.removeItem('lastViewedJuz');
+            localStorage.removeItem('lastScrollPosition');
+
+            // Remove the instant-hide style if it exists
+            const instantHideStyle = document.getElementById('instant-hide');
+            if (instantHideStyle) {
+                instantHideStyle.remove();
+            }
+
+            // Show home page, hide reader
             document.getElementById('homePage').classList.remove('hidden');
             document.getElementById('surahReaderPage').classList.remove('visible');
+
+            // Force display changes
+            document.getElementById('homePage').style.display = '';
+            document.getElementById('surahReaderPage').style.display = '';
+
+            // Update browser history
+            history.pushState({ page: 'home' }, 'تەفسیر کورد - Tafsir Kurd', '/');
+
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -5078,7 +5731,7 @@
         // Search Functionality - ENHANCED with Smart Arabic Text Search
         function performSearch(query) {
             if (!quranData) {
-                showNotification('تکایە چاوەڕوانبە تا قورئان بار بێت');
+                showNotification('تکایە چاڤەرێ بە هەتا قورئان بار ببت');
                 return;
             }
 
@@ -5118,7 +5771,7 @@
                             surah: surahNum,
                             ayah: 1,
                             text: `${surahInfo.arabic} - ${surahInfo.english}`,
-                            surahName: `سوورەی ${surahInfo.english}`,
+                            surahName: `سوورەتی ${surahInfo.english}`,
                             similarity: 9000 // High priority for surah number
                         });
                     }
@@ -5167,7 +5820,7 @@
                                 surah: i,
                                 ayah: 1,
                                 text: `${surah.arabic} - ${surah.english}`,
-                                surahName: `سوورەی ${surah.english}`,
+                                surahName: `سوورەتی ${surah.english}`,
                                 similarity: maxScore * 10 // Boost surah matches
                             });
                         }
@@ -5197,33 +5850,121 @@
                 }
             }
 
-            // Sort all results by similarity (highest first)
-            allResults.sort((a, b) => b.similarity - a.similarity);
+            // Remove duplicates (same surah:ayah)
+            const uniqueResults = [];
+            const seen = new Set();
+            allResults.forEach(result => {
+                const key = `${result.surah}:${result.ayah}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueResults.push(result);
+                }
+            });
 
-            // Show all results in dropdown (unlimited)
-            showSearchResults(allResults, query);
+            // Sort all results by similarity (highest first)
+            uniqueResults.sort((a, b) => b.similarity - a.similarity);
+
+            // Filter out weak matches (keep only good quality results)
+            const qualityResults = uniqueResults.filter(r => r.similarity > 50);
+
+            // Show only top 30 most relevant results
+            const top30Results = qualityResults.slice(0, 30);
+            showSearchResults(top30Results, query);
+        }
+
+        // Highlight matching text in search results
+        function highlightMatch(text, query) {
+            if (!query) return text;
+
+            const queryNorm = normalizeArabicText(query);
+            const textNorm = normalizeArabicText(text);
+
+            // Find the exact match position in normalized text
+            const matchIndex = textNorm.indexOf(queryNorm);
+
+            if (matchIndex === -1) {
+                // Try word-by-word highlighting
+                const queryWords = query.trim().split(/\s+/);
+                let highlightedText = text;
+
+                queryWords.forEach(word => {
+                    if (word.length >= 2) {
+                        // Create case-insensitive regex that matches the word
+                        const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const regex = new RegExp(`(${escapedWord})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<strong style="font-weight: 700; color: var(--primary); background: rgba(var(--primary-rgb), 0.1); padding: 2px 4px; border-radius: 4px;">$1</strong>');
+                    }
+                });
+
+                return highlightedText;
+            }
+
+            // Find corresponding position in original text
+            let charCount = 0;
+            let startPos = 0;
+            for (let i = 0; i < text.length; i++) {
+                const normChar = normalizeArabicText(text[i]);
+                if (normChar) charCount++;
+                if (charCount === matchIndex + 1) {
+                    startPos = i;
+                    break;
+                }
+            }
+
+            // Find end position
+            const matchLength = queryNorm.length;
+            charCount = 0;
+            let endPos = startPos;
+            for (let i = startPos; i < text.length; i++) {
+                const normChar = normalizeArabicText(text[i]);
+                if (normChar) charCount++;
+                if (charCount >= matchLength) {
+                    endPos = i + 1;
+                    break;
+                }
+            }
+
+            // Build highlighted text
+            const before = text.substring(0, startPos);
+            const match = text.substring(startPos, endPos);
+            const after = text.substring(endPos);
+
+            return `${before}<strong style="font-weight: 700; color: var(--primary); background: rgba(var(--primary-rgb), 0.1); padding: 2px 4px; border-radius: 4px;">${match}</strong>${after}`;
         }
 
         // Show search results in dropdown
         function showSearchResults(results, query) {
             const dropdown = document.getElementById('searchResultsDropdown');
 
+            // Position dropdown below search input
+            const searchInput = document.getElementById('heroSearchInput');
+            if (searchInput) {
+                const inputRect = searchInput.getBoundingClientRect();
+                dropdown.style.top = (inputRect.bottom + 10) + 'px';
+            }
+
             if (results.length === 0) {
-                dropdown.innerHTML = '<div class="search-no-results">هیچ ئەنجامێک نەدۆزرایەوە</div>';
+                dropdown.innerHTML = '<div class="search-no-results">چ ژ ئەنجامان نەهاتە دیتن</div>';
                 dropdown.classList.add('active');
                 return;
             }
 
-            const resultsHTML = results.map((result) => `
+            const resultsHTML = results.map((result) => {
+                const decorativeCode = getDecorativeSurahCode(result.surah);
+                const highlightedText = highlightMatch(result.text, query);
+
+                return `
                 <div class="search-result-item" onclick="openSurahWithAyah(${result.surah}, ${result.ayah}); hideSearchResults();">
+                    <div class="surah-card-arabic no-kurdish-convert" style="font-size: 2.5rem; margin-bottom: 10px;">${decorativeCode}</div>
                     <div class="search-result-header">
                         ${result.surahName} - ئایەت ${KurdishNumbers.toKurdish(result.ayah)}
                     </div>
                     <div class="search-result-text">
-                        ${result.text}
+                        ${highlightedText}
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
 
             dropdown.innerHTML = resultsHTML;
             dropdown.classList.add('active');
@@ -5248,10 +5989,10 @@
 
             if (index > -1) {
                 bookmarkedAyahs.splice(index, 1);
-                showNotification('نیشانە لابرا');
+                showNotification('نیشانە هاتە ژێبرن');
             } else {
                 bookmarkedAyahs.push(key);
-                showNotification('نیشانەکرا');
+                showNotification('نیشانەکرن');
             }
 
             // Update button
@@ -5302,7 +6043,7 @@
 
             copyToClipboard(text);
             closeCopyModal();
-            showNotification('کۆپیکرا لەگەڵ تەفسیر');
+            showNotification('دگەل تەفسیرێ هاتە کۆپیکرن');
         }
 
         function copyAyahWithoutTafsir() {
@@ -5326,7 +6067,7 @@
 
             copyToClipboard(text);
             closeCopyModal();
-            showNotification('کۆپیکرا بەبێ تەفسیر');
+            showNotification('بێ تەفسیر هاتە کۆپیکرن');
         }
 
         function copyJustTafsir() {
@@ -5345,7 +6086,7 @@
 
             copyToClipboard(text);
             closeCopyModal();
-            showNotification('تەفسیر کۆپیکرا');
+            showNotification('تەفسیر هاتە کۆپیکرن');
         }
 
         function copyToClipboard(text) {
@@ -5385,9 +6126,31 @@
         }
 
         function continueReading() {
-            if (isUserAuthenticated && lastReadPosition.surah) {
+            console.log('📖 Continue reading clicked. Current position:', lastReadPosition);
+
+            // Check for guest reading position if not authenticated
+            if (!isUserAuthenticated) {
+                const guestPosition = localStorage.getItem('guestLastReadPosition');
+                if (guestPosition) {
+                    try {
+                        const position = JSON.parse(guestPosition);
+                        if (position.surah && position.ayah) {
+                            lastReadPosition = position;
+                            console.log('📖 Loaded guest position from localStorage:', position);
+                        }
+                    } catch (e) {
+                        console.error('Failed to parse guest position:', e);
+                    }
+                } else {
+                    console.log('ℹ️ No guest position found in localStorage');
+                }
+            }
+
+            if (lastReadPosition.surah && lastReadPosition.surah > 0) {
+                console.log('✅ Opening surah:', lastReadPosition.surah, 'ayah:', lastReadPosition.ayah);
                 openSurahWithAyah(lastReadPosition.surah, lastReadPosition.ayah);
             } else {
+                console.log('ℹ️ Opening default (Al-Fatihah)');
                 openSurah(1);
             }
         }
@@ -5397,26 +6160,64 @@
             const surahNameEl = document.getElementById('continueReadingSurahName');
             const infoEl = document.getElementById('continueReadingInfo');
 
-            if (isUserAuthenticated && lastReadPosition.surah) {
+            console.log('🔄 updateContinueReading called');
+            console.log('   isUserAuthenticated:', isUserAuthenticated);
+            console.log('   Current lastReadPosition:', lastReadPosition);
+
+            // Reload from localStorage for non-authenticated users (in case it changed)
+            if (!isUserAuthenticated) {
+                const guestPosition = localStorage.getItem('guestLastReadPosition');
+                console.log('   guestLastReadPosition from localStorage:', guestPosition);
+                if (guestPosition) {
+                    try {
+                        const position = JSON.parse(guestPosition);
+                        if (position.surah && position.ayah) {
+                            lastReadPosition = position;
+                            console.log('   ✅ Loaded position from localStorage:', lastReadPosition);
+                        }
+                    } catch (e) {
+                        console.error('   ❌ Failed to parse guest position:', e);
+                    }
+                } else {
+                    console.log('   ⚠️ No guest position in localStorage');
+                }
+            }
+
+            if (!surahNameEl || !infoEl) {
+                console.error('❌ Card elements not found!');
+                return;
+            }
+
+            console.log('   Checking surahNames:', typeof surahNames, surahNames ? 'exists' : 'null');
+
+            if (lastReadPosition.surah && lastReadPosition.surah > 0 && lastReadPosition.surah <= 114) {
                 const info = surahNames[lastReadPosition.surah];
-                const decorativeCode = getDecorativeSurahCode(lastReadPosition.surah);
-                surahNameEl.textContent = decorativeCode;
-                infoEl.textContent = `${KurdishNumbers.toKurdish(lastReadPosition.surah)}. ${info.english} - ئایەت ${KurdishNumbers.toKurdish(lastReadPosition.ayah)}`;
+                console.log('   Surah info for', lastReadPosition.surah, ':', info);
+                if (info) {
+                    const decorativeCode = getDecorativeSurahCode(lastReadPosition.surah);
+                    surahNameEl.textContent = decorativeCode;
+                    infoEl.textContent = `${KurdishNumbers.toKurdish(lastReadPosition.surah)}. ${info.english} - ئایەت ${KurdishNumbers.toKurdish(lastReadPosition.ayah)}`;
+                    console.log('✅ Continue reading card updated:', info.english, 'Ayah', lastReadPosition.ayah);
+                } else {
+                    console.error('❌ Surah info not found for:', lastReadPosition.surah);
+                    console.log('   surahNames keys:', Object.keys(surahNames || {}));
+                }
             } else {
                 surahNameEl.textContent = 'surah001';
-                infoEl.textContent = '١. Al-Fatihah';
+                infoEl.textContent = '١. الفاتحة';
+                console.log('ℹ️ Using default (Al-Fatihah), position:', lastReadPosition);
             }
         }
 
         // Reset Reading Progress
         function resetReadingProgress() {
             if (!isUserAuthenticated) {
-                showNotification('تکایە چوونەژوورەوە بکە');
+                showNotification('تکایە چوونە ژوورڤە بکە');
                 return;
             }
 
             // Confirm with user
-            const confirmed = confirm('دڵنیای دەتەوێت هەموو پێشکەوتنەکەت بسڕیتەوە و لە سەرەتاوە دەست پێ بکەیتەوە؟\n\nئەمە هەموو شتێک دەسڕێتەوە:\n• پۆزیشنی خوێندنەوە\n• ئامارەکان (ڕۆژی چالاک، سوورە تەواو، ئایەت خوێندراوە)\n• ئایەتە خوێندراوەکان\n• هەموو داتا\n\nئایا دڵنیایت؟');
+            const confirmed = confirm('دڵنیای دەتەوێت هەموو پێشکەفتنەکەت بسڕیتەوە و لە سەرەتاوە دەست پێ بکەیتەوە؟\n\nئەمە هەموو شتێک دەسڕێتەوە:\n• پۆزیشنی خواندن\n• ئامارەکان (ڕۆژی چالاک، سوورەت تەمام، ئایەتا هاتیە خواندن)\n• ئایەتە خوێندراوەکان\n• هەموو داتا\n\nئایا دڵنیایت؟');
 
             if (confirmed) {
                 // Reset position to beginning
@@ -5466,7 +6267,7 @@
                 }
 
                 // Show notification
-                showNotification('هەموو پێشکەوتنەکان سڕانەوە! دەست پێ بکەرەوە لە سەرەتاوە');
+                showNotification('هەمی پێشکەفتن هاتنە سڕینەڤە! ژ دەستپێکێ دەست پێ بکە');
 
                 // Close menu
                 closeFeatherOverlay();
@@ -5574,8 +6375,20 @@
         }
 
         function startRandomAyahTimer() {
+            let lastCheckedDate = new Date().toDateString(); // Track the last checked date
+
             function updateTimer() {
                 const now = new Date();
+                const currentDate = now.toDateString();
+
+                // Check if date changed since last check
+                if (currentDate !== lastCheckedDate) {
+                    console.log('[Daily Ayah] Date changed! Reloading ayah...');
+                    lastCheckedDate = currentDate;
+                    dailyAyahLoaded = false; // Reset flag for new day
+                    loadRandomAyah(); // Load new ayah immediately
+                }
+
                 const midnight = new Date();
                 midnight.setHours(24, 0, 0, 0); // Next midnight
 
@@ -5592,15 +6405,6 @@
                 const timerEl = document.getElementById('randomTimer');
                 if (timerEl) {
                     timerEl.textContent = kurdishTime;
-                    console.log('Timer updated:', timeStr, '->', kurdishTime);
-                }
-
-                // Check if we passed midnight (diff is very small means we just passed)
-                if (diff < 2000) {
-                    setTimeout(() => {
-                        dailyAyahLoaded = false; // Reset flag for new day
-                        loadRandomAyah(); // Load new ayah at midnight
-                    }, diff + 100);
                 }
             }
 
@@ -6190,9 +6994,40 @@
 
         // Track ayah scroll/view - Enhanced with visual feedback
         function trackAyahView(surahNumber, ayahNumber, ayahElement) {
-            if (!isUserAuthenticated || !currentUser) return;
-
             const ayahKey = `${surahNumber}:${ayahNumber}`;
+
+            // Track sequential reading for ALL users (authenticated and guests)
+            const isSequentialRead =
+                // Same surah, next ayah
+                (surahNumber === lastReadPosition.surah && ayahNumber === lastReadPosition.ayah + 1) ||
+                // Next surah, first ayah (finished previous surah)
+                (surahNumber === lastReadPosition.surah + 1 && ayahNumber === 1) ||
+                // Very first ayah (starting fresh)
+                (lastReadPosition.surah === 1 && lastReadPosition.ayah === 1 && surahNumber === 1);
+
+            if (isSequentialRead) {
+                lastReadPosition = { surah: surahNumber, ayah: ayahNumber };
+                console.log('📖 Sequential read detected. Position updated:', lastReadPosition);
+
+                // Update URL with current ayah position (without adding to history)
+                const surahInfo = surahNames[surahNumber];
+                if (surahInfo) {
+                    const title = `${surahInfo.english} (${surahInfo.arabic}) - ئایەت ${KurdishNumbers.toKurdish(ayahNumber)} - تەفسیر کورد`;
+                    history.replaceState({ page: 'surah', surah: surahNumber, ayah: ayahNumber }, title, `?surah=${surahNumber}&ayah=${ayahNumber}`);
+                }
+
+                // Save to localStorage for non-authenticated users
+                if (!isUserAuthenticated) {
+                    localStorage.setItem('guestLastReadPosition', JSON.stringify(lastReadPosition));
+                    console.log('💾 Guest position saved to localStorage:', lastReadPosition);
+                }
+
+                // Update continue reading card in real-time
+                updateContinueReading();
+            }
+
+            // Authenticated user tracking only below this point
+            if (!isUserAuthenticated || !currentUser) return;
 
             // Check if this is a new ayah read
             const isNewRead = !activityTracker.readAyahs.has(ayahKey);
@@ -6215,22 +7050,6 @@
                 ayahElement.style.transition = 'all 0.5s ease';
             }
 
-            // Update current position - ONLY if reading SEQUENTIALLY (consecutively)
-            const isSequentialRead =
-                // Same surah, next ayah
-                (surahNumber === lastReadPosition.surah && ayahNumber === lastReadPosition.ayah + 1) ||
-                // Next surah, first ayah (finished previous surah)
-                (surahNumber === lastReadPosition.surah + 1 && ayahNumber === 1) ||
-                // Very first ayah (starting fresh)
-                (lastReadPosition.surah === 1 && lastReadPosition.ayah === 1 && surahNumber === 1);
-
-            if (isSequentialRead) {
-                lastReadPosition = { surah: surahNumber, ayah: ayahNumber };
-
-                // Update continue reading card in real-time
-                updateContinueReading();
-            }
-
             // Update stats display in real-time
             if (isNewRead) {
                 userStats.ayahsRead = activityTracker.readAyahs.size;
@@ -6246,30 +7065,41 @@
 
         // Update surah progress indicator in reader header
         function updateSurahProgressIndicator(surahNumber) {
-            if (!surahNames[surahNumber] || !isUserAuthenticated) return;
+            if (!surahNames[surahNumber]) return;
 
-            const totalAyahs = surahNames[surahNumber].ayahs;
+            const surahInfo = surahNames[surahNumber];
+            const totalAyahs = surahInfo.ayahs;
             let readCount = 0;
 
-            // Count how many ayahs in this surah have been read
-            for (let i = 1; i <= totalAyahs; i++) {
-                const ayahKey = `${surahNumber}:${i}`;
-                if (activityTracker.readAyahs.has(ayahKey)) {
-                    readCount++;
+            // Count how many ayahs in this surah have been read (only if authenticated)
+            if (isUserAuthenticated && activityTracker.readAyahs) {
+                for (let i = 1; i <= totalAyahs; i++) {
+                    const ayahKey = `${surahNumber}:${i}`;
+                    if (activityTracker.readAyahs.has(ayahKey)) {
+                        readCount++;
+                    }
                 }
             }
 
-            // Show indicator only if user is authenticated
-            const indicator = document.getElementById('surahProgressIndicator');
-            const fillBar = document.getElementById('surahProgressFill');
-            const textElement = document.getElementById('surahProgressText');
+            const percentage = Math.round((readCount / totalAyahs) * 100);
 
-            if (indicator && fillBar && textElement) {
-                indicator.style.display = 'block';
+            // Update sticky progress header
+            const stickySurahName = document.getElementById('stickySurahName');
+            const progressFillSticky = document.getElementById('progressFillSticky');
+            const progressPercentage = document.getElementById('progressPercentage');
+            const stickyAyahCount = document.getElementById('stickyAyahCount');
 
-                const percentage = Math.round((readCount / totalAyahs) * 100);
-                fillBar.style.width = percentage + '%';
-                textElement.textContent = `${KurdishNumbers.toKurdish(readCount)} / ${KurdishNumbers.toKurdish(totalAyahs)} ئایەت خوێندراوە (${KurdishNumbers.toKurdish(percentage)}%)`;
+            if (stickySurahName) {
+                stickySurahName.textContent = surahInfo.english;
+            }
+            if (progressFillSticky) {
+                progressFillSticky.style.width = percentage + '%';
+            }
+            if (progressPercentage) {
+                progressPercentage.textContent = KurdishNumbers.toKurdish(percentage) + '٪';
+            }
+            if (stickyAyahCount) {
+                stickyAyahCount.textContent = `${KurdishNumbers.toKurdish(readCount)} / ${KurdishNumbers.toKurdish(totalAyahs)} ئایەت`;
             }
         }
 
@@ -6464,14 +7294,15 @@
 
         // Setup IntersectionObserver for precise ayah tracking
         function setupScrollTracking() {
-            if (!isUserAuthenticated || !currentUser) return;
+            // Setup scroll-based progress for everyone
+            setupScrollProgress();
 
-            // Disconnect existing observer if any
+            // Disconnect existing observer if any (for both authenticated and guest users)
             if (activityTracker.ayahObserver) {
                 activityTracker.ayahObserver.disconnect();
             }
 
-            // Create IntersectionObserver with precise options
+            // Create IntersectionObserver with precise options - FOR ALL USERS (authenticated and guests)
             const observerOptions = {
                 root: null, // viewport
                 rootMargin: '-20% 0px -20% 0px', // Trigger when ayah is 20% into viewport
@@ -6479,8 +7310,11 @@
             };
 
             activityTracker.ayahObserver = new IntersectionObserver((entries) => {
+                // Find the most visible ayah from all entries
+                let mostVisibleAyah = null;
+                let maxRatio = 0;
+
                 entries.forEach(entry => {
-                    // Only track if ayah is significantly visible (50% threshold)
                     if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
                         const ayahElement = entry.target;
                         const surahNum = parseInt(ayahElement.getAttribute('data-surah'));
@@ -6488,18 +7322,95 @@
 
                         if (surahNum && ayahNum) {
                             trackAyahView(surahNum, ayahNum, ayahElement);
+
+                            // Track the most visible ayah
+                            if (entry.intersectionRatio > maxRatio) {
+                                maxRatio = entry.intersectionRatio;
+                                mostVisibleAyah = { surahNum, ayahNum };
+                            }
                         }
                     }
                 });
+
+                // Only update sidebar highlight for the most visible ayah
+                if (mostVisibleAyah) {
+                    const ayahKey = `${mostVisibleAyah.surahNum}:${mostVisibleAyah.ayahNum}`;
+                    if (activityTracker.lastHighlightedAyah !== ayahKey) {
+                        activityTracker.lastHighlightedAyah = ayahKey;
+
+                        requestAnimationFrame(() => {
+                            document.querySelectorAll('.ayah-item-sidebar').forEach(item => {
+                                item.classList.remove('active');
+                            });
+                            const sidebarAyah = document.querySelector(`.ayah-item-sidebar[data-surah="${mostVisibleAyah.surahNum}"][data-ayah="${mostVisibleAyah.ayahNum}"]`);
+                            if (sidebarAyah) {
+                                sidebarAyah.classList.add('active');
+                            }
+                        });
+                    }
+                }
             }, observerOptions);
 
-            // Observe all ayah elements
+            // Observe all ayah elements - FOR ALL USERS
             setTimeout(() => {
                 const ayahElements = document.querySelectorAll('.ayah[data-ayah]');
+                console.log('👁️ Setting up ayah observer for', ayahElements.length, 'ayahs');
                 ayahElements.forEach(ayah => {
                     activityTracker.ayahObserver.observe(ayah);
                 });
             }, 500); // Small delay to ensure elements are rendered
+        }
+
+        // Setup scroll-based progress update (for all users)
+        function setupScrollProgress() {
+            let ticking = false;
+
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    window.requestAnimationFrame(() => {
+                        updateScrollBasedProgress();
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            });
+
+            // Initial update
+            updateScrollBasedProgress();
+        }
+
+        // Update progress based on scroll position
+        function updateScrollBasedProgress() {
+            const container = document.getElementById('ayahContainer');
+            if (!container) return;
+
+            const ayahElements = container.querySelectorAll('.ayah[data-ayah]');
+            if (ayahElements.length === 0) return;
+
+            // Get total scrollable height
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercentage = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+
+            // Calculate ayahs read based on scroll percentage
+            const totalAyahs = ayahElements.length;
+            const ayahsRead = Math.floor((scrollPercentage / 100) * totalAyahs);
+            const percentage = Math.min(100, Math.round(scrollPercentage));
+
+            // Update sticky progress bar
+            const progressFillSticky = document.getElementById('progressFillSticky');
+            const progressPercentage = document.getElementById('progressPercentage');
+            const stickyAyahCount = document.getElementById('stickyAyahCount');
+
+            if (progressFillSticky) {
+                progressFillSticky.style.width = percentage + '%';
+            }
+            if (progressPercentage) {
+                progressPercentage.textContent = KurdishNumbers.toKurdish(percentage) + '٪';
+            }
+            if (stickyAyahCount) {
+                stickyAyahCount.textContent = `${KurdishNumbers.toKurdish(ayahsRead)} / ${KurdishNumbers.toKurdish(totalAyahs)} ئایەت`;
+            }
         }
 
         // Detect which ayahs are currently visible (legacy fallback)
@@ -6605,10 +7516,19 @@
             // Track Geographic Visit
             async function trackGeoVisit() {
                 try {
-                    // Only track once per session to avoid duplicate tracking
-                    if (sessionStorage.getItem('geo_tracked')) return;
+                    // Check if already tracked in this session
+                    const lastTracked = sessionStorage.getItem('geo_tracked_time');
+                    const now = Date.now();
 
-                    await fetch('/.netlify/functions/geo-analytics', {
+                    // Track once per day per user (24 hours = 86400000 ms)
+                    if (lastTracked && (now - parseInt(lastTracked)) < 86400000) {
+                        console.log('📍 Geo tracking: Already tracked in last 24 hours');
+                        return;
+                    }
+
+                    console.log('📍 Geo tracking: Sending visit data...');
+
+                    const response = await fetch('/.netlify/functions/geo-analytics', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -6617,9 +7537,13 @@
                         })
                     });
 
-                    sessionStorage.setItem('geo_tracked', 'true');
+                    const result = await response.json();
+                    console.log('✅ Geo tracking success:', result);
+
+                    // Store timestamp of last tracking
+                    sessionStorage.setItem('geo_tracked_time', now.toString());
                 } catch (error) {
-                    console.error('Geo tracking failed:', error);
+                    console.error('❌ Geo tracking failed:', error);
                 }
             }
 
@@ -6671,26 +7595,181 @@
         let lastScrollTop = 0;
         let scrollTimeout;
         const header = document.querySelector('.professional-header');
+        const stickyProgress = document.getElementById('stickyProgressHeader');
 
+        // Set initial position on page load
+        if (stickyProgress) {
+            const isMobile = window.innerWidth <= 768;
+            stickyProgress.style.top = isMobile ? '55px' : '85px';
+            stickyProgress.style.display = 'block';
+            stickyProgress.style.visibility = 'visible';
+        }
+
+        let saveScrollTimeout;
         window.addEventListener('scroll', function() {
             clearTimeout(scrollTimeout);
 
             scrollTimeout = setTimeout(function() {
                 let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
+                const isMobile = window.innerWidth <= 768;
+
                 if (scrollTop > lastScrollTop && scrollTop > 100) {
                     // Scrolling down & past 100px
                     header.classList.add('header-hidden');
+                    if (stickyProgress) {
+                        stickyProgress.style.top = isMobile ? '0px' : '0px';
+                    }
                 } else {
                     // Scrolling up or at top
                     header.classList.remove('header-hidden');
+                    if (stickyProgress) {
+                        stickyProgress.style.top = isMobile ? '55px' : '85px';
+                    }
                 }
 
                 lastScrollTop = scrollTop;
+
+                // Save scroll position for refresh persistence (debounced)
+                clearTimeout(saveScrollTimeout);
+                saveScrollTimeout = setTimeout(function() {
+                    const lastViewType = localStorage.getItem('lastViewType');
+                    if (lastViewType === 'surah' || lastViewType === 'juz') {
+                        localStorage.setItem('lastScrollPosition', scrollTop);
+                    }
+                }, 500);
             }, 10);
         });
 
-        console.log('✅ تەفسیر کوورد - Quran Reader loaded successfully');
+        // Restore last viewed page on refresh
+        const lastViewType = localStorage.getItem('lastViewType');
+        const lastViewedSurah = localStorage.getItem('lastViewedSurah');
+        const lastViewedJuz = localStorage.getItem('lastViewedJuz');
+        const lastScrollPosition = localStorage.getItem('lastScrollPosition');
+
+        if (lastViewType === 'surah' && lastViewedSurah) {
+            console.log('📖 Restoring last viewed surah:', lastViewedSurah);
+
+            // Set flag to prevent automatic scroll to top
+            if (lastScrollPosition) {
+                window.isRestoringScroll = true;
+            }
+
+            openSurah(parseInt(lastViewedSurah));
+
+            // Restore scroll position after content loads
+            if (lastScrollPosition) {
+                // Use requestAnimationFrame for smoother restoration
+                const restoreScroll = () => {
+                    setTimeout(() => {
+                        window.scrollTo({
+                            top: parseInt(lastScrollPosition),
+                            behavior: 'auto'
+                        });
+                        console.log('📍 Restored scroll position:', lastScrollPosition);
+                        window.isRestoringScroll = false;
+                    }, 600);
+                };
+                requestAnimationFrame(restoreScroll);
+            }
+        } else if (lastViewType === 'juz' && lastViewedJuz) {
+            console.log('📖 Restoring last viewed juz:', lastViewedJuz);
+
+            // Set flag to prevent automatic scroll to top
+            if (lastScrollPosition) {
+                window.isRestoringScroll = true;
+            }
+
+            loadJuzContinuous(parseInt(lastViewedJuz));
+
+            // Restore scroll position after content loads
+            if (lastScrollPosition) {
+                // Use requestAnimationFrame for smoother restoration
+                const restoreScroll = () => {
+                    setTimeout(() => {
+                        window.scrollTo({
+                            top: parseInt(lastScrollPosition),
+                            behavior: 'auto'
+                        });
+                        console.log('📍 Restored scroll position:', lastScrollPosition);
+                        window.isRestoringScroll = false;
+                    }, 600);
+                };
+                requestAnimationFrame(restoreScroll);
+            }
+        }
+
+        // Debug test function - accessible from console
+        window.testGuestReading = function(surahNum, ayahNum) {
+            console.log('🧪 Testing guest reading position...');
+            const testPosition = { surah: surahNum || 2, ayah: ayahNum || 50 };
+            localStorage.setItem('guestLastReadPosition', JSON.stringify(testPosition));
+            console.log('💾 Set localStorage:', testPosition);
+            lastReadPosition = testPosition;
+
+            // Direct DOM manipulation
+            const surahNameEl = document.getElementById('continueReadingSurahName');
+            const infoEl = document.getElementById('continueReadingInfo');
+            console.log('   Elements found:', !!surahNameEl, !!infoEl);
+
+            if (surahNameEl && infoEl && surahNames) {
+                const info = surahNames[testPosition.surah];
+                console.log('   Surah info:', info);
+                if (info) {
+                    const decorativeCode = getDecorativeSurahCode(testPosition.surah);
+                    surahNameEl.textContent = decorativeCode;
+                    infoEl.textContent = `${KurdishNumbers.toKurdish(testPosition.surah)}. ${info.english} - ئایەت ${KurdishNumbers.toKurdish(testPosition.ayah)}`;
+                    console.log('✅ Directly updated DOM');
+                }
+            }
+
+            updateContinueReading();
+            console.log('✅ Test complete - check the continue reading card');
+        };
+
+        window.checkGuestData = function() {
+            console.log('🔍 Checking guest reading data:');
+            console.log('   isUserAuthenticated:', isUserAuthenticated);
+            console.log('   lastReadPosition:', lastReadPosition);
+            console.log('   localStorage guestLastReadPosition:', localStorage.getItem('guestLastReadPosition'));
+            console.log('   surahNames loaded:', !!surahNames);
+            if (surahNames && lastReadPosition.surah) {
+                console.log('   Surah info:', surahNames[lastReadPosition.surah]);
+            }
+        };
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function(event) {
+            console.log('🔙 Browser back button clicked', event.state);
+
+            if (event.state && event.state.page === 'surah') {
+                // Going back to a surah page
+                if (event.state.ayah) {
+                    openSurahWithAyah(event.state.surah, event.state.ayah);
+                } else {
+                    openSurah(event.state.surah);
+                }
+            } else {
+                // Going back to home page or external site
+                showHomePage();
+            }
+        });
+
+        // Set initial history state for Quran page
+        if (!window.location.search) {
+            history.replaceState({ page: 'quran' }, 'قورئان - تەفسیر کورد', window.location.pathname);
+        }
+
+        console.log('✅ تەفسیر کورد - Quran Reader loaded successfully');
+        console.log('🧪 Debug functions available: testGuestReading(surah, ayah), checkGuestData()');
+
+        // Auto-check on load
+        setTimeout(() => {
+            if (!isUserAuthenticated) {
+                console.log('\n🔍 Auto-check for guest user:');
+                window.checkGuestData();
+            }
+        }, 2000);
     </script>
 </body>
 </html>
