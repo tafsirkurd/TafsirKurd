@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ku">
 <head>
+    <script src="/utils/theme-loader.js"></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
-    <title>ڕێکخستنەکان - تەفسیر کوورد</title>
+    <title>رێکخستن - تەفسیر کورد</title>
 
     <!-- Favicons - High quality with SVG for perfect scaling -->
     <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
@@ -39,6 +40,7 @@
             --accent: #ffffff;
             --bg: #fafafa;
             --card-bg: #ffffff;
+            --item-bg: #f5f5f5;
             --text: #000000;
             --text-muted: #666666;
             --border: #e8e8e8;
@@ -52,9 +54,12 @@
             --accent: #000000;
             --bg: #0a0a0a;
             --card-bg: #1a1a1a;
+            --item-bg: #252525;
             --text: #ffffff;
             --text-muted: #b0b0b0;
             --border: #2a2a2a;
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.5);
         }
 
         * {
@@ -69,12 +74,6 @@
             color: var(--text);
             line-height: 1.6;
             transition: background-color var(--transition), color var(--transition);
-            opacity: 0;
-        }
-
-        body.ready {
-            opacity: 1;
-            transition: opacity 0.3s ease;
         }
 
         .header {
@@ -159,7 +158,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 25px;
-            background: var(--bg);
+            background: var(--item-bg);
             border-radius: 12px;
             margin-bottom: 15px;
             transition: all var(--transition);
@@ -425,6 +424,160 @@
                 font-size: 0.9rem;
             }
         }
+
+        /* Footer Styles */
+        footer {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            margin-top: 80px;
+            padding: 60px 20px 30px;
+            text-align: right;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            direction: rtl;
+        }
+
+        .footer-main {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .footer-logo-img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+        }
+
+        .footer-brand-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .footer-brand-tagline {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
+
+        .footer-social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .footer-social-icons a {
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            transition: all 0.4s;
+        }
+
+        .footer-social-icons a:hover {
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .footer-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .footer-contact-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .footer-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.4s;
+        }
+
+        .footer-link:hover {
+            color: var(--primary);
+            transform: translateX(-5px);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            padding-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .footer-copyright {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer-meta-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-meta-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        .footer-meta-link:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .footer-main {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .footer-main {
+                grid-template-columns: 1fr;
+            }
+            .footer-brand {
+                text-align: center;
+            }
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -432,11 +585,11 @@
         <div class="header-container">
             <h1 class="header-title">
                 <i class="fas fa-cog"></i>
-                ڕێکخستنەکان
+                رێکخستن
             </h1>
             <a href="/quran" class="back-btn">
                 <i class="fas fa-arrow-right"></i>
-                گەڕانەوە
+                گەڕیان ڤە
             </a>
         </div>
     </header>
@@ -447,15 +600,15 @@
             <div class="settings-card">
                 <h2 class="settings-card-title">
                     <i class="fas fa-palette"></i>
-                    ڕووکار
+                    رۆکار
                 </h2>
                 <div class="setting-item">
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-moon"></i>
-                            دۆخی تاریکی
+                            رەوشا تاریک
                         </div>
-                        <div class="setting-description">گۆڕین بۆ دۆخی تاریکی بۆ خوێندنەوەی ئاسانتر</div>
+                        <div class="setting-description">گوهۆڕین بۆ رەوشا تاریک بۆ خواندنا ئاسانتر</div>
                     </div>
                     <div class="setting-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
                         <div class="setting-toggle-knob"></div>
@@ -467,19 +620,19 @@
             <div class="settings-card">
                 <h2 class="settings-card-title">
                     <i class="fas fa-font"></i>
-                    فۆنتی عەرەبی
+                    فۆنتا عەرەبی
                 </h2>
                 
                 <div class="setting-item">
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-text-height"></i>
-                            جۆری فۆنت
+                            جۆرێ فۆنتێ
                         </div>
-                        <div class="setting-description">دەستکاری فۆنتی دەقی عەرەبی</div>
+                        <div class="setting-description">دەستکاریکرنا فۆنتا تێکستێ عەرەبی</div>
                     </div>
                     <select class="setting-select" id="arabicFontSelect" onchange="changeArabicFont()">
-                        <option value="KFGQPC Hafs">KFGQPC Hafs (هەفس)</option>
+                        <option value="KFGQPC Hafs">KFGQPC Hafs (حەفس)</option>
                         <option value="Scheherazade New">Scheherazade New</option>
                         <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
                     </select>
@@ -489,9 +642,9 @@
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-text-width"></i>
-                            قەبارەی فۆنت
+                            قەبارەیا فۆنتێ
                         </div>
-                        <div class="setting-description">گەورە یان بچووک کردنەوەی دەقی عەرەبی</div>
+                        <div class="setting-description">مەزن یان بچووککرنا تێکستێ عەرەبی</div>
                     </div>
                     <div class="setting-slider-container">
                         <input type="range" class="setting-slider" id="arabicSizeSlider"
@@ -502,7 +655,7 @@
                 </div>
 
                 <div class="font-preview">
-                    <div class="font-preview-label">پێشبینینی فۆنت</div>
+                    <div class="font-preview-label">پێشبینیا فۆنتێ</div>
                     <div class="font-preview-text arabic-preview" id="arabicPreview">
                         بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
                     </div>
@@ -513,21 +666,21 @@
             <div class="settings-card">
                 <h2 class="settings-card-title">
                     <i class="fas fa-book-open"></i>
-                    فۆنتی تەفسیر
+                    فۆنتا تەفسیرێ
                 </h2>
                 
                 <div class="setting-item">
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-text-height"></i>
-                            جۆری فۆنت
+                            جۆرێ فۆنتێ
                         </div>
-                        <div class="setting-description">دەستکاری فۆنتی تەفسیری کوردی</div>
+                        <div class="setting-description">دەستکاریکرنا فۆنتا تەفسیرێیا کوردی</div>
                     </div>
                     <select class="setting-select" id="tafsirFontSelect" onchange="changeTafsirFont()">
                         <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
                         <option value="Scheherazade New">Scheherazade New</option>
-                        <option value="KFGQPC Hafs">KFGQPC Hafs (هەفس)</option>
+                        <option value="KFGQPC Hafs">KFGQPC Hafs (حەفس)</option>
                     </select>
                 </div>
 
@@ -535,9 +688,9 @@
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-text-width"></i>
-                            قەبارەی فۆنت
+                            قەبارەیا فۆنتێ
                         </div>
-                        <div class="setting-description">گەورە یان بچووک کردنەوەی دەقی تەفسیر</div>
+                        <div class="setting-description">مەزن یان بچووککرنا تێکستێ تەفسیرێ</div>
                     </div>
                     <div class="setting-slider-container">
                         <input type="range" class="setting-slider" id="tafsirSizeSlider"
@@ -548,9 +701,9 @@
                 </div>
 
                 <div class="font-preview">
-                    <div class="font-preview-label">پێشبینینی فۆنت</div>
+                    <div class="font-preview-label">پێشبینیا فۆنتێ</div>
                     <div class="font-preview-text tafsir-preview" id="tafsirPreview">
-                        لە ناوی خوای میهرەبان و بەزەییدا. ستایش بۆ خوایە، پەروەردگاری جیهانیان.
+                        ب ناڤێ خودایێ دلۆڤان و دلوڤین. سوپاس بۆ خودێ، خودانێ جیهانان.
                     </div>
                 </div>
             </div>
@@ -559,16 +712,16 @@
             <div class="settings-card">
                 <h2 class="settings-card-title">
                     <i class="fas fa-book-reader"></i>
-                    خوێندنەوە
+                    خواندن
                 </h2>
                 
                 <div class="setting-item">
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-eye"></i>
-                            پیشاندانی تەفسیر
+                            نیشاندان و ڤەدیتنا تەفسیرێ
                         </div>
-                        <div class="setting-description">پیشاندان یان شاردنەوەی تەفسیری کوردی</div>
+                        <div class="setting-description">نیشاندان یان ڤەشارتنا تەفسیرێ کوردی</div>
                     </div>
                     <div class="setting-toggle active" id="tafsirToggle" onclick="toggleTafsir()">
                         <div class="setting-toggle-knob"></div>
@@ -579,9 +732,9 @@
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-scroll"></i>
-                            خولاندنی خۆکار
+                            زڤراندنا خۆکار
                         </div>
-                        <div class="setting-description">خولاندنی خۆکاری پەڕە لە کاتی خوێندنەوە</div>
+                        <div class="setting-description">زڤراندنا خۆکارا پەڕەیێ د دەما خواندنێدا</div>
                     </div>
                     <div class="setting-toggle" id="autoScrollToggle" onclick="toggleAutoScroll()">
                         <div class="setting-toggle-knob"></div>
@@ -593,16 +746,16 @@
             <div class="settings-card">
                 <h2 class="settings-card-title">
                     <i class="fas fa-bell"></i>
-                    بیرئینان
+                    بیرهاتن
                 </h2>
 
                 <div class="setting-item">
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-envelope"></i>
-                            بیرئینانێن ئیمەیلێ
+                            بیرهاتنێن ئیمەیلێ
                         </div>
-                        <div class="setting-description">وەرگرتنا بیرئینانێن رۆژانە ب رێیا ئیمەیلێ</div>
+                        <div class="setting-description">وەرگرتنا بیرهاتنێن رۆژانە ب رێیا ئیمەیلێ</div>
                     </div>
                     <div class="setting-toggle active" id="emailNotificationsToggle" onclick="toggleEmailNotifications()">
                         <div class="setting-toggle-knob"></div>
@@ -613,9 +766,9 @@
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-desktop"></i>
-                            بیرئینانێن گەڕۆکێ
+                            بیرهاتنێن گەڕۆکێ
                         </div>
-                        <div class="setting-description">وەرگرتنا بیرئینانێن گەڕۆکێ</div>
+                        <div class="setting-description">وەرگرتنا بیرهاتنێن گەڕۆکێ</div>
                     </div>
                     <div class="setting-toggle active" id="browserNotificationsToggle" onclick="toggleBrowserNotifications()">
                         <div class="setting-toggle-knob"></div>
@@ -627,14 +780,14 @@
             <div class="settings-card">
                 <h2 class="settings-card-title">
                     <i class="fas fa-undo"></i>
-                    گەڕاندنەوە بۆ بنەڕەت
+                    گەڕیاندنڤە بۆ بنەڕەت
                 </h2>
                 <p style="color: var(--text-muted); margin-bottom: 20px; line-height: 1.8;">
-                    ئەم کارە هەموو ڕێکخستنەکان دەگەڕێنێتەوە بۆ بنەڕەتەکانیان. ئەم کردارە ناگەڕێتەوە.
+                    ئەڤ کارە هەموو رێکخستنان دگەڕینیتەڤە بۆ بنەڕەتێن وان. ئەڤ کردارە ناگەڕیێتەڤە.
                 </p>
                 <button class="reset-btn" onclick="resetSettings()">
                     <i class="fas fa-redo"></i>
-                    گەڕاندنەوەی هەموو ڕێکخستنەکان
+                    گەڕیاندنەڤەیا هەموو رێکخستنان
                 </button>
             </div>
         </div>
@@ -739,7 +892,7 @@
             localStorage.setItem('theme', newTheme);
             toggle.classList.toggle('active');
 
-            showNotification(newTheme === 'dark' ? 'دۆخی تاریکی چالاککرا' : 'دۆخی ڕووناکی چالاککرا');
+            showNotification(newTheme === 'dark' ? 'رەوشا تاری هاتە چالاککرن' : 'رەوشا ڕووناهیێ هاتە چالاککرن');
         }
 
         function changeArabicFont() {
@@ -753,7 +906,7 @@
                 preview.style.fontFamily = font;
             }
 
-            showNotification('فۆنتی عەرەبی گۆڕدرا');
+            showNotification('فۆنتا عەرەبی هاتە گوهۆڕین');
         }
 
         function changeArabicSize(value) {
@@ -779,7 +932,7 @@
                 preview.style.fontFamily = font;
             }
 
-            showNotification('فۆنتی تەفسیر گۆڕدرا');
+            showNotification('فۆنتا تەفسیرێ هاتە گوهۆڕین');
         }
 
         function changeTafsirSize(value) {
@@ -798,18 +951,18 @@
             const toggle = document.getElementById('tafsirToggle');
             toggle.classList.toggle('active');
             localStorage.setItem('showTafsir', toggle.classList.contains('active'));
-            showNotification(toggle.classList.contains('active') ? 'تەفسیر پیشاندرا' : 'تەفسیر شاراوە');
+            showNotification(toggle.classList.contains('active') ? 'تەفسیر هاتە نیشاندان' : 'تەفسیر هاتە ڤەشارتن');
         }
 
         function toggleAutoScroll() {
             const toggle = document.getElementById('autoScrollToggle');
             toggle.classList.toggle('active');
             localStorage.setItem('autoScroll', toggle.classList.contains('active'));
-            showNotification(toggle.classList.contains('active') ? 'خولاندنی خۆکار چالاککرا' : 'خولاندنی خۆکار ناچالاککرا');
+            showNotification(toggle.classList.contains('active') ? 'زڤڕاندنا خۆکار هاتە چالاککرن' : 'زڤڕاندنا خۆکار هاتە نەچالاککرن');
         }
 
         function resetSettings() {
-            if (confirm('ئایا دڵنیایت لە گەڕاندنەوەی هەموو ڕێکخستنەکان بۆ بنەڕەت؟')) {
+            if (confirm('ئایا دڵنیایت لە گەڕیاندنەڤەیا هەموو رێکخستنان بۆ بنەڕەت؟')) {
                 localStorage.removeItem('arabicFont');
                 localStorage.removeItem('arabicSize');
                 localStorage.removeItem('tafsirFont');
@@ -835,7 +988,7 @@
                 document.getElementById('tafsirToggle').classList.add('active');
                 document.getElementById('autoScrollToggle').classList.remove('active');
 
-                showNotification('ڕێکخستنەکان گەڕانەوە بۆ بنەڕەت');
+                showNotification('ڕێکخستن ڤەگەڕیان سەر ڕەوشا بنەڕەت');
             }
         }
 
@@ -923,15 +1076,15 @@
                 if (error) {
                     console.error('Error updating email notifications:', error);
                     toggle.classList.toggle('active'); // Revert on error
-                    showNotification('هەڵەیەک ڕوویدا');
+                    showNotification('خەلەتییەک چێبوو');
                     return;
                 }
 
-                showNotification(willBeActive ? 'بیرئینانێن ئیمەیلێ چالاککران' : 'بیرئینانێن ئیمەیلێ ناچالاککران');
+                showNotification(willBeActive ? 'بیرهاتنێن ئیمەیلی هاتنە چالاککرن' : 'بیرهاتنێن ئیمەیلی هاتنە نەچالاککرن');
             } catch (err) {
                 console.error('Error toggling email notifications:', err);
                 toggle.classList.toggle('active'); // Revert on error
-                showNotification('هەڵەیەک ڕوویدا');
+                showNotification('خەلەتییەک چێبوو');
             }
         }
 
@@ -944,7 +1097,7 @@
             if (willBeActive && 'Notification' in window) {
                 const permission = await Notification.requestPermission();
                 if (permission !== 'granted') {
-                    showNotification('مافی بیرئینانێن گەڕۆکێ نەهاتە دان');
+                    showNotification('مافێ بیرهاتنێن گەڕۆکی نەهاتە دان');
                     return;
                 }
             }
@@ -976,15 +1129,15 @@
                 if (error) {
                     console.error('Error updating browser notifications:', error);
                     toggle.classList.toggle('active'); // Revert on error
-                    showNotification('هەڵەیەک ڕوویدا');
+                    showNotification('خەلەتییەک چێبوو');
                     return;
                 }
 
-                showNotification(willBeActive ? 'بیرئینانێن گەڕۆکێ چالاککران' : 'بیرئینانێن گەڕۆکێ ناچالاککران');
+                showNotification(willBeActive ? 'بیرهاتنێن گەڕۆکی هاتنە چالاککرن' : 'بیرهاتنێن گەڕۆکی هاتنە نەچالاککرن');
             } catch (err) {
                 console.error('Error toggling browser notifications:', err);
                 toggle.classList.toggle('active'); // Revert on error
-                showNotification('هەڵەیەک ڕوویدا');
+                showNotification('خەلەتییەک چێبوو');
             }
         }
 
@@ -998,6 +1151,90 @@
                     console.log('❌ Service Worker registration failed:', error);
                 });
         }
+    </script>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-main">
+                <!-- Brand Section -->
+                <div class="footer-brand">
+                    <div class="footer-brand-header">
+                        <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image">
+                        <h2 class="footer-brand-name">تەفسیر کورد</h2>
+                    </div>
+                    <p class="footer-brand-tagline">
+                        پلاتفۆرمەکا ئارام بۆ خواندنێ، گەڕیان و رامان ل سەر قورئانا پیرۆز ب زمانێ کوردی (بادینی). قورئان بگەهیتە دەستێ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
+                    </p>
+                    <div class="footer-social-icons">
+                        <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://www.youtube.com/@tefsirkurd" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="https://t.me/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                            <i class="fab fa-telegram"></i>
+                        </a>
+                        <a href="https://www.pinterest.com/tafsirkurd/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest">
+                            <i class="fab fa-pinterest"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Navigate Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title">گەڕیان</h3>
+                    <div class="footer-links">
+                        <a href="/profile" class="footer-link">پرۆفایل</a>
+                        <a href="/goals" class="footer-link">ئارمانج</a>
+                        <a href="/bookmarks" class="footer-link">نیشانەکری</a>
+                        <a href="/settings" class="footer-link">رێکخستن</a>
+                    </div>
+                </div>
+
+                <!-- Resources Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title">رۆژپەڕێن دی</h3>
+                    <div class="footer-links">
+                        <a href="/" class="footer-link">مالپەڕێ سەرەکی</a>
+                        <a href="/quran" class="footer-link">قورئانا پیرۆز</a>
+                        <a href="/#features" class="footer-link">تایبەتمەندی</a>
+                        <a href="/#about" class="footer-link">دەربارەی مە</a>
+                    </div>
+                </div>
+
+                <!-- Connect Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title">پەیوەندی</h3>
+                    <div class="footer-links">
+                        <p class="footer-contact-text">ئەگەر تە پرسیارەک یان پێشنیارەک هەبیت، پەیوەندییێ ب مە بکە و ب زووترین دەم دێ بەرسڤا تە هێتە دان!</p>
+                        <a href="mailto:info@tafsirkurd.com" class="footer-link">
+                            <i class="fas fa-envelope"></i> info@tafsirkurd.com
+                        </a>
+                        <a href="/#contact" class="footer-link">
+                            <i class="fas fa-paper-plane"></i> فۆرمێ پڕ بکە
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <p class="footer-copyright">
+                    &copy; <span id="footer-year"></span> تەفسیر کورد. هەمی ماف پاراستی نە. خودایێ مەزن بەرەکەتێ بێخیتە هەول و ماندبوونا مە.
+                </p>
+                <div class="footer-meta-links">
+                    <a href="/privacy-policy" class="footer-meta-link">پاراستنا تایبەتمەندیێ</a>
+                    <a href="/terms-and-conditions" class="footer-meta-link">مەرج و رێسایان</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Set current year
+        document.getElementById('footer-year').textContent = new Date().getFullYear();
     </script>
 </body>
 </html>

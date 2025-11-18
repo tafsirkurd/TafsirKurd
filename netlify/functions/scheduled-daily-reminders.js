@@ -1,5 +1,5 @@
-// Scheduled function to send daily Quran reminders via email
-// Runs daily at 8 PM Iraq time (17:00 UTC)
+// Scheduled function to send weekly Quran reminders via email
+// Runs every Friday at 8 PM Iraq time (17:00 UTC)
 // Environment variable BREVO_API_KEY configured in Netlify
 
 const { createClient } = require('@supabase/supabase-js');
@@ -10,7 +10,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const BREVO_API_KEY = process.env.BREVO_API_KEY || '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';
 
 exports.handler = async (event, context) => {
-    console.log('🕐 Running daily reminder job...');
+    console.log('🕐 Running weekly reminder job (Friday)...');
 
     try {
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -103,11 +103,16 @@ async function sendDailyReminderEmail(email, userName, streak, dayCount) {
     const messages = [
         `خشتەیا تە گەش و پر رۆناهی یە — نەئێخە. ئەڤرۆ بتنێ ئایەتەکێ بخوینە`,
         `بیرئینانە: تەنانەت ئایەتەکێ تە نزیک دکەت ژ خودێ. ئێستا بەردەوام بە`,
-        `بەردەوامیی عیبادەتە — قورئانا خوە ڤەکە و پێشڤەچوونا خوە بەردەوام بکە`
+        `بەردەوامیی عیبادەتە — قورئانا خوە ڤەکە و پێشڤەچوونا خوە بەردەوام بکە`,
+        `هەفتەیەکا نوێ، هەولێکا نوێ — ئایەتەک یان دوو بخوینە و بەرکەتدار بە`,
+        `قورئان چارەسەرا دڵ و گیانە — هێشتا نەچوی دەر، دەستپێک و بخوینە`
     ];
     const message = messages[Math.floor(Math.random() * messages.length)];
 
-    const htmlContent = getEmailTemplate(message, userName, streak, dayCount);
+    const emojis = ['🌙', '📖', '✨', '🕌', '💫', '🌟', '🌿', '💚', '☪️', '🤲'];
+    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+    const htmlContent = getEmailTemplate(message, userName, streak, dayCount, randomEmoji);
 
     const emailData = {
         sender: {
@@ -120,14 +125,14 @@ async function sendDailyReminderEmail(email, userName, streak, dayCount) {
                 name: userName
             }
         ],
-        subject: "بیرئینانا خواندنا قورئانێ 🌙",
+        subject: `بیرئینانا هەفتانە ${randomEmoji}`,
         htmlContent: htmlContent
     };
 
     return sendBrevoEmail(emailData);
 }
 
-function getEmailTemplate(message, userName, streak, dayCount) {
+function getEmailTemplate(message, userName, streak, dayCount, emoji) {
     const streakSection = streak > 0
         ? `<p style="text-align:center;font-size:16px;color:#666;font-family:'IBM Plex Sans Arabic',-apple-system,sans-serif;margin:20px 0;">تو د رۆژا <strong style="color:#000000;font-size:24px;font-family:'IBM Plex Sans Arabic',-apple-system,sans-serif;">${dayCount}</strong> یێ دا یێ ل سەر رێکا خوە یا قورئانێ</p>`
         : '';
@@ -137,7 +142,7 @@ function getEmailTemplate(message, userName, streak, dayCount) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>بیرئینانا رۆژانە</title>
+    <title>بیرئینانا هەفتانە</title>
 </head>
 <body style="margin:0;padding:0;font-family:'IBM Plex Sans Arabic',sans-serif;background:#fafafa">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -148,8 +153,8 @@ function getEmailTemplate(message, userName, streak, dayCount) {
 <div style="height:2px;background:linear-gradient(90deg,transparent,#000000,transparent);width:100px;margin:0 auto"></div>
 </td></tr>
 <tr><td style="padding:0 20px;text-align:center">
-<div style="font-size:42px;margin:15px 0">🌙</div>
-<h2 style="margin:10px 0 20px;font-size:20px;font-weight:600;color:#333;font-family:'IBM Plex Sans Arabic',sans-serif">بیرئینانا رۆژانە</h2>
+<div style="font-size:42px;margin:15px 0">${emoji}</div>
+<h2 style="margin:10px 0 20px;font-size:20px;font-weight:600;color:#333;font-family:'IBM Plex Sans Arabic',sans-serif">بیرئینانا هەفتانە</h2>
 <p style="margin:0 0 20px;font-size:17px;line-height:1.6;color:#555;font-family:'IBM Plex Sans Arabic',sans-serif">${message}</p>
 ${streakSection}
 </td></tr>

@@ -1,28 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run build:*)",
+      "Bash(for file in profile.html bookmarks.html goals.html reading-goal.html)",
+      "Bash(do grep -n \"opacity: 0;\" \"$file\")",
+      "Bash(node scripts/extract-kurdish-text.js:*)",
+      "Bash(node:*)",
+      "Bash(python -m http.server:*)",
+      "Bash(rm:*)",
       "Bash(cat:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(npm run deploy:prod:*)",
-      "Bash(curl -X POST \"https://api.telegram.org/bot8546537386:AAHVo4BPadrtO2uKsIALdwQ9abB_M3x8ENE/setWebhook\" -H \"Content-Type: application/json\" -d \"{\"\"url\"\": \"\"https://tafsirkurd.com/.netlify/functions/telegram-webhook\"\"}\")",
-      "Bash(curl \"https://api.telegram.org/bot8546537386:AAHVo4BPadrtO2uKsIALdwQ9abB_M3x8ENE/getWebhookInfo\")",
-      "Bash(curl -X POST \"https://tafsirkurd.com/.netlify/functions/telegram-webhook\" -H \"Content-Type: application/json\" -d '{\"\"message\"\":{\"\"chat\"\":{\"\"id\"\":5737599664},\"\"text\"\":\"\"/start\"\"}}')",
-      "Bash(curl -X POST \"https://api.telegram.org/bot8546537386:AAHVo4BPadrtO2uKsIALdwQ9abB_M3x8ENE/deleteWebhook\")",
-      "Bash(curl -X POST \"https://api.telegram.org/bot8546537386:AAHVo4BPadrtO2uKsIALdwQ9abB_M3x8ENE/setWebhook\" -H \"Content-Type: application/json\" -d '{\"\"url\"\": \"\"https://tafsirkurd.com/.netlify/functions/telegram-webhook\"\"}')",
-      "Bash(curl -X POST \"https://api.telegram.org/bot8546537386:AAHVo4BPadrtO2uKsIALdwQ9abB_M3x8ENE/sendMessage\" -H \"Content-Type: application/json\" -d '{\"\"chat_id\"\": 5737599664, \"\"text\"\": \"\"🤖 Bot is now active!\\n\\nTry these commands:\\n/start - Welcome message\\n/help - Show help\\n/status - Check status\\n\\nYour notifications are ready!\"\", \"\"parse_mode\"\": \"\"Markdown\"\"}')",
-      "Bash(curl -X POST \"https://api.telegram.org/bot8546537386:AAHVo4BPadrtO2uKsIALdwQ9abB_M3x8ENE/deleteMyCommands\")",
-      "Bash(node check-users.js:*)",
-      "Bash(node migrate-users.js:*)",
-      "Bash(node reset-anonymous-users.js:*)",
-      "Bash(npm run build:prod:*)",
-      "Bash(npm run:*)",
-      "Bash(dir:*)",
-      "WebFetch(domain:gravatar.com)",
-      "Bash(certutil:*)",
-      "Bash(netlify deploy:*)"
+      "Bash(git commit -m \"$(cat <<''EOF''\nTranslate all alerts and notifications to Badini Kurdish\n\n- Updated all notifications from Sorani to proper Badini dialect\n- Fixed alerts in index.html, login.html, settings.html, goals.html, reading-goal.html\n- Improved mobile/desktop layout for reading-goal page\n- Fixed dark mode button styling in complete-signup.html\n- Updated time display from Sorani to Badini (لەمەوپێش → بەرێ)\n- Cleaned up root directory (removed temp files and old documentation)\n- Added translation scripts for Kurdish text management\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

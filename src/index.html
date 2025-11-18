@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ku">
 <head>
+  <script src="/utils/theme-loader.js"></script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -137,9 +138,12 @@ window.addEventListener('error', function(e) {
 
 <nav>
     <div class="nav-container">
-        <a class="nav-logo" href="#" id="homeLink">
-            <img src="assets/images/logo.png" alt="Tafsir Kurd logo" class="logo-image">
-        </a>
+        <div class="nav-logo">
+            <a href="#" id="homeLink" style="display: flex; align-items: center;">
+                <img src="assets/images/logo.png" alt="Tafsir Kurd logo" class="logo-image">
+            </a>
+            <div class="header-title">تەفسیر کورد</div>
+        </div>
 
         <div class="hamburger-menu" id="hamburgerMenu">
             <span></span>
@@ -189,7 +193,7 @@ window.addEventListener('error', function(e) {
 <header id="headerBg">
     <div class="header-bg-layer" id="headerBgLayer"></div>
     <div class="hero-inner">
-        <h1 class="hero-title">تەفسیر کورد</h1>
+        <img src="assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-title hero-logo-static" style="height: 150px; width: auto; filter: brightness(0) invert(1);">
         <p class="hero-sub">بەردەستکرنا شرۆڤەکرنەکا ڕوون و ڕەسەن یا قورئانا پیرۆز ب زمانێ کوردی. ب شێوەیەکێ ڕوون و ب دلسۆزی و ڕێزگرتن، ئەم وانەیان ب شێوازێ ڤیدیویێن کورت و ئاسۆیی و هەروەسا تەفسیرا تەمام دروست دکەین دا کو پەیاما قورئانێ بگەهیتە هەمی ماڵان.</p>
 
         <div class="tab-navigation">
@@ -517,7 +521,7 @@ window.addEventListener('error', function(e) {
                     <h2 class="footer-brand-name">تەفسیر کورد</h2>
                 </div>
                 <p class="footer-brand-tagline">
-                    پلاتفۆرمێکا بڤیسەر و ئارامە بۆ خواندنا، گوهدارکرنا، گەڕانا و رامانێ لسەر قورئانا پیرۆز ب زمانێ کوردی (سۆرانی). قورئان بهێتە دەستێ هەرکەسێ، هەرکو و هەردەم.
+                    پلاتفۆرمەکا ئارام بۆ خواندنێ، گەڕیان و رامان ل سەر قورئانا پیرۆز ب زمانێ کوردی (بادینی). قورئان بگەهیتە دەستێ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
                 </p>
                 <div class="footer-social-icons">
                     <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
@@ -588,6 +592,9 @@ window.addEventListener('error', function(e) {
 </div>
 
 <script>
+// Global Supabase client
+let supabase = null;
+
 const backgroundImages = [
     'https://images.unsplash.com/photo-1649297711811-5cfa2774cbc7?q=80&w=1073&auto=format&fit=crop',
     'https://images.unsplash.com/photo-1644461561916-2acd569906b0?q=80&w=1073&auto=format&fit=crop',
@@ -1095,7 +1102,7 @@ function setupContactForm() {
         const submitButton = this.querySelector('button[type="submit"]');
 
         submitButton.disabled = true;
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> هنارتن...';
 
         try {
             const formData = new FormData(this);
@@ -1103,6 +1110,11 @@ function setupContactForm() {
             const email = formData.get('email');
             const subject = formData.get('subject');
             const message = formData.get('message');
+
+            // Check if Supabase is available
+            if (!supabase) {
+                throw new Error('Database connection not available');
+            }
 
             // Save to Supabase
             const { error } = await supabase
@@ -1145,12 +1157,12 @@ function setupContactForm() {
 
         } catch (error) {
             console.error('Error submitting message:', error);
-            formMessage.textContent = 'هەڵەیەک ڕوویدا. تکایە دووبارە هەوڵ بدەرەوە.';
+            formMessage.textContent = 'ئاریشەک چێبوو. دووبارە هەول بدە.';
             formMessage.className = 'form-message error';
             formMessage.style.display = 'block';
         } finally {
             submitButton.disabled = false;
-            submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+            submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> هنارتنا نامەیێ';
         }
     });
 }
@@ -1181,7 +1193,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const yearElement = document.getElementById('year');
     if (yearElement) {
-        yearElement.textContent = new Date().getFullYear();
+        yearElement.textContent = window.KurdishNumbers.toKurdish(new Date().getFullYear());
     }
 
     try {

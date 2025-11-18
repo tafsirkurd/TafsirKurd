@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ku">
 <head>
+    <script src="/utils/theme-loader.js"></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="description" content="Quran - Read the Holy Quran with Kurdish translations - Tafsir Kurd">
@@ -9,7 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
-    <title>قوورئان - تەفسیر کوورد</title>
+    <title>قورئان - تەفسیر کورد</title>
 
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-WVQC0MKLFN"></script>
@@ -157,7 +158,8 @@
             align-items: center;
             justify-content: center;
             z-index: 10000;
-            transition: opacity 1s ease, visibility 1s ease;
+            opacity: 0;
+            transition: opacity 0.3s ease;
             overflow: hidden;
         }
 
@@ -257,13 +259,16 @@
 
         .main-content {
             opacity: 0;
-            transition: opacity 0.6s ease;
+            visibility: hidden;
             margin-left: 0;
-            transition: margin-left var(--transition), opacity 0.6s ease;
+            transition: margin-left 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease, visibility 0s linear 0.6s;
+            will-change: margin-left;
         }
 
         .main-content.loaded {
             opacity: 1;
+            visibility: visible;
+            transition: margin-left 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease, visibility 0s linear 0s;
         }
 
         .main-content.shifted {
@@ -466,8 +471,9 @@
             flex-direction: column;
             z-index: 999;
             transform: translateX(-100%);
-            transition: transform var(--transition);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: var(--shadow-lg);
+            will-change: transform;
         }
 
         .sidebar.visible {
@@ -529,6 +535,47 @@
             font-size: 1.3rem;
             font-weight: 700;
             color: var(--primary);
+        }
+
+        .sidebar-tabs {
+            display: flex;
+            gap: 8px;
+            margin: 15px 0 10px 0;
+            padding: 0;
+        }
+
+        .sidebar-tab {
+            flex: 1;
+            padding: 10px 15px;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        .sidebar-tab i {
+            font-size: 1rem;
+        }
+
+        .sidebar-tab:hover {
+            background: var(--border-light);
+            border-color: var(--primary);
+            color: var(--text);
+        }
+
+        .sidebar-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: var(--accent);
         }
 
         .search-container-sidebar {
@@ -648,6 +695,10 @@
             text-overflow: ellipsis;
         }
 
+        .surah-item-sidebar.active .surah-name-sidebar {
+            color: var(--accent);
+        }
+
         .surah-item-sidebar.active .surah-arabic-sidebar {
             color: var(--accent);
         }
@@ -678,6 +729,12 @@
             background: var(--primary);
             color: var(--accent);
             transform: translateX(3px);
+        }
+
+        .ayah-item-sidebar.active {
+            background: var(--primary);
+            color: var(--accent);
+            font-weight: 600;
         }
 
         .sidebar-toggle {
@@ -745,21 +802,11 @@
             align-items: center;
             gap: 15px;
             cursor: pointer;
-            transition: opacity var(--transition);
-        }
-
-        .header-logo-section:hover {
-            opacity: 0.8;
-        }
-
-        .header-logo-section:hover .header-logo-img {
-            transform: rotate(10deg) scale(1.1);
         }
 
         .header-logo-img {
             width: 55px;
             height: 55px;
-            transition: transform var(--transition);
             object-fit: contain;
         }
 
@@ -1688,7 +1735,7 @@
         .sticky-surah-name {
             font-size: 1rem;
             font-weight: 600;
-            color: var(--text-primary);
+            color: var(--text);
             white-space: nowrap;
         }
 
@@ -2444,7 +2491,6 @@
             .header-logo-img {
                 width: 40px;
                 height: 40px;
-                object-fit: contain;
             }
 
             .header-btn {
@@ -2778,9 +2824,26 @@
         .hidden {
             display: none;
         }
+
+        /* Force content to be hidden on initial load */
+        .main-content {
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+
+        /* Only show content when loaded class is added */
+        .main-content.loaded {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        /* Ensure preloader is always on top */
+        .preloader {
+            z-index: 99999 !important;
+        }
     </style>
 </head>
-<body>
+<body class="no-scroll">
     <!-- Instant CSS to prevent home page flash -->
     <script>
         // This must run FIRST, before any DOM elements render
@@ -2809,8 +2872,8 @@
         </div>
         <div class="preloader-content">
             <img src="assets/images/logo.png" alt="Tafsir Kurd" class="preloader-logo logo-image">
-            <h1 class="preloader-title">تەفسیر کوورد</h1>
-            <p class="preloader-subtitle">چاوەڕێبە...</p>
+            <h1 class="preloader-title">تەفسیر کورد</h1>
+            <p class="preloader-subtitle">چاڤەرێ بە...</p>
             <div class="preloader-dots">
                 <div class="preloader-dot"></div>
                 <div class="preloader-dot"></div>
@@ -2824,9 +2887,9 @@
         // This runs immediately, before page render, to prevent flash
         (function() {
             const returningFromSettings = sessionStorage.getItem('returnToQuranReader');
-            const hasSeenPreloader = sessionStorage.getItem('hasSeenPreloader');
 
-            if (returningFromSettings || hasSeenPreloader) {
+            // Only skip preloader if returning from settings, not for regular refreshes
+            if (returningFromSettings) {
                 const preloader = document.getElementById('preloader');
                 const mainContent = document.getElementById('mainContent');
 
@@ -2845,7 +2908,7 @@
     <div class="settings-modal" id="settingsModal">
         <div class="settings-content">
             <div class="settings-header">
-                <h2 class="settings-title">ڕێکخستنەکان</h2>
+                <h2 class="settings-title">رێکخستن</h2>
                 <button class="settings-close" onclick="closeSettings()">
                     <i class="fas fa-times"></i>
                 </button>
@@ -2855,10 +2918,10 @@
             <div class="settings-section">
                 <h3 class="settings-section-title">
                     <i class="fas fa-palette"></i>
-                    ڕوکار
+                    رۆکار
                 </h3>
                 <div class="setting-item">
-                    <span class="setting-label">دۆخی تاریکی</span>
+                    <span class="setting-label">رەوشا تاریک</span>
                     <div class="setting-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
                         <div class="setting-toggle-knob"></div>
                     </div>
@@ -2869,14 +2932,14 @@
             <div class="settings-section">
                 <h3 class="settings-section-title">
                     <i class="fas fa-book-open"></i>
-                    ڕێکخستنی خوێندنەوە
+                    رێکخستنا خواندنێ
                 </h3>
 
                 <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <span class="setting-label">جۆری فۆنتی عەرەبی</span>
+                        <span class="setting-label">جۆرێ فۆنتا عەرەبی</span>
                         <select class="setting-select" id="arabicFontSelect" onchange="changeArabicFont()">
-                            <option value="KFGQPC Hafs">KFGQPC Hafs (هەفس)</option>
+                            <option value="KFGQPC Hafs">KFGQPC Hafs (حەفس)</option>
                             <option value="Scheherazade New">Scheherazade New</option>
                             <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
                         </select>
@@ -2888,7 +2951,7 @@
 
                 <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <span class="setting-label">قەبارەی فۆنتی عەرەبی</span>
+                        <span class="setting-label">قەبارەیا فۆنتا عەرەبی</span>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <input type="range" class="setting-slider" id="arabicSizeSlider"
                                    min="1.5" max="3.5" step="0.1" value="2.2"
@@ -2900,21 +2963,21 @@
 
                 <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <span class="setting-label">جۆری فۆنتی تەفسیر</span>
+                        <span class="setting-label">جۆرێ فۆنتا تەفسیرێ</span>
                         <select class="setting-select" id="tafsirFontSelect" onchange="changeTafsirFont()">
                             <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
                             <option value="Scheherazade New">Scheherazade New</option>
-                            <option value="KFGQPC Hafs">KFGQPC Hafs (هەفس)</option>
+                            <option value="KFGQPC Hafs">KFGQPC Hafs (حەفس)</option>
                         </select>
                     </div>
                     <div id="tafsirPreview" style="width: 100%; padding: 15px; background: var(--bg); border-radius: 8px; text-align: right; font-size: 1.1rem; color: var(--text); border: 2px solid var(--border); direction: rtl;">
-                        بە ناوی خوای بە بەزەیی و میهرەبان، ستایشی جێگای ستایش خوایە کە پەروەردگاری گشت دونیایە.
+                        ب ناڤێ خودایێ دلۆڤان و دلوڤین، هەمی سوپاس و ستایش بۆ خودایێ مەزن یێ کو خودانێ هەمی جیهان و گەردوونێ یە.
                     </div>
                 </div>
 
                 <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <span class="setting-label">قەبارەی فۆنتی تەفسیر</span>
+                        <span class="setting-label">قەبارەیا فۆنتا تەفسیرێ</span>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <input type="range" class="setting-slider" id="tafsirSizeSlider"
                                    min="0.9" max="1.8" step="0.05" value="1.1"
@@ -2925,14 +2988,14 @@
                 </div>
 
                 <div class="setting-item">
-                    <span class="setting-label">پیشاندانی تەفسیر</span>
+                    <span class="setting-label">نیشاندان و ڤەدیتنا تەفسیرێ</span>
                     <div class="setting-toggle active" id="tafsirToggle">
                         <div class="setting-toggle-knob"></div>
                     </div>
                 </div>
 
                 <div class="setting-item">
-                    <span class="setting-label">خولاندنی خۆکار</span>
+                    <span class="setting-label">زڤراندنا خۆکار</span>
                     <div class="setting-toggle" id="autoScrollToggle">
                         <div class="setting-toggle-knob"></div>
                     </div>
@@ -2942,7 +3005,7 @@
             <!-- Reset Settings -->
             <div class="settings-section">
                 <button onclick="resetSettings()" style="width: 100%; padding: 12px; background: transparent; color: #e74c3c; border: 2px solid #e74c3c; border-radius: 10px; font-weight: 600; cursor: pointer; font-family: 'IBM Plex Sans Arabic', sans-serif;">
-                    <i class="fas fa-redo"></i> گەڕاندنەوەی ڕێکخستنەکان
+                    <i class="fas fa-redo"></i> گەڕیاندنڤەیا رێکخستنێ
                 </button>
             </div>
         </div>
@@ -2951,22 +3014,22 @@
     <!-- Copy Modal -->
     <div class="copy-modal" id="copyModal">
         <div class="copy-modal-content">
-            <h3 class="copy-modal-title">کۆپیکردنی ئایەت</h3>
+            <h3 class="copy-modal-title">کۆپیکرنا ئایەتێ</h3>
             <div class="copy-options">
                 <button class="copy-option-btn" onclick="copyAyahWithTafsir()">
                     <i class="fas fa-copy"></i>
-                    <span>کۆپی لەگەڵ تەفسیر</span>
+                    <span>کۆپی دگەل تەفسیرێ</span>
                 </button>
                 <button class="copy-option-btn" onclick="copyAyahWithoutTafsir()">
                     <i class="fas fa-file-alt"></i>
-                    <span>کۆپی بەبێ تەفسیر</span>
+                    <span>کۆپی بێ تەفسیر</span>
                 </button>
                 <button class="copy-option-btn" onclick="copyJustTafsir()">
                     <i class="fas fa-language"></i>
-                    <span>کۆپی تەنها تەفسیر</span>
+                    <span>کۆپی ب تنێ تەفسیر</span>
                 </button>
             </div>
-            <button class="copy-cancel-btn" onclick="closeCopyModal()">پاشگەزبوونەوە</button>
+            <button class="copy-cancel-btn" onclick="closeCopyModal()">زڤڕین</button>
         </div>
     </div>
 
@@ -2976,16 +3039,16 @@
             <div class="login-required-icon">
                 <i class="fas fa-lock"></i>
             </div>
-            <h2 class="login-required-title">چوونەژووروەوە پێویستە</h2>
+            <h2 class="login-required-title">چوونە ژوورڤە پێتڤییە</h2>
             <p class="login-required-text">
-                بۆ بەکارهێنانی ئەم تایبەتمەندییە، تکایە چوونەژووروەوە بکە یان هەژماری نوێ دروست بکە.
+                ژ بۆ بکارئینانا ڤێ تایبەتمەندییێ، تکایە چوونە ژوورڤە بکە یان هەژمارەکا نوو دروست بکە.
             </p>
             <div class="login-required-buttons">
                 <button class="login-required-btn" onclick="goToLogin()">
-                    <i class="fas fa-sign-in-alt"></i> چوونەژووروەوە
+                    <i class="fas fa-sign-in-alt"></i> چوونە ژوورڤە
                 </button>
                 <button class="login-required-btn secondary" onclick="closeLoginRequired()">
-                    پاشگەزبوونەوە
+                    زڤڕین
                 </button>
             </div>
         </div>
@@ -2996,16 +3059,30 @@
         <div class="sidebar-header">
             <div class="sidebar-logo" onclick="showHomePage()">
                 <img src="assets/images/logo.png" alt="Tafsir Kurd" class="logo-image">
-                <div class="sidebar-title">قوورئان</div>
+                <div class="sidebar-title">قورئان</div>
             </div>
             <button class="sidebar-close-btn" onclick="closeSidebar()" title="داخستن">
                 <i class="fas fa-times"></i>
             </button>
+
+            <!-- Tabs for Surah and Juz -->
+            <div class="sidebar-tabs">
+                <button class="sidebar-tab active" onclick="switchSidebarTab('surah')" id="surahTab">
+                    <i class="fas fa-book"></i>
+                    <span>سوڕەت</span>
+                </button>
+                <button class="sidebar-tab" onclick="switchSidebarTab('juz')" id="juzTab">
+                    <i class="fas fa-layer-group"></i>
+                    <span>جوز</span>
+                </button>
+            </div>
+
             <div class="search-container-sidebar">
-                <input type="text" class="search-input-sidebar" placeholder="گەڕان: ٢:١٢٧ یان ناوی سوورە..." id="sidebarSearch">
+                <input type="text" class="search-input-sidebar" placeholder="لێگەریانا قورئانێ…" id="sidebarSearch">
             </div>
         </div>
         <div class="surah-list-sidebar" id="surahListSidebar"></div>
+        <div class="surah-list-sidebar" id="juzListSidebar" style="display: none;"></div>
     </div>
 
     <!-- Sidebar Toggle Button -->
@@ -3016,7 +3093,7 @@
     <!-- Feather Overlay -->
     <div class="feather-overlay" id="featherOverlay">
         <div class="feather-overlay-header">
-            <h2 class="feather-overlay-title">مێنیۆی بەکارهێنەر</h2>
+            <h2 class="feather-overlay-title">مێنیویا بکارئینەری</h2>
             <button class="feather-close-btn" onclick="closeFeatherOverlay()">
                 <i class="fas fa-times"></i>
             </button>
@@ -3027,7 +3104,7 @@
             <div class="profile-section" onclick="window.location.href='/profile'">
                 <img src="" alt="Profile" class="profile-avatar-large" id="profileAvatar">
                 <div class="profile-info">
-                    <div class="profile-name" id="profileName">ناو</div>
+                    <div class="profile-name" id="profileName">ناڤ</div>
                     <div class="profile-email" id="profileEmail">email@gmail.com</div>
                 </div>
             </div>
@@ -3042,19 +3119,19 @@
                 </a>
                 <a href="/bookmarks" class="nav-menu-item">
                     <i class="fas fa-bookmark"></i>
-                    <span>نیشانەکراوەکان</span>
+                    <span>نیشانەکری</span>
                 </a>
                 <a href="/goals" class="nav-menu-item">
                     <i class="fas fa-bullseye"></i>
-                    <span>ئامانجەکان</span>
+                    <span>ئارمانج</span>
                 </a>
                 <a href="/settings" class="nav-menu-item" onclick="saveStateBeforeSettings(event)">
                     <i class="fas fa-cog"></i>
-                    <span>ڕێکخستنەکان</span>
+                    <span>رێکخستن</span>
                 </a>
                 <div class="nav-menu-item" onclick="signOut()">
                     <i class="fas fa-sign-out-alt"></i>
-                    <span>دەرچوون</span>
+                    <span>دەرکەفتن</span>
                 </div>
             </div>
         </div>
@@ -3063,28 +3140,28 @@
         <div class="feather-section">
             <h3 class="feather-section-title">
                 <i class="fas fa-chart-line"></i>
-                پێشکەوتن
+                پێشکەفتن
             </h3>
             <div class="stat-grid">
                 <div class="stat-card">
                     <div class="stat-value" id="statDays">0</div>
-                    <div class="stat-label">ڕۆژ چالاک</div>
+                    <div class="stat-label">رۆژا چالاک</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statSurahs">0</div>
-                    <div class="stat-label">سوورە تەواو</div>
+                    <div class="stat-label">سوورەت تەمام</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statAyahs">0</div>
-                    <div class="stat-label">ئایەت خوێندراوە</div>
+                    <div class="stat-label">ئایەتا هاتیە خواندن</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statStreak">0</div>
-                    <div class="stat-label">🔥 بەردەوامی</div>
+                    <div class="stat-label">🔥 بەردەوامبە</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statTime">0</div>
-                    <div class="stat-label">خولەک خوێندنەوە</div>
+                    <div class="stat-label">خولەکێن خواندنێ</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statLevel">1</div>
@@ -3095,7 +3172,7 @@
             <!-- Reset Reading Progress Button -->
             <button onclick="resetReadingProgress()" style="width: 100%; margin-top: 20px; padding: 14px 20px; background: var(--bg); border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif; font-size: 1rem; font-weight: 600; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 10px;">
                 <i class="fas fa-redo"></i>
-                <span>دەستپێکردنەوە لە سەرەتاوە</span>
+                <span>دەستپێکرن ڤە ژ دەستپێکێ</span>
             </button>
         </div>
     </div>
@@ -3105,28 +3182,28 @@
         <i class="fas fa-arrow-up"></i>
     </div>
 
-    <div class="main-content" id="mainContent">
+    <div class="main-content" id="mainContent" style="opacity: 0; visibility: hidden;">
 
         <!-- Professional Header -->
         <header class="professional-header">
             <div class="header-container">
                 <div class="header-logo-section" onclick="showHomePage()">
                     <img src="assets/images/logo.png" alt="Logo" class="header-logo-img logo-image">
-                    <div class="header-title">تەفسیر کوورد</div>
+                    <div class="header-title">تەفسیر کورد</div>
                 </div>
                 <nav class="header-nav">
                     <a href="/" class="header-btn outline">
                         <i class="fas fa-globe"></i>
-                        <span>ماڵپەڕی سەرەکی</span>
+                        <span>مالپەڕێ سەرەکی</span>
                     </a>
                     <a href="/settings" class="header-btn outline" onclick="saveStateBeforeSettings(event)">
                         <i class="fas fa-cog"></i>
-                        <span>ڕێکخستنەکان</span>
+                        <span>رێکخستن</span>
                     </a>
                     <div id="authSection">
                         <button class="header-btn" onclick="goToLogin()">
                             <i class="fas fa-user"></i>
-                            <span>چوونەژووروەوە</span>
+                            <span>چوونە ژوورڤە</span>
                         </button>
                     </div>
                 </nav>
@@ -3137,11 +3214,12 @@
         <div class="home-page" id="homePage">
             <!-- Hero Section -->
             <section class="hero-section">
+                <img src="assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-logo-static" style="height: 150px; width: auto; margin-bottom: 30px; filter: brightness(0) invert(1);">
                 <div class="hero-search">
                     <input
                         type="text"
                         class="hero-search-input"
-                        placeholder="گەڕان لە قورئان..."
+                        placeholder="لێگەریانا قورئانێ…"
                         id="heroSearchInput"
                     >
                     <i class="fas fa-search hero-search-icon"></i>
@@ -3153,7 +3231,7 @@
                         <div style="background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: var(--shadow-lg); border: 2px solid var(--border);">
                             <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
                                 <i class="fas fa-fire"></i>
-                                <span>گەڕانە بەناوبانگەکان</span>
+                                <span>گەڕیانێن بناڤودەنگ</span>
                             </div>
 
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
@@ -3162,7 +3240,7 @@
                                     <i class="fas fa-bookmark" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">67. Al-Mulk</div>
-                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەی المُلک</div>
+                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەتا المُلک</div>
                                     </div>
                                 </button>
 
@@ -3170,7 +3248,7 @@
                                     <i class="fas fa-bookmark" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">18. Al-Kahf</div>
-                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەی الکهف</div>
+                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەتا الکهف</div>
                                     </div>
                                 </button>
 
@@ -3178,7 +3256,7 @@
                                     <i class="fas fa-bookmark" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">36. Ya-Sin</div>
-                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەی یسین</div>
+                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەتا یسین</div>
                                     </div>
                                 </button>
 
@@ -3202,7 +3280,7 @@
                                     <i class="fas fa-heart" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">55. Ar-Rahman</div>
-                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەی الرحمٰن</div>
+                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەتا الرحمٰن</div>
                                     </div>
                                 </button>
                             </div>
@@ -3212,15 +3290,15 @@
                 <div class="hero-actions">
                     <button class="hero-chip" id="heroSidebarBtn" type="button">
                         <i class="fas fa-list"></i>
-                        <span>لیستی سوورەکان</span>
+                        <span>لیستەیا سوورەتان</span>
                     </button>
                     <button class="hero-chip" id="heroContinueBtn" type="button">
                         <i class="fas fa-play-circle"></i>
-                        <span>بەردەوامبە لە خوێندنەوە</span>
+                        <span>بەردەوام بە د خواندنێ</span>
                     </button>
                     <button class="hero-chip" id="heroRandomBtn" type="button">
                         <i class="fas fa-star"></i>
-                        <span>ئایەتی ڕۆژانە</span>
+                        <span>ئایەتا رۆژانە</span>
                     </button>
                 </div>
             </section>
@@ -3231,7 +3309,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
                         <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 10px;">
                             <i class="fas fa-star"></i>
-                            ئایەتی ڕۆژانە
+                            ئایەتا رۆژانە
                         </div>
                         <div style="background: var(--bg); padding: 10px 20px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-clock"></i>
@@ -3249,7 +3327,7 @@
                         <div id="randomAyahRef" style="font-weight: 600; color: var(--primary); font-size: 1.1rem;"></div>
                         <button onclick="gotoRandomAyah()" style="padding: 12px 24px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; cursor: pointer; font-weight: 600; transition: all var(--transition); display: flex; align-items: center; gap: 10px; font-family: 'IBM Plex Sans Arabic', sans-serif;">
                             <i class="fas fa-arrow-left"></i>
-                            بڕۆ بۆ ئایەتەکە
+                            پتر ببیە
                         </button>
                     </div>
                 </div>
@@ -3263,14 +3341,14 @@
                     <div id="noGoalsCard" style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition);">
                         <h3 style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-bullseye"></i>
-                            ئامانجەکانت لە قورئان
+                            ئارمانجا تە د قورئانێدا:
                         </h3>
                         <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 25px;">
-                            شوێن کەوتنی پێشکەوتنەکەت بکە، ئامانجی تایبەتی خۆت دروست بکە، و بەردەوام بە.
+                            ل دویڤ پێشکەفتنا خۆ هەرە، ئارمانجێن تایبەت ب خۆ دیار بکە، و بەردەوام بە.
                         </p>
                         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                             <button onclick="requireLogin('goals')" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif;">
-                                <i class="fas fa-plus"></i> بینینی ئامانجەکان
+                                <i class="fas fa-plus"></i> دیتنا پێشکەفتنا تە:
                             </button>
                         </div>
                     </div>
@@ -3279,7 +3357,7 @@
                     <div id="goalsCardContainer" style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition); display: none;">
                         <h3 style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-bullseye"></i>
-                            ئامانجەکانت لە قورئان
+                            ئارمانجا تە د قورئانێدا:
                         </h3>
 
                         <!-- Streak Badge - Hidden by default until reading goal is set -->
@@ -3293,13 +3371,13 @@
                             </div>
                             <button onclick="event.stopPropagation(); requireLogin('reading-goal')" style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.3); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif; display: flex; align-items: center; gap: 6px;">
                                 <i class="fas fa-bullseye"></i>
-                                دانانا ئامانجێ
+                                دانانا ئارمانجەکێ
                             </button>
                         </div>
 
                         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                             <button onclick="requireLogin('goals')" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif;">
-                                <i class="fas fa-chart-line"></i> بینینی پێشکەوتن
+                                <i class="fas fa-chart-line"></i> دیتنا پێشکەفتنا تە:
                             </button>
                         </div>
                     </div>
@@ -3308,14 +3386,14 @@
                     <div style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition);">
                         <h3 style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-pencil-alt"></i>
-                            نیشانە و تێبینییەکانت
+                            نیشان و تێبینییێن تە:
                         </h3>
                         <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 25px;">
-                            ئایەتە دڵخوازەکانت پاشەکەوت بکە و تێبینییەکانت تۆمار بکە بە گەڕانەوەی دواتر.
+                            ئایەتێن تە یێن دلخواز پاشکەڤت بکە و تێبینییێن خۆ تۆمار بکە ب گەڕیانەکا داهاتی.
                         </p>
                         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                             <button onclick="requireLogin('bookmarks')" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif;">
-                                <i class="fas fa-bookmark"></i> کردنەوەی نیشانەکان
+                                <i class="fas fa-bookmark"></i> دیتنا نیشان و تێبینییێن تە:
                             </button>
                         </div>
                     </div>
@@ -3324,10 +3402,10 @@
                     <div style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition);">
                         <h3 style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 12px;">
                             <i class="fas fa-book-reader"></i>
-                            بەخێربێیت بۆ تەفسیری کوورد
+                            ب خێر بێی بۆ تەفسیر کورد
                         </h3>
                         <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 25px;">
-                            قورئانا پیرۆز بخوێنە بە تەفسیری سەناحی کوردی. هەموو ١١٤ سوورەکان لەگەڵ تەفسیری تەواو.
+                            قورئانا پیرۆز بخوێنە بە تەفسیری سەناحی کوردی. هەموو ١١٤ سوورەتکان لەگەڵ تەفسیری تەواو.
                         </p>
                         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                             <button onclick="scrollToSurahList()" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif;">
@@ -3342,7 +3420,7 @@
                     <div style="font-family: 'SurahName', 'Scheherazade New', serif; font-size: 20rem; text-align: center; margin: auto 0; color: var(--primary); line-height: 1;" class="no-kurdish-convert" id="continueReadingSurahName">surah001</div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px;">
                         <div style="font-size: 1.2rem; font-weight: 600; color: var(--text-muted);" id="continueReadingInfo">١. الفاتحة</div>
-                        <div style="background: var(--bg); padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.9rem;">بەردەوامبە</div>
+                        <div style="background: var(--bg); padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.9rem;">بەردەوام بە</div>
                     </div>
                 </div>
             </div>
@@ -3351,7 +3429,7 @@
             <section class="surah-list-container" id="surahListSection">
                 <h2 class="surah-list-title">
                     <i class="fas fa-book-open"></i>
-                    هەموو سوورەکانی قورئان
+                    هەمی سوڕەتێن قورئانێ
                 </h2>
 
                 <!-- Filter and Sort Controls -->
@@ -3359,7 +3437,7 @@
                     <div class="filter-group">
                         <button class="filter-btn active" data-filter="surah" onclick="changeFilter('surah')">
                             <i class="fas fa-book"></i>
-                            <span>سوورە</span>
+                            <span>سوڕەت</span>
                         </button>
                         <button class="filter-btn" data-filter="juz" onclick="changeFilter('juz')">
                             <i class="fas fa-bookmark"></i>
@@ -3367,10 +3445,10 @@
                         </button>
                     </div>
                     <div class="sort-group">
-                        <label style="font-weight: 600; color: var(--text); margin-right: 10px;">ڕیزکردن بەپێی:</label>
+                        <label style="font-weight: 600; color: var(--text); margin-right: 10px;">رێزکرن ب گۆرەی:</label>
                         <select class="sort-select" id="sortOrder" onchange="changeSortOrder()">
-                            <option value="asc">لە کەمەوە بۆ زۆر</option>
-                            <option value="desc">لە زۆرەوە بۆ کەم</option>
+                            <option value="asc">ژ کێمی بۆ زێدە</option>
+                            <option value="desc">ژ زێدەیی بۆ کێم</option>
                         </select>
                     </div>
                 </div>
@@ -3383,13 +3461,13 @@
         <div class="surah-reader-page" id="surahReaderPage">
             <button class="reader-back-btn" onclick="showHomePage()">
                 <i class="fas fa-arrow-right"></i>
-                گەڕانەوە بۆ لیست
+                گەڕیان ڤە بۆ لیستێ
             </button>
 
             <div class="reader-header">
                 <div class="surah-card-arabic no-kurdish-convert" id="readerSurahIcon" style="margin-bottom: 15px;">surah001</div>
                 <h2 class="reader-surah-name" id="readerSurahName">Al-Fatihah (الفاتحة)</h2>
-                <p class="reader-surah-info" id="readerSurahInfo">7 ئایەت</p>
+                <p class="reader-surah-info" id="readerSurahInfo">٧ ئایەت</p>
             </div>
 
             <!-- Sticky progress header -->
@@ -3417,11 +3495,11 @@
             <div class="surah-navigation">
                 <button class="nav-btn" id="prevSurahBtn" onclick="navigateSurah('prev')">
                     <i class="fas fa-arrow-right"></i>
-                    <span id="prevSurahName">سوورەی پێشوو</span>
+                    <span id="prevSurahName">سوورەتا پێشوو</span>
                 </button>
 
                 <button class="nav-btn" id="nextSurahBtn" onclick="navigateSurah('next')">
-                    <span id="nextSurahName">سوورەی دواتر</span>
+                    <span id="nextSurahName">سوورەتا دواتر</span>
                     <i class="fas fa-arrow-left"></i>
                 </button>
             </div>
@@ -3461,7 +3539,7 @@
                             <h2 class="footer-brand-name">تەفسیر کورد</h2>
                         </div>
                         <p class="footer-brand-tagline">
-                            پلاتفۆرمێکا بڤیسەر و ئارامە بۆ خواندنا، گوهدارکرنا، گەڕانا و رامانێ لسەر قورئانا پیرۆز ب زمانێ کوردی (سۆرانی). قورئان بهێتە دەستێ هەرکەسێ، هەرکو و هەردەم.
+                            پلاتفۆرمەکا ئارام بۆ خواندنێ، گەڕیان و رامان ل سەر قورئانا پیرۆز ب زمانێ کوردی (بادینی). قورئان بگەهیتە دەستێ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
                         </p>
                         <div class="footer-social-icons">
                             <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
@@ -3481,22 +3559,23 @@
 
                     <!-- Navigate Section -->
                     <div class="footer-section">
-                        <h3 class="footer-section-title">گەڕان</h3>
+                        <h3 class="footer-section-title">گەڕیان</h3>
                         <div class="footer-links">
                             <a href="/profile" class="footer-link">پرۆفایل</a>
-                            <a href="/goals" class="footer-link">ئامانجەکان</a>
-                            <a href="/bookmarks" class="footer-link">نیشانەکراوەکان</a>
-                            <a href="/settings" class="footer-link">ڕێکخستنەکان</a>
+                            <a href="/goals" class="footer-link">ئارمانج</a>
+                            <a href="/bookmarks" class="footer-link">نیشانەکری</a>
+                            <a href="/settings" class="footer-link">رێکخستن</a>
                         </div>
                     </div>
 
                     <!-- Resources Section -->
                     <div class="footer-section">
-                        <h3 class="footer-section-title">رۆژپەڕا دیکە</h3>
+                        <h3 class="footer-section-title">رۆژپەڕێن دی</h3>
                         <div class="footer-links">
-                            <a href="/" class="footer-link">ماڵپەڕی سەرەکی</a>
+                            <a href="/" class="footer-link">مالپەڕێ سەرەکی</a>
+                            <a href="/quran" class="footer-link">قورئانا پیرۆز</a>
                             <a href="/#features" class="footer-link">تایبەتمەندی</a>
-                            <a href="/#about" class="footer-link">دەربارەی ئێمە</a>
+                            <a href="/#about" class="footer-link">دەربارەی مە</a>
                         </div>
                     </div>
 
@@ -3504,12 +3583,12 @@
                     <div class="footer-section">
                         <h3 class="footer-section-title">پەیوەندی</h3>
                         <div class="footer-links">
-                            <p class="footer-contact-text">ئەگەر تە پسیارەک یان پێشنیارەک هەیە، پەیوەندیێ ب مە بکە و ب زویترین دەم دێ بەرسڤا تە هێتە دان!</p>
+                            <p class="footer-contact-text">ئەگەر تە پرسیارەک یان پێشنیارەک هەبیت، پەیوەندییێ ب مە بکە و ب زووترین دەم دێ بەرسڤا تە هێتە دان!</p>
                             <a href="mailto:info@tafsirkurd.com" class="footer-link">
                                 <i class="fas fa-envelope"></i> info@tafsirkurd.com
                             </a>
                             <a href="/#contact" class="footer-link">
-                                <i class="fas fa-paper-plane"></i> فۆرما پڕبکە
+                                <i class="fas fa-paper-plane"></i> فۆرمێ پڕ بکە
                             </a>
                         </div>
                     </div>
@@ -3518,11 +3597,11 @@
                 <!-- Footer Bottom -->
                 <div class="footer-bottom">
                     <p class="footer-copyright">
-                        &copy; <span id="year"></span> تەفسیر کورد. هەمی ماف د پاراستینە. خودایێ مەزن بەرەکەتێ بێخیتە هەوڵ و ماندیبوونا مە.
+                        &copy; <span id="year"></span> تەفسیر کورد. هەمی ماف پاراستی نە. خودایێ مەزن بەرەکەتێ بێخیتە هەول و ماندبوونا مە.
                     </p>
                     <div class="footer-meta-links">
-                        <a href="/privacy-policy" class="footer-meta-link">پارێزراوی تایبەتمەندی</a>
-                        <a href="/terms-and-conditions" class="footer-meta-link">مەرج و ڕێسا</a>
+                        <a href="/privacy-policy" class="footer-meta-link">پاراستنا تایبەتمەندیێ</a>
+                        <a href="/terms-and-conditions" class="footer-meta-link">مەرج و رێسایان</a>
                     </div>
                 </div>
             </div>
@@ -3605,6 +3684,7 @@
             readAyahs: new Set(), // All-time read ayahs as "surah:ayah"
             ayahObserver: null, // IntersectionObserver for ayah tracking
             ayahReadTimes: {}, // Track when each ayah was read
+            lastHighlightedAyah: null, // Track last highlighted ayah in sidebar
             sessionData: {
                 startTime: null,
                 endTime: null,
@@ -3839,11 +3919,18 @@
             initializeApp();
             initScrollToTop();
 
-            // Show loading skeleton immediately
-            renderSurahGrid();
+            // Set a maximum timeout for loading (10 seconds)
+            const loadTimeout = setTimeout(() => {
+                console.warn('⚠️ Loading timeout reached, showing page anyway');
+                if (preloaderHideCallback) {
+                    preloaderHideCallback();
+                }
+            }, 10000);
 
-            // Load data in background while showing UI
-            loadQuranData().then(() => {
+            try {
+                // Load data first before showing anything
+                await loadQuranData();
+
                 // Once data is loaded, render content
                 renderSurahGrid();
                 renderSidebarList();
@@ -3860,9 +3947,23 @@
 
                 handleUrlParameters();
 
+                // Clear timeout since loading succeeded
+                clearTimeout(loadTimeout);
+
+                // Hide preloader after everything is ready
+                if (preloaderHideCallback) {
+                    preloaderHideCallback();
+                }
+
                 // Restore state if returning from settings
                 restoreStateFromSettings();
-            });
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                clearTimeout(loadTimeout);
+                if (preloaderHideCallback) {
+                    preloaderHideCallback();
+                }
+            }
         });
 
         // Handle URL parameters for direct ayah navigation
@@ -3931,7 +4032,7 @@
             document.getElementById('authSection').innerHTML = `
                 <button class="header-btn" onclick="goToLogin()">
                     <i class="fas fa-user"></i>
-                    <span>چوونەژووروەوە</span>
+                    <span>چوونە ژوورڤە</span>
                 </button>
             `;
 
@@ -3945,31 +4046,51 @@
             lastReadPosition = { surah: 1, ayah: 1 };
 
             closeFeatherOverlay();
-            showNotification('بە سەرکەوتوویی دەرچوویت - هەموو پێشکەوتنەکانت پارێزراوە');
+            showNotification('ب سەرکەفتی دەرکەفتی - هەموو پێشکەفتنێن تە هاتنە پاشکەفتکرن');
             updateContinueReading();
         }
 
-        // Preloader
+        // Smart Preloader - Only shows if loading takes time
+        let preloaderHideCallback = null;
+        let preloaderShown = false;
+
         function initPreloader() {
             const preloader = document.getElementById('preloader');
             const mainContent = document.getElementById('mainContent');
 
-            // Check if preloader has already been shown in this session
-            const hasSeenPreloader = sessionStorage.getItem('hasSeenPreloader');
             // Check if returning from settings
             const returningFromSettings = sessionStorage.getItem('returnToQuranReader');
 
-            if (hasSeenPreloader || returningFromSettings || performance.navigation.type === 2) {
+            if (returningFromSettings) {
                 preloader.style.display = 'none';
                 mainContent.classList.add('loaded');
                 document.body.classList.remove('no-scroll');
                 return;
             }
 
-            const minLoadTime = 2000;
             const startTime = Date.now();
+            const showPreloaderDelay = 300; // Only show preloader if loading takes more than 300ms
+            const minLoadTime = 800; // Keep preloader visible for at least 800ms if shown
+
+            let preloaderTimeout = setTimeout(() => {
+                // Loading is taking time, show the preloader
+                preloaderShown = true;
+                preloader.style.opacity = '1';
+                document.body.classList.add('no-scroll');
+            }, showPreloaderDelay);
 
             function hidePreloader() {
+                clearTimeout(preloaderTimeout);
+
+                if (!preloaderShown) {
+                    // Loading was fast, never showed preloader
+                    preloader.style.display = 'none';
+                    mainContent.classList.add('loaded');
+                    document.body.classList.remove('no-scroll');
+                    return;
+                }
+
+                // Preloader was shown, ensure it stays visible for minimum time
                 const elapsed = Date.now() - startTime;
                 const remainingTime = Math.max(0, minLoadTime - elapsed);
 
@@ -3979,19 +4100,12 @@
                         preloader.style.display = 'none';
                         mainContent.classList.add('loaded');
                         document.body.classList.remove('no-scroll');
-                        // Mark that preloader has been shown in this session
-                        sessionStorage.setItem('hasSeenPreloader', 'true');
                     }, 1000);
                 }, remainingTime);
             }
 
-            document.body.classList.add('no-scroll');
-
-            if (document.readyState === 'complete') {
-                hidePreloader();
-            } else {
-                window.addEventListener('load', hidePreloader);
-            }
+            // Store the callback so we can call it when data is loaded
+            preloaderHideCallback = hidePreloader;
         }
 
         // Load Quran Data - OPTIMIZED FOR SPEED WITH CACHING
@@ -4064,7 +4178,7 @@
 
             } catch (error) {
                 console.error('Error loading data:', error);
-                showNotification('هەڵە لە بارکردنی زانیاریەکان');
+                showNotification('هەلە د بارکرنا زانیاریان دا');
             }
         }
 
@@ -4311,7 +4425,7 @@
             prefs.darkMode = (newTheme === 'dark');
             localStorage.setItem('userPreferences', JSON.stringify(prefs));
 
-            showNotification(newTheme === 'dark' ? 'دۆخی تاریکی چالاککرا' : 'دۆخی ڕوونایی چالاککرا');
+            showNotification(newTheme === 'dark' ? 'رەوشا تاریک چالاککر' : 'رەوشا رووناهیێ چالاککر');
         }
 
         function changeArabicFont() {
@@ -4326,7 +4440,7 @@
             // Update page
             document.documentElement.style.setProperty('--arabic-font', font);
             localStorage.setItem('arabicFont', font);
-            showNotification('فۆنتی عەرەبی گۆڕدرا');
+            showNotification('فۆنتا عەرەبی هاتە گوهۆڕین');
         }
 
         function changeArabicSize(value) {
@@ -4356,7 +4470,7 @@
             // Update page
             document.documentElement.style.setProperty('--tafsir-font', font);
             localStorage.setItem('tafsirFont', font);
-            showNotification('فۆنتی تەفسیر گۆڕدرا');
+            showNotification('فۆنتا تەفسیرێ هاتە گوهۆڕین');
         }
 
         function changeTafsirSize(value) {
@@ -4401,7 +4515,7 @@
             localStorage.setItem('showTafsir', isActive);
             console.log('Saved showTafsir to localStorage:', isActive);
 
-            showNotification(isActive ? 'تەفسیر پیشاندرا' : 'تەفسیر شاراوە');
+            showNotification(isActive ? 'تەفسیر هاتە نیشاندان' : 'تەفسیر شارای');
         }
 
         function toggleAutoScroll() {
@@ -4418,10 +4532,10 @@
 
             if (autoScrollEnabled) {
                 startAutoScroll();
-                showNotification('خولاندنی خۆکار چالاککرا - تکایە بچۆ بۆ خوێندنەوەی سوورە');
+                showNotification('زڤراندنا خۆکار چالاککر - تکایە بچە بۆ خواندنا سوورەتێ');
             } else {
                 stopAutoScroll();
-                showNotification('خولاندنی خۆکار ناچالاککرا');
+                showNotification('زڤراندنا خۆکار نەچالاککر');
             }
         }
 
@@ -4430,7 +4544,7 @@
             const readerPage = document.getElementById('surahReaderPage');
 
             if (!readerPage || !readerPage.classList.contains('visible')) {
-                showNotification('تکایە سوورەیەک بکەرەوە بۆ خولاندنی خۆکار');
+                showNotification('تکایە سوورەتەکێ ڤەکەرە بۆ زڤراندنا خۆکار');
                 autoScrollEnabled = false;
                 const toggle = document.getElementById('autoScrollToggle');
                 if (toggle) toggle.classList.remove('active');
@@ -4451,7 +4565,7 @@
                 // Stop at bottom
                 if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
                     stopAutoScroll();
-                    showNotification('گەیشتیت بە کۆتایی');
+                    showNotification('گەهشتیە دوماهیێ');
                 }
             }, 50);
         }
@@ -4489,7 +4603,7 @@
             document.documentElement.style.setProperty('--tafsir-size', '1.1rem');
             document.documentElement.setAttribute('data-theme', 'light');
 
-            showNotification('ڕێکخستنەکان گەڕانەوە بۆ بنەڕەت');
+            showNotification('رێکخستن گەڕیانڤە بۆ بنەڕەت');
         }
 
         // Scroll to Top functionality
@@ -4518,7 +4632,7 @@
 
             // Show loading skeleton if data not ready
             if (!quranData || Object.keys(quranData).length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 15px;"></i><div>دەستپێدەکرێت...</div></div>';
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 15px;"></i><div>دەستپێدکەت...</div></div>';
                 return;
             }
 
@@ -4586,9 +4700,9 @@
                     const header = document.createElement('div');
                     header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;';
                     header.innerHTML = `
-                        <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">جوز ${KurdishNumbers.toKurdish(juzNum)}</h3>
-                        <button onclick="readFullJuz(${juzNum})" style="background: var(--primary); border: none; color: white; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; font-family: 'IBM Plex Sans Arabic', sans-serif;">
-                            خوێندنەوە
+                        <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text);">جوزئ ${KurdishNumbers.toKurdish(juzNum)}</h3>
+                        <button onclick="readFullJuz(${juzNum})" style="background: var(--primary); border: none; color: var(--accent); padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; font-family: 'IBM Plex Sans Arabic', sans-serif;">
+                            خواندن
                         </button>
                     `;
                     juzContainer.appendChild(header);
@@ -4612,15 +4726,15 @@
                         };
 
                         surahRow.innerHTML = `
-                            <div style="background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; flex-shrink: 0;">
+                            <div style="background: var(--primary); color: var(--accent); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; flex-shrink: 0;">
                                 ${KurdishNumbers.toKurdish(surahNum)}
                             </div>
                             <div style="flex: 1;">
-                                <div class="surah-card-arabic no-kurdish-convert" style="font-size: 2rem; color: var(--text-primary); margin-bottom: 4px;">${decorativeCode}</div>
+                                <div class="surah-card-arabic no-kurdish-convert" style="font-size: 2rem; color: var(--text); margin-bottom: 4px;">${decorativeCode}</div>
                                 <div style="font-size: 0.85rem; color: var(--text-muted);">${KurdishNumbers.toKurdish(surah.ayahs)} ئایەت</div>
                             </div>
                             <div style="text-align: right;">
-                                <div style="font-weight: 600; font-size: 1rem; color: var(--text-primary);">${surah.english}</div>
+                                <div style="font-weight: 600; font-size: 1rem; color: var(--text);">${surah.english}</div>
                             </div>
                         `;
                         juzContainer.appendChild(surahRow);
@@ -4668,7 +4782,9 @@
                 for (let j = 1; j <= info.ayahs; j++) {
                     const ayahItem = document.createElement('div');
                     ayahItem.className = 'ayah-item-sidebar';
-                    ayahItem.textContent = `ئایەتی ${KurdishNumbers.toKurdish(j)}`;
+                    ayahItem.dataset.surah = i;
+                    ayahItem.dataset.ayah = j;
+                    ayahItem.textContent = `ئایەتا ${KurdishNumbers.toKurdish(j)}`;
                     ayahItem.onclick = (e) => {
                         e.stopPropagation();
                         openSurahWithAyah(i, j);
@@ -4687,18 +4803,174 @@
             }
         }
 
+        // Render Juz List in Sidebar
+        function renderJuzList() {
+            const container = document.getElementById('juzListSidebar');
+            container.innerHTML = '';
+
+            const juzData = {
+                1: [1, 2], 2: [2], 3: [2, 3], 4: [3, 4], 5: [4, 5], 6: [4, 5, 6],
+                7: [5, 6, 7], 8: [6, 7, 8], 9: [7, 8, 9], 10: [8, 9, 10, 11],
+                11: [9, 10, 11], 12: [10, 11, 12], 13: [11, 12, 13], 14: [12, 13, 14, 15],
+                15: [15, 16, 17], 16: [17, 18], 17: [18, 19, 20], 18: [21, 22],
+                19: [23, 24, 25], 20: [25, 26, 27], 21: [27, 28, 29], 22: [29, 30, 31, 32, 33],
+                23: [33, 34, 35, 36], 24: [36, 37, 38, 39], 25: [39, 40, 41], 26: [41, 42, 43, 44, 45],
+                27: [45, 46, 47, 48, 49, 50, 51], 28: [51, 52, 53, 54, 55, 56, 57], 29: [58, 59, 60, 61, 62, 63, 64, 65, 66],
+                30: [67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78]
+            };
+
+            for (let juzNum = 1; juzNum <= 30; juzNum++) {
+                const surahs = juzData[juzNum];
+
+                // Create Juz header item
+                const juzItem = document.createElement('div');
+                juzItem.className = 'surah-item-sidebar juz-item-sidebar';
+                juzItem.dataset.juz = juzNum;
+
+                juzItem.innerHTML = `
+                    <div class="surah-num-sidebar">${KurdishNumbers.toKurdish(juzNum)}</div>
+                    <div class="surah-info-sidebar">
+                        <div class="surah-name-sidebar" style="font-weight: 700;">جوزئی ${KurdishNumbers.toKurdish(juzNum)}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">${surahs.length} سوڕەت</div>
+                    </div>
+                    <i class="fas fa-chevron-down" style="color: var(--text-muted); transition: transform 0.3s;"></i>
+                `;
+
+                juzItem.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleJuzList(juzNum);
+                });
+
+                container.appendChild(juzItem);
+
+                // Create expandable Surah list for this Juz
+                const surahListContainer = document.createElement('div');
+                surahListContainer.className = 'juz-surah-list';
+                surahListContainer.id = `juz-surah-list-${juzNum}`;
+                surahListContainer.style.cssText = 'max-height: 0; overflow: hidden; transition: max-height 0.3s ease; padding-left: 15px;';
+
+                surahs.forEach(surahNum => {
+                    const surah = surahNames[surahNum];
+                    const decorativeCode = getDecorativeSurahCode(surahNum);
+
+                    // Surah item
+                    const surahItem = document.createElement('div');
+                    surahItem.className = 'surah-item-sidebar';
+                    surahItem.style.cssText = 'margin: 5px 0; background: var(--bg);';
+                    surahItem.dataset.surah = surahNum;
+
+                    surahItem.innerHTML = `
+                        <div class="surah-num-sidebar">${KurdishNumbers.toKurdish(surahNum)}</div>
+                        <div class="surah-info-sidebar">
+                            <div class="surah-arabic-sidebar no-kurdish-convert">${decorativeCode}</div>
+                            <div class="surah-name-sidebar">${surah.english}</div>
+                        </div>
+                    `;
+
+                    surahItem.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleJuzSurahAyahList(juzNum, surahNum);
+                    });
+
+                    surahListContainer.appendChild(surahItem);
+
+                    // Add ayah list for each surah
+                    const ayahList = document.createElement('div');
+                    ayahList.className = 'ayah-list-sidebar';
+                    ayahList.id = `juz-ayah-list-${juzNum}-${surahNum}`;
+
+                    for (let j = 1; j <= surah.ayahs; j++) {
+                        const ayahItem = document.createElement('div');
+                        ayahItem.className = 'ayah-item-sidebar';
+                        ayahItem.dataset.surah = surahNum;
+                        ayahItem.dataset.ayah = j;
+                        ayahItem.textContent = `ئایەتا ${KurdishNumbers.toKurdish(j)}`;
+                        ayahItem.onclick = (e) => {
+                            e.stopPropagation();
+                            openSurahWithAyah(surahNum, j);
+                            closeSidebar();
+                        };
+                        ayahList.appendChild(ayahItem);
+                    }
+
+                    surahListContainer.appendChild(ayahList);
+                });
+
+                container.appendChild(surahListContainer);
+            }
+        }
+
+        // Toggle Juz surah list
+        function toggleJuzList(juzNum) {
+            const surahList = document.getElementById(`juz-surah-list-${juzNum}`);
+            const juzItem = document.querySelector(`[data-juz="${juzNum}"]`);
+            const chevron = juzItem.querySelector('.fa-chevron-down');
+
+            if (surahList) {
+                const isExpanded = surahList.style.maxHeight !== '0px' && surahList.style.maxHeight !== '';
+
+                if (isExpanded) {
+                    surahList.style.maxHeight = '0';
+                    chevron.style.transform = 'rotate(0deg)';
+                } else {
+                    surahList.style.maxHeight = '1000px';
+                    chevron.style.transform = 'rotate(180deg)';
+                }
+            }
+        }
+
+        // Toggle ayah list within juz
+        function toggleJuzSurahAyahList(juzNum, surahNum) {
+            const ayahList = document.getElementById(`juz-ayah-list-${juzNum}-${surahNum}`);
+            if (ayahList) {
+                ayahList.classList.toggle('expanded');
+            }
+        }
+
+        // Switch between Surah and Juz tabs in sidebar
+        function switchSidebarTab(tab) {
+            const surahTab = document.getElementById('surahTab');
+            const juzTab = document.getElementById('juzTab');
+            const surahList = document.getElementById('surahListSidebar');
+            const juzList = document.getElementById('juzListSidebar');
+
+            if (tab === 'surah') {
+                surahTab.classList.add('active');
+                juzTab.classList.remove('active');
+                surahList.style.display = 'block';
+                juzList.style.display = 'none';
+            } else {
+                surahTab.classList.remove('active');
+                juzTab.classList.add('active');
+                surahList.style.display = 'none';
+                juzList.style.display = 'block';
+
+                // Render juz list if not already rendered
+                if (juzList.children.length === 0) {
+                    renderJuzList();
+                }
+            }
+        }
+
+
         // Sidebar Functions
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const toggle = document.getElementById('sidebarToggle');
             const mainContent = document.getElementById('mainContent');
 
-            sidebar.classList.toggle('visible');
-            toggle.classList.toggle('active');
+            // Use requestAnimationFrame for smoother animation
+            requestAnimationFrame(() => {
+                sidebar.classList.toggle('visible');
+                toggle.classList.toggle('active');
 
-            if (window.innerWidth > 768) {
-                mainContent.classList.toggle('shifted');
-            }
+                if (window.innerWidth > 768) {
+                    // Slight delay for content shift to sync with sidebar
+                    requestAnimationFrame(() => {
+                        mainContent.classList.toggle('shifted');
+                    });
+                }
+            });
         }
 
         function closeSidebar() {
@@ -4782,7 +5054,7 @@
             loadJuzContinuous(juzNum, juzSurahs, startPosition);
 
             // Show notification
-            showNotification(`جوزی ${KurdishNumbers.toKurdish(juzNum)} - ${juzSurahs.length} سوورە`);
+            showNotification(`جوزئی ${KurdishNumbers.toKurdish(juzNum)} - ${juzSurahs.length} سوورەت`);
 
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -4801,11 +5073,11 @@
             localStorage.setItem('lastViewType', 'juz');
 
             // Show loading
-            container.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>بارکردنی جوزی ' + KurdishNumbers.toKurdish(juzNum) + '...</p></div>';
+            container.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>بارکردنی جوزئی ' + KurdishNumbers.toKurdish(juzNum) + '...</p></div>';
 
             // Check if data is loaded
             if (!quranData) {
-                container.innerHTML = '<p style="text-align: center; padding: 40px;">زانیاری بەردەست نییە</p>';
+                container.innerHTML = '<p style="text-align: center; padding: 40px;">زانیاری بەردەست نینە</p>';
                 return;
             }
 
@@ -4864,21 +5136,21 @@
                             <div class="ayah-actions">
                                 <button class="ayah-action-btn"
                                         onclick="openCopyModal(${surahNum}, ${verse.verse})"
-                                        title="کۆپیکردن">
+                                        title="کۆپیکرن">
                                     <i class="fas fa-copy"></i>
                                 </button>
                                 <button class="ayah-action-btn ${isBookmarked ? 'bookmarked' : ''}"
                                         onclick="toggleBookmark(${surahNum}, ${verse.verse})"
-                                        title="نیشانەکردن">
+                                        title="نیشانەکرن">
                                     <i class="fas fa-bookmark"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="ayah-arabic">${verse.text}</div>
                         ${tafsir ? `
-                            <div class="tafsir-label">تەفسیری سەناحی:</div>
+                            <div class="tafsir-label">تەفسیرا ساناهی:</div>
                             <div class="tafsir-content">${tafsir}</div>
-                        ` : '<div class="tafsir-content"><span class="no-translation">تەفسیر بەردەست نییە.</span></div>'}
+                        ` : '<div class="tafsir-content"><span class="no-translation">تەفسیر بەردەست نینە.</span></div>'}
                     `;
 
                     container.appendChild(ayahDiv);
@@ -4956,7 +5228,7 @@
 
             // Add to browser history so back button works
             const surahInfo = surahNames[surahNum];
-            const title = `${surahInfo.english} (${surahInfo.arabic}) - تەفسیر کوورد`;
+            const title = `${surahInfo.english} (${surahInfo.arabic}) - تەفسیر کورد`;
             history.pushState({ page: 'surah', surah: surahNum }, title, `?surah=${surahNum}`);
 
             // Save current state for refresh persistence
@@ -4980,7 +5252,7 @@
 
             // Add to browser history with ayah parameter
             const surahInfo = surahNames[surahNum];
-            const title = `${surahInfo.english} (${surahInfo.arabic}) - ئایەت ${KurdishNumbers.toKurdish(ayahNum)} - تەفسیر کوورد`;
+            const title = `${surahInfo.english} (${surahInfo.arabic}) - ئایەت ${KurdishNumbers.toKurdish(ayahNum)} - تەفسیر کورد`;
             history.pushState({ page: 'surah', surah: surahNum, ayah: ayahNum }, title, `?surah=${surahNum}&ayah=${ayahNum}`);
 
             // Initialize activity tracking for this surah
@@ -5022,10 +5294,10 @@
 
         function loadAyahs(surahNum, highlightAyah) {
             const container = document.getElementById('ayahContainer');
-            container.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>بارکردنی ئایەتەکان...</p></div>';
+            container.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>بارکرنا ئایەتان...</p></div>';
 
             if (!quranData || !quranData[surahNum]) {
-                container.innerHTML = '<p style="text-align: center; padding: 40px;">زانیاری بەردەست نییە</p>';
+                container.innerHTML = '<p style="text-align: center; padding: 40px;">زانیاری بەردەست نینە</p>';
                 return;
             }
 
@@ -5060,21 +5332,21 @@
                             <div class="ayah-actions">
                                 <button class="ayah-action-btn"
                                         onclick="openCopyModal(${surahNum}, ${verse.verse})"
-                                        title="کۆپیکردن">
+                                        title="کۆپیکرن">
                                     <i class="fas fa-copy"></i>
                                 </button>
                                 <button class="ayah-action-btn ${isBookmarked ? 'bookmarked' : ''}"
                                         onclick="toggleBookmark(${surahNum}, ${verse.verse})"
-                                        title="نیشانەکردن">
+                                        title="نیشانەکرن">
                                     <i class="fas fa-bookmark"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="ayah-arabic">${verse.text}</div>
                         ${tafsir ? `
-                            <div class="tafsir-label">تەفسیری سەناحی:</div>
+                            <div class="tafsir-label">تەفسیرا ساناهی:</div>
                             <div class="tafsir-content">${tafsir}</div>
-                        ` : '<div class="tafsir-content"><span class="no-translation">تەفسیر بەردەست نییە.</span></div>'}
+                        ` : '<div class="tafsir-content"><span class="no-translation">تەفسیر بەردەست نینە.</span></div>'}
                     `;
 
                     container.appendChild(ayahDiv);
@@ -5121,7 +5393,7 @@
                 prevName.textContent = surahNames[surahNum - 1].english;
             } else {
                 prevBtn.disabled = true;
-                prevName.textContent = 'سوورەی پێشوو';
+                prevName.textContent = 'سوورەتا پێشوو';
             }
 
             if (surahNum < 114) {
@@ -5129,7 +5401,7 @@
                 nextName.textContent = surahNames[surahNum + 1].english;
             } else {
                 nextBtn.disabled = true;
-                nextName.textContent = 'سوورەی دواتر';
+                nextName.textContent = 'سوورەتا دواتر';
             }
         }
 
@@ -5173,7 +5445,7 @@
             document.getElementById('surahReaderPage').style.display = '';
 
             // Update browser history
-            history.pushState({ page: 'home' }, 'تەفسیر کوورد - Tafsir Kurd', '/');
+            history.pushState({ page: 'home' }, 'تەفسیر کورد - Tafsir Kurd', '/');
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -5459,7 +5731,7 @@
         // Search Functionality - ENHANCED with Smart Arabic Text Search
         function performSearch(query) {
             if (!quranData) {
-                showNotification('تکایە چاوەڕوانبە تا قورئان بار بێت');
+                showNotification('تکایە چاڤەرێ بە هەتا قورئان بار ببت');
                 return;
             }
 
@@ -5499,7 +5771,7 @@
                             surah: surahNum,
                             ayah: 1,
                             text: `${surahInfo.arabic} - ${surahInfo.english}`,
-                            surahName: `سوورەی ${surahInfo.english}`,
+                            surahName: `سوورەتی ${surahInfo.english}`,
                             similarity: 9000 // High priority for surah number
                         });
                     }
@@ -5548,7 +5820,7 @@
                                 surah: i,
                                 ayah: 1,
                                 text: `${surah.arabic} - ${surah.english}`,
-                                surahName: `سوورەی ${surah.english}`,
+                                surahName: `سوورەتی ${surah.english}`,
                                 similarity: maxScore * 10 // Boost surah matches
                             });
                         }
@@ -5672,7 +5944,7 @@
             }
 
             if (results.length === 0) {
-                dropdown.innerHTML = '<div class="search-no-results">هیچ ئەنجامێک نەدۆزرایەوە</div>';
+                dropdown.innerHTML = '<div class="search-no-results">چ ژ ئەنجامان نەهاتە دیتن</div>';
                 dropdown.classList.add('active');
                 return;
             }
@@ -5717,10 +5989,10 @@
 
             if (index > -1) {
                 bookmarkedAyahs.splice(index, 1);
-                showNotification('نیشانە لابرا');
+                showNotification('نیشانە هاتە ژێبرن');
             } else {
                 bookmarkedAyahs.push(key);
-                showNotification('نیشانەکرا');
+                showNotification('نیشانەکرن');
             }
 
             // Update button
@@ -5771,7 +6043,7 @@
 
             copyToClipboard(text);
             closeCopyModal();
-            showNotification('کۆپیکرا لەگەڵ تەفسیر');
+            showNotification('دگەل تەفسیرێ هاتە کۆپیکرن');
         }
 
         function copyAyahWithoutTafsir() {
@@ -5795,7 +6067,7 @@
 
             copyToClipboard(text);
             closeCopyModal();
-            showNotification('کۆپیکرا بەبێ تەفسیر');
+            showNotification('بێ تەفسیر هاتە کۆپیکرن');
         }
 
         function copyJustTafsir() {
@@ -5814,7 +6086,7 @@
 
             copyToClipboard(text);
             closeCopyModal();
-            showNotification('تەفسیر کۆپیکرا');
+            showNotification('تەفسیر هاتە کۆپیکرن');
         }
 
         function copyToClipboard(text) {
@@ -5940,12 +6212,12 @@
         // Reset Reading Progress
         function resetReadingProgress() {
             if (!isUserAuthenticated) {
-                showNotification('تکایە چوونەژوورەوە بکە');
+                showNotification('تکایە چوونە ژوورڤە بکە');
                 return;
             }
 
             // Confirm with user
-            const confirmed = confirm('دڵنیای دەتەوێت هەموو پێشکەوتنەکەت بسڕیتەوە و لە سەرەتاوە دەست پێ بکەیتەوە؟\n\nئەمە هەموو شتێک دەسڕێتەوە:\n• پۆزیشنی خوێندنەوە\n• ئامارەکان (ڕۆژی چالاک، سوورە تەواو، ئایەت خوێندراوە)\n• ئایەتە خوێندراوەکان\n• هەموو داتا\n\nئایا دڵنیایت؟');
+            const confirmed = confirm('دڵنیای دەتەوێت هەموو پێشکەفتنەکەت بسڕیتەوە و لە سەرەتاوە دەست پێ بکەیتەوە؟\n\nئەمە هەموو شتێک دەسڕێتەوە:\n• پۆزیشنی خواندن\n• ئامارەکان (ڕۆژی چالاک، سوورەت تەمام، ئایەتا هاتیە خواندن)\n• ئایەتە خوێندراوەکان\n• هەموو داتا\n\nئایا دڵنیایت؟');
 
             if (confirmed) {
                 // Reset position to beginning
@@ -5995,7 +6267,7 @@
                 }
 
                 // Show notification
-                showNotification('هەموو پێشکەوتنەکان سڕانەوە! دەست پێ بکەرەوە لە سەرەتاوە');
+                showNotification('هەمی پێشکەفتن هاتنە سڕینەڤە! ژ دەستپێکێ دەست پێ بکە');
 
                 // Close menu
                 closeFeatherOverlay();
@@ -6103,8 +6375,20 @@
         }
 
         function startRandomAyahTimer() {
+            let lastCheckedDate = new Date().toDateString(); // Track the last checked date
+
             function updateTimer() {
                 const now = new Date();
+                const currentDate = now.toDateString();
+
+                // Check if date changed since last check
+                if (currentDate !== lastCheckedDate) {
+                    console.log('[Daily Ayah] Date changed! Reloading ayah...');
+                    lastCheckedDate = currentDate;
+                    dailyAyahLoaded = false; // Reset flag for new day
+                    loadRandomAyah(); // Load new ayah immediately
+                }
+
                 const midnight = new Date();
                 midnight.setHours(24, 0, 0, 0); // Next midnight
 
@@ -6121,15 +6405,6 @@
                 const timerEl = document.getElementById('randomTimer');
                 if (timerEl) {
                     timerEl.textContent = kurdishTime;
-                    console.log('Timer updated:', timeStr, '->', kurdishTime);
-                }
-
-                // Check if we passed midnight (diff is very small means we just passed)
-                if (diff < 2000) {
-                    setTimeout(() => {
-                        dailyAyahLoaded = false; // Reset flag for new day
-                        loadRandomAyah(); // Load new ayah at midnight
-                    }, diff + 100);
                 }
             }
 
@@ -6737,7 +7012,7 @@
                 // Update URL with current ayah position (without adding to history)
                 const surahInfo = surahNames[surahNumber];
                 if (surahInfo) {
-                    const title = `${surahInfo.english} (${surahInfo.arabic}) - ئایەت ${KurdishNumbers.toKurdish(ayahNumber)} - تەفسیر کوورد`;
+                    const title = `${surahInfo.english} (${surahInfo.arabic}) - ئایەت ${KurdishNumbers.toKurdish(ayahNumber)} - تەفسیر کورد`;
                     history.replaceState({ page: 'surah', surah: surahNumber, ayah: ayahNumber }, title, `?surah=${surahNumber}&ayah=${ayahNumber}`);
                 }
 
@@ -7035,8 +7310,11 @@
             };
 
             activityTracker.ayahObserver = new IntersectionObserver((entries) => {
+                // Find the most visible ayah from all entries
+                let mostVisibleAyah = null;
+                let maxRatio = 0;
+
                 entries.forEach(entry => {
-                    // Only track if ayah is significantly visible (50% threshold)
                     if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
                         const ayahElement = entry.target;
                         const surahNum = parseInt(ayahElement.getAttribute('data-surah'));
@@ -7044,9 +7322,33 @@
 
                         if (surahNum && ayahNum) {
                             trackAyahView(surahNum, ayahNum, ayahElement);
+
+                            // Track the most visible ayah
+                            if (entry.intersectionRatio > maxRatio) {
+                                maxRatio = entry.intersectionRatio;
+                                mostVisibleAyah = { surahNum, ayahNum };
+                            }
                         }
                     }
                 });
+
+                // Only update sidebar highlight for the most visible ayah
+                if (mostVisibleAyah) {
+                    const ayahKey = `${mostVisibleAyah.surahNum}:${mostVisibleAyah.ayahNum}`;
+                    if (activityTracker.lastHighlightedAyah !== ayahKey) {
+                        activityTracker.lastHighlightedAyah = ayahKey;
+
+                        requestAnimationFrame(() => {
+                            document.querySelectorAll('.ayah-item-sidebar').forEach(item => {
+                                item.classList.remove('active');
+                            });
+                            const sidebarAyah = document.querySelector(`.ayah-item-sidebar[data-surah="${mostVisibleAyah.surahNum}"][data-ayah="${mostVisibleAyah.ayahNum}"]`);
+                            if (sidebarAyah) {
+                                sidebarAyah.classList.add('active');
+                            }
+                        });
+                    }
+                }
             }, observerOptions);
 
             // Observe all ayah elements - FOR ALL USERS
@@ -7453,12 +7755,12 @@
             }
         });
 
-        // Set initial history state for home page
+        // Set initial history state for Quran page
         if (!window.location.search) {
-            history.replaceState({ page: 'home' }, 'تەفسیر کوورد - Tafsir Kurd', '/');
+            history.replaceState({ page: 'quran' }, 'قورئان - تەفسیر کورد', window.location.pathname);
         }
 
-        console.log('✅ تەفسیر کوورد - Quran Reader loaded successfully');
+        console.log('✅ تەفسیر کورد - Quran Reader loaded successfully');
         console.log('🧪 Debug functions available: testGuestReading(surah, ayah), checkGuestData()');
 
         // Auto-check on load

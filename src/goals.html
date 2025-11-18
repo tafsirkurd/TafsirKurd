@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
-    <title>ئامانجەکان - تەفسیر کوورد</title>
+    <title>ئارمانج - تەفسیر کورد</title>
 
     <!-- Favicons - High quality with SVG for perfect scaling -->
     <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
@@ -51,6 +51,18 @@
             --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        [data-theme="dark"] {
+            --primary: #ffffff;
+            --accent: #000000;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #ffffff;
+            --text-muted: #b0b0b0;
+            --border: #2a2a2a;
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.5);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -62,13 +74,6 @@
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
-            /* Hide body until auth check is complete - prevents flash */
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        body.ready {
-            opacity: 1;
         }
 
         .header {
@@ -579,20 +584,174 @@
                 font-size: 0.9rem;
             }
         }
+
+        /* Footer Styles */
+        footer {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            margin-top: 80px;
+            padding: 60px 20px 30px;
+            text-align: right;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            direction: rtl;
+        }
+
+        .footer-main {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .footer-logo-img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+        }
+
+        .footer-brand-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .footer-brand-tagline {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
+
+        .footer-social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .footer-social-icons a {
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            transition: all 0.4s;
+        }
+
+        .footer-social-icons a:hover {
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .footer-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .footer-contact-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .footer-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.4s;
+        }
+
+        .footer-link:hover {
+            color: var(--primary);
+            transform: translateX(-5px);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            padding-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .footer-copyright {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer-meta-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-meta-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        .footer-meta-link:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .footer-main {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .footer-main {
+                grid-template-columns: 1fr;
+            }
+            .footer-brand {
+                text-align: center;
+            }
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
     <header class="header">
         <div class="header-container">
-            <h1 class="header-title">ئامانجەکان</h1>
+            <h1 class="header-title">ئارمانج</h1>
             <div style="display: flex; gap: 12px; align-items: center;">
                 <a href="/reading-goal" class="back-btn" style="background: var(--primary); color: var(--accent); border-color: var(--primary);">
                     <i class="fas fa-plus"></i>
-                    ئامانجێ نوێ
+                    ئارمانجەکا نوی
                 </a>
                 <a href="/quran" class="back-btn">
                     <i class="fas fa-arrow-right"></i>
-                    گەڕانەوە
+                    گەڕیان ڤە
                 </a>
             </div>
         </div>
@@ -603,14 +762,14 @@
         <div class="progress-section">
             <h2 class="section-title">
                 <i class="fas fa-chart-line"></i>
-                پێشکەوتن
+                پێشکەفتن
             </h2>
 
             <!-- Goal Details Card -->
             <div class="goal-details-card" id="goalDetailsCard" style="display: none;">
                 <div class="goal-details-header">
                     <div>
-                        <div class="goal-details-title" id="goalDetailsTitle">ئامانجا تە</div>
+                        <div class="goal-details-title" id="goalDetailsTitle">ئارمانجا تە</div>
                         <div class="goal-details-description" id="goalDetailsDescription"></div>
                     </div>
                     <div class="goal-details-icon">🎯</div>
@@ -623,10 +782,10 @@
             <div class="streak-container">
                 <div class="streak-left">
                     <div class="streak-number" id="streakNumber">0</div>
-                    <div class="streak-label">ڕۆژ</div>
+                    <div class="streak-label">رۆژ</div>
                 </div>
                 <div class="streak-right">
-                    <h3>پێشکەوتنی ئەم هەفتەیە</h3>
+                    <h3>پێشکەفتنا ڤێ هەفتییێ</h3>
                     <div class="week-progress" id="weekProgress">
                         <!-- Days will be populated by JavaScript -->
                     </div>
@@ -636,7 +795,7 @@
             <!-- Today's Goal -->
             <div class="goal-section">
                 <div class="goal-header">
-                    <div class="goal-text" id="goalText">ئامانجی ئەمڕۆ: 10 خولەک خوێندنەوە</div>
+                    <div class="goal-text" id="goalText">ئارمانجا ئەڤرۆ: ١٠ خولەک خواندن</div>
                     <div class="goal-percentage" id="goalPercent">0%</div>
                 </div>
                 <div class="progress-bar-container">
@@ -649,7 +808,7 @@
         <div class="calendar-section">
             <h2 class="section-title">
                 <i class="fas fa-calendar-alt"></i>
-                ڕۆژژمێری پێشکەوتن
+                رۆژژمێرا پێشکەفتنێ
             </h2>
 
             <div class="year-selector">
@@ -668,12 +827,12 @@
 
             <!-- Manual Entry -->
             <div class="manual-entry">
-                <div class="manual-entry-title">زیادکردنی خولەک بە دەستی</div>
+                <div class="manual-entry-title">زێدەکرنا خولەکان ب دەستی</div>
                 <div class="manual-entry-form">
                     <input type="date" class="form-input" id="manualDate">
-                    <input type="number" class="form-input" id="manualMinutes" placeholder="خولەک (بە خولەک)">
+                    <input type="number" class="form-input" id="manualMinutes" placeholder="خولەک (ب خولەک)">
                     <button class="add-btn" onclick="addManualEntry()">
-                        <i class="fas fa-plus"></i> زیادکردن
+                        <i class="fas fa-plus"></i> زێدەکرن
                     </button>
                 </div>
             </div>
@@ -683,12 +842,12 @@
         <div class="goal-management">
             <h2 class="section-title">
                 <i class="fas fa-cog"></i>
-                بەڕێوەبردنی ئامانج
+                رێڤەبرنا ئارمانجێ
             </h2>
 
             <div class="goal-actions">
                 <button class="goal-btn delete" onclick="deleteGoal()">
-                    <i class="fas fa-trash"></i> سڕینەوەی هەموو زانیاری
+                    <i class="fas fa-trash"></i> سڕینەڤەیا هەمی زانیاریان
                 </button>
             </div>
         </div>
@@ -702,8 +861,8 @@
         let currentUser = null;
         let currentGoal = null; // Store the full goal object
 
-        const daysOfWeek = ['یەکشەممە', 'دووشەممە', 'سێشەممە', 'چوارشەممە', 'پێنجشەممە', 'هەینی', 'شەممە'];
-        const monthNames = ['کانوونی دووەم', 'شوبات', 'ئازار', 'نیسان', 'ئایار', 'حوزەیران', 'تەممووز', 'ئاب', 'ئەیلوول', 'تشرینی یەکەم', 'تشرینی دووەم', 'کانوونی یەکەم'];
+        const daysOfWeek = ['یەکشەمبی', 'دووشەمبی', 'سێشەمبی', 'چوارشەمبی', 'پێنجشەمبی', 'ئەینی', 'شەمبی'];
+        const monthNames = ['کانوونا دوویێ', 'شوبات', 'ئازار', 'نیسان', 'ئایار', 'حوزەیران', 'تەممووز', 'ئاب', 'ئەیلول', 'تشرینا ئێکێ', 'تشرینا دوویێ', 'کانوونا ئێکێ'];
 
         window.addEventListener('load', () => {
             // Check if user is authenticated
@@ -768,20 +927,20 @@
             card.style.display = 'block';
 
             // Set title and description
-            title.textContent = currentGoal.name || 'ئامانجا تە';
+            title.textContent = currentGoal.name || 'ئارمانجا تە';
             description.textContent = currentGoal.description || '';
 
             // Build details grid
             grid.innerHTML = '';
 
             // Add goal type detail
-            addDetailItem(grid, 'جۆرا ئامانجێ', getGoalTypeLabel(currentGoal.type));
+            addDetailItem(grid, 'جۆرێ ئارمانجێ', getGoalTypeLabel(currentGoal.type));
 
             // Add criteria detail
-            addDetailItem(grid, 'پێوەر', getCriteriaLabel(currentGoal.criteria));
+            addDetailItem(grid, 'پیڤەر', getCriteriaLabel(currentGoal.criteria));
 
             // Add target detail
-            addDetailItem(grid, 'ئامانجا رۆژانە', `${currentGoal.target} ${getCriteriaUnit(currentGoal.criteria)}`);
+            addDetailItem(grid, 'ئارمانجا رۆژانە', `${currentGoal.target} ${getCriteriaUnit(currentGoal.criteria)}`);
 
             // Add frequency detail
             addDetailItem(grid, 'دووبارەبوون', getFrequencyLabel(currentGoal.frequency));
@@ -826,8 +985,8 @@
 
         function getCriteriaLabel(criteria) {
             const labels = {
-                'time': 'کات',
-                'pages': 'لاپەڕە',
+                'time': 'دەم',
+                'pages': 'لاپەڕ',
                 'ayahs': 'ئایەت',
                 'surahs': 'سوورە',
                 'juz': 'جوز',
@@ -839,7 +998,7 @@
         function getCriteriaUnit(criteria) {
             const units = {
                 'time': 'خولەک',
-                'pages': 'لاپەڕە',
+                'pages': 'لاپەڕ',
                 'ayahs': 'ئایەت',
                 'surahs': 'سوورە',
                 'juz': 'جوز',
@@ -864,19 +1023,19 @@
             const flowLabels = {
                 '1year': {
                     step2: {
-                        '1time': 'جارەکێ د ساڵێ',
-                        '2times': 'دوو جاران د ساڵێ',
-                        '3times': 'سێ جاران د ساڵێ'
+                        '1time': 'جارەکێ د سالێ',
+                        '2times': 'دوو جاران د سالێ',
+                        '3times': 'سێ جاران د سالێ'
                     },
                     step3: {
-                        'none': 'هەر رۆژێ بخێنە',
-                        'friday': 'هەینی بەتاڵ',
-                        'weekend': 'کۆتایی هەفتە بەتاڵ'
+                        'none': 'هەر رۆژێ بخوینە',
+                        'friday': 'ئەینی بەتاڵ',
+                        'weekend': 'دوماهییا هەفتییێ بەتاڵ'
                     },
                     step4: {
-                        'weekly': 'پێداچوونەوەیا هەفتانە',
-                        'monthly': 'پێداچوونەوەیا مەهانە',
-                        'quarterly': 'پێداچوونەوەیا سێ مەهان'
+                        'weekly': 'پێداچوونەڤەیا هەفتانە',
+                        'monthly': 'پێداچوونەڤەیا مەهانە',
+                        'quarterly': 'پێداچوونەڤەیا سێ مەهان'
                     }
                 },
                 '30days': {
@@ -888,7 +1047,7 @@
                     step3: {
                         'tajweed': 'ب تەجویدێ',
                         'understanding': 'ب تەفسیرێ',
-                        'memorization': 'حیڤز کرن',
+                        'memorization': 'حیفزکرن',
                         'both': 'تەجوید و تەفسیر'
                     },
                     step4: {
@@ -904,7 +1063,7 @@
                         '3days': '٣ رۆژ/هەفتە'
                     },
                     step3: {
-                        'morning': 'سبەحێ',
+                        'morning': 'سپێدێ',
                         'afternoon': 'پێشڤانێ',
                         'evening': 'ئێڤارێ',
                         'flexible': 'دەمەکێ نەدیاری'
@@ -1049,7 +1208,7 @@
             const minutesInput = document.getElementById('manualMinutes');
 
             if (!dateInput.value || !minutesInput.value) {
-                alert('تکایە هەردوو خانە پڕبکەرەوە');
+                alert('تکایە هەردوو خانە پڕ بکە');
                 return;
             }
 
@@ -1065,7 +1224,7 @@
             updateTodayProgress();
 
             minutesInput.value = '';
-            alert('زانیاریەکە زیادکرا');
+            alert('زانیاریەک هاتە زێدەکرن');
         }
 
         function calculateStreak() {
@@ -1116,7 +1275,7 @@
             let goalText = '';
             if (currentGoal && currentGoal.criteria === 'pages') {
                 const pagesRead = Math.floor(todayMinutes / 3); // Estimate: 1 page ≈ 3 minutes
-                goalText = `ئامانجی ئەمڕۆ: ${KurdishNumbers.toKurdish(currentGoal.target)} لاپەڕە خوێندنەوە (${KurdishNumbers.toKurdish(pagesRead)} لاپەڕە تەواوکراوە)`;
+                goalText = `ئامانجی ئەمڕۆ: ${KurdishNumbers.toKurdish(currentGoal.target)} لاپەڕ خوێندنەوە (${KurdishNumbers.toKurdish(pagesRead)} لاپەڕ تەواوکراوە)`;
             } else if (currentGoal && currentGoal.criteria === 'juz') {
                 const juzRead = Math.floor(todayMinutes / 60); // Estimate: 1 juz ≈ 60 minutes
                 goalText = `ئامانجی ئەمڕۆ: ${KurdishNumbers.toKurdish(currentGoal.target)} جوز خوێندنەوە (${KurdishNumbers.toKurdish(juzRead)} جوز تەواوکراوە)`;
@@ -1130,7 +1289,7 @@
             } else {
                 // Default to time-based (minutes)
                 const targetMinutes = currentGoal ? currentGoal.target : dailyGoalMinutes;
-                goalText = `ئامانجی ئەمڕۆ: ${KurdishNumbers.toKurdish(targetMinutes)} خولەک خوێندنەوە (${KurdishNumbers.toKurdish(todayMinutes)} خولەک تەواوکراوە)`;
+                goalText = `ئارمانجا ئەڤڕو: ${KurdishNumbers.toKurdish(targetMinutes)} خولەک خیندن (${KurdishNumbers.toKurdish(todayMinutes)} خولەک تمامکرینە)`;
             }
 
             document.getElementById('goalText').textContent = goalText;
@@ -1138,7 +1297,7 @@
 
 
         function deleteGoal() {
-            if (confirm('ئایا دڵنیایت لە سڕینەوەی هەموو زانیاری و دەستپێکردنەوە؟')) {
+            if (confirm('ئایا دڵنیایت لە سڕینەڤەیا هەمی زانیاریان و دەستپێکرنەوە؟')) {
                 // Clear reading data but keep other user data
                 const userKey = 'quran_data_' + currentUser.sub;
                 const saved = localStorage.getItem(userKey);
@@ -1171,7 +1330,7 @@
                 renderWeekProgress();
                 updateStreak();
                 updateTodayProgress();
-                alert('هەموو زانیاریەکان سڕایەوە');
+                alert('هەمی زانیاری هاتنە سڕینەڤە');
             }
         }
 
@@ -1189,6 +1348,89 @@
                     console.log('❌ Service Worker registration failed:', error);
                 });
         }
+    </script>
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-main">
+                <!-- Brand Section -->
+                <div class="footer-brand">
+                    <div class="footer-brand-header">
+                        <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image">
+                        <h2 class="footer-brand-name">تەفسیر کورد</h2>
+                    </div>
+                    <p class="footer-brand-tagline">
+                        پلاتفۆرمەکا ئارام بۆ خواندنێ، گەڕیان و رامان ل سەر قورئانا پیرۆز ب زمانێ کوردی (بادینی). قورئان بگەهیتە دەستێ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
+                    </p>
+                    <div class="footer-social-icons">
+                        <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://www.youtube.com/@tefsirkurd" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="https://t.me/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                            <i class="fab fa-telegram"></i>
+                        </a>
+                        <a href="https://www.pinterest.com/tafsirkurd/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest">
+                            <i class="fab fa-pinterest"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Navigate Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title">گەڕیان</h3>
+                    <div class="footer-links">
+                        <a href="/profile" class="footer-link">پرۆفایل</a>
+                        <a href="/goals" class="footer-link">ئارمانج</a>
+                        <a href="/bookmarks" class="footer-link">نیشانەکری</a>
+                        <a href="/settings" class="footer-link">رێکخستن</a>
+                    </div>
+                </div>
+
+                <!-- Resources Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title">رۆژپەڕێن دی</h3>
+                    <div class="footer-links">
+                        <a href="/" class="footer-link">مالپەڕێ سەرەکی</a>
+                        <a href="/quran" class="footer-link">قورئانا پیرۆز</a>
+                        <a href="/#features" class="footer-link">تایبەتمەندی</a>
+                        <a href="/#about" class="footer-link">دەربارەی مە</a>
+                    </div>
+                </div>
+
+                <!-- Connect Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title">پەیوەندی</h3>
+                    <div class="footer-links">
+                        <p class="footer-contact-text">ئەگەر تە پرسیارەک یان پێشنیارەک هەبیت، پەیوەندییێ ب مە بکە و ب زووترین دەم دێ بەرسڤا تە هێتە دان!</p>
+                        <a href="mailto:info@tafsirkurd.com" class="footer-link">
+                            <i class="fas fa-envelope"></i> info@tafsirkurd.com
+                        </a>
+                        <a href="/#contact" class="footer-link">
+                            <i class="fas fa-paper-plane"></i> فۆرمێ پڕ بکە
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <p class="footer-copyright">
+                    &copy; <span id="footer-year"></span> تەفسیر کورد. هەمی ماف پاراستی نە. خودایێ مەزن بەرەکەتێ بێخیتە هەول و ماندبوونا مە.
+                </p>
+                <div class="footer-meta-links">
+                    <a href="/privacy-policy" class="footer-meta-link">پاراستنا تایبەتمەندیێ</a>
+                    <a href="/terms-and-conditions" class="footer-meta-link">مەرج و رێسایان</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Set current year
+        document.getElementById('footer-year').textContent = new Date().getFullYear();
     </script>
 </body>
 </html>

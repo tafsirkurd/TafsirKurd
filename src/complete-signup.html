@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ku">
 <head>
+    <script src="/utils/theme-loader.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="تەواوکردنی تۆمارکردن - تەفسیر کوورد">
+    <meta name="description" content="تەمامکرنا تۆمارکرنێ - تەفسیر کورد">
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
-    <title>تەواوکردنی تۆمارکردن - تەفسیر کوورد</title>
+    <title>تەمامکرنا تۆمارکرنێ - تەفسیر کورد</title>
 
     <!-- Favicons - High quality with SVG for perfect scaling -->
     <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
@@ -329,7 +330,7 @@
         .continue-btn {
             width: 100%;
             padding: 13px;
-            background: linear-gradient(135deg, #000000 0%, #333333 100%);
+            background: var(--primary);
             color: var(--accent);
             border: none;
             border-radius: 12px;
@@ -355,9 +356,19 @@
             width: 0;
             height: 0;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.15);
             transform: translate(-50%, -50%);
             transition: width 0.6s, height 0.6s;
+        }
+
+        [data-theme="dark"] .continue-btn {
+            background: #ffffff;
+            color: #000000;
+            border: 2px solid #ffffff;
+        }
+
+        [data-theme="dark"] .continue-btn::before {
+            background: rgba(0, 0, 0, 0.1);
         }
 
         .continue-btn:hover::before {
@@ -370,6 +381,11 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
         }
 
+        [data-theme="dark"] .continue-btn:hover {
+            background: #f0f0f0;
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+        }
+
         .continue-btn span,
         .continue-btn i {
             position: relative;
@@ -380,8 +396,8 @@
             display: none;
             width: 18px;
             height: 18px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top-color: white;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -569,9 +585,9 @@
             </div>
 
             <div class="welcome-header">
-                <h1 class="welcome-title">سەرکەوتوو بوو!</h1>
+                <h1 class="welcome-title">سەرکەفتی بوو!</h1>
                 <p class="welcome-subtitle">
-                    بە سەرکەوتوویی چوویتە ژوورەوە. با ئەزموونەکەت ڕێکبخەین
+                    ب سەرکەفتی چویە ژوورڤە. بلا ئەزموونا تە رێکێخین
                 </p>
             </div>
 
@@ -580,12 +596,12 @@
             </div>
 
             <div class="preferences-section">
-                <h2 class="preferences-title">هەڵبژاردنەکانت</h2>
+                <h2 class="preferences-title">هەلبژارتنێن تە</h2>
 
                 <div class="preference-item" onclick="togglePreference(this, 'notifications')">
                     <div class="preference-label">
                         <i class="fas fa-bell preference-icon"></i>
-                        <span>ئاگادارکردنەوەی ڕۆژانە</span>
+                        <span>ئاگەهدارکرنا رۆژانە</span>
                     </div>
                     <div class="toggle-switch active" data-pref="notifications"></div>
                 </div>
@@ -593,7 +609,7 @@
                 <div class="preference-item" onclick="togglePreference(this, 'darkMode')">
                     <div class="preference-label">
                         <i class="fas fa-moon preference-icon"></i>
-                        <span>دۆخی تاریک</span>
+                        <span>رەوشا تاریک</span>
                     </div>
                     <div class="toggle-switch" data-pref="darkMode"></div>
                 </div>
@@ -601,7 +617,7 @@
                 <div class="preference-item" onclick="togglePreference(this, 'autoSave')">
                     <div class="preference-label">
                         <i class="fas fa-save preference-icon"></i>
-                        <span>هەڵگرتنی خۆکار</span>
+                        <span>هەلگرتنا خۆکار</span>
                     </div>
                     <div class="toggle-switch active" data-pref="autoSave"></div>
                 </div>
@@ -609,12 +625,12 @@
 
             <button class="continue-btn" id="continueBtn" onclick="completeSignup()">
                 <div class="loading-spinner"></div>
-                <span>دەستپێکردن</span>
+                <span>دەستپێکرن</span>
                 <i class="fas fa-arrow-left"></i>
             </button>
 
             <div class="skip-link">
-                <a class="skip-btn" onclick="skipToMain()">پەلکێشکردن و چوونە سەرەتا</a>
+                <a class="skip-btn" onclick="skipToMain()">راکێشان و چوونە سەرەتا</a>
             </div>
         </div>
     </div>
@@ -734,6 +750,23 @@
                                 data: userData
                             })
                         }).catch(err => console.error('Failed to save notification settings:', err));
+
+                        // Send confirmation notification to admin via Telegram
+                        fetch('/.netlify/functions/telegram-notify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                type: 'notification_enabled',
+                                title: '🔔 Notifications Enabled!',
+                                message: `${userData.full_name || userData.userName || 'User'} enabled email reminders`,
+                                details: `Email: ${userData.email || user.email || 'Not provided'}`,
+                                data: {
+                                    userName: userData.full_name || userData.userName || 'Unknown',
+                                    userEmail: userData.email || user.email || 'Not provided',
+                                    timestamp: new Date().toISOString()
+                                }
+                            })
+                        }).catch(err => console.error('Failed to send Telegram notification:', err));
                     }
 
                     showNotification('Email reminders enabled! You\'ll receive daily Quran reminders in your inbox 📧🌙');
@@ -775,7 +808,7 @@
                 localStorage.setItem('theme', theme);
 
                 // Show notification
-                showNotification(isActive ? 'دۆخی تاریک چالاککرا' : 'دۆخی ڕووناک چالاککرا');
+                showNotification(isActive ? 'رەوشا تاریک چالاککر' : 'رەوشا رووناهیێ چالاککر');
             }
         }
 

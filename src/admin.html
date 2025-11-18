@@ -1500,10 +1500,14 @@
     <!-- Edit Video Modal -->
     <div id="editVideoModal" class="modal">
         <div class="modal-content">
-            <h3 class="modal-header">Edit Video URL</h3>
+            <h3 class="modal-header">Edit Video</h3>
             <div class="form-group">
                 <label>Instagram Post URL</label>
                 <input type="url" id="editVideoUrl" placeholder="https://www.instagram.com/p/...">
+            </div>
+            <div class="form-group">
+                <label>Position (1, 2, or 3)</label>
+                <input type="number" id="editVideoPosition" min="1" max="3" placeholder="Position">
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeEditVideoModal()">Cancel</button>
@@ -2325,25 +2329,33 @@
             if (!container) return;
 
             try {
-                // Combine recent users and messages
+                // Combine recent users and messages with timestamps
                 const activity = [];
 
-                allUsers.slice(-5).forEach(user => {
-                    activity.push({
-                        type: 'user',
-                        name: user.name || 'New User',
-                        action: 'Registered',
-                        time: 'Recently'
-                    });
+                // Get most recent 10 users (reversed because allUsers is now newest first)
+                allUsers.slice(0, 10).forEach(user => {
+                    if (user.created_at) {
+                        activity.push({
+                            type: 'user',
+                            name: user.name || 'New User',
+                            action: 'Registered',
+                            time: new Date(user.created_at).getTime(),
+                            timeDisplay: formatRelativeTime(user.created_at)
+                        });
+                    }
                 });
 
-                allMessages.slice(-5).forEach(msg => {
-                    activity.push({
-                        type: 'message',
-                        name: msg.name || 'Anonymous',
-                        action: 'Sent message',
-                        time: 'Recently'
-                    });
+                // Get most recent 10 messages
+                allMessages.slice(0, 10).forEach(msg => {
+                    if (msg.created_at) {
+                        activity.push({
+                            type: 'message',
+                            name: msg.name || 'Anonymous',
+                            action: 'Sent message',
+                            time: new Date(msg.created_at).getTime(),
+                            timeDisplay: formatRelativeTime(msg.created_at)
+                        });
+                    }
                 });
 
                 if (activity.length === 0) {
@@ -2351,7 +2363,11 @@
                     return;
                 }
 
-                container.innerHTML = activity.map(item => `
+                // Sort by timestamp (newest first)
+                activity.sort((a, b) => b.time - a.time);
+
+                // Display top 10 most recent activities
+                container.innerHTML = activity.slice(0, 10).map(item => `
                     <div class="table-card">
                         <div class="table-card-row">
                             <span class="table-card-label">${item.type === 'user' ? '👤' : '📧'} ${item.name}</span>
@@ -2359,13 +2375,36 @@
                         </div>
                         <div class="table-card-row">
                             <span class="table-card-label">Time:</span>
-                            <span class="table-card-value">${item.time}</span>
+                            <span class="table-card-value">${item.timeDisplay}</span>
                         </div>
                     </div>
                 `).join('');
             } catch (error) {
                 console.error('Error loading activity:', error);
+                container.innerHTML = '<div class="empty-state"><div class="empty-text" style="color: var(--danger);">Error loading activity</div></div>';
             }
+        }
+
+        // Format relative time (e.g., "2 hours ago", "3 days ago")
+        function formatRelativeTime(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffSec = Math.floor(diffMs / 1000);
+            const diffMin = Math.floor(diffSec / 60);
+            const diffHour = Math.floor(diffMin / 60);
+            const diffDay = Math.floor(diffHour / 24);
+            const diffWeek = Math.floor(diffDay / 7);
+            const diffMonth = Math.floor(diffDay / 30);
+
+            if (diffSec < 60) return 'Just now';
+            if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
+            if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
+            if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+            if (diffWeek < 4) return `${diffWeek} week${diffWeek > 1 ? 's' : ''} ago`;
+            if (diffMonth < 12) return `${diffMonth} month${diffMonth > 1 ? 's' : ''} ago`;
+
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
         }
 
         // Load Analytics
@@ -3302,7 +3341,7 @@
             container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading videos...</div></div>';
 
             try {
-                const { data, error } = await supabase.from('featured_videos').select('*').order('id', { ascending: false });
+                const { data, error } = await supabase.from('featured_videos').select('*').order('position', { ascending: true });
                 if (error) throw error;
 
                 allVideos = data || [];
@@ -3317,7 +3356,7 @@
                     <div class="table-card">
                         <div class="table-card-row">
                             <span class="table-card-label">Position:</span>
-                            <span class="badge info">#${index + 1}</span>
+                            <span class="badge info">#${video.position || (index + 1)}</span>
                         </div>
                         <div class="table-card-row">
                             <span class="table-card-label">URL:</span>
@@ -3325,7 +3364,7 @@
                         </div>
                         <div class="table-card-actions">
                             <button class="btn-icon info" onclick="window.open('${video.video_url}', '_blank')">🔗 Open</button>
-                            <button class="btn-icon warning" onclick="openEditVideoModal(${video.id}, '${video.video_url}')">✏️ Edit</button>
+                            <button class="btn-icon warning" onclick="openEditVideoModal(${video.id}, '${video.video_url}', ${video.position || (index + 1)})">✏️ Edit</button>
                             <button class="btn-icon danger" onclick="deleteVideo(${video.id})">🗑️ Delete</button>
                         </div>
                     </div>
@@ -3522,29 +3561,68 @@
 
         let currentEditVideoId = null;
 
-        function openEditVideoModal(id, url) {
+        function openEditVideoModal(id, url, position) {
             currentEditVideoId = id;
             document.getElementById('editVideoUrl').value = url;
+            document.getElementById('editVideoPosition').value = position || 1;
             document.getElementById('editVideoModal').classList.add('active');
         }
 
         function closeEditVideoModal() {
             document.getElementById('editVideoModal').classList.remove('active');
             document.getElementById('editVideoUrl').value = '';
+            document.getElementById('editVideoPosition').value = '';
             currentEditVideoId = null;
         }
 
         async function saveVideoEdit() {
             const url = document.getElementById('editVideoUrl').value.trim();
+            const position = parseInt(document.getElementById('editVideoPosition').value);
+
             if (!url) {
                 alert('Please enter a URL');
                 return;
             }
 
+            if (!position || position < 1 || position > 3) {
+                alert('Please enter a valid position (1, 2, or 3)');
+                return;
+            }
+
             try {
+                // Check if another video already has this position
+                const { data: existingVideo } = await supabase
+                    .from('featured_videos')
+                    .select('id, position')
+                    .eq('position', position)
+                    .neq('id', currentEditVideoId)
+                    .single();
+
+                // If position is taken, swap positions
+                if (existingVideo) {
+                    // Get current video's position
+                    const { data: currentVideo } = await supabase
+                        .from('featured_videos')
+                        .select('position')
+                        .eq('id', currentEditVideoId)
+                        .single();
+
+                    if (currentVideo) {
+                        // Swap: move other video to current video's old position
+                        await supabase
+                            .from('featured_videos')
+                            .update({ position: currentVideo.position })
+                            .eq('id', existingVideo.id);
+                    }
+                }
+
+                // Update current video
                 const { error } = await supabase
                     .from('featured_videos')
-                    .update({ video_url: url })
+                    .update({
+                        video_url: url,
+                        position: position
+                    })
                     .eq('id', currentEditVideoId);
 
                 if (error) throw error;
@@ -3572,13 +3650,13 @@
             container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading users...</div></div>';
 
             try {
-                const { data, error } = await supabase.from('user_data').select('*').order('id', { ascending: false });
+                const { data, error } = await supabase.from('user_data').select('*').order('id', { ascending: true });
                 if (error) throw error;
 
                 console.log('[Admin] Raw user data from database:', data);
 
-                // Parse user data from JSON
-                allUsers = (data || []).map(user => {
+                // Parse user data from JSON and assign sequential user numbers
+                allUsers = (data || []).map((user, index) => {
                     console.log('[Admin] Processing user:', user);
                     console.log('[Admin] User data field:', user.data);
 
@@ -3622,6 +3700,7 @@
 
                     return {
                         ...user,
+                        userNumber: index + 1, // Sequential user number based on join order (oldest = #1)
                         full_name: userData.full_name || userData.userName || user.user_id?.split('|')[0] || 'User',
                         name: userData.full_name || userData.userName || user.user_id?.split('|')[0] || 'User',
                         email: userData.email || userData.userEmail || user.user_id || '-',
@@ -3638,6 +3717,9 @@
                 });
 
                 console.log('[Admin] Processed users:', allUsers);
+
+                // Reverse array to show newest users first in admin panel (but keep userNumber intact)
+                allUsers.reverse();
 
                 // Update users header stats
                 const now = Date.now();
@@ -3675,8 +3757,8 @@
                 return;
             }
 
-            container.innerHTML = filtered.map((user, index) => {
-                const userNumber = index + 1; // Sequential user number (1, 2, 3...)
+            container.innerHTML = filtered.map((user) => {
+                const userNumber = user.userNumber; // Use pre-assigned user number from database order
                 // Get Surah name
                 const surahInfo = surahNames[user.current_surah];
                 const surahDisplay = surahInfo ? `${surahInfo.english} (${surahInfo.arabic})` : (user.current_surah ? `Surah ${user.current_surah}` : 'Not started');
@@ -3717,6 +3799,34 @@
                 // Calculate reading velocity
                 const daysActive = user.created_at ? Math.max(1, (Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24)) : 1;
                 const velocity = (user.total_read / daysActive).toFixed(1);
+
+                // Calculate estimated reading time (average 30 seconds per ayah)
+                const totalReadingMinutes = Math.round((user.total_read || 0) * 0.5); // 30 sec = 0.5 min
+                const readingHours = Math.floor(totalReadingMinutes / 60);
+                const readingMinutes = totalReadingMinutes % 60;
+                const readingTimeDisplay = readingHours > 0 ? `${readingHours}h ${readingMinutes}m` : `${readingMinutes}m`;
+
+                // Calculate engagement score (0-100)
+                const daysFromLastActivity = lastActivityDate ? Math.floor((Date.now() - new Date(lastActivityDate).getTime()) / (1000 * 60 * 60 * 24)) : 999;
+                const recencyScore = Math.max(0, 30 - daysFromLastActivity); // Max 30 points for recent activity
+                const progressScore = Math.min(40, completion * 0.4); // Max 40 points for progress
+                const velocityScore = Math.min(30, parseFloat(velocity) * 3); // Max 30 points for velocity
+                const engagementScore = Math.round(recencyScore + progressScore + velocityScore);
+
+                // Determine engagement level
+                const engagementLevel = engagementScore >= 70 ? '🔥 Highly Engaged' :
+                                       engagementScore >= 40 ? '✨ Moderately Engaged' :
+                                       engagementScore >= 20 ? '💤 Low Engagement' : '😴 Inactive';
+
+                // Calculate estimated completion date based on current velocity
+                const remainingAyahs = 6236 - (user.total_read || 0);
+                const daysToComplete = parseFloat(velocity) > 0 ? Math.ceil(remainingAyahs / parseFloat(velocity)) : null;
+                const estimatedCompletion = daysToComplete ? new Date(Date.now() + (daysToComplete * 24 * 60 * 60 * 1000)).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
+
+                // Get user data for additional details
+                const userData = user.data || {};
+                const bookmarksCount = userData.bookmarks?.length || 0;
+                const readAyahsCount = userData.readAyahs?.length || 0;
 
                 return `
                 <div class="table-card" style="position: relative; overflow: hidden; animation: fadeInUp 0.5s ease-out; background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%); border: 2px solid #e8ebf7;">
@@ -3776,6 +3886,52 @@
                         </div>
                     </div>
 
+                    <!-- Engagement & Analytics -->
+                    <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #e8ebf7;">
+                        <div style="font-weight: 600; color: #667eea; margin-bottom: 12px; font-size: 15px;">📈 Engagement Analytics</div>
+
+                        <!-- Engagement Score Bar -->
+                        <div style="background: #f8f9ff; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-size: 12px; color: #666;">ENGAGEMENT SCORE</span>
+                                <span style="font-weight: 700; font-size: 18px; color: #667eea;">${engagementScore}/100</span>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
+                                <div style="background: linear-gradient(90deg, ${engagementScore >= 70 ? '#10b981' : engagementScore >= 40 ? '#f59e0b' : '#ef4444'} 0%, ${engagementScore >= 70 ? '#059669' : engagementScore >= 40 ? '#d97706' : '#dc2626'} 100%); height: 100%; width: ${engagementScore}%; transition: width 0.5s; box-shadow: 0 0 8px ${engagementScore >= 70 ? '#10b981' : engagementScore >= 40 ? '#f59e0b' : '#ef4444'};"></div>
+                            </div>
+                            <div style="margin-top: 6px; font-size: 13px; font-weight: 600; color: ${engagementScore >= 70 ? '#10b981' : engagementScore >= 40 ? '#f59e0b' : '#ef4444'};">
+                                ${engagementLevel}
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                            <div style="background: #f0fdf4; padding: 10px; border-radius: 8px; border-left: 3px solid #10b981;">
+                                <div style="font-size: 11px; color: #666; margin-bottom: 3px;">⏱️ TIME SPENT</div>
+                                <div style="font-size: 16px; font-weight: 700; color: #059669;">${readingTimeDisplay}</div>
+                            </div>
+                            <div style="background: #fef3c7; padding: 10px; border-radius: 8px; border-left: 3px solid #f59e0b;">
+                                <div style="font-size: 11px; color: #666; margin-bottom: 3px;">📚 BOOKMARKS</div>
+                                <div style="font-size: 16px; font-weight: 700; color: #d97706;">${bookmarksCount}</div>
+                            </div>
+                            <div style="background: #ede9fe; padding: 10px; border-radius: 8px; border-left: 3px solid #8b5cf6;">
+                                <div style="font-size: 11px; color: #666; margin-bottom: 3px;">✅ UNIQUE AYAHS</div>
+                                <div style="font-size: 16px; font-weight: 700; color: #7c3aed;">${readAyahsCount}</div>
+                            </div>
+                            <div style="background: #fce7f3; padding: 10px; border-radius: 8px; border-left: 3px solid #ec4899;">
+                                <div style="font-size: 11px; color: #666; margin-bottom: 3px;">📆 DAYS ACTIVE</div>
+                                <div style="font-size: 16px; font-weight: 700; color: #db2777;">${Math.round(daysActive)}</div>
+                            </div>
+                        </div>
+
+                        ${parseFloat(velocity) > 0 ? `
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px; border-radius: 8px; margin-top: 12px; color: white;">
+                            <div style="font-size: 11px; opacity: 0.9; margin-bottom: 3px;">🎯 ESTIMATED COMPLETION</div>
+                            <div style="font-size: 15px; font-weight: 700;">${estimatedCompletion}</div>
+                            <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">${daysToComplete} days at current pace</div>
+                        </div>
+                        ` : ''}
+                    </div>
+
                     <!-- Account Information -->
                     <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #e8ebf7;">
                         <div style="font-weight: 600; color: #667eea; margin-bottom: 12px; font-size: 15px;">ℹ️ Account Information</div>
@@ -3791,6 +3947,10 @@
                             <div style="display: flex; justify-content: space-between;">
                                 <span style="color: #666;">🔢 User Number:</span>
                                 <span style="font-weight: 600; color: #667eea; font-size: 16px;">#${userNumber}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">🆔 Database ID:</span>
+                                <span style="font-weight: 600; color: #999; font-size: 11px;">${user.id}</span>
                             </div>
                         </div>
                     </div>

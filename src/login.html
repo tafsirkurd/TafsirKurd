@@ -4,12 +4,12 @@
     <script src="/utils/theme-loader.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="description" content="چوونەژووروەوە بۆ تەفسیر کوورد">
+    <meta name="description" content="چوونە ژوورڤە بۆ تەفسیر کورد">
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
-    <title>چوونەژووروەوە - تەفسیر کوورد</title>
+    <title>چوونە ژوورڤە - تەفسیر کورد</title>
 
     <!-- Favicons - High quality with SVG for perfect scaling -->
     <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
@@ -54,6 +54,17 @@
             --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        [data-theme="dark"] {
+            --primary: #ffffff;
+            --accent: #000000;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #ffffff;
+            --text-muted: #b0b0b0;
+            --border: #2a2a2a;
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -62,7 +73,7 @@
 
         body {
             font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
-            background: linear-gradient(135deg, #fdfdfd 0%, #ffffff 100%);
+            background: var(--bg);
             min-height: 100vh;
             max-height: 100vh;
             color: var(--text);
@@ -93,7 +104,7 @@
         .shape:nth-child(1) {
             width: 200px;
             height: 200px;
-            background: black;
+            background: var(--primary);
             border-radius: 50%;
             top: 10%;
             left: 10%;
@@ -103,7 +114,7 @@
         .shape:nth-child(2) {
             width: 150px;
             height: 150px;
-            background: black;
+            background: var(--primary);
             border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
             top: 60%;
             right: 10%;
@@ -113,7 +124,7 @@
         .shape:nth-child(3) {
             width: 180px;
             height: 180px;
-            background: black;
+            background: var(--primary);
             border-radius: 50%;
             bottom: 10%;
             left: 50%;
@@ -123,7 +134,7 @@
         .shape:nth-child(4) {
             width: 120px;
             height: 120px;
-            background: black;
+            background: var(--primary);
             border-radius: 50%;
             top: 30%;
             right: 30%;
@@ -168,7 +179,7 @@
         .login-header {
             text-align: center;
             margin-bottom: 18px;
-            color: black;
+            color: var(--text);
         }
 
         .login-title {
@@ -198,7 +209,7 @@
             border-radius: 20px;
             padding: 25px 20px;
             box-shadow: var(--shadow-lg);
-            border: 3px solid rgba(255, 255, 255, 0.2);
+            border: 3px solid var(--border);
             backdrop-filter: blur(10px);
             animation: scaleIn 0.5s ease-out;
         }
@@ -225,6 +236,10 @@
             margin-bottom: 10px;
             animation: bounce 2s infinite;
             object-fit: contain;
+        }
+
+        [data-theme="dark"] .logo-section img {
+            filter: invert(1) brightness(1.2);
         }
 
         @keyframes bounce {
@@ -316,7 +331,7 @@
         .google-signin-btn {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, #000000 0%, #333333 100%);
+            background: var(--primary);
             color: var(--accent);
             border: none;
             border-radius: 12px;
@@ -342,9 +357,13 @@
             width: 0;
             height: 0;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.15);
             transform: translate(-50%, -50%);
             transition: width 0.6s, height 0.6s;
+        }
+
+        [data-theme="dark"] .google-signin-btn::before {
+            background: rgba(0, 0, 0, 0.2);
         }
 
         .google-signin-btn:hover::before {
@@ -470,8 +489,8 @@
             display: none;
             width: 20px;
             height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top-color: white;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -696,47 +715,47 @@
 
     <div class="login-container">
         <div class="login-header">
-            <h1 class="login-title">بەخێربێیت بۆ تەفسیر کوورد</h1>
+            <h1 class="login-title">ب خێر بێی بۆ تەفسیر کورد</h1>
             <p class="login-subtitle">
-                چوونەژووروەوە بکە بۆ دەسپێگەیشتن بە تایبەتمەندییە تایبەتەکان
+                چوونە ژوورڤە بکە بۆ دەستگەهشتن ب تایبەتمەندییێن تایبەت
             </p>
         </div>
 
         <div class="login-card">
             <div class="logo-section">
-                <img src="assets/images/logo.png" alt="تەفسیر کوورد">
-                <div class="logo-text">تەفسیر کوورد</div>
+                <img src="assets/images/logo.png" alt="تەفسیر کورد">
+                <div class="logo-text">تەفسیر کورد</div>
             </div>
 
             <div class="benefits-section">
-                <h3 class="benefits-title">چی بەدەست دەهێنیت دوای چوونەژوورەوە:</h3>
+                <h3 class="benefits-title">چ دێ ب دەستڤە ئینی پشتی چوونە ژوورڤە:</h3>
                 <div class="features-list">
                     <div class="feature-item">
                         <span class="feature-icon">✦</span>
                         <div>
-                            <span class="feature-badge">نوێ!</span>
-                            تێبینی تایبەت و نیشانەکردنەوە
+                            <span class="feature-badge">نوی!</span>
+                            تێبینیێن تایبەت و نیشانەکرن
                         </div>
                     </div>
                     <div class="feature-item">
                         <span class="feature-icon">✦</span>
-                        <div>شوێنکەوتنی ئامانج و پێشکەوتنت</div>
+                        <div>شوێنکەفتنا ئارمانج و پێشکەفتنا تە</div>
                     </div>
                     <div class="feature-item">
                         <span class="feature-icon">✦</span>
-                        <div>هەڵگرتنی خوێندنەوەی بەردەوام</div>
+                        <div>هەلگرتنا خواندنەکا بەردەوام</div>
                     </div>
                     <div class="feature-item">
                         <span class="feature-icon">✦</span>
-                        <div>هاوکات کردن لەنێوان هەموو ئامێرەکانت</div>
+                        <div>هەڤدەمکرن د ناڤبەرا هەمی ئامیرێن تە دا</div>
                     </div>
                     <div class="feature-item">
                         <span class="feature-icon">✦</span>
-                        <div>دەسگەیشتن بە تایبەتمەندی پێشکەوتوو</div>
+                        <div>دەستگەهشتن ب تایبەتمەندیێن پێشکەفتی</div>
                     </div>
                     <div class="feature-item">
                         <span class="feature-icon">✦</span>
-                        <div>ئاگادارکردنەوەی ڕۆژانە بۆ خوێندنەوە</div>
+                        <div>ئاگەهدارکرنا رۆژانە بۆ خواندنێ</div>
                     </div>
                 </div>
             </div>
@@ -755,7 +774,7 @@
             <button class="google-signin-btn" id="googleSignInBtn" onclick="startGoogleSignIn()">
                 <div class="loading-spinner"></div>
                 <i class="fab fa-google"></i>
-                <span>چوونەژوورەوە بە Google</span>
+                <span>چوونە ژوورڤە ب Google</span>
             </button>
 
             <div class="divider">
@@ -765,14 +784,14 @@
             <div class="back-link">
                 <a href="/quran" class="back-btn">
                     <i class="fas fa-arrow-right"></i>
-                    گەڕانەوە بۆ سەرەتا
+                    گەڕیان ڤە بۆ سەرەتا
                 </a>
             </div>
 
             <p class="privacy-text">
-                پاراستنی تایبەتێتیت لەپێش دایە – بە چوونەژووروەوە، ڕازیت بە
-                <a href="/privacy-policy" class="privacy-link">سیاسەتی تایبەتێتی</a> و
-                <a href="/terms-and-conditions" class="privacy-link">مەرج و بەندەکان</a>مان
+                پاراستنا تایبەتمەندیا تە د پێشییێ دایە – ب چوونە ژوورڤە، رازی ی ب
+                <a href="/privacy-policy" class="privacy-link">سیاسەتا تایبەتمەندیێ</a> و
+                <a href="/terms-and-conditions" class="privacy-link">مەرج و بەند</a>مان
             </p>
         </div>
     </div>
@@ -817,14 +836,14 @@
             } catch (error) {
                 console.error('Google Sign-In error:', error);
                 btn.classList.remove('loading');
-                showNotification('هەڵەیەک ڕوویدا، تکایە دووبارە هەوڵ بدەرەوە');
+                showNotification('خەلەتییەک چێبوو، تکایە دووبارە هەول بدە');
             }
         }
 
         async function handleTokenResponse(response) {
             if (response.error) {
                 console.error('Token error:', response.error);
-                showNotification('چوونەژوورەوە سەرکەوتوو نەبوو');
+                showNotification('چوونە ژوورڤە سەرکەفتی نەبوو');
                 return;
             }
 
@@ -844,7 +863,7 @@
             } catch (error) {
                 console.error('Failed to get user info:', error);
                 btn.classList.remove('loading');
-                showNotification('هەڵەیەک ڕوویدا، تکایە دووبارە هەوڵ بدەرەوە');
+                showNotification('خەلەتییەک چێبوو، تکایە دووبارە هەول بدە');
             }
         }
 
@@ -1035,7 +1054,7 @@
             if (isAuthenticated === 'true') {
                 const user = JSON.parse(localStorage.getItem('user'));
                 if (user) {
-                    showNotification('ئێوە پێشتر چووبوونەتە ژوورەوە');
+                    showNotification('هەوە پێشتر چوو بوونە ژوورڤە');
                     // Immediate redirect - no delay
                     window.location.href = '/quran';
                     return;
