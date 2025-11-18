@@ -2,7 +2,7 @@
 
 > A modern, fast, and offline-capable Quran platform with Kurdish Tafsir
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR-BADGE/deploy-status)](https://app.netlify.com/sites/YOUR-SITE/deploys)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/tafsirkurd/deploy-status)](https://app.netlify.com/sites/tafsirkurd/deploys)
 [![Performance](https://img.shields.io/badge/Performance-100-brightgreen)]()
 [![PWA](https://img.shields.io/badge/PWA-Enabled-blue)]()
 [![Offline](https://img.shields.io/badge/Offline-Ready-orange)]()
