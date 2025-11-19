@@ -142,12 +142,12 @@
             background: var(--card-bg);
             border: 2px solid transparent;
             border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 16px;
+            padding: 28px;
+            margin-bottom: 20px;
             cursor: pointer;
             transition: all var(--transition);
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 20px;
             position: relative;
         }
@@ -205,6 +205,9 @@
         .goal-description {
             color: var(--text-muted);
             font-size: 0.95rem;
+            line-height: 1.6;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .input-group {
@@ -1258,23 +1261,23 @@
 
                 <!-- Navigate Section -->
                 <div class="footer-section">
-                    <h3 class="footer-section-title">گەڕان</h3>
+                    <h3 class="footer-section-title">گەڕیان</h3>
                     <div class="footer-links">
                         <a href="/profile" class="footer-link">پرۆفایل</a>
-                        <a href="/goals" class="footer-link">ئامانجەکان</a>
-                        <a href="/bookmarks" class="footer-link">نیشانەکراوەکان</a>
-                        <a href="/settings" class="footer-link">ڕێکخستنەکان</a>
+                        <a href="/goals" class="footer-link">ئارمانج</a>
+                        <a href="/bookmarks" class="footer-link">نیشانەکری</a>
+                        <a href="/settings" class="footer-link">رێکخستن</a>
                     </div>
                 </div>
 
                 <!-- Resources Section -->
                 <div class="footer-section">
-                    <h3 class="footer-section-title">رۆژپەڕا دیکە</h3>
+                    <h3 class="footer-section-title">رۆژپەڕێن دی</h3>
                     <div class="footer-links">
+                        <a href="/" class="footer-link">مالپەڕێ سەرەکی</a>
                         <a href="/quran" class="footer-link">قورئانا پیرۆز</a>
                         <a href="/#features" class="footer-link">تایبەتمەندی</a>
-                        <a href="/#about" class="footer-link">دەربارەی ئێمە</a>
-                        <a href="/#contact" class="footer-link">پەیوەندی</a>
+                        <a href="/#about" class="footer-link">دەربارەی مە</a>
                     </div>
                 </div>
 
@@ -1282,7 +1285,7 @@
                 <div class="footer-section">
                     <h3 class="footer-section-title">پەیوەندی</h3>
                     <div class="footer-links">
-                        <p class="footer-contact-text">ئەگەر تە پسیارەک یان پێشنیارەک هەیە، پەیوەندیێ ب مە بکە و ب زویترین دەم دێ بەرسڤا تە هێتە دان!</p>
+                        <p class="footer-contact-text">ئەگەر تە پرسیارەک یان پێشنیارەک هەبیت، پەیوەندییێ ب مە بکە و ب زووترین دەم دێ بەرسڤا تە هێتە دان!</p>
                         <a href="mailto:info@tafsirkurd.com" class="footer-link">
                             <i class="fas fa-envelope"></i> info@tafsirkurd.com
                         </a>
