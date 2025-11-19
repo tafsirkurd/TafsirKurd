@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v357-empty-array-fix';
+const CACHE_NAME = 'tafsir-kurd-v358-database-clear-tool';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -44,7 +44,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v357-empty-array-fix');
+  console.log('[ServiceWorker] Installing v358-database-clear-tool');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
