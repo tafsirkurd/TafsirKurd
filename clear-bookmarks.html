@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear All Bookmarks - Tafsir Kurd</title>
+</head>
+<body>
+    <h1>Clear All User Bookmarks</h1>
+    <button onclick="clearBookmarks()">Clear My Bookmarks</button>
+    <div id="result"></div>
+    
+    <script>
+        function clearBookmarks() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user && user.sub) {
+                const userKey = 'quran_data_' + user.sub;
+                const saved = localStorage.getItem(userKey);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    data.bookmarks = [];
+                    data.notes = {};
+                    data.timestamps = {};
+                    data.cachedText = {};
+                    localStorage.setItem(userKey, JSON.stringify(data));
+                    document.getElementById('result').innerHTML = '<p style="color: green;">✅ All bookmarks cleared! Refresh any page to see changes.</p>';
+                } else {
+                    document.getElementById('result').innerHTML = '<p style="color: orange;">No data found.</p>';
+                }
+            } else {
+                document.getElementById('result').innerHTML = '<p style="color: red;">Not logged in.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
