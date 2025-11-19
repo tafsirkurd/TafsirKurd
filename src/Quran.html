@@ -6566,11 +6566,29 @@
 
             console.log('🔄 Loading user data for:', currentUser.sub);
 
-            // Try loading from cloud backup first (in case localStorage was cleared)
-            const loadedFromCloud = await loadFromDatabase();
-
-            // Now load from localStorage (which now has cloud data if it was restored)
+            // Check if localStorage already has data
             const saved = localStorage.getItem(userKey);
+
+            // SMART SYNC: Compare timestamps to decide which data to use
+            if (!saved) {
+                // No localStorage data - load from cloud
+                console.log('📥 localStorage empty, loading from cloud backup...');
+                await loadFromDatabase();
+            } else {
+                // localStorage exists - check if cloud has newer data
+                const localData = JSON.parse(saved);
+                const localTimestamp = localData.lastSyncTime || 0;
+
+                console.log('🔍 Checking cloud for updates (local timestamp: ' + new Date(localTimestamp).toLocaleString() + ')');
+
+                const cloudData = await getCloudData();
+                if (cloudData && cloudData.lastSyncTime && cloudData.lastSyncTime > localTimestamp) {
+                    console.log('☁️ Cloud has newer data, using cloud version');
+                    localStorage.setItem(userKey, JSON.stringify(cloudData));
+                } else {
+                    console.log('✅ Local data is up-to-date, using localStorage');
+                }
+            }
 
             if (saved) {
                 const data = JSON.parse(saved);
@@ -6668,8 +6686,8 @@
                     totalActiveMinutes: Math.max(userStats.totalActiveMinutes || 0, existingData.stats?.totalActiveMinutes || 0)
                 },
 
-                // Only update if we have valid data
-                bookmarks: bookmarkedAyahs && bookmarkedAyahs.length > 0 ? bookmarkedAyahs : (existingData.bookmarks || []),
+                // Always save bookmarks, even if empty (for deletions)
+                bookmarks: bookmarkedAyahs || [],
                 lastRead: lastReadPosition && lastReadPosition.surah > 0 ? lastReadPosition : (existingData.lastRead || { surah: 1, ayah: 1 }),
 
                 // Merge read ayahs (union of old and new)
@@ -6720,7 +6738,10 @@
                     return existing || current;
                 })(),
 
-                readingGoal: readingGoal ? JSON.parse(readingGoal) : (existingData.readingGoal || null)
+                readingGoal: readingGoal ? JSON.parse(readingGoal) : (existingData.readingGoal || null),
+
+                // Add timestamp for smart sync
+                lastSyncTime: Date.now()
             };
 
             // Validate critical data before saving
@@ -6795,12 +6816,11 @@
             }
         }
 
-        async function loadFromDatabase() {
-            if (!isUserAuthenticated || !currentUser) return false;
+        // Helper to get cloud data without overwriting localStorage
+        async function getCloudData() {
+            if (!isUserAuthenticated || !currentUser) return null;
 
             try {
-                console.log('☁️ Loading from database for user:', currentUser.sub);
-
                 const response = await fetch('/.netlify/functions/user-data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -6811,18 +6831,31 @@
                 });
 
                 const result = await response.json();
+                return result.success ? result.data : null;
+            } catch (error) {
+                console.error('⚠️ Cloud fetch error:', error);
+                return null;
+            }
+        }
+
+        async function loadFromDatabase() {
+            if (!isUserAuthenticated || !currentUser) return false;
+
+            try {
+                console.log('☁️ Loading from database for user:', currentUser.sub);
+
+                const cloudData = await getCloudData();
 
                 console.log('📥 Database response:', {
-                    success: result.success,
-                    hasData: !!result.data,
-                    stats: result.data?.stats,
-                    position: result.data?.currentPosition
+                    hasData: !!cloudData,
+                    stats: cloudData?.stats,
+                    position: cloudData?.currentPosition
                 });
 
-                if (result.success && result.data) {
+                if (cloudData) {
                     // Restore from cloud to localStorage
                     const userKey = 'quran_data_' + currentUser.sub;
-                    localStorage.setItem(userKey, JSON.stringify(result.data));
+                    localStorage.setItem(userKey, JSON.stringify(cloudData));
                     console.log('✅ Data restored from cloud backup');
                     console.log('💾 Saved to localStorage with key:', userKey);
                     return true;

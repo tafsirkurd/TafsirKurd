@@ -959,17 +959,22 @@
                 const userKey = 'quran_data_' + user.sub;
                 const saved = localStorage.getItem(userKey) || '{}';
                 const data = JSON.parse(saved);
-                data.bookmarks = bookmarkedAyahs;
-                data.notes = ayahNotes;
-                data.timestamps = ayahTimestamps;
+
+                // ALWAYS save bookmarks array, even if empty (for deletions)
+                data.bookmarks = bookmarkedAyahs || [];
+                data.notes = ayahNotes || {};
+                data.timestamps = ayahTimestamps || {};
 
                 // Keep existing cachedText if it exists
                 if (!data.cachedText) {
                     data.cachedText = {};
                 }
 
+                // Add timestamp for smart sync
+                data.lastSyncTime = Date.now();
+
                 localStorage.setItem(userKey, JSON.stringify(data));
-                console.log('Bookmarks saved:', bookmarkedAyahs);
+                console.log('Bookmarks saved:', bookmarkedAyahs, 'with timestamp:', new Date(data.lastSyncTime).toLocaleString());
 
                 // Sync to cloud database
                 try {
@@ -982,7 +987,7 @@
                             data: data
                         })
                     });
-                    console.log('✅ Bookmarks synced to cloud');
+                    console.log('✅ Bookmarks synced to cloud at', new Date().toLocaleString());
                 } catch (error) {
                     console.warn('⚠️ Cloud sync failed:', error);
                 }
