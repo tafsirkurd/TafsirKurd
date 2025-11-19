@@ -896,11 +896,17 @@
             // Load bookmarks data
             loadBookmarks();
 
-            // PERFORMANCE: Load Quran data FIRST for instant display (uses cached version)
-            await loadQuranData();
-
-            // Then render bookmarks with data already available
+            // INSTANT RENDER: Show bookmarks immediately with cached data
             renderBookmarks();
+
+            // PERFORMANCE: Load Quran data in background (non-blocking)
+            loadQuranData().then(() => {
+                // Refresh bookmarks with fresh data if needed
+                const hasCachedData = bookmarkedAyahs.every(key => getCachedAyahText(key));
+                if (!hasCachedData) {
+                    renderBookmarks();
+                }
+            });
 
             // Setup search and sort
             const searchInput = document.getElementById('searchInput');
@@ -917,6 +923,9 @@
                     filterAndRenderBookmarks(searchInput.value, e.target.value);
                 });
             }
+
+            // Start timestamp auto-update interval
+            setInterval(updateTimestamps, 30000);
         });
 
         function loadBookmarks() {
@@ -1353,9 +1362,6 @@
                 }
             });
         }
-
-        // Set interval to update timestamps every 30 seconds
-        setInterval(updateTimestamps, 30000);
 
         // Clear old service worker and caches
         if ('serviceWorker' in navigator) {
