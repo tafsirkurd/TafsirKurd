@@ -962,7 +962,14 @@
                 data.bookmarks = bookmarkedAyahs;
                 data.notes = ayahNotes;
                 data.timestamps = ayahTimestamps;
+
+                // Keep existing cachedText if it exists
+                if (!data.cachedText) {
+                    data.cachedText = {};
+                }
+
                 localStorage.setItem(userKey, JSON.stringify(data));
+                console.log('Bookmarks saved:', bookmarkedAyahs);
             }
         }
 
@@ -1292,24 +1299,33 @@
 
                     // Wait for animation to complete, then remove from data
                     setTimeout(() => {
+                        // Remove from arrays
                         bookmarkedAyahs = bookmarkedAyahs.filter(b => b !== key);
                         delete ayahNotes[key];
                         delete ayahTimestamps[key];
 
-                        // Clear cached text
+                        // Clear cached text and save everything
                         const user = JSON.parse(localStorage.getItem('user'));
                         if (user) {
                             const userKey = 'quran_data_' + user.sub;
-                            const saved = localStorage.getItem(userKey);
-                            if (saved) {
-                                const data = JSON.parse(saved);
-                                if (data.cachedText) {
-                                    delete data.cachedText[key];
-                                }
+                            const saved = localStorage.getItem(userKey) || '{}';
+                            const data = JSON.parse(saved);
+
+                            // Update all data
+                            data.bookmarks = bookmarkedAyahs;
+                            data.notes = ayahNotes;
+                            data.timestamps = ayahTimestamps;
+
+                            // Remove cached text for this bookmark
+                            if (data.cachedText && data.cachedText[key]) {
+                                delete data.cachedText[key];
                             }
+
+                            // Save to localStorage
+                            localStorage.setItem(userKey, JSON.stringify(data));
+                            console.log('Bookmark deleted and saved:', key);
                         }
 
-                        saveBookmarks();
                         renderBookmarks();
                         showNotification('نیشانە هاتە سڕینەڤە');
                     }, 400); // Match transition duration
