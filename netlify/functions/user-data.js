@@ -89,8 +89,8 @@ exports.handler = async (event, context) => {
                     if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
                         output[key] = deepMerge(target[key] || {}, source[key]);
                     } else if (Array.isArray(source[key])) {
-                        // For arrays, prefer source if it has data, otherwise keep target
-                        output[key] = source[key].length > 0 ? source[key] : (target[key] || []);
+                        // ALWAYS use source array, even if empty (for bookmark deletions)
+                        output[key] = source[key];
                     } else {
                         // For primitives, prefer source if defined and not null, otherwise keep target
                         output[key] = (source[key] !== undefined && source[key] !== null) ? source[key] : target[key];
