@@ -892,15 +892,14 @@
             // Auth check passed - show the page
             document.body.classList.add('ready');
 
-            // PERFORMANCE: Load and show bookmarks immediately, don't wait for Quran data
+            // Load bookmarks data
             loadBookmarks();
-            renderBookmarks();
 
-            // PERFORMANCE: Load Quran data in background (non-blocking)
-            loadQuranData().then(() => {
-                // Refresh bookmarks with loaded ayah text
-                renderBookmarks();
-            });
+            // PERFORMANCE: Load Quran data FIRST for instant display (uses cached version)
+            await loadQuranData();
+
+            // Then render bookmarks with data already available
+            renderBookmarks();
 
             // Setup search and sort
             const searchInput = document.getElementById('searchInput');
@@ -1021,7 +1020,7 @@
                         </div>
                     </div>
                     <div class="ayah-arabic" id="ayah-${key}">
-                        ${getCachedAyahText(key) || '<i class="fas fa-spinner fa-spin"></i> باربوون...'}
+                        ${getCachedAyahText(key) || getAyahTextSync(surah, ayah) || '<i class="fas fa-spinner fa-spin"></i> باربوون...'}
                     </div>
                     ${note ? `
                         <div class="ayah-note">
@@ -1045,8 +1044,10 @@
                 `;
                 list.appendChild(card);
 
-                // Load ayah text (simulated)
-                loadAyahText(surah, ayah, key);
+                // Only load from API if not cached
+                if (!getCachedAyahText(key) && !getAyahTextSync(surah, ayah)) {
+                    loadAyahText(surah, ayah, key);
+                }
             });
 
             // Update timestamps in real-time
@@ -1157,7 +1158,7 @@
                         </div>
                     </div>
                     <div class="ayah-arabic" id="ayah-${key}">
-                        ${getCachedAyahText(key) || '<i class="fas fa-spinner fa-spin"></i> باربوون...'}
+                        ${getCachedAyahText(key) || getAyahTextSync(surah, ayah) || '<i class="fas fa-spinner fa-spin"></i> باربوون...'}
                     </div>
                     ${note ? `
                         <div class="ayah-note">
@@ -1180,7 +1181,11 @@
                     </div>
                 `;
                 list.appendChild(card);
-                loadAyahText(surah, ayah, key);
+
+                // Only load from API if not cached
+                if (!getCachedAyahText(key) && !getAyahTextSync(surah, ayah)) {
+                    loadAyahText(surah, ayah, key);
+                }
             });
 
             // Update timestamps in real-time
@@ -1236,6 +1241,16 @@
                 }
             }
             return null;
+        }
+
+        // Get ayah text synchronously if quranData is already loaded
+        function getAyahTextSync(surah, ayah) {
+            if (!quranData || !quranData[surah]) {
+                return null;
+            }
+            const verses = quranData[surah].verses;
+            const verse = verses.find(v => v.verse === ayah);
+            return verse?.text || null;
         }
 
         function removeBookmark(key) {
