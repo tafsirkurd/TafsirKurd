@@ -97,6 +97,7 @@
             display: flex;
             gap: 60px;
             align-items: center;
+            overflow: hidden;
         }
 
         .left-section {
@@ -106,7 +107,8 @@
 
         .right-section {
             flex: 1;
-            max-width: 600px;
+            max-width: 100%;
+            width: 100%;
         }
 
         h1 {
@@ -393,10 +395,12 @@
                 flex-direction: column;
                 gap: 30px;
                 padding: 20px 15px;
+                overflow: visible;
             }
 
             .left-section, .right-section {
                 max-width: 100%;
+                width: 100%;
             }
 
             h1 {
@@ -455,7 +459,13 @@
 
         @media (max-width: 480px) {
             .container {
-                padding: 15px 12px;
+                padding: 15px 10px;
+                overflow: visible;
+            }
+
+            .right-section {
+                width: 100%;
+                padding: 0;
             }
 
             h1 {
