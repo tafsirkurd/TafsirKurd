@@ -206,6 +206,17 @@
             border-right: 5px solid var(--primary);
             position: relative;
             overflow: hidden;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .bookmark-card.removing {
+            opacity: 0;
+            transform: scale(0.8);
+            margin: 0;
+            padding: 0;
+            max-height: 0;
+            border: none;
         }
 
         .bookmark-card::before {
@@ -1265,11 +1276,51 @@
 
         function removeBookmark(key) {
             if (confirm('ئایا دڵنیای ژ سڕینەڤەیا ڤێ نیشانەیێ؟')) {
-                bookmarkedAyahs = bookmarkedAyahs.filter(b => b !== key);
-                delete ayahNotes[key];
-                delete ayahTimestamps[key];
-                saveBookmarks();
-                renderBookmarks();
+                // Find the card element
+                const cards = document.querySelectorAll('.bookmark-card');
+                let cardToRemove = null;
+
+                cards.forEach(card => {
+                    if (card.innerHTML.includes(`removeBookmark('${key}')`)) {
+                        cardToRemove = card;
+                    }
+                });
+
+                if (cardToRemove) {
+                    // Add removing class for animation
+                    cardToRemove.classList.add('removing');
+
+                    // Wait for animation to complete, then remove from data
+                    setTimeout(() => {
+                        bookmarkedAyahs = bookmarkedAyahs.filter(b => b !== key);
+                        delete ayahNotes[key];
+                        delete ayahTimestamps[key];
+
+                        // Clear cached text
+                        const user = JSON.parse(localStorage.getItem('user'));
+                        if (user) {
+                            const userKey = 'quran_data_' + user.sub;
+                            const saved = localStorage.getItem(userKey);
+                            if (saved) {
+                                const data = JSON.parse(saved);
+                                if (data.cachedText) {
+                                    delete data.cachedText[key];
+                                }
+                            }
+                        }
+
+                        saveBookmarks();
+                        renderBookmarks();
+                        showNotification('نیشانە هاتە سڕینەڤە');
+                    }, 400); // Match transition duration
+                } else {
+                    // Fallback if card not found
+                    bookmarkedAyahs = bookmarkedAyahs.filter(b => b !== key);
+                    delete ayahNotes[key];
+                    delete ayahTimestamps[key];
+                    saveBookmarks();
+                    renderBookmarks();
+                }
             }
         }
 
