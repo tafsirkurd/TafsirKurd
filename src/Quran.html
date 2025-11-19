@@ -1946,6 +1946,16 @@
             border-color: var(--primary);
         }
 
+        .bookmark-btn.bookmarked {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .bookmark-btn.bookmarked i::before {
+            content: "\f00c";  /* fa-check icon */
+        }
+
         .ayah-arabic {
             font-family: var(--arabic-font), serif;
             font-size: var(--arabic-size);
@@ -5139,9 +5149,11 @@
                                         title="کۆپیکرن">
                                     <i class="fas fa-copy"></i>
                                 </button>
-                                <button class="ayah-action-btn ${isBookmarked ? 'bookmarked' : ''}"
+                                <button class="ayah-action-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}"
                                         onclick="toggleBookmark(${surahNum}, ${verse.verse})"
-                                        title="نیشانەکرن">
+                                        title="نیشانەکرن"
+                                        data-surah="${surahNum}"
+                                        data-ayah="${verse.verse}">
                                     <i class="fas fa-bookmark"></i>
                                 </button>
                             </div>
@@ -5335,9 +5347,11 @@
                                         title="کۆپیکرن">
                                     <i class="fas fa-copy"></i>
                                 </button>
-                                <button class="ayah-action-btn ${isBookmarked ? 'bookmarked' : ''}"
+                                <button class="ayah-action-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}"
                                         onclick="toggleBookmark(${surahNum}, ${verse.verse})"
-                                        title="نیشانەکرن">
+                                        title="نیشانەکرن"
+                                        data-surah="${surahNum}"
+                                        data-ayah="${verse.verse}">
                                     <i class="fas fa-bookmark"></i>
                                 </button>
                             </div>
@@ -5995,8 +6009,8 @@
                 showNotification('نیشانەکرن');
             }
 
-            // Update button
-            const btn = document.querySelector(`#ayah-${ayah} .ayah-action-btn`);
+            // Update button - specifically target the bookmark button
+            const btn = document.querySelector(`button.bookmark-btn[data-surah="${surah}"][data-ayah="${ayah}"]`);
             if (btn) {
                 btn.classList.toggle('bookmarked');
             }
