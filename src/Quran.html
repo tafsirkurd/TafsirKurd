@@ -1842,6 +1842,7 @@
             border: 1px solid var(--border);
             transition: all var(--transition);
             border-right: 4px solid var(--primary);
+            position: relative;
         }
 
         .ayah:hover {
@@ -1954,6 +1955,27 @@
 
         .bookmark-btn.bookmarked i::before {
             content: "\f00c";  /* fa-check icon */
+        }
+
+        /* Green bookmark indicator on ayah card */
+        .ayah.bookmarked::after {
+            content: "\f00c";  /* fa-check icon */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #10b981;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+            z-index: 10;
         }
 
         .ayah-arabic {
@@ -5140,6 +5162,11 @@
                         ayahDiv.classList.add('ayah-read');
                     }
 
+                    // Add bookmarked class to ayah card if bookmarked
+                    if (isBookmarked) {
+                        ayahDiv.classList.add('bookmarked');
+                    }
+
                     ayahDiv.innerHTML = `
                         <div class="ayah-header">
                             <div class="ayah-number">${KurdishNumbers.toKurdish(verse.verse)}</div>
@@ -5332,6 +5359,11 @@
                     const ayahKey = `${surahNum}:${verse.verse}`;
                     if (isUserAuthenticated && activityTracker.readAyahs && activityTracker.readAyahs.has(ayahKey)) {
                         ayahDiv.classList.add('ayah-read');
+                    }
+
+                    // Add bookmarked class to ayah card if bookmarked
+                    if (isBookmarked) {
+                        ayahDiv.classList.add('bookmarked');
                     }
 
                     if (highlightAyah && verse.verse === highlightAyah) {
@@ -6013,6 +6045,12 @@
             const btn = document.querySelector(`button.bookmark-btn[data-surah="${surah}"][data-ayah="${ayah}"]`);
             if (btn) {
                 btn.classList.toggle('bookmarked');
+            }
+
+            // Update ayah card - add/remove bookmarked class
+            const ayahCard = document.querySelector(`.ayah[data-surah="${surah}"][data-ayah="${ayah}"]`);
+            if (ayahCard) {
+                ayahCard.classList.toggle('bookmarked');
             }
 
             // Save to localStorage
