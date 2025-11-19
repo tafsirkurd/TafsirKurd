@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v353-production-deploy';
+const CACHE_NAME = 'tafsir-kurd-v354-production-deploy';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -7,6 +7,7 @@ const urlsToCache = [
   '/bookmarks.html',
   '/profile.html',
   '/goals.html',
+  '/reading-goal.html',
   '/settings.html',
   '/login.html',
   '/onboarding.html',
@@ -43,7 +44,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v353-production-deploy');
+  console.log('[ServiceWorker] Installing v354-production-deploy');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
@@ -60,9 +61,14 @@ self.addEventListener('install', event => {
       return caches.open(CACHE_NAME);
     }).then(cache => {
       console.log('[ServiceWorker] Caching resources');
-      return cache.addAll(urlsToCache).catch(error => {
-        console.error('[ServiceWorker] Failed to cache some resources:', error);
-      });
+      // Cache files individually for better error handling
+      return Promise.all(
+        urlsToCache.map(url => {
+          return cache.add(url).catch(error => {
+            console.warn('[ServiceWorker] Failed to cache:', url, error);
+          });
+        })
+      );
     })
   );
   // INSTANT activation - don't wait
