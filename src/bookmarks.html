@@ -1048,7 +1048,7 @@
                         </div>
                     </div>
                     <div class="ayah-arabic" id="ayah-${key}">
-                        ${getCachedAyahText(key) || getAyahTextSync(surah, ayah) || '<i class="fas fa-spinner fa-spin"></i> باربوون...'}
+                        ${getCachedAyahText(key) || getAyahTextSync(surah, ayah) || '<i class="fas fa-spinner fa-spin"></i>'}
                     </div>
                     ${note ? `
                         <div class="ayah-note">
@@ -1186,7 +1186,7 @@
                         </div>
                     </div>
                     <div class="ayah-arabic" id="ayah-${key}">
-                        ${getCachedAyahText(key) || getAyahTextSync(surah, ayah) || '<i class="fas fa-spinner fa-spin"></i> باربوون...'}
+                        ${getCachedAyahText(key) || getAyahTextSync(surah, ayah) || '<i class="fas fa-spinner fa-spin"></i>'}
                     </div>
                     ${note ? `
                         <div class="ayah-note">
@@ -1226,8 +1226,8 @@
 
             // PERFORMANCE: Don't block - check immediately if data is available
             if (!quranData || !quranData[surah]) {
-                // Show placeholder text while loading
-                element.innerHTML = '<i class="fas fa-spinner fa-spin"></i> باربوون...';
+                // Show placeholder icon while loading
+                element.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                 return;
             }
 
