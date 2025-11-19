@@ -953,7 +953,7 @@
             }
         }
 
-        function saveBookmarks() {
+        async function saveBookmarks() {
             const user = JSON.parse(localStorage.getItem('user'));
             if (user) {
                 const userKey = 'quran_data_' + user.sub;
@@ -970,6 +970,22 @@
 
                 localStorage.setItem(userKey, JSON.stringify(data));
                 console.log('Bookmarks saved:', bookmarkedAyahs);
+
+                // Sync to cloud database
+                try {
+                    await fetch('/.netlify/functions/user-data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: user.sub,
+                            action: 'save',
+                            data: data
+                        })
+                    });
+                    console.log('✅ Bookmarks synced to cloud');
+                } catch (error) {
+                    console.warn('⚠️ Cloud sync failed:', error);
+                }
             }
         }
 
