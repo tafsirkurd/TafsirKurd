@@ -5277,6 +5277,7 @@
         // ============================================
 
         let featuresData = [];
+        let deletedFeatureIds = [];
 
         async function loadFeatures() {
             console.log('⭐ Loading features...');
@@ -5376,6 +5377,10 @@
 
         function deleteFeature(index) {
             if (confirm('دلنیایی کو دڤێی ئەڤ تایبەتمەندی بژێی؟')) {
+                const feature = featuresData[index];
+                if (feature.id) {
+                    deletedFeatureIds.push(feature.id);
+                }
                 featuresData.splice(index, 1);
                 displayFeaturesEditor();
             }
@@ -5397,17 +5402,36 @@
 
                 console.log('💾 Saving features:', updates);
 
-                // Delete old features and insert new ones
-                await supabase.from('features').delete().neq('id', 0);
+                // Delete removed features first
+                for (const id of deletedFeatureIds) {
+                    const { error } = await supabase
+                        .from('features')
+                        .delete()
+                        .eq('id', id);
+                    if (error) throw error;
+                }
 
+                // Save each feature (update existing or insert new)
                 for (const feature of updates) {
                     if (feature.id) {
-                        await supabase.from('features').update(feature).eq('id', feature.id);
+                        // Update existing feature
+                        const { error } = await supabase
+                            .from('features')
+                            .update(feature)
+                            .eq('id', feature.id);
+                        if (error) throw error;
                     } else {
+                        // Insert new feature
                         delete feature.id;
-                        await supabase.from('features').insert([feature]);
+                        const { error } = await supabase
+                            .from('features')
+                            .insert([feature]);
+                        if (error) throw error;
                     }
                 }
+
+                // Clear deleted IDs
+                deletedFeatureIds = [];
 
                 messageDiv.innerHTML = `
                     <div style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(86, 171, 47, 0.3);">
@@ -5439,6 +5463,7 @@
         // ============================================
 
         let scheduleData = [];
+        let deletedScheduleIds = [];
 
         async function loadSchedule() {
             console.log('📅 Loading schedule...');
@@ -5554,6 +5579,10 @@
 
         function deleteSchedule(index) {
             if (confirm('دلنیایی کو دڤێی ئەڤ خشتە بژێی؟')) {
+                const item = scheduleData[index];
+                if (item.id) {
+                    deletedScheduleIds.push(item.id);
+                }
                 scheduleData.splice(index, 1);
                 displayScheduleEditor();
             }
@@ -5577,16 +5606,36 @@
 
                 console.log('💾 Saving schedule:', updates);
 
-                await supabase.from('schedule').delete().neq('id', 0);
+                // Delete removed schedule items first
+                for (const id of deletedScheduleIds) {
+                    const { error } = await supabase
+                        .from('schedule')
+                        .delete()
+                        .eq('id', id);
+                    if (error) throw error;
+                }
 
+                // Save each schedule item (update existing or insert new)
                 for (const item of updates) {
                     if (item.id) {
-                        await supabase.from('schedule').update(item).eq('id', item.id);
+                        // Update existing item
+                        const { error } = await supabase
+                            .from('schedule')
+                            .update(item)
+                            .eq('id', item.id);
+                        if (error) throw error;
                     } else {
+                        // Insert new item
                         delete item.id;
-                        await supabase.from('schedule').insert([item]);
+                        const { error } = await supabase
+                            .from('schedule')
+                            .insert([item]);
+                        if (error) throw error;
                     }
                 }
+
+                // Clear deleted IDs
+                deletedScheduleIds = [];
 
                 messageDiv.innerHTML = `
                     <div style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; padding: 25px; border-radius: 20px;">
