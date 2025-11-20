@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v366-social-stats-design';
+const CACHE_NAME = 'tafsir-kurd-v367-features-schedule';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -47,7 +47,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v366-social-stats-design');
+  console.log('[ServiceWorker] Installing v367-features-schedule');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
