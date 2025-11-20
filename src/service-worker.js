@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v359-smart-sync';
+const CACHE_NAME = 'tafsir-kurd-v362-secure-fast-offline';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -25,6 +25,7 @@ const urlsToCache = [
   '/utils/notification-messages.js',
   '/utils/notification-scheduler.js',
   '/utils/theme-loader.js',
+  '/utils/footer-loader.js',
   '/assets/fonts/fonts.css',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.woff2',
@@ -39,12 +40,13 @@ const urlsToCache = [
   '/assets/fontawesome/webfonts/fa-regular-400.woff2',
   '/assets/fontawesome/webfonts/fa-brands-400.woff2',
   '/assets/images/logo.png',
+  '/assets/images/TafsirKurd.png',
   '/manifest.json'
 ];
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v359-smart-sync');
+  console.log('[ServiceWorker] Installing v362-secure-fast-offline');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

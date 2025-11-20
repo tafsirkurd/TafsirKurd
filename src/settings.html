@@ -797,13 +797,26 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // Initialize Supabase
-        const SUPABASE_URL = 'https://hztgjjctxchmzhncimyj.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6dGdqamN0eGNobXpobmNpbXlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQyOTY3MDksImV4cCI6MjA0OTg3MjcwOX0.vaxgOgH6FnbXWJm-kERi1R32mwZjJyC2TzV1_MHn79g';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Secure Configuration - Load from server
+        let supabase = null;
+
+        async function initSupabase() {
+            try {
+                const response = await fetch('/.netlify/functions/config');
+                if (!response.ok) throw new Error('Failed to fetch config');
+                const config = await response.json();
+                supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                console.log('✅ Supabase initialized securely');
+                return true;
+            } catch (error) {
+                console.error('❌ Supabase init failed:', error);
+                return false;
+            }
+        }
 
         // Initialize settings from localStorage
-        window.addEventListener('load', () => {
+        window.addEventListener('load', async () => {
+            await initSupabase(); // Initialize Supabase securely first
             // Check authentication
             const user = localStorage.getItem('user');
             const isAuthenticated = !!user;
