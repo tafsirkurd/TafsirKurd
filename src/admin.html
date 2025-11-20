@@ -6458,6 +6458,9 @@
                                                             <span style="font-weight: 600; font-size: 14px; color: ${item.is_active ? '#4CAF50' : '#999'};">Active</span>
                                                         </div>
                                                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                                            <button onclick="saveTranslation(${globalIndex})" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                                                                💾 Save
+                                                            </button>
                                                             <button onclick="showTranslationPreview('${item.key_id}', '${item.kurdish_text.replace(/'/g, "\\'")}', '${item.context}', '${item.page}')"
                                                                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
                                                                 👁️ Preview
