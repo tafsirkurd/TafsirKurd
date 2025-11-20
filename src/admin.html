@@ -861,6 +861,7 @@
                 <div class="nav-tab active" onclick="switchSection('dashboard')">📊 Dashboard</div>
                 <div class="nav-tab" onclick="switchSection('analytics')">📈 Analytics</div>
                 <div class="nav-tab" onclick="switchSection('bots')">🤖 Bot Protection</div>
+                <div class="nav-tab" onclick="switchSection('social')">📱 Social Stats</div>
                 <div class="nav-tab" onclick="switchSection('messages')">📧 Messages</div>
                 <div class="nav-tab" onclick="switchSection('videos')">🎥 Videos</div>
                 <div class="nav-tab" onclick="switchSection('users')">👥 Users</div>
@@ -1183,6 +1184,24 @@
                     <h3 class="section-subtitle">All Bot Logs</h3>
                     <div id="allBotsTable"></div>
                 </div>
+            </section>
+
+            <!-- Social Stats Section -->
+            <section id="socialSection" class="section">
+                <h2 class="section-title">📱 Social Media Statistics</h2>
+                <p class="section-description">تۆ دشێی ئەڤێ ژمارە بگوهەری ژ مۆبایلێ خۆ، ئەو ژمارە دێ سەر ماڵپەرێ پیشان بن</p>
+
+                <!-- Social Stats Editor -->
+                <div id="socialStatsEditor"></div>
+
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="primary-btn" onclick="saveSocialStats()" style="padding: 12px 30px; font-size: 16px; background: #4CAF50;">
+                        💾 تۆمارکرنا گوهەرتنا
+                    </button>
+                </div>
+
+                <!-- Success/Error Messages -->
+                <div id="socialStatsMessage" style="margin-top: 20px; text-align: center; display: none;"></div>
             </section>
 
             <!-- Messages Section -->
@@ -1737,6 +1756,11 @@
             // Update sections
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
             document.getElementById(section + 'Section').classList.add('active');
+
+            // Load section-specific data
+            if (section === 'social') {
+                loadSocialStats();
+            }
 
             // Track section view in Google Analytics
             if (typeof gtag !== 'undefined') {
@@ -4837,6 +4861,167 @@
             } catch (error) {
                 console.error('Error sending test notification:', error);
                 alert('❌ Error sending test notification: ' + error.message);
+            }
+        }
+
+        // ============================================
+        // Social Stats Management
+        // ============================================
+
+        let socialStatsData = [];
+
+        async function loadSocialStats() {
+            console.log('📱 Loading social stats...');
+
+            if (!supabase) {
+                await initSupabase();
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('social_stats')
+                    .select('*')
+                    .order('display_order', { ascending: true });
+
+                if (error) throw error;
+
+                socialStatsData = data || [];
+                console.log(`📱 Loaded ${socialStatsData.length} social stats`);
+
+                displaySocialStatsEditor();
+            } catch (error) {
+                console.error('❌ Error loading social stats:', error);
+                document.getElementById('socialStatsEditor').innerHTML = `
+                    <div style="background: #ffebee; color: #c62828; padding: 20px; border-radius: 8px; text-align: center;">
+                        <strong>❌ هەڵە:</strong> نەشیا ژمارە بخەونین
+                        <br><small>${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+
+        function displaySocialStatsEditor() {
+            const container = document.getElementById('socialStatsEditor');
+            if (!container || socialStatsData.length === 0) return;
+
+            container.innerHTML = `
+                <div style="display: grid; gap: 20px;">
+                    ${socialStatsData.map(stat => `
+                        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                                <div style="font-size: 32px;">
+                                    <i class="${stat.icon_class}"></i>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 18px; font-weight: bold; color: #333;">
+                                        ${stat.stat_label}
+                                    </div>
+                                    <div style="font-size: 14px; color: #666; margin-top: 5px;">
+                                        ${stat.stat_key}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; color: #666; font-size: 14px;">
+                                        ژمارە (Number)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="value_${stat.stat_key}"
+                                        value="${stat.stat_value}"
+                                        style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 24px; font-weight: bold; text-align: center;"
+                                        min="0"
+                                        step="1"
+                                    >
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; color: #666; font-size: 14px;">
+                                        یەکە (Unit)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="unit_${stat.stat_key}"
+                                        value="${stat.stat_unit}"
+                                        style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 20px; font-weight: bold; text-align: center;"
+                                        placeholder="ھ+"
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        async function saveSocialStats() {
+            const saveButton = event.target;
+            const messageDiv = document.getElementById('socialStatsMessage');
+
+            // Disable button and show loading
+            saveButton.disabled = true;
+            saveButton.textContent = '⏳ تۆمار دبیت...';
+            messageDiv.style.display = 'none';
+
+            try {
+                const updates = socialStatsData.map(stat => {
+                    const newValue = parseInt(document.getElementById(`value_${stat.stat_key}`).value) || 0;
+                    const newUnit = document.getElementById(`unit_${stat.stat_key}`).value || stat.stat_unit;
+
+                    return {
+                        id: stat.id,
+                        stat_value: newValue,
+                        stat_unit: newUnit
+                    };
+                });
+
+                console.log('💾 Saving social stats:', updates);
+
+                // Update each stat
+                for (const update of updates) {
+                    const { error } = await supabase
+                        .from('social_stats')
+                        .update({
+                            stat_value: update.stat_value,
+                            stat_unit: update.stat_unit
+                        })
+                        .eq('id', update.id);
+
+                    if (error) throw error;
+                }
+
+                // Show success message
+                messageDiv.innerHTML = `
+                    <div style="background: #e8f5e9; color: #2e7d32; padding: 15px; border-radius: 8px; font-size: 16px;">
+                        <strong>✅ سەرکەفتی!</strong> گوهەرتنە هاتنە تۆمارکرن. ئەو ژمارە نوکە دێ سەر ماڵپەرێ پیشان بن.
+                    </div>
+                `;
+                messageDiv.style.display = 'block';
+
+                // Reload stats
+                await loadSocialStats();
+
+                console.log('✅ Social stats saved successfully');
+
+            } catch (error) {
+                console.error('❌ Error saving social stats:', error);
+                messageDiv.innerHTML = `
+                    <div style="background: #ffebee; color: #c62828; padding: 15px; border-radius: 8px; font-size: 16px;">
+                        <strong>❌ هەڵە!</strong> نەشیا گوهەرتنە تۆمار بکەن
+                        <br><small>${error.message}</small>
+                    </div>
+                `;
+                messageDiv.style.display = 'block';
+            } finally {
+                // Re-enable button
+                saveButton.disabled = false;
+                saveButton.textContent = '💾 تۆمارکرنا گوهەرتنا';
+
+                // Hide message after 5 seconds
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 5000);
             }
         }
 

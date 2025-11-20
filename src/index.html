@@ -255,7 +255,8 @@ window.addEventListener('error', function(e) {
 
             <section id="reach">
                 <h2 class="section-title">دەستگەهشتن</h2>
-                <div class="stats-grid">
+                <div class="stats-grid" id="social-stats-container">
+                    <!-- Loading state -->
                     <div class="stat-card">
                         <div class="stat-icon">
                             <i class="fab fa-instagram"></i>
@@ -1211,6 +1212,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (supabase) {
         setInterval(loadWebsiteContent, 300000);
+        // Load social stats from database
+        loadSocialStats();
     }
 
     // Track geographic visit
@@ -1228,6 +1231,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('⚠️ SERVICE WORKER DISABLED - No caching active');
     }
 });
+
+// Load Social Media Stats from Database
+async function loadSocialStats() {
+    try {
+        if (!supabase) return;
+
+        const { data, error } = await supabase
+            .from('social_stats')
+            .select('*')
+            .order('display_order', { ascending: true });
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+            const container = document.getElementById('social-stats-container');
+            if (!container) return;
+
+            // Build HTML from database
+            container.innerHTML = data.map(stat => `
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="${stat.icon_class}"></i>
+                    </div>
+                    <div class="stat-number" data-target="${stat.stat_value}">٠</div>
+                    <div class="stat-unit">${stat.stat_unit}</div>
+                    <div class="stat-label">${stat.stat_label}</div>
+                </div>
+            `).join('');
+
+            // Re-initialize number animation after updating HTML
+            initNumberAnimation();
+        }
+    } catch (error) {
+        console.error('Failed to load social stats:', error);
+        // Keep default fallback stats if database fails
+    }
+}
 
 // Track Geographic Visit
 async function trackGeoVisit() {
