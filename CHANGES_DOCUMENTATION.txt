@@ -1,0 +1,294 @@
+===============================================================================
+ADMIN PANEL - INDIVIDUAL SAVE BUTTONS FEATURE
+===============================================================================
+Date: 2025-11-20
+Changes by: Claude Code
+
+===============================================================================
+SUMMARY
+===============================================================================
+Added individual save buttons for each translation item in the admin panel,
+allowing users to save changes to specific translations without having to
+use the "Save All Changes" button.
+
+===============================================================================
+FILES MODIFIED
+===============================================================================
+1. src/admin.html
+   - Line 6418-6420: Added Save button
+   - Line 6474-6533: Added saveTranslation() function
+
+===============================================================================
+WHAT WAS ADDED
+===============================================================================
+
+1. SAVE BUTTON (Line 6418-6420)
+   Location: Next to Preview and Delete buttons in each translation item
+
+   HTML Code:
+   <button onclick="saveTranslation(${globalIndex})"
+           style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+                  color: white; border: none; padding: 8px 16px;
+                  border-radius: 8px; cursor: pointer; font-weight: 600;
+                  font-size: 13px;">
+       💾 Save
+   </button>
+
+2. SAVE TRANSLATION FUNCTION (Line 6474-6533)
+
+   Function: async function saveTranslation(index)
+
+   What it does:
+   - Saves individual translation changes to Supabase database
+   - Updates existing translations or inserts new ones
+   - Provides visual feedback during save process
+   - Handles errors gracefully
+
+===============================================================================
+HOW IT WORKS
+===============================================================================
+
+STEP 1: User clicks "💾 Save" button on a translation item
+
+STEP 2: Button shows loading state
+   - Text changes to: "⏳ Saving..."
+   - Button is disabled
+
+STEP 3: Function collects data from input fields:
+   - Key ID: document.getElementById(`trans_key_${index}`)
+   - Kurdish Text: document.getElementById(`trans_text_${index}`)
+   - Context: document.getElementById(`trans_context_${index}`)
+   - Page: document.getElementById(`trans_page_${index}`)
+   - Active Status: document.getElementById(`trans_active_${index}`)
+
+STEP 4: Database operation
+   IF translation has an ID:
+       - UPDATE existing record in Supabase
+   ELSE:
+       - INSERT new record in Supabase
+       - Store returned ID
+
+STEP 5: Success feedback
+   - Button text: "✅ Saved!"
+   - Background: Green gradient
+   - Duration: 2 seconds
+   - Then returns to normal state
+
+STEP 6: Error handling (if any error occurs)
+   - Button text: "❌ Error"
+   - Background: Red gradient
+   - Shows alert with error message
+   - Duration: 2 seconds
+   - Then returns to normal state
+
+===============================================================================
+VISUAL STATES
+===============================================================================
+
+NORMAL STATE:
+   Text: "💾 Save"
+   Color: Green gradient (#56ab2f to #a8e063)
+   Status: Enabled
+
+LOADING STATE:
+   Text: "⏳ Saving..."
+   Color: Green gradient
+   Status: Disabled
+
+SUCCESS STATE:
+   Text: "✅ Saved!"
+   Color: Darker green (#4CAF50 to #45a049)
+   Status: Disabled (for 2 seconds)
+
+ERROR STATE:
+   Text: "❌ Error"
+   Color: Red gradient (#eb3349 to #f45c43)
+   Status: Disabled (for 2 seconds)
+
+===============================================================================
+DATABASE OPERATIONS
+===============================================================================
+
+Table: kurdish_translations
+
+UPDATE Operation (for existing translations):
+   await supabase
+       .from('kurdish_translations')
+       .update(updatedTranslation)
+       .eq('id', updatedTranslation.id);
+
+INSERT Operation (for new translations):
+   await supabase
+       .from('kurdish_translations')
+       .insert([updatedTranslation])
+       .select();
+
+===============================================================================
+BUTTON LAYOUT
+===============================================================================
+
+Before this change:
+   [Active Toggle] [Preview] [Delete]
+
+After this change:
+   [Active Toggle] [Save] [Preview] [Delete]
+
+All buttons use: display: flex; gap: 8px;
+
+===============================================================================
+USE CASES
+===============================================================================
+
+1. Quick Edit: User can edit one translation and save it immediately
+2. Testing: User can test changes on individual items before saving all
+3. Safety: Reduces risk of losing all changes if something goes wrong
+4. Performance: Faster than saving all translations when editing just one
+5. Workflow: Better for making multiple small edits over time
+
+===============================================================================
+TECHNICAL DETAILS
+===============================================================================
+
+Function Signature:
+   async function saveTranslation(index)
+
+Parameters:
+   - index: The index of the translation in translationsData array
+
+Dependencies:
+   - Supabase client (must be initialized)
+   - translationsData array (global variable)
+   - DOM elements with IDs: trans_key_${index}, trans_text_${index}, etc.
+
+Error Handling:
+   - try/catch block
+   - Console logging for debugging
+   - User alert for errors
+   - Visual feedback on button
+
+Return Value:
+   - None (async function, updates UI directly)
+
+===============================================================================
+COMPARISON WITH EXISTING FEATURE
+===============================================================================
+
+SAVE ALL CHANGES BUTTON (Already existed):
+   - Location: Bottom of translations section
+   - Function: saveAllTranslations()
+   - Action: Saves all translations at once
+   - Use case: Bulk updates
+
+NEW INDIVIDUAL SAVE BUTTON:
+   - Location: Each translation item
+   - Function: saveTranslation(index)
+   - Action: Saves one translation
+   - Use case: Single item updates
+
+Both functions use the same Supabase operations but different scope.
+
+===============================================================================
+GIT COMMITS
+===============================================================================
+
+Commit 1: 84e7c3d
+   Message: "Add individual save buttons for translations in admin panel"
+   Files: src/admin.html
+   Changes: +64 lines
+
+Commit 2: 85ff60f
+   Message: "Move clear-bookmarks.html to src directory"
+   Files: clear-bookmarks.html → src/clear-bookmarks.html
+   Changes: File moved
+
+===============================================================================
+TESTING CHECKLIST
+===============================================================================
+
+[ ] Save button appears next to Preview and Delete buttons
+[ ] Clicking Save shows "⏳ Saving..." state
+[ ] Successful save shows "✅ Saved!" for 2 seconds
+[ ] Button returns to normal after success
+[ ] Changes are saved to database
+[ ] New translations get an ID after first save
+[ ] Error state works if database fails
+[ ] Button is disabled during save operation
+[ ] Multiple items can be saved independently
+[ ] Active toggle state is saved correctly
+
+===============================================================================
+FUTURE IMPROVEMENTS (OPTIONAL)
+===============================================================================
+
+1. Add keyboard shortcut (Ctrl+S) to save current translation
+2. Add auto-save feature after X seconds of inactivity
+3. Add "unsaved changes" indicator
+4. Add undo/redo functionality
+5. Add batch save for selected items
+6. Add diff view to show what changed
+
+===============================================================================
+TROUBLESHOOTING
+===============================================================================
+
+Problem: Button stays in loading state
+Solution: Check browser console for JavaScript errors
+
+Problem: Changes not saving
+Solution: Check Supabase connection and credentials
+
+Problem: Button not appearing
+Solution: Clear browser cache and reload page
+
+Problem: Wrong translation being saved
+Solution: Check that globalIndex is correct in button onclick
+
+===============================================================================
+CODE LOCATIONS REFERENCE
+===============================================================================
+
+File: src/admin.html
+
+Save Button HTML:
+   Lines: 6417-6428
+   Section: Translation item rendering
+
+saveTranslation() Function:
+   Lines: 6474-6533
+   Section: Translation management functions
+
+Related Functions:
+   - displayTranslationsEditor(): Line 6300+
+   - deleteTranslation(): Line 6458-6472
+   - saveAllTranslations(): Line 6535+
+   - addNewTranslation(): Line 6439-6453
+
+===============================================================================
+BACKUP INFORMATION
+===============================================================================
+
+Original code (before changes) is in git history:
+   Commit: 8691c96 (previous commit)
+
+To restore original code:
+   git checkout 8691c96 src/admin.html
+
+To see the diff:
+   git diff 8691c96 84e7c3d src/admin.html
+
+===============================================================================
+CONTACT & SUPPORT
+===============================================================================
+
+Generated by: Claude Code
+Repository: https://github.com/tafsirkurd/TafsirKurd.git
+Branch: main
+
+For issues or questions:
+   - Check git history: git log
+   - View specific commit: git show 84e7c3d
+   - Compare changes: git diff
+
+===============================================================================
+END OF DOCUMENTATION
+===============================================================================
