@@ -6415,6 +6415,9 @@
                                                             <span style="font-weight: 600; font-size: 14px; color: ${item.is_active ? '#4CAF50' : '#999'};">Active</span>
                                                         </div>
                                                         <div style="display: flex; gap: 8px;">
+                                                            <button onclick="saveTranslation(${globalIndex})" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                                                                💾 Save
+                                                            </button>
                                                             <button onclick="showTranslationPreview('${item.key_id}', '${item.kurdish_text.replace(/'/g, "\\'")}', '${item.context}', '${item.page}')"
                                                                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
                                                                 👁️ Preview
@@ -6465,6 +6468,67 @@
                 }
                 translationsData.splice(index, 1);
                 displayTranslationsEditor();
+            }
+        }
+
+        async function saveTranslation(index) {
+            const saveBtn = event.target;
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '⏳ Saving...';
+            saveBtn.disabled = true;
+
+            try {
+                const translation = translationsData[index];
+                const updatedTranslation = {
+                    id: translation.id,
+                    key_id: document.getElementById(`trans_key_${index}`).value,
+                    kurdish_text: document.getElementById(`trans_text_${index}`).value,
+                    context: document.getElementById(`trans_context_${index}`).value,
+                    category: translation.category,
+                    page: document.getElementById(`trans_page_${index}`).value,
+                    is_active: document.getElementById(`trans_active_${index}`).checked
+                };
+
+                console.log('💾 Saving translation:', updatedTranslation);
+
+                if (updatedTranslation.id) {
+                    // Update existing
+                    const { error } = await supabase
+                        .from('kurdish_translations')
+                        .update(updatedTranslation)
+                        .eq('id', updatedTranslation.id);
+                    if (error) throw error;
+                } else {
+                    // Insert new
+                    delete updatedTranslation.id;
+                    const { data, error } = await supabase
+                        .from('kurdish_translations')
+                        .insert([updatedTranslation])
+                        .select();
+                    if (error) throw error;
+                    // Update the translation with the new ID
+                    translation.id = data[0].id;
+                }
+
+                // Show success feedback
+                saveBtn.innerHTML = '✅ Saved!';
+                saveBtn.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
+                setTimeout(() => {
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.style.background = 'linear-gradient(135deg, #56ab2f 0%, #a8e063 100%)';
+                    saveBtn.disabled = false;
+                }, 2000);
+
+            } catch (error) {
+                console.error('❌ Error saving translation:', error);
+                saveBtn.innerHTML = '❌ Error';
+                saveBtn.style.background = 'linear-gradient(135deg, #eb3349 0%, #f45c43 100%)';
+                setTimeout(() => {
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.style.background = 'linear-gradient(135deg, #56ab2f 0%, #a8e063 100%)';
+                    saveBtn.disabled = false;
+                }, 2000);
+                alert('Error saving translation: ' + error.message);
             }
         }
 
