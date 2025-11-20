@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v369-icon-picker-enhanced';
+const CACHE_NAME = 'tafsir-kurd-v370-cache-update';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -27,6 +27,7 @@ const urlsToCache = [
   '/utils/theme-loader.js',
   '/utils/footer-loader.js',
   '/utils/bot-detector.js',
+  '/utils/text-highlighter.js',
   '/assets/fonts/fonts.css',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.woff2',
@@ -47,7 +48,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v369-icon-picker-enhanced');
+  console.log('[ServiceWorker] Installing v370-cache-update');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
