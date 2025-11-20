@@ -1307,6 +1307,51 @@
                     <p class="kurdish-text" style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 18px;">بەشەکێ هەلبژێرە بۆ بەڕێوەبردن</p>
                 </div>
 
+                <!-- Quick Stats Overview -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 35px; border-radius: 25px; box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3); position: relative; overflow: hidden; margin-bottom: 40px;">
+                    <!-- Decorative Background Elements -->
+                    <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%; filter: blur(40px);"></div>
+                    <div style="position: absolute; bottom: -80px; left: -80px; width: 250px; height: 250px; background: rgba(255,255,255,0.08); border-radius: 50%; filter: blur(60px);"></div>
+
+                    <!-- Header -->
+                    <div style="position: relative; z-index: 1; text-align: center; margin-bottom: 35px;">
+                        <div style="font-size: 48px; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">📊</div>
+                        <h2 style="margin: 0 0 8px 0; font-size: 32px; font-weight: 800; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">Quick Overview</h2>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 16px; font-weight: 300;">Real-time statistics at a glance</p>
+                    </div>
+
+                    <!-- Stats Grid with Glass Cards -->
+                    <div style="position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 25px; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="font-size: 40px; margin-bottom: 12px;">👥</div>
+                            <div style="font-size: 36px; font-weight: 800; color: white; margin-bottom: 5px; text-shadow: 0 2px 8px rgba(0,0,0,0.2);" id="totalUsers">0</div>
+                            <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 8px;">Total Users</div>
+                            <div style="font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; display: inline-block;" id="usersChange">+0 this week</div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 25px; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="font-size: 40px; margin-bottom: 12px;">📧</div>
+                            <div style="font-size: 36px; font-weight: 800; color: white; margin-bottom: 5px; text-shadow: 0 2px 8px rgba(0,0,0,0.2);" id="totalMessages">0</div>
+                            <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 8px;">Messages</div>
+                            <div style="font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; display: inline-block;" id="messagesChange">0 unread</div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 25px; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="font-size: 40px; margin-bottom: 12px;">🎥</div>
+                            <div style="font-size: 36px; font-weight: 800; color: white; margin-bottom: 5px; text-shadow: 0 2px 8px rgba(0,0,0,0.2);" id="totalVideos">0</div>
+                            <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 8px;">Videos</div>
+                            <div style="font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; display: inline-block;" id="videosChange">Featured</div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 25px; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="font-size: 40px; margin-bottom: 12px;">📖</div>
+                            <div style="font-size: 36px; font-weight: 800; color: white; margin-bottom: 5px; text-shadow: 0 2px 8px rgba(0,0,0,0.2);" id="totalReading">0</div>
+                            <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 8px;">Active Readers</div>
+                            <div style="font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; display: inline-block;" id="readingChange">Reading now</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Dashboard Cards Grid -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 40px;">
                     <!-- Analytics Card -->
@@ -1391,51 +1436,6 @@
                         <div style="font-size: 56px; margin-bottom: 15px;">💬</div>
                         <h3 style="margin: 0 0 10px 0; color: white; font-size: 24px; font-weight: 700;">Telegram</h3>
                         <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">Configure Telegram bot notifications</p>
-                    </div>
-                </div>
-
-                <!-- Quick Stats Overview -->
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 35px; border-radius: 25px; box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3); position: relative; overflow: hidden;">
-                    <!-- Decorative Background Elements -->
-                    <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%; filter: blur(40px);"></div>
-                    <div style="position: absolute; bottom: -80px; left: -80px; width: 250px; height: 250px; background: rgba(255,255,255,0.08); border-radius: 50%; filter: blur(60px);"></div>
-
-                    <!-- Header -->
-                    <div style="position: relative; z-index: 1; text-align: center; margin-bottom: 35px;">
-                        <div style="font-size: 48px; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">📊</div>
-                        <h2 style="margin: 0 0 8px 0; font-size: 32px; font-weight: 800; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">Quick Overview</h2>
-                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 16px; font-weight: 300;">Real-time statistics at a glance</p>
-                    </div>
-
-                    <!-- Stats Grid with Glass Cards -->
-                    <div style="position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 25px; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                            <div style="font-size: 40px; margin-bottom: 12px;">👥</div>
-                            <div style="font-size: 36px; font-weight: 800; color: white; margin-bottom: 5px; text-shadow: 0 2px 8px rgba(0,0,0,0.2);" id="totalUsers">0</div>
-                            <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 8px;">Total Users</div>
-                            <div style="font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; display: inline-block;" id="usersChange">+0 this week</div>
-                        </div>
-
-                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 25px; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                            <div style="font-size: 40px; margin-bottom: 12px;">📧</div>
-                            <div style="font-size: 36px; font-weight: 800; color: white; margin-bottom: 5px; text-shadow: 0 2px 8px rgba(0,0,0,0.2);" id="totalMessages">0</div>
-                            <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 8px;">Messages</div>
-                            <div style="font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; display: inline-block;" id="messagesChange">0 unread</div>
-                        </div>
-
-                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 25px; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                            <div style="font-size: 40px; margin-bottom: 12px;">🎥</div>
-                            <div style="font-size: 36px; font-weight: 800; color: white; margin-bottom: 5px; text-shadow: 0 2px 8px rgba(0,0,0,0.2);" id="totalVideos">0</div>
-                            <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 8px;">Videos</div>
-                            <div style="font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; display: inline-block;" id="videosChange">Featured</div>
-                        </div>
-
-                        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 25px; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                            <div style="font-size: 40px; margin-bottom: 12px;">📖</div>
-                            <div style="font-size: 36px; font-weight: 800; color: white; margin-bottom: 5px; text-shadow: 0 2px 8px rgba(0,0,0,0.2);" id="totalReading">0</div>
-                            <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 8px;">Active Readers</div>
-                            <div style="font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; display: inline-block;" id="readingChange">Reading now</div>
-                        </div>
                     </div>
                 </div>
             </section>
