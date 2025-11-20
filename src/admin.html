@@ -1181,7 +1181,16 @@
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="loginPassword" required autocomplete="current-password">
+                    <div style="position: relative;">
+                        <input type="password" id="loginPassword" required autocomplete="current-password" style="padding-right: 45px;">
+                        <button type="button" id="togglePassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 20px; color: #666; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; transition: color 0.3s;" title="Show password">
+                            👁️
+                        </button>
+                    </div>
+                    <div id="capsLockWarning" style="display: none; margin-top: 8px; padding: 10px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border-radius: 8px; font-size: 13px; font-weight: 600; align-items: center; gap: 8px;">
+                        <span style="font-size: 16px;">⚠️</span>
+                        <span>Caps Lock is ON</span>
+                    </div>
                 </div>
 
                 <!-- Cloudflare Turnstile - Hidden bot protection -->
@@ -2253,6 +2262,40 @@
             adminTurnstileToken = token;
             console.log('✅ Admin Turnstile verification successful (invisible mode)');
         }
+
+        // Password visibility toggle
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('loginPassword');
+
+        togglePasswordBtn.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+
+            // Toggle eye icon
+            if (type === 'text') {
+                this.innerHTML = '👁️‍🗨️'; // Eye with line (hidden)
+                this.title = 'Hide password';
+            } else {
+                this.innerHTML = '👁️'; // Eye (visible)
+                this.title = 'Show password';
+            }
+        });
+
+        // Caps Lock detection
+        const capsLockWarning = document.getElementById('capsLockWarning');
+
+        passwordInput.addEventListener('keyup', function(event) {
+            if (event.getModifierState('CapsLock')) {
+                capsLockWarning.style.display = 'flex';
+            } else {
+                capsLockWarning.style.display = 'none';
+            }
+        });
+
+        // Hide caps lock warning when input loses focus
+        passwordInput.addEventListener('blur', function() {
+            capsLockWarning.style.display = 'none';
+        });
 
         // Secure Login Form
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
