@@ -6461,6 +6461,10 @@
                                                             <button onclick="saveTranslation(${globalIndex})" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
                                                                 💾 Save
                                                             </button>
+                                                            <button onclick="showTestPreview('${item.kurdish_text.replace(/'/g, "\\'")}', '${item.context}', '${item.category}')"
+                                                                style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                                                                🧪 Test Preview
+                                                            </button>
                                                             <button onclick="showTranslationPreview('${item.key_id}', '${item.kurdish_text.replace(/'/g, "\\'")}', '${item.context}', '${item.page}')"
                                                                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
                                                                 👁️ Preview
@@ -6820,6 +6824,198 @@
         function closeTranslationPreview() {
             document.getElementById('translationPreviewModal').style.display = 'none';
             document.body.style.overflow = 'auto';
+        }
+
+        // Test Preview - Shows the text as it would appear in different contexts
+        function showTestPreview(text, context, category) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                backdrop-filter: blur(5px);
+            `;
+
+            let previewHTML = '';
+
+            // Show different previews based on context and category
+            if (context.includes('alert') || context.includes('Confirmation') || context.includes('confirm')) {
+                previewHTML = `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="margin: 0 0 15px 0; color: #667eea; font-size: 18px;">🚨 Alert/Confirmation Dialog</h3>
+                        <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); max-width: 400px; text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">⚠️</div>
+                            <div class="kurdish-text" style="font-size: 18px; font-weight: 600; margin-bottom: 20px; line-height: 1.6;">${text}</div>
+                            <div style="display: flex; gap: 10px; justify-content: center;">
+                                <button style="background: #4CAF50; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer;">بەڵێ</button>
+                                <button style="background: #f44336; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer;">نەخێر</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (context.includes('notification') || context.includes('Notification') || context.includes('success') || context.includes('Success')) {
+                previewHTML += `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="margin: 0 0 15px 0; color: #4CAF50; font-size: 18px;">✅ Success Notification</h3>
+                        <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 20px 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4); display: flex; align-items: center; gap: 15px; max-width: 500px;">
+                            <div style="font-size: 32px;">✅</div>
+                            <div class="kurdish-text" style="font-size: 16px; font-weight: 600; line-height: 1.6;">${text}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (context.includes('error') || context.includes('Error') || context.includes('failed') || context.includes('Failed')) {
+                previewHTML += `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="margin: 0 0 15px 0; color: #f44336; font-size: 18px;">❌ Error Message</h3>
+                        <div style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); color: white; padding: 20px 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(244, 67, 54, 0.4); display: flex; align-items: center; gap: 15px; max-width: 500px;">
+                            <div style="font-size: 32px;">❌</div>
+                            <div class="kurdish-text" style="font-size: 16px; font-weight: 600; line-height: 1.6;">${text}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (context.includes('Button') || context.includes('button') || category === 'buttons') {
+                previewHTML += `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="margin: 0 0 15px 0; color: #4facfe; font-size: 18px;">🔘 Button</h3>
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            <button class="kurdish-text" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 32px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">${text}</button>
+                            <button class="kurdish-text" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none; padding: 12px 32px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);">${text}</button>
+                            <button class="kurdish-text" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; border: none; padding: 12px 32px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(67, 233, 123, 0.4);">${text}</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (context.includes('heading') || context.includes('title') || context.includes('Title') || context.includes('Heading')) {
+                previewHTML += `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="margin: 0 0 15px 0; color: #667eea; font-size: 18px;">📝 Heading/Title</h3>
+                        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                            <h1 class="kurdish-text" style="margin: 0; font-size: 32px; font-weight: 700; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">${text}</h1>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (context.includes('Navigation') || context.includes('link') || category === 'navigation') {
+                previewHTML += `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="margin: 0 0 15px 0; color: #667eea; font-size: 18px;">🧭 Navigation Link</h3>
+                        <nav style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);">
+                            <a class="kurdish-text" style="color: white; text-decoration: none; font-weight: 600; font-size: 16px; padding: 8px 16px; border-radius: 8px; background: rgba(255,255,255,0.15); display: inline-block;">${text}</a>
+                        </nav>
+                    </div>
+                `;
+            }
+
+            if (context.includes('placeholder') || context.includes('Placeholder')) {
+                previewHTML += `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="margin: 0 0 15px 0; color: #667eea; font-size: 18px;">📝 Input Field</h3>
+                        <input type="text" placeholder="${text}" class="kurdish-text" style="width: 100%; max-width: 400px; padding: 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; background: white;">
+                    </div>
+                `;
+            }
+
+            if (context.includes('label') || context.includes('Label')) {
+                previewHTML += `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="margin: 0 0 15px 0; color: #667eea; font-size: 18px;">🏷️ Form Label</h3>
+                        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                            <label class="kurdish-text" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 15px; color: #555;">${text}</label>
+                            <input type="text" style="width: 100%; max-width: 400px; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (context.includes('loading') || context.includes('Loading')) {
+                previewHTML += `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="margin: 0 0 15px 0; color: #4facfe; font-size: 18px;">⏳ Loading State</h3>
+                        <div style="background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 15px; animation: spin 2s linear infinite;">⏳</div>
+                            <div class="kurdish-text" style="font-size: 18px; font-weight: 600; color: #667eea;">${text}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // If no specific preview was generated, show a generic card
+            if (previewHTML === '') {
+                previewHTML = `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="margin: 0 0 15px 0; color: #667eea; font-size: 18px;">📄 Text Display</h3>
+                        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                            <p class="kurdish-text" style="margin: 0; font-size: 18px; line-height: 1.8; color: #333;">${text}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            modal.innerHTML = `
+                <div style="background: linear-gradient(to bottom, #f8f9fa, #ffffff); border-radius: 20px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2 style="margin: 0; color: white; font-size: 24px; font-weight: 700;">🧪 Test Preview</h2>
+                            <p style="margin: 5px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">See how this text appears in different contexts</p>
+                        </div>
+                        <button onclick="this.closest('[style*=\\'position: fixed\\']').remove(); document.body.style.overflow = 'auto';" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 28px; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">×</button>
+                    </div>
+                    <div style="padding: 30px;">
+                        <div style="background: #f0f4ff; padding: 20px; border-radius: 12px; margin-bottom: 30px; border-left: 4px solid #667eea;">
+                            <div style="display: grid; grid-template-columns: auto 1fr; gap: 15px; align-items: start;">
+                                <div style="font-weight: 700; color: #667eea; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Text:</div>
+                                <div class="kurdish-text" style="font-size: 20px; font-weight: 600; color: #333; line-height: 1.6;">${text}</div>
+                                <div style="font-weight: 700; color: #667eea; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Context:</div>
+                                <div style="font-size: 14px; color: #666;">${context}</div>
+                                <div style="font-weight: 700; color: #667eea; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Category:</div>
+                                <div style="font-size: 14px; color: #666; text-transform: capitalize;">${category}</div>
+                            </div>
+                        </div>
+                        ${previewHTML}
+                        <div style="background: #fff9e6; padding: 20px; border-radius: 12px; border-left: 4px solid #ffc107; margin-top: 25px;">
+                            <div style="display: flex; align-items: start; gap: 12px;">
+                                <div style="font-size: 24px;">💡</div>
+                                <div>
+                                    <div style="font-weight: 700; color: #f57c00; margin-bottom: 5px;">Testing Note</div>
+                                    <div style="font-size: 14px; color: #666; line-height: 1.6;">This preview shows how the text appears in different UI contexts. Your friend can use this to understand the text usage without triggering actual actions on the website.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
+
+            // Add animation styles if not already present
+            if (!document.getElementById('spin-animation')) {
+                const style = document.createElement('style');
+                style.id = 'spin-animation';
+                style.textContent = `
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
         }
 
         // Show Text Location - Opens page and highlights the text
