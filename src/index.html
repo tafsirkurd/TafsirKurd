@@ -219,7 +219,8 @@ window.addEventListener('error', function(e) {
         <div class="tab-content active" id="missionContent">
             <section id="features">
                 <h2 class="section-title">ئەم چ پێشکێشدکەین</h2>
-                <div class="features-grid">
+                <div class="features-grid" id="features-container">
+                    <!-- Fallback content -->
                     <div class="feature-card">
                         <div class="feature-icon">
                             <i class="fas fa-mobile-alt"></i>
@@ -328,7 +329,7 @@ window.addEventListener('error', function(e) {
 
             <section id="schedule">
                 <h2 class="section-title">خشتەیێ ڕۆژانە</h2>
-                <div class="schedule-grid">
+                <div class="schedule-grid" id="schedule-container">
                     <div class="schedule-card">
                         <div class="schedule-day">
                             <i class="fas fa-calendar-day"></i>
@@ -1212,8 +1213,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (supabase) {
         setInterval(loadWebsiteContent, 300000);
-        // Load social stats from database
+        // Load dynamic content from database
         loadSocialStats();
+        loadFeatures();
+        loadScheduleItems();
     }
 
     // Track geographic visit
@@ -1231,6 +1234,72 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('⚠️ SERVICE WORKER DISABLED - No caching active');
     }
 });
+
+// Load Features from Database
+async function loadFeatures() {
+    try {
+        if (!supabase) return;
+
+        const { data, error } = await supabase
+            .from('features')
+            .select('*')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true });
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+            const container = document.getElementById('features-container');
+            if (!container) return;
+
+            container.innerHTML = data.map(feature => `
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="${feature.icon_class}"></i>
+                    </div>
+                    <h3 class="feature-title">${feature.title}</h3>
+                    <p class="feature-desc">${feature.description}</p>
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Failed to load features:', error);
+    }
+}
+
+// Load Schedule from Database
+async function loadScheduleItems() {
+    try {
+        if (!supabase) return;
+
+        const { data, error } = await supabase
+            .from('schedule')
+            .select('*')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true});
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+            const container = document.getElementById('schedule-container');
+            if (!container) return;
+
+            container.innerHTML = data.map(item => `
+                <div class="schedule-card">
+                    <div class="schedule-day">
+                        <i class="${item.icon_class}"></i>
+                        ${item.day_label}
+                    </div>
+                    <div class="schedule-time">${item.time_label}</div>
+                    <div class="schedule-topic">${item.topic}</div>
+                    <div class="schedule-desc">${item.description}</div>
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Failed to load schedule:', error);
+    }
+}
 
 // Load Social Media Stats from Database
 async function loadSocialStats() {

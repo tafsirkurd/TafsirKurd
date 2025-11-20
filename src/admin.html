@@ -862,6 +862,8 @@
                 <div class="nav-tab" onclick="switchSection('analytics')">📈 Analytics</div>
                 <div class="nav-tab" onclick="switchSection('bots')">🤖 Bot Protection</div>
                 <div class="nav-tab" onclick="switchSection('social')">📱 Social Stats</div>
+                <div class="nav-tab" onclick="switchSection('features')">⭐ Features</div>
+                <div class="nav-tab" onclick="switchSection('schedule')">📅 Schedule</div>
                 <div class="nav-tab" onclick="switchSection('messages')">📧 Messages</div>
                 <div class="nav-tab" onclick="switchSection('videos')">🎥 Videos</div>
                 <div class="nav-tab" onclick="switchSection('users')">👥 Users</div>
@@ -1227,6 +1229,100 @@
 
                 <!-- Success/Error Messages -->
                 <div id="socialStatsMessage" style="margin-top: 20px; text-align: center; display: none;"></div>
+            </section>
+
+            <!-- Features Section -->
+            <section id="featuresSection" class="section">
+                <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 40px 30px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 20px 60px rgba(240, 147, 251, 0.3);">
+                    <div style="text-align: center; color: white;">
+                        <div style="font-size: 64px; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">⭐</div>
+                        <h2 style="font-size: 32px; font-weight: 700; margin: 0 0 10px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Features Manager</h2>
+                        <p style="font-size: 18px; opacity: 0.95; margin: 0; font-weight: 300;">گوهەرینا تایبەتمەندییێن ماڵپەرێ</p>
+                    </div>
+                </div>
+
+                <div id="featuresEditor"></div>
+
+                <div style="text-align: center; margin: 30px 0;">
+                    <button onclick="addNewFeature()" style="
+                        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                        color: white;
+                        border: none;
+                        padding: 15px 40px;
+                        font-size: 18px;
+                        font-weight: 600;
+                        border-radius: 50px;
+                        cursor: pointer;
+                        box-shadow: 0 10px 30px rgba(240, 147, 251, 0.4);
+                        transition: all 0.3s ease;
+                        margin-right: 15px;
+                    ">
+                        ➕ زێدەکرنا تایبەتمەندیا نوی
+                    </button>
+                    <button onclick="saveFeatures()" style="
+                        background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+                        color: white;
+                        border: none;
+                        padding: 15px 40px;
+                        font-size: 18px;
+                        font-weight: 600;
+                        border-radius: 50px;
+                        cursor: pointer;
+                        box-shadow: 0 10px 30px rgba(86, 171, 47, 0.4);
+                        transition: all 0.3s ease;
+                    ">
+                        💾 تۆمارکرنا هەمی گوهەرتنان
+                    </button>
+                </div>
+
+                <div id="featuresMessage" style="margin-top: 20px; text-align: center; display: none;"></div>
+            </section>
+
+            <!-- Schedule Section -->
+            <section id="scheduleSection" class="section">
+                <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 40px 30px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 20px 60px rgba(250, 112, 154, 0.3);">
+                    <div style="text-align: center; color: white;">
+                        <div style="font-size: 64px; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">📅</div>
+                        <h2 style="font-size: 32px; font-weight: 700; margin: 0 0 10px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Schedule Manager</h2>
+                        <p style="font-size: 18px; opacity: 0.95; margin: 0; font-weight: 300;">گوهەرینا خشتەیا ڕۆژانە</p>
+                    </div>
+                </div>
+
+                <div id="scheduleEditor"></div>
+
+                <div style="text-align: center; margin: 30px 0;">
+                    <button onclick="addNewSchedule()" style="
+                        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+                        color: white;
+                        border: none;
+                        padding: 15px 40px;
+                        font-size: 18px;
+                        font-weight: 600;
+                        border-radius: 50px;
+                        cursor: pointer;
+                        box-shadow: 0 10px 30px rgba(250, 112, 154, 0.4);
+                        transition: all 0.3s ease;
+                        margin-right: 15px;
+                    ">
+                        ➕ زێدەکرنا خشتەیەکا نوی
+                    </button>
+                    <button onclick="saveSchedule()" style="
+                        background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+                        color: white;
+                        border: none;
+                        padding: 15px 40px;
+                        font-size: 18px;
+                        font-weight: 600;
+                        border-radius: 50px;
+                        cursor: pointer;
+                        box-shadow: 0 10px 30px rgba(86, 171, 47, 0.4);
+                        transition: all 0.3s ease;
+                    ">
+                        💾 تۆمارکرنا هەمی گوهەرتنان
+                    </button>
+                </div>
+
+                <div id="scheduleMessage" style="margin-top: 20px; text-align: center; display: none;"></div>
             </section>
 
             <!-- Messages Section -->
@@ -1785,6 +1881,10 @@
             // Load section-specific data
             if (section === 'social') {
                 loadSocialStats();
+            } else if (section === 'features') {
+                loadFeatures();
+            } else if (section === 'schedule') {
+                loadSchedule();
             }
 
             // Track section view in Google Analytics
@@ -5169,6 +5269,347 @@
                 setTimeout(() => {
                     messageDiv.style.display = 'none';
                 }, 5000);
+            }
+        }
+
+        // ============================================
+        // Features Management
+        // ============================================
+
+        let featuresData = [];
+
+        async function loadFeatures() {
+            console.log('⭐ Loading features...');
+            if (!supabase) await initSupabase();
+
+            try {
+                const { data, error } = await supabase
+                    .from('features')
+                    .select('*')
+                    .order('display_order', { ascending: true });
+
+                if (error) throw error;
+
+                featuresData = data || [];
+                console.log(`⭐ Loaded ${featuresData.length} features`);
+                displayFeaturesEditor();
+            } catch (error) {
+                console.error('❌ Error loading features:', error);
+                document.getElementById('featuresEditor').innerHTML = `
+                    <div style="background: #ffebee; color: #c62828; padding: 20px; border-radius: 12px; text-align: center;">
+                        <strong>❌ هەڵە:</strong> نەشیا تایبەتمەندیان بخەونین
+                    </div>
+                `;
+            }
+        }
+
+        function displayFeaturesEditor() {
+            const container = document.getElementById('featuresEditor');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div style="display: grid; gap: 25px;">
+                    ${featuresData.map((feature, index) => `
+                        <div style="background: white; padding: 0; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid rgba(0,0,0,0.05);">
+                            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; color: white;">
+                                <div style="display: flex; align-items: center; gap: 15px;">
+                                    <div style="background: rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                        <i class="${feature.icon_class}"></i>
+                                    </div>
+                                    <div style="flex: 1; font-size: 20px; font-weight: 700;">تایبەتمەندی ${index + 1}</div>
+                                    <button onclick="deleteFeature(${index})" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 14px;">
+                                        🗑️ Delete
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div style="padding: 25px;">
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">Icon Class (FontAwesome)</label>
+                                    <input type="text" id="feature_icon_${index}" value="${feature.icon_class}" placeholder="fas fa-mobile-alt"
+                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; transition: all 0.3s;"
+                                        onfocus="this.style.borderColor='#f093fb';" onblur="this.style.borderColor='#e0e0e0';">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">سەردێڕ • Title</label>
+                                    <input type="text" id="feature_title_${index}" value="${feature.title}"
+                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 18px; font-weight: 600; transition: all 0.3s;"
+                                        onfocus="this.style.borderColor='#f093fb';" onblur="this.style.borderColor='#e0e0e0';">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">شرۆڤەکرن • Description</label>
+                                    <textarea id="feature_desc_${index}" rows="4"
+                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; resize: vertical; transition: all 0.3s;"
+                                        onfocus="this.style.borderColor='#f093fb';" onblur="this.style.borderColor='#e0e0e0';">${feature.description}</textarea>
+                                </div>
+
+                                <div style="display: flex; gap: 15px; align-items: center;">
+                                    <label style="color: #555; font-size: 14px; font-weight: 600;">Order:</label>
+                                    <input type="number" id="feature_order_${index}" value="${feature.display_order}" min="0"
+                                        style="width: 80px; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; text-align: center; font-weight: bold;">
+
+                                    <label style="margin-left: 20px;">
+                                        <input type="checkbox" id="feature_active_${index}" ${feature.is_active ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                                        <span style="margin-left: 10px; font-weight: 600;">Active</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function addNewFeature() {
+            featuresData.push({
+                id: null,
+                icon_class: 'fas fa-star',
+                title: 'تایبەتمەندیا نوی',
+                description: 'شرۆڤەکرنا تایبەتمەندیێ لڤیر بنڤیسە',
+                display_order: featuresData.length + 1,
+                is_active: true
+            });
+            displayFeaturesEditor();
+        }
+
+        function deleteFeature(index) {
+            if (confirm('دلنیایی کو دڤێی ئەڤ تایبەتمەندی بژێی؟')) {
+                featuresData.splice(index, 1);
+                displayFeaturesEditor();
+            }
+        }
+
+        async function saveFeatures() {
+            const messageDiv = document.getElementById('featuresMessage');
+            messageDiv.style.display = 'none';
+
+            try {
+                const updates = featuresData.map((feature, index) => ({
+                    id: feature.id,
+                    icon_class: document.getElementById(`feature_icon_${index}`).value,
+                    title: document.getElementById(`feature_title_${index}`).value,
+                    description: document.getElementById(`feature_desc_${index}`).value,
+                    display_order: parseInt(document.getElementById(`feature_order_${index}`).value),
+                    is_active: document.getElementById(`feature_active_${index}`).checked
+                }));
+
+                console.log('💾 Saving features:', updates);
+
+                // Delete old features and insert new ones
+                await supabase.from('features').delete().neq('id', 0);
+
+                for (const feature of updates) {
+                    if (feature.id) {
+                        await supabase.from('features').update(feature).eq('id', feature.id);
+                    } else {
+                        delete feature.id;
+                        await supabase.from('features').insert([feature]);
+                    }
+                }
+
+                messageDiv.innerHTML = `
+                    <div style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(86, 171, 47, 0.3);">
+                        <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+                        <div style="font-size: 24px; font-weight: 700;">سەرکەفتی!</div>
+                        <div style="font-size: 16px;">تایبەتمەندیان هاتنە تۆمارکرن</div>
+                    </div>
+                `;
+                messageDiv.style.display = 'block';
+
+                await loadFeatures();
+                setTimeout(() => { messageDiv.style.display = 'none'; }, 5000);
+
+            } catch (error) {
+                console.error('❌ Error saving features:', error);
+                messageDiv.innerHTML = `
+                    <div style="background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); color: white; padding: 25px; border-radius: 20px;">
+                        <div style="font-size: 48px;">❌</div>
+                        <div style="font-size: 24px; font-weight: 700;">هەڵە!</div>
+                        <div>${error.message}</div>
+                    </div>
+                `;
+                messageDiv.style.display = 'block';
+            }
+        }
+
+        // ============================================
+        // Schedule Management
+        // ============================================
+
+        let scheduleData = [];
+
+        async function loadSchedule() {
+            console.log('📅 Loading schedule...');
+            if (!supabase) await initSupabase();
+
+            try {
+                const { data, error } = await supabase
+                    .from('schedule')
+                    .select('*')
+                    .order('display_order', { ascending: true });
+
+                if (error) throw error;
+
+                scheduleData = data || [];
+                console.log(`📅 Loaded ${scheduleData.length} schedule items`);
+                displayScheduleEditor();
+            } catch (error) {
+                console.error('❌ Error loading schedule:', error);
+                document.getElementById('scheduleEditor').innerHTML = `
+                    <div style="background: #ffebee; color: #c62828; padding: 20px; border-radius: 12px; text-align: center;">
+                        <strong>❌ هەڵە:</strong> نەشیا خشتەیێ بخەونین
+                    </div>
+                `;
+            }
+        }
+
+        function displayScheduleEditor() {
+            const container = document.getElementById('scheduleEditor');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div style="display: grid; gap: 25px;">
+                    ${scheduleData.map((item, index) => `
+                        <div style="background: white; padding: 0; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden;">
+                            <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 20px; color: white;">
+                                <div style="display: flex; align-items: center; gap: 15px;">
+                                    <div style="background: rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                        <i class="${item.icon_class}"></i>
+                                    </div>
+                                    <div style="flex: 1; font-size: 20px; font-weight: 700;">خشتە ${index + 1}</div>
+                                    <button onclick="deleteSchedule(${index})" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 10px 15px; border-radius: 8px; cursor: pointer;">
+                                        🗑️ Delete
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div style="padding: 25px;">
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">Icon Class</label>
+                                    <input type="text" id="schedule_icon_${index}" value="${item.icon_class}" placeholder="fas fa-calendar-day"
+                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px;"
+                                        onfocus="this.style.borderColor='#fa709a';" onblur="this.style.borderColor='#e0e0e0';">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">ناڤێ ڕۆژێ • Day Label</label>
+                                    <input type="text" id="schedule_day_${index}" value="${item.day_label}"
+                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 18px; font-weight: 600;"
+                                        onfocus="this.style.borderColor='#fa709a';" onblur="this.style.borderColor='#e0e0e0';">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">کات • Time</label>
+                                    <input type="text" id="schedule_time_${index}" value="${item.time_label}"
+                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px;"
+                                        onfocus="this.style.borderColor='#fa709a';" onblur="this.style.borderColor='#e0e0e0';">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">بابەت • Topic</label>
+                                    <input type="text" id="schedule_topic_${index}" value="${item.topic}"
+                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 18px; font-weight: 600;"
+                                        onfocus="this.style.borderColor='#fa709a';" onblur="this.style.borderColor='#e0e0e0';">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">شرۆڤەکرن • Description</label>
+                                    <textarea id="schedule_desc_${index}" rows="4"
+                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; resize: vertical;"
+                                        onfocus="this.style.borderColor='#fa709a';" onblur="this.style.borderColor='#e0e0e0';">${item.description}</textarea>
+                                </div>
+
+                                <div style="display: flex; gap: 15px; align-items: center;">
+                                    <label style="color: #555; font-size: 14px; font-weight: 600;">Order:</label>
+                                    <input type="number" id="schedule_order_${index}" value="${item.display_order}" min="0"
+                                        style="width: 80px; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; text-align: center; font-weight: bold;">
+
+                                    <label style="margin-left: 20px;">
+                                        <input type="checkbox" id="schedule_active_${index}" ${item.is_active ? 'checked' : ''} style="width: 20px; height: 20px;">
+                                        <span style="margin-left: 10px; font-weight: 600;">Active</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function addNewSchedule() {
+            scheduleData.push({
+                id: null,
+                icon_class: 'fas fa-calendar-day',
+                day_label: 'ڕۆژا نوی',
+                time_label: 'کات',
+                topic: 'بابەتا نوی',
+                description: 'شرۆڤەکرن لڤیر بنڤیسە',
+                display_order: scheduleData.length + 1,
+                is_active: true
+            });
+            displayScheduleEditor();
+        }
+
+        function deleteSchedule(index) {
+            if (confirm('دلنیایی کو دڤێی ئەڤ خشتە بژێی؟')) {
+                scheduleData.splice(index, 1);
+                displayScheduleEditor();
+            }
+        }
+
+        async function saveSchedule() {
+            const messageDiv = document.getElementById('scheduleMessage');
+            messageDiv.style.display = 'none';
+
+            try {
+                const updates = scheduleData.map((item, index) => ({
+                    id: item.id,
+                    icon_class: document.getElementById(`schedule_icon_${index}`).value,
+                    day_label: document.getElementById(`schedule_day_${index}`).value,
+                    time_label: document.getElementById(`schedule_time_${index}`).value,
+                    topic: document.getElementById(`schedule_topic_${index}`).value,
+                    description: document.getElementById(`schedule_desc_${index}`).value,
+                    display_order: parseInt(document.getElementById(`schedule_order_${index}`).value),
+                    is_active: document.getElementById(`schedule_active_${index}`).checked
+                }));
+
+                console.log('💾 Saving schedule:', updates);
+
+                await supabase.from('schedule').delete().neq('id', 0);
+
+                for (const item of updates) {
+                    if (item.id) {
+                        await supabase.from('schedule').update(item).eq('id', item.id);
+                    } else {
+                        delete item.id;
+                        await supabase.from('schedule').insert([item]);
+                    }
+                }
+
+                messageDiv.innerHTML = `
+                    <div style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; padding: 25px; border-radius: 20px;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+                        <div style="font-size: 24px; font-weight: 700;">سەرکەفتی!</div>
+                        <div style="font-size: 16px;">خشتە هاتە تۆمارکرن</div>
+                    </div>
+                `;
+                messageDiv.style.display = 'block';
+
+                await loadSchedule();
+                setTimeout(() => { messageDiv.style.display = 'none'; }, 5000);
+
+            } catch (error) {
+                console.error('❌ Error saving schedule:', error);
+                messageDiv.innerHTML = `
+                    <div style="background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); color: white; padding: 25px; border-radius: 20px;">
+                        <div style="font-size: 48px;">❌</div>
+                        <div style="font-size: 24px; font-weight: 700;">هەڵە!</div>
+                        <div>${error.message}</div>
+                    </div>
+                `;
+                messageDiv.style.display = 'block';
             }
         }
 
