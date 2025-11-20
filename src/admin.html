@@ -1845,7 +1845,7 @@
 
             <!-- Translations Section -->
             <section id="translationsSection" class="section">
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);">
+                <div style="background: #1a1a1a; padding: 40px 30px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
                     <div style="text-align: center; color: white;">
                         <div style="font-size: 64px; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">🌐</div>
                         <h2 style="font-size: 32px; font-weight: 700; margin: 0 0 10px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Kurdish Translations Manager</h2>
@@ -6582,18 +6582,18 @@
                                                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
                                                         <div>
                                                             <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #555; font-size: 13px;">🔑 Key ID</label>
-                                                            <input type="text" id="trans_key_${globalIndex}" value="${item.key_id}"
-                                                                style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: monospace; background: white;">
+                                                            <input type="text" id="trans_key_${globalIndex}" value="${item.key_id}" readonly
+                                                                style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: monospace; background: #f5f5f5; color: #666; cursor: not-allowed;">
                                                         </div>
                                                         <div>
                                                             <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #555; font-size: 13px;">📄 Page</label>
-                                                            <input type="text" id="trans_page_${globalIndex}" value="${item.page}"
-                                                                style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: white;">
+                                                            <input type="text" id="trans_page_${globalIndex}" value="${item.page}" readonly
+                                                                style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: #f5f5f5; color: #666; cursor: not-allowed;">
                                                         </div>
                                                         <div>
                                                             <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #555; font-size: 13px;">📝 Context</label>
-                                                            <input type="text" id="trans_context_${globalIndex}" value="${item.context}"
-                                                                style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: white;">
+                                                            <input type="text" id="trans_context_${globalIndex}" value="${item.context}" readonly
+                                                                style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: #f5f5f5; color: #666; cursor: not-allowed;">
                                                         </div>
                                                     </div>
                                                     <div style="margin-bottom: 15px;">
