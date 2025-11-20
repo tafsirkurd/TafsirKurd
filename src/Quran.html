@@ -4298,7 +4298,7 @@
             // Detect manual scrolling to stop auto-scroll
             let scrollTimeout;
             window.addEventListener('wheel', function(e) {
-                if (autoScrollEnabled && autoScrollInterval) {
+                if (autoScrollEnabled && autoScrollAnimationFrame) {
                     // User is scrolling manually
                     userScrolling = true;
 
@@ -4326,7 +4326,7 @@
             }, { passive: true });
 
             window.addEventListener('touchmove', function(e) {
-                if (autoScrollEnabled && autoScrollInterval) {
+                if (autoScrollEnabled && autoScrollAnimationFrame) {
                     const touchY = e.touches[0].clientY;
                     const deltaY = touchStartY - touchY;
 
