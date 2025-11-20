@@ -1225,69 +1225,139 @@
             </div>
         </header>
 
-        <!-- Mobile Navigation -->
-        <nav class="mobile-nav">
-            <div class="nav-tabs">
-                <div class="nav-tab active" onclick="switchSection('dashboard')">📊 Dashboard</div>
-                <div class="nav-tab" onclick="switchSection('analytics')">📈 Analytics</div>
-                <div class="nav-tab" onclick="switchSection('bots')">🤖 Bot Protection</div>
-                <div class="nav-tab" onclick="switchSection('social')">📱 Social Stats</div>
-                <div class="nav-tab" onclick="switchSection('features')">⭐ Features</div>
-                <div class="nav-tab" onclick="switchSection('schedule')">📅 Schedule</div>
-                <div class="nav-tab" onclick="switchSection('translations')">🌐 Translations</div>
-                <div class="nav-tab" onclick="switchSection('messages')">📧 Messages</div>
-                <div class="nav-tab" onclick="switchSection('videos')">🎥 Videos</div>
-                <div class="nav-tab" onclick="switchSection('users')">👥 Users</div>
-                <div class="nav-tab" onclick="switchSection('reading')">📖 Reading</div>
-                <div class="nav-tab" onclick="switchSection('database')">💾 Database</div>
-                <div class="nav-tab" onclick="switchSection('telegram')">📱 Telegram</div>
-            </div>
-        </nav>
+        <!-- Dashboard Navigation - Hidden when in section -->
+        <div id="backToDashboard" style="display: none; padding: 20px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px;">
+            <button onclick="switchSection('dashboard')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 10px;">
+                ← <span class="kurdish-text">گەڕانەوە بۆ داشبۆرد</span>
+            </button>
+        </div>
 
         <!-- Content -->
         <div class="admin-content">
             <!-- Dashboard Section -->
             <section id="dashboardSection" class="section active">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">👥</div>
-                        <div class="stat-value" id="totalUsers">0</div>
-                        <div class="stat-label">Total Users</div>
-                        <div class="stat-change up" id="usersChange">+0 this week</div>
+                <!-- Welcome Header -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 50px 30px; border-radius: 25px; margin-bottom: 40px; box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3); text-align: center;">
+                    <div style="font-size: 72px; margin-bottom: 20px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">🎛️</div>
+                    <h1 style="margin: 0; color: white; font-size: 42px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Admin Dashboard</h1>
+                    <p style="margin: 15px 0 0 0; color: rgba(255,255,255,0.95); font-size: 20px; font-weight: 300;">Choose a section to manage</p>
+                    <p class="kurdish-text" style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 18px;">بەشەکێ هەلبژێرە بۆ بەڕێوەبردن</p>
+                </div>
+
+                <!-- Dashboard Cards Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 40px;">
+                    <!-- Analytics Card -->
+                    <div onclick="switchSection('analytics')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(102, 126, 234, 0.3)'">
+                        <div style="font-size: 56px; margin-bottom: 15px;">📈</div>
+                        <h3 style="margin: 0 0 10px 0; color: white; font-size: 24px; font-weight: 700;">Analytics</h3>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">View website statistics, visitor data, and geographic analytics</p>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📧</div>
-                        <div class="stat-value" id="totalMessages">0</div>
-                        <div class="stat-label">Messages</div>
-                        <div class="stat-change" id="messagesChange">0 unread</div>
+
+                    <!-- Users Card -->
+                    <div onclick="switchSection('users')" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(79, 172, 254, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(79, 172, 254, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(79, 172, 254, 0.3)'">
+                        <div style="font-size: 56px; margin-bottom: 15px;">👥</div>
+                        <h3 style="margin: 0 0 10px 0; color: white; font-size: 24px; font-weight: 700;">Users</h3>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">Manage registered users and view user activity</p>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">🎥</div>
-                        <div class="stat-value" id="totalVideos">0</div>
-                        <div class="stat-label">Videos</div>
-                        <div class="stat-change" id="videosChange">Featured</div>
+
+                    <!-- Messages Card -->
+                    <div onclick="switchSection('messages')" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(67, 233, 123, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(67, 233, 123, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(67, 233, 123, 0.3)'">
+                        <div style="font-size: 56px; margin-bottom: 15px;">📧</div>
+                        <h3 style="margin: 0 0 10px 0; color: white; font-size: 24px; font-weight: 700;">Messages</h3>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">Read and respond to user messages</p>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📖</div>
-                        <div class="stat-value" id="totalReading">0</div>
-                        <div class="stat-label">Active Readers</div>
-                        <div class="stat-change up" id="readingChange">Reading now</div>
+
+                    <!-- Translations Card -->
+                    <div onclick="switchSection('translations')" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(250, 112, 154, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(250, 112, 154, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(250, 112, 154, 0.3)'">
+                        <div style="font-size: 56px; margin-bottom: 15px;">🌐</div>
+                        <h3 style="margin: 0 0 10px 0; color: white; font-size: 24px; font-weight: 700;">Translations</h3>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">Manage Kurdish text translations across the website</p>
+                    </div>
+
+                    <!-- Videos Card -->
+                    <div onclick="switchSection('videos')" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(240, 147, 251, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(240, 147, 251, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(240, 147, 251, 0.3)'">
+                        <div style="font-size: 56px; margin-bottom: 15px;">🎥</div>
+                        <h3 style="margin: 0 0 10px 0; color: white; font-size: 24px; font-weight: 700;">Videos</h3>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">Manage video content and YouTube links</p>
+                    </div>
+
+                    <!-- Social Stats Card -->
+                    <div onclick="switchSection('social')" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(48, 207, 208, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(48, 207, 208, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(48, 207, 208, 0.3)'">
+                        <div style="font-size: 56px; margin-bottom: 15px;">📱</div>
+                        <h3 style="margin: 0 0 10px 0; color: white; font-size: 24px; font-weight: 700;">Social Stats</h3>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">Update social media follower counts</p>
+                    </div>
+
+                    <!-- Features Card -->
+                    <div onclick="switchSection('features')" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(168, 237, 234, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(168, 237, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(168, 237, 234, 0.3)'">
+                        <div style="font-size: 56px; margin-bottom: 15px;">⭐</div>
+                        <h3 style="margin: 0 0 10px 0; color: #333; font-size: 24px; font-weight: 700;">Features</h3>
+                        <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.6;">Add and manage website features</p>
+                    </div>
+
+                    <!-- Schedule Card -->
+                    <div onclick="switchSection('schedule')" style="background: linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(255, 154, 86, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(255, 154, 86, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(255, 154, 86, 0.3)'">
+                        <div style="font-size: 56px; margin-bottom: 15px;">📅</div>
+                        <h3 style="margin: 0 0 10px 0; color: white; font-size: 24px; font-weight: 700;">Schedule</h3>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">Manage daily schedule and timings</p>
+                    </div>
+
+                    <!-- Reading Card -->
+                    <div onclick="switchSection('reading')" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(255, 236, 210, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(255, 236, 210, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(255, 236, 210, 0.3)'">
+                        <div style="font-size: 56px; margin-bottom: 15px;">📖</div>
+                        <h3 style="margin: 0 0 10px 0; color: #333; font-size: 24px; font-weight: 700;">Reading</h3>
+                        <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.6;">View user reading statistics and goals</p>
+                    </div>
+
+                    <!-- Bot Protection Card -->
+                    <div onclick="switchSection('bots')" style="background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(224, 195, 252, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(224, 195, 252, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(224, 195, 252, 0.3)'">
+                        <div style="font-size: 56px; margin-bottom: 15px;">🤖</div>
+                        <h3 style="margin: 0 0 10px 0; color: #333; font-size: 24px; font-weight: 700;">Bot Protection</h3>
+                        <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.6;">Monitor bot activity and security logs</p>
+                    </div>
+
+                    <!-- Database Card -->
+                    <div onclick="switchSection('database')" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(255, 107, 107, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(255, 107, 107, 0.3)'">
+                        <div style="font-size: 56px; margin-bottom: 15px;">💾</div>
+                        <h3 style="margin: 0 0 10px 0; color: white; font-size: 24px; font-weight: 700;">Database</h3>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">Backup and restore database operations</p>
+                    </div>
+
+                    <!-- Telegram Card -->
+                    <div onclick="switchSection('telegram')" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(86, 171, 47, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(86, 171, 47, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(86, 171, 47, 0.3)'">
+                        <div style="font-size: 56px; margin-bottom: 15px;">💬</div>
+                        <h3 style="margin: 0 0 10px 0; color: white; font-size: 24px; font-weight: 700;">Telegram</h3>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">Configure Telegram bot notifications</p>
                     </div>
                 </div>
 
-                <div class="chart-container">
-                    <h3 class="chart-header">User Growth (Last 30 Days)</h3>
-                    <canvas id="userGrowthChart" class="chart-canvas"></canvas>
-                </div>
-
-                <div class="table-container">
-                    <div class="table-header">
-                        <h2 class="table-title">Recent Activity</h2>
-                    </div>
-                    <div id="recentActivityTable" class="mobile-table">
-                        <div class="loading">
-                            <div class="loading-spinner"></div>
-                            <div class="loading-text">Loading activity...</div>
+                <!-- Quick Stats Overview -->
+                <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
+                    <h2 style="margin: 0 0 25px 0; font-size: 28px; font-weight: 700; color: #333;">Quick Overview</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-value" id="totalUsers">0</div>
+                            <div class="stat-label">Total Users</div>
+                            <div class="stat-change up" id="usersChange">+0 this week</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📧</div>
+                            <div class="stat-value" id="totalMessages">0</div>
+                            <div class="stat-label">Messages</div>
+                            <div class="stat-change" id="messagesChange">0 unread</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🎥</div>
+                            <div class="stat-value" id="totalVideos">0</div>
+                            <div class="stat-label">Videos</div>
+                            <div class="stat-change" id="videosChange">Featured</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📖</div>
+                            <div class="stat-value" id="totalReading">0</div>
+                            <div class="stat-label">Active Readers</div>
+                            <div class="stat-change up" id="readingChange">Reading now</div>
                         </div>
                     </div>
                 </div>
@@ -2375,13 +2445,20 @@
 
         // Switch Section
         function switchSection(section) {
-            // Update tabs
-            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
-
             // Update sections
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
             document.getElementById(section + 'Section').classList.add('active');
+
+            // Show/hide back to dashboard button
+            const backButton = document.getElementById('backToDashboard');
+            if (section === 'dashboard') {
+                backButton.style.display = 'none';
+            } else {
+                backButton.style.display = 'block';
+            }
+
+            // Scroll to top
+            window.scrollTo(0, 0);
 
             // Load section-specific data
             if (section === 'social') {
