@@ -742,6 +742,22 @@
                         <div class="setting-toggle-knob"></div>
                     </div>
                 </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-gauge-high"></i>
+                            خێرایا زڤراندنێ
+                        </div>
+                        <div class="setting-description">دیارکرنا خێرایا زڤراندنا خۆکار</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px; flex: 1; max-width: 300px;">
+                        <input type="range" id="autoScrollSpeedSlider" min="1" max="5" value="2" step="1"
+                            style="flex: 1; height: 6px; border-radius: 5px; background: linear-gradient(to right, #4CAF50 0%, #4CAF50 40%, #ddd 40%, #ddd 100%); outline: none; -webkit-appearance: none; cursor: pointer;"
+                            oninput="updateAutoScrollSpeed(this.value)">
+                        <span id="autoScrollSpeedValue" style="min-width: 80px; font-weight: 600; color: var(--text); text-align: center; font-size: 0.95rem;">هێواش</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Notification Settings -->
@@ -885,6 +901,15 @@
                 autoScrollToggle.classList.remove('active');
             }
 
+            // Load auto-scroll speed (default: 2 - medium)
+            const autoScrollSpeed = localStorage.getItem('autoScrollSpeed') || '2';
+            const autoScrollSpeedSlider = document.getElementById('autoScrollSpeedSlider');
+            const autoScrollSpeedValue = document.getElementById('autoScrollSpeedValue');
+            if (autoScrollSpeedSlider) {
+                autoScrollSpeedSlider.value = autoScrollSpeed;
+                updateAutoScrollSpeedDisplay(autoScrollSpeed);
+            }
+
             // Initialize previews
             const arabicPreview = document.getElementById('arabicPreview');
             const tafsirPreview = document.getElementById('tafsirPreview');
@@ -976,6 +1001,39 @@
             showNotification(toggle.classList.contains('active') ? 'زڤڕاندنا خۆکار هاتە چالاککرن' : 'زڤڕاندنا خۆکار هاتە نەچالاککرن');
         }
 
+        function updateAutoScrollSpeed(speed) {
+            localStorage.setItem('autoScrollSpeed', speed);
+            updateAutoScrollSpeedDisplay(speed);
+
+            const speedNames = {
+                '1': 'زۆر هێواش',
+                '2': 'هێواش',
+                '3': 'ناڤەند',
+                '4': 'خێرا',
+                '5': 'زۆر خێرا'
+            };
+            showNotification(`خێرایا زڤراندنێ: ${speedNames[speed]}`);
+        }
+
+        function updateAutoScrollSpeedDisplay(speed) {
+            const slider = document.getElementById('autoScrollSpeedSlider');
+            const valueDisplay = document.getElementById('autoScrollSpeedValue');
+
+            const speedNames = {
+                '1': 'زۆر هێواش',
+                '2': 'هێواش',
+                '3': 'ناڤەند',
+                '4': 'خێرا',
+                '5': 'زۆر خێرا'
+            };
+
+            valueDisplay.textContent = speedNames[speed] || 'هێواش';
+
+            // Update slider background gradient
+            const percentage = ((speed - 1) / 4) * 100;
+            slider.style.background = `linear-gradient(to right, #4CAF50 0%, #4CAF50 ${percentage}%, #ddd ${percentage}%, #ddd 100%)`;
+        }
+
         function resetSettings() {
             if (confirm('ئایا دڵنیایت لە گەڕیاندنەڤەیا هەموو رێکخستنان بۆ بنەڕەت؟')) {
                 localStorage.removeItem('arabicFont');
@@ -985,6 +1043,7 @@
                 localStorage.removeItem('theme');
                 localStorage.removeItem('showTafsir');
                 localStorage.removeItem('autoScroll');
+                localStorage.removeItem('autoScrollSpeed');
 
                 document.getElementById('arabicFontSelect').value = 'KFGQPC Hafs';
                 document.getElementById('arabicSizeSlider').value = '2.2';
