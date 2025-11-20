@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v362-secure-fast-offline';
+const CACHE_NAME = 'tafsir-kurd-v363-admin-analytics-fix';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -46,7 +46,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v362-secure-fast-offline');
+  console.log('[ServiceWorker] Installing v363-admin-analytics-fix');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

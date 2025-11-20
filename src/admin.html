@@ -1718,12 +1718,37 @@
             try {
                 console.log('📊 Loading dashboard data...');
 
+                // Ensure Supabase is initialized
+                if (!supabase) {
+                    console.warn('⚠️ Supabase not initialized, waiting...');
+                    await initSupabase();
+                }
+
+                if (!supabase) {
+                    console.error('❌ Failed to initialize Supabase');
+                    return;
+                }
+
                 // Load all data
                 const [usersResult, messagesResult, videosResult] = await Promise.all([
                     supabase.from('user_data').select('*'),
                     supabase.from('contact_messages').select('*'),
                     supabase.from('featured_videos').select('*')
                 ]);
+
+                // Check for errors
+                if (usersResult.error) {
+                    console.error('❌ Error loading users:', usersResult.error);
+                    throw new Error('Failed to load users');
+                }
+                if (messagesResult.error) {
+                    console.error('❌ Error loading messages:', messagesResult.error);
+                }
+                if (videosResult.error) {
+                    console.error('❌ Error loading videos:', videosResult.error);
+                }
+
+                console.log(`📊 Loaded ${usersResult.data?.length || 0} users, ${messagesResult.data?.length || 0} messages, ${videosResult.data?.length || 0} videos`);
 
                 // Parse user data from JSON (match Quran.html structure)
                 allUsers = (usersResult.data || []).map(user => {
