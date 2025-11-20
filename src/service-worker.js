@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v363-admin-analytics-fix';
+const CACHE_NAME = 'tafsir-kurd-v364-bot-protection';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -26,6 +26,7 @@ const urlsToCache = [
   '/utils/notification-scheduler.js',
   '/utils/theme-loader.js',
   '/utils/footer-loader.js',
+  '/utils/bot-detector.js',
   '/assets/fonts/fonts.css',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.woff2',
@@ -46,7 +47,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v363-admin-analytics-fix');
+  console.log('[ServiceWorker] Installing v364-bot-protection');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

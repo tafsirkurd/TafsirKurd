@@ -860,6 +860,7 @@
             <div class="nav-tabs">
                 <div class="nav-tab active" onclick="switchSection('dashboard')">📊 Dashboard</div>
                 <div class="nav-tab" onclick="switchSection('analytics')">📈 Analytics</div>
+                <div class="nav-tab" onclick="switchSection('bots')">🤖 Bot Protection</div>
                 <div class="nav-tab" onclick="switchSection('messages')">📧 Messages</div>
                 <div class="nav-tab" onclick="switchSection('videos')">🎥 Videos</div>
                 <div class="nav-tab" onclick="switchSection('users')">👥 Users</div>
@@ -1134,6 +1135,53 @@
                             <div class="loading-text">Loading detailed page analytics...</div>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <!-- Bot Protection Section -->
+            <section id="botsSection" class="section">
+                <h2 class="section-title">🤖 Bot Protection Dashboard</h2>
+
+                <!-- Bot Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🤖</div>
+                        <div class="stat-value" id="totalBotsDetected">-</div>
+                        <div class="stat-label">Total Bots Detected</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🚫</div>
+                        <div class="stat-value" id="totalBotsBlocked">-</div>
+                        <div class="stat-label">Malicious Bots Blocked</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-value" id="totalBotsAllowed">-</div>
+                        <div class="stat-label">Search Engines Allowed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-value" id="botBlockRate">-</div>
+                        <div class="stat-label">Block Rate</div>
+                    </div>
+                </div>
+
+                <!-- Bot Types Chart -->
+                <div class="chart-container">
+                    <h3 class="chart-title">Bot Types Distribution</h3>
+                    <div id="botTypesContainer" style="min-height: 200px;"></div>
+                </div>
+
+                <!-- Recent Bot Activity -->
+                <div style="margin-top: 30px;">
+                    <h3 class="section-subtitle">Recent Bot Activity (Last 24 Hours)</h3>
+                    <div id="recentBotsTable"></div>
+                </div>
+
+                <!-- All Bot Logs -->
+                <div style="margin-top: 30px;">
+                    <h3 class="section-subtitle">All Bot Logs</h3>
+                    <div id="allBotsTable"></div>
                 </div>
             </section>
 
@@ -1705,6 +1753,7 @@
         async function loadSectionData(section) {
             switch(section) {
                 case 'analytics': await loadAnalytics(); break;
+                case 'bots': await loadBotProtection(); break;
                 case 'messages': await loadMessages(); break;
                 case 'videos': await loadVideos(); break;
                 case 'users': await loadUsers(); break;
@@ -2507,6 +2556,185 @@
 
             // Create activity timeline
             createActivityTimelineChart();
+        }
+
+        // Load Bot Protection Dashboard
+        async function loadBotProtection() {
+            console.log('🤖 Loading bot protection data...');
+
+            // Ensure Supabase is initialized
+            if (!supabase) {
+                console.warn('⚠️ Supabase not initialized, waiting...');
+                await initSupabase();
+            }
+
+            if (!supabase) {
+                console.error('❌ Failed to initialize Supabase');
+                return;
+            }
+
+            try {
+                // Load all bot logs
+                const { data: botLogs, error } = await supabase
+                    .from('bot_logs')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('❌ Error loading bot logs:', error);
+                    throw error;
+                }
+
+                console.log(`🤖 Loaded ${botLogs?.length || 0} bot logs`);
+
+                // Calculate statistics
+                const totalBots = botLogs.length;
+                const blockedBots = botLogs.filter(b => b.blocked).length;
+                const allowedBots = botLogs.filter(b => !b.blocked && b.is_bot).length;
+                const blockRate = totalBots > 0 ? Math.round((blockedBots / totalBots) * 100) : 0;
+
+                // Update stats
+                document.getElementById('totalBotsDetected').textContent = totalBots.toLocaleString();
+                document.getElementById('totalBotsBlocked').textContent = blockedBots.toLocaleString();
+                document.getElementById('totalBotsAllowed').textContent = allowedBots.toLocaleString();
+                document.getElementById('botBlockRate').textContent = blockRate + '%';
+
+                // Show bot types distribution
+                displayBotTypesDistribution(botLogs);
+
+                // Show recent bot activity (last 24 hours)
+                const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                const recentBots = botLogs.filter(b => b.created_at > oneDayAgo);
+                displayRecentBots(recentBots);
+
+                // Show all bot logs
+                displayAllBots(botLogs);
+
+            } catch (error) {
+                console.error('❌ Error loading bot protection data:', error);
+            }
+        }
+
+        function displayBotTypesDistribution(botLogs) {
+            const container = document.getElementById('botTypesContainer');
+            if (!container) return;
+
+            // Count bot types
+            const botTypes = {};
+            botLogs.forEach(log => {
+                const type = log.bot_type || 'unknown';
+                botTypes[type] = (botTypes[type] || 0) + 1;
+            });
+
+            // Create simple bar chart
+            const total = botLogs.length || 1;
+            container.innerHTML = Object.entries(botTypes)
+                .sort((a, b) => b[1] - a[1])
+                .map(([type, count]) => {
+                    const percentage = Math.round((count / total) * 100);
+                    const icon = type === 'malicious' ? '🚫' : type === 'search-engine' ? '🔍' : type === 'headless-browser' ? '🤖' : '❓';
+                    return `
+                        <div style="margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>${icon} ${type}</span>
+                                <span><strong>${count}</strong> (${percentage}%)</span>
+                            </div>
+                            <div style="background: #f0f0f0; border-radius: 10px; overflow: hidden; height: 24px;">
+                                <div style="background: ${type === 'malicious' ? '#e74c3c' : type === 'search-engine' ? '#2ecc71' : '#3498db'}; height: 100%; width: ${percentage}%; transition: width 0.3s;"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+        }
+
+        function displayRecentBots(botLogs) {
+            const container = document.getElementById('recentBotsTable');
+            if (!container) return;
+
+            if (botLogs.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No bot activity in the last 24 hours</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Type</th>
+                                <th>IP</th>
+                                <th>Location</th>
+                                <th>Page</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${botLogs.slice(0, 50).map(bot => `
+                                <tr>
+                                    <td>${new Date(bot.created_at).toLocaleString()}</td>
+                                    <td>${bot.bot_type}</td>
+                                    <td><code>${bot.ip_address || 'N/A'}</code></td>
+                                    <td>${bot.city || 'Unknown'}, ${bot.country || 'Unknown'}</td>
+                                    <td>${bot.page || '/'}</td>
+                                    <td>
+                                        ${bot.blocked ?
+                                            '<span style="color: #e74c3c; font-weight: bold;">🚫 Blocked</span>' :
+                                            '<span style="color: #2ecc71; font-weight: bold;">✅ Allowed</span>'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function displayAllBots(botLogs) {
+            const container = document.getElementById('allBotsTable');
+            if (!container) return;
+
+            if (botLogs.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No bot logs found</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Bot Type</th>
+                                <th>User Agent</th>
+                                <th>IP Address</th>
+                                <th>Location</th>
+                                <th>Page</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${botLogs.slice(0, 100).map(bot => `
+                                <tr>
+                                    <td>${new Date(bot.created_at).toLocaleString()}</td>
+                                    <td>${bot.bot_type}</td>
+                                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${bot.user_agent}">
+                                        ${bot.user_agent?.substring(0, 50)}...
+                                    </td>
+                                    <td><code>${bot.ip_address || 'N/A'}</code></td>
+                                    <td>${bot.city || 'Unknown'}, ${bot.country || 'Unknown'}</td>
+                                    <td>${bot.page || '/'}</td>
+                                    <td>
+                                        ${bot.blocked ?
+                                            '<span style="color: #e74c3c; font-weight: bold;">🚫 Blocked</span>' :
+                                            '<span style="color: #2ecc71; font-weight: bold;">✅ Allowed</span>'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
         }
 
         // Normalize location names (client-side for old data)
