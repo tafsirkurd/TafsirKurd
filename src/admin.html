@@ -5634,6 +5634,96 @@
         }
 
         // ============================================
+        // Icon Picker Component
+        // ============================================
+
+        const popularIcons = [
+            'fas fa-mobile-alt', 'fas fa-book-open', 'fas fa-language', 'fas fa-heart',
+            'fas fa-calendar-day', 'fas fa-sun', 'fas fa-star', 'fas fa-mosque',
+            'fas fa-video', 'fas fa-book', 'fas fa-quran', 'fas fa-pray',
+            'fas fa-hands', 'fas fa-hand-holding-heart', 'fas fa-lightbulb', 'fas fa-graduation-cap',
+            'fas fa-users', 'fas fa-user', 'fas fa-eye', 'fas fa-comment',
+            'fas fa-share', 'fas fa-hashtag', 'fas fa-fire', 'fas fa-trophy',
+            'fas fa-gem', 'fas fa-crown', 'fas fa-rocket', 'fas fa-chart-line',
+            'fas fa-clock', 'fas fa-bell', 'fas fa-envelope', 'fas fa-globe',
+            'fas fa-map-marker-alt', 'fas fa-home', 'fas fa-building', 'fas fa-hospital',
+            'fas fa-school', 'fas fa-university', 'fas fa-place-of-worship', 'fas fa-kaaba',
+            'fas fa-play', 'fas fa-pause', 'fas fa-stop', 'fas fa-music',
+            'fas fa-microphone', 'fas fa-headphones', 'fas fa-camera', 'fas fa-image',
+            'fas fa-file-alt', 'fas fa-folder', 'fas fa-download', 'fas fa-upload',
+            'fas fa-cloud', 'fas fa-wifi', 'fas fa-signal', 'fas fa-battery-full',
+            'fas fa-moon', 'fas fa-cloud-sun', 'fas fa-wind', 'fas fa-snowflake',
+            'fas fa-check', 'fas fa-times', 'fas fa-plus', 'fas fa-minus',
+            'fas fa-arrow-right', 'fas fa-arrow-left', 'fas fa-arrow-up', 'fas fa-arrow-down',
+            'fab fa-instagram', 'fab fa-facebook', 'fab fa-twitter', 'fab fa-youtube',
+            'fab fa-tiktok', 'fab fa-whatsapp', 'fab fa-telegram', 'fab fa-linkedin'
+        ];
+
+        function createIconPicker(inputId, currentIcon = '') {
+            const container = document.getElementById(inputId).parentElement;
+            if (container.querySelector('.icon-picker-dropdown')) return;
+
+            const dropdown = document.createElement('div');
+            dropdown.className = 'icon-picker-dropdown';
+            dropdown.innerHTML = `
+                <div class="icon-picker-search">
+                    <input type="text" placeholder="بگەڕێ بۆ ئایکۆنێ..." class="kurdish-text" oninput="filterIcons(this.value, '${inputId}')">
+                </div>
+                <div class="icon-picker-grid" id="${inputId}_grid">
+                    ${popularIcons.map(icon => `
+                        <div class="icon-picker-item" onclick="selectIcon('${icon}', '${inputId}')">
+                            <i class="${icon}"></i>
+                            <span>${icon.split(' ')[1].replace('fa-', '')}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            container.style.position = 'relative';
+            container.appendChild(dropdown);
+
+            const input = document.getElementById(inputId);
+            input.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('show');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!container.contains(e.target)) {
+                    dropdown.classList.remove('show');
+                }
+            });
+        }
+
+        function selectIcon(iconClass, inputId) {
+            const input = document.getElementById(inputId);
+            input.value = iconClass;
+
+            const preview = input.nextElementSibling;
+            if (preview && preview.classList.contains('icon-preview')) {
+                preview.innerHTML = `<i class="${iconClass}"></i>`;
+            }
+
+            const dropdown = input.parentElement.querySelector('.icon-picker-dropdown');
+            if (dropdown) dropdown.classList.remove('show');
+
+            input.dispatchEvent(new Event('change'));
+        }
+
+        function filterIcons(searchTerm, inputId) {
+            const grid = document.getElementById(`${inputId}_grid`);
+            const items = grid.querySelectorAll('.icon-picker-item');
+
+            items.forEach(item => {
+                const iconName = item.textContent.toLowerCase();
+                const iconClass = item.querySelector('i').className.toLowerCase();
+                const matches = iconName.includes(searchTerm.toLowerCase()) ||
+                               iconClass.includes(searchTerm.toLowerCase());
+                item.style.display = matches ? 'flex' : 'none';
+            });
+        }
+
+        // ============================================
         // Features Management
         // ============================================
 
@@ -5670,52 +5760,70 @@
             if (!container) return;
 
             container.innerHTML = `
-                <div style="display: grid; gap: 25px;">
+                <div style="display: grid; gap: 30px;">
                     ${featuresData.map((feature, index) => `
-                        <div style="background: white; padding: 0; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid rgba(0,0,0,0.05);">
-                            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; color: white;">
+                        <div class="enhanced-card" style="background: white; padding: 0; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid rgba(0,0,0,0.05); transition: all 0.3s ease;">
+                            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 25px; color: white;">
                                 <div style="display: flex; align-items: center; gap: 15px;">
-                                    <div style="background: rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                    <div style="background: rgba(255,255,255,0.25); width: 55px; height: 55px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                                         <i class="${feature.icon_class}"></i>
                                     </div>
-                                    <div style="flex: 1; font-size: 20px; font-weight: 700;">تایبەتمەندی ${index + 1}</div>
-                                    <button onclick="deleteFeature(${index})" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 14px;">
+                                    <div style="flex: 1; font-size: 22px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">تایبەتمەندی ${index + 1}</div>
+                                    <button onclick="deleteFeature(${index})" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 12px 18px; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.25)'">
                                         🗑️ Delete
                                     </button>
                                 </div>
                             </div>
 
-                            <div style="padding: 25px;">
-                                <div style="margin-bottom: 20px;">
-                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">Icon Class (FontAwesome)</label>
-                                    <input type="text" id="feature_icon_${index}" value="${feature.icon_class}" placeholder="fas fa-mobile-alt"
-                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; transition: all 0.3s;"
-                                        onfocus="this.style.borderColor='#f093fb';" onblur="this.style.borderColor='#e0e0e0';">
+                            <div style="padding: 30px;">
+                                <div style="margin-bottom: 25px;">
+                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">ئایکۆن • Icon</label>
+                                    <div class="icon-picker-container" style="position: relative;">
+                                        <input type="text" id="feature_icon_${index}" value="${feature.icon_class}" placeholder="انتخاب ئایکۆن" readonly
+                                            class="icon-picker-input form-input kurdish-text"
+                                            onclick="createIconPicker('feature_icon_${index}')"
+                                            style="width: 100%; padding: 14px 55px 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; background: #f8f9fa; cursor: pointer; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif;">
+                                        <div class="icon-preview" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">
+                                            <i class="${feature.icon_class}"></i>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div style="margin-bottom: 20px;">
-                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">سەردێڕ • Title</label>
+                                <div style="margin-bottom: 25px;">
+                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">سەردێڕ • Title</label>
                                     <input type="text" id="feature_title_${index}" value="${feature.title}"
-                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 18px; font-weight: 600; transition: all 0.3s;"
-                                        onfocus="this.style.borderColor='#f093fb';" onblur="this.style.borderColor='#e0e0e0';">
+                                        class="form-input kurdish-text"
+                                        style="width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 18px; font-weight: 600; background: #f8f9fa; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif;"
+                                        onfocus="this.style.borderColor='#f093fb'; this.style.background='white'; this.style.boxShadow='0 0 0 4px rgba(240, 147, 251, 0.1)';"
+                                        onblur="this.style.borderColor='#e0e0e0'; this.style.background='#f8f9fa'; this.style.boxShadow='none';">
                                 </div>
 
-                                <div style="margin-bottom: 20px;">
-                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">شرۆڤەکرن • Description</label>
-                                    <textarea id="feature_desc_${index}" rows="4"
-                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; resize: vertical; transition: all 0.3s;"
-                                        onfocus="this.style.borderColor='#f093fb';" onblur="this.style.borderColor='#e0e0e0';">${feature.description}</textarea>
+                                <div style="margin-bottom: 25px;">
+                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">شرۆڤەکرن • Description</label>
+                                    <textarea id="feature_desc_${index}" rows="5"
+                                        class="form-input kurdish-text"
+                                        style="width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; line-height: 1.6; resize: vertical; background: #f8f9fa; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif;"
+                                        onfocus="this.style.borderColor='#f093fb'; this.style.background='white'; this.style.boxShadow='0 0 0 4px rgba(240, 147, 251, 0.1)';"
+                                        onblur="this.style.borderColor='#e0e0e0'; this.style.background='#f8f9fa'; this.style.boxShadow='none';">${feature.description}</textarea>
                                 </div>
 
-                                <div style="display: flex; gap: 15px; align-items: center;">
-                                    <label style="color: #555; font-size: 14px; font-weight: 600;">Order:</label>
-                                    <input type="number" id="feature_order_${index}" value="${feature.display_order}" min="0"
-                                        style="width: 80px; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; text-align: center; font-weight: bold;">
+                                <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <label style="color: #555; font-size: 15px; font-weight: 700;">Order:</label>
+                                        <input type="number" id="feature_order_${index}" value="${feature.display_order}" min="0"
+                                            style="width: 90px; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; text-align: center; font-weight: bold; font-size: 18px; background: #f8f9fa;">
+                                    </div>
 
-                                    <label style="margin-left: 20px;">
-                                        <input type="checkbox" id="feature_active_${index}" ${feature.is_active ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
-                                        <span style="margin-left: 10px; font-weight: 600;">Active</span>
-                                    </label>
+                                    <div style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
+                                        <label class="toggle-switch" style="position: relative; display: inline-block; width: 54px; height: 30px;">
+                                            <input type="checkbox" id="feature_active_${index}" ${feature.is_active ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
+                                            <span class="toggle-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 30px; transition: 0.3s;"
+                                                onclick="this.previousElementSibling.checked = !this.previousElementSibling.checked; this.style.backgroundColor = this.previousElementSibling.checked ? '#4CAF50' : '#ccc';">
+                                                <span style="position: absolute; content: ''; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: 0.3s; transform: ${feature.is_active ? 'translateX(24px)' : 'translateX(0)'};"></span>
+                                            </span>
+                                        </label>
+                                        <span style="font-weight: 700; font-size: 15px; color: ${feature.is_active ? '#4CAF50' : '#999'}; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">${feature.is_active ? 'چالاک' : 'ناچالاک'}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -5856,66 +5964,88 @@
             if (!container) return;
 
             container.innerHTML = `
-                <div style="display: grid; gap: 25px;">
+                <div style="display: grid; gap: 30px;">
                     ${scheduleData.map((item, index) => `
-                        <div style="background: white; padding: 0; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden;">
-                            <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 20px; color: white;">
+                        <div class="enhanced-card" style="background: white; padding: 0; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid rgba(0,0,0,0.05); transition: all 0.3s ease;">
+                            <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 25px; color: white;">
                                 <div style="display: flex; align-items: center; gap: 15px;">
-                                    <div style="background: rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                    <div style="background: rgba(255,255,255,0.25); width: 55px; height: 55px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                                         <i class="${item.icon_class}"></i>
                                     </div>
-                                    <div style="flex: 1; font-size: 20px; font-weight: 700;">خشتە ${index + 1}</div>
-                                    <button onclick="deleteSchedule(${index})" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 10px 15px; border-radius: 8px; cursor: pointer;">
+                                    <div style="flex: 1; font-size: 22px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">خشتە ${index + 1}</div>
+                                    <button onclick="deleteSchedule(${index})" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 12px 18px; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.25)'">
                                         🗑️ Delete
                                     </button>
                                 </div>
                             </div>
 
-                            <div style="padding: 25px;">
-                                <div style="margin-bottom: 20px;">
-                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">Icon Class</label>
-                                    <input type="text" id="schedule_icon_${index}" value="${item.icon_class}" placeholder="fas fa-calendar-day"
-                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px;"
-                                        onfocus="this.style.borderColor='#fa709a';" onblur="this.style.borderColor='#e0e0e0';">
+                            <div style="padding: 30px;">
+                                <div style="margin-bottom: 25px;">
+                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">ئایکۆن • Icon</label>
+                                    <div class="icon-picker-container" style="position: relative;">
+                                        <input type="text" id="schedule_icon_${index}" value="${item.icon_class}" placeholder="انتخاب ئایکۆن" readonly
+                                            class="icon-picker-input form-input kurdish-text"
+                                            onclick="createIconPicker('schedule_icon_${index}')"
+                                            style="width: 100%; padding: 14px 55px 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; background: #f8f9fa; cursor: pointer; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif;">
+                                        <div class="icon-preview" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">
+                                            <i class="${item.icon_class}"></i>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div style="margin-bottom: 20px;">
-                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">ناڤێ ڕۆژێ • Day Label</label>
+                                <div style="margin-bottom: 25px;">
+                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">ناڤێ ڕۆژێ • Day Label</label>
                                     <input type="text" id="schedule_day_${index}" value="${item.day_label}"
-                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 18px; font-weight: 600;"
-                                        onfocus="this.style.borderColor='#fa709a';" onblur="this.style.borderColor='#e0e0e0';">
+                                        class="form-input kurdish-text"
+                                        style="width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 18px; font-weight: 600; background: #f8f9fa; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif;"
+                                        onfocus="this.style.borderColor='#fa709a'; this.style.background='white'; this.style.boxShadow='0 0 0 4px rgba(250, 112, 154, 0.1)';"
+                                        onblur="this.style.borderColor='#e0e0e0'; this.style.background='#f8f9fa'; this.style.boxShadow='none';">
                                 </div>
 
-                                <div style="margin-bottom: 20px;">
-                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">کات • Time</label>
+                                <div style="margin-bottom: 25px;">
+                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">کات • Time</label>
                                     <input type="text" id="schedule_time_${index}" value="${item.time_label}"
-                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px;"
-                                        onfocus="this.style.borderColor='#fa709a';" onblur="this.style.borderColor='#e0e0e0';">
+                                        class="form-input kurdish-text"
+                                        style="width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; background: #f8f9fa; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif;"
+                                        onfocus="this.style.borderColor='#fa709a'; this.style.background='white'; this.style.boxShadow='0 0 0 4px rgba(250, 112, 154, 0.1)';"
+                                        onblur="this.style.borderColor='#e0e0e0'; this.style.background='#f8f9fa'; this.style.boxShadow='none';">
                                 </div>
 
-                                <div style="margin-bottom: 20px;">
-                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">بابەت • Topic</label>
+                                <div style="margin-bottom: 25px;">
+                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">بابەت • Topic</label>
                                     <input type="text" id="schedule_topic_${index}" value="${item.topic}"
-                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 18px; font-weight: 600;"
-                                        onfocus="this.style.borderColor='#fa709a';" onblur="this.style.borderColor='#e0e0e0';">
+                                        class="form-input kurdish-text"
+                                        style="width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 18px; font-weight: 600; background: #f8f9fa; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif;"
+                                        onfocus="this.style.borderColor='#fa709a'; this.style.background='white'; this.style.boxShadow='0 0 0 4px rgba(250, 112, 154, 0.1)';"
+                                        onblur="this.style.borderColor='#e0e0e0'; this.style.background='#f8f9fa'; this.style.boxShadow='none';">
                                 </div>
 
-                                <div style="margin-bottom: 20px;">
-                                    <label style="display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 600;">شرۆڤەکرن • Description</label>
-                                    <textarea id="schedule_desc_${index}" rows="4"
-                                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; resize: vertical;"
-                                        onfocus="this.style.borderColor='#fa709a';" onblur="this.style.borderColor='#e0e0e0';">${item.description}</textarea>
+                                <div style="margin-bottom: 25px;">
+                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">شرۆڤەکرن • Description</label>
+                                    <textarea id="schedule_desc_${index}" rows="5"
+                                        class="form-input kurdish-text"
+                                        style="width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; line-height: 1.6; resize: vertical; background: #f8f9fa; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif;"
+                                        onfocus="this.style.borderColor='#fa709a'; this.style.background='white'; this.style.boxShadow='0 0 0 4px rgba(250, 112, 154, 0.1)';"
+                                        onblur="this.style.borderColor='#e0e0e0'; this.style.background='#f8f9fa'; this.style.boxShadow='none';">${item.description}</textarea>
                                 </div>
 
-                                <div style="display: flex; gap: 15px; align-items: center;">
-                                    <label style="color: #555; font-size: 14px; font-weight: 600;">Order:</label>
-                                    <input type="number" id="schedule_order_${index}" value="${item.display_order}" min="0"
-                                        style="width: 80px; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; text-align: center; font-weight: bold;">
+                                <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <label style="color: #555; font-size: 15px; font-weight: 700;">Order:</label>
+                                        <input type="number" id="schedule_order_${index}" value="${item.display_order}" min="0"
+                                            style="width: 90px; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; text-align: center; font-weight: bold; font-size: 18px; background: #f8f9fa;">
+                                    </div>
 
-                                    <label style="margin-left: 20px;">
-                                        <input type="checkbox" id="schedule_active_${index}" ${item.is_active ? 'checked' : ''} style="width: 20px; height: 20px;">
-                                        <span style="margin-left: 10px; font-weight: 600;">Active</span>
-                                    </label>
+                                    <div style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
+                                        <label class="toggle-switch" style="position: relative; display: inline-block; width: 54px; height: 30px;">
+                                            <input type="checkbox" id="schedule_active_${index}" ${item.is_active ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
+                                            <span class="toggle-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 30px; transition: 0.3s;"
+                                                onclick="this.previousElementSibling.checked = !this.previousElementSibling.checked; this.style.backgroundColor = this.previousElementSibling.checked ? '#4CAF50' : '#ccc';">
+                                                <span style="position: absolute; content: ''; height: 22px; width: 22px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: 0.3s; transform: ${item.is_active ? 'translateX(24px)' : 'translateX(0)'};"></span>
+                                            </span>
+                                        </label>
+                                        <span style="font-weight: 700; font-size: 15px; color: ${item.is_active ? '#4CAF50' : '#999'}; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">${item.is_active ? 'چالاک' : 'ناچالاک'}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
