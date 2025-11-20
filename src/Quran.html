@@ -3679,6 +3679,9 @@
         })();
         let autoScrollEnabled = false;
         let autoScrollInterval = null;
+        let autoScrollSpeed = 2; // Default speed (1=very slow, 5=very fast)
+        let lastScrollPosition = 0;
+        let userScrolling = false;
 
         // Activity Tracking Variables
         let activityTracker = {
@@ -4291,6 +4294,58 @@
                 });
             }
 
+            // Detect manual scrolling to stop auto-scroll
+            let scrollTimeout;
+            window.addEventListener('wheel', function(e) {
+                if (autoScrollEnabled && autoScrollInterval) {
+                    // User is scrolling manually
+                    userScrolling = true;
+
+                    // Clear any existing timeout
+                    if (scrollTimeout) clearTimeout(scrollTimeout);
+
+                    // If scrolling up, stop auto-scroll completely
+                    if (e.deltaY < 0) {
+                        stopAutoScroll();
+                        showNotification('زڤراندنا خۆکار ڕاگیرا - تو ب دەستێ گەریایت بۆ ژور');
+                        return;
+                    }
+
+                    // If scrolling down, pause briefly then resume
+                    scrollTimeout = setTimeout(() => {
+                        userScrolling = false;
+                    }, 500); // Resume after 500ms of no scrolling
+                }
+            }, { passive: true });
+
+            // Also detect touch scrolling on mobile
+            let touchStartY = 0;
+            window.addEventListener('touchstart', function(e) {
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            window.addEventListener('touchmove', function(e) {
+                if (autoScrollEnabled && autoScrollInterval) {
+                    const touchY = e.touches[0].clientY;
+                    const deltaY = touchStartY - touchY;
+
+                    userScrolling = true;
+
+                    if (scrollTimeout) clearTimeout(scrollTimeout);
+
+                    // If swiping up (scrolling down content), stop auto-scroll
+                    if (deltaY < 0) {
+                        stopAutoScroll();
+                        showNotification('زڤراندنا خۆکار ڕاگیرا');
+                        return;
+                    }
+
+                    scrollTimeout = setTimeout(() => {
+                        userScrolling = false;
+                    }, 500);
+                }
+            }, { passive: true });
+
             // Setup Sidebar
             document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
 
@@ -4571,19 +4626,57 @@
                 clearInterval(autoScrollInterval);
             }
 
-            // Scroll 2 pixels every 50ms = 40px per second (smooth reading speed)
+            // Load speed setting from localStorage
+            const savedSpeed = localStorage.getItem('autoScrollSpeed');
+            autoScrollSpeed = savedSpeed ? parseInt(savedSpeed) : 2;
+
+            // Speed configurations: pixels per frame and frame rate
+            // Speed 1 (Very Slow): 0.5px every 50ms = 10px/second
+            // Speed 2 (Slow): 1px every 50ms = 20px/second
+            // Speed 3 (Medium): 1.5px every 50ms = 30px/second
+            // Speed 4 (Fast): 2px every 50ms = 40px/second
+            // Speed 5 (Very Fast): 3px every 50ms = 60px/second
+            const speedConfig = {
+                1: { pixels: 0.5, interval: 50 },
+                2: { pixels: 1, interval: 50 },
+                3: { pixels: 1.5, interval: 50 },
+                4: { pixels: 2, interval: 50 },
+                5: { pixels: 3, interval: 50 }
+            };
+
+            const config = speedConfig[autoScrollSpeed] || speedConfig[2];
+
+            // Smooth scrolling with requestAnimationFrame for better performance
+            let accumulatedScroll = 0;
             autoScrollInterval = setInterval(() => {
-                window.scrollBy({
-                    top: 2,
-                    behavior: 'auto'
-                });
+                if (userScrolling) {
+                    // User is manually scrolling, pause auto-scroll
+                    return;
+                }
+
+                accumulatedScroll += config.pixels;
+
+                // Only scroll when we have at least 1 pixel to scroll
+                if (accumulatedScroll >= 1) {
+                    const scrollAmount = Math.floor(accumulatedScroll);
+                    window.scrollBy({
+                        top: scrollAmount,
+                        behavior: 'auto' // Instant, no smooth animation for more control
+                    });
+                    accumulatedScroll -= scrollAmount;
+                }
+
+                // Update last position
+                lastScrollPosition = window.scrollY;
 
                 // Stop at bottom
-                if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+                if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 10) {
                     stopAutoScroll();
                     showNotification('گەهشتیە دوماهیێ');
                 }
-            }, 50);
+            }, config.interval);
+
+            console.log(`🚀 Auto-scroll started at speed ${autoScrollSpeed} (${config.pixels}px/${config.interval}ms)`);
         }
 
         function stopAutoScroll() {
