@@ -1770,6 +1770,21 @@
                 </div>
 
                 <div id="translationsMessage" style="margin-top: 20px; text-align: center; display: none;"></div>
+
+                <!-- Preview Modal -->
+                <div id="translationPreviewModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; backdrop-filter: blur(5px);" onclick="closeTranslationPreview()">
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 20px; padding: 0; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 20px 20px 0 0; color: white;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h3 style="margin: 0; font-size: 24px; font-weight: 700;">👁️ Text Preview</h3>
+                                <button onclick="closeTranslationPreview()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 20px; font-weight: 700;">×</button>
+                            </div>
+                        </div>
+                        <div id="translationPreviewContent" style="padding: 30px;">
+                            <!-- Content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <!-- Messages Section -->
@@ -6388,7 +6403,7 @@
                                                             class="kurdish-text"
                                                             style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; line-height: 1.6; background: white; font-family: 'IBM Plex Sans Arabic', sans-serif; resize: vertical;">${item.kurdish_text}</textarea>
                                                     </div>
-                                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                                                         <div style="display: flex; align-items: center; gap: 10px;">
                                                             <label class="toggle-switch" style="position: relative; display: inline-block; width: 50px; height: 26px;">
                                                                 <input type="checkbox" id="trans_active_${globalIndex}" ${item.is_active ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
@@ -6399,9 +6414,15 @@
                                                             </label>
                                                             <span style="font-weight: 600; font-size: 14px; color: ${item.is_active ? '#4CAF50' : '#999'};">Active</span>
                                                         </div>
-                                                        <button onclick="deleteTranslation(${globalIndex})" style="background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
-                                                            🗑️ Delete
-                                                        </button>
+                                                        <div style="display: flex; gap: 8px;">
+                                                            <button onclick="showTranslationPreview('${item.key_id}', '${item.kurdish_text.replace(/'/g, "\\'")}', '${item.context}', '${item.page}')"
+                                                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                                                                👁️ Preview
+                                                            </button>
+                                                            <button onclick="deleteTranslation(${globalIndex})" style="background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                                                                🗑️ Delete
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             `;
@@ -6519,6 +6540,175 @@
                 `;
                 messageDiv.style.display = 'block';
             }
+        }
+
+        // Preview Translation Location
+        function showTranslationPreview(keyId, text, context, page) {
+            const modal = document.getElementById('translationPreviewModal');
+            const content = document.getElementById('translationPreviewContent');
+
+            // Determine usage examples based on context and page
+            const usageExamples = getUsageExamples(keyId, context, page);
+
+            content.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                        <div style="font-weight: 600; color: #555; margin-bottom: 8px; font-size: 13px;">🔑 Key ID:</div>
+                        <div style="font-family: monospace; background: white; padding: 10px; border-radius: 6px; font-size: 14px; border: 1px solid #e0e0e0;">${keyId}</div>
+                    </div>
+
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                        <div style="font-weight: 600; color: #555; margin-bottom: 8px; font-size: 13px;">🌐 Kurdish Text:</div>
+                        <div style="font-family: 'IBM Plex Sans Arabic', sans-serif; background: white; padding: 15px; border-radius: 6px; font-size: 18px; line-height: 1.8; border: 1px solid #e0e0e0; direction: rtl;" class="kurdish-text">${text}</div>
+                    </div>
+
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                        <div style="font-weight: 600; color: #555; margin-bottom: 8px; font-size: 13px;">📝 Context:</div>
+                        <div style="background: white; padding: 10px; border-radius: 6px; font-size: 14px; border: 1px solid #e0e0e0;">${context}</div>
+                    </div>
+
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                        <div style="font-weight: 600; color: #555; margin-bottom: 8px; font-size: 13px;">📄 Page(s):</div>
+                        <div style="background: white; padding: 10px; border-radius: 6px; font-size: 14px; border: 1px solid #e0e0e0;">${page}</div>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e8ebf7 100%); padding: 20px; border-radius: 12px; margin-top: 20px;">
+                    <div style="font-weight: 700; color: #333; margin-bottom: 15px; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                        <span>📍</span>
+                        <span>Where This Text Appears:</span>
+                    </div>
+                    ${usageExamples}
+                </div>
+
+                <div style="text-align: center; margin-top: 25px;">
+                    <button onclick="closeTranslationPreview()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; font-size: 16px; font-weight: 600; border-radius: 10px; cursor: pointer;">
+                        Close Preview
+                    </button>
+                </div>
+            `;
+
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function getUsageExamples(keyId, context, page) {
+            const examples = {
+                // Navigation
+                'nav_home': '• Main navigation menu\n• Footer navigation',
+                'nav_quran': '• Top navigation bar\n• Mobile menu',
+                'nav_profile': '• Bottom footer navigation\n• Settings page links',
+                'nav_settings': '• Footer menu\n• Profile page navigation',
+                'nav_goals': '• Footer navigation\n• Bookmarks page links',
+                'nav_bookmarks': '• Footer menu\n• Settings page',
+
+                // Authentication
+                'auth_welcome': '• Login page main heading',
+                'auth_subtitle': '• Login page subtitle text',
+                'google_signin': '• Google sign-in button',
+                'back_home': '• Login page back button',
+
+                // Buttons
+                'btn_save': '• Bookmark notes\n• Settings page\n• Profile edits',
+                'btn_delete': '• Delete buttons across all pages',
+                'btn_back': '• Navigation buttons\n• Form pages',
+                'btn_read_quran': '• Homepage call-to-action button',
+                'btn_logout': '• Profile page sign out button',
+
+                // Settings
+                'darkmode_label': '• Settings page toggle\n• Complete signup preferences',
+                'darkmode_desc': '• Settings page description',
+                'font_arabic_title': '• Settings page card title',
+                'font_size_label': '• Settings page font controls',
+
+                // Notifications
+                'notif_darkmode_enabled': '• Notification after enabling dark mode\n• Shows in Quran.html, settings.html, complete-signup.html',
+                'notif_bookmark_removed': '• Success message after deleting bookmark',
+                'notif_note_saved': '• Success message after saving note',
+                'msg_error': '• Generic error message across all pages',
+                'error_signin_failed': '• Login page error notification',
+
+                // Alerts
+                'alert_bookmark_delete_confirm': '• Confirmation dialog before deleting bookmark',
+                'alert_signout_confirm': '• Confirmation before signing out',
+                'alert_delete_account_confirm': '• Warning before account deletion',
+                'alert_reset_settings_confirm': '• Confirmation before resetting settings',
+
+                // Profile
+                'profile_title': '• Profile page main heading',
+                'total_surahs': '• Profile stats card label',
+                'total_bookmarks': '• Profile statistics display',
+                'achievements_title': '• Profile achievements section',
+
+                // Goals
+                'goals_title': '• Goals page main heading',
+                'progress_title': '• Goals progress section',
+                'today_goal': '• Daily goal display text',
+
+                // Bookmarks
+                'bookmarks_title': '• Bookmarks page heading',
+                'empty_bookmarks': '• Empty state when no bookmarks',
+                'no_results': '• Search results empty state',
+
+                // Loading
+                'loading_starting': '• Initial load screen in Quran page',
+                'loading_ayahs': '• While loading verses',
+                'msg_loading': '• Generic loading message',
+
+                // Forms
+                'form_name': '• Contact form name field',
+                'form_email': '• Contact form email field',
+                'form_message': '• Contact form message textarea',
+                'search_placeholder': '• Bookmarks search input'
+            };
+
+            const example = examples[keyId];
+            if (example) {
+                const lines = example.split('\n');
+                return `
+                    <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+                        ${lines.map(line => `
+                            <div style="padding: 8px 0; color: #555; font-size: 14px; line-height: 1.6;">
+                                ${line}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // Generic fallback based on context
+            let genericExample = '';
+            if (context.includes('Button')) {
+                genericExample = '• Used in button text\n• Action buttons throughout the website';
+            } else if (context.includes('notification') || context.includes('Notification')) {
+                genericExample = '• Shows as notification message\n• Appears after user actions';
+            } else if (context.includes('alert') || context.includes('Confirmation')) {
+                genericExample = '• Alert dialog box\n• Confirmation popup before actions';
+            } else if (context.includes('label') || context.includes('Label')) {
+                genericExample = '• Form field label\n• UI element label';
+            } else if (context.includes('heading') || context.includes('title')) {
+                genericExample = '• Page heading\n• Section title';
+            } else if (context.includes('placeholder')) {
+                genericExample = '• Input field placeholder text';
+            } else {
+                genericExample = `• Used as ${context}\n• Appears on: ${page}`;
+            }
+
+            const lines = genericExample.split('\n');
+            return `
+                <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #999;">
+                    ${lines.map(line => `
+                        <div style="padding: 8px 0; color: #666; font-size: 14px; line-height: 1.6;">
+                            ${line}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function closeTranslationPreview() {
+            document.getElementById('translationPreviewModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
         }
 
         // Auto-refresh analytics stats every 30 seconds
