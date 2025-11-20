@@ -3678,10 +3678,11 @@
             }
         })();
         let autoScrollEnabled = false;
-        let autoScrollInterval = null;
+        let autoScrollAnimationFrame = null;
         let autoScrollSpeed = 2; // Default speed (1=very slow, 5=very fast)
         let lastScrollPosition = 0;
         let userScrolling = false;
+        let autoScrollStartTime = null;
 
         // Activity Tracking Variables
         let activityTracker = {
@@ -4622,69 +4623,80 @@
                 return;
             }
 
-            if (autoScrollInterval) {
-                clearInterval(autoScrollInterval);
+            if (autoScrollAnimationFrame) {
+                cancelAnimationFrame(autoScrollAnimationFrame);
             }
 
             // Load speed setting from localStorage
             const savedSpeed = localStorage.getItem('autoScrollSpeed');
             autoScrollSpeed = savedSpeed ? parseInt(savedSpeed) : 2;
 
-            // Speed configurations: pixels per frame and frame rate
-            // Speed 1 (Very Slow): 0.5px every 50ms = 10px/second
-            // Speed 2 (Slow): 1px every 50ms = 20px/second
-            // Speed 3 (Medium): 1.5px every 50ms = 30px/second
-            // Speed 4 (Fast): 2px every 50ms = 40px/second
-            // Speed 5 (Very Fast): 3px every 50ms = 60px/second
-            const speedConfig = {
-                1: { pixels: 0.5, interval: 50 },
-                2: { pixels: 1, interval: 50 },
-                3: { pixels: 1.5, interval: 50 },
-                4: { pixels: 2, interval: 50 },
-                5: { pixels: 3, interval: 50 }
+            // Speed configurations: pixels per second (60fps for smooth animation)
+            // Speed 1 (Very Slow): 10px/second
+            // Speed 2 (Slow): 20px/second
+            // Speed 3 (Medium): 30px/second
+            // Speed 4 (Fast): 40px/second
+            // Speed 5 (Very Fast): 60px/second
+            const pixelsPerSecond = {
+                1: 10,
+                2: 20,
+                3: 30,
+                4: 40,
+                5: 60
             };
 
-            const config = speedConfig[autoScrollSpeed] || speedConfig[2];
+            const scrollSpeed = pixelsPerSecond[autoScrollSpeed] || 20;
+            autoScrollStartTime = performance.now();
+            let lastFrameTime = autoScrollStartTime;
 
-            // Smooth scrolling with requestAnimationFrame for better performance
-            let accumulatedScroll = 0;
-            autoScrollInterval = setInterval(() => {
-                if (userScrolling) {
-                    // User is manually scrolling, pause auto-scroll
+            // Ultra-smooth scrolling with requestAnimationFrame (60fps)
+            const smoothScroll = (currentTime) => {
+                if (!autoScrollEnabled) {
                     return;
                 }
 
-                accumulatedScroll += config.pixels;
+                // Calculate time delta since last frame
+                const deltaTime = currentTime - lastFrameTime;
+                lastFrameTime = currentTime;
 
-                // Only scroll when we have at least 1 pixel to scroll
-                if (accumulatedScroll >= 1) {
-                    const scrollAmount = Math.floor(accumulatedScroll);
+                if (!userScrolling) {
+                    // Calculate smooth scroll amount based on time delta
+                    // This ensures consistent speed regardless of frame rate
+                    const scrollAmount = (scrollSpeed / 1000) * deltaTime;
+
+                    // Use scrollBy with smooth pixel-perfect scrolling
                     window.scrollBy({
                         top: scrollAmount,
-                        behavior: 'auto' // Instant, no smooth animation for more control
+                        behavior: 'auto' // No browser animation, we control it
                     });
-                    accumulatedScroll -= scrollAmount;
+
+                    // Update last position
+                    lastScrollPosition = window.scrollY;
+
+                    // Stop at bottom with 50px buffer
+                    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
+                        stopAutoScroll();
+                        showNotification('گەهشتیە دوماهیێ');
+                        return;
+                    }
                 }
 
-                // Update last position
-                lastScrollPosition = window.scrollY;
+                // Continue animation loop
+                autoScrollAnimationFrame = requestAnimationFrame(smoothScroll);
+            };
 
-                // Stop at bottom
-                if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 10) {
-                    stopAutoScroll();
-                    showNotification('گەهشتیە دوماهیێ');
-                }
-            }, config.interval);
-
-            console.log(`🚀 Auto-scroll started at speed ${autoScrollSpeed} (${config.pixels}px/${config.interval}ms)`);
+            // Start the smooth scroll animation
+            autoScrollAnimationFrame = requestAnimationFrame(smoothScroll);
+            console.log(`🚀 Auto-scroll started at speed ${autoScrollSpeed} (${scrollSpeed}px/s) - Ultra Smooth 60fps`);
         }
 
         function stopAutoScroll() {
-            if (autoScrollInterval) {
-                clearInterval(autoScrollInterval);
-                autoScrollInterval = null;
+            if (autoScrollAnimationFrame) {
+                cancelAnimationFrame(autoScrollAnimationFrame);
+                autoScrollAnimationFrame = null;
             }
             autoScrollEnabled = false;
+            autoScrollStartTime = null;
             const toggle = document.getElementById('autoScrollToggle');
             if (toggle) {
                 toggle.classList.remove('active');
