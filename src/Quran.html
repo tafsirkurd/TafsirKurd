@@ -4269,6 +4269,13 @@
             if (shouldAutoScroll) {
                 autoScrollToggle.classList.add('active');
                 autoScrollEnabled = true;
+                // If a surah is already open, start auto-scroll automatically
+                setTimeout(() => {
+                    const readerPage = document.getElementById('surahReaderPage');
+                    if (readerPage && readerPage.classList.contains('visible')) {
+                        startAutoScroll();
+                    }
+                }, 1000); // Wait 1 second for page to fully load
             } else {
                 autoScrollToggle.classList.remove('active');
                 autoScrollEnabled = false;
