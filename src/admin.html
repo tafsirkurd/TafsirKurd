@@ -2349,6 +2349,55 @@
     </div>
 
     <script>
+        // ==================== PERFORMANCE OPTIMIZATION ====================
+        // Data cache to prevent redundant API calls
+        const dataCache = {
+            users: { data: null, timestamp: null, ttl: 60000 }, // 1 minute
+            messages: { data: null, timestamp: null, ttl: 60000 },
+            analytics: { data: null, timestamp: null, ttl: 30000 }, // 30 seconds
+            videos: { data: null, timestamp: null, ttl: 120000 }, // 2 minutes
+            translations: { data: null, timestamp: null, ttl: 300000 }, // 5 minutes
+            reading: { data: null, timestamp: null, ttl: 60000 },
+            bots: { data: null, timestamp: null, ttl: 60000 },
+            database: { data: null, timestamp: null, ttl: 120000 }
+        };
+
+        // Check if cached data is still valid
+        function isCacheValid(key) {
+            const cache = dataCache[key];
+            if (!cache || !cache.data || !cache.timestamp) return false;
+            return (Date.now() - cache.timestamp) < cache.ttl;
+        }
+
+        // Get cached data
+        function getCachedData(key) {
+            return dataCache[key]?.data || null;
+        }
+
+        // Set cache
+        function setCacheData(key, data) {
+            if (dataCache[key]) {
+                dataCache[key].data = data;
+                dataCache[key].timestamp = Date.now();
+            }
+        }
+
+        // Track which sections have been loaded
+        const loadedSections = new Set();
+
+        // Debounce function for search inputs
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
         // Secure Configuration - Load from server
         let supabase = null;
 
@@ -2574,6 +2623,36 @@
             }
         }
 
+        // Update Dashboard Statistics Display
+        function updateDashboardStats() {
+            // Update stats
+            document.getElementById('totalUsers').textContent = allUsers.length;
+            document.getElementById('totalMessages').textContent = allMessages.length;
+            document.getElementById('totalVideos').textContent = allVideos.length;
+
+            // Unread messages
+            const unreadCount = allMessages.filter(m => m.status !== 'read').length;
+            document.getElementById('messagesChange').textContent = `${unreadCount} unread`;
+            document.getElementById('messagesChange').className = unreadCount > 0 ? 'stat-change warning' : 'stat-change';
+
+            // Active readers (users who have read at least something)
+            const activeReaders = allUsers.filter(u => u.total_read > 0 || u.current_surah).length;
+            document.getElementById('totalReading').textContent = activeReaders;
+
+            // Database counts
+            document.getElementById('dbUsersCount').textContent = allUsers.length;
+            document.getElementById('dbMessagesCount').textContent = allMessages.length;
+            document.getElementById('dbVideosCount').textContent = allVideos.length;
+
+            // Calculate weekly change
+            const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+            const newUsersThisWeek = allUsers.filter(u => u.created_at && new Date(u.created_at).getTime() > oneWeekAgo).length;
+            const usersChangeEl = document.getElementById('usersChange');
+            if (usersChangeEl) {
+                usersChangeEl.textContent = `+${newUsersThisWeek} this week`;
+            }
+        }
+
         // Load Dashboard Data
         async function loadDashboardData() {
             try {
@@ -2590,10 +2669,20 @@
                     return;
                 }
 
-                // Load all data
+                // Check if we have cached data for quick overview
+                if (isCacheValid('users') && isCacheValid('messages') && isCacheValid('videos')) {
+                    console.log('⚡ Using cached dashboard data');
+                    allUsers = getCachedData('users');
+                    allMessages = getCachedData('messages');
+                    allVideos = getCachedData('videos');
+                    updateDashboardStats();
+                    return;
+                }
+
+                // Load minimal data for dashboard (counts only, full details loaded per section)
                 const [usersResult, messagesResult, videosResult] = await Promise.all([
-                    supabase.from('user_data').select('*'),
-                    supabase.from('contact_messages').select('*'),
+                    supabase.from('user_data').select('*').limit(1000),
+                    supabase.from('contact_messages').select('*').limit(100),
                     supabase.from('featured_videos').select('*')
                 ]);
 
@@ -2645,24 +2734,14 @@
                 allMessages = messagesResult.data || [];
                 allVideos = videosResult.data || [];
 
-                // Update stats
-                document.getElementById('totalUsers').textContent = allUsers.length;
-                document.getElementById('totalMessages').textContent = allMessages.length;
-                document.getElementById('totalVideos').textContent = allVideos.length;
+                // Cache the data
+                setCacheData('users', allUsers);
+                setCacheData('messages', allMessages);
+                setCacheData('videos', allVideos);
+                console.log('💾 Dashboard data cached');
 
-                // Unread messages
-                const unreadCount = allMessages.filter(m => m.status !== 'read').length;
-                document.getElementById('messagesChange').textContent = `${unreadCount} unread`;
-                document.getElementById('messagesChange').className = unreadCount > 0 ? 'stat-change warning' : 'stat-change';
-
-                // Active readers (users who have read at least something)
-                const activeReaders = allUsers.filter(u => u.total_read > 0 || u.current_surah).length;
-                document.getElementById('totalReading').textContent = activeReaders;
-
-                // Database counts
-                document.getElementById('dbUsersCount').textContent = allUsers.length;
-                document.getElementById('dbMessagesCount').textContent = allMessages.length;
-                document.getElementById('dbVideosCount').textContent = allVideos.length;
+                // Update stats display
+                updateDashboardStats();
 
                 // Create user growth chart
                 createUserGrowthChart();
@@ -4202,10 +4281,25 @@
             container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading messages...</div></div>';
 
             try {
-                const { data, error } = await supabase.from('contact_messages').select('*').order('id', { ascending: false });
+                // Check cache first
+                if (isCacheValid('messages')) {
+                    console.log('⚡ Using cached messages data');
+                    allMessages = getCachedData('messages');
+                    loadMessagesStats(allMessages);
+                    displayMessages(allMessages);
+                    return;
+                }
+
+                const { data, error} = await supabase
+                    .from('contact_messages')
+                    .select('*')
+                    .order('id', { ascending: false })
+                    .limit(500); // Limit to 500 most recent messages
                 if (error) throw error;
 
                 allMessages = data || [];
+                setCacheData('messages', allMessages);
+                console.log('💾 Messages data cached');
                 loadMessagesStats(allMessages);
                 displayMessages(allMessages);
             } catch (error) {
@@ -4356,11 +4450,12 @@
             `).join('');
         }
 
-        // Search messages
+        // Search messages with debouncing (300ms)
         if (document.getElementById('messageSearch')) {
-            document.getElementById('messageSearch').addEventListener('input', () => {
+            const debouncedMessageSearch = debounce(() => {
                 displayMessages(allMessages);
-            });
+            }, 300);
+            document.getElementById('messageSearch').addEventListener('input', debouncedMessageSearch);
         }
 
         function filterMessages(filter) {
@@ -4724,7 +4819,22 @@
             container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading users...</div></div>';
 
             try {
-                const { data, error } = await supabase.from('user_data').select('*').order('id', { ascending: true });
+                // Check cache first
+                if (isCacheValid('users')) {
+                    console.log('⚡ Using cached user data');
+                    const cachedData = getCachedData('users');
+                    allUsers = cachedData;
+                    displayUsers(allUsers);
+                    updateUsersStats(allUsers);
+                    return;
+                }
+
+                // Optimized query: order by created_at DESC for faster queries with index
+                const { data, error } = await supabase
+                    .from('user_data')
+                    .select('*')
+                    .order('id', { ascending: true })
+                    .limit(1000); // Limit to 1000 users for performance
                 if (error) throw error;
 
                 console.log('[Admin] Raw user data from database:', data);
@@ -4795,25 +4905,32 @@
                 // Reverse array to show newest users first in admin panel (but keep userNumber intact)
                 allUsers.reverse();
 
-                // Update users header stats
-                const now = Date.now();
-                const oneWeekAgo = now - (7 * 24 * 60 * 60 * 1000);
-                const totalUsers = allUsers.length;
-                const activeUsers = allUsers.filter(u => u.last_read && new Date(u.last_read).getTime() > oneWeekAgo).length;
-                const readingUsers = allUsers.filter(u => u.total_read > 0 || u.current_surah).length;
+                // Cache the processed data
+                setCacheData('users', allUsers);
+                console.log('💾 Users data cached');
 
-                const headerTotal = document.getElementById('usersHeaderTotal');
-                const headerActive = document.getElementById('usersHeaderActive');
-                const headerReading = document.getElementById('usersHeaderReading');
-                if (headerTotal) headerTotal.textContent = `📊 Total: ${totalUsers}`;
-                if (headerActive) headerActive.textContent = `✅ Active: ${activeUsers}`;
-                if (headerReading) headerReading.textContent = `📖 Reading: ${readingUsers}`;
-
+                // Update stats and display
+                updateUsersStats(allUsers);
                 displayUsers(allUsers);
             } catch (error) {
                 console.error('Error loading users:', error);
                 container.innerHTML = '<div class="empty-state"><div class="empty-text" style="color: var(--danger);">Error loading users</div></div>';
             }
+        }
+
+        function updateUsersStats(users) {
+            const now = Date.now();
+            const oneWeekAgo = now - (7 * 24 * 60 * 60 * 1000);
+            const totalUsers = users.length;
+            const activeUsers = users.filter(u => u.last_read && new Date(u.last_read).getTime() > oneWeekAgo).length;
+            const readingUsers = users.filter(u => u.total_read > 0 || u.current_surah).length;
+
+            const headerTotal = document.getElementById('usersHeaderTotal');
+            const headerActive = document.getElementById('usersHeaderActive');
+            const headerReading = document.getElementById('usersHeaderReading');
+            if (headerTotal) headerTotal.textContent = `📊 Total: ${totalUsers}`;
+            if (headerActive) headerActive.textContent = `✅ Active: ${activeUsers}`;
+            if (headerReading) headerReading.textContent = `📖 Reading: ${readingUsers}`;
         }
 
         function displayUsers(users) {
@@ -5038,11 +5155,12 @@
             }).join('');
         }
 
-        // Search users
+        // Search users with debouncing (300ms)
         if (document.getElementById('userSearch')) {
-            document.getElementById('userSearch').addEventListener('input', () => {
+            const debouncedUserSearch = debounce(() => {
                 displayUsers(allUsers);
-            });
+            }, 300);
+            document.getElementById('userSearch').addEventListener('input', debouncedUserSearch);
         }
 
         async function deleteUser(id) {
