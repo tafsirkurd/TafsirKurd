@@ -6457,13 +6457,14 @@
                                                             </label>
                                                             <span style="font-weight: 600; font-size: 14px; color: ${item.is_active ? '#4CAF50' : '#999'};">Active</span>
                                                         </div>
-                                                        <div style="display: flex; gap: 8px;">
-                                                            <button onclick="saveTranslation(${globalIndex})" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
-                                                                💾 Save
-                                                            </button>
+                                                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                                                             <button onclick="showTranslationPreview('${item.key_id}', '${item.kurdish_text.replace(/'/g, "\\'")}', '${item.context}', '${item.page}')"
                                                                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
                                                                 👁️ Preview
+                                                            </button>
+                                                            <button onclick="showTextLocation('${item.page}', '${item.kurdish_text.replace(/'/g, "\\'")}')"
+                                                                style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                                                                📍 Show Location
                                                             </button>
                                                             <button onclick="deleteTranslation(${globalIndex})" style="background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
                                                                 🗑️ Delete
@@ -6816,6 +6817,109 @@
         function closeTranslationPreview() {
             document.getElementById('translationPreviewModal').style.display = 'none';
             document.body.style.overflow = 'auto';
+        }
+
+        // Show Text Location - Opens page and highlights the text
+        function showTextLocation(page, text) {
+            // Determine the URL based on page
+            let url = '/';
+
+            if (page === 'all') {
+                // If text appears on all pages, show a modal with all locations
+                showAllLocations(text);
+                return;
+            }
+
+            // Convert page to URL
+            if (page.includes(',')) {
+                // Multiple pages - show first one
+                const pages = page.split(',');
+                url = '/' + pages[0].trim();
+            } else {
+                url = '/' + page;
+            }
+
+            // Store the text to highlight in sessionStorage
+            sessionStorage.setItem('highlightText', text);
+            sessionStorage.setItem('highlightTime', Date.now());
+
+            // Open page in new tab
+            window.open(url, '_blank');
+
+            // Show notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                color: white;
+                padding: 20px 30px;
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(79, 172, 254, 0.4);
+                z-index: 10001;
+                font-weight: 600;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.innerHTML = `
+                <div style="font-size: 24px; margin-bottom: 5px;">📍</div>
+                <div>Opening page...</div>
+                <div style="font-size: 12px; opacity: 0.9; margin-top: 5px;">Text will be highlighted in bold</div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function showAllLocations(text) {
+            const modal = document.getElementById('translationPreviewModal');
+            const content = document.getElementById('translationPreviewContent');
+
+            content.innerHTML = `
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">📍</div>
+                    <h3 style="font-size: 22px; margin: 0 0 10px 0; color: #333;">Text Used on Multiple Pages</h3>
+                    <p style="color: #666; margin: 0;">This text appears across the entire website</p>
+                </div>
+
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                    <div style="font-weight: 600; color: #555; margin-bottom: 10px;">Kurdish Text:</div>
+                    <div style="font-family: 'IBM Plex Sans Arabic', sans-serif; font-size: 18px; padding: 15px; background: white; border-radius: 8px; direction: rtl;" class="kurdish-text">${text}</div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e8ebf7 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                    <div style="font-weight: 700; color: #333; margin-bottom: 15px;">📄 Common Pages:</div>
+                    <div style="display: grid; gap: 10px;">
+                        <button onclick="window.open('/index.html', '_blank'); closeTranslationPreview();" style="background: white; border: 2px solid #667eea; color: #667eea; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: left; transition: all 0.2s;" onmouseover="this.style.background='#667eea'; this.style.color='white'" onmouseout="this.style.background='white'; this.style.color='#667eea'">
+                            🏠 Homepage (index.html)
+                        </button>
+                        <button onclick="window.open('/login.html', '_blank'); closeTranslationPreview();" style="background: white; border: 2px solid #667eea; color: #667eea; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: left; transition: all 0.2s;" onmouseover="this.style.background='#667eea'; this.style.color='white'" onmouseout="this.style.background='white'; this.style.color='#667eea'">
+                            🔐 Login Page
+                        </button>
+                        <button onclick="window.open('/settings.html', '_blank'); closeTranslationPreview();" style="background: white; border: 2px solid #667eea; color: #667eea; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: left; transition: all 0.2s;" onmouseover="this.style.background='#667eea'; this.style.color='white'" onmouseout="this.style.background='white'; this.style.color='#667eea'">
+                            ⚙️ Settings Page
+                        </button>
+                        <button onclick="window.open('/profile.html', '_blank'); closeTranslationPreview();" style="background: white; border: 2px solid #667eea; color: #667eea; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: left; transition: all 0.2s;" onmouseover="this.style.background='#667eea'; this.style.color='white'" onmouseout="this.style.background='white'; this.style.color='#667eea'">
+                            👤 Profile Page
+                        </button>
+                        <button onclick="window.open('/Quran.html', '_blank'); closeTranslationPreview();" style="background: white; border: 2px solid #667eea; color: #667eea; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: left; transition: all 0.2s;" onmouseover="this.style.background='#667eea'; this.style.color='white'" onmouseout="this.style.background='white'; this.style.color='#667eea'">
+                            📖 Quran Page
+                        </button>
+                    </div>
+                </div>
+
+                <div style="text-align: center;">
+                    <button onclick="closeTranslationPreview()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; font-size: 16px; font-weight: 600; border-radius: 10px; cursor: pointer;">
+                        Close
+                    </button>
+                </div>
+            `;
+
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
         }
 
         // Auto-refresh analytics stats every 30 seconds
