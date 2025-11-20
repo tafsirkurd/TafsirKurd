@@ -2859,10 +2859,10 @@
         (function() {
             const returningFromSettings = sessionStorage.getItem('returnToQuranReader');
             const lastViewType = localStorage.getItem('lastViewType');
-            const lastScrollPosition = localStorage.getItem('lastScrollPosition');
+            const savedScrollPosition = localStorage.getItem('lastScrollPosition');
 
             // Hide home page instantly if returning from settings OR restoring scroll position
-            if (returningFromSettings === 'true' || (lastViewType && lastScrollPosition)) {
+            if (returningFromSettings === 'true' || (lastViewType && savedScrollPosition)) {
                 // Inject CSS immediately to hide home page
                 document.write('<style id="instant-hide">#homePage { display: none !important; } #surahReaderPage { display: block !important; }</style>');
             }
@@ -7807,28 +7807,28 @@
         const lastViewType = localStorage.getItem('lastViewType');
         const lastViewedSurah = localStorage.getItem('lastViewedSurah');
         const lastViewedJuz = localStorage.getItem('lastViewedJuz');
-        const lastScrollPosition = localStorage.getItem('lastScrollPosition');
+        const savedScrollPos = localStorage.getItem('lastScrollPosition');
 
         if (lastViewType === 'surah' && lastViewedSurah) {
             console.log('📖 Restoring last viewed surah:', lastViewedSurah);
 
             // Set flag to prevent automatic scroll to top
-            if (lastScrollPosition) {
+            if (savedScrollPos) {
                 window.isRestoringScroll = true;
             }
 
             openSurah(parseInt(lastViewedSurah));
 
             // Restore scroll position after content loads
-            if (lastScrollPosition) {
+            if (savedScrollPos) {
                 // Use requestAnimationFrame for smoother restoration
                 const restoreScroll = () => {
                     setTimeout(() => {
                         window.scrollTo({
-                            top: parseInt(lastScrollPosition),
+                            top: parseInt(savedScrollPos),
                             behavior: 'auto'
                         });
-                        console.log('📍 Restored scroll position:', lastScrollPosition);
+                        console.log('📍 Restored scroll position:', savedScrollPos);
                         window.isRestoringScroll = false;
                     }, 600);
                 };
@@ -7838,22 +7838,22 @@
             console.log('📖 Restoring last viewed juz:', lastViewedJuz);
 
             // Set flag to prevent automatic scroll to top
-            if (lastScrollPosition) {
+            if (savedScrollPos) {
                 window.isRestoringScroll = true;
             }
 
             loadJuzContinuous(parseInt(lastViewedJuz));
 
             // Restore scroll position after content loads
-            if (lastScrollPosition) {
+            if (savedScrollPos) {
                 // Use requestAnimationFrame for smoother restoration
                 const restoreScroll = () => {
                     setTimeout(() => {
                         window.scrollTo({
-                            top: parseInt(lastScrollPosition),
+                            top: parseInt(savedScrollPos),
                             behavior: 'auto'
                         });
-                        console.log('📍 Restored scroll position:', lastScrollPosition);
+                        console.log('📍 Restored scroll position:', savedScrollPos);
                         window.isRestoringScroll = false;
                     }, 600);
                 };
