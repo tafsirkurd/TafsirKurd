@@ -1188,15 +1188,40 @@
 
             <!-- Social Stats Section -->
             <section id="socialSection" class="section">
-                <h2 class="section-title">📱 Social Media Statistics</h2>
-                <p class="section-description">تۆ دشێی ئەڤێ ژمارە بگوهەری ژ مۆبایلێ خۆ، ئەو ژمارە دێ سەر ماڵپەرێ پیشان بن</p>
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);">
+                    <div style="text-align: center; color: white;">
+                        <div style="font-size: 64px; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">📱</div>
+                        <h2 style="font-size: 32px; font-weight: 700; margin: 0 0 10px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Social Media Statistics</h2>
+                        <p style="font-size: 18px; opacity: 0.95; margin: 0; font-weight: 300;">گوهەرینا ژمارێن سۆشیال میدیا ژ مۆبایلێ خۆ</p>
+                    </div>
+                </div>
 
                 <!-- Social Stats Editor -->
-                <div id="socialStatsEditor"></div>
+                <div id="socialStatsEditor" style="margin-bottom: 30px;"></div>
 
-                <div style="margin-top: 20px; text-align: center;">
-                    <button class="primary-btn" onclick="saveSocialStats()" style="padding: 12px 30px; font-size: 16px; background: #4CAF50;">
-                        💾 تۆمارکرنا گوهەرتنا
+                <!-- Save Button -->
+                <div style="text-align: center; margin: 30px 0;">
+                    <button
+                        class="primary-btn"
+                        onclick="saveSocialStats()"
+                        style="
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            border: none;
+                            padding: 18px 50px;
+                            font-size: 20px;
+                            font-weight: 600;
+                            border-radius: 50px;
+                            cursor: pointer;
+                            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+                            transition: all 0.3s ease;
+                            position: relative;
+                            overflow: hidden;
+                        "
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 40px rgba(102, 126, 234, 0.5)';"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(102, 126, 234, 0.4)';"
+                    >
+                        <span style="position: relative; z-index: 1;">💾 تۆمارکرنا گوهەرتنا</span>
                     </button>
                 </div>
 
@@ -4904,49 +4929,149 @@
             const container = document.getElementById('socialStatsEditor');
             if (!container || socialStatsData.length === 0) return;
 
+            // Color gradients for each platform
+            const gradients = {
+                'instagram_followers': 'linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+                'tiktok_followers': 'linear-gradient(135deg, #00f2ea 0%, #ff0050 100%)',
+                'total_views': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                'videos_published': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+            };
+
             container.innerHTML = `
-                <div style="display: grid; gap: 20px;">
+                <div style="display: grid; gap: 25px;">
                     ${socialStatsData.map(stat => `
-                        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-                                <div style="font-size: 32px;">
+                        <div style="
+                            background: white;
+                            padding: 0;
+                            border-radius: 20px;
+                            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+                            overflow: hidden;
+                            transition: all 0.3s ease;
+                            border: 1px solid rgba(0,0,0,0.05);
+                        ">
+                            <!-- Header with gradient -->
+                            <div style="
+                                background: ${gradients[stat.stat_key] || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
+                                padding: 25px;
+                                position: relative;
+                                overflow: hidden;
+                            ">
+                                <div style="position: absolute; top: -20px; right: -20px; font-size: 120px; opacity: 0.1;">
                                     <i class="${stat.icon_class}"></i>
                                 </div>
-                                <div style="flex: 1;">
-                                    <div style="font-size: 18px; font-weight: bold; color: #333;">
-                                        ${stat.stat_label}
-                                    </div>
-                                    <div style="font-size: 14px; color: #666; margin-top: 5px;">
-                                        ${stat.stat_key}
+                                <div style="position: relative; z-index: 1;">
+                                    <div style="display: flex; align-items: center; gap: 15px; color: white;">
+                                        <div style="
+                                            background: rgba(255,255,255,0.2);
+                                            width: 60px;
+                                            height: 60px;
+                                            border-radius: 15px;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            font-size: 32px;
+                                            backdrop-filter: blur(10px);
+                                            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                                        ">
+                                            <i class="${stat.icon_class}"></i>
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <div style="font-size: 22px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                ${stat.stat_label}
+                                            </div>
+                                            <div style="font-size: 13px; opacity: 0.9; margin-top: 3px; font-weight: 300;">
+                                                ${stat.stat_key.replace(/_/g, ' ').toUpperCase()}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
-                                <div>
-                                    <label style="display: block; margin-bottom: 5px; color: #666; font-size: 14px;">
-                                        ژمارە (Number)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        id="value_${stat.stat_key}"
-                                        value="${stat.stat_value}"
-                                        style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 24px; font-weight: bold; text-align: center;"
-                                        min="0"
-                                        step="1"
-                                    >
+                            <!-- Input Section -->
+                            <div style="padding: 30px 25px;">
+                                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+                                    <div>
+                                        <label style="
+                                            display: block;
+                                            margin-bottom: 10px;
+                                            color: #555;
+                                            font-size: 14px;
+                                            font-weight: 600;
+                                            text-transform: uppercase;
+                                            letter-spacing: 0.5px;
+                                        ">
+                                            ژمارە • Number
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="value_${stat.stat_key}"
+                                            value="${stat.stat_value}"
+                                            style="
+                                                width: 100%;
+                                                padding: 18px;
+                                                border: 3px solid #e0e0e0;
+                                                border-radius: 15px;
+                                                font-size: 32px;
+                                                font-weight: 800;
+                                                text-align: center;
+                                                background: #f8f9fa;
+                                                transition: all 0.3s ease;
+                                                box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+                                            "
+                                            min="0"
+                                            step="1"
+                                            onfocus="this.style.borderColor='${gradients[stat.stat_key] ? '#667eea' : '#667eea'}'; this.style.background='white'; this.style.boxShadow='0 0 0 4px rgba(102, 126, 234, 0.1)';"
+                                            onblur="this.style.borderColor='#e0e0e0'; this.style.background='#f8f9fa'; this.style.boxShadow='inset 0 2px 4px rgba(0,0,0,0.05)';"
+                                        >
+                                    </div>
+                                    <div>
+                                        <label style="
+                                            display: block;
+                                            margin-bottom: 10px;
+                                            color: #555;
+                                            font-size: 14px;
+                                            font-weight: 600;
+                                            text-transform: uppercase;
+                                            letter-spacing: 0.5px;
+                                        ">
+                                            یەکە • Unit
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="unit_${stat.stat_key}"
+                                            value="${stat.stat_unit}"
+                                            style="
+                                                width: 100%;
+                                                padding: 18px;
+                                                border: 3px solid #e0e0e0;
+                                                border-radius: 15px;
+                                                font-size: 24px;
+                                                font-weight: 700;
+                                                text-align: center;
+                                                background: #f8f9fa;
+                                                transition: all 0.3s ease;
+                                                box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+                                            "
+                                            placeholder="ھ+"
+                                            onfocus="this.style.borderColor='#667eea'; this.style.background='white'; this.style.boxShadow='0 0 0 4px rgba(102, 126, 234, 0.1)';"
+                                            onblur="this.style.borderColor='#e0e0e0'; this.style.background='#f8f9fa'; this.style.boxShadow='inset 0 2px 4px rgba(0,0,0,0.05)';"
+                                        >
+                                    </div>
                                 </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 5px; color: #666; font-size: 14px;">
-                                        یەکە (Unit)
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="unit_${stat.stat_key}"
-                                        value="${stat.stat_unit}"
-                                        style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 20px; font-weight: bold; text-align: center;"
-                                        placeholder="ھ+"
-                                    >
+
+                                <!-- Current Preview -->
+                                <div style="
+                                    margin-top: 20px;
+                                    padding: 15px;
+                                    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                                    border-radius: 12px;
+                                    text-align: center;
+                                    font-size: 14px;
+                                    color: #555;
+                                ">
+                                    <span style="opacity: 0.7;">پیشاندان سەر ماڵپەرێ:</span>
+                                    <strong style="font-size: 24px; margin: 0 5px; color: #333;">${stat.stat_value}</strong>
+                                    <strong style="font-size: 18px; color: #667eea;">${stat.stat_unit}</strong>
                                 </div>
                             </div>
                         </div>
@@ -4991,10 +5116,21 @@
                     if (error) throw error;
                 }
 
-                // Show success message
+                // Show success message with animation
                 messageDiv.innerHTML = `
-                    <div style="background: #e8f5e9; color: #2e7d32; padding: 15px; border-radius: 8px; font-size: 16px;">
-                        <strong>✅ سەرکەفتی!</strong> گوهەرتنە هاتنە تۆمارکرن. ئەو ژمارە نوکە دێ سەر ماڵپەرێ پیشان بن.
+                    <div style="
+                        background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+                        color: white;
+                        padding: 25px 30px;
+                        border-radius: 20px;
+                        font-size: 18px;
+                        box-shadow: 0 10px 30px rgba(86, 171, 47, 0.3);
+                        text-align: center;
+                        animation: slideInUp 0.5s ease;
+                    ">
+                        <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+                        <div style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">سەرکەفتی!</div>
+                        <div style="font-size: 16px; opacity: 0.95;">گوهەرتنە هاتنە تۆمارکرن. ئەو ژمارە نوکە دێ سەر ماڵپەرێ پیشان بن.</div>
                     </div>
                 `;
                 messageDiv.style.display = 'block';
@@ -5007,9 +5143,20 @@
             } catch (error) {
                 console.error('❌ Error saving social stats:', error);
                 messageDiv.innerHTML = `
-                    <div style="background: #ffebee; color: #c62828; padding: 15px; border-radius: 8px; font-size: 16px;">
-                        <strong>❌ هەڵە!</strong> نەشیا گوهەرتنە تۆمار بکەن
-                        <br><small>${error.message}</small>
+                    <div style="
+                        background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+                        color: white;
+                        padding: 25px 30px;
+                        border-radius: 20px;
+                        font-size: 18px;
+                        box-shadow: 0 10px 30px rgba(235, 51, 73, 0.3);
+                        text-align: center;
+                        animation: shake 0.5s ease;
+                    ">
+                        <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
+                        <div style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">هەڵە!</div>
+                        <div style="font-size: 16px; opacity: 0.95;">نەشیا گوهەرتنە تۆمار بکەن</div>
+                        <div style="font-size: 14px; opacity: 0.8; margin-top: 10px;">${error.message}</div>
                     </div>
                 `;
                 messageDiv.style.display = 'block';
