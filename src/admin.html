@@ -9,12 +9,18 @@
     <meta http-equiv="Expires" content="0">
     <title>Admin Panel - Tafsir Kurd</title>
 
+    <!-- Performance Optimizations -->
+    <meta name="theme-color" content="#667eea">
+    <link rel="dns-prefetch" href="https://gijupzejtbpifjzwadee.supabase.co">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+
     <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
     <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/favicon-96x96.png">
 
     <!-- Preconnect -->
-    <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co">
+    <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 
     <!-- Font Preloading -->
     <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
@@ -66,12 +72,21 @@
             box-sizing: border-box;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            /* Hardware acceleration */
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
         }
 
         body::before {
@@ -622,30 +637,46 @@
             margin: 0 auto 15px;
         }
 
+        /* GPU-Accelerated Animations */
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+                will-change: transform;
+            }
         }
 
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translate3d(0, 20px, 0);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translate3d(0, 0, 0);
             }
         }
 
         @keyframes pulse {
             0%, 100% {
-                transform: scale(1);
+                transform: scale3d(1, 1, 1);
                 box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
             }
             50% {
-                transform: scale(1.05);
+                transform: scale3d(1.05, 1.05, 1.05);
                 box-shadow: 0 6px 15px rgba(102, 126, 234, 0.5);
             }
+        }
+
+        /* Performance: Enable GPU acceleration for transitions */
+        .content-card, .stat-card, .section, button, input, select, textarea {
+            will-change: auto;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+        }
+
+        /* Smooth transitions */
+        * {
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .loading-text {
@@ -6432,9 +6463,121 @@
             'fas fa-ice-cream', 'fas fa-keyboard', 'fas fa-life-ring', 'fas fa-lightbulb',
             'fas fa-link', 'fas fa-magnet', 'fas fa-map-signs', 'fas fa-mask',
             'fas fa-memorial', 'fas fa-monument', 'fas fa-mug-saucer', 'fas fa-newspaper',
-            'fas fa-oil-can', 'fas fa-paper-plane', 'fas fa-parking', 'fas fa-passport'
+            'fas fa-oil-can', 'fas fa-paper-plane', 'fas fa-parking', 'fas fa-passport',
+
+            // Religion & Spirituality Extended
+            'fas fa-cross', 'fas fa-church', 'fas fa-bible', 'fas fa-om',
+            'fas fa-yin-yang', 'fas fa-peace', 'fas fa-dove', 'fas fa-hands-praying',
+            'fas fa-menorah', 'fas fa-star-of-david', 'fas fa-hamsa', 'fas fa-dharmachakra',
+            'fas fa-khanda', 'fas fa-gopuram', 'fas fa-vihara', 'fas fa-torii-gate',
+
+            // Energy & Power
+            'fas fa-solar-panel', 'fas fa-wind-turbine', 'fas fa-charging-station', 'fas fa-car-battery',
+            'fas fa-gas-pump', 'fas fa-oil-well', 'fas fa-industry', 'fas fa-atom',
+            'fas fa-radiation', 'fas fa-biohazard', 'fas fa-fire', 'fas fa-burn',
+
+            // Sports & Activities Extended
+            'fas fa-skiing', 'fas fa-skiing-nordic', 'fas fa-snowboarding', 'fas fa-skating',
+            'fas fa-hockey-puck', 'fas fa-golf-ball', 'fas fa-tennis-ball', 'fas fa-racquet',
+            'fas fa-dumbbell', 'fas fa-weight', 'fas fa-trophy-alt', 'fas fa-medal',
+            'fas fa-stopwatch-20', 'fas fa-whistle', 'fas fa-field-hockey', 'fas fa-cricket',
+
+            // Music & Audio Extended
+            'fas fa-guitar', 'fas fa-piano', 'fas fa-violin', 'fas fa-saxophone',
+            'fas fa-trumpet', 'fas fa-drums', 'fas fa-music-note', 'fas fa-music-alt',
+            'fas fa-drum-steelpan', 'fas fa-musical-note', 'fas fa-compact-disc', 'fas fa-cassette-tape',
+            'fas fa-record-vinyl', 'fas fa-turntable', 'fas fa-radio', 'fas fa-speaker',
+
+            // Arrows & Navigation Extended
+            'fas fa-compass-drafting', 'fas fa-location-arrow', 'fas fa-directions', 'fas fa-paper-plane',
+            'fas fa-expand', 'fas fa-compress', 'fas fa-expand-arrows-alt', 'fas fa-compress-arrows-alt',
+            'fas fa-arrows-alt', 'fas fa-arrows-alt-h', 'fas fa-arrows-alt-v', 'fas fa-arrows-rotate',
+            'fas fa-maximize', 'fas fa-minimize', 'fas fa-up-down-left-right', 'fas fa-shuffle',
+
+            // Status & Indicators
+            'fas fa-circle-check', 'fas fa-circle-xmark', 'fas fa-circle-exclamation', 'fas fa-circle-question',
+            'fas fa-circle-info', 'fas fa-circle-plus', 'fas fa-circle-minus', 'fas fa-circle-play',
+            'fas fa-circle-pause', 'fas fa-circle-stop', 'fas fa-triangle-exclamation', 'fas fa-square-check',
+            'fas fa-square-xmark', 'fas fa-square-plus', 'fas fa-square-minus', 'fas fa-hexagon',
+
+            // Weather & Environment Extended
+            'fas fa-temperature-arrow-up', 'fas fa-temperature-arrow-down', 'fas fa-cloud-bolt', 'fas fa-cloud-meatball',
+            'fas fa-smog', 'fas fa-tornado', 'fas fa-hurricane', 'fas fa-volcano',
+            'fas fa-hill-avalanche', 'fas fa-house-tsunami', 'fas fa-house-flood', 'fas fa-fire-smoke',
+            'fas fa-droplet', 'fas fa-droplet-slash', 'fas fa-sun-plant-wilt', 'fas fa-plant-wilt',
+
+            // Buildings & Architecture Extended
+            'fas fa-igloo', 'fas fa-fort-awesome', 'fas fa-tower-observation', 'fas fa-monument',
+            'fas fa-archway', 'fas fa-bridge', 'fas fa-bridge-water', 'fas fa-bridge-circle-check',
+            'fas fa-warehouse', 'fas fa-store', 'fas fa-shop', 'fas fa-store-slash',
+            'fas fa-building-columns', 'fas fa-building-shield', 'fas fa-building-lock', 'fas fa-building-circle-check',
+
+            // Communication & Messaging Extended
+            'fas fa-message', 'fas fa-messages', 'fas fa-comment-medical', 'fas fa-comment-slash',
+            'fas fa-comment-sms', 'fas fa-comments-dollar', 'fas fa-message-dots', 'fas fa-message-lines',
+            'fas fa-square-phone', 'fas fa-phone-flip', 'fas fa-phone-slash', 'fas fa-phone-volume',
+            'fas fa-voicemail', 'fas fa-fax', 'fas fa-walkie-talkie', 'fas fa-mobile-screen',
+
+            // Food & Dining Extended
+            'fas fa-bacon', 'fas fa-burger', 'fas fa-hotdog', 'fas fa-egg',
+            'fas fa-lemon', 'fas fa-pepper-hot', 'fas fa-stroopwafel', 'fas fa-cookie',
+            'fas fa-cookie-bite', 'fas fa-candy', 'fas fa-drumstick', 'fas fa-fish-fins',
+            'fas fa-jar', 'fas fa-bottle-water', 'fas fa-bowl-food', 'fas fa-plate-wheat',
+
+            // Science & Laboratory Extended
+            'fas fa-microscope', 'fas fa-vial-circle-check', 'fas fa-vials', 'fas fa-flask-vial',
+            'fas fa-mortar-pestle', 'fas fa-prescription', 'fas fa-syringe', 'fas fa-capsules',
+            'fas fa-pills', 'fas fa-tablets', 'fas fa-disease', 'fas fa-virus',
+            'fas fa-bacteria', 'fas fa-virus-slash', 'fas fa-bacteria-slash', 'fas fa-skull-crossbones',
+
+            // Military & Defense
+            'fas fa-shield', 'fas fa-shield-halved', 'fas fa-shield-virus', 'fas fa-helmet-battle',
+            'fas fa-gun', 'fas fa-burst', 'fas fa-bomb', 'fas fa-land-mine-on',
+            'fas fa-jet-fighter', 'fas fa-helicopter-symbol', 'fas fa-tank', 'fas fa-person-military-rifle',
+            'fas fa-person-rifle', 'fas fa-medal', 'fas fa-flag-usa', 'fas fa-parachute-box',
+
+            // Vehicles Extended
+            'fas fa-van-shuttle', 'fas fa-truck-monster', 'fas fa-truck-pickup', 'fas fa-truck-field',
+            'fas fa-tractor', 'fas fa-caravan', 'fas fa-trailer', 'fas fa-car-side',
+            'fas fa-car-rear', 'fas fa-taxi', 'fas fa-train-subway', 'fas fa-train-tram',
+            'fas fa-ferry', 'fas fa-sailboat', 'fas fa-anchor', 'fas fa-anchor-circle-check',
+
+            // Accessibility & Medical Extended
+            'fas fa-wheelchair-move', 'fas fa-accessible-icon', 'fas fa-blind', 'fas fa-braille',
+            'fas fa-deaf', 'fas fa-sign-language', 'fas fa-audio-description', 'fas fa-universal-access',
+            'fas fa-crutches', 'fas fa-person-cane', 'fas fa-person-walking-with-cane', 'fas fa-wheelchair-alt',
+            'fas fa-hearing-aid', 'fas fa-ear-listen', 'fas fa-ear-deaf', 'fas fa-eye-low-vision',
+
+            // Tools & Hardware Extended
+            'fas fa-scissors', 'fas fa-tape', 'fas fa-screwdriver-wrench', 'fas fa-gears',
+            'fas fa-axe', 'fas fa-pickaxe', 'fas fa-shovel', 'fas fa-toolbox',
+            'fas fa-plunger', 'fas fa-broom-ball', 'fas fa-wrench-simple', 'fas fa-file-zipper',
+            'fas fa-magnet', 'fas fa-magnifying-glass', 'fas fa-magnifying-glass-plus', 'fas fa-magnifying-glass-minus',
+
+            // UI & Interface
+            'fas fa-bars', 'fas fa-ellipsis', 'fas fa-ellipsis-vertical', 'fas fa-grip',
+            'fas fa-grip-lines', 'fas fa-grip-lines-vertical', 'fas fa-grip-vertical', 'fas fa-table',
+            'fas fa-table-cells', 'fas fa-table-list', 'fas fa-border-all', 'fas fa-border-none',
+            'fas fa-window-maximize', 'fas fa-window-minimize', 'fas fa-window-restore', 'fas fa-sidebar',
+
+            // Coding & Development
+            'fas fa-code', 'fas fa-code-branch', 'fas fa-code-commit', 'fas fa-code-compare',
+            'fas fa-code-fork', 'fas fa-code-merge', 'fas fa-code-pull-request', 'fas fa-terminal',
+            'fas fa-file-code', 'fas fa-bug', 'fas fa-debug', 'fas fa-laptop-code',
+            'fas fa-rectangle-code', 'fas fa-brackets-curly', 'fas fa-window-maximize', 'fas fa-server',
+
+            // More Brand Icons
+            'fab fa-airbnb', 'fab fa-algolia', 'fab fa-atlassian', 'fab fa-bitbucket',
+            'fab fa-blogger', 'fab fa-bootstrap', 'fab fa-chrome', 'fab fa-cloudflare',
+            'fab fa-css3', 'fab fa-css3-alt', 'fab fa-digitalocean', 'fab fa-firefox',
+            'fab fa-git', 'fab fa-git-alt', 'fab fa-golang', 'fab fa-html5',
+            'fab fa-hubspot', 'fab fa-intercom', 'fab fa-kickstarter', 'fab fa-laravel',
+            'fab fa-mailchimp', 'fab fa-markdown', 'fab fa-npm', 'fab fa-opera',
+            'fab fa-php', 'fab fa-raspberry-pi', 'fab fa-rust', 'fab fa-sass',
+            'fab fa-shopify', 'fab fa-swift', 'fab fa-ubuntu', 'fab fa-unity'
         ];
 
+        // Optimized Icon Picker with Virtual Scrolling
         function createIconPicker(inputId, currentIcon = '') {
             const container = document.getElementById(inputId).parentElement;
             if (container.querySelector('.icon-picker-dropdown')) return;
@@ -6445,18 +6588,67 @@
                 <div class="icon-picker-search">
                     <input type="text" placeholder="بگەڕێ بۆ ئایکۆنێ..." class="kurdish-text" oninput="filterIcons(this.value, '${inputId}')">
                 </div>
-                <div class="icon-picker-grid" id="${inputId}_grid">
-                    ${popularIcons.map(icon => `
-                        <div class="icon-picker-item" onclick="selectIcon('${icon}', '${inputId}')">
-                            <i class="${icon}"></i>
-                            <span>${icon.split(' ')[1].replace('fa-', '')}</span>
-                        </div>
-                    `).join('')}
-                </div>
+                <div class="icon-picker-grid" id="${inputId}_grid"></div>
             `;
 
             container.style.position = 'relative';
             container.appendChild(dropdown);
+
+            // Lazy load icons - only render visible ones
+            const grid = dropdown.querySelector('.icon-picker-grid');
+            let currentlyRendered = [];
+
+            function renderIcons(icons = popularIcons, append = false) {
+                if (!append) {
+                    grid.innerHTML = '';
+                    currentlyRendered = [];
+                }
+
+                // Use DocumentFragment for better performance
+                const fragment = document.createDocumentFragment();
+                const iconsToRender = icons.slice(0, 100); // Render first 100 initially
+
+                iconsToRender.forEach(icon => {
+                    const item = document.createElement('div');
+                    item.className = 'icon-picker-item';
+                    item.innerHTML = `
+                        <i class="${icon}"></i>
+                        <span>${icon.split(' ')[1].replace('fa-', '')}</span>
+                    `;
+                    item.onclick = () => selectIcon(icon, inputId);
+                    fragment.appendChild(item);
+                    currentlyRendered.push(icon);
+                });
+
+                grid.appendChild(fragment);
+
+                // Load remaining icons on scroll
+                if (icons.length > 100) {
+                    const loadMore = () => {
+                        if (grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 100) {
+                            const remaining = icons.slice(currentlyRendered.length, currentlyRendered.length + 100);
+                            if (remaining.length > 0) {
+                                const moreFragment = document.createDocumentFragment();
+                                remaining.forEach(icon => {
+                                    const item = document.createElement('div');
+                                    item.className = 'icon-picker-item';
+                                    item.innerHTML = `
+                                        <i class="${icon}"></i>
+                                        <span>${icon.split(' ')[1].replace('fa-', '')}</span>
+                                    `;
+                                    item.onclick = () => selectIcon(icon, inputId);
+                                    moreFragment.appendChild(item);
+                                    currentlyRendered.push(icon);
+                                });
+                                grid.appendChild(moreFragment);
+                            }
+                        }
+                    };
+                    grid.addEventListener('scroll', loadMore, { passive: true });
+                }
+            }
+
+            renderIcons();
 
             const input = document.getElementById(inputId);
             input.addEventListener('click', (e) => {
@@ -6469,6 +6661,9 @@
                     dropdown.classList.remove('show');
                 }
             });
+
+            // Store render function for filter
+            dropdown._renderIcons = renderIcons;
         }
 
         function selectIcon(iconClass, inputId) {
@@ -6486,17 +6681,27 @@
             input.dispatchEvent(new Event('change'));
         }
 
+        // Optimized filter with debouncing
+        let filterTimeout;
         function filterIcons(searchTerm, inputId) {
-            const grid = document.getElementById(`${inputId}_grid`);
-            const items = grid.querySelectorAll('.icon-picker-item');
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(() => {
+                const dropdown = document.getElementById(inputId).parentElement.querySelector('.icon-picker-dropdown');
+                if (!dropdown || !dropdown._renderIcons) return;
 
-            items.forEach(item => {
-                const iconName = item.textContent.toLowerCase();
-                const iconClass = item.querySelector('i').className.toLowerCase();
-                const matches = iconName.includes(searchTerm.toLowerCase()) ||
-                               iconClass.includes(searchTerm.toLowerCase());
-                item.style.display = matches ? 'flex' : 'none';
-            });
+                if (!searchTerm) {
+                    dropdown._renderIcons(popularIcons);
+                    return;
+                }
+
+                const filtered = popularIcons.filter(icon => {
+                    const iconName = icon.toLowerCase();
+                    const search = searchTerm.toLowerCase();
+                    return iconName.includes(search);
+                });
+
+                dropdown._renderIcons(filtered);
+            }, 150); // Debounce for better performance
         }
 
         // ============================================
