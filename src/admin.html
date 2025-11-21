@@ -6604,11 +6604,10 @@
                     currentlyRendered = [];
                 }
 
-                // Use DocumentFragment for better performance
+                // Render ALL icons instantly with DocumentFragment (super fast)
                 const fragment = document.createDocumentFragment();
-                const iconsToRender = icons.slice(0, 300); // Render first 300 initially (more visible)
 
-                iconsToRender.forEach(icon => {
+                icons.forEach(icon => {
                     const item = document.createElement('div');
                     item.className = 'icon-picker-item';
                     item.innerHTML = `
@@ -6617,35 +6616,10 @@
                     `;
                     item.onclick = () => selectIcon(icon, inputId);
                     fragment.appendChild(item);
-                    currentlyRendered.push(icon);
                 });
 
                 grid.appendChild(fragment);
-
-                // Load remaining icons on scroll
-                if (icons.length > 300) {
-                    const loadMore = () => {
-                        if (grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 200) {
-                            const remaining = icons.slice(currentlyRendered.length, currentlyRendered.length + 200);
-                            if (remaining.length > 0) {
-                                const moreFragment = document.createDocumentFragment();
-                                remaining.forEach(icon => {
-                                    const item = document.createElement('div');
-                                    item.className = 'icon-picker-item';
-                                    item.innerHTML = `
-                                        <i class="${icon}"></i>
-                                        <span>${icon.split(' ')[1].replace('fa-', '')}</span>
-                                    `;
-                                    item.onclick = () => selectIcon(icon, inputId);
-                                    moreFragment.appendChild(item);
-                                    currentlyRendered.push(icon);
-                                });
-                                grid.appendChild(moreFragment);
-                            }
-                        }
-                    };
-                    grid.addEventListener('scroll', loadMore, { passive: true });
-                }
+                currentlyRendered = [...icons];
             }
 
             renderIcons();
