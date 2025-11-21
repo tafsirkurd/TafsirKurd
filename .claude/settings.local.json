@@ -14,7 +14,17 @@
       "Bash(git merge:*)",
       "Bash(git commit:*)",
       "Bash(git pull:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(dir:*)",
+      "Bash(nul)",
+      "Bash(src/sitemap.xml)",
+      "Bash(SEO_GUIDE.md)",
+      "Bash(del nul)",
+      "Bash(curl:*)",
+      "Bash(netlify/functions/google-search-console.js)",
+      "Bash(GOOGLE_SEARCH_CONSOLE_SETUP.md)",
+      "Bash(ADMIN_SEARCH_CONSOLE_INTEGRATION.md)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
