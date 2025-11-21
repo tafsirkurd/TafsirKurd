@@ -6179,25 +6179,115 @@
         // ============================================
 
         const popularIcons = [
+            // Mobile & Reading
             'fas fa-mobile-alt', 'fas fa-book-open', 'fas fa-language', 'fas fa-heart',
+            'fas fa-tablet-alt', 'fas fa-mobile', 'fas fa-laptop', 'fas fa-desktop',
+
+            // Islamic & Religious
             'fas fa-calendar-day', 'fas fa-sun', 'fas fa-star', 'fas fa-mosque',
             'fas fa-video', 'fas fa-book', 'fas fa-quran', 'fas fa-pray',
-            'fas fa-hands', 'fas fa-hand-holding-heart', 'fas fa-lightbulb', 'fas fa-graduation-cap',
-            'fas fa-users', 'fas fa-user', 'fas fa-eye', 'fas fa-comment',
-            'fas fa-share', 'fas fa-hashtag', 'fas fa-fire', 'fas fa-trophy',
-            'fas fa-gem', 'fas fa-crown', 'fas fa-rocket', 'fas fa-chart-line',
-            'fas fa-clock', 'fas fa-bell', 'fas fa-envelope', 'fas fa-globe',
-            'fas fa-map-marker-alt', 'fas fa-home', 'fas fa-building', 'fas fa-hospital',
-            'fas fa-school', 'fas fa-university', 'fas fa-place-of-worship', 'fas fa-kaaba',
+            'fas fa-hands', 'fas fa-hand-holding-heart', 'fas fa-kaaba', 'fas fa-place-of-worship',
+            'fas fa-crescent', 'fas fa-moon', 'fas fa-star-and-crescent', 'fas fa-dharmachakra',
+
+            // Education & Learning
+            'fas fa-lightbulb', 'fas fa-graduation-cap', 'fas fa-school', 'fas fa-university',
+            'fas fa-chalkboard-teacher', 'fas fa-book-reader', 'fas fa-user-graduate', 'fas fa-pencil-alt',
+            'fas fa-pen', 'fas fa-highlighter', 'fas fa-marker', 'fas fa-brain',
+
+            // People & Community
+            'fas fa-users', 'fas fa-user', 'fas fa-user-friends', 'fas fa-user-circle',
+            'fas fa-user-tie', 'fas fa-user-shield', 'fas fa-user-check', 'fas fa-user-plus',
+            'fas fa-child', 'fas fa-baby', 'fas fa-male', 'fas fa-female',
+
+            // Communication
+            'fas fa-eye', 'fas fa-comment', 'fas fa-comments', 'fas fa-comment-dots',
+            'fas fa-share', 'fas fa-share-alt', 'fas fa-retweet', 'fas fa-reply',
+            'fas fa-envelope', 'fas fa-inbox', 'fas fa-paper-plane', 'fas fa-mail-bulk',
+
+            // Achievement & Goals
+            'fas fa-hashtag', 'fas fa-fire', 'fas fa-trophy', 'fas fa-medal',
+            'fas fa-gem', 'fas fa-crown', 'fas fa-award', 'fas fa-certificate',
+            'fas fa-ribbon', 'fas fa-gift', 'fas fa-gifts', 'fas fa-birthday-cake',
+
+            // Progress & Analytics
+            'fas fa-rocket', 'fas fa-chart-line', 'fas fa-chart-bar', 'fas fa-chart-pie',
+            'fas fa-chart-area', 'fas fa-analytics', 'fas fa-tasks', 'fas fa-list-ol',
+            'fas fa-list-ul', 'fas fa-check-circle', 'fas fa-check-square', 'fas fa-clipboard-check',
+
+            // Time & Notifications
+            'fas fa-clock', 'fas fa-bell', 'fas fa-alarm-clock', 'fas fa-stopwatch',
+            'fas fa-hourglass-half', 'fas fa-calendar', 'fas fa-calendar-alt', 'fas fa-calendar-check',
+            'fas fa-calendar-plus', 'fas fa-calendar-times', 'fas fa-history', 'fas fa-redo',
+
+            // Location & Places
+            'fas fa-globe', 'fas fa-map-marker-alt', 'fas fa-home', 'fas fa-building',
+            'fas fa-hospital', 'fas fa-map', 'fas fa-map-marked', 'fas fa-map-pin',
+            'fas fa-street-view', 'fas fa-city', 'fas fa-landmark', 'fas fa-atlas',
+
+            // Media & Entertainment
             'fas fa-play', 'fas fa-pause', 'fas fa-stop', 'fas fa-music',
             'fas fa-microphone', 'fas fa-headphones', 'fas fa-camera', 'fas fa-image',
+            'fas fa-images', 'fas fa-photo-video', 'fas fa-film', 'fas fa-video',
+            'fas fa-podcast', 'fas fa-volume-up', 'fas fa-volume-down', 'fas fa-volume-mute',
+
+            // Files & Storage
             'fas fa-file-alt', 'fas fa-folder', 'fas fa-download', 'fas fa-upload',
-            'fas fa-cloud', 'fas fa-wifi', 'fas fa-signal', 'fas fa-battery-full',
-            'fas fa-moon', 'fas fa-cloud-sun', 'fas fa-wind', 'fas fa-snowflake',
+            'fas fa-cloud', 'fas fa-cloud-upload-alt', 'fas fa-cloud-download-alt', 'fas fa-save',
+            'fas fa-file-pdf', 'fas fa-file-word', 'fas fa-file-excel', 'fas fa-file-powerpoint',
+            'fas fa-file-image', 'fas fa-file-video', 'fas fa-file-audio', 'fas fa-archive',
+
+            // Nature & Weather
+            'fas fa-sun', 'fas fa-moon', 'fas fa-cloud-sun', 'fas fa-wind',
+            'fas fa-snowflake', 'fas fa-cloud-rain', 'fas fa-cloud-moon', 'fas fa-smog',
+            'fas fa-tree', 'fas fa-seedling', 'fas fa-leaf', 'fas fa-mountain',
+
+            // Technology & Connectivity
+            'fas fa-wifi', 'fas fa-signal', 'fas fa-battery-full', 'fas fa-plug',
+            'fas fa-bolt', 'fas fa-broadcast-tower', 'fas fa-satellite', 'fas fa-ethernet',
+            'fas fa-network-wired', 'fas fa-server', 'fas fa-database', 'fas fa-hdd',
+
+            // Actions & Controls
             'fas fa-check', 'fas fa-times', 'fas fa-plus', 'fas fa-minus',
             'fas fa-arrow-right', 'fas fa-arrow-left', 'fas fa-arrow-up', 'fas fa-arrow-down',
+            'fas fa-angle-right', 'fas fa-angle-left', 'fas fa-angle-up', 'fas fa-angle-down',
+            'fas fa-chevron-right', 'fas fa-chevron-left', 'fas fa-chevron-up', 'fas fa-chevron-down',
+            'fas fa-caret-right', 'fas fa-caret-left', 'fas fa-caret-up', 'fas fa-caret-down',
+            'fas fa-edit', 'fas fa-trash', 'fas fa-save', 'fas fa-undo',
+            'fas fa-sync', 'fas fa-search', 'fas fa-filter', 'fas fa-sort',
+            'fas fa-cog', 'fas fa-cogs', 'fas fa-sliders-h', 'fas fa-wrench',
+            'fas fa-tools', 'fas fa-hammer', 'fas fa-screwdriver', 'fas fa-power-off',
+
+            // Shopping & Money
+            'fas fa-shopping-cart', 'fas fa-shopping-bag', 'fas fa-credit-card', 'fas fa-money-bill',
+            'fas fa-coins', 'fas fa-wallet', 'fas fa-dollar-sign', 'fas fa-euro-sign',
+            'fas fa-pound-sign', 'fas fa-receipt', 'fas fa-tag', 'fas fa-tags',
+
+            // Health & Fitness
+            'fas fa-heart', 'fas fa-heartbeat', 'fas fa-dumbbell', 'fas fa-running',
+            'fas fa-walking', 'fas fa-biking', 'fas fa-swimmer', 'fas fa-medkit',
+            'fas fa-pills', 'fas fa-syringe', 'fas fa-stethoscope', 'fas fa-hospital',
+
+            // Food & Drink
+            'fas fa-utensils', 'fas fa-coffee', 'fas fa-mug-hot', 'fas fa-wine-glass',
+            'fas fa-beer', 'fas fa-hamburger', 'fas fa-pizza-slice', 'fas fa-ice-cream',
+            'fas fa-apple-alt', 'fas fa-carrot', 'fas fa-bread-slice', 'fas fa-cheese',
+
+            // Transportation
+            'fas fa-car', 'fas fa-bus', 'fas fa-taxi', 'fas fa-plane',
+            'fas fa-train', 'fas fa-subway', 'fas fa-bicycle', 'fas fa-motorcycle',
+            'fas fa-truck', 'fas fa-ship', 'fas fa-helicopter', 'fas fa-rocket',
+
+            // Security & Safety
+            'fas fa-lock', 'fas fa-unlock', 'fas fa-key', 'fas fa-shield-alt',
+            'fas fa-user-lock', 'fas fa-user-shield', 'fas fa-exclamation-triangle', 'fas fa-info-circle',
+            'fas fa-question-circle', 'fas fa-eye-slash', 'fas fa-fingerprint', 'fas fa-id-card',
+
+            // Social Media
             'fab fa-instagram', 'fab fa-facebook', 'fab fa-twitter', 'fab fa-youtube',
-            'fab fa-tiktok', 'fab fa-whatsapp', 'fab fa-telegram', 'fab fa-linkedin'
+            'fab fa-tiktok', 'fab fa-whatsapp', 'fab fa-telegram', 'fab fa-linkedin',
+            'fab fa-snapchat', 'fab fa-reddit', 'fab fa-pinterest', 'fab fa-discord',
+            'fab fa-twitch', 'fab fa-github', 'fab fa-gitlab', 'fab fa-google',
+            'fab fa-apple', 'fab fa-microsoft', 'fab fa-amazon', 'fab fa-android'
         ];
 
         function createIconPicker(inputId, currentIcon = '') {
