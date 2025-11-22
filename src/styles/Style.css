@@ -994,14 +994,9 @@ section.show {
     transition: height 0.4s ease;
 }
 
-.stat-card:hover::after {
-    height: 100%;
-}
-
 .stat-card:hover {
     transform: translateY(-5px) scale(1.03);
     box-shadow: var(--shadow-md);
-    border-color: var(--primary);
 }
 
 .stat-icon {
