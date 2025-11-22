@@ -6,12 +6,13 @@
 const { google } = require('googleapis');
 
 exports.handler = async (event, context) => {
-  // Enable CORS
+  // Enable CORS and caching
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Cache-Control': 'public, max-age=3600, s-maxage=3600' // Cache for 1 hour
   };
 
   // Handle OPTIONS request for CORS
@@ -134,6 +135,33 @@ exports.handler = async (event, context) => {
     const avgCTR = totalClicks > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : '0.00';
     const avgPosition = queries.length > 0 ?
       (queries.reduce((sum, q) => sum + parseFloat(q.position), 0) / queries.length).toFixed(1) : '0.0';
+
+    // Check if there's actually any data
+    if (rows.length === 0 || totalImpressions === 0) {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          noData: true,
+          message: 'No search data available yet. This is normal for newly verified sites. Data usually appears within 24-48 hours after verification.',
+          data: {
+            summary: {
+              totalClicks: 0,
+              totalImpressions: 0,
+              avgCTR: '0.00',
+              avgPosition: '0.0',
+              dateRange: {
+                start: formatDate(startDate),
+                end: formatDate(endDate)
+              }
+            },
+            queries: [],
+            pages: []
+          }
+        })
+      };
+    }
 
     return {
       statusCode: 200,
