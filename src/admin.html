@@ -7628,18 +7628,21 @@
 
         // Show Preview Menu - Combined menu for all preview options
         function showPreviewMenu(index) {
+            console.log('showPreviewMenu called with index:', index);
             const item = translationsData[index];
             if (!item) {
                 console.error('Translation not found at index:', index);
                 return;
             }
 
+            console.log('Item found:', item);
             const keyId = item.key_id;
             const text = item.kurdish_text;
             const context = item.context;
             const page = item.page;
             const category = item.category;
 
+            console.log('Creating modal...');
             const modal = document.createElement('div');
             modal.style.cssText = `
                 position: fixed;
@@ -7767,8 +7770,10 @@
                 document.body.style.overflow = 'auto';
             };
 
+            console.log('Appending modal to body...');
             document.body.appendChild(modal);
             document.body.style.overflow = 'hidden';
+            console.log('Modal appended! Check if you see black overlay.');
         }
 
         // Test Preview - Shows the text as it would appear in different contexts
