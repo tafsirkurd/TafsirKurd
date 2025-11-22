@@ -1005,12 +1005,25 @@ section.show {
     color: var(--primary);
     margin-bottom: 20px;
     transition: transform var(--transition-medium) var(--cubic);
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
 }
 
+.stat-icon i {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* Disabled to remove highlight
 .stat-card:hover .stat-icon {
     transform: scale(1.2) rotate(-10deg);
     animation: pulse 1s ease infinite;
 }
+*/
 
 @keyframes pulse {
     0%, 100% {
