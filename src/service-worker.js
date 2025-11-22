@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v392-whitebox';
+const CACHE_NAME = 'tafsir-kurd-v393-transform-fix';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -48,7 +48,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v392-whitebox');
+  console.log('[ServiceWorker] Installing v393-transform-fix');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

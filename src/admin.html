@@ -84,9 +84,6 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             text-rendering: optimizeLegibility;
-            /* Hardware acceleration */
-            transform: translateZ(0);
-            -webkit-transform: translateZ(0);
         }
 
         body::before {
@@ -670,8 +667,6 @@
         /* Performance: Enable GPU acceleration for transitions */
         .content-card, .stat-card, .section, button, input, select, textarea {
             will-change: auto;
-            transform: translateZ(0);
-            -webkit-transform: translateZ(0);
         }
 
         /* Smooth transitions */
