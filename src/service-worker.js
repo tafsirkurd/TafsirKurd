@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v403-truly-no-anim';
+const CACHE_NAME = 'tafsir-kurd-v404-no-icon-highlight';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -48,7 +48,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v403-truly-no-anim');
+  console.log('[ServiceWorker] Installing v404-no-icon-highlight');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
