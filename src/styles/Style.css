@@ -948,11 +948,9 @@ section.show {
     padding: 40px 30px;
     text-align: center;
     box-shadow: var(--shadow-sm);
-    transition: all var(--transition-medium) var(--cubic);
     border: 1px solid var(--border-light);
     position: relative;
     overflow: hidden;
-    animation: statCardPulse 4s ease-in-out infinite;
 }
 
 .stat-card:nth-child(1) {
@@ -994,11 +992,12 @@ section.show {
     transition: height 0.4s ease;
 }
 
+/* All hover effects disabled per user request
 .stat-card:hover {
     transform: translateY(-5px) scale(1.03);
     box-shadow: var(--shadow-md);
-    /* Note: border-color NOT changed to avoid colored highlight */
 }
+*/
 
 .stat-icon {
     font-size: 3rem;
@@ -1018,10 +1017,12 @@ section.show {
     background: transparent !important;
 }
 
+/* Icon hover disabled
 .stat-card:hover .stat-icon {
     transform: scale(1.2) rotate(-10deg);
     animation: pulse 1s ease infinite;
 }
+*/
 
 @keyframes pulse {
     0%, 100% {
@@ -1041,9 +1042,11 @@ section.show {
     transition: transform var(--transition-medium);
 }
 
+/* Number hover disabled
 .stat-card:hover .stat-number {
     transform: scale(1.1);
 }
+*/
 
 .stat-unit {
     font-family: 'IBM Plex Sans Arabic', sans-serif;
@@ -1062,9 +1065,11 @@ section.show {
     transition: color var(--transition-medium);
 }
 
+/* Label hover disabled
 .stat-card:hover .stat-label {
     color: var(--text);
 }
+*/
 
 /* Videos Grid with Hover Animations */
 .videos-grid {
