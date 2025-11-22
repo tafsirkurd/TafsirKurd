@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v407-original-restored';
+const CACHE_NAME = 'tafsir-kurd-v408-inline-css';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -17,7 +17,6 @@ const urlsToCache = [
   '/admin.html',
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
-  '/styles/Style.css',
   '/styles/mobile-optimize.css',
   '/utils/console-cleaner.js',
   '/utils/kurdish-numbers.js',
@@ -48,7 +47,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v407-original-restored');
+  console.log('[ServiceWorker] Installing v408-inline-css');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
