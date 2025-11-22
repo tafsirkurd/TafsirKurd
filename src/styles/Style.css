@@ -978,7 +978,7 @@ section.show {
     }
     50% {
         transform: scale(1.03);
-        box-shadow: 0 10px 40px rgba(var(--primary-rgb), 0.2);
+        box-shadow: var(--shadow-md);
     }
 }
 

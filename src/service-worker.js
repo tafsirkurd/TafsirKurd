@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v399-welcome-glass';
+const CACHE_NAME = 'tafsir-kurd-v400-revert';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -48,7 +48,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v399-welcome-glass');
+  console.log('[ServiceWorker] Installing v400-revert');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
