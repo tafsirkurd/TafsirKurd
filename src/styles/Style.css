@@ -401,11 +401,11 @@ nav {
     top: 0;
     left: 0;
     width: 100%;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
     z-index: 900;
     padding: 15px 0;
     transition: all var(--transition-medium) var(--cubic);
@@ -413,7 +413,7 @@ nav {
 
 nav.scrolled-nav {
     padding: 10px 0;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
 }
 
 .nav-container {
