@@ -952,7 +952,6 @@ section.show {
     border: 1px solid var(--border-light);
     position: relative;
     overflow: hidden;
-    animation: statCardPulse 4s ease-in-out infinite;
 }
 
 .stat-card:nth-child(1) {
@@ -994,10 +993,12 @@ section.show {
     transition: height 0.4s ease;
 }
 
+/* Hover effect disabled to remove highlight
 .stat-card:hover {
     transform: translateY(-5px) scale(1.03);
     box-shadow: var(--shadow-md);
 }
+*/
 
 .stat-icon {
     font-size: 3rem;
