@@ -774,14 +774,15 @@
 
         /* Professional Header */
         .professional-header {
-            background: var(--card-bg);
-            box-shadow: var(--shadow-sm);
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
             padding: 15px 0;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
             position: sticky;
             top: 0;
             z-index: 1001;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
             transition: transform 0.3s ease-in-out;
         }
 
