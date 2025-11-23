@@ -1347,7 +1347,7 @@
                     </div>
 
                     <!-- Stats Grid with Glass Cards -->
-                    <div style="position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div style="position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
                         <div onclick="switchSection('users')" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 25px; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
                             <div style="font-size: 40px; margin-bottom: 12px;">👥</div>
                             <div style="font-size: 36px; font-weight: 800; color: white; margin-bottom: 5px; text-shadow: 0 2px 8px rgba(0,0,0,0.2);" id="totalUsers">0</div>
@@ -1374,6 +1374,81 @@
                             <div style="font-size: 36px; font-weight: 800; color: white; margin-bottom: 5px; text-shadow: 0 2px 8px rgba(0,0,0,0.2);" id="totalReading">0</div>
                             <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 8px;">Active Readers</div>
                             <div style="font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; display: inline-block;" id="readingChange">Reading now</div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Detailed Stats -->
+                    <div style="position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 20px;">
+                        <!-- Visitor Stats -->
+                        <div style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.15);">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                <div style="font-size: 28px;">👁️</div>
+                                <div>
+                                    <div style="font-size: 22px; font-weight: 700; color: white; text-shadow: 0 2px 6px rgba(0,0,0,0.2);" id="overviewVisitors">0</div>
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.85);">Daily Visitors</div>
+                                </div>
+                            </div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 15px; text-align: center;" id="overviewVisitorsChange">Today</div>
+                        </div>
+
+                        <!-- Streak Stats -->
+                        <div style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.15);">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                <div style="font-size: 28px;">🔥</div>
+                                <div>
+                                    <div style="font-size: 22px; font-weight: 700; color: white; text-shadow: 0 2px 6px rgba(0,0,0,0.2);" id="overviewStreaks">0</div>
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.85);">Active Streaks</div>
+                                </div>
+                            </div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 15px; text-align: center;" id="overviewStreaksChange">7+ days</div>
+                        </div>
+
+                        <!-- Quran Completion -->
+                        <div style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.15);">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                <div style="font-size: 28px;">✅</div>
+                                <div>
+                                    <div style="font-size: 22px; font-weight: 700; color: white; text-shadow: 0 2px 6px rgba(0,0,0,0.2);" id="overviewCompleted">0</div>
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.85);">Completed</div>
+                                </div>
+                            </div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 15px; text-align: center;">Full Quran</div>
+                        </div>
+
+                        <!-- Goals Set -->
+                        <div style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.15);">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                <div style="font-size: 28px;">🎯</div>
+                                <div>
+                                    <div style="font-size: 22px; font-weight: 700; color: white; text-shadow: 0 2px 6px rgba(0,0,0,0.2);" id="overviewGoals">0</div>
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.85);">Active Goals</div>
+                                </div>
+                            </div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 15px; text-align: center;" id="overviewGoalsChange">This month</div>
+                        </div>
+
+                        <!-- Bookmarks -->
+                        <div style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.15);">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                <div style="font-size: 28px;">🔖</div>
+                                <div>
+                                    <div style="font-size: 22px; font-weight: 700; color: white; text-shadow: 0 2px 6px rgba(0,0,0,0.2);" id="overviewBookmarks">0</div>
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.85);">Bookmarks</div>
+                                </div>
+                            </div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 15px; text-align: center;">Total saved</div>
+                        </div>
+
+                        <!-- Countries -->
+                        <div style="background: rgba(255,255,255,0.12); backdrop-filter: blur(8px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.15);">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                                <div style="font-size: 28px;">🌍</div>
+                                <div>
+                                    <div style="font-size: 22px; font-weight: 700; color: white; text-shadow: 0 2px 6px rgba(0,0,0,0.2);" id="overviewCountries">0</div>
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.85);">Countries</div>
+                                </div>
+                            </div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 15px; text-align: center;">Worldwide</div>
                         </div>
                     </div>
                 </div>
