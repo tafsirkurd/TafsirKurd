@@ -32,7 +32,7 @@ exports.handler = async (event, context) => {
         const emailData = {
             sender: {
                 name: "TafsirKurd",
-                email: "notifications@tafsirkurd.com" // Authenticated domain sender
+                email: "noreply@tafsirkurd.com" // Authenticated domain sender
             },
             to: [
                 {
@@ -44,6 +44,9 @@ exports.handler = async (event, context) => {
             htmlContent: htmlContent,
             textContent: textContent || htmlContent.replace(/<[^>]*>/g, '')
         };
+
+        console.log('📧 Sending email to:', to);
+        console.log('📝 Subject:', subject);
 
         const result = await sendBrevoEmail(BREVO_API_KEY, emailData);
 
@@ -70,7 +73,13 @@ exports.handler = async (event, context) => {
 
 function sendBrevoEmail(apiKey, emailData) {
     return new Promise((resolve, reject) => {
-        const data = JSON.stringify(emailData);
+        let data;
+        try {
+            data = JSON.stringify(emailData);
+        } catch (error) {
+            console.error('❌ Failed to stringify email data:', error);
+            return reject(new Error(`JSON stringify failed: ${error.message}`));
+        }
 
         const options = {
             hostname: 'api.brevo.com',
@@ -81,7 +90,7 @@ function sendBrevoEmail(apiKey, emailData) {
                 'accept': 'application/json',
                 'api-key': apiKey,
                 'content-type': 'application/json',
-                'Content-Length': data.length
+                'Content-Length': Buffer.byteLength(data)
             }
         };
 
@@ -99,10 +108,13 @@ function sendBrevoEmail(apiKey, emailData) {
                     if (res.statusCode === 201) {
                         resolve(response);
                     } else {
-                        reject(new Error(`Brevo API error: ${response.message || body}`));
+                        console.error('❌ Brevo API error response:', response);
+                        console.error('Status code:', res.statusCode);
+                        reject(new Error(`Brevo API error: ${response.message || JSON.stringify(response) || body}`));
                     }
                 } catch (error) {
-                    reject(new Error(`Failed to parse Brevo response: ${error.message}`));
+                    console.error('❌ Failed to parse response:', body);
+                    reject(new Error(`Failed to parse Brevo response: ${error.message} - Body: ${body}`));
                 }
             });
         });
