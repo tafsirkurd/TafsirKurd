@@ -8401,31 +8401,52 @@
             const confirmed = confirm(`🧪 Send test email to ${adminEmail}?`);
             if (!confirmed) return;
 
+            console.log('📧 Test email - Subject:', subject);
+            console.log('📧 Test email - Message:', message);
+
             const htmlContent = convertToEmailHTML(message, subject);
+            console.log('📧 Generated HTML length:', htmlContent.length);
+
+            const requestBody = {
+                to: adminEmail,
+                subject: subject,
+                htmlContent: htmlContent,
+                textContent: message
+            };
 
             try {
+                const bodyString = JSON.stringify(requestBody);
+                console.log('📧 Request body size:', bodyString.length, 'bytes');
+
                 const response = await fetch('/.netlify/functions/send-email-notification', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        to: adminEmail,
-                        subject: subject,
-                        htmlContent: htmlContent,
-                        textContent: message
-                    })
+                    body: bodyString
                 });
 
-                const result = await response.json();
+                console.log('📧 Response status:', response.status);
+                const responseText = await response.text();
+                console.log('📧 Response text:', responseText);
+
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('❌ Failed to parse response:', e);
+                    alert(`❌ Server error: ${responseText.substring(0, 200)}`);
+                    return;
+                }
 
                 if (result.success) {
-                    alert(`✅ Test email sent to ${adminEmail}!\n\nCheck your inbox.`);
+                    alert(`✅ Test email sent to ${adminEmail}!\n\nMessage ID: ${result.messageId || 'N/A'}\n\nCheck your inbox and spam folder.`);
                 } else {
-                    alert(`❌ Failed to send test email: ${result.error}`);
+                    console.error('❌ Error from server:', result);
+                    alert(`❌ Failed to send test email:\n\n${result.error}\n\nDetails: ${result.details || 'None'}\n\nCheck browser console (F12) for more info.`);
                 }
 
             } catch (error) {
-                console.error('Error sending test email:', error);
-                alert(`❌ Error: ${error.message}`);
+                console.error('❌ Error sending test email:', error);
+                alert(`❌ Error: ${error.message}\n\nCheck browser console (F12) for details.`);
             }
         }
 
