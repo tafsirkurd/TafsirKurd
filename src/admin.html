@@ -4,23 +4,24 @@
     <script src="/utils/theme-loader.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <title>Admin Panel - Tafsir Kurd</title>
 
     <!-- Performance Optimizations -->
     <meta name="theme-color" content="#667eea">
+
+    <!-- Resource Hints for faster loading -->
     <link rel="dns-prefetch" href="https://gijupzejtbpifjzwadee.supabase.co">
-    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://challenges.cloudflare.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
+    <!-- Preconnect to critical origins -->
+    <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 
     <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
     <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/favicon-96x96.png">
-
-    <!-- Preconnect -->
-    <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 
     <!-- Font Preloading -->
     <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
@@ -30,20 +31,23 @@
     <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
     <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
 
-    <!-- External Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- External Libraries - Async loading for better performance -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 
     <!-- Cloudflare Turnstile - Bot Protection -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
-    <!-- Google Analytics -->
+    <!-- Google Analytics - Async -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-F2QMXE80WJ"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', 'G-F2QMXE80WJ');
+        gtag('config', 'G-F2QMXE80WJ', {
+            'page_path': '/admin',
+            'send_page_view': false // Manual page view tracking
+        });
     </script>
 
     <style>
@@ -8756,6 +8760,77 @@
             document.body.style.overflow = 'hidden';
         }
 
+        // ==================== PERFORMANCE OPTIMIZATIONS ====================
+
+        // Debounce function for search/filter operations
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Cache for API responses
+        const apiCache = new Map();
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+        function getCachedData(key) {
+            const cached = apiCache.get(key);
+            if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+                console.log(`✅ Using cached data for: ${key}`);
+                return cached.data;
+            }
+            return null;
+        }
+
+        function setCachedData(key, data) {
+            apiCache.set(key, {
+                data: data,
+                timestamp: Date.now()
+            });
+        }
+
+        // Lazy load images
+        function lazyLoadImages() {
+            const images = document.querySelectorAll('img[data-src]');
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                        observer.unobserve(img);
+                    }
+                });
+            });
+
+            images.forEach(img => imageObserver.observe(img));
+        }
+
+        // Optimize table rendering with pagination
+        function renderTableWithPagination(data, container, renderFunc, itemsPerPage = 50) {
+            const totalPages = Math.ceil(data.length / itemsPerPage);
+            let currentPage = 1;
+
+            function renderPage(page) {
+                const start = (page - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+                const pageData = data.slice(start, end);
+
+                requestAnimationFrame(() => {
+                    renderFunc(pageData, container);
+                });
+            }
+
+            renderPage(currentPage);
+            return { totalPages, renderPage };
+        }
+
         // Auto-refresh analytics stats every 30 seconds
         let analyticsRefreshInterval = null;
 
@@ -8775,12 +8850,30 @@
             }, 30000); // 30 seconds
         }
 
-        // Initialize Telegram status on page load
+        // Initialize on page load with progressive loading
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Admin Panel Loading - Performance Mode Enabled');
+
+            // Priority 1: Critical initialization
             await initSupabase(); // Initialize Supabase securely first
-            updateTelegramStatus();
-            startAnalyticsAutoRefresh(); // Start auto-refresh on page load
+
+            // Priority 2: Lightweight updates (non-blocking)
+            requestIdleCallback(() => {
+                updateTelegramStatus();
+                lazyLoadImages();
+            });
+
+            // Priority 3: Background tasks
+            setTimeout(() => {
+                startAnalyticsAutoRefresh();
+                console.log('✅ Admin Panel Fully Loaded');
+            }, 100);
         });
+
+        // Use requestIdleCallback for non-critical tasks
+        window.requestIdleCallback = window.requestIdleCallback || function(cb) {
+            return setTimeout(cb, 1);
+        };
 
         // ==================== EMAIL SENDING FUNCTIONS ====================
 
