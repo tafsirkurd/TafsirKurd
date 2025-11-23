@@ -1386,6 +1386,17 @@
                         0%, 100% { transform: scale(1); }
                         50% { transform: scale(1.05); }
                     }
+
+                    /* iOS-style wiggle animation for drag mode */
+                    @keyframes wiggle {
+                        0%, 100% { transform: rotate(-1deg); }
+                        50% { transform: rotate(1deg); }
+                    }
+
+                    /* Smooth transitions for dashboard cards */
+                    .dashboard-card {
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                    }
                 </style>
 
                 <!-- Quick Stats Overview -->
@@ -8567,19 +8578,24 @@
             }
         }
 
-        // ==================== DRAG AND DROP FUNCTIONALITY ====================
+        // ==================== DRAG AND DROP FUNCTIONALITY (iOS-STYLE) ====================
 
         let dragModeEnabled = false;
         let draggedElement = null;
+        let touchStartY = 0;
+        let touchStartX = 0;
+        let isDragging = false;
+        let placeholder = null;
         const CARD_ORDER_KEY = 'adminDashboardCardOrder';
 
-        // Save card order to localStorage
+        // Save card order to localStorage (auto-save on every change)
         function saveCardOrder() {
             const grid = document.getElementById('dashboardCardsGrid');
-            const cards = [...grid.children];
+            if (!grid) return;
+            const cards = [...grid.children].filter(card => !card.classList.contains('drag-placeholder'));
             const order = cards.map(card => card.getAttribute('data-card-id'));
             localStorage.setItem(CARD_ORDER_KEY, JSON.stringify(order));
-            console.log('💾 Card order saved:', order);
+            console.log('💾 Card order auto-saved:', order);
         }
 
         // Load and apply saved card order
@@ -8625,6 +8641,8 @@
                     card.setAttribute('draggable', 'true');
                     card.style.cursor = 'move';
                     card.onclick = null; // Disable click navigation in drag mode
+                    // Add wiggle animation like iOS
+                    card.style.animation = 'wiggle 0.5s ease-in-out infinite';
                 });
                 initializeDragAndDrop();
             } else {
@@ -8633,11 +8651,10 @@
                 cards.forEach(card => {
                     card.setAttribute('draggable', 'false');
                     card.style.cursor = 'pointer';
+                    card.style.animation = '';
                     const sectionName = card.getAttribute('data-card-id');
                     card.onclick = () => switchSection(sectionName);
                 });
-                // Save order when exiting drag mode
-                saveCardOrder();
             }
         }
 
@@ -8645,21 +8662,37 @@
             const cards = document.querySelectorAll('.dashboard-card');
 
             cards.forEach(card => {
+                // Desktop drag events
                 card.addEventListener('dragstart', handleDragStart);
                 card.addEventListener('dragover', handleDragOver);
                 card.addEventListener('drop', handleDrop);
                 card.addEventListener('dragend', handleDragEnd);
-                card.addEventListener('dragenter', handleDragEnter);
-                card.addEventListener('dragleave', handleDragLeave);
+
+                // Mobile touch events
+                card.addEventListener('touchstart', handleTouchStart, { passive: false });
+                card.addEventListener('touchmove', handleTouchMove, { passive: false });
+                card.addEventListener('touchend', handleTouchEnd, { passive: false });
             });
         }
 
+        // ===== DESKTOP DRAG HANDLERS =====
         function handleDragStart(e) {
             if (!dragModeEnabled) return;
             draggedElement = this;
-            this.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-            this.style.opacity = '0.6';
-            this.style.transform = 'rotate(3deg) scale(0.95)';
+
+            // Create placeholder
+            placeholder = this.cloneNode(true);
+            placeholder.classList.add('drag-placeholder');
+            placeholder.style.opacity = '0.3';
+            placeholder.style.pointerEvents = 'none';
+
+            // iOS-style lift animation
+            this.style.transition = 'all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            this.style.opacity = '0.9';
+            this.style.transform = 'scale(1.08) rotate(2deg)';
+            this.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.3)';
+            this.style.zIndex = '1000';
+
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/html', this.innerHTML);
         }
@@ -8668,23 +8701,25 @@
             if (!dragModeEnabled) return;
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
+
+            if (this !== draggedElement) {
+                const grid = document.getElementById('dashboardCardsGrid');
+                const allCards = [...grid.children].filter(card => !card.classList.contains('drag-placeholder'));
+                const draggedIndex = allCards.indexOf(draggedElement);
+                const targetIndex = allCards.indexOf(this);
+
+                // Smooth reordering animation
+                if (draggedIndex < targetIndex) {
+                    this.parentNode.insertBefore(draggedElement, this.nextSibling);
+                } else {
+                    this.parentNode.insertBefore(draggedElement, this);
+                }
+
+                // Auto-save on position change
+                saveCardOrder();
+            }
+
             return false;
-        }
-
-        function handleDragEnter(e) {
-            if (!dragModeEnabled || this === draggedElement) return;
-            this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-            this.style.border = '3px dashed #667eea';
-            this.style.transform = 'scale(1.08) translateY(-8px)';
-            this.style.boxShadow = '0 20px 50px rgba(102, 126, 234, 0.5)';
-        }
-
-        function handleDragLeave(e) {
-            if (!dragModeEnabled) return;
-            this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-            this.style.border = '';
-            this.style.transform = '';
-            this.style.boxShadow = '';
         }
 
         function handleDrop(e) {
@@ -8692,41 +8727,136 @@
             e.stopPropagation();
             e.preventDefault();
 
-            if (draggedElement !== this) {
-                const grid = document.getElementById('dashboardCardsGrid');
-                const allCards = [...grid.children];
-                const draggedIndex = allCards.indexOf(draggedElement);
-                const targetIndex = allCards.indexOf(this);
+            // Remove placeholder if exists
+            if (placeholder && placeholder.parentNode) {
+                placeholder.parentNode.removeChild(placeholder);
+            }
 
-                // Add smooth transition for reordering
-                allCards.forEach(card => {
-                    card.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-                });
+            // iOS-style drop animation
+            if (draggedElement) {
+                draggedElement.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                draggedElement.style.transform = 'scale(1)';
+                draggedElement.style.opacity = '1';
 
-                if (draggedIndex < targetIndex) {
-                    this.parentNode.insertBefore(draggedElement, this.nextSibling);
-                } else {
-                    this.parentNode.insertBefore(draggedElement, this);
-                }
-
-                // Animate the drop
+                // Bounce effect
                 setTimeout(() => {
-                    draggedElement.style.transform = 'scale(1.1)';
+                    draggedElement.style.transform = 'scale(1.05)';
                     setTimeout(() => {
-                        draggedElement.style.transform = '';
-                    }, 200);
+                        draggedElement.style.transform = 'scale(1)';
+                    }, 150);
                 }, 10);
             }
 
-            this.style.border = '';
-            this.style.transform = '';
-            this.style.boxShadow = '';
             return false;
         }
 
         function handleDragEnd(e) {
             if (!dragModeEnabled) return;
-            this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+
+            // Reset styles
+            this.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            this.style.opacity = '1';
+            this.style.transform = 'scale(1)';
+            this.style.boxShadow = '';
+            this.style.zIndex = '';
+
+            // Remove placeholder
+            if (placeholder && placeholder.parentNode) {
+                placeholder.parentNode.removeChild(placeholder);
+            }
+
+            draggedElement = null;
+            placeholder = null;
+        }
+
+        // ===== MOBILE TOUCH HANDLERS =====
+        function handleTouchStart(e) {
+            if (!dragModeEnabled) return;
+
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            isDragging = false;
+
+            // Start drag after slight delay (like iOS)
+            setTimeout(() => {
+                if (!isDragging && dragModeEnabled) {
+                    draggedElement = this;
+                    isDragging = true;
+
+                    // Haptic-like animation
+                    this.style.transition = 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    this.style.transform = 'scale(1.1) rotate(2deg)';
+                    this.style.opacity = '0.9';
+                    this.style.boxShadow = '0 25px 50px rgba(0, 0, 0, 0.3)';
+                    this.style.zIndex = '1000';
+                    this.style.position = 'relative';
+                }
+            }, 150);
+        }
+
+        function handleTouchMove(e) {
+            if (!dragModeEnabled || !isDragging || !draggedElement) return;
+            e.preventDefault();
+
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - touchStartX;
+            const deltaY = touch.clientY - touchStartY;
+
+            // Move the element with touch
+            draggedElement.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(1.1) rotate(2deg)`;
+
+            // Find element under touch
+            const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+            const targetCard = elementUnderTouch?.closest('.dashboard-card');
+
+            if (targetCard && targetCard !== draggedElement && !targetCard.classList.contains('drag-placeholder')) {
+                const grid = document.getElementById('dashboardCardsGrid');
+                const allCards = [...grid.children].filter(card => !card.classList.contains('drag-placeholder'));
+                const draggedIndex = allCards.indexOf(draggedElement);
+                const targetIndex = allCards.indexOf(targetCard);
+
+                // Smooth reordering
+                if (draggedIndex < targetIndex) {
+                    targetCard.parentNode.insertBefore(draggedElement, targetCard.nextSibling);
+                } else {
+                    targetCard.parentNode.insertBefore(draggedElement, targetCard);
+                }
+
+                // Auto-save on position change
+                saveCardOrder();
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!dragModeEnabled || !isDragging) return;
+
+            if (draggedElement) {
+                // iOS-style settle animation
+                draggedElement.style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                draggedElement.style.transform = 'scale(1)';
+                draggedElement.style.opacity = '1';
+                draggedElement.style.boxShadow = '';
+                draggedElement.style.zIndex = '';
+                draggedElement.style.position = '';
+
+                // Bounce effect
+                setTimeout(() => {
+                    if (draggedElement) {
+                        draggedElement.style.transform = 'scale(1.08)';
+                        setTimeout(() => {
+                            if (draggedElement) {
+                                draggedElement.style.transform = 'scale(1)';
+                            }
+                        }, 150);
+                    }
+                }, 50);
+            }
+
+            draggedElement = null;
+            isDragging = false;
+            touchStartX = 0;
+            touchStartY = 0;
             this.style.opacity = '1';
             this.style.transform = '';
 
