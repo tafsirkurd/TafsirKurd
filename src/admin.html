@@ -8533,6 +8533,47 @@
 
         let dragModeEnabled = false;
         let draggedElement = null;
+        const CARD_ORDER_KEY = 'adminDashboardCardOrder';
+
+        // Save card order to localStorage
+        function saveCardOrder() {
+            const grid = document.getElementById('dashboardCardsGrid');
+            const cards = [...grid.children];
+            const order = cards.map(card => card.getAttribute('data-card-id'));
+            localStorage.setItem(CARD_ORDER_KEY, JSON.stringify(order));
+            console.log('💾 Card order saved:', order);
+        }
+
+        // Load and apply saved card order
+        function loadCardOrder() {
+            const savedOrder = localStorage.getItem(CARD_ORDER_KEY);
+            if (!savedOrder) return;
+
+            try {
+                const order = JSON.parse(savedOrder);
+                const grid = document.getElementById('dashboardCardsGrid');
+                const cards = [...grid.children];
+
+                // Create a map of card-id to element
+                const cardMap = new Map();
+                cards.forEach(card => {
+                    const id = card.getAttribute('data-card-id');
+                    cardMap.set(id, card);
+                });
+
+                // Reorder cards based on saved order
+                order.forEach(cardId => {
+                    const card = cardMap.get(cardId);
+                    if (card) {
+                        grid.appendChild(card);
+                    }
+                });
+
+                console.log('✅ Card order restored:', order);
+            } catch (error) {
+                console.error('❌ Failed to load card order:', error);
+            }
+        }
 
         function toggleDragMode() {
             dragModeEnabled = !dragModeEnabled;
@@ -8557,6 +8598,8 @@
                     const sectionName = card.getAttribute('data-card-id');
                     card.onclick = () => switchSection(sectionName);
                 });
+                // Save order when exiting drag mode
+                saveCardOrder();
             }
         }
 
@@ -8861,6 +8904,7 @@
             requestIdleCallback(() => {
                 updateTelegramStatus();
                 lazyLoadImages();
+                loadCardOrder(); // Restore saved card order
             });
 
             // Priority 3: Background tasks
