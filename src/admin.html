@@ -8392,11 +8392,8 @@
                 return;
             }
 
-            const adminEmail = document.getElementById('adminEmail').textContent;
-            if (!adminEmail || !adminEmail.includes('@')) {
-                alert('❌ Admin email not found. Please make sure you are logged in.');
-                return;
-            }
+            // Always use the admin email
+            const adminEmail = 'tefsirkurd@gmail.com';
 
             const confirmed = confirm(`🧪 Send test email to ${adminEmail}?`);
             if (!confirmed) return;
@@ -8434,7 +8431,7 @@
             // Convert line breaks to <p> tags
             const paragraphs = message.split('\n\n').filter(p => p.trim());
             const htmlParagraphs = paragraphs.map(p =>
-                `<p style="margin: 0 0 15px 0; font-size: 17px; line-height: 1.7; color: #333; font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif;">${p.trim()}</p>`
+                `<p style="margin: 0 0 15px 0; font-size: 17px; line-height: 1.8; color: #333; font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; direction: rtl; text-align: right;">${p.trim()}</p>`
             ).join('');
 
             return `<!DOCTYPE html>
@@ -8444,23 +8441,23 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>${subject}</title>
 </head>
-<body style="margin:0;padding:0;font-family:'IBM Plex Sans Arabic',sans-serif;background:#fafafa">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<body style="margin:0;padding:0;font-family:'IBM Plex Sans Arabic',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fafafa;direction:rtl">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl">
 <tr><td align="center" style="padding:20px 10px">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
-<tr><td style="padding:30px 20px;text-align:center">
-<h1 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#000000;font-family:'IBM Plex Sans Arabic',sans-serif">تەفسیرکورد</h1>
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08)" dir="rtl">
+<tr><td style="padding:30px 20px;text-align:center;direction:rtl">
+<h1 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#000000;font-family:'IBM Plex Sans Arabic',-apple-system,sans-serif;direction:rtl">تەفسیرکورد</h1>
 <div style="height:2px;background:linear-gradient(90deg,transparent,#000000,transparent);width:100px;margin:0 auto"></div>
 </td></tr>
-<tr><td style="padding:0 30px 30px 30px;text-align:right;direction:rtl">
+<tr><td style="padding:30px 30px;text-align:right;direction:rtl">
 ${htmlParagraphs}
 </td></tr>
-<tr><td style="padding:20px;text-align:center">
-<a href="https://tafsirkurd.com" style="display:inline-block;background:#000000;color:#fff;padding:14px 35px;text-decoration:none;border-radius:25px;font-weight:600;font-size:15px;font-family:'IBM Plex Sans Arabic',sans-serif">سەردانا TafsirKurd بکە</a>
+<tr><td style="padding:20px;text-align:center;direction:rtl">
+<a href="https://tafsirkurd.com" style="display:inline-block;background:#000000;color:#fff;padding:14px 35px;text-decoration:none;border-radius:25px;font-weight:600;font-size:15px;font-family:'IBM Plex Sans Arabic',-apple-system,sans-serif">سەردانا TafsirKurd بکە</a>
 </td></tr>
-<tr><td style="padding:20px;text-align:center;border-top:1px solid #eee;font-size:13px;color:#999;font-family:'IBM Plex Sans Arabic',sans-serif">
-<p style="margin:0 0 5px;color:#000000;font-weight:600">2025 تەفسیرکورد</p>
-<p style="margin:0"><a href="https://tafsirkurd.com/settings" style="color:#999;text-decoration:none">رێکخستنان بگۆڕە</a></p>
+<tr><td style="padding:20px;text-align:center;border-top:1px solid #eee;font-size:13px;color:#999;font-family:'IBM Plex Sans Arabic',-apple-system,sans-serif;direction:rtl">
+<p style="margin:0 0 5px;color:#000000;font-weight:600;direction:rtl">2025 تەفسیرکورد</p>
+<p style="margin:0;direction:rtl"><a href="https://tafsirkurd.com/settings" style="color:#999;text-decoration:none">رێکخستنان بگۆڕە</a></p>
 </td></tr>
 </table>
 </td></tr>
