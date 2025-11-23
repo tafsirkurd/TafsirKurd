@@ -2551,7 +2551,7 @@
                 </div>
 
                 <!-- Variables Reference Card -->
-                <div class="table-card" style="background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%); border: 2px solid #9e9e9e;">
+                <div class="table-card" style="background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%); border: 2px solid #9e9e9e; margin-bottom: 30px;">
                     <h3 style="margin: 0 0 15px 0; font-size: 18px; font-weight: 700; color: #424242;">🔧 Available Variables for Personalization</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                         <div style="background: white; padding: 12px; border-radius: 8px; border-left: 3px solid #4caf50;">
@@ -2574,6 +2574,66 @@
                             <code style="font-weight: 700; color: #c62828;">{featureName}</code>
                             <div style="font-size: 13px; color: #666; margin-top: 5px;">New feature name</div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Email Composer -->
+                <div class="table-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white;">
+                    <h3 style="margin: 0 0 20px 0; font-size: 22px; font-weight: 700; color: white;">✉️ Send Email to Users</h3>
+
+                    <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Email Subject</label>
+                            <input type="text" id="emailSubject" placeholder="e.g., بیرئینانا نوێ ژ تەفسیر کورد" style="width: 100%; padding: 12px; border: 2px solid rgba(255,255,255,0.3); border-radius: 8px; font-size: 14px; background: white; color: #333; box-sizing: border-box;">
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Email Message (Kurdish - RTL)</label>
+                            <textarea id="emailMessage" rows="6" placeholder="سلام عليكم {name}،
+
+ئەم هێڤیدارین تو یێ باش بی...
+
+— تەفسیر کورد" style="width: 100%; padding: 12px; border: 2px solid rgba(255,255,255,0.3); border-radius: 8px; font-size: 14px; direction: rtl; font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif; background: white; color: #333; resize: vertical; box-sizing: border-box;"></textarea>
+                            <div style="font-size: 12px; margin-top: 5px; color: rgba(255,255,255,0.9);">
+                                💡 Use variables like {name}, {streak}, {surahCount} for personalization
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Send To</label>
+                            <select id="emailFilterType" style="width: 100%; padding: 12px; border: 2px solid rgba(255,255,255,0.3); border-radius: 8px; font-size: 14px; background: white; color: #333; box-sizing: border-box;">
+                                <option value="all">All Users (Everyone with email)</option>
+                                <option value="active">Active Users (Read within last 7 days)</option>
+                                <option value="inactive">Inactive Users (Haven't read in 7+ days)</option>
+                            </select>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <p style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600;">⚠️ Important Reminders:</p>
+                            <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.8;">
+                                <li>Keep it short, gentle, and respectful (2-5 sentences)</li>
+                                <li>Never pushy or guilt-based</li>
+                                <li>Max 3 emails per month to users</li>
+                                <li>Always end with dua and sign as "— تەفسیر کورد"</li>
+                            </ul>
+                        </div>
+
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <button onclick="sendBulkEmail()" id="sendEmailBtn" style="flex: 1; background: white; color: #667eea; padding: 14px 24px; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                                📧 Send Email
+                            </button>
+                            <button onclick="testEmail()" style="background: rgba(255,255,255,0.2); color: white; padding: 14px 24px; border: 2px solid white; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s;">
+                                🧪 Test (Send to yourself)
+                            </button>
+                        </div>
+
+                        <div id="emailSendingProgress" style="display: none; margin-top: 20px; text-align: center;">
+                            <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            <p style="margin-top: 15px; font-size: 16px; font-weight: 600;">Sending emails...</p>
+                            <p id="emailProgressText" style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Please wait...</p>
+                        </div>
+
+                        <div id="emailSendingResult" style="display: none; margin-top: 20px; padding: 15px; border-radius: 8px; text-align: center;"></div>
                     </div>
                 </div>
             </section>
@@ -8238,6 +8298,176 @@
             updateTelegramStatus();
             startAnalyticsAutoRefresh(); // Start auto-refresh on page load
         });
+
+        // ==================== EMAIL SENDING FUNCTIONS ====================
+
+        // Send bulk email to users
+        async function sendBulkEmail() {
+            const subject = document.getElementById('emailSubject').value.trim();
+            const message = document.getElementById('emailMessage').value.trim();
+            const filterType = document.getElementById('emailFilterType').value;
+
+            // Validation
+            if (!subject) {
+                alert('❌ Please enter an email subject');
+                return;
+            }
+
+            if (!message) {
+                alert('❌ Please enter an email message');
+                return;
+            }
+
+            // Confirmation
+            const filterText = filterType === 'all' ? 'ALL users' :
+                              filterType === 'active' ? 'ACTIVE users (read within 7 days)' :
+                              'INACTIVE users (haven\'t read in 7+ days)';
+
+            const confirmed = confirm(`⚠️ Are you sure you want to send this email to ${filterText}?\n\nThis action cannot be undone.`);
+            if (!confirmed) return;
+
+            // Convert message to HTML with proper formatting
+            const htmlContent = convertToEmailHTML(message, subject);
+
+            // Show progress
+            document.getElementById('emailSendingProgress').style.display = 'block';
+            document.getElementById('emailSendingResult').style.display = 'none';
+            document.getElementById('sendEmailBtn').disabled = true;
+
+            try {
+                const response = await fetch('/.netlify/functions/send-bulk-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subject: subject,
+                        htmlContent: htmlContent,
+                        textContent: message,
+                        filterType: filterType
+                    })
+                });
+
+                const result = await response.json();
+
+                // Hide progress
+                document.getElementById('emailSendingProgress').style.display = 'none';
+                document.getElementById('sendEmailBtn').disabled = false;
+
+                if (result.success) {
+                    // Show success result
+                    document.getElementById('emailSendingResult').innerHTML = `
+                        <div style="background: rgba(76, 175, 80, 0.2); padding: 20px; border-radius: 8px; border: 2px solid rgba(76, 175, 80, 0.5);">
+                            <h3 style="margin: 0 0 15px 0; font-size: 20px; color: #2e7d32;">✅ Email Sent Successfully!</h3>
+                            <div style="font-size: 16px; line-height: 1.8;">
+                                <p style="margin: 5px 0;"><strong>📧 Sent:</strong> ${result.sent} emails</p>
+                                <p style="margin: 5px 0;"><strong>⏭️ Skipped:</strong> ${result.skipped} users (no email or filtered out)</p>
+                                ${result.failed > 0 ? `<p style="margin: 5px 0;"><strong>❌ Failed:</strong> ${result.failed} emails</p>` : ''}
+                                <p style="margin: 5px 0;"><strong>👥 Total users:</strong> ${result.total}</p>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('emailSendingResult').style.display = 'block';
+
+                    // Clear form
+                    document.getElementById('emailSubject').value = '';
+                    document.getElementById('emailMessage').value = '';
+                } else {
+                    alert(`❌ Failed to send emails: ${result.error || 'Unknown error'}`);
+                }
+
+            } catch (error) {
+                document.getElementById('emailSendingProgress').style.display = 'none';
+                document.getElementById('sendEmailBtn').disabled = false;
+                console.error('Error sending bulk email:', error);
+                alert(`❌ Error sending emails: ${error.message}`);
+            }
+        }
+
+        // Test email (send to admin)
+        async function testEmail() {
+            const subject = document.getElementById('emailSubject').value.trim();
+            const message = document.getElementById('emailMessage').value.trim();
+
+            if (!subject || !message) {
+                alert('❌ Please enter both subject and message first');
+                return;
+            }
+
+            const adminEmail = document.getElementById('adminEmail').textContent;
+            if (!adminEmail || !adminEmail.includes('@')) {
+                alert('❌ Admin email not found. Please make sure you are logged in.');
+                return;
+            }
+
+            const confirmed = confirm(`🧪 Send test email to ${adminEmail}?`);
+            if (!confirmed) return;
+
+            const htmlContent = convertToEmailHTML(message, subject);
+
+            try {
+                const response = await fetch('/.netlify/functions/send-email-notification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: adminEmail,
+                        subject: subject,
+                        htmlContent: htmlContent,
+                        textContent: message
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`✅ Test email sent to ${adminEmail}!\n\nCheck your inbox.`);
+                } else {
+                    alert(`❌ Failed to send test email: ${result.error}`);
+                }
+
+            } catch (error) {
+                console.error('Error sending test email:', error);
+                alert(`❌ Error: ${error.message}`);
+            }
+        }
+
+        // Convert plain text message to HTML email
+        function convertToEmailHTML(message, subject) {
+            // Convert line breaks to <p> tags
+            const paragraphs = message.split('\n\n').filter(p => p.trim());
+            const htmlParagraphs = paragraphs.map(p =>
+                `<p style="margin: 0 0 15px 0; font-size: 17px; line-height: 1.7; color: #333; font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif;">${p.trim()}</p>`
+            ).join('');
+
+            return `<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>${subject}</title>
+</head>
+<body style="margin:0;padding:0;font-family:'IBM Plex Sans Arabic',sans-serif;background:#fafafa">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td align="center" style="padding:20px 10px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+<tr><td style="padding:30px 20px;text-align:center">
+<h1 style="margin:0 0 8px;font-size:28px;font-weight:700;color:#000000;font-family:'IBM Plex Sans Arabic',sans-serif">تەفسیرکورد</h1>
+<div style="height:2px;background:linear-gradient(90deg,transparent,#000000,transparent);width:100px;margin:0 auto"></div>
+</td></tr>
+<tr><td style="padding:0 30px 30px 30px;text-align:right;direction:rtl">
+${htmlParagraphs}
+</td></tr>
+<tr><td style="padding:20px;text-align:center">
+<a href="https://tafsirkurd.com" style="display:inline-block;background:#000000;color:#fff;padding:14px 35px;text-decoration:none;border-radius:25px;font-weight:600;font-size:15px;font-family:'IBM Plex Sans Arabic',sans-serif">سەردانا TafsirKurd بکە</a>
+</td></tr>
+<tr><td style="padding:20px;text-align:center;border-top:1px solid #eee;font-size:13px;color:#999;font-family:'IBM Plex Sans Arabic',sans-serif">
+<p style="margin:0 0 5px;color:#000000;font-weight:600">2025 تەفسیرکورد</p>
+<p style="margin:0"><a href="https://tafsirkurd.com/settings" style="color:#999;text-decoration:none">رێکخستنان بگۆڕە</a></p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+        }
 
         // ==================== SEARCH CONSOLE FUNCTIONS ====================
 

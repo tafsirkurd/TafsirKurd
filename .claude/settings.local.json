@@ -24,7 +24,9 @@
       "Bash(netlify/functions/google-search-console.js)",
       "Bash(GOOGLE_SEARCH_CONSOLE_SETUP.md)",
       "Bash(ADMIN_SEARCH_CONSOLE_INTEGRATION.md)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(git fetch:*)"
     ],
     "deny": [],
     "ask": []
