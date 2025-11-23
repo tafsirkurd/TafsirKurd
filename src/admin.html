@@ -2643,63 +2643,162 @@
                 <!-- Email Statistics & History -->
                 <div class="table-card" style="margin-top: 30px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="margin: 0; font-size: 20px; font-weight: 700; color: #333;">📊 Email Statistics (Last 30 Days)</h3>
-                        <button onclick="loadEmailStats()" style="background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                            🔄 Refresh
+                        <h3 style="margin: 0; font-size: 22px; font-weight: 700; color: #333;">📊 Email Analytics & Performance Dashboard</h3>
+                        <button onclick="loadEmailStats()" style="background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+                            🔄 Refresh Stats
                         </button>
                     </div>
 
-                    <div id="emailStatsLoading" style="text-align: center; padding: 40px;">
-                        <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                        <p style="margin-top: 15px; color: #666;">Loading email statistics...</p>
+                    <div id="emailStatsLoading" style="text-align: center; padding: 60px;">
+                        <div style="display: inline-block; width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        <p style="margin-top: 20px; color: #666; font-size: 16px; font-weight: 600;">Loading comprehensive email analytics...</p>
                     </div>
 
                     <div id="emailStatsContent" style="display: none;">
-                        <!-- Stats Summary -->
+                        <!-- Overview Stats -->
                         <div class="analytics-grid" style="margin-bottom: 30px;">
-                            <div class="stat-card">
-                                <div class="stat-icon" style="color: #667eea;">📧</div>
-                                <div class="stat-value" id="emailStatsSent">0</div>
-                                <div class="stat-label">Total Sent</div>
+                            <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                <div class="stat-icon" style="color: white; font-size: 32px;">📧</div>
+                                <div class="stat-value" id="emailStatsSent" style="color: white;">0</div>
+                                <div class="stat-label" style="color: rgba(255,255,255,0.9);">Total Sent</div>
+                                <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;" id="emailSentChange">Last 30 days</div>
                             </div>
-                            <div class="stat-card">
-                                <div class="stat-icon" style="color: #4caf50;">✅</div>
-                                <div class="stat-value" id="emailStatsDelivered">0</div>
-                                <div class="stat-label">Delivered</div>
+                            <div class="stat-card" style="background: linear-gradient(135deg, #4caf50 0%, #45a049 100%); color: white;">
+                                <div class="stat-icon" style="color: white; font-size: 32px;">✅</div>
+                                <div class="stat-value" id="emailStatsDelivered" style="color: white;">0</div>
+                                <div class="stat-label" style="color: rgba(255,255,255,0.9);">Delivered</div>
+                                <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;" id="emailDeliveryRate">0% delivery rate</div>
                             </div>
-                            <div class="stat-card">
-                                <div class="stat-icon" style="color: #ff9800;">📖</div>
-                                <div class="stat-value" id="emailStatsOpens">0</div>
-                                <div class="stat-label">Opens</div>
+                            <div class="stat-card" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white;">
+                                <div class="stat-icon" style="color: white; font-size: 32px;">📖</div>
+                                <div class="stat-value" id="emailStatsOpens" style="color: white;">0</div>
+                                <div class="stat-label" style="color: rgba(255,255,255,0.9);">Unique Opens</div>
+                                <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;" id="emailOpenRate">0% open rate</div>
                             </div>
-                            <div class="stat-card">
-                                <div class="stat-icon" style="color: #2196f3;">🖱️</div>
-                                <div class="stat-value" id="emailStatsClicks">0</div>
-                                <div class="stat-label">Clicks</div>
+                            <div class="stat-card" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); color: white;">
+                                <div class="stat-icon" style="color: white; font-size: 32px;">🖱️</div>
+                                <div class="stat-value" id="emailStatsClicks" style="color: white;">0</div>
+                                <div class="stat-label" style="color: rgba(255,255,255,0.9);">Unique Clicks</div>
+                                <div style="font-size: 12px; margin-top: 5px; opacity: 0.8;" id="emailClickRate">0% click rate</div>
+                            </div>
+                        </div>
+
+                        <!-- Detailed Performance Metrics -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                            <!-- Engagement Box -->
+                            <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 20px; border-radius: 12px; border-left: 4px solid #2196f3;">
+                                <h4 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 700; color: #1976d2;">📈 Engagement Metrics</h4>
+                                <div style="font-size: 14px; line-height: 2; color: #333;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Total Opens:</span>
+                                        <strong id="emailTotalOpens">0</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Total Clicks:</span>
+                                        <strong id="emailTotalClicks">0</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Avg Opens/Email:</span>
+                                        <strong id="emailAvgOpens">0</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Delivery Health Box -->
+                            <div style="background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); padding: 20px; border-radius: 12px; border-left: 4px solid #9c27b0;">
+                                <h4 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 700; color: #7b1fa2;">🏥 Delivery Health</h4>
+                                <div style="font-size: 14px; line-height: 2; color: #333;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Hard Bounces:</span>
+                                        <strong id="emailHardBounces" style="color: #f44336;">0</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Soft Bounces:</span>
+                                        <strong id="emailSoftBounces" style="color: #ff9800;">0</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Spam Reports:</span>
+                                        <strong id="emailSpamReports" style="color: #f44336;">0</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recipient Actions Box -->
+                            <div style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); padding: 20px; border-radius: 12px; border-left: 4px solid #ff9800;">
+                                <h4 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 700; color: #e65100;">👥 Recipient Actions</h4>
+                                <div style="font-size: 14px; line-height: 2; color: #333;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Unsubscribes:</span>
+                                        <strong id="emailUnsubscribes">0</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Invalid Emails:</span>
+                                        <strong id="emailInvalid" style="color: #f44336;">0</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Blocked:</span>
+                                        <strong id="emailBlocked" style="color: #f44336;">0</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Time-based Stats Box -->
+                            <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 20px; border-radius: 12px; border-left: 4px solid #4caf50;">
+                                <h4 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 700; color: #2e7d32;">⏰ Time Analysis</h4>
+                                <div style="font-size: 14px; line-height: 2; color: #333;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Last Email Sent:</span>
+                                        <strong id="emailLastSent">-</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Emails Today:</span>
+                                        <strong id="emailsToday">0</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>This Week:</span>
+                                        <strong id="emailsThisWeek">0</strong>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Recent Email History -->
-                        <div>
-                            <h4 style="margin: 0 0 15px 0; font-size: 18px; font-weight: 700; color: #333;">📜 Recent Email History</h4>
+                        <div style="margin-top: 30px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <h4 style="margin: 0; font-size: 18px; font-weight: 700; color: #333;">📜 Recent Email Activity (Last 100 Events)</h4>
+                                <div style="display: flex; gap: 10px;">
+                                    <select id="emailEventFilter" onchange="filterEmailHistory()" style="padding: 8px 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px;">
+                                        <option value="all">All Events</option>
+                                        <option value="sent">📧 Sent</option>
+                                        <option value="delivered">✅ Delivered</option>
+                                        <option value="opened">📖 Opened</option>
+                                        <option value="clicked">🖱️ Clicked</option>
+                                        <option value="bounced">❌ Bounced</option>
+                                        <option value="spam">⚠️ Spam</option>
+                                    </select>
+                                    <input type="text" id="emailSearchInput" onkeyup="searchEmailHistory()" placeholder="Search subject or email..." style="padding: 8px 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; width: 250px;">
+                                </div>
+                            </div>
                             <div class="table-container">
                                 <table class="data-table">
                                     <thead>
                                         <tr>
-                                            <th>Date & Time</th>
+                                            <th style="width: 180px;">Date & Time</th>
                                             <th>Subject</th>
-                                            <th>To</th>
-                                            <th>Status</th>
-                                            <th>Event</th>
+                                            <th style="width: 200px;">Recipient</th>
+                                            <th style="width: 120px;">Status</th>
+                                            <th style="width: 100px;">Tag</th>
+                                            <th style="width: 120px;">Message ID</th>
                                         </tr>
                                     </thead>
                                     <tbody id="emailHistoryTable">
                                         <tr>
-                                            <td colspan="5" style="text-align: center; padding: 20px; color: #999;">No email history available</td>
+                                            <td colspan="6" style="text-align: center; padding: 30px; color: #999;">No email history available</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
+                            <div id="emailHistoryCount" style="margin-top: 15px; text-align: center; color: #666; font-size: 14px;"></div>
                         </div>
                     </div>
                 </div>
@@ -8553,6 +8652,9 @@ ${htmlParagraphs}
 </html>`;
         }
 
+        // Store all events globally for filtering
+        let allEmailEvents = [];
+
         // Load email statistics from Brevo
         async function loadEmailStats() {
             console.log('📊 Loading email statistics...');
@@ -8571,53 +8673,78 @@ ${htmlParagraphs}
                 if (result.success) {
                     document.getElementById('emailStatsContent').style.display = 'block';
 
-                    // Update stats
+                    // Update main stats
                     const stats = result.stats || {};
-                    document.getElementById('emailStatsSent').textContent = (stats.requests || 0).toLocaleString();
-                    document.getElementById('emailStatsDelivered').textContent = (stats.delivered || 0).toLocaleString();
-                    document.getElementById('emailStatsOpens').textContent = (stats.uniqueOpens || 0).toLocaleString();
-                    document.getElementById('emailStatsClicks').textContent = (stats.uniqueClicks || 0).toLocaleString();
+                    const sent = stats.requests || 0;
+                    const delivered = stats.delivered || 0;
+                    const uniqueOpens = stats.uniqueOpens || 0;
+                    const uniqueClicks = stats.uniqueClicks || 0;
+
+                    document.getElementById('emailStatsSent').textContent = sent.toLocaleString();
+                    document.getElementById('emailStatsDelivered').textContent = delivered.toLocaleString();
+                    document.getElementById('emailStatsOpens').textContent = uniqueOpens.toLocaleString();
+                    document.getElementById('emailStatsClicks').textContent = uniqueClicks.toLocaleString();
+
+                    // Calculate rates
+                    const deliveryRate = sent > 0 ? ((delivered / sent) * 100).toFixed(1) : 0;
+                    const openRate = delivered > 0 ? ((uniqueOpens / delivered) * 100).toFixed(1) : 0;
+                    const clickRate = uniqueOpens > 0 ? ((uniqueClicks / uniqueOpens) * 100).toFixed(1) : 0;
+
+                    document.getElementById('emailDeliveryRate').textContent = `${deliveryRate}% delivery rate`;
+                    document.getElementById('emailOpenRate').textContent = `${openRate}% open rate`;
+                    document.getElementById('emailClickRate').textContent = `${clickRate}% click rate`;
+
+                    // Engagement metrics
+                    document.getElementById('emailTotalOpens').textContent = (stats.opens || 0).toLocaleString();
+                    document.getElementById('emailTotalClicks').textContent = (stats.clicks || 0).toLocaleString();
+                    const avgOpens = sent > 0 ? ((stats.opens || 0) / sent).toFixed(1) : 0;
+                    document.getElementById('emailAvgOpens').textContent = avgOpens;
+
+                    // Delivery health
+                    document.getElementById('emailHardBounces').textContent = (stats.hardBounces || 0).toLocaleString();
+                    document.getElementById('emailSoftBounces').textContent = (stats.softBounces || 0).toLocaleString();
+                    document.getElementById('emailSpamReports').textContent = (stats.spamReports || 0).toLocaleString();
+
+                    // Recipient actions
+                    document.getElementById('emailUnsubscribes').textContent = (stats.unsubscriptions || 0).toLocaleString();
+                    document.getElementById('emailInvalid').textContent = (stats.invalid || 0).toLocaleString();
+                    document.getElementById('emailBlocked').textContent = (stats.blocked || 0).toLocaleString();
+
+                    // Time-based stats
+                    const events = result.events || [];
+                    allEmailEvents = events; // Store for filtering
+
+                    if (events.length > 0) {
+                        const latestEvent = events[0];
+                        const latestDate = new Date(latestEvent.date || latestEvent.time);
+                        const timeAgo = getTimeAgo(latestDate);
+                        document.getElementById('emailLastSent').textContent = timeAgo;
+                    } else {
+                        document.getElementById('emailLastSent').textContent = 'Never';
+                    }
+
+                    // Count emails today and this week
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const weekAgo = new Date(today);
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+
+                    const todayCount = events.filter(e => {
+                        const eventDate = new Date(e.date || e.time);
+                        eventDate.setHours(0, 0, 0, 0);
+                        return eventDate.getTime() === today.getTime() && e.event === 'sent';
+                    }).length;
+
+                    const weekCount = events.filter(e => {
+                        const eventDate = new Date(e.date || e.time);
+                        return eventDate >= weekAgo && e.event === 'sent';
+                    }).length;
+
+                    document.getElementById('emailsToday').textContent = todayCount;
+                    document.getElementById('emailsThisWeek').textContent = weekCount;
 
                     // Update email history table
-                    const events = result.events || [];
-                    const historyTable = document.getElementById('emailHistoryTable');
-
-                    if (events.length === 0) {
-                        historyTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #999;">No email history available</td></tr>';
-                    } else {
-                        historyTable.innerHTML = events.map(event => {
-                            const date = new Date(event.date || event.time);
-                            const formattedDate = date.toLocaleString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            });
-
-                            const statusColor = event.event === 'delivered' ? '#4caf50' :
-                                              event.event === 'sent' ? '#2196f3' :
-                                              event.event === 'opened' ? '#ff9800' :
-                                              event.event === 'clicked' ? '#9c27b0' :
-                                              event.event === 'bounced' ? '#f44336' : '#999';
-
-                            const statusIcon = event.event === 'delivered' ? '✅' :
-                                             event.event === 'sent' ? '📧' :
-                                             event.event === 'opened' ? '📖' :
-                                             event.event === 'clicked' ? '🖱️' :
-                                             event.event === 'bounced' ? '❌' : '📋';
-
-                            return `
-                                <tr>
-                                    <td>${formattedDate}</td>
-                                    <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(event.subject || '-')}</td>
-                                    <td>${escapeHtml(event.email || '-')}</td>
-                                    <td><span style="color: ${statusColor}; font-weight: 600;">${statusIcon} ${event.event || 'N/A'}</span></td>
-                                    <td>${event.tag || 'transactional'}</td>
-                                </tr>
-                            `;
-                        }).join('');
-                    }
+                    renderEmailHistory(events);
 
                     console.log('✅ Email stats loaded successfully');
                 } else {
@@ -8629,6 +8756,97 @@ ${htmlParagraphs}
                 console.error('❌ Error loading email stats:', error);
                 alert(`❌ Error: ${error.message}`);
             }
+        }
+
+        // Render email history table
+        function renderEmailHistory(events, filter = 'all', searchTerm = '') {
+            const historyTable = document.getElementById('emailHistoryTable');
+
+            // Filter events
+            let filteredEvents = events;
+            if (filter !== 'all') {
+                filteredEvents = events.filter(e => e.event === filter);
+            }
+            if (searchTerm) {
+                filteredEvents = filteredEvents.filter(e =>
+                    (e.subject && e.subject.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                    (e.email && e.email.toLowerCase().includes(searchTerm.toLowerCase()))
+                );
+            }
+
+            document.getElementById('emailHistoryCount').textContent =
+                `Showing ${filteredEvents.length} of ${events.length} total events`;
+
+            if (filteredEvents.length === 0) {
+                historyTable.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; color: #999;">No matching email events found</td></tr>';
+            } else {
+                historyTable.innerHTML = filteredEvents.map(event => {
+                    const date = new Date(event.date || event.time);
+                    const formattedDate = date.toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    const statusColor = event.event === 'delivered' ? '#4caf50' :
+                                      event.event === 'sent' ? '#2196f3' :
+                                      event.event === 'opened' ? '#ff9800' :
+                                      event.event === 'clicked' ? '#9c27b0' :
+                                      event.event === 'bounced' || event.event === 'hard_bounce' || event.event === 'soft_bounce' ? '#f44336' :
+                                      event.event === 'spam' || event.event === 'complaint' ? '#e91e63' : '#999';
+
+                    const statusIcon = event.event === 'delivered' ? '✅' :
+                                     event.event === 'sent' ? '📧' :
+                                     event.event === 'opened' ? '📖' :
+                                     event.event === 'clicked' ? '🖱️' :
+                                     event.event === 'bounced' || event.event === 'hard_bounce' || event.event === 'soft_bounce' ? '❌' :
+                                     event.event === 'spam' || event.event === 'complaint' ? '⚠️' :
+                                     event.event === 'unsubscribed' ? '🚫' : '📋';
+
+                    const messageId = event.messageId || event['message-id'] || '-';
+                    const shortMessageId = messageId.length > 15 ? messageId.substring(0, 15) + '...' : messageId;
+
+                    return `
+                        <tr data-event="${event.event}">
+                            <td>${formattedDate}</td>
+                            <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(event.subject || '')}">${escapeHtml(event.subject || '-')}</td>
+                            <td title="${escapeHtml(event.email || '')}">${escapeHtml(event.email || '-')}</td>
+                            <td><span style="color: ${statusColor}; font-weight: 600;">${statusIcon} ${event.event || 'N/A'}</span></td>
+                            <td>${event.tag || 'transactional'}</td>
+                            <td title="${messageId}" style="font-family: monospace; font-size: 11px;">${shortMessageId}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Filter email history
+        function filterEmailHistory() {
+            const filter = document.getElementById('emailEventFilter').value;
+            const searchTerm = document.getElementById('emailSearchInput').value;
+            renderEmailHistory(allEmailEvents, filter, searchTerm);
+        }
+
+        // Search email history
+        function searchEmailHistory() {
+            const filter = document.getElementById('emailEventFilter').value;
+            const searchTerm = document.getElementById('emailSearchInput').value;
+            renderEmailHistory(allEmailEvents, filter, searchTerm);
+        }
+
+        // Get time ago string
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'Just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            if (days < 7) return `${days}d ago`;
+            return date.toLocaleDateString();
         }
 
         // Helper function to escape HTML
