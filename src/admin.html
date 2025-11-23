@@ -2639,6 +2639,70 @@
                         <div id="emailSendingResult" style="display: none; margin-top: 20px; padding: 15px; border-radius: 8px; text-align: center;"></div>
                     </div>
                 </div>
+
+                <!-- Email Statistics & History -->
+                <div class="table-card" style="margin-top: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0; font-size: 20px; font-weight: 700; color: #333;">📊 Email Statistics (Last 30 Days)</h3>
+                        <button onclick="loadEmailStats()" style="background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            🔄 Refresh
+                        </button>
+                    </div>
+
+                    <div id="emailStatsLoading" style="text-align: center; padding: 40px;">
+                        <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        <p style="margin-top: 15px; color: #666;">Loading email statistics...</p>
+                    </div>
+
+                    <div id="emailStatsContent" style="display: none;">
+                        <!-- Stats Summary -->
+                        <div class="analytics-grid" style="margin-bottom: 30px;">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="color: #667eea;">📧</div>
+                                <div class="stat-value" id="emailStatsSent">0</div>
+                                <div class="stat-label">Total Sent</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon" style="color: #4caf50;">✅</div>
+                                <div class="stat-value" id="emailStatsDelivered">0</div>
+                                <div class="stat-label">Delivered</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon" style="color: #ff9800;">📖</div>
+                                <div class="stat-value" id="emailStatsOpens">0</div>
+                                <div class="stat-label">Opens</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon" style="color: #2196f3;">🖱️</div>
+                                <div class="stat-value" id="emailStatsClicks">0</div>
+                                <div class="stat-label">Clicks</div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Email History -->
+                        <div>
+                            <h4 style="margin: 0 0 15px 0; font-size: 18px; font-weight: 700; color: #333;">📜 Recent Email History</h4>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date & Time</th>
+                                            <th>Subject</th>
+                                            <th>To</th>
+                                            <th>Status</th>
+                                            <th>Event</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="emailHistoryTable">
+                                        <tr>
+                                            <td colspan="5" style="text-align: center; padding: 20px; color: #999;">No email history available</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </section>
         </div>
     </div>
@@ -2976,6 +3040,7 @@
                 case 'reading': await loadReadingStats(); break;
                 case 'searchConsole': await loadSearchConsoleData(); break;
                 case 'database': await loadDatabaseStats(); break;
+                case 'emailTemplates': await loadEmailStats(); break;
             }
         }
 
@@ -8486,6 +8551,91 @@ ${htmlParagraphs}
 </div>
 </body>
 </html>`;
+        }
+
+        // Load email statistics from Brevo
+        async function loadEmailStats() {
+            console.log('📊 Loading email statistics...');
+
+            document.getElementById('emailStatsLoading').style.display = 'block';
+            document.getElementById('emailStatsContent').style.display = 'none';
+
+            try {
+                const response = await fetch('/.netlify/functions/brevo-email-stats');
+                const result = await response.json();
+
+                console.log('📊 Email stats response:', result);
+
+                document.getElementById('emailStatsLoading').style.display = 'none';
+
+                if (result.success) {
+                    document.getElementById('emailStatsContent').style.display = 'block';
+
+                    // Update stats
+                    const stats = result.stats || {};
+                    document.getElementById('emailStatsSent').textContent = (stats.requests || 0).toLocaleString();
+                    document.getElementById('emailStatsDelivered').textContent = (stats.delivered || 0).toLocaleString();
+                    document.getElementById('emailStatsOpens').textContent = (stats.uniqueOpens || 0).toLocaleString();
+                    document.getElementById('emailStatsClicks').textContent = (stats.uniqueClicks || 0).toLocaleString();
+
+                    // Update email history table
+                    const events = result.events || [];
+                    const historyTable = document.getElementById('emailHistoryTable');
+
+                    if (events.length === 0) {
+                        historyTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #999;">No email history available</td></tr>';
+                    } else {
+                        historyTable.innerHTML = events.map(event => {
+                            const date = new Date(event.date || event.time);
+                            const formattedDate = date.toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+
+                            const statusColor = event.event === 'delivered' ? '#4caf50' :
+                                              event.event === 'sent' ? '#2196f3' :
+                                              event.event === 'opened' ? '#ff9800' :
+                                              event.event === 'clicked' ? '#9c27b0' :
+                                              event.event === 'bounced' ? '#f44336' : '#999';
+
+                            const statusIcon = event.event === 'delivered' ? '✅' :
+                                             event.event === 'sent' ? '📧' :
+                                             event.event === 'opened' ? '📖' :
+                                             event.event === 'clicked' ? '🖱️' :
+                                             event.event === 'bounced' ? '❌' : '📋';
+
+                            return `
+                                <tr>
+                                    <td>${formattedDate}</td>
+                                    <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(event.subject || '-')}</td>
+                                    <td>${escapeHtml(event.email || '-')}</td>
+                                    <td><span style="color: ${statusColor}; font-weight: 600;">${statusIcon} ${event.event || 'N/A'}</span></td>
+                                    <td>${event.tag || 'transactional'}</td>
+                                </tr>
+                            `;
+                        }).join('');
+                    }
+
+                    console.log('✅ Email stats loaded successfully');
+                } else {
+                    alert(`❌ Failed to load email stats: ${result.error}`);
+                }
+
+            } catch (error) {
+                document.getElementById('emailStatsLoading').style.display = 'none';
+                console.error('❌ Error loading email stats:', error);
+                alert(`❌ Error: ${error.message}`);
+            }
+        }
+
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         // Debug Brevo configuration
