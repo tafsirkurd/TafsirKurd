@@ -76,6 +76,19 @@
             scroll-behavior: smooth;
         }
 
+        /* Animated Gradient */
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
         body {
             font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: var(--bg);
@@ -1283,7 +1296,7 @@
         <header class="admin-header" style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255, 255, 255, 0.18);">
             <div class="admin-header-content" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; max-width: 1400px; margin: 0 auto;">
                 <div class="admin-logo" style="display: flex; align-items: center; gap: 15px; cursor: pointer;" onclick="switchSection('dashboard')">
-                    <div style="background: #1a1a1a; padding: 12px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
+                    <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%); background-size: 200% 200%; animation: gradientShift 4s ease infinite; padding: 12px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
                         <img src="/assets/images/logo.png" alt="Logo" style="width: 40px; height: 40px; display: block; filter: brightness(0) invert(1);">
                     </div>
                     <div>
@@ -1300,13 +1313,13 @@
                     </div>
 
                     <!-- Dashboard Button -->
-                    <button onclick="switchSection('dashboard')" style="background: #1a1a1a; color: white; border: 2px solid #1a1a1a; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.3s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#2d2d2d'; this.style.borderColor='#2d2d2d'" onmouseout="this.style.background='#1a1a1a'; this.style.borderColor='#1a1a1a'">
+                    <button onclick="switchSection('dashboard')" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%); background-size: 200% 200%; animation: gradientShift 3s ease infinite; color: white; border: 2px solid rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.3s; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)'">
                         <span style="font-size: 18px;">🏠</span>
                         <span>Dashboard</span>
                     </button>
 
                     <!-- Logout Button -->
-                    <button class="btn-logout" onclick="logout()" style="background: #1a1a1a; color: white; border: none; padding: 10px 24px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); display: flex; align-items: center; gap: 8px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)'">
+                    <button class="btn-logout" onclick="logout()" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%); background-size: 200% 200%; animation: gradientShift 3s ease infinite; color: white; border: none; padding: 10px 24px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); display: flex; align-items: center; gap: 8px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)'">
                         <span style="font-size: 18px;">🚪</span>
                         <span>Logout</span>
                     </button>
@@ -8559,7 +8572,9 @@
         function handleDragStart(e) {
             if (!dragModeEnabled) return;
             draggedElement = this;
-            this.style.opacity = '0.5';
+            this.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            this.style.opacity = '0.6';
+            this.style.transform = 'rotate(3deg) scale(0.95)';
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/html', this.innerHTML);
         }
@@ -8573,14 +8588,18 @@
 
         function handleDragEnter(e) {
             if (!dragModeEnabled || this === draggedElement) return;
+            this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             this.style.border = '3px dashed #667eea';
-            this.style.transform = 'scale(1.05)';
+            this.style.transform = 'scale(1.08) translateY(-8px)';
+            this.style.boxShadow = '0 20px 50px rgba(102, 126, 234, 0.5)';
         }
 
         function handleDragLeave(e) {
             if (!dragModeEnabled) return;
+            this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             this.style.border = '';
             this.style.transform = '';
+            this.style.boxShadow = '';
         }
 
         function handleDrop(e) {
@@ -8594,26 +8613,43 @@
                 const draggedIndex = allCards.indexOf(draggedElement);
                 const targetIndex = allCards.indexOf(this);
 
+                // Add smooth transition for reordering
+                allCards.forEach(card => {
+                    card.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                });
+
                 if (draggedIndex < targetIndex) {
                     this.parentNode.insertBefore(draggedElement, this.nextSibling);
                 } else {
                     this.parentNode.insertBefore(draggedElement, this);
                 }
+
+                // Animate the drop
+                setTimeout(() => {
+                    draggedElement.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        draggedElement.style.transform = '';
+                    }, 200);
+                }, 10);
             }
 
             this.style.border = '';
             this.style.transform = '';
+            this.style.boxShadow = '';
             return false;
         }
 
         function handleDragEnd(e) {
             if (!dragModeEnabled) return;
+            this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             this.style.opacity = '1';
+            this.style.transform = '';
 
             const cards = document.querySelectorAll('.dashboard-card');
             cards.forEach(card => {
                 card.style.border = '';
                 card.style.transform = '';
+                card.style.boxShadow = '';
             });
         }
 
