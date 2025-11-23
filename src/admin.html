@@ -1343,24 +1343,48 @@
             <!-- Dashboard Section -->
             <section id="dashboardSection" class="section active">
                 <!-- Welcome Header -->
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 60px 40px; border-radius: 30px; margin-bottom: 40px; box-shadow: 0 25px 70px rgba(102, 126, 234, 0.4); text-align: center; position: relative; overflow: hidden;">
-                    <!-- Animated Background Pattern -->
-                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.1; background-image: repeating-linear-gradient(45deg, transparent, transparent 20px, white 20px, white 21px), repeating-linear-gradient(-45deg, transparent, transparent 20px, white 20px, white 21px);"></div>
+                <div style="background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%); padding: 50px 30px; border-radius: 25px; margin-bottom: 40px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.1); text-align: center; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+                    <!-- Animated Geometric Pattern Background -->
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.08;">
+                        <!-- Diagonal grid pattern -->
+                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: repeating-linear-gradient(45deg, transparent 0, transparent 25px, rgba(255,255,255,0.4) 25px, rgba(255,255,255,0.4) 26px), repeating-linear-gradient(-45deg, transparent 0, transparent 25px, rgba(255,255,255,0.3) 25px, rgba(255,255,255,0.3) 26px); animation: patternSlide 20s linear infinite;"></div>
+                    </div>
+
+                    <!-- Glowing orbs -->
+                    <div style="position: absolute; top: -100px; right: -50px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(100,150,255,0.15) 0%, transparent 70%); border-radius: 50%; animation: float 8s ease-in-out infinite;"></div>
+                    <div style="position: absolute; bottom: -80px; left: -80px; width: 250px; height: 250px; background: radial-gradient(circle, rgba(150,100,255,0.12) 0%, transparent 70%); border-radius: 50%; animation: float 10s ease-in-out infinite reverse;"></div>
+
+                    <!-- Accent line -->
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, transparent, rgba(100,150,255,0.5), rgba(150,100,255,0.5), transparent); animation: shimmer 3s ease-in-out infinite;"></div>
 
                     <!-- Content -->
                     <div style="position: relative; z-index: 1;">
-                        <div style="font-size: 80px; margin-bottom: 25px; animation: float 3s ease-in-out infinite;">🎛️</div>
-                        <h1 style="margin: 0; color: white; font-size: 48px; font-weight: 900; text-shadow: 0 4px 20px rgba(0,0,0,0.3); letter-spacing: -1px;">Admin Dashboard</h1>
-                        <div style="width: 80px; height: 4px; background: white; margin: 20px auto; border-radius: 2px; opacity: 0.8;"></div>
-                        <p style="margin: 20px 0 0 0; color: rgba(255,255,255,0.95); font-size: 22px; font-weight: 400; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">Choose a section to manage</p>
-                        <p class="kurdish-text" style="margin: 12px 0 0 0; color: rgba(255,255,255,0.9); font-size: 20px; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">بەشەکێ هەلبژێرە بۆ بەڕێوەبردن</p>
+                        <div style="font-size: 72px; margin-bottom: 20px; filter: drop-shadow(0 4px 12px rgba(100,150,255,0.3)); animation: iconPulse 3s ease-in-out infinite;">🎛️</div>
+                        <h1 style="margin: 0; color: white; font-size: 42px; font-weight: 800; text-shadow: 0 2px 8px rgba(100,150,255,0.3), 0 0 30px rgba(100,150,255,0.1);">Admin Dashboard</h1>
+                        <p style="margin: 15px 0 0 0; color: rgba(255,255,255,0.95); font-size: 20px; font-weight: 300;">Choose a section to manage</p>
+                        <p class="kurdish-text" style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 18px;">بەشەکێ هەلبژێرە بۆ بەڕێوەبردن</p>
                     </div>
                 </div>
 
                 <style>
+                    @keyframes patternSlide {
+                        0% { transform: translate(0, 0); }
+                        100% { transform: translate(50px, 50px); }
+                    }
+
                     @keyframes float {
-                        0%, 100% { transform: translateY(0px); }
-                        50% { transform: translateY(-15px); }
+                        0%, 100% { transform: translate(0, 0) scale(1); }
+                        50% { transform: translate(20px, 20px) scale(1.1); }
+                    }
+
+                    @keyframes shimmer {
+                        0%, 100% { opacity: 0.3; }
+                        50% { opacity: 1; }
+                    }
+
+                    @keyframes iconPulse {
+                        0%, 100% { transform: scale(1); }
+                        50% { transform: scale(1.05); }
                     }
                 </style>
 
