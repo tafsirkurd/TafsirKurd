@@ -2618,12 +2618,15 @@
                             </ul>
                         </div>
 
-                        <div style="display: flex; gap: 15px; align-items: center;">
+                        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                             <button onclick="sendBulkEmail()" id="sendEmailBtn" style="flex: 1; background: white; color: #667eea; padding: 14px 24px; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                                 📧 Send Email
                             </button>
                             <button onclick="testEmail()" style="background: rgba(255,255,255,0.2); color: white; padding: 14px 24px; border: 2px solid white; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s;">
                                 🧪 Test (Send to yourself)
+                            </button>
+                            <button onclick="debugBrevoTest()" style="background: rgba(255,165,0,0.3); color: white; padding: 14px 24px; border: 2px solid orange; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s;">
+                                🔧 Debug Brevo
                             </button>
                         </div>
 
@@ -8471,6 +8474,32 @@ ${htmlParagraphs}
 </table>
 </body>
 </html>`;
+        }
+
+        // Debug Brevo configuration
+        async function debugBrevoTest() {
+            const confirmed = confirm('🔧 This will send a simple test email to tefsirkurd@gmail.com to debug Brevo configuration.\n\nContinue?');
+            if (!confirmed) return;
+
+            try {
+                const response = await fetch('/.netlify/functions/test-brevo-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`✅ Debug test email sent successfully!\n\nMessage ID: ${result.messageId}\nSent to: ${result.sentTo}\n\nCheck your inbox (and spam folder) at tefsirkurd@gmail.com`);
+                } else {
+                    alert(`❌ Debug test failed:\n\n${result.error}\n\nThis helps identify the issue with Brevo configuration.`);
+                }
+
+            } catch (error) {
+                console.error('Error in debug test:', error);
+                alert(`❌ Error: ${error.message}`);
+            }
         }
 
         // ==================== SEARCH CONSOLE FUNCTIONS ====================
