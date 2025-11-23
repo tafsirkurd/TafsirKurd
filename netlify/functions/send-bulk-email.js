@@ -170,7 +170,12 @@ async function sendEmail(email, userName, subject, htmlContent, textContent) {
         ],
         subject: subject,
         htmlContent: htmlContent,
-        textContent: textContent || htmlContent.replace(/<[^>]*>/g, '')
+        textContent: textContent || htmlContent.replace(/<[^>]*>/g, ''),
+        headers: {
+            "X-Mailin-custom": "tafsirkurd_notification",
+            "charset": "utf-8"
+        },
+        tags: ["transactional", "notification"]
     };
 
     return sendBrevoEmail(emailData);

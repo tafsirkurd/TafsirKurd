@@ -32,7 +32,7 @@ exports.handler = async (event, context) => {
         const emailData = {
             sender: {
                 name: "TafsirKurd",
-                email: "noreply@tafsirkurd.com" // Authenticated domain sender
+                email: "noreply@tafsirkurd.com"
             },
             to: [
                 {
@@ -42,7 +42,12 @@ exports.handler = async (event, context) => {
             ],
             subject: subject,
             htmlContent: htmlContent,
-            textContent: textContent || htmlContent.replace(/<[^>]*>/g, '')
+            textContent: textContent || htmlContent.replace(/<[^>]*>/g, ''),
+            headers: {
+                "X-Mailin-custom": "tafsirkurd_notification",
+                "charset": "utf-8"
+            },
+            tags: ["transactional", "notification"]
         };
 
         console.log('📧 Sending email to:', to);
