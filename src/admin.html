@@ -2560,13 +2560,27 @@
                     <div style="background: rgba(255,255,255,0.5); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
                         <strong style="display: block; margin-bottom: 8px;">Possible reasons:</strong>
                         <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
-                            <li>Site was recently verified - data takes 24-48 hours to appear</li>
-                            <li>No Google search traffic in the last 28 days</li>
-                            <li>Site not indexed by Google yet</li>
+                            <li><strong>Sitemap issue:</strong> If sitemap shows "Couldn't fetch" - wait 1-7 days for Google to crawl it</li>
+                            <li><strong>Recently verified:</strong> Data takes 24-48 hours after successful crawl</li>
+                            <li><strong>No traffic yet:</strong> No Google search traffic in the last 28 days</li>
+                            <li><strong>Not indexed:</strong> Site pages not indexed by Google yet</li>
                         </ul>
+                    </div>
+                    <div style="background: rgba(100,150,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #667eea;">
+                        <strong style="display: block; margin-bottom: 8px;">🔧 Troubleshooting Steps:</strong>
+                        <ol style="margin: 0; padding-left: 20px; line-height: 1.8; font-size: 14px;">
+                            <li>Check sitemap status in <a href="https://search.google.com/search-console/sitemaps?resource_id=https://tafsirkurd.com/" target="_blank" style="color: #667eea; text-decoration: underline;">Search Console Sitemaps</a></li>
+                            <li>If "Couldn't fetch", click "Test sitemap" button in Search Console</li>
+                            <li>Verify sitemap is accessible: <a href="https://tafsirkurd.com/sitemap.xml" target="_blank" style="color: #667eea; text-decoration: underline;">tafsirkurd.com/sitemap.xml</a></li>
+                            <li>Request indexing for key pages using URL Inspection tool</li>
+                            <li>Wait 2-7 days for Google's first crawl</li>
+                        </ol>
                     </div>
                     <button onclick="loadSearchConsoleData()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
                         🔄 Refresh Data
+                    </button>
+                    <button onclick="window.open('https://search.google.com/search-console/sitemaps?resource_id=https://tafsirkurd.com/', '_blank')" style="background: #34a853; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; margin-left: 10px;">
+                        🗺️ Check Sitemap Status
                     </button>
                     <button onclick="window.open('https://search.google.com/search-console?resource_id=https://tafsirkurd.com/', '_blank')" style="background: white; color: #333; border: 2px solid #ddd; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; margin-left: 10px;">
                         📊 Open Search Console
