@@ -3704,32 +3704,76 @@
                 // Get location - try multiple services
                 let location = 'Unknown';
 
+                console.log('🔍 Looking up location for IP:', ipAddress);
+
                 // Try ipapi.co first (has free tier, good accuracy)
                 try {
-                    const locationResponse = await fetch(`https://ipapi.co/${ipAddress}/json/`);
+                    const locationResponse = await fetch(`https://ipapi.co/${ipAddress}/json/`, {
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    console.log('📍 ipapi.co response status:', locationResponse.status);
+
                     if (locationResponse.ok) {
                         const locationData = await locationResponse.json();
+                        console.log('📍 ipapi.co data:', locationData);
+
                         if (locationData.city && locationData.country_name) {
                             location = `${locationData.city}, ${locationData.country_name}`;
+                            console.log('✅ Location found:', location);
+                        } else if (locationData.error) {
+                            console.warn('⚠️ ipapi.co error:', locationData.reason || locationData.error);
                         }
                     }
                 } catch (err) {
-                    console.log('ipapi.co lookup failed, trying fallback...', err);
+                    console.error('❌ ipapi.co lookup failed:', err);
                 }
 
                 // Fallback: Try ip-api.com with HTTPS
                 if (location === 'Unknown') {
+                    console.log('🔄 Trying fallback: ip-api.com');
                     try {
-                        const locationResponse = await fetch(`https://get.geojs.io/v1/ip/geo/${ipAddress}.json`);
+                        const locationResponse = await fetch(`http://ip-api.com/json/${ipAddress}?fields=status,message,country,city`);
+                        console.log('📍 ip-api.com response status:', locationResponse.status);
+
                         if (locationResponse.ok) {
                             const locationData = await locationResponse.json();
-                            if (locationData.city && locationData.country) {
+                            console.log('📍 ip-api.com data:', locationData);
+
+                            if (locationData.status === 'success' && locationData.city && locationData.country) {
                                 location = `${locationData.city}, ${locationData.country}`;
+                                console.log('✅ Location found from fallback:', location);
+                            } else if (locationData.message) {
+                                console.warn('⚠️ ip-api.com error:', locationData.message);
                             }
                         }
                     } catch (err) {
-                        console.log('GeoJS lookup failed:', err);
+                        console.error('❌ ip-api.com lookup failed:', err);
                     }
+                }
+
+                // Last fallback: Try GeoJS
+                if (location === 'Unknown') {
+                    console.log('🔄 Trying last fallback: GeoJS');
+                    try {
+                        const locationResponse = await fetch(`https://get.geojs.io/v1/ip/geo/${ipAddress}.json`);
+                        console.log('📍 GeoJS response status:', locationResponse.status);
+
+                        if (locationResponse.ok) {
+                            const locationData = await locationResponse.json();
+                            console.log('📍 GeoJS data:', locationData);
+
+                            if (locationData.city && locationData.country) {
+                                location = `${locationData.city}, ${locationData.country}`;
+                                console.log('✅ Location found from GeoJS:', location);
+                            }
+                        }
+                    } catch (err) {
+                        console.error('❌ GeoJS lookup failed:', err);
+                    }
+                }
+
+                if (location === 'Unknown') {
+                    console.warn('⚠️ All location services failed, using Unknown');
                 }
 
                 // Save session to database
