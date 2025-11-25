@@ -263,12 +263,35 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Supabase configuration
-        const SUPABASE_URL = 'https://gijupzejtbpifjzwadee.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanVwemVqdGJwaWZqendkZWUiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczMDU0MDk4NCwiZXhwIjoyMDQ2MTE2OTg0fQ.FRCEfyYnuCT0N5lmH-xGYhKbLqkZZfyQjRcyBDaOk4Q';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Supabase client (initialized securely)
+        let supabase;
+
+        // Initialize Supabase with secure config
+        async function initSupabase() {
+            try {
+                const response = await fetch('/.netlify/functions/config');
+                if (!response.ok) throw new Error('Failed to fetch config');
+                const config = await response.json();
+                supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                console.log('✅ Supabase initialized securely');
+                return true;
+            } catch (error) {
+                console.error('❌ Failed to initialize Supabase:', error);
+                document.getElementById('sessionsTable').innerHTML =
+                    `<tr><td colspan="7" style="text-align: center; padding: 40px; color: #e74c3c;">
+                        ⚠️ Configuration Error<br><br>
+                        <small>Failed to load Supabase config</small>
+                    </td></tr>`;
+                return false;
+            }
+        }
 
         async function loadAnalytics() {
+            // Initialize Supabase if not already done
+            if (!supabase) {
+                const initialized = await initSupabase();
+                if (!initialized) return;
+            }
             try {
                 // Fetch all admin login sessions
                 const { data: sessions, error } = await supabase
