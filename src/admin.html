@@ -5255,7 +5255,7 @@
                 // Fetch user data with location data
                 const { data: users, error } = await supabase
                     .from('user_data')
-                    .select('id, name, email, ip_address, city, region, country, updated_at')
+                    .select('id, user_id, full_name, userName, userEmail, email, ip_address, city, region, country, updated_at')
                     .not('ip_address', 'is', null)
                     .order('updated_at', { ascending: false })
                     .limit(100);
@@ -5282,7 +5282,7 @@
                 // Display visitor IPs
                 tbody.innerHTML = users.map((user, index) => {
                     const lastSeen = user.updated_at ? new Date(user.updated_at) : null;
-                    const userName = user.name || user.email || 'Anonymous';
+                    const userName = user.full_name || user.userName || user.email || user.userEmail || user.user_id?.split('|')[0] || 'Anonymous';
                     const city = user.city || 'Unknown';
                     const region = user.region || 'Unknown';
                     const country = user.country || 'Unknown';
