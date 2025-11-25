@@ -374,48 +374,18 @@
         // Check IP access before loading anything
         async function checkAccess() {
             try {
-                // Try multiple IP detection services
-                let visitorIP = null;
+                // Use Netlify function to get client IP (most reliable)
+                const ipResponse = await fetch('/.netlify/functions/get-client-ip');
 
-                // Try ipify first
-                try {
-                    const ipResponse = await fetch('https://api.ipify.org?format=json', { timeout: 5000 });
-                    if (ipResponse.ok) {
-                        const ipData = await ipResponse.json();
-                        visitorIP = ipData.ip;
-                    }
-                } catch (e) {
-                    console.warn('ipify failed, trying fallback...', e);
+                if (!ipResponse.ok) {
+                    throw new Error('Failed to fetch IP from server');
                 }
 
-                // Fallback: Try ipapi.co
-                if (!visitorIP) {
-                    try {
-                        const ipResponse = await fetch('https://ipapi.co/json/', { timeout: 5000 });
-                        if (ipResponse.ok) {
-                            const ipData = await ipResponse.json();
-                            visitorIP = ipData.ip;
-                        }
-                    } catch (e) {
-                        console.warn('ipapi.co failed, trying another fallback...', e);
-                    }
-                }
+                const ipData = await ipResponse.json();
+                const visitorIP = ipData.ip;
 
-                // Fallback: Try ip-api.com
-                if (!visitorIP) {
-                    try {
-                        const ipResponse = await fetch('http://ip-api.com/json/', { timeout: 5000 });
-                        if (ipResponse.ok) {
-                            const ipData = await ipResponse.json();
-                            visitorIP = ipData.query;
-                        }
-                    } catch (e) {
-                        console.warn('ip-api.com failed', e);
-                    }
-                }
-
-                if (!visitorIP) {
-                    throw new Error('Could not detect IP from any service');
+                if (!visitorIP || visitorIP === 'Unknown') {
+                    throw new Error('Could not detect your IP address');
                 }
 
                 console.log('Visitor IP:', visitorIP);
