@@ -2232,6 +2232,96 @@
                     </div>
                 </div>
 
+                <!-- Admin Login IP Analytics -->
+                <div id="adminIPAnalyticsContainer" style="margin-top: 40px; padding: 30px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); border-radius: 16px; box-shadow: 0 10px 30px rgba(17,153,142,0.3);">
+                    <div style="text-align: center; color: white; margin-bottom: 30px;">
+                        <h2 style="font-size: 32px; font-weight: 800; margin: 0 0 10px 0;">🔐 Admin Login Analytics</h2>
+                        <p style="font-size: 16px; opacity: 0.95; margin: 0;">Track admin panel logins with IP addresses, locations, and online status</p>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="stats-grid" style="margin-bottom: 30px;">
+                        <div class="stat-card" style="background: white; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                            <div class="stat-icon">🔒</div>
+                            <div class="stat-value" id="totalAdminLogins" style="color: #11998e;">-</div>
+                            <div class="stat-label" style="color: #666;">Total Logins</div>
+                        </div>
+                        <div class="stat-card" style="background: white; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                            <div class="stat-icon">🟢</div>
+                            <div class="stat-value" id="adminsOnlineNow" style="color: #11998e;">-</div>
+                            <div class="stat-label" style="color: #666;">Currently Online</div>
+                        </div>
+                        <div class="stat-card" style="background: white; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                            <div class="stat-icon">🌐</div>
+                            <div class="stat-value" id="uniqueAdminIPs" style="color: #11998e;">-</div>
+                            <div class="stat-label" style="color: #666;">Unique IPs</div>
+                        </div>
+                        <div class="stat-card" style="background: white; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                            <div class="stat-icon">📅</div>
+                            <div class="stat-value" id="adminLogins24h" style="color: #11998e;">-</div>
+                            <div class="stat-label" style="color: #666;">Last 24 Hours</div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Login Sessions Table -->
+                    <div class="table-container" style="background: white; margin-bottom: 20px;">
+                        <h3 class="table-header" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 15px; margin: 0; border-radius: 12px 12px 0 0; font-size: 18px; font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
+                            <span>📊 Admin Login Sessions</span>
+                            <button onclick="loadAdminIPAnalytics()" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">🔄 Refresh</button>
+                        </h3>
+                        <div style="overflow-x: auto;">
+                            <table class="data-table" style="margin: 0; width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th style="padding: 12px;">Status</th>
+                                        <th style="padding: 12px;">Email</th>
+                                        <th style="padding: 12px;">IP Address</th>
+                                        <th style="padding: 12px;">Location</th>
+                                        <th style="padding: 12px;">Login Time</th>
+                                        <th style="padding: 12px;">Last Active</th>
+                                        <th style="padding: 12px;">Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminSessionsTableBody">
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
+                                            <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
+                                            <div>Loading admin sessions...</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- IP Statistics Table -->
+                    <div class="table-container" style="background: white;">
+                        <h3 class="table-header" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 15px; margin: 0; border-radius: 12px 12px 0 0; font-size: 18px; font-weight: 700;">
+                            🌍 IP Address Statistics
+                        </h3>
+                        <div style="overflow-x: auto;">
+                            <table class="data-table" style="margin: 0; width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th style="padding: 12px;">IP Address</th>
+                                        <th style="padding: 12px;">Total Logins</th>
+                                        <th style="padding: 12px;">Last Seen</th>
+                                        <th style="padding: 12px;">Location</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminIPStatsTableBody">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center; padding: 40px; color: #999;">
+                                            <div style="font-size: 48px; margin-bottom: 10px;">🌐</div>
+                                            <div>Loading IP statistics...</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Kurdish Region Detailed Analytics -->
                 <div id="kurdishRegionAnalytics" style="margin-top: 30px; padding: 25px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 16px; box-shadow: 0 10px 30px rgba(217,119,6,0.3); display: none;">
                     <div style="text-align: center; color: white; margin-bottom: 25px;">
@@ -4792,6 +4882,9 @@
             // Load geographic analytics
             await loadGeoAnalytics();
 
+            // Load admin IP analytics
+            await loadAdminIPAnalytics();
+
             // Create popular surahs chart
             createPopularSurahsChart();
 
@@ -4800,6 +4893,166 @@
 
             // Create activity timeline
             createActivityTimelineChart();
+        }
+
+        // Load Admin IP Analytics
+        async function loadAdminIPAnalytics() {
+            console.log('🔐 Loading admin IP analytics...');
+
+            try {
+                // Fetch all admin login sessions
+                const { data: sessions, error } = await supabase
+                    .from('admin_login_sessions')
+                    .select('*')
+                    .order('login_time', { ascending: false });
+
+                if (error) {
+                    console.error('Error fetching admin sessions:', error);
+                    document.getElementById('adminSessionsTableBody').innerHTML = `
+                        <tr><td colspan="7" style="text-align: center; padding: 40px; color: #e74c3c;">
+                            ⚠️ Error loading sessions: ${error.message}
+                        </td></tr>`;
+                    return;
+                }
+
+                console.log('✅ Loaded admin sessions:', sessions);
+
+                if (!sessions || sessions.length === 0) {
+                    document.getElementById('adminSessionsTableBody').innerHTML = `
+                        <tr><td colspan="7" style="text-align: center; padding: 40px;">
+                            <div style="font-size: 48px; margin-bottom: 10px;">📊</div>
+                            <div style="color: #999;">No admin login sessions yet</div>
+                        </td></tr>`;
+                    document.getElementById('adminIPStatsTableBody').innerHTML = `
+                        <tr><td colspan="4" style="text-align: center; padding: 40px;">
+                            <div style="font-size: 48px; margin-bottom: 10px;">🌐</div>
+                            <div style="color: #999;">No IP data yet</div>
+                        </td></tr>`;
+
+                    // Update stats
+                    document.getElementById('totalAdminLogins').textContent = '0';
+                    document.getElementById('adminsOnlineNow').textContent = '0';
+                    document.getElementById('uniqueAdminIPs').textContent = '0';
+                    document.getElementById('adminLogins24h').textContent = '0';
+                    return;
+                }
+
+                // Calculate stats
+                const now = new Date();
+                const last24h = new Date(now - 24 * 60 * 60 * 1000);
+                const onlineCount = sessions.filter(s => s.is_online).length;
+                const uniqueIPs = new Set(sessions.map(s => s.ip_address)).size;
+                const logins24h = sessions.filter(s => new Date(s.login_time) > last24h).length;
+
+                // Update stats
+                document.getElementById('totalAdminLogins').textContent = sessions.length;
+                document.getElementById('adminsOnlineNow').textContent = onlineCount;
+                document.getElementById('uniqueAdminIPs').textContent = uniqueIPs;
+                document.getElementById('adminLogins24h').textContent = logins24h;
+
+                // Owner IPs
+                const OWNER_IPS = ['185.136.148.162', '185.84.71.147'];
+
+                // Display sessions table
+                const sessionsHTML = sessions.map(session => {
+                    const isOnline = session.is_online;
+                    const isOwner = OWNER_IPS.includes(session.ip_address);
+                    const loginTime = new Date(session.login_time);
+                    const lastActive = session.last_active ? new Date(session.last_active) : null;
+                    const duration = lastActive ? formatDuration(loginTime, lastActive) : 'Active';
+
+                    return `
+                        <tr style="${isOwner ? 'background: rgba(17, 153, 142, 0.05);' : ''}">
+                            <td style="padding: 12px;">
+                                <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; ${isOnline ? 'background: rgba(46, 204, 113, 0.2); color: #2ecc71;' : 'background: rgba(231, 76, 60, 0.2); color: #e74c3c;'}">
+                                    ${isOnline ? '🟢 Online' : '⚫ Offline'}
+                                </span>
+                            </td>
+                            <td style="padding: 12px;">
+                                ${session.email || 'N/A'}
+                                ${isOwner ? '<span style="display: inline-block; margin-left: 8px; padding: 2px 8px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; border-radius: 12px; font-size: 10px; font-weight: 700;">👑 OWNER</span>' : ''}
+                            </td>
+                            <td style="padding: 12px; font-family: 'Courier New', monospace; font-weight: 600;">${session.ip_address || 'Unknown'}</td>
+                            <td style="padding: 12px;">${session.location || 'Unknown'}</td>
+                            <td style="padding: 12px; color: #666; font-size: 13px;">${formatTimestamp(loginTime)}</td>
+                            <td style="padding: 12px; color: #666; font-size: 13px;">${lastActive ? formatTimestamp(lastActive) : 'Now'}</td>
+                            <td style="padding: 12px;">${duration}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                document.getElementById('adminSessionsTableBody').innerHTML = sessionsHTML;
+
+                // Display IP statistics
+                const ipStats = {};
+                sessions.forEach(session => {
+                    const ip = session.ip_address || 'Unknown';
+                    if (!ipStats[ip]) {
+                        ipStats[ip] = {
+                            count: 0,
+                            lastSeen: session.login_time,
+                            location: session.location || 'Unknown'
+                        };
+                    }
+                    ipStats[ip].count++;
+                    if (new Date(session.login_time) > new Date(ipStats[ip].lastSeen)) {
+                        ipStats[ip].lastSeen = session.login_time;
+                    }
+                });
+
+                const ipArray = Object.entries(ipStats).sort((a, b) => b[1].count - a[1].count);
+
+                const ipStatsHTML = ipArray.map(([ip, stats]) => {
+                    const isOwner = OWNER_IPS.includes(ip);
+                    return `
+                        <tr style="${isOwner ? 'background: rgba(17, 153, 142, 0.05);' : ''}">
+                            <td style="padding: 12px; font-family: 'Courier New', monospace; font-weight: 600;">
+                                ${ip}
+                                ${isOwner ? '<span style="display: inline-block; margin-left: 8px; padding: 2px 8px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; border-radius: 12px; font-size: 10px; font-weight: 700;">👑 OWNER</span>' : ''}
+                            </td>
+                            <td style="padding: 12px; font-weight: 600;">${stats.count}</td>
+                            <td style="padding: 12px; color: #666; font-size: 13px;">${formatTimestamp(new Date(stats.lastSeen))}</td>
+                            <td style="padding: 12px;">${stats.location}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                document.getElementById('adminIPStatsTableBody').innerHTML = ipStatsHTML;
+
+            } catch (error) {
+                console.error('Failed to load admin IP analytics:', error);
+                document.getElementById('adminSessionsTableBody').innerHTML = `
+                    <tr><td colspan="7" style="text-align: center; padding: 40px; color: #e74c3c;">
+                        ⚠️ Error: ${error.message}
+                    </td></tr>`;
+            }
+        }
+
+        // Helper function to format timestamp
+        function formatTimestamp(date) {
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+
+            return date.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Helper function to format duration
+        function formatDuration(start, end) {
+            const diff = end - start;
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+
+            if (hours > 0) return `${hours}h ${minutes}m`;
+            return `${minutes}m`;
         }
 
         // Load Bot Protection Dashboard
