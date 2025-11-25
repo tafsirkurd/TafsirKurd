@@ -374,10 +374,49 @@
         // Check IP access before loading anything
         async function checkAccess() {
             try {
-                // Get visitor's IP address
-                const ipResponse = await fetch('https://api.ipify.org?format=json');
-                const ipData = await ipResponse.json();
-                const visitorIP = ipData.ip;
+                // Try multiple IP detection services
+                let visitorIP = null;
+
+                // Try ipify first
+                try {
+                    const ipResponse = await fetch('https://api.ipify.org?format=json', { timeout: 5000 });
+                    if (ipResponse.ok) {
+                        const ipData = await ipResponse.json();
+                        visitorIP = ipData.ip;
+                    }
+                } catch (e) {
+                    console.warn('ipify failed, trying fallback...', e);
+                }
+
+                // Fallback: Try ipapi.co
+                if (!visitorIP) {
+                    try {
+                        const ipResponse = await fetch('https://ipapi.co/json/', { timeout: 5000 });
+                        if (ipResponse.ok) {
+                            const ipData = await ipResponse.json();
+                            visitorIP = ipData.ip;
+                        }
+                    } catch (e) {
+                        console.warn('ipapi.co failed, trying another fallback...', e);
+                    }
+                }
+
+                // Fallback: Try ip-api.com
+                if (!visitorIP) {
+                    try {
+                        const ipResponse = await fetch('http://ip-api.com/json/', { timeout: 5000 });
+                        if (ipResponse.ok) {
+                            const ipData = await ipResponse.json();
+                            visitorIP = ipData.query;
+                        }
+                    } catch (e) {
+                        console.warn('ip-api.com failed', e);
+                    }
+                }
+
+                if (!visitorIP) {
+                    throw new Error('Could not detect IP from any service');
+                }
 
                 console.log('Visitor IP:', visitorIP);
 
@@ -402,14 +441,18 @@
                 return true;
             } catch (error) {
                 console.error('Error checking IP:', error);
+                // For debugging: Show the actual error
                 document.querySelector('.container').innerHTML = `
                     <div class="access-denied">
                         <div class="access-denied-icon">⚠️</div>
                         <h1 class="access-denied-title">Security Check Failed</h1>
                         <p class="access-denied-text">
                             Unable to verify your access permissions.<br>
-                            Please check your internet connection and try again.
+                            Error: ${error.message}
                         </p>
+                        <button class="refresh-btn" onclick="location.reload()" style="margin-top: 20px;">
+                            🔄 Try Again
+                        </button>
                     </div>
                 `;
                 return false;
