@@ -295,24 +295,84 @@
         }
 
         @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            table {
-                font-size: 12px;
-            }
-
-            th, td {
+            body {
                 padding: 10px;
             }
 
+            .container {
+                max-width: 100%;
+            }
+
             .header {
-                padding: 20px;
+                padding: 20px 15px;
             }
 
             h1 {
                 font-size: 24px;
+            }
+
+            .subtitle {
+                font-size: 12px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-value {
+                font-size: 28px;
+            }
+
+            .stat-label {
+                font-size: 11px;
+            }
+
+            .table-container {
+                padding: 15px;
+                border-radius: 15px;
+            }
+
+            h2 {
+                font-size: 18px;
+            }
+
+            .refresh-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            /* Make table scrollable horizontally on mobile */
+            .table-container > div {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            table {
+                min-width: 600px;
+                font-size: 11px;
+            }
+
+            th, td {
+                padding: 8px 6px;
+                white-space: nowrap;
+            }
+
+            .status-badge {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+
+            .ip-address {
+                font-size: 11px;
+            }
+
+            .timestamp {
+                font-size: 11px;
             }
 
             .access-denied-icon {
@@ -321,6 +381,16 @@
 
             .access-denied-title {
                 font-size: 24px;
+            }
+
+            .access-denied-text {
+                font-size: 14px;
+                padding: 0 15px;
+            }
+
+            .access-denied-ip {
+                font-size: 12px;
+                padding: 8px 15px;
             }
         }
     </style>
@@ -568,9 +638,13 @@
             }
 
             tbody.innerHTML = sessions.map(session => {
-                const isOnline = session.is_online;
                 const loginTime = new Date(session.login_time);
                 const lastActive = session.last_active ? new Date(session.last_active) : null;
+
+                // Calculate if truly online: last_active within 60 seconds (2x the update interval)
+                const now = new Date();
+                const isOnline = lastActive && (now - lastActive) < 60000; // 60 seconds threshold
+
                 const duration = lastActive ? formatDuration(loginTime, lastActive) : 'Active';
                 const isOwner = OWNER_IPS.includes(session.ip_address);
 
@@ -599,8 +673,14 @@
             const now = new Date();
             const last24h = new Date(now - 24 * 60 * 60 * 1000);
 
+            // Calculate truly online sessions (last_active within 60 seconds)
+            const onlineCount = sessions.filter(s => {
+                const lastActive = s.last_active ? new Date(s.last_active) : null;
+                return lastActive && (now - lastActive) < 60000;
+            }).length;
+
             document.getElementById('totalLogins').textContent = sessions.length;
-            document.getElementById('onlineNow').textContent = sessions.filter(s => s.is_online).length;
+            document.getElementById('onlineNow').textContent = onlineCount;
             document.getElementById('uniqueIPs').textContent = new Set(sessions.map(s => s.ip_address)).size;
             document.getElementById('last24h').textContent = sessions.filter(s => new Date(s.login_time) > last24h).length;
         }
