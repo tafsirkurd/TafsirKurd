@@ -3686,6 +3686,78 @@
         });
 
         // Secure Login Form
+        // Track admin login with IP and send Telegram notification
+        async function trackAdminLogin(email) {
+            try {
+                // Get IP address from ipify API
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipResponse.json();
+                const ipAddress = ipData.ip;
+
+                // Get location from ip-api
+                let location = 'Unknown';
+                try {
+                    const locationResponse = await fetch(`http://ip-api.com/json/${ipAddress}`);
+                    const locationData = await locationResponse.json();
+                    if (locationData.status === 'success') {
+                        location = `${locationData.city}, ${locationData.country}`;
+                    }
+                } catch (err) {
+                    console.log('Location lookup failed:', err);
+                }
+
+                // Save session to database
+                const { data: sessionData, error } = await supabase
+                    .from('admin_login_sessions')
+                    .insert([{
+                        email: email,
+                        ip_address: ipAddress,
+                        location: location,
+                        login_time: new Date().toISOString(),
+                        last_active: new Date().toISOString(),
+                        is_online: true
+                    }])
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.error('Error saving session:', error);
+                }
+
+                // Send Telegram notification
+                const message = `🔐 *Admin Panel Login Alert*\n\n` +
+                    `👤 *Email:* ${email}\n` +
+                    `🌐 *IP Address:* \`${ipAddress}\`\n` +
+                    `📍 *Location:* ${location}\n` +
+                    `⏰ *Time:* ${new Date().toLocaleString()}\n\n` +
+                    `🔗 [View Analytics](https://tafsirkurd.com/admin-analytics.html)`;
+
+                fetch('/.netlify/functions/telegram-notification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message,
+                        parse_mode: 'Markdown'
+                    })
+                }).catch(err => console.error('Failed to send Telegram notification:', err));
+
+                // Store session ID for tracking online status
+                if (sessionData) {
+                    sessionStorage.setItem('adminSessionId', sessionData.id);
+
+                    // Update online status every 30 seconds
+                    setInterval(async () => {
+                        await supabase
+                            .from('admin_login_sessions')
+                            .update({ last_active: new Date().toISOString(), is_online: true })
+                            .eq('id', sessionData.id);
+                    }, 30000);
+                }
+            } catch (error) {
+                console.error('Error tracking admin login:', error);
+            }
+        }
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -3721,6 +3793,9 @@
                     document.getElementById('loginContainer').style.display = 'none';
                     document.getElementById('adminContainer').classList.add('active');
 
+                    // Track admin login with IP address and send Telegram notification
+                    trackAdminLogin(email);
+
                     // Track admin login in Google Analytics
                     if (typeof gtag !== 'undefined') {
                         gtag('event', 'admin_login', {
@@ -3747,6 +3822,22 @@
         // Secure Logout
         async function logout() {
             const token = sessionStorage.getItem('adminToken');
+            const sessionId = sessionStorage.getItem('adminSessionId');
+
+            // Mark session as offline
+            if (sessionId) {
+                try {
+                    await supabase
+                        .from('admin_login_sessions')
+                        .update({
+                            is_online: false,
+                            last_active: new Date().toISOString()
+                        })
+                        .eq('id', sessionId);
+                } catch (error) {
+                    console.error('Error updating session:', error);
+                }
+            }
 
             try {
                 await fetch('/.netlify/functions/admin-auth', {
@@ -3759,6 +3850,7 @@
             }
 
             sessionStorage.removeItem('adminToken');
+            sessionStorage.removeItem('adminSessionId');
             location.reload();
         }
 
