@@ -26,7 +26,12 @@
       "Bash(ADMIN_SEARCH_CONSOLE_INTEGRATION.md)",
       "Bash(npm install:*)",
       "Bash(python -m json.tool:*)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(python:*)",
+      "Bash(cd:*)",
+      "Bash(for file in profile.html bookmarks.html goals.html reading-goal.html settings.html)",
+      "Bash(do tail -3 \"D:\\WEBSITE\\src$file\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []
