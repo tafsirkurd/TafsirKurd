@@ -1325,16 +1325,16 @@
                         </button>
 
                         <!-- Quick Navigation Dropdown -->
-                        <select id="pageNavigationSelector" onchange="if(this.value) { window.open(this.value, '_blank'); this.value=''; }" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%); background-size: 200% 200%; animation: gradientShift 3s ease infinite; color: white; border: 2px solid rgba(255,255,255,0.1); padding: 10px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill=\"white\" height=\"20\" viewBox=\"0 0 24 24\" width=\"20\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5z\"/></svg>'); background-repeat: no-repeat; background-position: right 8px center; background-size: 20px; padding-right: 35px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)'">
+                        <select id="pageNavigationSelector" onchange="if(this.value) { window.open(this.value, '_blank'); this.value=''; }" style="background-color: #1a1a1a; color: white; border: 2px solid rgba(255,255,255,0.1); padding: 10px 16px; padding-right: 35px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.3)'; this.style.borderColor='rgba(255,255,255,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)'; this.style.borderColor='rgba(255,255,255,0.1)'">
                             <option value="">🚀 Go to page...</option>
-                            <option value="/" style="background: #1a1a1a; color: white;">🏠 Homepage</option>
-                            <option value="/Quran.html" style="background: #1a1a1a; color: white;">📖 Quran</option>
-                            <option value="/profile.html" style="background: #1a1a1a; color: white;">👤 Profile</option>
-                            <option value="/bookmarks.html" style="background: #1a1a1a; color: white;">🔖 Bookmarks</option>
-                            <option value="/goals.html" style="background: #1a1a1a; color: white;">🎯 Goals</option>
-                            <option value="/reading-goal.html" style="background: #1a1a1a; color: white;">📊 Reading Goal</option>
-                            <option value="/settings.html" style="background: #1a1a1a; color: white;">⚙️ Settings</option>
-                            <option value="/login.html" style="background: #1a1a1a; color: white;">🔐 Login</option>
+                            <option value="/">🏠 Homepage</option>
+                            <option value="/Quran.html">📖 Quran</option>
+                            <option value="/profile.html">👤 Profile</option>
+                            <option value="/bookmarks.html">🔖 Bookmarks</option>
+                            <option value="/goals.html">🎯 Goals</option>
+                            <option value="/reading-goal.html">📊 Reading Goal</option>
+                            <option value="/settings.html">⚙️ Settings</option>
+                            <option value="/login.html">🔐 Login</option>
                         </select>
                     </div>
 
@@ -1415,6 +1415,34 @@
                     }
                 </style>
 
+                <!-- Quick Overview Section -->
+                <div style="background: #1a1a1a; padding: 40px 35px; border-radius: 25px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); position: relative; overflow: hidden; margin-bottom: 40px;">
+                    <!-- Decorative Background Elements -->
+                    <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%; filter: blur(40px);"></div>
+                    <div style="position: absolute; bottom: -80px; left: -80px; width: 250px; height: 250px; background: rgba(255,255,255,0.08); border-radius: 50%; filter: blur(60px);"></div>
+
+                    <!-- Header -->
+                    <div style="position: relative; z-index: 1; text-align: center; margin-bottom: 35px;">
+                        <div style="font-size: 48px; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">📊</div>
+                        <h2 style="margin: 0 0 8px 0; font-size: 32px; font-weight: 800; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">Quick Overview</h2>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 16px; font-weight: 300;">Real-time statistics at a glance</p>
+                    </div>
+
+                    <!-- Stats Grid with Glass Cards -->
+                    <div style="position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                        <div class="dashboard-card" data-card-id="users" draggable="false" onclick="switchSection('users')" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 25px; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="font-size: 40px; margin-bottom: 12px;">👥</div>
+                            <div style="font-size: 36px; font-weight: 800; color: white; margin-bottom: 5px; text-shadow: 0 2px 8px rgba(0,0,0,0.2);" id="totalUsers">0</div>
+                            <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 8px;">Total Users</div>
+                            <div style="font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; display: inline-block;" id="usersChange">+0 this week</div>
+                        </div>
+
+                        <div class="dashboard-card" data-card-id="messages" draggable="false" onclick="switchSection('messages')" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 25px; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="font-size: 40px; margin-bottom: 12px;">📧</div>
+                            <div style="font-size: 36px; font-weight: 800; color: white; margin-bottom: 5px; text-shadow: 0 2px 8px rgba(0,0,0,0.2);" id="totalMessages">0</div>
+                            <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 8px;">Messages</div>
+                            <div style="font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; display: inline-block;" id="messagesChange">0 unread</div>
+                        </div>
 
                         <div class="dashboard-card" data-card-id="videos" draggable="false" onclick="switchSection('videos')" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 25px; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
                             <div style="font-size: 40px; margin-bottom: 12px;">🎥</div>
