@@ -2553,10 +2553,24 @@
 
                 <!--  No Data Notice (shown if setup but no data yet) -->
                 <div id="searchConsoleNoDataNotice" style="display: none; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); padding: 30px; border-radius: 16px; margin-bottom: 30px;">
-                    <h2 style="margin: 0 0 15px 0; font-size: 28px;">⏳ Processing Data</h2>
-                    <p style="margin: 0; font-size: 16px; line-height: 1.6;">
-                        Processing data, please check again in a day or so
+                    <h2 style="margin: 0 0 15px 0; font-size: 28px;">⏳ No Search Data Yet</h2>
+                    <p style="margin: 0 0 15px 0; font-size: 16px; line-height: 1.6;" id="noDataMessage">
+                        No search data available for the last 28 days.
                     </p>
+                    <div style="background: rgba(255,255,255,0.5); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                        <strong style="display: block; margin-bottom: 8px;">Possible reasons:</strong>
+                        <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                            <li>Site was recently verified - data takes 24-48 hours to appear</li>
+                            <li>No Google search traffic in the last 28 days</li>
+                            <li>Site not indexed by Google yet</li>
+                        </ul>
+                    </div>
+                    <button onclick="loadSearchConsoleData()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                        🔄 Refresh Data
+                    </button>
+                    <button onclick="window.open('https://search.google.com/search-console?resource_id=https://tafsirkurd.com/', '_blank')" style="background: white; color: #333; border: 2px solid #ddd; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; margin-left: 10px;">
+                        📊 Open Search Console
+                    </button>
                 </div>
 
                 <!-- Summary Stats -->
