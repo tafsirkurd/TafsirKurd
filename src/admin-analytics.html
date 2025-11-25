@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Analytics - Secret</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(30px);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .table-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .refresh-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            color: #999;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-online {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+
+        .status-offline {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .ip-address {
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .timestamp {
+            color: #999;
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Admin Analytics Dashboard</h1>
+            <p class="subtitle">Secret analytics - Admin login tracking and monitoring</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalLogins">0</div>
+                <div class="stat-label">Total Admin Logins</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="onlineNow">0</div>
+                <div class="stat-label">Currently Online</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="uniqueIPs">0</div>
+                <div class="stat-label">Unique IP Addresses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="last24h">0</div>
+                <div class="stat-label">Logins (Last 24h)</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <h2>📊 Admin Login Sessions</h2>
+                <button class="refresh-btn" onclick="loadAnalytics()">🔄 Refresh</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Email</th>
+                        <th>IP Address</th>
+                        <th>Location</th>
+                        <th>Login Time</th>
+                        <th>Last Active</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody id="sessionsTable">
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #666;">
+                            Loading sessions...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <h2>🌍 IP Address Statistics</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>IP Address</th>
+                        <th>Total Logins</th>
+                        <th>Last Seen</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody id="ipStatsTable">
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 40px; color: #666;">
+                            Loading IP statistics...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://gijupzejtbpifjzwadee.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanVwemVqdGJwaWZqendkZWUiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczMDU0MDk4NCwiZXhwIjoyMDQ2MTE2OTg0fQ.FRCEfyYnuCT0N5lmH-xGYhKbLqkZZfyQjRcyBDaOk4Q';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function loadAnalytics() {
+            try {
+                // Fetch all admin login sessions
+                const { data: sessions, error } = await supabase
+                    .from('admin_login_sessions')
+                    .select('*')
+                    .order('login_time', { ascending: false });
+
+                if (error) {
+                    console.error('Error fetching sessions:', error);
+                    return;
+                }
+
+                displaySessions(sessions || []);
+                calculateStats(sessions || []);
+                displayIPStats(sessions || []);
+            } catch (err) {
+                console.error('Failed to load analytics:', err);
+            }
+        }
+
+        function displaySessions(sessions) {
+            const tbody = document.getElementById('sessionsTable');
+
+            if (sessions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: #666;">No sessions found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = sessions.map(session => {
+                const isOnline = session.is_online;
+                const loginTime = new Date(session.login_time);
+                const lastActive = session.last_active ? new Date(session.last_active) : null;
+                const duration = lastActive ? formatDuration(loginTime, lastActive) : 'Active';
+
+                return `
+                    <tr>
+                        <td>
+                            <span class="status-badge ${isOnline ? 'status-online' : 'status-offline'}">
+                                ${isOnline ? '🟢 Online' : '⚫ Offline'}
+                            </span>
+                        </td>
+                        <td>${session.email || 'N/A'}</td>
+                        <td><span class="ip-address">${session.ip_address || 'Unknown'}</span></td>
+                        <td>${session.location || 'Unknown'}</td>
+                        <td class="timestamp">${formatTimestamp(loginTime)}</td>
+                        <td class="timestamp">${lastActive ? formatTimestamp(lastActive) : 'Now'}</td>
+                        <td>${duration}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function calculateStats(sessions) {
+            const now = new Date();
+            const last24h = new Date(now - 24 * 60 * 60 * 1000);
+
+            document.getElementById('totalLogins').textContent = sessions.length;
+            document.getElementById('onlineNow').textContent = sessions.filter(s => s.is_online).length;
+            document.getElementById('uniqueIPs').textContent = new Set(sessions.map(s => s.ip_address)).size;
+            document.getElementById('last24h').textContent = sessions.filter(s => new Date(s.login_time) > last24h).length;
+        }
+
+        function displayIPStats(sessions) {
+            const tbody = document.getElementById('ipStatsTable');
+
+            // Group by IP address
+            const ipStats = {};
+            sessions.forEach(session => {
+                const ip = session.ip_address || 'Unknown';
+                if (!ipStats[ip]) {
+                    ipStats[ip] = {
+                        count: 0,
+                        lastSeen: session.login_time,
+                        location: session.location || 'Unknown'
+                    };
+                }
+                ipStats[ip].count++;
+                if (new Date(session.login_time) > new Date(ipStats[ip].lastSeen)) {
+                    ipStats[ip].lastSeen = session.login_time;
+                }
+            });
+
+            const ipArray = Object.entries(ipStats).sort((a, b) => b[1].count - a[1].count);
+
+            if (ipArray.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #666;">No IP data available</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = ipArray.map(([ip, stats]) => `
+                <tr>
+                    <td><span class="ip-address">${ip}</span></td>
+                    <td>${stats.count}</td>
+                    <td class="timestamp">${formatTimestamp(new Date(stats.lastSeen))}</td>
+                    <td>${stats.location}</td>
+                </tr>
+            `).join('');
+        }
+
+        function formatTimestamp(date) {
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+
+            return date.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatDuration(start, end) {
+            const diff = end - start;
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+
+            if (hours > 0) return `${hours}h ${minutes}m`;
+            return `${minutes}m`;
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadAnalytics, 30000);
+
+        // Load on page load
+        loadAnalytics();
+    </script>
+</body>
+</html>
