@@ -5252,10 +5252,10 @@
             const tbody = document.getElementById('visitorIPsTableBody');
 
             try {
-                // Fetch user data with location data
+                // Fetch user data with location data (select all columns to avoid column name issues)
                 const { data: users, error } = await supabase
                     .from('user_data')
-                    .select('id, user_id, full_name, userName, userEmail, email, ip_address, city, region, country, updated_at')
+                    .select('*')
                     .not('ip_address', 'is', null)
                     .order('updated_at', { ascending: false })
                     .limit(100);
