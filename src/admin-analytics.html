@@ -278,14 +278,25 @@
 
                 if (error) {
                     console.error('Error fetching sessions:', error);
+                    document.getElementById('sessionsTable').innerHTML =
+                        `<tr><td colspan="7" style="text-align: center; padding: 40px; color: #e74c3c;">
+                            ⚠️ Error: ${error.message}<br><br>
+                            <small>Make sure the table exists and RLS is disabled</small>
+                        </td></tr>`;
                     return;
                 }
 
+                console.log('✅ Loaded sessions:', sessions);
                 displaySessions(sessions || []);
                 calculateStats(sessions || []);
                 displayIPStats(sessions || []);
             } catch (err) {
                 console.error('Failed to load analytics:', err);
+                document.getElementById('sessionsTable').innerHTML =
+                    `<tr><td colspan="7" style="text-align: center; padding: 40px; color: #e74c3c;">
+                        ⚠️ Connection Error<br><br>
+                        <small>${err.message}</small>
+                    </td></tr>`;
             }
         }
 
@@ -293,7 +304,11 @@
             const tbody = document.getElementById('sessionsTable');
 
             if (sessions.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: #666;">No sessions found</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">📊</div>
+                    <div style="color: #999; font-size: 18px; margin-bottom: 10px;">No admin logins yet</div>
+                    <div style="color: #666; font-size: 14px;">Login to /admin.html to see tracking data here</div>
+                </td></tr>`;
                 return;
             }
 
@@ -354,7 +369,11 @@
             const ipArray = Object.entries(ipStats).sort((a, b) => b[1].count - a[1].count);
 
             if (ipArray.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #666;">No IP data available</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 40px;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">🌍</div>
+                    <div style="color: #999; font-size: 18px; margin-bottom: 10px;">No IP data yet</div>
+                    <div style="color: #666; font-size: 14px;">Data will appear after first admin login</div>
+                </td></tr>`;
                 return;
             }
 
