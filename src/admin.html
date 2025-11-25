@@ -3706,69 +3706,67 @@
 
                 console.log('🔍 Looking up location for IP:', ipAddress);
 
-                // Try ipapi.co first (has free tier, good accuracy)
+                // Try GeoJS first (reliable, HTTPS, no rate limits)
                 try {
-                    const locationResponse = await fetch(`https://ipapi.co/${ipAddress}/json/`, {
-                        headers: { 'Accept': 'application/json' }
-                    });
-                    console.log('📍 ipapi.co response status:', locationResponse.status);
+                    const locationResponse = await fetch(`https://get.geojs.io/v1/ip/geo/${ipAddress}.json`);
+                    console.log('📍 GeoJS response status:', locationResponse.status);
 
                     if (locationResponse.ok) {
                         const locationData = await locationResponse.json();
-                        console.log('📍 ipapi.co data:', locationData);
+                        console.log('📍 GeoJS data:', locationData);
 
-                        if (locationData.city && locationData.country_name) {
-                            location = `${locationData.city}, ${locationData.country_name}`;
-                            console.log('✅ Location found:', location);
-                        } else if (locationData.error) {
-                            console.warn('⚠️ ipapi.co error:', locationData.reason || locationData.error);
+                        if (locationData.city && locationData.country) {
+                            location = `${locationData.city}, ${locationData.country}`;
+                            console.log('✅ Location found from GeoJS:', location);
                         }
                     }
                 } catch (err) {
-                    console.error('❌ ipapi.co lookup failed:', err);
+                    console.error('❌ GeoJS lookup failed:', err);
                 }
 
-                // Fallback: Try ip-api.com with HTTPS
+                // Fallback: Try ipapi.co
                 if (location === 'Unknown') {
-                    console.log('🔄 Trying fallback: ip-api.com');
+                    console.log('🔄 Trying fallback: ipapi.co');
                     try {
-                        const locationResponse = await fetch(`http://ip-api.com/json/${ipAddress}?fields=status,message,country,city`);
-                        console.log('📍 ip-api.com response status:', locationResponse.status);
+                        const locationResponse = await fetch(`https://ipapi.co/${ipAddress}/json/`, {
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        console.log('📍 ipapi.co response status:', locationResponse.status);
 
                         if (locationResponse.ok) {
                             const locationData = await locationResponse.json();
-                            console.log('📍 ip-api.com data:', locationData);
+                            console.log('📍 ipapi.co data:', locationData);
 
-                            if (locationData.status === 'success' && locationData.city && locationData.country) {
-                                location = `${locationData.city}, ${locationData.country}`;
-                                console.log('✅ Location found from fallback:', location);
-                            } else if (locationData.message) {
-                                console.warn('⚠️ ip-api.com error:', locationData.message);
+                            if (locationData.city && locationData.country_name) {
+                                location = `${locationData.city}, ${locationData.country_name}`;
+                                console.log('✅ Location found from ipapi.co:', location);
+                            } else if (locationData.error) {
+                                console.warn('⚠️ ipapi.co error:', locationData.reason || locationData.error);
                             }
                         }
                     } catch (err) {
-                        console.error('❌ ip-api.com lookup failed:', err);
+                        console.error('❌ ipapi.co lookup failed:', err);
                     }
                 }
 
-                // Last fallback: Try GeoJS
+                // Last fallback: Try freegeoip.app
                 if (location === 'Unknown') {
-                    console.log('🔄 Trying last fallback: GeoJS');
+                    console.log('🔄 Trying last fallback: freegeoip.app');
                     try {
-                        const locationResponse = await fetch(`https://get.geojs.io/v1/ip/geo/${ipAddress}.json`);
-                        console.log('📍 GeoJS response status:', locationResponse.status);
+                        const locationResponse = await fetch(`https://freegeoip.app/json/${ipAddress}`);
+                        console.log('📍 freegeoip.app response status:', locationResponse.status);
 
                         if (locationResponse.ok) {
                             const locationData = await locationResponse.json();
-                            console.log('📍 GeoJS data:', locationData);
+                            console.log('📍 freegeoip.app data:', locationData);
 
-                            if (locationData.city && locationData.country) {
-                                location = `${locationData.city}, ${locationData.country}`;
-                                console.log('✅ Location found from GeoJS:', location);
+                            if (locationData.city && locationData.country_name) {
+                                location = `${locationData.city}, ${locationData.country_name}`;
+                                console.log('✅ Location found from freegeoip.app:', location);
                             }
                         }
                     } catch (err) {
-                        console.error('❌ GeoJS lookup failed:', err);
+                        console.error('❌ freegeoip.app lookup failed:', err);
                     }
                 }
 
