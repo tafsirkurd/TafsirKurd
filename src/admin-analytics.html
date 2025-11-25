@@ -61,9 +61,48 @@
             transition: background var(--transition), color var(--transition);
         }
 
+        /* Hide content until security check passes */
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .container.authorized {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Loading screen during security check */
+        .security-check-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            text-align: center;
+        }
+
+        .security-check-loading .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .security-check-loading .loading-text {
+            font-size: 16px;
+            color: var(--text-muted);
         }
 
         .header {
@@ -287,7 +326,14 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Security check loading screen -->
+    <div id="securityCheckLoading" class="security-check-loading">
+        <div class="spinner"></div>
+        <div class="loading-text">🔒 Verifying access permissions...</div>
+    </div>
+
+    <!-- Main content (hidden until authorized) -->
+    <div class="container" id="mainContainer">
         <div class="header">
             <h1>🔐 Admin Analytics Dashboard</h1>
             <p class="subtitle">Secret analytics - Admin login tracking and monitoring</p>
@@ -373,6 +419,9 @@
 
         // Check IP access before loading anything
         async function checkAccess() {
+            const loadingScreen = document.getElementById('securityCheckLoading');
+            const mainContainer = document.getElementById('mainContainer');
+
             try {
                 // Use Netlify function to get client IP (most reliable)
                 const ipResponse = await fetch('/.netlify/functions/get-client-ip');
@@ -392,8 +441,11 @@
 
                 // Check if IP is authorized
                 if (!OWNER_IPS.includes(visitorIP)) {
+                    // Hide loading screen
+                    loadingScreen.style.display = 'none';
+
                     // Unauthorized access - show access denied page
-                    document.querySelector('.container').innerHTML = `
+                    mainContainer.innerHTML = `
                         <div class="access-denied">
                             <div class="access-denied-icon">🔒</div>
                             <h1 class="access-denied-title">Access Denied</h1>
@@ -404,15 +456,26 @@
                             <div class="access-denied-ip">Your IP: ${visitorIP}</div>
                         </div>
                     `;
+                    mainContainer.style.opacity = '1';
+                    mainContainer.style.visibility = 'visible';
                     return false;
                 }
 
                 console.log('✅ Access granted - Owner IP detected');
+
+                // Hide loading screen, show authorized content
+                loadingScreen.style.display = 'none';
+                mainContainer.classList.add('authorized');
+
                 return true;
             } catch (error) {
                 console.error('Error checking IP:', error);
+
+                // Hide loading screen
+                loadingScreen.style.display = 'none';
+
                 // For debugging: Show the actual error
-                document.querySelector('.container').innerHTML = `
+                mainContainer.innerHTML = `
                     <div class="access-denied">
                         <div class="access-denied-icon">⚠️</div>
                         <h1 class="access-denied-title">Security Check Failed</h1>
@@ -425,6 +488,8 @@
                         </button>
                     </div>
                 `;
+                mainContainer.style.opacity = '1';
+                mainContainer.style.visibility = 'visible';
                 return false;
             }
         }
