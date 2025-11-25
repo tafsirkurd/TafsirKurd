@@ -307,8 +307,16 @@
             flex-shrink: 0;
         }
 
+        [data-theme="dark"] .toggle-switch {
+            background: #4a4a4a;
+        }
+
         .toggle-switch.active {
             background: var(--primary);
+        }
+
+        [data-theme="dark"] .toggle-switch.active {
+            background: #ffffff;
         }
 
         .toggle-switch::after {
@@ -321,6 +329,15 @@
             top: 2px;
             right: 2px;
             transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        [data-theme="dark"] .toggle-switch::after {
+            background: #ffffff;
+        }
+
+        [data-theme="dark"] .toggle-switch.active::after {
+            background: #000000;
         }
 
         .toggle-switch.active::after {
@@ -514,31 +531,33 @@
             }
 
             .preference-item {
-                padding: 8px 10px;
-                margin-bottom: 6px;
+                padding: 12px 14px;
+                margin-bottom: 8px;
+                border-radius: 12px;
+                min-height: 50px;
             }
 
             .preference-label {
-                font-size: 0.8rem;
-                gap: 6px;
+                font-size: 0.85rem;
+                gap: 8px;
             }
 
             .preference-icon {
-                font-size: 0.9rem;
+                font-size: 1rem;
             }
 
             .toggle-switch {
-                width: 40px;
-                height: 22px;
+                width: 48px;
+                height: 26px;
             }
 
             .toggle-switch::after {
-                width: 18px;
-                height: 18px;
+                width: 22px;
+                height: 22px;
             }
 
             .toggle-switch.active::after {
-                right: 20px;
+                right: 24px;
             }
 
             .continue-btn {
@@ -770,7 +789,10 @@
                         }).catch(err => console.error('Failed to send Telegram notification:', err));
                     }
 
-                    showNotification('Email reminders enabled! You\'ll receive daily Quran reminders in your inbox 📧🌙');
+                    // Translation key: notification_email_enabled
+                    // Kurdish: بیرانینێن ئیمێلی هاتنە چالاک کرن! تو دێ ڕۆژانە بیرانینێن قورئانێ د ئیمێلا خۆ دا وەرگری 📧🌙
+                    // English: Email reminders enabled! You'll receive daily Quran reminders in your inbox 📧🌙
+                    showNotification('بیرانینێن ئیمێلی هاتنە چالاک کرن! تو دێ ڕۆژانە بیرانینێن قورئانێ د ئیمێلا خۆ دا وەرگری 📧🌙');
                 } else {
                     // Disable notifications
                     window.notificationScheduler.saveSettings({ enabled: false });
@@ -798,7 +820,10 @@
                         }).catch(err => console.error('Failed to save notification settings:', err));
                     }
 
-                    showNotification('Email reminders disabled');
+                    // Translation key: notification_email_disabled
+                    // Kurdish: بیرانینێن ئیمێلی هاتنە گرتن
+                    // English: Email reminders disabled
+                    showNotification('بیرانینێن ئیمێلی هاتنە گرتن');
                 }
             }
 
