@@ -6,32 +6,13 @@
 (function() {
     'use strict';
 
-    // Only show for authenticated admin users
-    // You can customize this logic based on your auth system
-    function isAdmin() {
-        // Check if user has admin access (customize this based on your auth)
-        const userData = localStorage.getItem('user_data');
-        if (!userData) return false;
-
-        try {
-            const user = JSON.parse(userData);
-            // Add your admin check logic here
-            // For now, we'll show it to all logged-in users
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
     // Don't show on admin page itself
     if (window.location.pathname.includes('admin.html')) {
         return;
     }
 
-    // Only show if user is admin
-    if (!isAdmin()) {
-        return;
-    }
+    // Show to everyone - admin page has its own authentication
+    // If you want to restrict visibility, modify this section
 
     // Create the floating button
     const adminButton = document.createElement('div');
