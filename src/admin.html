@@ -3689,21 +3689,47 @@
         // Track admin login with IP and send Telegram notification
         async function trackAdminLogin(email) {
             try {
-                // Get IP address from ipify API
-                const ipResponse = await fetch('https://api.ipify.org?format=json');
-                const ipData = await ipResponse.json();
-                const ipAddress = ipData.ip;
-
-                // Get location from ip-api
-                let location = 'Unknown';
+                // Get IP address from our Netlify function (most reliable)
+                let ipAddress = 'Unknown';
                 try {
-                    const locationResponse = await fetch(`http://ip-api.com/json/${ipAddress}`);
-                    const locationData = await locationResponse.json();
-                    if (locationData.status === 'success') {
-                        location = `${locationData.city}, ${locationData.country}`;
+                    const ipResponse = await fetch('/.netlify/functions/get-client-ip');
+                    if (ipResponse.ok) {
+                        const ipData = await ipResponse.json();
+                        ipAddress = ipData.ip;
                     }
                 } catch (err) {
-                    console.log('Location lookup failed:', err);
+                    console.error('Failed to get IP from Netlify function:', err);
+                }
+
+                // Get location - try multiple services
+                let location = 'Unknown';
+
+                // Try ipapi.co first (has free tier, good accuracy)
+                try {
+                    const locationResponse = await fetch(`https://ipapi.co/${ipAddress}/json/`);
+                    if (locationResponse.ok) {
+                        const locationData = await locationResponse.json();
+                        if (locationData.city && locationData.country_name) {
+                            location = `${locationData.city}, ${locationData.country_name}`;
+                        }
+                    }
+                } catch (err) {
+                    console.log('ipapi.co lookup failed, trying fallback...', err);
+                }
+
+                // Fallback: Try ip-api.com with HTTPS
+                if (location === 'Unknown') {
+                    try {
+                        const locationResponse = await fetch(`https://get.geojs.io/v1/ip/geo/${ipAddress}.json`);
+                        if (locationResponse.ok) {
+                            const locationData = await locationResponse.json();
+                            if (locationData.city && locationData.country) {
+                                location = `${locationData.city}, ${locationData.country}`;
+                            }
+                        }
+                    } catch (err) {
+                        console.log('GeoJS lookup failed:', err);
+                    }
                 }
 
                 // Save session to database
