@@ -1316,27 +1316,18 @@
                         <div style="color: #666; font-size: 12px;">Administrator</div>
                     </div>
 
-                    <!-- Navigation Buttons -->
-                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                        <!-- Dashboard Button -->
-                        <button onclick="switchSection('dashboard')" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%); background-size: 200% 200%; animation: gradientShift 3s ease infinite; color: white; border: 2px solid rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.3s; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)'">
-                            <span style="font-size: 18px;">🏠</span>
-                            <span>Dashboard</span>
-                        </button>
-
-                        <!-- Quick Navigation Dropdown -->
-                        <select id="pageNavigationSelector" onchange="if(this.value) { window.open(this.value, '_blank'); this.value=''; }" style="background-color: #1a1a1a; color: white; border: 2px solid rgba(255,255,255,0.1); padding: 10px 16px; padding-right: 35px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.3)'; this.style.borderColor='rgba(255,255,255,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)'; this.style.borderColor='rgba(255,255,255,0.1)'">
-                            <option value="">🚀 Go to page...</option>
-                            <option value="/">🏠 Homepage</option>
-                            <option value="/Quran.html">📖 Quran</option>
-                            <option value="/profile.html">👤 Profile</option>
-                            <option value="/bookmarks.html">🔖 Bookmarks</option>
-                            <option value="/goals.html">🎯 Goals</option>
-                            <option value="/reading-goal.html">📊 Reading Goal</option>
-                            <option value="/settings.html">⚙️ Settings</option>
-                            <option value="/login.html">🔐 Login</option>
-                        </select>
-                    </div>
+                    <!-- Quick Navigation Dropdown -->
+                    <select id="pageNavigationSelector" onchange="if(this.value) { window.open(this.value, '_blank'); this.value=''; }" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%); background-size: 200% 200%; animation: gradientShift 3s ease infinite; color: white; border: 2px solid rgba(255,255,255,0.1); padding: 12px 20px; padding-right: 40px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); min-width: 180px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.3)'; this.style.borderColor='rgba(255,255,255,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)'; this.style.borderColor='rgba(255,255,255,0.1)'">
+                        <option value="">🚀 Go to page...</option>
+                        <option value="/">🏠 Homepage</option>
+                        <option value="/Quran.html">📖 Quran</option>
+                        <option value="/profile.html">👤 Profile</option>
+                        <option value="/bookmarks.html">🔖 Bookmarks</option>
+                        <option value="/goals.html">🎯 Goals</option>
+                        <option value="/reading-goal.html">📊 Reading Goal</option>
+                        <option value="/settings.html">⚙️ Settings</option>
+                        <option value="/login.html">🔐 Login</option>
+                    </select>
 
                     <!-- Logout Button -->
                     <button class="btn-logout" onclick="logout()" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%); background-size: 200% 200%; animation: gradientShift 3s ease infinite; color: white; border: none; padding: 10px 24px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); display: flex; align-items: center; gap: 8px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)'">
