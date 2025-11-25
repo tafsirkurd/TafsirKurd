@@ -3,12 +3,24 @@
 
 exports.handler = async (event, context) => {
     try {
-        // Netlify automatically provides the client IP in headers
-        const clientIP = event.headers['x-nf-client-connection-ip'] ||
-                        event.headers['x-forwarded-for'] ||
-                        event.headers['client-ip'] ||
-                        context.clientContext?.identity?.claims?.sub ||
-                        'Unknown';
+        // Priority order for getting real client IP (especially behind Cloudflare)
+        let clientIP =
+            event.headers['cf-connecting-ip'] ||           // Cloudflare real IP (highest priority)
+            event.headers['x-real-ip'] ||                  // Real IP header
+            event.headers['x-nf-client-connection-ip'] ||  // Netlify client IP
+            event.headers['x-forwarded-for']?.split(',')[0]?.trim() || // First IP in forwarded chain
+            event.headers['client-ip'] ||
+            'Unknown';
+
+        // Debug: log all headers to help troubleshoot
+        console.log('Headers:', {
+            'cf-connecting-ip': event.headers['cf-connecting-ip'],
+            'x-real-ip': event.headers['x-real-ip'],
+            'x-nf-client-connection-ip': event.headers['x-nf-client-connection-ip'],
+            'x-forwarded-for': event.headers['x-forwarded-for'],
+            'client-ip': event.headers['client-ip']
+        });
+        console.log('Detected IP:', clientIP);
 
         return {
             statusCode: 200,
