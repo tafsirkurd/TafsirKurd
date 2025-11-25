@@ -1,8 +1,7 @@
--- Drop table if exists (clean start)
-DROP TABLE IF EXISTS admin_login_sessions CASCADE;
-
 -- Create admin_login_sessions table for tracking admin panel logins
-CREATE TABLE admin_login_sessions (
+-- Run this in the Supabase SQL Editor
+
+CREATE TABLE IF NOT EXISTS public.admin_login_sessions (
     id BIGSERIAL PRIMARY KEY,
     email TEXT NOT NULL,
     ip_address TEXT,
@@ -13,7 +12,10 @@ CREATE TABLE admin_login_sessions (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Disable RLS to avoid policy errors
+ALTER TABLE public.admin_login_sessions DISABLE ROW LEVEL SECURITY;
+
 -- Create indexes for faster lookups
-CREATE INDEX idx_admin_sessions_email ON admin_login_sessions(email);
-CREATE INDEX idx_admin_sessions_login_time ON admin_login_sessions(login_time DESC);
-CREATE INDEX idx_admin_sessions_is_online ON admin_login_sessions(is_online);
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_email ON public.admin_login_sessions(email);
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_login_time ON public.admin_login_sessions(login_time DESC);
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_is_online ON public.admin_login_sessions(is_online);
