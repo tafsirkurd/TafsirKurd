@@ -266,8 +266,8 @@
         // Supabase client (initialized securely)
         let supabase;
 
-        // Owner IP address
-        const OWNER_IP = '185.136.148.162';
+        // Owner IP addresses
+        const OWNER_IPS = ['185.136.148.162', '185.84.71.147'];
 
         // Initialize Supabase with secure config
         async function initSupabase() {
@@ -343,7 +343,7 @@
                 const loginTime = new Date(session.login_time);
                 const lastActive = session.last_active ? new Date(session.last_active) : null;
                 const duration = lastActive ? formatDuration(loginTime, lastActive) : 'Active';
-                const isOwner = session.ip_address === OWNER_IP;
+                const isOwner = OWNER_IPS.includes(session.ip_address);
 
                 return `
                     <tr style="${isOwner ? 'background: rgba(102, 126, 234, 0.05);' : ''}">
@@ -408,7 +408,7 @@
             }
 
             tbody.innerHTML = ipArray.map(([ip, stats]) => {
-                const isOwner = ip === OWNER_IP;
+                const isOwner = OWNER_IPS.includes(ip);
                 return `
                 <tr style="${isOwner ? 'background: rgba(102, 126, 234, 0.05);' : ''}">
                     <td>
