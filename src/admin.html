@@ -2053,6 +2053,13 @@
                         <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.6;">View user reading statistics and goals</p>
                     </div>
 
+                    <!-- Background Images Card -->
+                    <div class="dashboard-card" data-card-id="backgrounds" draggable="false" onclick="switchSection('backgrounds')" style="background: linear-gradient(135deg, #8EC5FC 0%, #E0C3FC 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(142, 197, 252, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(142, 197, 252, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(142, 197, 252, 0.3)'">
+                        <div style="font-size: 56px; margin-bottom: 15px;">🖼️</div>
+                        <h3 style="margin: 0 0 10px 0; color: white; font-size: 24px; font-weight: 700;">Background Images</h3>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">Manage homepage & Quran page backgrounds</p>
+                    </div>
+
                     <!-- Bot Protection Card -->
                     <div class="dashboard-card" data-card-id="bots" draggable="false" onclick="switchSection('bots')" style="background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(224, 195, 252, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(224, 195, 252, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(224, 195, 252, 0.3)'">
                         <div style="font-size: 56px; margin-bottom: 15px;">🤖</div>
@@ -3508,6 +3515,64 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Background Images Section -->
+            <section id="backgroundsSection" class="section">
+                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <div>
+                            <h2 style="margin: 0 0 10px 0; font-size: 28px; color: #333;">🖼️ Background Images</h2>
+                            <p style="margin: 0; color: #666;">Manage background images for Homepage (8 images) and Quran page</p>
+                        </div>
+                        <button onclick="showAddBackgroundModal()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px 28px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                            ➕ Add Image
+                        </button>
+                    </div>
+
+                    <!-- Page Tabs -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 25px;">
+                        <button id="indexBgTab" onclick="switchBackgroundTab('index')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600;">
+                            🏠 Homepage (8 images)
+                        </button>
+                        <button id="quranBgTab" onclick="switchBackgroundTab('quran')" style="background: #e0e0e0; color: #666; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600;">
+                            📖 Quran Page
+                        </button>
+                    </div>
+
+                    <!-- Images Grid -->
+                    <div id="backgroundImagesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                        <!-- Images will be loaded here -->
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Add Background Image Modal -->
+    <div id="addBackgroundModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h3 class="modal-header">Add Background Image</h3>
+            <div style="margin: 20px 0;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Page</label>
+                <select id="newBgPage" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px;">
+                    <option value="index">Homepage</option>
+                    <option value="quran">Quran Page</option>
+                </select>
+            </div>
+            <div style="margin: 20px 0;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Image URL</label>
+                <input type="text" id="newBgImageUrl" placeholder="https://example.com/image.jpg" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px;">
+                <p style="margin: 8px 0 0 0; color: #666; font-size: 14px;">Or upload from your phone/computer:</p>
+                <input type="file" id="newBgImageFile" accept="image/*" style="margin-top: 10px; padding: 10px; width: 100%; border: 2px dashed #e0e0e0; border-radius: 8px;">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 25px;">
+                <button onclick="saveNewBackground()" style="flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px;">
+                    Save
+                </button>
+                <button onclick="closeAddBackgroundModal()" style="flex: 1; background: #f0f0f0; color: #666; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px;">
+                    Cancel
+                </button>
+            </div>
         </div>
     </div>
 
