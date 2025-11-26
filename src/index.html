@@ -2913,10 +2913,6 @@ window.addEventListener('error', function(e) {
 </div>
 
 <script>
-// Global Supabase client
-let supabase = null;
-window.supabase = null; // Make it accessible to external scripts
-
 // Background images - will be loaded from database only
 let backgroundImages = [];
 
@@ -2927,13 +2923,13 @@ async function loadBackgroundImagesFromDB() {
     try {
         console.log('🔍 [BG] Starting to load background images...');
 
-        if (!supabase) {
+        if (!window.supabase) {
             console.error('❌ [BG] Supabase client is not initialized!');
             return;
         }
 
         console.log('✅ [BG] Supabase client OK, querying database...');
-        const { data, error } = await supabase
+        const { data, error } = await window.supabase
             .from('background_images')
             .select('image_url')
             .eq('page_name', 'index')
