@@ -2860,6 +2860,7 @@ window.addEventListener('error', function(e) {
 <script>
 // Global Supabase client
 let supabase = null;
+window.supabase = null; // Make it accessible to external scripts
 
 const backgroundImages = [
     'https://images.unsplash.com/photo-1649297711811-5cfa2774cbc7?q=80&w=1073&auto=format&fit=crop',
@@ -3279,6 +3280,7 @@ async function loadWebsiteContent() {
         // Load videos from Supabase database
         if (!supabase) {
             supabase = await initSupabase();
+            window.supabase = supabase; // Make it accessible globally
             if (!supabase) {
                 loadFallbackContent();
                 return;
