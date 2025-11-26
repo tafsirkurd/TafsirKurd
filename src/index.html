@@ -2913,8 +2913,11 @@ window.addEventListener('error', function(e) {
 </div>
 
 <script>
-// Background images - will be loaded from database only
-let backgroundImages = [];
+// Background images - will be loaded from database
+// Placeholder image shows immediately while database loads
+let backgroundImages = [
+    'https://images.unsplash.com/photo-1649297711811-5cfa2774cbc7?q=80&w=1073&auto=format&fit=crop'
+];
 
 let currentBgIndex = 0;
 
@@ -2944,10 +2947,15 @@ async function loadBackgroundImagesFromDB() {
         console.log('📊 [BG] Query result:', { count: data?.length || 0, data });
 
         if (data && data.length > 0) {
+            // Replace placeholder with database images
             backgroundImages = data.map(img => img.image_url);
             console.log('✅ [BG] Loaded', backgroundImages.length, 'background images from database:', backgroundImages);
+
+            // Restart rotation with new images
+            currentBgIndex = 0;
+            setInitialBackground();
         } else {
-            console.warn('⚠️ [BG] No background images found in database');
+            console.warn('⚠️ [BG] No background images found in database, using placeholder');
         }
     } catch (error) {
         console.error('❌ [BG] Error loading background images:', error);
@@ -3558,6 +3566,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     initPreloader();
     initTabs();
 
+    // Show placeholder background immediately (no delay!)
+    setInitialBackground();
+    startBackgroundRotation();
+
     const yearElement = document.getElementById('year');
     if (yearElement) {
         yearElement.textContent = window.KurdishNumbers.toKurdish(new Date().getFullYear());
@@ -3566,12 +3578,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         await loadWebsiteContent();
 
-        // Load background images from database after Supabase is ready
+        // Load background images from database (will auto-update when ready)
         await loadBackgroundImagesFromDB();
-
-        // Set initial background and start rotation AFTER images are loaded
-        setInitialBackground();
-        startBackgroundRotation();
 
     } catch (error) {
         loadFallbackContent();
