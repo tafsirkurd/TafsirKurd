@@ -4,13 +4,6 @@
 (async function initLocationTracking() {
     console.log('🌍 Location Tracker: Script loaded');
 
-    // Check if Supabase is available
-    if (typeof supabase === 'undefined') {
-        console.warn('⚠️ Location Tracker: Supabase not loaded, retrying in 1 second...');
-        setTimeout(initLocationTracking, 1000);
-        return;
-    }
-
     // Prevent running multiple times
     if (window.locationTrackingStarted) {
         console.log('📍 Location Tracker: Already running');
@@ -18,11 +11,33 @@
     }
     window.locationTrackingStarted = true;
 
+    // Wait for Supabase to be available (check both window.supabase and global supabase)
+    let retries = 0;
+    const maxRetries = 10;
+
+    while (retries < maxRetries) {
+        if (typeof window.supabase !== 'undefined' || typeof supabase !== 'undefined') {
+            console.log('✅ Location Tracker: Supabase found');
+            break;
+        }
+        console.warn(`⚠️ Location Tracker: Waiting for Supabase... (${retries + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        retries++;
+    }
+
+    if (retries >= maxRetries) {
+        console.error('❌ Location Tracker: Supabase not available after 10 seconds');
+        return;
+    }
+
+    // Use whichever supabase client is available
+    const supabaseClient = window.supabase || supabase;
+
     try {
         console.log('📍 Location Tracker: Checking authentication...');
 
         // Get current user
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
         if (userError) {
             console.error('❌ Location Tracker: Auth error:', userError);
@@ -62,7 +77,7 @@
         console.log('💾 Location Tracker: Saving to database...');
 
         // Update user_data table with location information
-        const { data: updateData, error: updateError } = await supabase
+        const { data: updateData, error: updateError } = await supabaseClient
             .from('user_data')
             .upsert({
                 user_id: user.id,
