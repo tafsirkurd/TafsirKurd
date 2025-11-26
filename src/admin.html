@@ -3337,9 +3337,6 @@
                             <button onclick="testEmail()" style="background: rgba(255,255,255,0.2); color: white; padding: 14px 24px; border: 2px solid white; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s;">
                                 🧪 Test (Send to yourself)
                             </button>
-                            <button onclick="debugBrevoTest()" style="background: rgba(255,165,0,0.3); color: white; padding: 14px 24px; border: 2px solid orange; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s;">
-                                🔧 Debug Brevo
-                            </button>
                         </div>
 
                         <div id="emailSendingProgress" style="display: none; margin-top: 20px; text-align: center;">
@@ -3911,12 +3908,17 @@
                     sessionStorage.setItem('adminSessionId', sessionData.id);
 
                     // Update online status every 30 seconds
-                    setInterval(async () => {
+                    const onlineStatusInterval = setInterval(async () => {
                         await supabase
                             .from('admin_login_sessions')
                             .update({ last_active: new Date().toISOString(), is_online: true })
                             .eq('id', sessionData.id);
                     }, 30000);
+
+                    // Cleanup interval on page unload to prevent memory leak
+                    window.addEventListener('beforeunload', () => {
+                        if (onlineStatusInterval) clearInterval(onlineStatusInterval);
+                    });
                 }
             } catch (error) {
                 console.error('Error tracking admin login:', error);
