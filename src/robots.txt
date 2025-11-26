@@ -1,66 +1,11 @@
-# robots.txt for Tafsir Kurd - tafsirkurd.com
-# Kurdish Quran Tafsir Platform
+# robots.txt for TafsirKurd.com
+# Allow all search engines to crawl the entire site
 
-# Allow all search engines to crawl
 User-agent: *
-Allow: /
-
-# Important pages to crawl
-Allow: /quran
-Allow: /index.html
-Allow: /Quran.html
-Allow: /profile.html
-Allow: /bookmarks.html
-Allow: /goals.html
-Allow: /reading-goal.html
-Allow: /settings.html
-
-# Allow assets for better SEO
-Allow: /assets/
-Allow: /styles/
-Allow: /*.css
-Allow: /*.js
-
-# Disallow admin and sensitive areas
-Disallow: /admin.html
-Disallow: /admin
-Disallow: /.netlify/
-Disallow: /netlify/
-Disallow: /database/
-
-# Disallow utility scripts (not needed for search)
-Disallow: /utils/
-Disallow: /scripts/
-
-# Disallow login/signup pages (no need to index)
-Disallow: /login.html
-Disallow: /complete-signup.html
-Disallow: /onboarding.html
-
-# Allow popular search engines
-User-agent: Googlebot
-Allow: /
-
-User-agent: Googlebot-Image
-Allow: /assets/images/
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Slurp
-Allow: /
-
-User-agent: DuckDuckBot
-Allow: /
-
-User-agent: Baiduspider
-Allow: /
-
-User-agent: YandexBot
 Allow: /
 
 # Sitemap location
 Sitemap: https://tafsirkurd.com/sitemap.xml
 
-# Crawl delay for polite crawling
+# Crawl-delay (optional - helps prevent server overload)
 Crawl-delay: 1
