@@ -3380,16 +3380,15 @@ const fallbackContent = {
 async function loadWebsiteContent() {
     try {
         // Load videos from Supabase database
-        if (!supabase) {
-            supabase = await initSupabase();
-            window.supabase = supabase; // Make it accessible globally
-            if (!supabase) {
+        if (!window.supabase) {
+            window.supabase = await initSupabase();
+            if (!window.supabase) {
                 loadFallbackContent();
                 return;
             }
         }
 
-        const { data: videosData, error: videosError } = await supabase
+        const { data: videosData, error: videosError } = await window.supabase
             .from('featured_videos')
             .select('*')
             .order('position', { ascending: true });
@@ -3482,12 +3481,12 @@ function setupContactForm() {
             const message = formData.get('message');
 
             // Check if Supabase is available
-            if (!supabase) {
+            if (!window.supabase) {
                 throw new Error('Database connection not available');
             }
 
             // Save to Supabase
-            const { error } = await supabase
+            const { error } = await window.supabase
                 .from('contact_messages')
                 .insert([{
                     name: name,
@@ -3590,7 +3589,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupNavScrollEffect();
     setupContactForm();
 
-    if (supabase) {
+    if (window.supabase) {
         setInterval(loadWebsiteContent, 300000);
         // Load dynamic content from database
         loadSocialStats();
@@ -3617,9 +3616,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Load Features from Database
 async function loadFeatures() {
     try {
-        if (!supabase) return;
+        if (!window.supabase) return;
 
-        const { data, error } = await supabase
+        const { data, error } = await window.supabase
             .from('features')
             .select('*')
             .eq('is_active', true)
@@ -3649,9 +3648,9 @@ async function loadFeatures() {
 // Load Schedule from Database
 async function loadScheduleItems() {
     try {
-        if (!supabase) return;
+        if (!window.supabase) return;
 
-        const { data, error } = await supabase
+        const { data, error } = await window.supabase
             .from('schedule')
             .select('*')
             .eq('is_active', true)
@@ -3683,9 +3682,9 @@ async function loadScheduleItems() {
 // Load Social Media Stats from Database
 async function loadSocialStats() {
     try {
-        if (!supabase) return;
+        if (!window.supabase) return;
 
-        const { data, error } = await supabase
+        const { data, error } = await window.supabase
             .from('social_stats')
             .select('*')
             .order('display_order', { ascending: true });
