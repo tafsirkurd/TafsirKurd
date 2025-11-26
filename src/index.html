@@ -2924,14 +2924,10 @@ let currentBgIndex = 0;
 // Load background images from database
 async function loadBackgroundImagesFromDB() {
     try {
-        console.log('🔍 [BG] Starting to load background images...');
-
         if (!window.supabase) {
-            console.error('❌ [BG] Supabase client is not initialized!');
             return;
         }
 
-        console.log('✅ [BG] Supabase client OK, querying database...');
         const { data, error } = await window.supabase
             .from('background_images')
             .select('image_url')
@@ -2939,29 +2935,10 @@ async function loadBackgroundImagesFromDB() {
             .eq('is_active', true)
             .order('image_order', { ascending: true });
 
-        if (error) {
-            console.error('❌ [BG] Database query error:', error);
-            throw error;
-        }
-
-        console.log('📊 [BG] Query result:', { count: data?.length || 0, data });
+        if (error) throw error;
 
         if (data && data.length > 0) {
-            // Replace placeholder with database images (NO FLASH - keep current image)
-            const dbImages = data.map(img => img.image_url);
-
-            // Only update if different from placeholder (prevents flash)
-            if (dbImages[0] !== backgroundImages[0]) {
-                backgroundImages = dbImages;
-                console.log('✅ [BG] Loaded', backgroundImages.length, 'background images from database:', backgroundImages);
-                // Don't restart - let rotation naturally move to next image
-            } else {
-                // Same first image, just update the array for rotation
-                backgroundImages = dbImages;
-                console.log('✅ [BG] Updated rotation with', backgroundImages.length, 'images (no flash)');
-            }
-        } else {
-            console.warn('⚠️ [BG] No background images found in database, using placeholder');
+            backgroundImages = data.map(img => img.image_url);
         }
     } catch (error) {
         console.error('❌ [BG] Error loading background images:', error);
@@ -2969,20 +2946,10 @@ async function loadBackgroundImagesFromDB() {
 }
 
 function startBackgroundRotation() {
-    console.log('🔄 [BG] Starting background rotation with', backgroundImages.length, 'images');
     const headerBg = document.getElementById('headerBg');
-    if (!headerBg) {
-        console.error('❌ [BG] Header background element not found');
+    if (!headerBg || !backgroundImages || backgroundImages.length === 0) {
         return;
     }
-
-    // Don't start rotation if no images
-    if (!backgroundImages || backgroundImages.length === 0) {
-        console.warn('⚠️ [BG] No background images available for rotation');
-        return;
-    }
-
-    console.log('✅ [BG] Background rotation started successfully');
 
     // Create two layers for crossfade
     let layer1 = document.getElementById('headerBgLayer');
@@ -2993,7 +2960,7 @@ function startBackgroundRotation() {
 
     let useLayer1 = true;
 
-    setInterval(() => {
+    const rotationInterval = setInterval(() => {
         if (backgroundImages.length === 0) return;
         currentBgIndex = (currentBgIndex + 1) % backgroundImages.length;
 
@@ -3009,10 +2976,14 @@ function startBackgroundRotation() {
 
         useLayer1 = !useLayer1;
     }, 8000);
+
+    // Cleanup on page unload to prevent memory leak
+    window.addEventListener('beforeunload', () => {
+        if (rotationInterval) clearInterval(rotationInterval);
+    });
 }
 
 function setInitialBackground() {
-    console.log('🎨 [BG] Setting initial background, images available:', backgroundImages.length);
     const headerLayer = document.getElementById('headerBgLayer');
     if (headerLayer && backgroundImages.length > 0) {
         headerLayer.style.backgroundImage = `url('${backgroundImages[currentBgIndex]}')`;
@@ -3604,7 +3575,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupContactForm();
 
     if (window.supabase) {
-        setInterval(loadWebsiteContent, 300000);
+        const contentRefreshInterval = setInterval(loadWebsiteContent, 300000);
+        window.addEventListener('beforeunload', () => {
+            if (contentRefreshInterval) clearInterval(contentRefreshInterval);
+        });
         // Load dynamic content from database
         loadSocialStats();
         loadFeatures();

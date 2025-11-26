@@ -67,6 +67,7 @@ temp/
 
 # Debug and test files
 debug.html
+debug-backgrounds.html
 test.html
 *.test.js
 *.spec.js
