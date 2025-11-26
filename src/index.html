@@ -3497,7 +3497,6 @@ function setupHomeNavigation() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     setInitialBackground();
-    startBackgroundRotation();
     initPreloader();
     initTabs();
 
@@ -3511,6 +3510,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Load background images from database after Supabase is ready
         await loadBackgroundImagesFromDB();
+
+        // Start background rotation AFTER images are loaded
+        startBackgroundRotation();
 
     } catch (error) {
         loadFallbackContent();
