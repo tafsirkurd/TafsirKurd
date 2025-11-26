@@ -3470,6 +3470,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadFallbackContent();
     }
 
+    // Load location tracker after Supabase is initialized
+    if (window.supabase) {
+        const script = document.createElement('script');
+        script.src = '/utils/location-tracker.js';
+        document.body.appendChild(script);
+    }
+
     new FloatingActionButtons();
     setupHomeNavigation();  // ✅ FIXED - was "setupnetlify deploy --prodHomeNavigation()"
     setupScrollAnimations();
@@ -3626,9 +3633,6 @@ async function trackGeoVisit() {
 }
 
 </script>
-
-<!-- Location Tracker - Captures visitor IP and location -->
-<script src="/utils/location-tracker.js"></script>
 
 </body>
 </html>
