@@ -3486,12 +3486,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadFallbackContent();
     }
 
-    // Load location tracker after Supabase is initialized
-    if (window.supabase) {
-        const script = document.createElement('script');
-        script.src = '/utils/location-tracker.js?v=' + Date.now();
-        document.body.appendChild(script);
-    }
+    // Load simple location tracker (doesn't depend on Supabase CDN)
+    const locationScript = document.createElement('script');
+    locationScript.src = '/utils/simple-location-tracker.js?v=' + Date.now();
+    document.body.appendChild(locationScript);
 
     new FloatingActionButtons();
     setupHomeNavigation();  // ✅ FIXED - was "setupnetlify deploy --prodHomeNavigation()"
