@@ -11,27 +11,43 @@
     }
     window.locationTrackingStarted = true;
 
-    // Wait for Supabase to be available (check both window.supabase and global supabase)
+    // Wait for Supabase to be available in the global scope
     let retries = 0;
     const maxRetries = 10;
+    let supabaseClient = null;
 
     while (retries < maxRetries) {
-        if (typeof window.supabase !== 'undefined' || typeof supabase !== 'undefined') {
-            console.log('✅ Location Tracker: Supabase found');
-            break;
+        // Try to get supabase from window scope first, then try global scope
+        try {
+            if (typeof window.supabase !== 'undefined' && window.supabase !== null) {
+                supabaseClient = window.supabase;
+                console.log('✅ Location Tracker: Found window.supabase');
+                break;
+            }
+        } catch (e) {
+            // window.supabase doesn't exist
         }
+
+        // Try accessing supabase from global scope (might be defined in page scripts)
+        try {
+            if (typeof supabase !== 'undefined' && supabase !== null) {
+                supabaseClient = supabase;
+                console.log('✅ Location Tracker: Found global supabase');
+                break;
+            }
+        } catch (e) {
+            // supabase doesn't exist in global scope either
+        }
+
         console.warn(`⚠️ Location Tracker: Waiting for Supabase... (${retries + 1}/${maxRetries})`);
         await new Promise(resolve => setTimeout(resolve, 1000));
         retries++;
     }
 
-    if (retries >= maxRetries) {
+    if (!supabaseClient) {
         console.error('❌ Location Tracker: Supabase not available after 10 seconds');
         return;
     }
-
-    // Use whichever supabase client is available
-    const supabaseClient = window.supabase || supabase;
 
     try {
         console.log('📍 Location Tracker: Checking authentication...');
