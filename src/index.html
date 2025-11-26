@@ -2886,8 +2886,14 @@ let currentBgIndex = 0;
 // Load background images from database
 async function loadBackgroundImagesFromDB() {
     try {
-        if (!supabase) return;
+        console.log('🔍 [BG] Starting to load background images...');
 
+        if (!supabase) {
+            console.error('❌ [BG] Supabase client is not initialized!');
+            return;
+        }
+
+        console.log('✅ [BG] Supabase client OK, querying database...');
         const { data, error } = await supabase
             .from('background_images')
             .select('image_url')
@@ -2895,26 +2901,39 @@ async function loadBackgroundImagesFromDB() {
             .eq('is_active', true)
             .order('image_order', { ascending: true });
 
-        if (error) throw error;
+        if (error) {
+            console.error('❌ [BG] Database query error:', error);
+            throw error;
+        }
+
+        console.log('📊 [BG] Query result:', { count: data?.length || 0, data });
 
         if (data && data.length > 0) {
             backgroundImages = data.map(img => img.image_url);
-            console.log('✅ Loaded', backgroundImages.length, 'background images from database');
+            console.log('✅ [BG] Loaded', backgroundImages.length, 'background images from database:', backgroundImages);
+        } else {
+            console.warn('⚠️ [BG] No background images found in database');
         }
     } catch (error) {
-        console.warn('Using fallback background images:', error);
+        console.error('❌ [BG] Error loading background images:', error);
     }
 }
 
 function startBackgroundRotation() {
+    console.log('🔄 [BG] Starting background rotation with', backgroundImages.length, 'images');
     const headerBg = document.getElementById('headerBg');
-    if (!headerBg) return;
+    if (!headerBg) {
+        console.error('❌ [BG] Header background element not found');
+        return;
+    }
 
     // Don't start rotation if no images
     if (!backgroundImages || backgroundImages.length === 0) {
-        console.warn('No background images available');
+        console.warn('⚠️ [BG] No background images available for rotation');
         return;
     }
+
+    console.log('✅ [BG] Background rotation started successfully');
 
     // Create two layers for crossfade
     let layer1 = document.getElementById('headerBgLayer');
@@ -2944,10 +2963,16 @@ function startBackgroundRotation() {
 }
 
 function setInitialBackground() {
+    console.log('🎨 [BG] Setting initial background, images available:', backgroundImages.length);
     const headerLayer = document.getElementById('headerBgLayer');
     if (headerLayer && backgroundImages.length > 0) {
         headerLayer.style.backgroundImage = `url('${backgroundImages[currentBgIndex]}')`;
         headerLayer.style.opacity = '1';
+        console.log('✅ [BG] Initial background set to:', backgroundImages[currentBgIndex]);
+    } else if (!headerLayer) {
+        console.error('❌ [BG] Header layer element not found');
+    } else {
+        console.warn('⚠️ [BG] No images available to set as background');
     }
 }
 
