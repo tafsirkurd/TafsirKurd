@@ -46,7 +46,9 @@
       "Bash(then cat \"D:\\WEBSITE\\.gitignore\")",
       "Bash(else echo \"No .gitignore file\")",
       "Bash(if [ ! -d \"docs\" ])",
-      "Bash(then mkdir docs)"
+      "Bash(then mkdir docs)",
+      "Bash(if [ ! -f \"src/utils/footer-loader.js\" ])",
+      "Bash(then touch \"src/utils/footer-loader.js\")"
     ],
     "deny": [],
     "ask": []
