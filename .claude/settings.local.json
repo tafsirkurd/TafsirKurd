@@ -39,7 +39,14 @@
       "Bash(then)",
       "Bash(echo:*)",
       "Bash(else)",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(find:*)",
+      "Bash(html5validator:*)",
+      "Bash(if [ -f \"D:\\WEBSITE\\.gitignore\" ])",
+      "Bash(then cat \"D:\\WEBSITE\\.gitignore\")",
+      "Bash(else echo \"No .gitignore file\")",
+      "Bash(if [ ! -d \"docs\" ])",
+      "Bash(then mkdir docs)"
     ],
     "deny": [],
     "ask": []

@@ -937,7 +937,10 @@
             }
 
             // Start timestamp auto-update interval
-            setInterval(updateTimestamps, 30000);
+            const timestampInterval = setInterval(updateTimestamps, 30000);
+            window.addEventListener('beforeunload', () => {
+                if (timestampInterval) clearInterval(timestampInterval);
+            });
         });
 
         function loadBookmarks() {
