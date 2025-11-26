@@ -11,6 +11,9 @@
     }
     window.locationTrackingStarted = true;
 
+    // Wait a bit for page to fully load
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
     // Wait for Supabase to be available in the global scope
     let retries = 0;
     const maxRetries = 10;
