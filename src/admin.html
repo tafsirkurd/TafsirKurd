@@ -2235,7 +2235,7 @@
                     <div style="margin-top: 30px;">
                         <div style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                             <h3 class="table-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; margin: 0; font-size: 20px; font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
-                                <span>🌐 Visitor IP Addresses & Locations</span>
+                                <span>🌐 Visitor Locations</span>
                                 <button onclick="loadGeoAnalytics()" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">🔄 Refresh</button>
                             </h3>
                             <div style="padding: 20px; overflow-x: auto;">
@@ -2243,19 +2243,18 @@
                                     <thead style="background: #f8f9fa;">
                                         <tr>
                                             <th style="padding: 15px 12px; font-size: 13px; text-align: left;">#</th>
-                                            <th style="padding: 15px 12px; font-size: 13px; text-align: left;">IP Address</th>
+                                            <th style="padding: 15px 12px; font-size: 13px; text-align: left;">User</th>
                                             <th style="padding: 15px 12px; font-size: 13px; text-align: left;">City</th>
                                             <th style="padding: 15px 12px; font-size: 13px; text-align: left;">Region</th>
                                             <th style="padding: 15px 12px; font-size: 13px; text-align: left;">Country</th>
                                             <th style="padding: 15px 12px; font-size: 13px; text-align: left;">Last Seen</th>
-                                            <th style="padding: 15px 12px; font-size: 13px; text-align: left;">User</th>
                                         </tr>
                                     </thead>
                                     <tbody id="visitorIPsTableBody">
                                         <tr>
-                                            <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
+                                            <td colspan="6" style="text-align: center; padding: 40px; color: #999;">
                                                 <div style="font-size: 48px; margin-bottom: 10px;">🌍</div>
-                                                <div>Loading visitor IP data...</div>
+                                                <div>Loading visitor location data...</div>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -5252,61 +5251,59 @@
             const tbody = document.getElementById('visitorIPsTableBody');
 
             try {
-                // Fetch user data with location data (select all columns to avoid column name issues)
+                // Fetch user data with location data (no IP address column exists, just show location data)
                 const { data: users, error } = await supabase
                     .from('user_data')
                     .select('*')
-                    .not('ip_address', 'is', null)
+                    .not('country', 'is', null)
                     .order('updated_at', { ascending: false })
                     .limit(100);
 
                 if (error) {
-                    console.error('Error fetching visitor IPs:', error);
-                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px; color: #e74c3c;">
+                    console.error('Error fetching visitor locations:', error);
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: #e74c3c;">
                         ⚠️ Error loading data: ${error.message}
                     </td></tr>`;
                     return;
                 }
 
                 if (!users || users.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px;">
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px;">
                         <div style="font-size: 48px; margin-bottom: 10px;">🌍</div>
-                        <div style="color: #999; font-size: 16px;">No visitor IP data yet</div>
-                        <div style="color: #666; font-size: 14px; margin-top: 5px;">IP addresses will appear after users visit the site</div>
+                        <div style="color: #999; font-size: 16px;">No visitor location data yet</div>
+                        <div style="color: #666; font-size: 14px; margin-top: 5px;">Location data will appear after users visit the site</div>
                     </td></tr>`;
                     return;
                 }
 
-                console.log('✅ Loaded', users.length, 'visitor IPs');
+                console.log('✅ Loaded', users.length, 'visitor locations');
 
-                // Display visitor IPs
+                // Display visitor locations
                 tbody.innerHTML = users.map((user, index) => {
                     const lastSeen = user.updated_at ? new Date(user.updated_at) : null;
                     const userName = user.full_name || user.userName || user.email || user.userEmail || user.user_id?.split('|')[0] || 'Anonymous';
                     const city = user.city || 'Unknown';
                     const region = user.region || 'Unknown';
                     const country = user.country || 'Unknown';
+                    const userId = user.user_id || user.id || '-';
 
                     return `
                         <tr style="border-bottom: 1px solid #f0f0f0;">
                             <td style="padding: 12px; font-weight: 600; color: #667eea;">${index + 1}</td>
                             <td style="padding: 12px;">
-                                <span style="font-family: 'Courier New', monospace; font-weight: 600; color: #333;">${user.ip_address}</span>
+                                <span style="color: #667eea; font-weight: 500;">${userName}</span>
                             </td>
                             <td style="padding: 12px;">${city}</td>
                             <td style="padding: 12px;">${region}</td>
                             <td style="padding: 12px; font-weight: 500;">${country}</td>
                             <td style="padding: 12px; color: #666; font-size: 13px;">${lastSeen ? formatRelativeTime(user.updated_at) : 'Unknown'}</td>
-                            <td style="padding: 12px;">
-                                <span style="color: #667eea; font-weight: 500;">${userName}</span>
-                            </td>
                         </tr>
                     `;
                 }).join('');
 
             } catch (error) {
                 console.error('Failed to load visitor IPs:', error);
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px; color: #e74c3c;">
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: #e74c3c;">
                     ⚠️ Error: ${error.message}
                 </td></tr>`;
             }

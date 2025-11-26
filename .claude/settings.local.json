@@ -31,7 +31,8 @@
       "Bash(cd:*)",
       "Bash(for file in profile.html bookmarks.html goals.html reading-goal.html settings.html)",
       "Bash(do tail -3 \"D:\\WEBSITE\\src$file\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": []
