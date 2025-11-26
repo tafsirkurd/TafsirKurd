@@ -52,8 +52,8 @@
         console.log('✅ Location Tracker: User authenticated:', user.id);
         console.log('📍 Location Tracker: Fetching location data...');
 
-        // Fetch location data from ipapi.co (free, no API key needed)
-        const response = await fetch('https://ipapi.co/json/');
+        // Fetch location data from our Netlify function (no CORS issues)
+        const response = await fetch('/.netlify/functions/get-location');
 
         if (!response.ok) {
             console.error('❌ Location Tracker: API request failed:', response.status);
@@ -62,15 +62,15 @@
 
         const locationData = await response.json();
 
-        if (!locationData || locationData.error) {
-            console.error('❌ Location Tracker: Failed to get location:', locationData?.reason || 'Unknown error');
+        if (!locationData || !locationData.success) {
+            console.error('❌ Location Tracker: Failed to get location:', locationData?.error || 'Unknown error');
             return;
         }
 
         console.log('✅ Location Tracker: Location data received:', {
             city: locationData.city,
             region: locationData.region,
-            country: locationData.country_name,
+            country: locationData.country,
             ip: locationData.ip
         });
 
@@ -84,7 +84,7 @@
                 email: user.email,
                 city: locationData.city || null,
                 region: locationData.region || null,
-                country: locationData.country_name || null,
+                country: locationData.country || null,
                 country_code: locationData.country_code || null,
                 ip_address: locationData.ip || null,
                 timezone: locationData.timezone || null,
