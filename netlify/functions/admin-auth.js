@@ -1,9 +1,15 @@
 // netlify/functions/admin-auth.js
 const crypto = require('crypto');
 
-// Store admin credentials in environment variables for security
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@tafsirkurd.com';
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || hashPassword('TafsirKurd@2025!');
+// CRITICAL: Admin credentials MUST be set in Netlify environment variables
+// Go to: Netlify Dashboard -> Site Settings -> Environment Variables
+// Set ADMIN_EMAIL and ADMIN_PASSWORD_HASH
+// Generate hash: node -e "console.log(require('crypto').createHash('sha256').update('YOUR_PASSWORD').digest('hex'))"
+if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD_HASH) {
+    throw new Error('SECURITY ERROR: ADMIN_EMAIL and ADMIN_PASSWORD_HASH environment variables must be set in Netlify. Never use default credentials.');
+}
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
 
 // Simple password hashing function (use bcrypt in production for better security)
 function hashPassword(password) {
