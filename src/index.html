@@ -2344,10 +2344,26 @@ window.addEventListener('error', function(e) {
   <script>
     async function initSupabase() {
       try {
+        // Wait for Supabase CDN to load
+        let retries = 0;
+        while (!window.supabase && retries < 10) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          retries++;
+        }
+
+        if (!window.supabase) {
+          throw new Error('Supabase CDN failed to load');
+        }
+
         const response = await fetch('/.netlify/functions/config');
         if (!response.ok) throw new Error('Failed to fetch config');
         const config = await response.json();
-        return window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+        const client = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+
+        // Make it globally accessible
+        window.supabase = client;
+
+        return client;
       } catch (error) {
         console.warn('Using fallback Supabase mode:', error);
         return null;
