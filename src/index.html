@@ -2878,18 +2878,8 @@ window.addEventListener('error', function(e) {
 let supabase = null;
 window.supabase = null; // Make it accessible to external scripts
 
-// Background images - will be loaded from database
-let backgroundImages = [
-    // Fallback images if database load fails
-    'https://images.unsplash.com/photo-1649297711811-5cfa2774cbc7?q=80&w=1073&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1644461561916-2acd569906b0?q=80&w=1073&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1685601342582-eee16ab0a9f9?q=80&w=1073&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1644374544063-78b5cd18ba79?q=80&w=1073&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1542816417-0983c9c9ad53?q=80&w=1073&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1519608487953-e999c86e7455?q=80&w=1073&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1591604466107-ec97de577aff?q=80&w=1073&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1590859808308-3d2d9c515b1a?q=80&w=1073&auto=format&fit=crop'
-];
+// Background images - will be loaded from database only
+let backgroundImages = [];
 
 let currentBgIndex = 0;
 
@@ -2920,6 +2910,12 @@ function startBackgroundRotation() {
     const headerBg = document.getElementById('headerBg');
     if (!headerBg) return;
 
+    // Don't start rotation if no images
+    if (!backgroundImages || backgroundImages.length === 0) {
+        console.warn('No background images available');
+        return;
+    }
+
     // Create two layers for crossfade
     let layer1 = document.getElementById('headerBgLayer');
     let layer2 = document.createElement('div');
@@ -2930,6 +2926,7 @@ function startBackgroundRotation() {
     let useLayer1 = true;
 
     setInterval(() => {
+        if (backgroundImages.length === 0) return;
         currentBgIndex = (currentBgIndex + 1) % backgroundImages.length;
 
         if (useLayer1) {
