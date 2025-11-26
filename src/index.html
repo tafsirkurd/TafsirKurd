@@ -2878,14 +2878,43 @@ window.addEventListener('error', function(e) {
 let supabase = null;
 window.supabase = null; // Make it accessible to external scripts
 
-const backgroundImages = [
+// Background images - will be loaded from database
+let backgroundImages = [
+    // Fallback images if database load fails
     'https://images.unsplash.com/photo-1649297711811-5cfa2774cbc7?q=80&w=1073&auto=format&fit=crop',
     'https://images.unsplash.com/photo-1644461561916-2acd569906b0?q=80&w=1073&auto=format&fit=crop',
     'https://images.unsplash.com/photo-1685601342582-eee16ab0a9f9?q=80&w=1073&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1644374544063-78b5cd18ba79?q=80&w=1073&auto=format&fit=crop'
+    'https://images.unsplash.com/photo-1644374544063-78b5cd18ba79?q=80&w=1073&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1542816417-0983c9c9ad53?q=80&w=1073&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1519608487953-e999c86e7455?q=80&w=1073&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1591604466107-ec97de577aff?q=80&w=1073&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1590859808308-3d2d9c515b1a?q=80&w=1073&auto=format&fit=crop'
 ];
 
 let currentBgIndex = 0;
+
+// Load background images from database
+async function loadBackgroundImagesFromDB() {
+    try {
+        if (!supabase) return;
+
+        const { data, error } = await supabase
+            .from('background_images')
+            .select('image_url')
+            .eq('page_name', 'index')
+            .eq('is_active', true)
+            .order('image_order', { ascending: true });
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+            backgroundImages = data.map(img => img.image_url);
+            console.log('✅ Loaded', backgroundImages.length, 'background images from database');
+        }
+    } catch (error) {
+        console.warn('Using fallback background images:', error);
+    }
+}
 
 function startBackgroundRotation() {
     const headerBg = document.getElementById('headerBg');
@@ -3482,6 +3511,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         await loadWebsiteContent();
+
+        // Load background images from database after Supabase is ready
+        await loadBackgroundImagesFromDB();
+
     } catch (error) {
         loadFallbackContent();
     }
