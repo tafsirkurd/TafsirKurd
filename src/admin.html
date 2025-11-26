@@ -5251,11 +5251,10 @@
             const tbody = document.getElementById('visitorIPsTableBody');
 
             try {
-                // Fetch user data with location data (no IP address column exists, just show location data)
+                // Fetch user data (show all users, location fields may or may not exist)
                 const { data: users, error } = await supabase
                     .from('user_data')
                     .select('*')
-                    .not('country', 'is', null)
                     .order('updated_at', { ascending: false })
                     .limit(100);
 
