@@ -1025,7 +1025,7 @@ section.show {
     padding: 40px 30px;
     text-align: center;
     box-shadow: var(--shadow-sm);
-    transition: all var(--transition-medium) var(--cubic);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid var(--border-light);
     position: relative;
     overflow: hidden;
@@ -1064,7 +1064,7 @@ section.show {
     color: var(--accent);
     font-size: 2rem;
     box-shadow: var(--shadow-md);
-    transition: all var(--transition-medium) var(--cubic);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .feature-card:hover .feature-icon {
@@ -1110,7 +1110,7 @@ section.show {
     padding: 40px 30px;
     text-align: center;
     box-shadow: var(--shadow-sm);
-    transition: all var(--transition-medium) var(--cubic);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid var(--border-light);
     position: relative;
     overflow: hidden;
@@ -1181,7 +1181,7 @@ section.show {
     font-size: 3rem;
     color: var(--primary);
     margin-bottom: 20px;
-    transition: transform var(--transition-medium) var(--cubic);
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stat-card:hover .stat-icon {
@@ -1236,7 +1236,7 @@ section.show {
     overflow: hidden;
     border-radius: 20px;
     box-shadow: var(--shadow-md);
-    transition: all var(--transition-medium) var(--cubic);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .video-container::before {
@@ -1249,7 +1249,7 @@ section.show {
     border: 3px solid var(--primary);
     border-radius: 20px;
     opacity: 0;
-    transition: opacity var(--transition-medium);
+    transition: opacity 0.6s ease;
     z-index: 1;
     pointer-events: none;
 }
@@ -1259,8 +1259,8 @@ section.show {
 }
 
 .video-container:hover {
-    transform: scale(1.03) translateY(-5px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-8px) scale(1.03);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 .video-container iframe {
@@ -2947,13 +2947,19 @@ async function loadBackgroundImagesFromDB() {
         console.log('📊 [BG] Query result:', { count: data?.length || 0, data });
 
         if (data && data.length > 0) {
-            // Replace placeholder with database images
-            backgroundImages = data.map(img => img.image_url);
-            console.log('✅ [BG] Loaded', backgroundImages.length, 'background images from database:', backgroundImages);
+            // Replace placeholder with database images (NO FLASH - keep current image)
+            const dbImages = data.map(img => img.image_url);
 
-            // Restart rotation with new images
-            currentBgIndex = 0;
-            setInitialBackground();
+            // Only update if different from placeholder (prevents flash)
+            if (dbImages[0] !== backgroundImages[0]) {
+                backgroundImages = dbImages;
+                console.log('✅ [BG] Loaded', backgroundImages.length, 'background images from database:', backgroundImages);
+                // Don't restart - let rotation naturally move to next image
+            } else {
+                // Same first image, just update the array for rotation
+                backgroundImages = dbImages;
+                console.log('✅ [BG] Updated rotation with', backgroundImages.length, 'images (no flash)');
+            }
         } else {
             console.warn('⚠️ [BG] No background images found in database, using placeholder');
         }
