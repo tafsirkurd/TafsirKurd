@@ -526,10 +526,12 @@
             height: 55px;
             transition: transform var(--transition);
             object-fit: contain;
+            animation: logoFloat 3s ease-in-out infinite;
         }
 
         .sidebar-logo:hover img {
             transform: rotate(10deg) scale(1.1);
+            animation: none;
         }
 
         .sidebar-title {
@@ -810,6 +812,22 @@
             width: 55px;
             height: 55px;
             object-fit: contain;
+            transition: transform var(--transition);
+            animation: logoFloat 3s ease-in-out infinite;
+        }
+
+        .header-logo-img:hover {
+            transform: rotate(5deg) scale(1.1);
+            animation: none;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
         }
 
         .header-title {
