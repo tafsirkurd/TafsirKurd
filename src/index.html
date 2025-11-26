@@ -3473,7 +3473,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Load location tracker after Supabase is initialized
     if (window.supabase) {
         const script = document.createElement('script');
-        script.src = '/utils/location-tracker.js';
+        script.src = '/utils/location-tracker.js?v=' + Date.now();
         document.body.appendChild(script);
     }
 
