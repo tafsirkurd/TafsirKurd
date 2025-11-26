@@ -2945,7 +2945,7 @@ function startBackgroundRotation() {
 
 function setInitialBackground() {
     const headerLayer = document.getElementById('headerBgLayer');
-    if (headerLayer) {
+    if (headerLayer && backgroundImages.length > 0) {
         headerLayer.style.backgroundImage = `url('${backgroundImages[currentBgIndex]}')`;
         headerLayer.style.opacity = '1';
     }
@@ -3496,7 +3496,6 @@ function setupHomeNavigation() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    setInitialBackground();
     initPreloader();
     initTabs();
 
@@ -3511,7 +3510,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Load background images from database after Supabase is ready
         await loadBackgroundImagesFromDB();
 
-        // Start background rotation AFTER images are loaded
+        // Set initial background and start rotation AFTER images are loaded
+        setInitialBackground();
         startBackgroundRotation();
 
     } catch (error) {
