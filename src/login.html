@@ -40,6 +40,7 @@
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="config/google-config.js"></script>
 
     <style>
         :root {
@@ -796,7 +797,7 @@
     </div>
 
     <script>
-        const CLIENT_ID = "510335424343-i42ua2q2718pg230e0kbrgha8edtmb14.apps.googleusercontent.com";
+        const CLIENT_ID = window.GOOGLE_CONFIG.CLIENT_ID;
 
         let currentUser = null;
         let tokenClient = null;
