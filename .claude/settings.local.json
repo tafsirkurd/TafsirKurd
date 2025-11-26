@@ -32,7 +32,14 @@
       "Bash(for file in profile.html bookmarks.html goals.html reading-goal.html settings.html)",
       "Bash(do tail -3 \"D:\\WEBSITE\\src$file\")",
       "Bash(done)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(for file in profile.html Quran.html settings.html bookmarks.html goals.html)",
+      "Bash(do)",
+      "Bash(if grep -q \"location-tracker.js\" \"D:\\WEBSITE\\src$file\")",
+      "Bash(then)",
+      "Bash(echo:*)",
+      "Bash(else)",
+      "Bash(fi)"
     ],
     "deny": [],
     "ask": []
