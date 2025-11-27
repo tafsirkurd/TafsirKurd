@@ -72,6 +72,16 @@ exports.handler = async (event, context) => {
 
             const passwordHash = hashPassword(password);
 
+            // Debug logging (remove after testing)
+            console.log('Login attempt:', {
+                providedEmail: email,
+                expectedEmail: ADMIN_EMAIL,
+                emailMatch: email === ADMIN_EMAIL,
+                providedPasswordHash: passwordHash,
+                expectedPasswordHash: ADMIN_PASSWORD_HASH,
+                hashMatch: passwordHash === ADMIN_PASSWORD_HASH
+            });
+
             if (email === ADMIN_EMAIL && passwordHash === ADMIN_PASSWORD_HASH) {
                 const sessionToken = generateSessionToken();
                 const expiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
