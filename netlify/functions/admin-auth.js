@@ -5,9 +5,8 @@ const crypto = require('crypto');
 // Go to: Netlify Dashboard -> Site Settings -> Environment Variables
 // Set ADMIN_EMAIL and ADMIN_PASSWORD_HASH
 // Generate hash: node -e "console.log(require('crypto').createHash('sha256').update('YOUR_PASSWORD').digest('hex'))"
-if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD_HASH) {
-    throw new Error('SECURITY ERROR: ADMIN_EMAIL and ADMIN_PASSWORD_HASH environment variables must be set in Netlify. Never use default credentials.');
-}
+
+// Get credentials from environment variables
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
 
@@ -46,6 +45,18 @@ exports.handler = async (event, context) => {
     }
 
     try {
+        // Check if environment variables are set
+        if (!ADMIN_EMAIL || !ADMIN_PASSWORD_HASH) {
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({
+                    success: false,
+                    error: 'Server configuration error: Admin credentials not set. Please contact administrator.'
+                })
+            };
+        }
+
         const body = JSON.parse(event.body || '{}');
         const { action, email, password, token } = body;
 
