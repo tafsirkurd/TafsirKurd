@@ -2994,6 +2994,32 @@
                     </a>
                 </div>
 
+                <!-- Re-authentication Notice (shown if token expired) -->
+                <div id="searchConsoleReauthNotice" style="display: none; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 30px; border-radius: 16px; margin-bottom: 30px;">
+                    <h2 style="margin: 0 0 15px 0; font-size: 28px;">🔐 Authentication Expired</h2>
+                    <p style="margin: 0 0 15px 0; font-size: 16px; line-height: 1.6; color: #333;">
+                        Your Google Search Console authentication token has expired. This can happen if the token hasn't been used for 6 months or if access was revoked.
+                    </p>
+                    <div style="background: rgba(255,255,255,0.7); padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #fa709a;">
+                        <strong style="display: block; margin-bottom: 12px; font-size: 16px; color: #333;">📋 Steps to Re-authenticate:</strong>
+                        <ol style="margin: 0; padding-left: 20px; line-height: 2; font-size: 15px; color: #444;">
+                            <li><strong>Follow Step 3</strong> in the setup guide to generate a new refresh token</li>
+                            <li><strong>Update Netlify environment variable</strong>: Replace the old <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">GOOGLE_REFRESH_TOKEN</code> with the new one</li>
+                            <li><strong>Trigger a new deployment</strong> or wait for the next auto-deploy</li>
+                            <li><strong>Return here</strong> and click "Refresh Data" below</li>
+                        </ol>
+                    </div>
+                    <button onclick="window.open('https://github.com/tafsirkurd/TafsirKurd/blob/main/docs/GOOGLE_SEARCH_CONSOLE_SETUP.md#step-3-get-refresh-token', '_blank')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102,126,234,0.3);">
+                        📖 View Setup Guide (Step 3)
+                    </button>
+                    <button onclick="window.open('https://app.netlify.com', '_blank')" style="background: #00AD9F; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; margin-left: 10px;">
+                        🚀 Open Netlify Dashboard
+                    </button>
+                    <button onclick="loadSearchConsoleData()" style="background: white; color: #333; border: 2px solid #ddd; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; margin-left: 10px;">
+                        🔄 Refresh Data
+                    </button>
+                </div>
+
                 <!--  No Data Notice (shown if setup but no data yet) -->
                 <div id="searchConsoleNoDataNotice" style="display: none; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); padding: 30px; border-radius: 16px; margin-bottom: 30px;">
                     <h2 style="margin: 0 0 15px 0; font-size: 28px;">⏳ No Search Data Yet</h2>
@@ -10308,12 +10334,20 @@ ${htmlParagraphs}
                 // Hide loading and all notices first
                 document.getElementById('searchConsoleLoading').style.display = 'none';
                 document.getElementById('searchConsoleSetupNotice').style.display = 'none';
+                document.getElementById('searchConsoleReauthNotice').style.display = 'none';
                 document.getElementById('searchConsoleNoDataNotice').style.display = 'none';
                 document.getElementById('searchConsoleSummary').style.display = 'none';
 
                 if (result.needsSetup) {
                     // Show setup notice
                     document.getElementById('searchConsoleSetupNotice').style.display = 'block';
+                    return;
+                }
+
+                if (result.needsReauth) {
+                    // Show re-authentication notice
+                    document.getElementById('searchConsoleReauthNotice').style.display = 'block';
+                    console.log('⚠️ Google authentication expired. User needs to regenerate refresh token.');
                     return;
                 }
 
