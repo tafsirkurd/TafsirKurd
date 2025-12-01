@@ -2587,7 +2587,7 @@
                         <button onclick="loadTranslations()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">
                             🔄 Refresh
                         </button>
-                        <button onclick="addAutoScrollSpeedLabels()" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;" title="Add all 10 auto scroll speed labels to database">
+                        <button id="addSpeedLabelsBtn" onclick="addAutoScrollSpeedLabels()" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; display: none;" title="Add all 10 auto scroll speed labels to database">
                             ⚡ Add Speed Labels
                         </button>
                         <button onclick="addNewTranslation()" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">
@@ -8530,6 +8530,10 @@
                 translationsData = data || [];
                 allTranslationsData = [...translationsData]; // Store copy for filtering
                 console.log(`🌐 Loaded ${translationsData.length} translations`);
+
+                // Check if all auto scroll speed labels exist
+                checkSpeedLabelsExist(data);
+
                 displayTranslationsEditor();
             } catch (error) {
                 console.error('❌ Error loading translations:', error);
@@ -8855,6 +8859,28 @@
             }
         }
 
+        // Check if auto scroll speed labels exist in database
+        function checkSpeedLabelsExist(translations) {
+            const speedLabelKeys = [
+                'autoScrollSpeed1', 'autoScrollSpeed2', 'autoScrollSpeed3', 'autoScrollSpeed4', 'autoScrollSpeed5',
+                'autoScrollSpeed6', 'autoScrollSpeed7', 'autoScrollSpeed8', 'autoScrollSpeed9', 'autoScrollSpeed10'
+            ];
+
+            const existingKeys = translations.map(t => t.key_id);
+            const missingLabels = speedLabelKeys.filter(key => !existingKeys.includes(key));
+
+            const button = document.getElementById('addSpeedLabelsBtn');
+            if (button) {
+                if (missingLabels.length > 0) {
+                    button.style.display = 'inline-block';
+                    console.log(`⚠️ Missing ${missingLabels.length} speed labels:`, missingLabels);
+                } else {
+                    button.style.display = 'none';
+                    console.log('✅ All speed labels already exist');
+                }
+            }
+        }
+
         // Bulk add auto scroll speed labels (Run in console: addAutoScrollSpeedLabels())
         async function addAutoScrollSpeedLabels() {
             if (!supabase) await initSupabase();
@@ -8907,9 +8933,14 @@
                 }
 
                 console.log(`🎉 Successfully added ${successCount} auto scroll speed labels!`);
-                alert(`✅ Successfully added ${successCount} auto scroll speed labels!\n\nReload the translations section to see them.`);
 
-                // Reload translations
+                // Hide the button
+                const button = document.getElementById('addSpeedLabelsBtn');
+                if (button) button.style.display = 'none';
+
+                alert(`✅ Successfully added ${successCount} auto scroll speed labels!\n\nThe translations are now visible in the list below.`);
+
+                // Reload translations (button will be auto-hidden by checkSpeedLabelsExist)
                 await loadTranslations();
 
             } catch (error) {
