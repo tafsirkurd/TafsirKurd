@@ -850,9 +850,19 @@
 
         function showNotification(msg) {
             const notif = document.createElement('div');
+
+            // Calculate position based on existing notifications
+            const existingNotifications = document.querySelectorAll('.notification-toast');
+            let topPosition = 20; // Start position
+
+            existingNotifications.forEach((existing) => {
+                topPosition += existing.offsetHeight + 15; // Stack with 15px gap
+            });
+
+            notif.className = 'notification-toast';
             notif.style.cssText = `
                 position: fixed;
-                top: 20px;
+                top: ${topPosition}px;
                 right: 20px;
                 left: 20px;
                 padding: 15px 20px;
@@ -864,14 +874,30 @@
                 box-shadow: var(--shadow-lg);
                 z-index: 10000;
                 animation: slideInDown 0.3s ease-out;
+                transition: all 0.3s ease;
             `;
             notif.textContent = msg;
             document.body.appendChild(notif);
 
+            // Remove with animation after 2 seconds
             setTimeout(() => {
                 notif.style.animation = 'slideInDown 0.3s ease-in reverse';
-                setTimeout(() => notif.remove(), 300);
+                setTimeout(() => {
+                    notif.remove();
+                    // Reposition remaining notifications
+                    repositionNotifications();
+                }, 300);
             }, 2000);
+        }
+
+        function repositionNotifications() {
+            const notifications = document.querySelectorAll('.notification-toast');
+            let topPosition = 20;
+
+            notifications.forEach((notif) => {
+                notif.style.top = topPosition + 'px';
+                topPosition += notif.offsetHeight + 15;
+            });
         }
 
         async function completeSignup() {

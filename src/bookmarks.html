@@ -1426,9 +1426,19 @@
 
         function showNotification(msg) {
             const notif = document.createElement('div');
+
+            // Calculate position based on existing notifications
+            const existingNotifications = document.querySelectorAll('.notification-toast');
+            let topPosition = 80; // Start position
+
+            existingNotifications.forEach((existing) => {
+                topPosition += existing.offsetHeight + 15; // Stack with 15px gap
+            });
+
+            notif.className = 'notification-toast';
             notif.style.cssText = `
                 position: fixed;
-                top: 80px;
+                top: ${topPosition}px;
                 right: 20px;
                 padding: 15px 25px;
                 background: var(--primary);
@@ -1437,10 +1447,31 @@
                 box-shadow: var(--shadow-md);
                 z-index: 9999;
                 font-weight: 600;
+                transition: all 0.3s ease;
+                animation: slideIn 0.3s ease;
             `;
             notif.textContent = msg;
             document.body.appendChild(notif);
-            setTimeout(() => notif.remove(), 3000);
+
+            // Remove with animation after 3 seconds
+            setTimeout(() => {
+                notif.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    notif.remove();
+                    // Reposition remaining notifications
+                    repositionNotifications();
+                }, 300);
+            }, 3000);
+        }
+
+        function repositionNotifications() {
+            const notifications = document.querySelectorAll('.notification-toast');
+            let topPosition = 80;
+
+            notifications.forEach((notif) => {
+                notif.style.top = topPosition + 'px';
+                topPosition += notif.offsetHeight + 15;
+            });
         }
 
         // Update all timestamps in real-time
