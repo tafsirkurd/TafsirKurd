@@ -2583,9 +2583,12 @@
                             </select>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
                         <button onclick="loadTranslations()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">
                             🔄 Refresh
+                        </button>
+                        <button onclick="addAutoScrollSpeedLabels()" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;" title="Add all 10 auto scroll speed labels to database">
+                            ⚡ Add Speed Labels
                         </button>
                         <button onclick="addNewTranslation()" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">
                             ➕ Add New Text
@@ -8849,6 +8852,69 @@
                     </div>
                 `;
                 messageDiv.style.display = 'block';
+            }
+        }
+
+        // Bulk add auto scroll speed labels (Run in console: addAutoScrollSpeedLabels())
+        async function addAutoScrollSpeedLabels() {
+            if (!supabase) await initSupabase();
+
+            const speedLabels = [
+                { key: 'autoScrollSpeed1', text: '١ - زۆر زۆر هێواش', context: 'Auto scroll speed level 1 - Very very slow' },
+                { key: 'autoScrollSpeed2', text: '٢ - زۆر هێواش', context: 'Auto scroll speed level 2 - Very slow' },
+                { key: 'autoScrollSpeed3', text: '٣ - هێواش', context: 'Auto scroll speed level 3 - Slow' },
+                { key: 'autoScrollSpeed4', text: '٤ - کەمێ هێواش', context: 'Auto scroll speed level 4 - Moderately slow' },
+                { key: 'autoScrollSpeed5', text: '٥ - ناڤەند', context: 'Auto scroll speed level 5 - Medium (default)' },
+                { key: 'autoScrollSpeed6', text: '٦ - کەمێ خێرا', context: 'Auto scroll speed level 6 - Moderately fast' },
+                { key: 'autoScrollSpeed7', text: '٧ - خێرا', context: 'Auto scroll speed level 7 - Fast' },
+                { key: 'autoScrollSpeed8', text: '٨ - زۆر خێرا', context: 'Auto scroll speed level 8 - Very fast' },
+                { key: 'autoScrollSpeed9', text: '٩ - زۆر زۆر خێرا', context: 'Auto scroll speed level 9 - Very very fast' },
+                { key: 'autoScrollSpeed10', text: '١٠ - خێراترین', context: 'Auto scroll speed level 10 - Fastest' }
+            ];
+
+            try {
+                console.log('🚀 Adding auto scroll speed labels...');
+                let successCount = 0;
+
+                for (const label of speedLabels) {
+                    // Check if already exists
+                    const { data: existing } = await supabase
+                        .from('kurdish_translations')
+                        .select('id')
+                        .eq('key_id', label.key)
+                        .single();
+
+                    if (existing) {
+                        console.log(`⏭️ Skipping ${label.key} (already exists)`);
+                        continue;
+                    }
+
+                    // Insert new label
+                    const { error } = await supabase
+                        .from('kurdish_translations')
+                        .insert({
+                            key_id: label.key,
+                            kurdish_text: label.text,
+                            context: label.context,
+                            category: 'settings',
+                            page: 'settings.html',
+                            is_active: true
+                        });
+
+                    if (error) throw error;
+                    successCount++;
+                    console.log(`✅ Added ${label.key}: ${label.text}`);
+                }
+
+                console.log(`🎉 Successfully added ${successCount} auto scroll speed labels!`);
+                alert(`✅ Successfully added ${successCount} auto scroll speed labels!\n\nReload the translations section to see them.`);
+
+                // Reload translations
+                await loadTranslations();
+
+            } catch (error) {
+                console.error('❌ Error adding labels:', error);
+                alert('❌ Error: ' + error.message);
             }
         }
 
