@@ -753,8 +753,8 @@
                     <div class="setting-slider-container">
                         <input type="range" class="setting-slider" id="autoScrollSpeedSlider"
                                min="1" max="10" value="5" step="1"
-                               oninput="updateAutoScrollSpeed(this.value)">
-                        <span class="slider-value" id="autoScrollSpeedValue">ناڤەند</span>
+                               oninput="updateAutoScrollSpeed(this.value)"
+                               style="width: 100%;">
                     </div>
                 </div>
             </div>
@@ -903,10 +903,8 @@
             // Load auto-scroll speed (default: 5 - medium)
             const autoScrollSpeed = localStorage.getItem('autoScrollSpeed') || '5';
             const autoScrollSpeedSlider = document.getElementById('autoScrollSpeedSlider');
-            const autoScrollSpeedValue = document.getElementById('autoScrollSpeedValue');
             if (autoScrollSpeedSlider) {
                 autoScrollSpeedSlider.value = autoScrollSpeed;
-                updateAutoScrollSpeedDisplay(autoScrollSpeed);
             }
 
             // Initialize previews
@@ -1002,7 +1000,6 @@
 
         function updateAutoScrollSpeed(speed) {
             localStorage.setItem('autoScrollSpeed', speed);
-            updateAutoScrollSpeedDisplay(speed);
 
             const speedNames = {
                 '1': '١ - زۆر زۆر هێواش',
@@ -1017,25 +1014,6 @@
                 '10': '١٠ - خێراترین'
             };
             showNotification(`خێرایا زڤراندنێ: ${speedNames[speed]}`);
-        }
-
-        function updateAutoScrollSpeedDisplay(speed) {
-            const valueDisplay = document.getElementById('autoScrollSpeedValue');
-
-            const speedNames = {
-                '1': '١ - زۆر زۆر هێواش',
-                '2': '٢ - زۆر هێواش',
-                '3': '٣ - هێواش',
-                '4': '٤ - کەمێ هێواش',
-                '5': '٥ - ناڤەند',
-                '6': '٦ - کەمێ خێرا',
-                '7': '٧ - خێرا',
-                '8': '٨ - زۆر خێرا',
-                '9': '٩ - زۆر زۆر خێرا',
-                '10': '١٠ - خێراترین'
-            };
-
-            valueDisplay.textContent = speedNames[speed] || '٥ - ناڤەند';
         }
 
         function resetSettings() {
@@ -1070,7 +1048,6 @@
                 const autoScrollSpeedSlider = document.getElementById('autoScrollSpeedSlider');
                 if (autoScrollSpeedSlider) {
                     autoScrollSpeedSlider.value = '5';
-                    updateAutoScrollSpeedDisplay('5');
                 }
 
                 showNotification('ڕێکخستن ڤەگەڕیان سەر ڕەوشا بنەڕەت');
