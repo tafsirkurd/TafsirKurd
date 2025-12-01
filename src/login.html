@@ -461,7 +461,6 @@
 
         .notification {
             position: fixed;
-            top: 20px;
             right: 20px;
             padding: 18px 30px;
             background: linear-gradient(135deg, #000000 0%, #333333 100%);
@@ -471,6 +470,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             animation: slideInRight 0.4s ease;
             z-index: 1000;
+            transition: all 0.3s ease;
         }
 
         @keyframes slideInRight {
@@ -481,6 +481,17 @@
             to {
                 opacity: 1;
                 transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
             }
         }
 
@@ -1040,12 +1051,37 @@
             const notif = document.createElement('div');
             notif.className = 'notification';
             notif.textContent = msg;
+
+            // Calculate position based on existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            let topPosition = 20; // Start position
+
+            existingNotifications.forEach((existing) => {
+                topPosition += existing.offsetHeight + 15; // Stack with 15px gap
+            });
+
+            notif.style.top = topPosition + 'px';
             document.body.appendChild(notif);
 
+            // Remove with animation after 3 seconds
             setTimeout(() => {
-                notif.style.animation = 'slideInRight 0.3s ease reverse';
-                setTimeout(() => notif.remove(), 300);
+                notif.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    notif.remove();
+                    // Reposition remaining notifications
+                    repositionNotifications();
+                }, 300);
             }, 3000);
+        }
+
+        function repositionNotifications() {
+            const notifications = document.querySelectorAll('.notification');
+            let topPosition = 20;
+
+            notifications.forEach((notif) => {
+                notif.style.top = topPosition + 'px';
+                topPosition += notif.offsetHeight + 15;
+            });
         }
 
         // Check if user is already logged in
