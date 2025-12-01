@@ -349,7 +349,6 @@
 
         .notification {
             position: fixed;
-            top: 100px;
             right: 30px;
             padding: 18px 30px;
             background: var(--primary);
@@ -360,6 +359,7 @@
             animation: slideIn 0.3s ease;
             font-weight: 600;
             font-size: 1.05rem;
+            transition: all 0.3s ease;
         }
 
         @keyframes slideIn {
@@ -370,6 +370,17 @@
             to {
                 opacity: 1;
                 transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
             }
         }
 
@@ -1058,8 +1069,37 @@
             const notif = document.createElement('div');
             notif.className = 'notification';
             notif.textContent = msg;
+
+            // Calculate position based on existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            let topPosition = 100; // Start position
+
+            existingNotifications.forEach((existing) => {
+                topPosition += existing.offsetHeight + 15; // Stack with 15px gap
+            });
+
+            notif.style.top = topPosition + 'px';
             document.body.appendChild(notif);
-            setTimeout(() => notif.remove(), 3000);
+
+            // Remove with animation after 3 seconds
+            setTimeout(() => {
+                notif.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    notif.remove();
+                    // Reposition remaining notifications
+                    repositionNotifications();
+                }, 300);
+            }, 3000);
+        }
+
+        function repositionNotifications() {
+            const notifications = document.querySelectorAll('.notification');
+            let topPosition = 100;
+
+            notifications.forEach((notif) => {
+                notif.style.top = topPosition + 'px';
+                topPosition += notif.offsetHeight + 15;
+            });
         }
 
         // Load notification settings from Supabase
