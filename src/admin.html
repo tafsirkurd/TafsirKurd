@@ -1593,6 +1593,86 @@
             #dashboardSection > div:first-child > div:first-child > div:first-child {
                 font-size: 48px !important;
             }
+
+            /* Translations section mobile fixes */
+            #translationsSection .section > div:first-child {
+                padding: 20px 15px !important;
+            }
+
+            #translationsSection .section > div:first-child h2 {
+                font-size: 20px !important;
+            }
+
+            #translationsSection .section > div:first-child p {
+                font-size: 13px !important;
+            }
+
+            /* Filter and buttons mobile */
+            #translationsSection > div:nth-child(2) {
+                padding: 15px !important;
+            }
+
+            #translationsSection > div:nth-child(2) > div:first-child {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+
+            #translationsSection button {
+                width: 100% !important;
+                padding: 12px 16px !important;
+                font-size: 13px !important;
+            }
+
+            /* Save button mobile */
+            #translationsSection > div:nth-child(4) button {
+                padding: 14px 30px !important;
+                font-size: 16px !important;
+            }
+        }
+
+        /* Additional mobile responsiveness for all sections */
+        @media (max-width: 768px) {
+            .section {
+                margin-bottom: 20px !important;
+            }
+
+            .section > div {
+                padding: 20px 15px !important;
+            }
+
+            .section h2 {
+                font-size: 22px !important;
+            }
+
+            .section p {
+                font-size: 14px !important;
+            }
+
+            /* Form inputs */
+            input[type="text"],
+            input[type="email"],
+            input[type="number"],
+            select,
+            textarea {
+                font-size: 16px !important; /* Prevent zoom on iOS */
+                padding: 12px !important;
+            }
+
+            /* Tables */
+            table {
+                font-size: 13px !important;
+            }
+
+            table th,
+            table td {
+                padding: 10px 8px !important;
+            }
+
+            /* Modal/popup */
+            .modal {
+                width: 95% !important;
+                max-width: 95% !important;
+            }
         }
     </style>
 </head>
