@@ -3707,7 +3707,7 @@
         })();
         let autoScrollEnabled = false;
         let autoScrollAnimationFrame = null;
-        let autoScrollSpeed = 2; // Default speed (1=very slow, 5=very fast)
+        let autoScrollSpeed = 5; // Default speed (1=very very slow, 10=fastest)
         let lastScrollPosition = 0;
         let userScrolling = false;
         let autoScrollStartTime = null;
@@ -4657,23 +4657,34 @@
 
             // Load speed setting from localStorage
             const savedSpeed = localStorage.getItem('autoScrollSpeed');
-            autoScrollSpeed = savedSpeed ? parseInt(savedSpeed) : 2;
+            autoScrollSpeed = savedSpeed ? parseInt(savedSpeed) : 5;
 
             // Speed configurations: pixels per second (60fps for smooth animation)
-            // Speed 1 (Very Slow): 10px/second
-            // Speed 2 (Slow): 20px/second
-            // Speed 3 (Medium): 30px/second
-            // Speed 4 (Fast): 40px/second
-            // Speed 5 (Very Fast): 60px/second
+            // More granular control with 10 levels for perfect reading pace
+            // Speed 1: 8px/s  - Very very slow (for careful study)
+            // Speed 2: 12px/s - Very slow
+            // Speed 3: 16px/s - Slow
+            // Speed 4: 22px/s - Moderately slow
+            // Speed 5: 30px/s - Medium (default - comfortable reading)
+            // Speed 6: 40px/s - Moderately fast
+            // Speed 7: 52px/s - Fast
+            // Speed 8: 66px/s - Very fast
+            // Speed 9: 82px/s - Very very fast
+            // Speed 10: 100px/s - Fastest (for quick review)
             const pixelsPerSecond = {
-                1: 10,
-                2: 20,
-                3: 30,
-                4: 40,
-                5: 60
+                1: 8,
+                2: 12,
+                3: 16,
+                4: 22,
+                5: 30,
+                6: 40,
+                7: 52,
+                8: 66,
+                9: 82,
+                10: 100
             };
 
-            const scrollSpeed = pixelsPerSecond[autoScrollSpeed] || 20;
+            const scrollSpeed = pixelsPerSecond[autoScrollSpeed] || 30;
             autoScrollStartTime = performance.now();
             let lastFrameTime = autoScrollStartTime;
 
@@ -5542,6 +5553,15 @@
 
                 // Setup scroll progress tracking for all users
                 setupScrollProgress();
+
+                // Auto-start auto scroll if it's enabled in settings
+                setTimeout(() => {
+                    const autoScrollSetting = localStorage.getItem('autoScroll');
+                    if (autoScrollSetting === 'true' && autoScrollEnabled) {
+                        // Give time for content to render and scroll position to be restored
+                        startAutoScroll();
+                    }
+                }, 1500); // Wait 1.5 seconds for content to fully render
             }
         }
 
