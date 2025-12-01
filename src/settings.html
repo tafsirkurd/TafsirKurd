@@ -748,13 +748,13 @@
                             <i class="fas fa-gauge-high"></i>
                             خێرایا زڤراندنێ
                         </div>
-                        <div class="setting-description">دیارکرنا خێرایا زڤراندنا خۆکار</div>
+                        <div class="setting-description">دیارکرنا خێرایا زڤراندنا خۆکار (١٠ ئاست)</div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 15px; flex: 1; max-width: 300px;">
-                        <input type="range" id="autoScrollSpeedSlider" min="1" max="5" value="2" step="1"
-                            style="flex: 1; height: 6px; border-radius: 5px; background: linear-gradient(to right, #4CAF50 0%, #4CAF50 40%, #ddd 40%, #ddd 100%); outline: none; -webkit-appearance: none; cursor: pointer;"
-                            oninput="updateAutoScrollSpeed(this.value)">
-                        <span id="autoScrollSpeedValue" style="min-width: 80px; font-weight: 600; color: var(--text); text-align: center; font-size: 0.95rem;">هێواش</span>
+                    <div class="setting-slider-container">
+                        <input type="range" class="setting-slider" id="autoScrollSpeedSlider"
+                               min="1" max="10" value="5" step="1"
+                               oninput="updateAutoScrollSpeed(this.value)">
+                        <span class="slider-value" id="autoScrollSpeedValue">ناڤەند</span>
                     </div>
                 </div>
             </div>
@@ -900,8 +900,8 @@
                 autoScrollToggle.classList.remove('active');
             }
 
-            // Load auto-scroll speed (default: 2 - medium)
-            const autoScrollSpeed = localStorage.getItem('autoScrollSpeed') || '2';
+            // Load auto-scroll speed (default: 5 - medium)
+            const autoScrollSpeed = localStorage.getItem('autoScrollSpeed') || '5';
             const autoScrollSpeedSlider = document.getElementById('autoScrollSpeedSlider');
             const autoScrollSpeedValue = document.getElementById('autoScrollSpeedValue');
             if (autoScrollSpeedSlider) {
@@ -1005,32 +1005,37 @@
             updateAutoScrollSpeedDisplay(speed);
 
             const speedNames = {
-                '1': 'زۆر هێواش',
-                '2': 'هێواش',
-                '3': 'ناڤەند',
-                '4': 'خێرا',
-                '5': 'زۆر خێرا'
+                '1': '١ - زۆر زۆر هێواش',
+                '2': '٢ - زۆر هێواش',
+                '3': '٣ - هێواش',
+                '4': '٤ - کەمێ هێواش',
+                '5': '٥ - ناڤەند',
+                '6': '٦ - کەمێ خێرا',
+                '7': '٧ - خێرا',
+                '8': '٨ - زۆر خێرا',
+                '9': '٩ - زۆر زۆر خێرا',
+                '10': '١٠ - خێراترین'
             };
             showNotification(`خێرایا زڤراندنێ: ${speedNames[speed]}`);
         }
 
         function updateAutoScrollSpeedDisplay(speed) {
-            const slider = document.getElementById('autoScrollSpeedSlider');
             const valueDisplay = document.getElementById('autoScrollSpeedValue');
 
             const speedNames = {
-                '1': 'زۆر هێواش',
-                '2': 'هێواش',
-                '3': 'ناڤەند',
-                '4': 'خێرا',
-                '5': 'زۆر خێرا'
+                '1': '١ - زۆر زۆر هێواش',
+                '2': '٢ - زۆر هێواش',
+                '3': '٣ - هێواش',
+                '4': '٤ - کەمێ هێواش',
+                '5': '٥ - ناڤەند',
+                '6': '٦ - کەمێ خێرا',
+                '7': '٧ - خێرا',
+                '8': '٨ - زۆر خێرا',
+                '9': '٩ - زۆر زۆر خێرا',
+                '10': '١٠ - خێراترین'
             };
 
-            valueDisplay.textContent = speedNames[speed] || 'هێواش';
-
-            // Update slider background gradient
-            const percentage = ((speed - 1) / 4) * 100;
-            slider.style.background = `linear-gradient(to right, #4CAF50 0%, #4CAF50 ${percentage}%, #ddd ${percentage}%, #ddd 100%)`;
+            valueDisplay.textContent = speedNames[speed] || '٥ - ناڤەند';
         }
 
         function resetSettings() {
@@ -1060,6 +1065,13 @@
                 document.getElementById('darkModeToggle').classList.remove('active');
                 document.getElementById('tafsirToggle').classList.add('active');
                 document.getElementById('autoScrollToggle').classList.remove('active');
+
+                // Reset auto scroll speed to default (5 - medium)
+                const autoScrollSpeedSlider = document.getElementById('autoScrollSpeedSlider');
+                if (autoScrollSpeedSlider) {
+                    autoScrollSpeedSlider.value = '5';
+                    updateAutoScrollSpeedDisplay('5');
+                }
 
                 showNotification('ڕێکخستن ڤەگەڕیان سەر ڕەوشا بنەڕەت');
             }
