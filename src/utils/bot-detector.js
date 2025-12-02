@@ -21,13 +21,21 @@
             /petalbot/i, /serpstatbot/i, /blexbot/i, /dataprovider/i
         ],
 
-        // Allowed search engine bots (won't be blocked, but tracked)
+        // Allowed search engine and social media bots (won't be blocked, but tracked)
         allowedBots: [
             /googlebot/i,
             /bingbot/i,
             /duckduckbot/i,
             /baiduspider/i,
-            /yandexbot/i
+            /yandexbot/i,
+            /twitterbot/i,
+            /facebookexternalhit/i,
+            /whatsapp/i,
+            /telegrambot/i,
+            /linkedinbot/i,
+            /pinterestbot/i,
+            /slackbot/i,
+            /discordbot/i
         ],
 
         // Check if user agent is a bot
@@ -106,6 +114,21 @@
             };
         },
 
+        // Check if it's a social media bot
+        isSocialBot(userAgent) {
+            const socialBots = [
+                /twitterbot/i, /facebookexternalhit/i, /whatsapp/i,
+                /telegrambot/i, /linkedinbot/i, /pinterestbot/i,
+                /slackbot/i, /discordbot/i
+            ];
+            for (let pattern of socialBots) {
+                if (pattern.test(userAgent)) {
+                    return true;
+                }
+            }
+            return false;
+        },
+
         // Get bot information
         getBotInfo(userAgent) {
             const info = {
@@ -125,7 +148,12 @@
 
                 // Check if it's an allowed bot
                 if (this.isAllowedBot(userAgent || navigator.userAgent)) {
-                    info.botType = 'search-engine';
+                    // Distinguish between search engines and social media bots
+                    if (this.isSocialBot(userAgent || navigator.userAgent)) {
+                        info.botType = 'social-media';
+                    } else {
+                        info.botType = 'search-engine';
+                    }
                     info.isAllowed = true;
                 } else {
                     info.botType = 'malicious';
@@ -237,7 +265,11 @@
                     console.warn('🚫 Malicious bot detected, blocking...');
                     this.blockBot(botInfo.botType);
                 } else {
-                    console.log('✅ Search engine bot detected (allowed)');
+                    if (botInfo.botType === 'social-media') {
+                        console.log('✅ Social media bot detected (allowed)');
+                    } else {
+                        console.log('✅ Search engine bot detected (allowed)');
+                    }
                 }
             } else {
                 console.log('✅ Human user detected');
