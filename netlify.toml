@@ -64,6 +64,23 @@
   for = "/*.{png,jpg,jpeg,gif,webp,svg,ico}"
   [headers.values]
     Cache-Control = "public, max-age=31536000"
+    Access-Control-Allow-Origin = "*"
+    X-Robots-Tag = "all"
+
+# Social card images - must be accessible to social media bots
+[[headers]]
+  for = "/assets/images/social-card.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+    Access-Control-Allow-Origin = "*"
+    X-Robots-Tag = "all"
+
+[[headers]]
+  for = "/assets/images/quran-social-card.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+    Access-Control-Allow-Origin = "*"
+    X-Robots-Tag = "all"
 
 # Sitemap - Proper content type and caching for search engines
 [[headers]]
