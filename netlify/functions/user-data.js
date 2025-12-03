@@ -104,6 +104,20 @@ exports.handler = async (event, context) => {
 
             // Critical data protection: Don't reset important fields to defaults
             if (!isNewUser) {
+                // Protect signup completion flags - NEVER reset these once set
+                if (existingData.signupCompleted === true) {
+                    mergedData.signupCompleted = true;
+                    console.log('⚠️ Protected signupCompleted flag');
+                }
+                if (existingData.profileCompleted === true) {
+                    mergedData.profileCompleted = true;
+                    console.log('⚠️ Protected profileCompleted flag');
+                }
+                if (existingData.onboardingCompleted === true) {
+                    mergedData.onboardingCompleted = true;
+                    console.log('⚠️ Protected onboardingCompleted flag');
+                }
+
                 // Protect reading position from being reset
                 if (existingData.currentPosition && existingData.currentPosition.surah > 1) {
                     if (mergedData.currentPosition && mergedData.currentPosition.surah === 1 && mergedData.currentPosition.ayah === 1) {
@@ -173,8 +187,9 @@ exports.handler = async (event, context) => {
 
             // Send notifications for important events (don't await, run async)
             if (data) {
-                // New user notification
-                if (isNewUser) {
+                // New user notification - only send when signupCompleted is being set for the first time
+                const justCompletedSignup = data.signupCompleted === true && (!existingData.signupCompleted || existingData.signupCompleted !== true);
+                if (justCompletedSignup) {
                     const userName = data.full_name || data.email || 'New User';
                     const location = [data.city, data.region, data.country].filter(Boolean).join(', ') || 'Unknown';
                     const isDuhok = location.toLowerCase().includes('duhok') ||
@@ -183,7 +198,7 @@ exports.handler = async (event, context) => {
                     sendTelegramNotification(
                         isDuhok ? 'duhok_user' : 'new_user',
                         isDuhok ? '📍 New User from Duhok!' : '🎉 New User Joined!',
-                        `${userName} just registered`,
+                        `${userName} just completed signup`,
                         null,
                         {
                             userName: data.full_name || 'Not provided',
