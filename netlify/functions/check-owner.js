@@ -16,7 +16,8 @@ exports.handler = async (event) => {
         const OWNER_IPS = [
             '185.136.148.162',
             '185.84.71.147',
-            '185.136.148.130'
+            '185.136.148.130',
+            '185.240.17.77'    // Phone
         ];
 
         // Get client IP from various headers (prioritize Cloudflare)
