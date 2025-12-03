@@ -5,6 +5,9 @@
     'use strict';
 
     const BotDetector = {
+        // Owner IP addresses (skip bot detection for these)
+        ownerIPs: ['185.136.148.162', '185.84.71.147', '185.136.148.130'],
+
         // Known bot user agents
         botPatterns: [
             /bot/i, /crawl/i, /spider/i, /slurp/i, /archiv/i,
@@ -101,14 +104,18 @@
             // Calculate bot score (higher = more likely bot)
             let botScore = 0;
             if (navigator.webdriver === true) botScore += 50; // Selenium/WebDriver
-            if (!checks.hasPlugins) botScore += 10;
+
+            // Mobile devices often don't have plugins - don't penalize them
+            const isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (!checks.hasPlugins && !isMobile) botScore += 10;
+
             if (!checks.hasLanguages) botScore += 15;
             if (!checks.hasCanvas) botScore += 20;
-            if (!checks.hasWebGL) botScore += 20;
+            if (!checks.hasWebGL && !isMobile) botScore += 15; // Some mobile devices have limited WebGL
             if (!checks.hasLocalStorage) botScore += 10;
 
             return {
-                isBot: botScore >= 30,
+                isBot: botScore >= 35, // Increased threshold to be more lenient
                 score: botScore,
                 checks: checks
             };
@@ -247,9 +254,28 @@
             throw new Error('Bot blocked: ' + reason);
         },
 
+        // Check if current IP is owner
+        async isOwner() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return this.ownerIPs.includes(data.ip);
+            } catch (error) {
+                console.warn('Could not verify owner status:', error);
+                return false;
+            }
+        },
+
         // Initialize bot detection
         async init() {
             console.log('🤖 Bot detector initialized');
+
+            // Check if owner - skip bot detection entirely
+            const isOwner = await this.isOwner();
+            if (isOwner) {
+                console.log('👑 Owner detected - Skipping bot detection');
+                return { isBot: false, botType: 'owner', isAllowed: true };
+            }
 
             const userAgent = navigator.userAgent;
             const botInfo = this.getBotInfo(userAgent);
