@@ -19,10 +19,14 @@ exports.handler = async (event) => {
             '185.136.148.130'
         ];
 
-        // Get client IP from various headers (Netlify provides these)
-        const clientIP = event.headers['x-nf-client-connection-ip'] ||
-                        event.headers['x-forwarded-for']?.split(',')[0].trim() ||
+        // Get client IP from various headers (prioritize Cloudflare)
+        const clientIP = event.headers['cf-connecting-ip'] ||           // Cloudflare real IP (highest priority)
+                        event.headers['x-real-ip'] ||                  // Real IP header
+                        event.headers['x-nf-client-connection-ip'] ||  // Netlify client IP
+                        event.headers['x-forwarded-for']?.split(',')[0]?.trim() || // First IP in chain
                         event.headers['client-ip'];
+
+        console.log('Check owner - Detected IP:', clientIP);
 
         const isOwner = OWNER_IPS.includes(clientIP);
 
