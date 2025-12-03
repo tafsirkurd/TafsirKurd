@@ -998,7 +998,6 @@
             // IMPORTANT: Check DATABASE first, then localStorage as fallback
             const hasCompletedSignup = needsSetup ? false : (userData.signupCompleted === true || localStorage.getItem('signupCompleted') === 'true');
             const hasCompletedOnboarding = needsSetup ? false : (userData.onboardingCompleted === true || localStorage.getItem('onboardingCompleted') === 'true');
-            const hasCompletedProfile = needsSetup ? false : (userData.profileCompleted === true);
 
             // Sync database flags to localStorage for consistent state
             if (userData.signupCompleted === true) {
@@ -1017,12 +1016,12 @@
                 localStorage.removeItem('signupCompleted'); // Clear to enforce flow
                 localStorage.removeItem('onboardingCompleted'); // Clear to enforce flow
                 window.location.href = '/onboarding';
-            } else if (hasCompletedSignup && hasCompletedProfile) {
-                // Returning user with complete profile - go straight to Quran
-                console.log('✅ Returning user with complete profile - Going to Quran');
+            } else if (hasCompletedSignup) {
+                // Returning user who completed signup - go straight to Quran
+                console.log('✅ Returning user - Going directly to Quran');
                 window.location.href = '/quran';
             } else if (hasCompletedOnboarding) {
-                // User completed onboarding but not signup - go to signup
+                // User completed onboarding but not signup - go to complete signup
                 console.log('⏭️ Onboarding done - Going to complete signup');
                 window.location.href = '/complete-signup';
             } else {
