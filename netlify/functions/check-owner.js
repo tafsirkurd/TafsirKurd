@@ -35,7 +35,8 @@ exports.handler = async (event) => {
             headers,
             body: JSON.stringify({
                 isOwner,
-                // Don't send IP back for security
+                // Send owner IPs list only if requester is an owner (for device tracking)
+                ownerIPs: isOwner ? OWNER_IPS : []
             })
         };
     } catch (error) {
