@@ -316,20 +316,20 @@
             }
 
             .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
             }
 
             .stat-card {
-                padding: 15px;
+                padding: 20px 15px;
             }
 
             .stat-value {
-                font-size: 28px;
+                font-size: 32px;
             }
 
             .stat-label {
-                font-size: 11px;
+                font-size: 12px;
             }
 
             .table-container {
@@ -347,19 +347,28 @@
             }
 
             /* Make table scrollable horizontally on mobile */
-            .table-container > div {
+            .table-container {
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
 
             table {
-                min-width: 600px;
-                font-size: 11px;
+                min-width: 800px;
+                font-size: 12px;
             }
 
             th, td {
-                padding: 8px 6px;
-                white-space: nowrap;
+                padding: 10px 8px;
+            }
+
+            .table-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+
+            .table-header h2 {
+                font-size: 16px;
             }
 
             .status-badge {
@@ -391,6 +400,48 @@
             .access-denied-ip {
                 font-size: 12px;
                 padding: 8px 15px;
+            }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-value {
+                font-size: 28px;
+            }
+
+            .stat-label {
+                font-size: 11px;
+            }
+
+            table {
+                min-width: 700px;
+                font-size: 11px;
+            }
+
+            th, td {
+                padding: 8px 6px;
+            }
+
+            .table-header h2 {
+                font-size: 15px;
+            }
+
+            .refresh-btn {
+                padding: 6px 10px;
+                font-size: 11px;
             }
         }
     </style>
