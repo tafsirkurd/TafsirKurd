@@ -428,9 +428,35 @@
             </div>
         </div>
 
+        <!-- Owner Devices Section -->
+        <div class="table-container" style="border: 2px solid #667eea;">
+            <div class="table-header">
+                <h2>👑 My Devices</h2>
+                <button class="refresh-btn" onclick="loadAnalytics()">🔄 Refresh</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>IP Address</th>
+                        <th>Device Location</th>
+                        <th>Last Seen</th>
+                        <th>Total Sessions</th>
+                    </tr>
+                </thead>
+                <tbody id="ownerDevicesTable">
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            Loading your devices...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
         <div class="table-container">
             <div class="table-header">
-                <h2>📊 Admin Login Sessions</h2>
+                <h2>📊 All Admin Login Sessions</h2>
                 <button class="refresh-btn" onclick="loadAnalytics()">🔄 Refresh</button>
             </div>
             <table>
@@ -574,6 +600,8 @@
             }
         }
 
+        let ownerIPs = [];
+
         async function loadAnalytics() {
             // Check access first (only on initial load)
             if (!supabase) {
@@ -584,6 +612,16 @@
                 const initialized = await initSupabase();
                 if (!initialized) return;
             }
+
+            // Get owner IPs
+            try {
+                const ownerResponse = await fetch('/.netlify/functions/check-owner');
+                const ownerData = await ownerResponse.json();
+                ownerIPs = ownerData.ownerIPs || [];
+            } catch (err) {
+                console.error('Failed to get owner IPs:', err);
+            }
+
             try {
                 // Fetch all admin login sessions
                 const { data: sessions, error } = await supabase
@@ -602,6 +640,7 @@
                 }
 
                 console.log('✅ Loaded sessions:', sessions);
+                displayOwnerDevices(sessions || []);
                 displaySessions(sessions || []);
                 calculateStats(sessions || []);
                 displayIPStats(sessions || []);
@@ -613,6 +652,66 @@
                         <small>${err.message}</small>
                     </td></tr>`;
             }
+        }
+
+        function displayOwnerDevices(sessions) {
+            const tbody = document.getElementById('ownerDevicesTable');
+
+            if (ownerIPs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    No owner devices configured
+                </td></tr>`;
+                return;
+            }
+
+            const now = new Date();
+
+            // Create a map of IP -> latest session data
+            const deviceData = {};
+            ownerIPs.forEach(ip => {
+                deviceData[ip] = {
+                    sessions: [],
+                    lastSeen: null,
+                    location: 'Not seen yet',
+                    isOnline: false
+                };
+            });
+
+            // Populate with session data
+            sessions.forEach(session => {
+                if (ownerIPs.includes(session.ip_address)) {
+                    deviceData[session.ip_address].sessions.push(session);
+                    const lastActive = session.last_active ? new Date(session.last_active) : new Date(session.login_time);
+                    if (!deviceData[session.ip_address].lastSeen || lastActive > deviceData[session.ip_address].lastSeen) {
+                        deviceData[session.ip_address].lastSeen = lastActive;
+                        deviceData[session.ip_address].location = session.location || 'Unknown';
+                    }
+                    // Check if online (last_active within 60 seconds)
+                    if (session.last_active && (now - new Date(session.last_active)) < 60000) {
+                        deviceData[session.ip_address].isOnline = true;
+                    }
+                }
+            });
+
+            tbody.innerHTML = ownerIPs.map(ip => {
+                const data = deviceData[ip];
+                const isOnline = data.isOnline;
+                const totalSessions = data.sessions.length;
+
+                return `
+                    <tr style="background: ${isOnline ? 'rgba(46, 204, 113, 0.05)' : 'rgba(149, 165, 166, 0.05)'};">
+                        <td>
+                            <span class="status-badge ${isOnline ? 'status-online' : 'status-offline'}">
+                                ${isOnline ? '🟢 Online' : '⚫ Offline'}
+                            </span>
+                        </td>
+                        <td><span class="ip-address">${ip}</span></td>
+                        <td>${data.location}</td>
+                        <td class="timestamp">${data.lastSeen ? formatTimestamp(data.lastSeen) : 'Never'}</td>
+                        <td><strong>${totalSessions}</strong></td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function displaySessions(sessions) {
