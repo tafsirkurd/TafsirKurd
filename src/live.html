@@ -636,19 +636,15 @@
                 const isOnline = lastActive && (now - lastActive) < 60000; // 60 seconds threshold
 
                 const duration = lastActive ? formatDuration(loginTime, lastActive) : 'Active';
-                const isOwner = OWNER_IPS.includes(session.ip_address);
 
                 return `
-                    <tr style="${isOwner ? 'background: rgba(102, 126, 234, 0.05);' : ''}">
+                    <tr>
                         <td>
                             <span class="status-badge ${isOnline ? 'status-online' : 'status-offline'}">
                                 ${isOnline ? '🟢 Online' : '⚫ Offline'}
                             </span>
                         </td>
-                        <td>
-                            ${session.email || 'N/A'}
-                            ${isOwner ? '<span style="display: inline-block; margin-left: 8px; padding: 2px 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; font-size: 10px; font-weight: 700;">👑 OWNER</span>' : ''}
-                        </td>
+                        <td>${session.email || 'N/A'}</td>
                         <td><span class="ip-address">${session.ip_address || 'Unknown'}</span></td>
                         <td>${session.location || 'Unknown'}</td>
                         <td class="timestamp">${formatTimestamp(loginTime)}</td>
@@ -707,13 +703,9 @@
             }
 
             tbody.innerHTML = ipArray.map(([ip, stats]) => {
-                const isOwner = OWNER_IPS.includes(ip);
                 return `
-                <tr style="${isOwner ? 'background: rgba(102, 126, 234, 0.05);' : ''}">
-                    <td>
-                        <span class="ip-address">${ip}</span>
-                        ${isOwner ? '<span style="display: inline-block; margin-left: 8px; padding: 2px 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; font-size: 10px; font-weight: 700;">👑 OWNER</span>' : ''}
-                    </td>
+                <tr>
+                    <td><span class="ip-address">${ip}</span></td>
                     <td>${stats.count}</td>
                     <td class="timestamp">${formatTimestamp(new Date(stats.lastSeen))}</td>
                     <td>${stats.location}</td>
