@@ -484,33 +484,23 @@
         // Supabase client (initialized securely)
         let supabase;
 
-        // Owner IP addresses (only these IPs can access this page)
-        const OWNER_IPS = ['185.136.148.162', '185.84.71.147', '185.136.148.130'];
-
         // Check IP access before loading anything
         async function checkAccess() {
             const loadingScreen = document.getElementById('securityCheckLoading');
             const mainContainer = document.getElementById('mainContainer');
 
             try {
-                // Use Netlify function to get client IP (most reliable)
-                const ipResponse = await fetch('/.netlify/functions/get-client-ip');
+                // Check if owner using server-side function (IPs stored securely)
+                const ownerResponse = await fetch('/.netlify/functions/check-owner');
 
-                if (!ipResponse.ok) {
-                    throw new Error('Failed to fetch IP from server');
+                if (!ownerResponse.ok) {
+                    throw new Error('Failed to verify access');
                 }
 
-                const ipData = await ipResponse.json();
-                const visitorIP = ipData.ip;
-
-                if (!visitorIP || visitorIP === 'Unknown') {
-                    throw new Error('Could not detect your IP address');
-                }
-
-                console.log('Visitor IP:', visitorIP);
+                const ownerData = await ownerResponse.json();
 
                 // Check if IP is authorized
-                if (!OWNER_IPS.includes(visitorIP)) {
+                if (!ownerData.isOwner) {
                     // Hide loading screen
                     loadingScreen.style.display = 'none';
 
@@ -523,7 +513,7 @@
                                 This page is restricted to authorized administrators only.<br>
                                 Your IP address is not authorized to access this analytics dashboard.
                             </p>
-                            <div class="access-denied-ip">Your IP: ${visitorIP}</div>
+                            <div class="access-denied-ip">Access from unauthorized location</div>
                         </div>
                     `;
                     mainContainer.style.opacity = '1';

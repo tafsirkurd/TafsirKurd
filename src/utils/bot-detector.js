@@ -5,9 +5,6 @@
     'use strict';
 
     const BotDetector = {
-        // Owner IP addresses (skip bot detection for these)
-        ownerIPs: ['185.136.148.162', '185.84.71.147', '185.136.148.130'],
-
         // Known bot user agents
         botPatterns: [
             /bot/i, /crawl/i, /spider/i, /slurp/i, /archiv/i,
@@ -254,12 +251,12 @@
             throw new Error('Bot blocked: ' + reason);
         },
 
-        // Check if current IP is owner
+        // Check if current IP is owner (server-side check)
         async isOwner() {
             try {
-                const response = await fetch('https://api.ipify.org?format=json');
+                const response = await fetch('/.netlify/functions/check-owner');
                 const data = await response.json();
-                return this.ownerIPs.includes(data.ip);
+                return data.isOwner === true;
             } catch (error) {
                 console.warn('Could not verify owner status:', error);
                 return false;
