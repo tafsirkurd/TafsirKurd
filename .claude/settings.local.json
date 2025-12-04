@@ -59,7 +59,8 @@
       "Bash(where:*)",
       "Bash(powershell -Command:*)",
       "Bash(cp:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []
