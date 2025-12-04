@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v408-inline-css';
+const CACHE_NAME = 'tafsir-kurd-v409-performance';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -14,7 +14,7 @@ const urlsToCache = [
   '/complete-signup.html',
   '/privacy-policy.html',
   '/terms-and-conditions.html',
-  '/admin.html',
+  // Skip admin.html - too large (614KB), rarely needed offline
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
   '/styles/mobile-optimize.css',
@@ -29,13 +29,12 @@ const urlsToCache = [
   '/utils/text-highlighter.js',
   '/assets/fonts/fonts.css',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2',
-  '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-300.woff2',
-  '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2',
+  // Skip weight-300 and 500 - not critical, load on demand
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2',
-  '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-700.woff2',
+  // Skip weight-700 - can fallback to 600 if needed
   '/assets/fonts/hafs.woff2',
   '/assets/fonts/amiri-quran-v1-arabic-regular.woff2',
-  '/assets/fonts/surah-name-v4.woff2',
+  // Skip surah-name font - decorative, can lazy load on demand
   '/assets/fontawesome/all.min.css',
   '/assets/fontawesome/webfonts/fa-solid-900.woff2',
   '/assets/fontawesome/webfonts/fa-regular-400.woff2',
@@ -47,7 +46,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v408-inline-css');
+  console.log('[ServiceWorker] Installing v409-performance');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

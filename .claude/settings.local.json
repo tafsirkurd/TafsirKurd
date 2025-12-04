@@ -48,7 +48,18 @@
       "Bash(if [ ! -d \"docs\" ])",
       "Bash(then mkdir docs)",
       "Bash(if [ ! -f \"src/utils/footer-loader.js\" ])",
-      "Bash(then touch \"src/utils/footer-loader.js\")"
+      "Bash(then touch \"src/utils/footer-loader.js\")",
+      "Bash(git config:*)",
+      "WebFetch(domain:tafsirkurd.com)",
+      "WebFetch(domain:www.opengraph.xyz)",
+      "WebFetch(domain:www.linkedin.com)",
+      "WebFetch(domain:developers.facebook.com)",
+      "WebFetch(domain:x.com)",
+      "Bash(identify:*)",
+      "Bash(where:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(cp:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []
