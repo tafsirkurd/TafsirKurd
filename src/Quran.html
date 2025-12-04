@@ -291,6 +291,35 @@
             background: linear-gradient(135deg, var(--card-bg) 0%, var(--bg) 100%) !important;
         }
 
+        /* Decorative elements - hidden by default, appear on hover */
+        .daily-verse-card .corner-decor,
+        .daily-verse-card .top-stripe-decor {
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0 !important;
+        }
+
+        .daily-verse-card:hover .corner-decor-top {
+            opacity: 0.15 !important;
+        }
+
+        .daily-verse-card:hover .corner-decor-bottom {
+            opacity: 0.10 !important;
+        }
+
+        .daily-verse-card:hover .top-stripe-decor {
+            opacity: 0.6 !important;
+        }
+
+        /* Star animation - only on hover */
+        .daily-verse-card .fa-star {
+            animation: none !important;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .daily-verse-card:hover .fa-star {
+            animation: pulse-star 2s ease-in-out infinite !important;
+        }
+
         /* Smooth hide/show animations */
         .daily-verse-card.hiding {
             opacity: 0 !important;
@@ -3539,11 +3568,11 @@
             <section id="dailyVerseSection" style="max-width: 1400px; margin: 40px auto; padding: 0 30px; transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); opacity: 1;">
                 <div class="daily-verse-card" style="border-radius: 24px; padding: 45px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--primary); border: 2px solid var(--primary); position: relative; overflow: hidden;">
                     <!-- Decorative corner elements -->
-                    <div style="position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); opacity: 0.15; pointer-events: none;"></div>
-                    <div style="position: absolute; bottom: -40px; left: -40px; width: 160px; height: 160px; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); opacity: 0.10; pointer-events: none;"></div>
+                    <div class="corner-decor corner-decor-top" style="position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); pointer-events: none;"></div>
+                    <div class="corner-decor corner-decor-bottom" style="position: absolute; bottom: -40px; left: -40px; width: 160px; height: 160px; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); pointer-events: none;"></div>
 
                     <!-- Top Islamic pattern decoration -->
-                    <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), var(--primary), rgba(0, 0, 0, 0.1), transparent); opacity: 0.6;"></div>
+                    <div class="top-stripe-decor" style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), var(--primary), rgba(0, 0, 0, 0.1), transparent);"></div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; position: relative; z-index: 1;">
                         <div style="font-size: 1.7rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 12px;">
