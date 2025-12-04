@@ -386,13 +386,14 @@
             border-radius: 24px;
             z-index: -1;
             opacity: 0;
-            animation: glow-border 3s ease-in-out infinite;
+            animation: none;
             filter: blur(8px);
             transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .daily-verse-card:hover::before {
             opacity: 0.6;
+            animation: glow-border 3s ease-in-out infinite;
         }
 
         .daily-verse-card button {
@@ -3576,7 +3577,7 @@
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; position: relative; z-index: 1;">
                         <div style="font-size: 1.7rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-star" style="animation: pulse-star 2s ease-in-out infinite; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));"></i>
+                            <i class="fas fa-star" style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));"></i>
                             <span>ئایەتا رۆژانە</span>
                         </div>
                         <div style="background: linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.02) 100%); backdrop-filter: blur(10px); padding: 12px 24px; border-radius: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
