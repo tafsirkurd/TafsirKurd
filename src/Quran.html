@@ -292,7 +292,7 @@
             left: -2px;
             right: -2px;
             bottom: -2px;
-            background: linear-gradient(135deg, var(--primary), #58cc02, var(--primary));
+            background: linear-gradient(135deg, var(--primary), rgba(0, 0, 0, 0.3), var(--primary));
             border-radius: 24px;
             z-index: -1;
             opacity: 0;
@@ -3469,15 +3469,15 @@
             <section style="max-width: 1400px; margin: 40px auto; padding: 0 30px;">
                 <div class="daily-verse-card" style="background: linear-gradient(135deg, var(--card-bg) 0%, var(--bg) 100%); border-radius: 24px; padding: 45px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--primary); border: 2px solid var(--primary); position: relative; overflow: hidden;">
                     <!-- Decorative corner elements -->
-                    <div style="position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); opacity: 0.12; pointer-events: none;"></div>
-                    <div style="position: absolute; bottom: -40px; left: -40px; width: 160px; height: 160px; background: radial-gradient(circle, #58cc02 0%, transparent 70%); opacity: 0.08; pointer-events: none;"></div>
+                    <div style="position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); opacity: 0.15; pointer-events: none;"></div>
+                    <div style="position: absolute; bottom: -40px; left: -40px; width: 160px; height: 160px; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); opacity: 0.10; pointer-events: none;"></div>
 
                     <!-- Top Islamic pattern decoration -->
-                    <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--primary), #58cc02, var(--primary), transparent); opacity: 0.6;"></div>
+                    <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), var(--primary), rgba(0, 0, 0, 0.1), transparent); opacity: 0.6;"></div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; position: relative; z-index: 1;">
-                        <div style="font-size: 1.7rem; font-weight: 700; background: linear-gradient(135deg, var(--primary) 0%, #58cc02 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-star" style="color: var(--primary); -webkit-text-fill-color: var(--primary); animation: pulse-star 2s ease-in-out infinite; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));"></i>
+                        <div style="font-size: 1.7rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-star" style="animation: pulse-star 2s ease-in-out infinite; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));"></i>
                             <span>ئایەتا رۆژانە</span>
                         </div>
                         <div style="background: linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.02) 100%); backdrop-filter: blur(10px); padding: 12px 24px; border-radius: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
@@ -3490,16 +3490,16 @@
                         <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
                     </div>
 
-                    <div id="randomAyahKurdish" style="font-size: 1.2rem; line-height: 2; padding: 25px; padding-right: 30px; border-right: 4px solid; border-image: linear-gradient(180deg, var(--primary), #58cc02) 1; direction: rtl; text-align: right; margin-bottom: 25px; font-family: 'IBM Plex Sans Arabic', sans-serif; position: relative; z-index: 1; background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.02)); border-radius: 0 12px 12px 0;"></div>
+                    <div id="randomAyahKurdish" style="font-size: 1.2rem; line-height: 2; padding: 25px; padding-right: 30px; border-right: 4px solid var(--primary); direction: rtl; text-align: right; margin-bottom: 25px; font-family: 'IBM Plex Sans Arabic', sans-serif; position: relative; z-index: 1; background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.02)); border-radius: 0 12px 12px 0;"></div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 25px; border-top: 2px solid; border-image: linear-gradient(90deg, transparent, var(--border), transparent) 1; flex-wrap: wrap; gap: 15px; position: relative; z-index: 1;">
-                        <div id="randomAyahRef" style="font-weight: 700; background: linear-gradient(135deg, var(--primary) 0%, #58cc02 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 1.15rem;"></div>
-                        <button onclick="gotoRandomAyah()" style="padding: 14px 28px; background: linear-gradient(135deg, var(--primary) 0%, #58cc02 100%); color: var(--accent); border: none; border-radius: 14px; cursor: pointer; font-weight: 700; transition: all var(--transition); display: flex; align-items: center; gap: 10px; font-family: 'IBM Plex Sans Arabic', sans-serif; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); position: relative; overflow: hidden;">
+                        <div id="randomAyahRef" style="font-weight: 700; color: var(--primary); font-size: 1.15rem;"></div>
+                        <button onclick="gotoRandomAyah()" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 14px; cursor: pointer; font-weight: 700; transition: all var(--transition); display: flex; align-items: center; gap: 10px; font-family: 'IBM Plex Sans Arabic', sans-serif; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); position: relative; overflow: hidden;">
                             <span style="position: relative; z-index: 1; display: flex; align-items: center; gap: 10px;">
                                 <i class="fas fa-arrow-left"></i>
                                 پتر ببیە
                             </span>
-                            <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #58cc02 0%, var(--primary) 100%); opacity: 0; transition: opacity 0.3s;"></div>
+                            <div style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.15); opacity: 0; transition: opacity 0.3s;"></div>
                         </button>
                     </div>
                 </div>
