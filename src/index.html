@@ -3620,16 +3620,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Track geographic visit
     trackGeoVisit();
 
-    // SERVICE WORKER COMPLETELY DISABLED FOR DEBUGGING
+    // Register Service Worker for offline support
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-            registrations.forEach(registration => {
-                registration.unregister();
-                console.log('🗑️ DISABLED: Unregistered service worker for debugging');
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+                console.log('✅ Service Worker registered successfully:', registration.scope);
+            })
+            .catch(error => {
+                console.log('❌ Service Worker registration failed:', error);
             });
-        });
-        // NOT re-registering - service worker completely disabled
-        console.log('⚠️ SERVICE WORKER DISABLED - No caching active');
     }
 });
 
