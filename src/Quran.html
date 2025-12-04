@@ -357,15 +357,24 @@
             opacity: 0;
             animation: glow-border 3s ease-in-out infinite;
             filter: blur(8px);
+            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .daily-verse-card:hover::before {
             opacity: 0.6;
         }
 
+        .daily-verse-card button {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
         .daily-verse-card button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .daily-verse-card button > div {
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .daily-verse-card button:hover > div {
