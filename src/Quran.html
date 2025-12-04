@@ -271,8 +271,9 @@
         }
 
         @keyframes glow-border {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
+            0% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+            100% { opacity: 0.3; }
         }
 
         .daily-verse-card {
@@ -294,30 +295,41 @@
         /* Decorative elements - hidden by default, appear on hover */
         .daily-verse-card .corner-decor,
         .daily-verse-card .top-stripe-decor {
-            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             opacity: 0 !important;
         }
 
         .daily-verse-card:hover .corner-decor-top {
             opacity: 0.15 !important;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .daily-verse-card:hover .corner-decor-bottom {
             opacity: 0.10 !important;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .daily-verse-card:hover .top-stripe-decor {
             opacity: 0.6 !important;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* Star animation - only on hover */
         .daily-verse-card .fa-star {
             animation: none !important;
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(1) rotate(0deg);
+            opacity: 1;
         }
 
         .daily-verse-card:hover .fa-star {
             animation: pulse-star 2s ease-in-out infinite !important;
+        }
+
+        /* Ensure smooth animation return when hover ends */
+        .daily-verse-card .fa-star,
+        .daily-verse-card::before {
+            will-change: transform, opacity;
         }
 
         /* Smooth hide/show animations */
@@ -388,12 +400,13 @@
             opacity: 0;
             animation: none;
             filter: blur(8px);
-            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .daily-verse-card:hover::before {
             opacity: 0.6;
             animation: glow-border 3s ease-in-out infinite;
+            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .daily-verse-card button {
