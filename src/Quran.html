@@ -277,12 +277,71 @@
 
         .daily-verse-card {
             position: relative;
-            transition: transform 0.4s ease, box-shadow 0.4s ease !important;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            opacity: 1;
+            transform: scale(1);
+            max-height: 2000px;
+            overflow: hidden;
         }
 
         .daily-verse-card:hover {
-            transform: translateY(-4px);
+            transform: translateY(-4px) scale(1);
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.15) !important;
+        }
+
+        /* Smooth hide/show animations */
+        .daily-verse-card.hiding {
+            opacity: 0 !important;
+            transform: scale(0.95) translateY(-20px) !important;
+            max-height: 0 !important;
+            margin: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            border-width: 0 !important;
+        }
+
+        .daily-verse-card.hidden {
+            display: none !important;
+        }
+
+        .daily-verse-card.showing {
+            animation: cardFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes cardFadeIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes cardFadeOut {
+            0% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.95) translateY(-20px);
+            }
+        }
+
+        /* Section smooth transitions */
+        #dailyVerseSection.hiding {
+            opacity: 0 !important;
+            transform: translateY(-30px);
+            max-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden;
+        }
+
+        #dailyVerseSection.hidden {
+            display: none !important;
         }
 
         .daily-verse-card::before {
@@ -3466,7 +3525,7 @@
             </section>
 
             <!-- Random Ayah Section -->
-            <section style="max-width: 1400px; margin: 40px auto; padding: 0 30px;">
+            <section id="dailyVerseSection" style="max-width: 1400px; margin: 40px auto; padding: 0 30px; transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); opacity: 1;">
                 <div class="daily-verse-card" style="background: linear-gradient(135deg, var(--card-bg) 0%, var(--bg) 100%); border-radius: 24px; padding: 45px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--primary); border: 2px solid var(--primary); position: relative; overflow: hidden;">
                     <!-- Decorative corner elements -->
                     <div style="position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); opacity: 0.15; pointer-events: none;"></div>
@@ -6701,6 +6760,55 @@
         function gotoRandomAyah() {
             if (window.currentRandomAyah) {
                 openSurahWithAyah(window.currentRandomAyah.surah, window.currentRandomAyah.ayah);
+            }
+        }
+
+        // Smooth hide/show functions for daily verse card
+        function hideDailyVerse() {
+            const section = document.getElementById('dailyVerseSection');
+            const card = document.querySelector('.daily-verse-card');
+
+            if (!section) return;
+
+            // Add hiding class for animation
+            section.classList.add('hiding');
+            if (card) card.classList.add('hiding');
+
+            // After animation completes, add hidden class
+            setTimeout(() => {
+                section.classList.add('hidden');
+                if (card) card.classList.add('hidden');
+            }, 600); // Match transition duration
+        }
+
+        function showDailyVerse() {
+            const section = document.getElementById('dailyVerseSection');
+            const card = document.querySelector('.daily-verse-card');
+
+            if (!section) return;
+
+            // Remove hidden class first
+            section.classList.remove('hidden', 'hiding');
+            if (card) {
+                card.classList.remove('hidden', 'hiding');
+                card.classList.add('showing');
+
+                // Remove showing class after animation
+                setTimeout(() => {
+                    card.classList.remove('showing');
+                }, 600);
+            }
+        }
+
+        // Toggle daily verse visibility
+        function toggleDailyVerse() {
+            const section = document.getElementById('dailyVerseSection');
+            if (!section) return;
+
+            if (section.classList.contains('hidden') || section.classList.contains('hiding')) {
+                showDailyVerse();
+            } else {
+                hideDailyVerse();
             }
         }
 
