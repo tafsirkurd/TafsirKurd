@@ -1688,11 +1688,11 @@
             <div id="loginError" class="error-message" style="display:none;"></div>
             <form id="loginForm">
                 <div class="form-group">
-                    <label>Email</label>
+                    <label for="loginEmail">Email</label>
                     <input type="email" id="loginEmail" required autocomplete="email">
                 </div>
                 <div class="form-group">
-                    <label>Password</label>
+                    <label for="loginPassword">Password</label>
                     <div style="position: relative;">
                         <input type="password" id="loginPassword" required autocomplete="current-password" style="padding-right: 45px;">
                         <button type="button" id="togglePassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 20px; color: #666; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; transition: color 0.3s;" title="Show password">
@@ -2626,13 +2626,13 @@
                 <div style="background: white; padding: 25px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
                         <div>
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">🔍 Search Text</label>
+                            <label for="translationsSearch" style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">🔍 Search Text</label>
                             <input type="text" id="translationsSearch" placeholder="Search Kurdish text or key..."
                                 oninput="filterTranslations()"
                                 style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 15px;">
                         </div>
                         <div>
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">📁 Category</label>
+                            <label for="translationsCategory" style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">📁 Category</label>
                             <select id="translationsCategory" onchange="filterTranslations()"
                                 style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 15px; cursor: pointer;">
                                 <option value="all">All Categories</option>
@@ -2649,7 +2649,7 @@
                             </select>
                         </div>
                         <div>
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">📄 Page</label>
+                            <label for="translationsPage" style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">📄 Page</label>
                             <select id="translationsPage" onchange="filterTranslations()"
                                 style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 15px; cursor: pointer;">
                                 <option value="all">All Pages</option>
@@ -3404,12 +3404,12 @@
 
                     <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
                         <div style="margin-bottom: 15px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Email Subject</label>
+                            <label for="emailSubject" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Email Subject</label>
                             <input type="text" id="emailSubject" placeholder="e.g., بیرئینانا نوێ ژ تەفسیر کورد" style="width: 100%; padding: 12px; border: 2px solid rgba(255,255,255,0.3); border-radius: 8px; font-size: 14px; background: white; color: #333; box-sizing: border-box;">
                         </div>
 
                         <div style="margin-bottom: 15px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Email Message (Kurdish - RTL)</label>
+                            <label for="emailMessage" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Email Message (Kurdish - RTL)</label>
                             <textarea id="emailMessage" rows="6" placeholder="سلام عليكم {name}،
 
 ئەم هێڤیدارین تو یێ باش بی...
@@ -3421,7 +3421,7 @@
                         </div>
 
                         <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Send To</label>
+                            <label for="emailFilterType" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px;">Send To</label>
                             <select id="emailFilterType" style="width: 100%; padding: 12px; border: 2px solid rgba(255,255,255,0.3); border-radius: 8px; font-size: 14px; background: white; color: #333; box-sizing: border-box;">
                                 <option value="all">All Users (Everyone with email)</option>
                                 <option value="active">Active Users (Read within last 7 days)</option>
@@ -3659,14 +3659,14 @@
         <div class="modal-content" style="max-width: 600px;">
             <h3 class="modal-header">Add Background Image</h3>
             <div style="margin: 20px 0;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Page</label>
+                <label for="newBgPage" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Page</label>
                 <select id="newBgPage" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px;">
                     <option value="index">Homepage</option>
                     <option value="quran">Quran Page</option>
                 </select>
             </div>
             <div style="margin: 20px 0;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Image URL</label>
+                <label for="newBgImageUrl" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Image URL</label>
                 <input type="text" id="newBgImageUrl" placeholder="https://example.com/image.jpg" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px;">
                 <p style="margin: 8px 0 0 0; color: #666; font-size: 14px;">Or upload from your phone/computer:</p>
                 <input type="file" id="newBgImageFile" accept="image/*" style="margin-top: 10px; padding: 10px; width: 100%; border: 2px dashed #e0e0e0; border-radius: 8px;">
@@ -3687,7 +3687,7 @@
         <div class="modal-content">
             <h3 class="modal-header">Add New Featured Video</h3>
             <div class="form-group">
-                <label>Instagram Post URL</label>
+                <label for="videoUrl">Instagram Post URL</label>
                 <input type="url" id="videoUrl" placeholder="https://www.instagram.com/p/...">
             </div>
             <div class="modal-footer">
@@ -3702,11 +3702,11 @@
         <div class="modal-content">
             <h3 class="modal-header">Edit Video</h3>
             <div class="form-group">
-                <label>Instagram Post URL</label>
+                <label for="editVideoUrl">Instagram Post URL</label>
                 <input type="url" id="editVideoUrl" placeholder="https://www.instagram.com/p/...">
             </div>
             <div class="form-group">
-                <label>Position (1, 2, or 3)</label>
+                <label for="editVideoPosition">Position (1, 2, or 3)</label>
                 <input type="number" id="editVideoPosition" min="1" max="3" placeholder="Position">
             </div>
             <div class="modal-footer">
@@ -3721,19 +3721,19 @@
         <div class="modal-content">
             <h3 class="modal-header">Message Details</h3>
             <div class="form-group">
-                <label>From</label>
+                <label for="modalMessageName">From</label>
                 <input type="text" id="modalMessageName" readonly>
             </div>
             <div class="form-group">
-                <label>Email</label>
+                <label for="modalMessageEmail">Email</label>
                 <input type="email" id="modalMessageEmail" readonly>
             </div>
             <div class="form-group">
-                <label>Subject</label>
+                <label for="modalMessageSubject">Subject</label>
                 <input type="text" id="modalMessageSubject" readonly>
             </div>
             <div class="form-group">
-                <label>Message</label>
+                <label for="modalMessageText">Message</label>
                 <textarea id="modalMessageText" readonly></textarea>
             </div>
             <div class="modal-footer">
@@ -7502,7 +7502,7 @@
                             <div style="padding: 30px 25px;">
                                 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
                                     <div>
-                                        <label style="
+                                        <label for="value_${stat.stat_key}" style="
                                             display: block;
                                             margin-bottom: 10px;
                                             color: #555;
@@ -7536,7 +7536,7 @@
                                         >
                                     </div>
                                     <div>
-                                        <label style="
+                                        <label for="unit_${stat.stat_key}" style="
                                             display: block;
                                             margin-bottom: 10px;
                                             color: #555;
@@ -8210,7 +8210,7 @@
 
                             <div style="padding: 30px;">
                                 <div style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">ئایکۆن • Icon</label>
+                                    <label for="feature_icon_${index}" style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">ئایکۆن • Icon</label>
                                     <div class="icon-picker-container" style="position: relative;">
                                         <input type="text" id="feature_icon_${index}" value="${feature.icon_class}" placeholder="انتخاب ئایکۆن" readonly
                                             class="icon-picker-input form-input kurdish-text"
@@ -8223,7 +8223,7 @@
                                 </div>
 
                                 <div style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">سەردێڕ • Title</label>
+                                    <label for="feature_title_${index}" style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">سەردێڕ • Title</label>
                                     <input type="text" id="feature_title_${index}" value="${feature.title}"
                                         class="form-input kurdish-text"
                                         style="width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 18px; font-weight: 600; background: #f8f9fa; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif;"
@@ -8232,7 +8232,7 @@
                                 </div>
 
                                 <div style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">شرۆڤەکرن • Description</label>
+                                    <label for="feature_desc_${index}" style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">شرۆڤەکرن • Description</label>
                                     <textarea id="feature_desc_${index}" rows="5"
                                         class="form-input kurdish-text"
                                         style="width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; line-height: 1.6; resize: vertical; background: #f8f9fa; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif;"
@@ -8242,13 +8242,13 @@
 
                                 <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
                                     <div style="display: flex; align-items: center; gap: 10px;">
-                                        <label style="color: #555; font-size: 15px; font-weight: 700;">Order:</label>
+                                        <label for="feature_order_${index}" style="color: #555; font-size: 15px; font-weight: 700;">Order:</label>
                                         <input type="number" id="feature_order_${index}" value="${feature.display_order}" min="0"
                                             style="width: 90px; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; text-align: center; font-weight: bold; font-size: 18px; background: #f8f9fa;">
                                     </div>
 
                                     <div style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
-                                        <label class="toggle-switch" style="position: relative; display: inline-block; width: 54px; height: 30px;">
+                                        <label for="feature_active_${index}" class="toggle-switch" style="position: relative; display: inline-block; width: 54px; height: 30px;">
                                             <input type="checkbox" id="feature_active_${index}" ${feature.is_active ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
                                             <span class="toggle-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 30px; transition: 0.3s;"
                                                 onclick="this.previousElementSibling.checked = !this.previousElementSibling.checked; this.style.backgroundColor = this.previousElementSibling.checked ? '#4CAF50' : '#ccc';">
@@ -8414,7 +8414,7 @@
 
                             <div style="padding: 30px;">
                                 <div style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">ئایکۆن • Icon</label>
+                                    <label for="schedule_icon_${index}" style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">ئایکۆن • Icon</label>
                                     <div class="icon-picker-container" style="position: relative;">
                                         <input type="text" id="schedule_icon_${index}" value="${item.icon_class}" placeholder="انتخاب ئایکۆن" readonly
                                             class="icon-picker-input form-input kurdish-text"
@@ -8427,7 +8427,7 @@
                                 </div>
 
                                 <div style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">ناڤێ ڕۆژێ • Day Label</label>
+                                    <label for="schedule_day_${index}" style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">ناڤێ ڕۆژێ • Day Label</label>
                                     <input type="text" id="schedule_day_${index}" value="${item.day_label}"
                                         class="form-input kurdish-text"
                                         style="width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 18px; font-weight: 600; background: #f8f9fa; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif;"
@@ -8436,7 +8436,7 @@
                                 </div>
 
                                 <div style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">کات • Time</label>
+                                    <label for="schedule_time_${index}" style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">کات • Time</label>
                                     <input type="text" id="schedule_time_${index}" value="${item.time_label}"
                                         class="form-input kurdish-text"
                                         style="width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; background: #f8f9fa; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif;"
@@ -8445,7 +8445,7 @@
                                 </div>
 
                                 <div style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">بابەت • Topic</label>
+                                    <label for="schedule_topic_${index}" style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">بابەت • Topic</label>
                                     <input type="text" id="schedule_topic_${index}" value="${item.topic}"
                                         class="form-input kurdish-text"
                                         style="width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 18px; font-weight: 600; background: #f8f9fa; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif;"
@@ -8454,7 +8454,7 @@
                                 </div>
 
                                 <div style="margin-bottom: 25px;">
-                                    <label style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">شرۆڤەکرن • Description</label>
+                                    <label for="schedule_desc_${index}" style="display: block; margin-bottom: 10px; color: #555; font-size: 15px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">شرۆڤەکرن • Description</label>
                                     <textarea id="schedule_desc_${index}" rows="5"
                                         class="form-input kurdish-text"
                                         style="width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; line-height: 1.6; resize: vertical; background: #f8f9fa; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif;"
@@ -8464,13 +8464,13 @@
 
                                 <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
                                     <div style="display: flex; align-items: center; gap: 10px;">
-                                        <label style="color: #555; font-size: 15px; font-weight: 700;">Order:</label>
+                                        <label for="schedule_order_${index}" style="color: #555; font-size: 15px; font-weight: 700;">Order:</label>
                                         <input type="number" id="schedule_order_${index}" value="${item.display_order}" min="0"
                                             style="width: 90px; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; text-align: center; font-weight: bold; font-size: 18px; background: #f8f9fa;">
                                     </div>
 
                                     <div style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
-                                        <label class="toggle-switch" style="position: relative; display: inline-block; width: 54px; height: 30px;">
+                                        <label for="schedule_active_${index}" class="toggle-switch" style="position: relative; display: inline-block; width: 54px; height: 30px;">
                                             <input type="checkbox" id="schedule_active_${index}" ${item.is_active ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
                                             <span class="toggle-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 30px; transition: 0.3s;"
                                                 onclick="this.previousElementSibling.checked = !this.previousElementSibling.checked; this.style.backgroundColor = this.previousElementSibling.checked ? '#4CAF50' : '#ccc';">
@@ -8716,30 +8716,30 @@
                                                 <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; border: 2px solid #e0e0e0; transition: all 0.3s;">
                                                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
                                                         <div>
-                                                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #555; font-size: 13px;">🔑 Key ID</label>
+                                                            <label for="trans_key_${globalIndex}" style="display: block; margin-bottom: 6px; font-weight: 600; color: #555; font-size: 13px;">🔑 Key ID</label>
                                                             <input type="text" id="trans_key_${globalIndex}" value="${item.key_id}" readonly
                                                                 style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: monospace; background: #f5f5f5; color: #666; cursor: not-allowed;">
                                                         </div>
                                                         <div>
-                                                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #555; font-size: 13px;">📄 Page</label>
+                                                            <label for="trans_page_${globalIndex}" style="display: block; margin-bottom: 6px; font-weight: 600; color: #555; font-size: 13px;">📄 Page</label>
                                                             <input type="text" id="trans_page_${globalIndex}" value="${item.page}" readonly
                                                                 style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: #f5f5f5; color: #666; cursor: not-allowed;">
                                                         </div>
                                                         <div>
-                                                            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #555; font-size: 13px;">📝 Context</label>
+                                                            <label for="trans_context_${globalIndex}" style="display: block; margin-bottom: 6px; font-weight: 600; color: #555; font-size: 13px;">📝 Context</label>
                                                             <input type="text" id="trans_context_${globalIndex}" value="${item.context}" readonly
                                                                 style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: #f5f5f5; color: #666; cursor: not-allowed;">
                                                         </div>
                                                     </div>
                                                     <div style="margin-bottom: 15px;">
-                                                        <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #555; font-size: 13px; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">🌐 Kurdish Text</label>
+                                                        <label for="trans_text_${globalIndex}" style="display: block; margin-bottom: 6px; font-weight: 600; color: #555; font-size: 13px; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text-bold">🌐 Kurdish Text</label>
                                                         <textarea id="trans_text_${globalIndex}" rows="2"
                                                             class="kurdish-text"
                                                             style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; line-height: 1.6; background: white; font-family: 'IBM Plex Sans Arabic', sans-serif; resize: vertical;">${item.kurdish_text}</textarea>
                                                     </div>
                                                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                                                         <div style="display: flex; align-items: center; gap: 10px;">
-                                                            <label class="toggle-switch" style="position: relative; display: inline-block; width: 50px; height: 26px;">
+                                                            <label for="trans_active_${globalIndex}" class="toggle-switch" style="position: relative; display: inline-block; width: 50px; height: 26px;">
                                                                 <input type="checkbox" id="trans_active_${globalIndex}" ${item.is_active ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
                                                                 <span class="toggle-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: ${item.is_active ? '#4CAF50' : '#ccc'}; border-radius: 26px; transition: 0.3s;"
                                                                     onclick="this.previousElementSibling.checked = !this.previousElementSibling.checked; this.style.backgroundColor = this.previousElementSibling.checked ? '#4CAF50' : '#ccc';">
