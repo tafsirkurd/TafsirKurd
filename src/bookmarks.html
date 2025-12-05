@@ -2,6 +2,7 @@
 <html dir="rtl" lang="ku">
 <head>
     <script src="/utils/theme-loader.js"></script>
+    <script src="/utils/scroll-position.js"></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#000000">
@@ -382,9 +383,19 @@
             margin-top: 15px;
             display: flex;
             align-items: center;
-            gap: 5px;
+            justify-content: flex-start;
+            gap: 8px;
             position: relative;
             z-index: 1;
+            flex-wrap: wrap;
+        }
+
+        .timestamp i {
+            flex-shrink: 0;
+        }
+
+        .timestamp .time-ago {
+            flex-shrink: 0;
         }
 
         /* Filter & Sort */
@@ -1011,9 +1022,19 @@
         }
 
         function renderBookmarks() {
+            const sortSelect = document.getElementById('sortSelect');
+            const searchInput = document.getElementById('searchInput');
+            const currentSort = sortSelect ? sortSelect.value : 'newest';
+            const currentSearch = searchInput ? searchInput.value : '';
+
+            // Use filterAndRenderBookmarks for consistent sorting
+            filterAndRenderBookmarks(currentSearch, currentSort);
+        }
+
+        function renderBookmarksDirectly(bookmarksToRender) {
             const container = document.getElementById('bookmarksContainer');
 
-            if (bookmarkedAyahs.length === 0) {
+            if (bookmarksToRender.length === 0 && bookmarkedAyahs.length === 0) {
                 document.getElementById('statsBar').style.display = 'none';
                 document.getElementById('controlsBar').style.display = 'none';
                 container.innerHTML = `
@@ -1049,7 +1070,7 @@
             container.innerHTML = '<div class="bookmarks-grid" id="bookmarksList"></div>';
             const list = document.getElementById('bookmarksList');
 
-            bookmarkedAyahs.forEach(key => {
+            bookmarksToRender.forEach(key => {
                 const [surah, ayah] = key.split('-').map(Number);
                 const note = ayahNotes[key] || '';
                 const timestamp = ayahTimestamps[key] || Date.now();
@@ -1120,10 +1141,8 @@
         }
 
         function filterAndRenderBookmarks(searchQuery = '', sortBy = 'newest') {
-            const container = document.getElementById('bookmarksContainer');
-
             if (bookmarkedAyahs.length === 0) {
-                renderBookmarks();
+                renderBookmarksDirectly([]);
                 return;
             }
 
@@ -1158,26 +1177,20 @@
                 } else if (sortBy === 'oldest') {
                     return timestampA - timestampB;
                 } else if (sortBy === 'surah') {
-                    const [surahA] = a.split('-').map(Number);
-                    const [surahB] = b.split('-').map(Number);
-                    return surahA - surahB;
+                    const [surahA, ayahA] = a.split('-').map(Number);
+                    const [surahB, ayahB] = b.split('-').map(Number);
+                    if (surahA !== surahB) {
+                        return surahA - surahB;
+                    }
+                    return ayahA - ayahB;
                 }
                 return 0;
             });
 
-            // Update stats
-            document.getElementById('totalBookmarks').textContent = bookmarkedAyahs.length;
-            const notesCount = Object.keys(ayahNotes).filter(key => ayahNotes[key]).length;
-            document.getElementById('totalNotes').textContent = notesCount;
-            const uniqueSurahs = new Set(bookmarkedAyahs.map(key => key.split('-')[0])).size;
-            document.getElementById('totalSurahs').textContent = uniqueSurahs;
-
-            // Render filtered bookmarks
-            container.innerHTML = '<div class="bookmarks-grid" id="bookmarksList"></div>';
-            const list = document.getElementById('bookmarksList');
-
-            if (filtered.length === 0) {
-                list.innerHTML = `
+            // Show no results message if filtered is empty
+            if (filtered.length === 0 && searchQuery) {
+                const container = document.getElementById('bookmarksContainer');
+                container.innerHTML = `
                     <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
                         <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
                         <p style="font-size: 1.2rem;">چ ئەنجامەک نەهاتە دیتن</p>
@@ -1187,74 +1200,8 @@
                 return;
             }
 
-            filtered.forEach(key => {
-                const [surah, ayah] = key.split('-').map(Number);
-                const note = ayahNotes[key] || '';
-                const timestamp = ayahTimestamps[key] || Date.now();
-
-                const card = document.createElement('div');
-                card.className = 'bookmark-card';
-                const surahInfo = surahNames[surah] || { english: `Surah ${surah}`, arabic: '' };
-                card.innerHTML = `
-                    <div class="bookmark-header">
-                        <div class="bookmark-ref">
-                            <i class="fas fa-bookmark"></i>
-                            <div style="display: flex; flex-direction: column; gap: 5px;">
-                                <div style="font-size: 1.1rem; font-weight: 600;">
-                                    ${surah}. ${surahInfo.english}
-                                </div>
-                                <div style="font-size: 0.9rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
-                                    <span>${surahInfo.arabic}</span>
-                                    <span>•</span>
-                                    <span>ئایەتا ${ayah}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bookmark-actions">
-                            <button class="action-btn" onclick="goToAyah(${surah}, ${ayah})" title="بچە بۆ ئایەتێ">
-                                <i class="fas fa-external-link-alt"></i>
-                            </button>
-                            <button class="action-btn" onclick="toggleNote('${key}')" title="تێبینی">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="action-btn delete" onclick="removeBookmark('${key}')" title="سڕینەڤە">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="ayah-arabic" id="ayah-${key}">
-                        ${getCachedAyahText(key) || getAyahTextSync(surah, ayah) || '<i class="fas fa-spinner fa-spin"></i>'}
-                    </div>
-                    ${note ? `
-                        <div class="ayah-note">
-                            <div class="note-label">
-                                <i class="fas fa-sticky-note"></i>
-                                تێبینی:
-                            </div>
-                            <div class="note-text">${note}</div>
-                        </div>
-                    ` : ''}
-                    <div id="note-editor-${key}" style="display: none;">
-                        <textarea class="note-input" id="note-input-${key}" placeholder="تێبینییا خۆ ل ڤێرێ بنڤیسە...">${note}</textarea>
-                        <button class="save-note-btn" onclick="saveNote('${key}')">
-                            <i class="fas fa-save"></i> پاشکەفتکرن
-                        </button>
-                    </div>
-                    <div class="timestamp" data-timestamp="${timestamp}">
-                        <i class="far fa-clock"></i>
-                        نیشانەکری <span class="time-ago">${formatTimestamp(timestamp)}</span>
-                    </div>
-                `;
-                list.appendChild(card);
-
-                // Only load from API if not cached
-                if (!getCachedAyahText(key) && !getAyahTextSync(surah, ayah)) {
-                    loadAyahText(surah, ayah, key);
-                }
-            });
-
-            // Update timestamps in real-time
-            updateTimestamps();
+            // Render the filtered and sorted bookmarks
+            renderBookmarksDirectly(filtered);
         }
 
         async function loadAyahText(surah, ayah, key) {
