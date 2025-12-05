@@ -156,6 +156,16 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            /* Better tap targets on mobile */
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+            /* Smoother font rendering */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        html {
+            /* Prevent text size adjustment on iOS */
+            -webkit-text-size-adjust: 100%;
         }
 
         body {
@@ -165,6 +175,9 @@
             color: var(--text);
             line-height: 1.6;
             transition: background-color var(--transition), color var(--transition);
+            /* Safe area for notched devices (iPhone X+) */
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
         }
 
         body.no-scroll {
@@ -2735,8 +2748,19 @@
         @media (max-width: 768px) {
             :root {
                 --sidebar-width: 85%;
-                --arabic-size: 1.3rem;
-                --tafsir-size: 0.8rem;
+                --arabic-size: 1.8rem; /* Larger for better mobile readability */
+                --tafsir-size: 0.95rem; /* Slightly larger for mobile */
+            }
+
+            /* Ensure all touch targets are at least 44x44px (Apple guidelines) */
+            button, a, .clickable {
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            /* Better mobile scrolling */
+            * {
+                -webkit-overflow-scrolling: touch;
             }
 
             .surah-reader-page {
