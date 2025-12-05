@@ -4301,10 +4301,9 @@
                 // Restore state if returning from settings
                 restoreStateFromSettings();
 
-                // Restore home page scroll position after rendering is complete
-                // This ensures the scroll position is restored AFTER all content is rendered
-                // Use longer delay to ensure all content is fully rendered
-                setTimeout(() => {
+                // Restore home page scroll position IMMEDIATELY to prevent flash
+                // Use requestAnimationFrame for next paint cycle - faster than setTimeout
+                requestAnimationFrame(() => {
                     const homePage = document.getElementById('homePage');
                     const isOnHomePage = homePage && !homePage.classList.contains('hidden');
 
@@ -4349,19 +4348,14 @@
                             const scrollPos = parseInt(savedPosition);
                             console.log('✅ Restoring scroll to:', scrollPos);
 
-                            // Force scroll with a slight delay to ensure DOM is ready
-                            setTimeout(() => {
-                                window.scrollTo({
-                                    top: scrollPos,
-                                    behavior: 'auto' // Use 'auto' for instant, no animation
-                                });
-                                console.log('📍 Scroll restored to:', scrollPos, 'Current position:', window.scrollY);
-                            }, 100);
+                            // Apply scroll INSTANTLY with no delay and no animation to prevent flash
+                            window.scrollTo(0, scrollPos);
+                            console.log('📍 Scroll restored to:', scrollPos, 'Current position:', window.scrollY);
                         } else {
                             console.log('ℹ️ No saved scroll position found');
                         }
                     }
-                }, 500); // Increased from 300ms to 500ms for better reliability
+                });
 
                 // Save home page scroll position continuously while scrolling
                 let homeScrollSaveTimeout;
@@ -6093,14 +6087,13 @@
             }
 
             if (savedPosition) {
-                setTimeout(() => {
-                    window.scrollTo({
-                        top: parseInt(savedPosition),
-                        behavior: 'smooth'
-                    });
-                }, 100);
+                // Apply scroll INSTANTLY to prevent flash - use requestAnimationFrame
+                requestAnimationFrame(() => {
+                    window.scrollTo(0, parseInt(savedPosition));
+                    console.log('📍 showHomePage: Restored scroll to', savedPosition);
+                });
             } else {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo(0, 0);
             }
         }
 
