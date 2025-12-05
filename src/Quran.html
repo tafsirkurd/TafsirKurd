@@ -4210,20 +4210,35 @@
 
         // Initialize on Load
         document.addEventListener('DOMContentLoaded', async () => {
-            initPreloader();
+            try {
+                initPreloader();
 
-            // Initialize UI immediately (don't wait for data)
-            checkAuthentication();
-            initializeApp();
-            initScrollToTop();
+                // Initialize UI immediately (don't wait for data)
+                checkAuthentication();
+                initializeApp();
+                initScrollToTop();
 
-            // Set a maximum timeout for loading (10 seconds)
-            const loadTimeout = setTimeout(() => {
-                console.warn('⚠️ Loading timeout reached, showing page anyway');
-                if (preloaderHideCallback) {
-                    preloaderHideCallback();
-                }
-            }, 10000);
+                // Set a maximum timeout for loading (10 seconds)
+                const loadTimeout = setTimeout(() => {
+                    console.warn('⚠️ Loading timeout reached, showing page anyway');
+                    if (preloaderHideCallback) {
+                        preloaderHideCallback();
+                    }
+                    // Force show page even if callback doesn't work
+                    const preloader = document.getElementById('preloader');
+                    const mainContent = document.getElementById('mainContent');
+                    if (preloader) preloader.style.display = 'none';
+                    if (mainContent) {
+                        mainContent.classList.add('loaded');
+                        mainContent.style.opacity = '1';
+                        mainContent.style.visibility = 'visible';
+                    }
+                    document.body.classList.remove('no-scroll');
+                }, 10000);
+            } catch (initError) {
+                console.error('Critical error in initialization:', initError);
+                alert('Critical initialization error: ' + initError.message);
+            }
 
             try {
                 // Load data first before showing anything
@@ -4257,10 +4272,22 @@
                 restoreStateFromSettings();
             } catch (error) {
                 console.error('Error during initialization:', error);
+                // Show visible error for debugging
+                alert('Page load error: ' + error.message + '\n\nPlease screenshot this and report it.');
                 clearTimeout(loadTimeout);
                 if (preloaderHideCallback) {
                     preloaderHideCallback();
                 }
+                // Force show page
+                const preloader = document.getElementById('preloader');
+                const mainContent = document.getElementById('mainContent');
+                if (preloader) preloader.style.display = 'none';
+                if (mainContent) {
+                    mainContent.classList.add('loaded');
+                    mainContent.style.opacity = '1';
+                    mainContent.style.visibility = 'visible';
+                }
+                document.body.classList.remove('no-scroll');
             }
         });
 
