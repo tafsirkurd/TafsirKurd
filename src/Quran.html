@@ -2,6 +2,7 @@
 <html dir="rtl" lang="ku">
 <head>
     <script src="/utils/theme-loader.js"></script>
+    <script src="/utils/scroll-position.js"></script>
     <script src="/utils/bot-detector.js" defer></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -4299,6 +4300,93 @@
 
                 // Restore state if returning from settings
                 restoreStateFromSettings();
+
+                // Restore home page scroll position after rendering is complete
+                // This ensures the scroll position is restored AFTER all content is rendered
+                // Use longer delay to ensure all content is fully rendered
+                setTimeout(() => {
+                    const homePage = document.getElementById('homePage');
+                    const isOnHomePage = homePage && !homePage.classList.contains('hidden');
+
+                    console.log('🔍 Checking scroll restoration:', { isOnHomePage, pathname: window.location.pathname });
+
+                    if (isOnHomePage) {
+                        // Check multiple sources for saved scroll position
+                        // 1. Quran-specific saved position (from SPA navigation)
+                        let savedPosition = sessionStorage.getItem('quran_home_scroll_position');
+                        console.log('🔍 Quran-specific position:', savedPosition);
+
+                        // 2. Universal scroll position script saved position (from external navigation)
+                        if (!savedPosition) {
+                            // Try multiple pathname variations
+                            const possibleKeys = [
+                                window.location.pathname + window.location.search,
+                                '/quran',
+                                '/Quran.html'
+                            ];
+
+                            for (const pageKey of possibleKeys) {
+                                console.log('🔍 Looking for universal position with key:', pageKey);
+                                const universalScrollData = sessionStorage.getItem('scroll_' + pageKey);
+                                console.log('🔍 Universal scroll data:', universalScrollData);
+
+                                if (universalScrollData) {
+                                    try {
+                                        const data = JSON.parse(universalScrollData);
+                                        savedPosition = data.position;
+                                        console.log('🔍 Parsed position from universal:', savedPosition);
+                                        // Clear it since we're using it
+                                        sessionStorage.removeItem('scroll_' + pageKey);
+                                        break;
+                                    } catch (e) {
+                                        console.warn('Failed to parse universal scroll data:', e);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (savedPosition) {
+                            const scrollPos = parseInt(savedPosition);
+                            console.log('✅ Restoring scroll to:', scrollPos);
+
+                            // Force scroll with a slight delay to ensure DOM is ready
+                            setTimeout(() => {
+                                window.scrollTo({
+                                    top: scrollPos,
+                                    behavior: 'auto' // Use 'auto' for instant, no animation
+                                });
+                                console.log('📍 Scroll restored to:', scrollPos, 'Current position:', window.scrollY);
+                            }, 100);
+                        } else {
+                            console.log('ℹ️ No saved scroll position found');
+                        }
+                    }
+                }, 500); // Increased from 300ms to 500ms for better reliability
+
+                // Save home page scroll position continuously while scrolling
+                let homeScrollSaveTimeout;
+                window.addEventListener('scroll', () => {
+                    const homePage = document.getElementById('homePage');
+                    const isOnHomePage = homePage && !homePage.classList.contains('hidden');
+
+                    if (isOnHomePage) {
+                        clearTimeout(homeScrollSaveTimeout);
+                        homeScrollSaveTimeout = setTimeout(() => {
+                            const scrollPos = window.scrollY;
+                            // Save to Quran-specific key for SPA navigation
+                            sessionStorage.setItem('quran_home_scroll_position', scrollPos.toString());
+
+                            // Also save to universal scroll position key for external navigation (settings, etc.)
+                            const pageKey = window.location.pathname + window.location.search;
+                            const scrollData = {
+                                position: scrollPos,
+                                timestamp: Date.now()
+                            };
+                            sessionStorage.setItem('scroll_' + pageKey, JSON.stringify(scrollData));
+                            console.log('💾 Saved scroll position:', scrollPos, 'to keys:', 'quran_home_scroll_position', 'scroll_' + pageKey);
+                        }, 100);
+                    }
+                }, { passive: true });
             } catch (error) {
                 console.error('Error during initialization:', error);
                 // Only show alert in development, not production
@@ -5705,6 +5793,22 @@
 
         // Open Surah
         function openSurah(surahNum) {
+            // Save current scroll position of home page before opening surah
+            const homePage = document.getElementById('homePage');
+            if (homePage && !homePage.classList.contains('hidden')) {
+                const scrollPos = window.scrollY;
+                // Save to Quran-specific key
+                sessionStorage.setItem('quran_home_scroll_position', scrollPos.toString());
+
+                // Also save to universal scroll position key
+                const pageKey = window.location.pathname + window.location.search;
+                const scrollData = {
+                    position: scrollPos,
+                    timestamp: Date.now()
+                };
+                sessionStorage.setItem('scroll_' + pageKey, JSON.stringify(scrollData));
+            }
+
             currentSurahNumber = surahNum;
             showSurahReader(surahNum);
 
@@ -5729,6 +5833,22 @@
         }
 
         function openSurahWithAyah(surahNum, ayahNum) {
+            // Save current scroll position of home page before opening surah
+            const homePage = document.getElementById('homePage');
+            if (homePage && !homePage.classList.contains('hidden')) {
+                const scrollPos = window.scrollY;
+                // Save to Quran-specific key
+                sessionStorage.setItem('quran_home_scroll_position', scrollPos.toString());
+
+                // Also save to universal scroll position key
+                const pageKey = window.location.pathname + window.location.search;
+                const scrollData = {
+                    position: scrollPos,
+                    timestamp: Date.now()
+                };
+                sessionStorage.setItem('scroll_' + pageKey, JSON.stringify(scrollData));
+            }
+
             currentSurahNumber = surahNum;
             showSurahReader(surahNum, ayahNum);
 
@@ -5945,18 +6065,72 @@
             // Update browser history
             history.pushState({ page: 'home' }, 'تەفسیر کورد - Tafsir Kurd', '/');
 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Restore home page scroll position if available
+            // Check multiple sources for saved scroll position
+            let savedPosition = sessionStorage.getItem('quran_home_scroll_position');
+
+            // Also check universal scroll position with multiple key variations
+            if (!savedPosition) {
+                const possibleKeys = [
+                    window.location.pathname + window.location.search,
+                    '/quran',
+                    '/Quran.html'
+                ];
+
+                for (const pageKey of possibleKeys) {
+                    const universalScrollData = sessionStorage.getItem('scroll_' + pageKey);
+                    if (universalScrollData) {
+                        try {
+                            const data = JSON.parse(universalScrollData);
+                            savedPosition = data.position;
+                            console.log('📍 Found scroll position with key:', pageKey, 'Position:', savedPosition);
+                            break;
+                        } catch (e) {
+                            console.warn('Failed to parse universal scroll data');
+                        }
+                    }
+                }
+            }
+
+            if (savedPosition) {
+                setTimeout(() => {
+                    window.scrollTo({
+                        top: parseInt(savedPosition),
+                        behavior: 'smooth'
+                    });
+                }, 100);
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         }
 
         // Save state before navigating to settings
         function saveStateBeforeSettings(event) {
             const readerPage = document.getElementById('surahReaderPage');
             const isReadingQuran = readerPage && readerPage.classList.contains('visible');
+            const homePage = document.getElementById('homePage');
+            const isOnHomePage = homePage && !homePage.classList.contains('hidden');
+
+            console.log('💾 saveStateBeforeSettings called:', { isReadingQuran, isOnHomePage, scrollY: window.scrollY });
 
             sessionStorage.setItem('returnToQuranReader', isReadingQuran ? 'true' : 'false');
             if (isReadingQuran) {
                 sessionStorage.setItem('returnToSurah', currentSurahNumber);
                 sessionStorage.setItem('returnScrollPosition', window.scrollY);
+                console.log('💾 Saved surah reading state:', currentSurahNumber, window.scrollY);
+            } else if (isOnHomePage) {
+                const scrollPos = window.scrollY;
+                // Save home page scroll position to Quran-specific key
+                sessionStorage.setItem('quran_home_scroll_position', scrollPos.toString());
+
+                // Also save to universal scroll position key for external navigation
+                const pageKey = window.location.pathname + window.location.search;
+                const scrollData = {
+                    position: scrollPos,
+                    timestamp: Date.now()
+                };
+                sessionStorage.setItem('scroll_' + pageKey, JSON.stringify(scrollData));
+                console.log('💾 Saved home page scroll position:', scrollPos, 'Keys:', 'quran_home_scroll_position', 'scroll_' + pageKey);
             }
 
             // Allow default navigation to continue
@@ -5983,6 +6157,9 @@
                 sessionStorage.removeItem('returnToQuranReader');
                 sessionStorage.removeItem('returnToSurah');
                 sessionStorage.removeItem('returnScrollPosition');
+
+                // Also clear home page scroll position since we're opening a surah
+                sessionStorage.removeItem('quran_home_scroll_position');
             }
         }
 
