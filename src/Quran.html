@@ -4434,8 +4434,8 @@
                 // If not cached, fetch from server
                 console.log('📥 Fetching Quran data from server...');
                 const [quranResponse, tafsirResponse] = await Promise.all([
-                    fetch('data/quran.json'),
-                    fetch('data/kurdish_tafsir.json')
+                    fetch('/data/quran.json'),
+                    fetch('/data/kurdish_tafsir.json')
                 ]);
 
                 // Use .json() method directly (more efficient than .text() + JSON.parse())
