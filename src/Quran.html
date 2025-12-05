@@ -4211,6 +4211,7 @@
 
         // Initialize on Load
         document.addEventListener('DOMContentLoaded', async () => {
+            let loadTimeout = null; // Declare at function scope
             try {
                 initPreloader();
 
@@ -4220,7 +4221,7 @@
                 initScrollToTop();
 
                 // Set a maximum timeout for loading (10 seconds)
-                const loadTimeout = setTimeout(() => {
+                loadTimeout = setTimeout(() => {
                     console.warn('⚠️ Loading timeout reached, showing page anyway');
                     if (preloaderHideCallback) {
                         preloaderHideCallback();
@@ -4238,7 +4239,10 @@
                 }, 10000);
             } catch (initError) {
                 console.error('Critical error in initialization:', initError);
-                alert('Critical initialization error: ' + initError.message);
+                // Only show alert in development
+                if (window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1')) {
+                    alert('Critical initialization error: ' + initError.message);
+                }
             }
 
             try {
@@ -4273,9 +4277,11 @@
                 restoreStateFromSettings();
             } catch (error) {
                 console.error('Error during initialization:', error);
-                // Show visible error for debugging
-                alert('Page load error: ' + error.message + '\n\nPlease screenshot this and report it.');
-                clearTimeout(loadTimeout);
+                // Only show alert in development, not production
+                if (window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1')) {
+                    alert('Page load error: ' + error.message + '\n\nPlease screenshot this and report it.');
+                }
+                if (loadTimeout) clearTimeout(loadTimeout);
                 if (preloaderHideCallback) {
                     preloaderHideCallback();
                 }
