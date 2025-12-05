@@ -734,7 +734,7 @@
 
         <div class="login-card">
             <div class="logo-section">
-                <img src="assets/images/logo.png" alt="تەفسیر کورد">
+                <img src="assets/images/logo.png" alt="تەفسیر کورد" width="150" height="150">
                 <div class="logo-text">تەفسیر کورد</div>
             </div>
 
@@ -909,7 +909,7 @@
                 });
 
                 const result = await response.json();
-                let userData = result.data || {};
+                userData = result.data || {};  // Fixed: removed duplicate 'let' declaration
 
                 // Check if user needs profile setup (was reset)
                 if (userData.needsProfileSetup === true) {
