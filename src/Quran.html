@@ -1520,15 +1520,32 @@
 
         @media (max-width: 768px) {
             .search-results-dropdown {
-                top: 130px;
-                max-height: calc(100vh - 150px);
-                width: calc(100% - 30px);
+                top: calc(100% + 10px) !important;
+                max-height: 400px !important;
+                width: calc(100% - 20px) !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
             }
 
             #popularSearchesSection {
-                top: 130px !important;
-                max-height: calc(100vh - 150px) !important;
-                width: calc(100% - 30px) !important;
+                top: calc(100% + 10px) !important;
+                max-height: 400px !important;
+                width: calc(100% - 20px) !important;
+                padding: 0 !important;
+            }
+
+            #popularSearchesSection > div {
+                padding: 20px !important;
+                border-radius: 16px !important;
+            }
+
+            #popularSearchesSection > div > div:last-child {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+
+            #popularSearchesSection button {
+                padding: 14px 16px !important;
             }
         }
 
@@ -3531,7 +3548,7 @@
                     <div class="search-results-dropdown" id="searchResultsDropdown"></div>
 
                     <!-- Popular Searches Dropdown - Hidden by default, shown on search focus -->
-                    <div id="popularSearchesSection" style="display: none; position: fixed; top: 200px; left: 50%; transform: translateX(-50%); z-index: 10000; width: calc(100% - 60px); max-width: 1200px; max-height: calc(100vh - 220px); overflow-y: auto; overflow-x: hidden;">
+                    <div id="popularSearchesSection" style="display: none; position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); z-index: 10000; width: calc(100% - 20px); max-width: 1200px; max-height: 500px; overflow-y: auto; overflow-x: hidden;">
                         <div style="background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: var(--shadow-lg); border: 2px solid var(--border);">
                             <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
                                 <i class="fas fa-fire"></i>
@@ -4803,31 +4820,26 @@
             const popularSearches = document.getElementById('popularSearchesSection');
             const searchResultsDropdown = document.getElementById('searchResultsDropdown');
 
-            // Function to position dropdowns below search input
-            function positionDropdowns() {
-                const inputRect = searchInput.getBoundingClientRect();
-                const dropdownTop = inputRect.bottom + 10; // 10px gap below input
-
-                searchResultsDropdown.style.top = dropdownTop + 'px';
-                popularSearches.style.top = dropdownTop + 'px';
-            }
-
-            // Update position on resize only
-            window.addEventListener('resize', () => {
-                if (popularSearches.style.display === 'block' || searchResultsDropdown.classList.contains('active')) {
-                    positionDropdowns();
-                }
-            });
-
             // Show popular searches when input is focused (if empty)
             searchInput.addEventListener('focus', (e) => {
                 const query = e.target.value.trim();
                 if (!query) {
-                    positionDropdowns();
                     popularSearches.style.display = 'block';
                     hideSearchResults(); // Hide search results dropdown
                 }
             });
+
+            // Close popup when scrolling
+            let scrollTimeout;
+            window.addEventListener('scroll', () => {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    if (popularSearches.style.display === 'block' || searchResultsDropdown.classList.contains('active')) {
+                        hideSearchResults();
+                        popularSearches.style.display = 'none';
+                    }
+                }, 100);
+            }, { passive: true });
 
             searchInput.addEventListener('input', (e) => {
                 const query = e.target.value.trim();
