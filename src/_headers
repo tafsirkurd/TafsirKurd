@@ -1,3 +1,9 @@
+# Sitemap - MUST be indexable by Google
+/sitemap.xml
+  X-Robots-Tag: all
+  Content-Type: application/xml
+  Cache-Control: public, max-age=3600
+
 # Allow social media bots to access images for link previews
 /assets/images/*
   Access-Control-Allow-Origin: *
