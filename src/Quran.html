@@ -3248,7 +3248,7 @@
                     mainContent.style.visibility = 'visible';
                     document.body.classList.remove('no-scroll');
                 }
-            }, 3000); // 3 second failsafe timeout
+            }, 1000); // 1 second failsafe timeout
         });
     </script>
 
@@ -4448,11 +4448,11 @@
                     }
                 }, { passive: true });
             } catch (error) {
-                console.error('Error during initialization:', error);
-                // Only show alert in development, not production
-                if (window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1')) {
-                    alert('Page load error: ' + error.message + '\n\nPlease screenshot this and report it.');
-                }
+                console.error('❌ CRITICAL ERROR during initialization:', error);
+                console.error('Error stack:', error.stack);
+                // Show error in console for debugging
+                alert('Page load error: ' + error.message + '\n\nCheck console for details.');
+
                 if (loadTimeout) clearTimeout(loadTimeout);
                 if (preloaderHideCallback) {
                     preloaderHideCallback();
