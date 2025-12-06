@@ -4693,8 +4693,12 @@
                 console.log('✅ Quran data loaded successfully');
 
             } catch (error) {
-                console.error('Error loading data:', error);
+                console.error('❌ CRITICAL: Failed to load Quran data:', error);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                alert('CRITICAL ERROR: Failed to load Quran data!\n\n' + error.message + '\n\nCheck console for details.');
                 showNotification('هەلە د بارکرنا زانیاریان دا');
+                throw error; // Re-throw to stop execution
             }
         }
 
