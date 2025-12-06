@@ -3219,10 +3219,37 @@
                 }
                 if (mainContent) {
                     mainContent.classList.add('loaded');
+                    mainContent.style.opacity = '1';
+                    mainContent.style.visibility = 'visible';
                 }
                 document.body.classList.remove('no-scroll');
             }
         })();
+
+        // CRITICAL FAILSAFE: Force show content if normal loading fails
+        // This ensures users ALWAYS see content, even if JS errors occur
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const preloader = document.getElementById('preloader');
+                const mainContent = document.getElementById('mainContent');
+
+                // Check if content is still hidden after 3 seconds
+                if (mainContent && !mainContent.classList.contains('loaded')) {
+                    console.warn('⚠️ FAILSAFE: Forcing page to show after timeout');
+
+                    // Force hide preloader
+                    if (preloader) {
+                        preloader.style.display = 'none';
+                    }
+
+                    // Force show main content
+                    mainContent.classList.add('loaded');
+                    mainContent.style.opacity = '1';
+                    mainContent.style.visibility = 'visible';
+                    document.body.classList.remove('no-scroll');
+                }
+            }, 3000); // 3 second failsafe timeout
+        });
     </script>
 
     <!-- Settings Modal -->
@@ -4253,14 +4280,21 @@
 
         // Initialize on Load
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 DOMContentLoaded event fired!');
             let loadTimeout = null; // Declare at function scope
             try {
+                console.log('✅ Starting initPreloader...');
                 initPreloader();
+                console.log('✅ initPreloader completed');
 
                 // Initialize UI immediately (don't wait for data)
+                console.log('👤 Starting checkAuthentication...');
                 checkAuthentication();
+                console.log('🎯 Starting initializeApp...');
                 initializeApp();
+                console.log('⬆️ Starting initScrollToTop...');
                 initScrollToTop();
+                console.log('✅ All init functions completed');
 
                 // Set a maximum timeout for loading (10 seconds)
                 loadTimeout = setTimeout(() => {
@@ -4289,15 +4323,24 @@
 
             try {
                 // Load data first before showing anything
+                console.log('📥 Starting loadQuranData...');
                 await loadQuranData();
+                console.log('✅ loadQuranData completed');
 
                 // Once data is loaded, render content
+                console.log('🎨 Starting renderSurahGrid...');
                 renderSurahGrid();
+                console.log('📋 Starting renderSidebarList...');
                 renderSidebarList();
+                console.log('👤 Starting loadUserData...');
                 loadUserData();
+                console.log('🎲 Starting loadRandomAyah...');
                 loadRandomAyah();
+                console.log('⏱️ Starting startRandomAyahTimer...');
                 startRandomAyahTimer();
+                console.log('🏆 Starting updateStreakBadge...');
                 updateStreakBadge(); // Update streak badge
+                console.log('✅ All rendering functions completed');
 
                 // Update continue reading - with extra delay for guest users to ensure surahNames is loaded
                 setTimeout(() => {
@@ -4311,12 +4354,18 @@
                 clearTimeout(loadTimeout);
 
                 // Hide preloader after everything is ready
+                console.log('🎬 Calling preloaderHideCallback...');
                 if (preloaderHideCallback) {
                     preloaderHideCallback();
+                    console.log('✅ preloaderHideCallback called');
+                } else {
+                    console.error('❌ preloaderHideCallback is null!');
                 }
 
                 // Restore state if returning from settings
+                console.log('🔄 Restoring state from settings...');
                 restoreStateFromSettings();
+                console.log('✅ Page initialization complete!');
 
                 // Restore home page scroll position IMMEDIATELY to prevent flash
                 // Use requestAnimationFrame for next paint cycle - faster than setTimeout
