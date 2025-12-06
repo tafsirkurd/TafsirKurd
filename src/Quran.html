@@ -4644,11 +4644,23 @@
                     fetch('/data/kurdish_tafsir.json')
                 ]);
 
+                console.log('📊 Quran response status:', quranResponse.status, quranResponse.ok);
+                console.log('📊 Tafsir response status:', tafsirResponse.status, tafsirResponse.ok);
+
+                if (!quranResponse.ok) {
+                    throw new Error(`Failed to load quran.json: ${quranResponse.status} ${quranResponse.statusText}`);
+                }
+                if (!tafsirResponse.ok) {
+                    throw new Error(`Failed to load kurdish_tafsir.json: ${tafsirResponse.status} ${tafsirResponse.statusText}`);
+                }
+
                 // Use .json() method directly (more efficient than .text() + JSON.parse())
+                console.log('🔄 Parsing JSON data...');
                 const [quranJson, tafsirJson] = await Promise.all([
                     quranResponse.json(),
                     tafsirResponse.json()
                 ]);
+                console.log('✅ JSON parsed successfully');
 
                 // Process tafsir data
                 tafsirData = {};
