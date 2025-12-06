@@ -4898,10 +4898,10 @@
             });
 
             // Close popup when scrolling
-            let scrollTimeout;
+            let hideSearchTimeout;
             window.addEventListener('scroll', () => {
-                clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(() => {
+                clearTimeout(hideSearchTimeout);
+                hideSearchTimeout = setTimeout(() => {
                     if (popularSearches.style.display === 'block' || searchResultsDropdown.classList.contains('active')) {
                         hideSearchResults();
                         popularSearches.style.display = 'none';
