@@ -82,6 +82,22 @@
       transition: background-color 0.3s, color 0.3s;
     }
 
+    /* Diagonal grid background pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.02;
+      z-index: -1;
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 35px, var(--primary) 35px, var(--primary) 36px),
+        repeating-linear-gradient(-45deg, transparent, transparent 35px, var(--primary) 35px, var(--primary) 36px);
+      pointer-events: none;
+    }
+
     .legal-container {
       max-width: 900px;
       margin: 0 auto;
