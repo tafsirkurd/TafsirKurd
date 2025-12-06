@@ -3974,12 +3974,14 @@
     </div>
 
     <script>
+        console.log('🔥 SCRIPT STARTED - Top of main script block');
         const CLIENT_ID = window.GOOGLE_CONFIG ? window.GOOGLE_CONFIG.CLIENT_ID : null;
 
         // INSTANT CACHE LOADER - Runs synchronously before anything else!
         // This pre-loads data from cache so it's available immediately
         let quranData = null;
         let tafsirData = null;
+        console.log('🔥 Variables declared');
 
         (function() {
             const CACHE_VERSION = 'v1';
@@ -4279,6 +4281,7 @@
         }
 
         // Initialize on Load
+        console.log('🔥 About to register DOMContentLoaded listener');
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('🚀 DOMContentLoaded event fired!');
             let loadTimeout = null; // Declare at function scope
