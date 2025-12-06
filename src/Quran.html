@@ -3109,21 +3109,13 @@
                 text-align: center;
             }
 
-            /* Make all cards more compact */
-            [style*="background: var(--card-bg)"] {
-                padding: 10px !important;
+            /* Make specific cards more compact */
+            .surah-card,
+            #noGoalsCard,
+            #goalsCardContainer,
+            .welcome-card {
+                padding: 20px !important;
                 margin: 8px 0 !important;
-            }
-
-            /* Reduce all gaps and margins */
-            * {
-                gap: 8px !important;
-            }
-
-            /* Compact all buttons */
-            button, .btn, [role="button"] {
-                padding: 8px 12px !important;
-                font-size: 0.8rem !important;
             }
 
             /* Make body padding smaller */
@@ -3131,9 +3123,45 @@
                 padding: 0 !important;
             }
 
-            /* Compact main sections */
-            section, .section {
+            /* Compact specific sections */
+            .surah-list-container {
                 padding: 15px 10px !important;
+            }
+
+            /* Daily Verse Section Mobile */
+            #dailyVerseSection {
+                padding: 0 15px !important;
+                margin: 20px auto !important;
+            }
+
+            .daily-verse-card {
+                padding: 25px 20px !important;
+                border-radius: 16px !important;
+            }
+
+            #randomAyahArabic {
+                font-size: 1.6rem !important;
+                padding: 20px 15px !important;
+                line-height: 2 !important;
+            }
+
+            #randomAyahKurdish {
+                font-size: 1rem !important;
+                padding: 15px !important;
+            }
+
+            .daily-verse-card .corner-decor {
+                display: none !important;
+            }
+
+            /* Continue Reading Card Mobile Adjustments */
+            #continueReadingCard {
+                padding: 30px 20px !important;
+                min-height: 250px !important;
+            }
+
+            #continueReadingSurahName {
+                font-size: clamp(6rem, 20vw, 10rem) !important;
             }
 
         }
@@ -3575,16 +3603,16 @@
                     <div class="search-results-dropdown" id="searchResultsDropdown"></div>
 
                     <!-- Popular Searches Dropdown - Hidden by default, shown on search focus -->
-                    <div id="popularSearchesSection" style="display: none; position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); z-index: 10000; width: calc(100% - 20px); max-width: 1200px; max-height: 500px; overflow-y: auto; overflow-x: hidden;">
-                        <div style="background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: var(--shadow-lg); border: 2px solid var(--border);">
+                    <div id="popularSearchesSection" style="display: none; position: fixed; top: 200px; left: 50%; transform: translateX(-50%); z-index: 10000; width: calc(100vw - 80px); max-width: 1100px; max-height: 500px; overflow-y: auto; overflow-x: hidden;">
+                        <div style="background: var(--card-bg); border-radius: 20px; padding: 20px; box-shadow: var(--shadow-lg); border: 2px solid var(--border); width: 100%; box-sizing: border-box;">
                             <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
                                 <i class="fas fa-fire"></i>
                                 <span>گەڕیانێن بناڤودەنگ</span>
                             </div>
 
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%;">
                                 <!-- Popular Surahs -->
-                                <button onclick="openSurah(67); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
+                                <button onclick="openSurah(67); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 15px 18px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px; box-sizing: border-box;">
                                     <i class="fas fa-bookmark" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">67. Al-Mulk</div>
@@ -3592,7 +3620,7 @@
                                     </div>
                                 </button>
 
-                                <button onclick="openSurah(18); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
+                                <button onclick="openSurah(18); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 15px 18px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px; box-sizing: border-box;">
                                     <i class="fas fa-bookmark" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">18. Al-Kahf</div>
@@ -3600,7 +3628,7 @@
                                     </div>
                                 </button>
 
-                                <button onclick="openSurah(36); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
+                                <button onclick="openSurah(36); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 15px 18px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px; box-sizing: border-box;">
                                     <i class="fas fa-bookmark" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">36. Ya-Sin</div>
@@ -3608,7 +3636,7 @@
                                     </div>
                                 </button>
 
-                                <button onclick="openSurahWithAyah(2, 255); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
+                                <button onclick="openSurahWithAyah(2, 255); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 15px 18px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px; box-sizing: border-box;">
                                     <i class="fas fa-star" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">Ayatul Kursi</div>
@@ -3616,7 +3644,7 @@
                                     </div>
                                 </button>
 
-                                <button onclick="openSurahWithAyah(2, 285); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
+                                <button onclick="openSurahWithAyah(2, 285); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 15px 18px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px; box-sizing: border-box;">
                                     <i class="fas fa-moon" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">Last Verses</div>
@@ -3624,7 +3652,7 @@
                                     </div>
                                 </button>
 
-                                <button onclick="openSurah(55); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 18px 22px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px;">
+                                <button onclick="openSurah(55); document.getElementById('popularSearchesSection').style.display='none';" style="all: unset; cursor: pointer; background: var(--bg); padding: 15px 18px; border-radius: 14px; border: 2px solid var(--border); transition: all var(--transition); display: flex; align-items: center; gap: 12px; box-sizing: border-box;">
                                     <i class="fas fa-heart" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">55. Ar-Rahman</div>
@@ -3652,8 +3680,8 @@
             </section>
 
             <!-- Random Ayah Section -->
-            <section id="dailyVerseSection" style="max-width: 1400px; margin: 40px auto; padding: 0 30px; transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); opacity: 1;">
-                <div class="daily-verse-card" style="border-radius: 24px; padding: 45px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--primary); border: 2px solid var(--primary); position: relative; overflow: hidden;">
+            <section id="dailyVerseSection" style="max-width: 1400px; margin: 40px auto; padding: 0 30px; transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); opacity: 1; overflow: visible;">
+                <div class="daily-verse-card" style="border-radius: 24px; padding: 45px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--primary); border: 2px solid var(--primary); position: relative; overflow: visible;">
                     <!-- Decorative corner elements -->
                     <div class="corner-decor corner-decor-top" style="position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); pointer-events: none;"></div>
                     <div class="corner-decor corner-decor-bottom" style="position: absolute; bottom: -40px; left: -40px; width: 160px; height: 160px; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); pointer-events: none;"></div>
@@ -3774,8 +3802,8 @@
                 </div>
 
                 <!-- Right Column - Continue Reading -->
-                <div id="continueReadingCard" style="background: var(--card-bg); border-radius: 20px; padding: 60px; box-shadow: var(--shadow-md); border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; min-height: 400px; cursor: pointer; transition: all var(--transition); position: relative; overflow: hidden;" onclick="continueReading()">
-                    <div style="font-family: 'SurahName', 'Scheherazade New', serif; font-size: 20rem; text-align: center; margin: auto 0; color: var(--primary); line-height: 1;" class="no-kurdish-convert" id="continueReadingSurahName">surah001</div>
+                <div id="continueReadingCard" style="background: var(--card-bg); border-radius: 20px; padding: 60px; box-shadow: var(--shadow-md); border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; min-height: 400px; cursor: pointer; transition: all var(--transition); position: relative; overflow: visible;" onclick="continueReading()">
+                    <div style="font-family: 'SurahName', 'Scheherazade New', serif; font-size: clamp(8rem, 15vw, 20rem); text-align: center; margin: auto 0; color: var(--primary); line-height: 1; max-width: 100%;" class="no-kurdish-convert" id="continueReadingSurahName">surah001</div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px;">
                         <div style="font-size: 1.2rem; font-weight: 600; color: var(--text-muted);" id="continueReadingInfo">١. الفاتحة</div>
                         <div style="background: var(--bg); padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.9rem;">بەردەوام بە</div>
