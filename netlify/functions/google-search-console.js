@@ -6,13 +6,13 @@
 const { google } = require('googleapis');
 
 exports.handler = async (event, context) => {
-  // Enable CORS and caching
+  // Enable CORS and minimal caching
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Content-Type': 'application/json',
-    'Cache-Control': 'public, max-age=3600, s-maxage=3600' // Cache for 1 hour
+    'Cache-Control': 'public, max-age=60, s-maxage=60' // Cache for 1 minute only
   };
 
   // Handle OPTIONS request for CORS
@@ -56,10 +56,10 @@ exports.handler = async (event, context) => {
       auth: oauth2Client
     });
 
-    // Calculate date range (last 28 days)
+    // Calculate date range (last 90 days to capture more data)
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 28);
+    startDate.setDate(startDate.getDate() - 90);
 
     const formatDate = (date) => {
       return date.toISOString().split('T')[0];
