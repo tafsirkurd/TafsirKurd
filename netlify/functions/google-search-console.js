@@ -123,15 +123,18 @@ exports.handler = async (event, context) => {
       position: (row.position || 0).toFixed(1)
     }));
 
-    // Get summary stats
-    const totalClicks = queries.reduce((sum, q) => sum + q.clicks, 0);
-    const totalImpressions = queries.reduce((sum, q) => sum + q.impressions, 0);
-    const avgCTR = totalClicks > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : '0.00';
-    const avgPosition = queries.length > 0 ?
-      (queries.reduce((sum, q) => sum + parseFloat(q.position), 0) / queries.length).toFixed(1) : '0.0';
+    // Get summary stats from the summary response (no dimensions)
+    const summaryRow = summaryResponse.data.rows && summaryResponse.data.rows.length > 0
+      ? summaryResponse.data.rows[0]
+      : null;
+
+    const totalClicks = summaryRow ? summaryRow.clicks : 0;
+    const totalImpressions = summaryRow ? summaryRow.impressions : 0;
+    const avgCTR = summaryRow ? (summaryRow.ctr * 100).toFixed(2) : '0.00';
+    const avgPosition = summaryRow ? summaryRow.position.toFixed(1) : '0.0';
 
     // Check if there's actually any data
-    if (rows.length === 0 || totalImpressions === 0) {
+    if (!summaryRow || totalImpressions === 0) {
       return {
         statusCode: 200,
         headers,
