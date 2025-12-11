@@ -659,6 +659,15 @@
             }
         }
 
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -3060,10 +3069,36 @@
 
             <!-- Search Console SEO Section -->
             <section id="searchConsoleSection" class="section">
-                <!-- Loading State -->
-                <div id="searchConsoleLoading" style="display: block; text-align: center; padding: 60px 20px;">
-                    <div style="display: inline-block; width: 50px; height: 50px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                    <p style="margin-top: 20px; font-size: 16px; color: #666;">Loading Search Console data...</p>
+                <!-- Loading State with Skeleton -->
+                <div id="searchConsoleLoading" style="display: block;">
+                    <div style="text-align: center; padding: 40px 20px 20px;">
+                        <div style="display: inline-block; width: 60px; height: 60px; border: 5px solid #f3f3f3; border-top: 5px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        <p style="margin-top: 20px; font-size: 18px; color: #667eea; font-weight: 600;">Loading Search Console data...</p>
+                    </div>
+
+                    <!-- Skeleton Stats -->
+                    <div class="analytics-grid" style="margin-bottom: 30px;">
+                        <div class="stat-card skeleton-card">
+                            <div style="width: 40px; height: 40px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 50%; margin: 0 auto 10px;"></div>
+                            <div style="height: 28px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; margin-bottom: 8px;"></div>
+                            <div style="height: 16px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; width: 70%; margin: 0 auto;"></div>
+                        </div>
+                        <div class="stat-card skeleton-card">
+                            <div style="width: 40px; height: 40px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 50%; margin: 0 auto 10px;"></div>
+                            <div style="height: 28px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; margin-bottom: 8px;"></div>
+                            <div style="height: 16px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; width: 70%; margin: 0 auto;"></div>
+                        </div>
+                        <div class="stat-card skeleton-card">
+                            <div style="width: 40px; height: 40px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 50%; margin: 0 auto 10px;"></div>
+                            <div style="height: 28px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; margin-bottom: 8px;"></div>
+                            <div style="height: 16px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; width: 70%; margin: 0 auto;"></div>
+                        </div>
+                        <div class="stat-card skeleton-card">
+                            <div style="width: 40px; height: 40px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 50%; margin: 0 auto 10px;"></div>
+                            <div style="height: 28px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; margin-bottom: 8px;"></div>
+                            <div style="height: 16px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; width: 70%; margin: 0 auto;"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Setup Notice (shown if not configured) -->
@@ -3140,126 +3175,106 @@
                 </div>
 
                 <!-- Summary Stats -->
-                <div id="searchConsoleSummary" style="display: none;">
-                    <div class="info-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 30px;">
-                        <div class="info-box-title">🔍 Google Search Console - Last 28 Days</div>
-                        <div class="info-box-desc">
+                <div id="searchConsoleSummary" style="display: none; opacity: 0; transition: opacity 0.6s ease-in-out;">
+                    <div class="info-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);">
+                        <div class="info-box-title" style="font-size: 24px;">🔍 Google Search Console - Last 28 Days</div>
+                        <div class="info-box-desc" style="font-size: 15px; opacity: 0.95;">
                             Search performance data from Google Search Console API
                         </div>
                     </div>
 
-                    <div class="analytics-grid" style="margin-bottom: 30px;">
-                        <div class="stat-card">
-                            <div class="stat-icon" style="color: #667eea;">📊</div>
-                            <div class="stat-value" id="gscTotalClicks">-</div>
-                            <div class="stat-label">Total Clicks</div>
+                    <div class="analytics-grid" style="margin-bottom: 30px; gap: 20px;">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #667eea15 0%, #667eea05 100%); border: 2px solid #667eea30; transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 25px rgba(102,126,234,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.05)'">
+                            <div class="stat-icon" style="color: #667eea; font-size: 36px;">📊</div>
+                            <div class="stat-value" id="gscTotalClicks" style="color: #667eea; font-size: 32px;">-</div>
+                            <div class="stat-label" style="font-size: 13px; font-weight: 600;">Total Clicks</div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-icon" style="color: #764ba2;">👁️</div>
-                            <div class="stat-value" id="gscTotalImpressions">-</div>
-                            <div class="stat-label">Total Impressions</div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #764ba215 0%, #764ba205 100%); border: 2px solid #764ba230; transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 25px rgba(118,75,162,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.05)'">
+                            <div class="stat-icon" style="color: #764ba2; font-size: 36px;">👁️</div>
+                            <div class="stat-value" id="gscTotalImpressions" style="color: #764ba2; font-size: 32px;">-</div>
+                            <div class="stat-label" style="font-size: 13px; font-weight: 600;">Total Impressions</div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-icon" style="color: #f093fb;">📈</div>
-                            <div class="stat-value" id="gscAvgCTR">-</div>
-                            <div class="stat-label">Average CTR</div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb15 0%, #f093fb05 100%); border: 2px solid #f093fb30; transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 25px rgba(240,147,251,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.05)'">
+                            <div class="stat-icon" style="color: #f093fb; font-size: 36px;">📈</div>
+                            <div class="stat-value" id="gscAvgCTR" style="color: #f093fb; font-size: 32px;">-</div>
+                            <div class="stat-label" style="font-size: 13px; font-weight: 600;">Average CTR</div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-icon" style="color: #f5576c;">🎯</div>
-                            <div class="stat-value" id="gscAvgPosition">-</div>
-                            <div class="stat-label">Avg Position</div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #f5576c15 0%, #f5576c05 100%); border: 2px solid #f5576c30; transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 25px rgba(245,87,108,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.05)'">
+                            <div class="stat-icon" style="color: #f5576c; font-size: 36px;">🎯</div>
+                            <div class="stat-value" id="gscAvgPosition" style="color: #f5576c; font-size: 32px;">-</div>
+                            <div class="stat-label" style="font-size: 13px; font-weight: 600;">Avg Position</div>
                         </div>
                     </div>
 
                     <!-- Performance Over Time Chart -->
-                    <div class="content-card" style="margin-bottom: 30px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                            <h3 style="margin: 0; font-size: 20px; font-weight: 700;">📈 Performance Over Time</h3>
-                            <button onclick="loadSearchConsoleData()" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+                    <div style="background: white; border-radius: 16px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid rgba(102,126,234,0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                            <h3 style="margin: 0; font-size: 22px; font-weight: 700; color: #333; display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 28px;">📈</span>
+                                Performance Over Time
+                            </h3>
+                            <button onclick="loadSearchConsoleData()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102,126,234,0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102,126,234,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102,126,234,0.3)'">
                                 🔄 Refresh
                             </button>
                         </div>
-                        <div style="position: relative; height: 400px;">
+                        <div style="position: relative; height: 400px; background: linear-gradient(180deg, rgba(102,126,234,0.03) 0%, rgba(118,75,162,0.03) 100%); border-radius: 12px; padding: 15px;">
                             <canvas id="performanceChart"></canvas>
                         </div>
                     </div>
 
                     <!-- Breakdown Cards Grid -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; margin-bottom: 30px;">
                         <!-- Countries Breakdown -->
-                        <div class="content-card">
-                            <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                                <span>🌍</span> Traffic by Country
+                        <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid rgba(102,126,234,0.1);">
+                            <h3 style="margin: 0 0 20px 0; font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; color: #333;">
+                                <span style="font-size: 26px;">🌍</span> Traffic by Country
                             </h3>
-                            <div class="table-wrapper" style="max-height: 400px; overflow-y: auto;">
-                                <table id="countriesTable">
-                                    <thead style="position: sticky; top: 0; background: white; z-index: 1;">
-                                        <tr>
-                                            <th style="cursor: pointer; user-select: none;" onclick="sortTable('countriesTable', 0)">Country</th>
-                                            <th style="cursor: pointer; user-select: none;" onclick="sortTable('countriesTable', 1)">Clicks</th>
-                                            <th style="cursor: pointer; user-select: none;" onclick="sortTable('countriesTable', 2)">Impressions</th>
-                                            <th style="cursor: pointer; user-select: none;" onclick="sortTable('countriesTable', 3)">CTR</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="countriesTableBody">
-                                        <tr>
-                                            <td colspan="4" style="text-align: center; padding: 40px;">
-                                                <div class="loading-spinner"></div>
-                                                <div class="loading-text">Loading countries...</div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div style="max-height: 450px; overflow-y: auto; margin: -10px -15px -15px -15px; padding: 10px 15px 15px 15px;">
+                                <div id="countriesTableBody">
+                                    <div style="text-align: center; padding: 40px;">
+                                        <div class="loading-spinner"></div>
+                                        <div class="loading-text">Loading countries...</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Devices Breakdown -->
-                        <div class="content-card">
-                            <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                                <span>📱</span> Traffic by Device
+                        <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid rgba(102,126,234,0.1);">
+                            <h3 style="margin: 0 0 20px 0; font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; color: #333;">
+                                <span style="font-size: 26px;">📱</span> Traffic by Device
                             </h3>
-                            <div class="table-wrapper">
-                                <table id="devicesTable">
-                                    <thead>
-                                        <tr>
-                                            <th style="cursor: pointer; user-select: none;" onclick="sortTable('devicesTable', 0)">Device Type</th>
-                                            <th style="cursor: pointer; user-select: none;" onclick="sortTable('devicesTable', 1)">Clicks</th>
-                                            <th style="cursor: pointer; user-select: none;" onclick="sortTable('devicesTable', 2)">Impressions</th>
-                                            <th style="cursor: pointer; user-select: none;" onclick="sortTable('devicesTable', 3)">CTR</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="devicesTableBody">
-                                        <tr>
-                                            <td colspan="4" style="text-align: center; padding: 40px;">
-                                                <div class="loading-spinner"></div>
-                                                <div class="loading-text">Loading devices...</div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div id="devicesTableBody" style="display: flex; flex-direction: column; gap: 15px;">
+                                <div style="text-align: center; padding: 40px;">
+                                    <div class="loading-spinner"></div>
+                                    <div class="loading-text">Loading devices...</div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Top Search Queries -->
-                    <div class="content-card" style="margin-bottom: 30px;">
+                    <div style="background: white; border-radius: 16px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid rgba(102,126,234,0.1);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                            <h3 style="margin: 0; font-size: 20px; font-weight: 700;">🔎 Top Search Queries</h3>
+                            <h3 style="margin: 0; font-size: 22px; font-weight: 700; color: #333; display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 28px;">🔎</span>
+                                Top Search Queries
+                            </h3>
                         </div>
-                        <div id="queriesNotice" style="display: none; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); padding: 20px; border-radius: 12px; margin-bottom: 15px;">
+                        <div id="queriesNotice" style="display: none; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); padding: 18px 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(252,182,159,0.2);">
                             <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #333;">
                                 <strong>ℹ️ Note:</strong> <span id="queriesNoteText"></span>
                             </p>
                         </div>
-                        <div class="table-wrapper">
-                            <table id="queriesTable">
+                        <div style="overflow-x: auto;">
+                            <table id="queriesTable" style="width: 100%; border-collapse: collapse;">
                                 <thead>
-                                    <tr>
-                                        <th style="cursor: pointer; user-select: none;" onclick="sortTable('queriesTable', 0)">Search Query</th>
-                                        <th style="cursor: pointer; user-select: none;" onclick="sortTable('queriesTable', 1)">Clicks</th>
-                                        <th style="cursor: pointer; user-select: none;" onclick="sortTable('queriesTable', 2)">Impressions</th>
-                                        <th style="cursor: pointer; user-select: none;" onclick="sortTable('queriesTable', 3)">CTR</th>
-                                        <th style="cursor: pointer; user-select: none;" onclick="sortTable('queriesTable', 4)">Position</th>
+                                    <tr style="background: linear-gradient(135deg, rgba(102,126,234,0.08) 0%, rgba(118,75,162,0.08) 100%); border-radius: 8px;">
+                                        <th style="padding: 14px 16px; text-align: left; font-weight: 700; font-size: 13px; color: #555; cursor: pointer; user-select: none; border-bottom: 2px solid #667eea;" onclick="sortTable('queriesTable', 0)">Search Query ↕</th>
+                                        <th style="padding: 14px 16px; text-align: center; font-weight: 700; font-size: 13px; color: #555; cursor: pointer; user-select: none; border-bottom: 2px solid #667eea;" onclick="sortTable('queriesTable', 1)">Clicks ↕</th>
+                                        <th style="padding: 14px 16px; text-align: center; font-weight: 700; font-size: 13px; color: #555; cursor: pointer; user-select: none; border-bottom: 2px solid #667eea;" onclick="sortTable('queriesTable', 2)">Impressions ↕</th>
+                                        <th style="padding: 14px 16px; text-align: center; font-weight: 700; font-size: 13px; color: #555; cursor: pointer; user-select: none; border-bottom: 2px solid #667eea;" onclick="sortTable('queriesTable', 3)">CTR ↕</th>
+                                        <th style="padding: 14px 16px; text-align: center; font-weight: 700; font-size: 13px; color: #555; cursor: pointer; user-select: none; border-bottom: 2px solid #667eea;" onclick="sortTable('queriesTable', 4)">Position ↕</th>
                                     </tr>
                                 </thead>
                                 <tbody id="searchQueriesTable">
@@ -3275,17 +3290,20 @@
                     </div>
 
                     <!-- Top Pages -->
-                    <div class="content-card">
-                        <h3 style="margin: 0 0 20px 0; font-size: 20px; font-weight: 700;">📄 Top Performing Pages</h3>
-                        <div class="table-wrapper">
-                            <table id="pagesTable">
+                    <div style="background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid rgba(102,126,234,0.1);">
+                        <h3 style="margin: 0 0 20px 0; font-size: 22px; font-weight: 700; color: #333; display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 28px;">📄</span>
+                            Top Performing Pages
+                        </h3>
+                        <div style="overflow-x: auto;">
+                            <table id="pagesTable" style="width: 100%; border-collapse: collapse;">
                                 <thead>
-                                    <tr>
-                                        <th style="cursor: pointer; user-select: none;" onclick="sortTable('pagesTable', 0)">Page URL</th>
-                                        <th style="cursor: pointer; user-select: none;" onclick="sortTable('pagesTable', 1)">Clicks</th>
-                                        <th style="cursor: pointer; user-select: none;" onclick="sortTable('pagesTable', 2)">Impressions</th>
-                                        <th style="cursor: pointer; user-select: none;" onclick="sortTable('pagesTable', 3)">CTR</th>
-                                        <th style="cursor: pointer; user-select: none;" onclick="sortTable('pagesTable', 4)">Position</th>
+                                    <tr style="background: linear-gradient(135deg, rgba(102,126,234,0.08) 0%, rgba(118,75,162,0.08) 100%); border-radius: 8px;">
+                                        <th style="padding: 14px 16px; text-align: left; font-weight: 700; font-size: 13px; color: #555; cursor: pointer; user-select: none; border-bottom: 2px solid #667eea;" onclick="sortTable('pagesTable', 0)">Page URL ↕</th>
+                                        <th style="padding: 14px 16px; text-align: center; font-weight: 700; font-size: 13px; color: #555; cursor: pointer; user-select: none; border-bottom: 2px solid #667eea;" onclick="sortTable('pagesTable', 1)">Clicks ↕</th>
+                                        <th style="padding: 14px 16px; text-align: center; font-weight: 700; font-size: 13px; color: #555; cursor: pointer; user-select: none; border-bottom: 2px solid #667eea;" onclick="sortTable('pagesTable', 2)">Impressions ↕</th>
+                                        <th style="padding: 14px 16px; text-align: center; font-weight: 700; font-size: 13px; color: #555; cursor: pointer; user-select: none; border-bottom: 2px solid #667eea;" onclick="sortTable('pagesTable', 3)">CTR ↕</th>
+                                        <th style="padding: 14px 16px; text-align: center; font-weight: 700; font-size: 13px; color: #555; cursor: pointer; user-select: none; border-bottom: 2px solid #667eea;" onclick="sortTable('pagesTable', 4)">Position ↕</th>
                                     </tr>
                                 </thead>
                                 <tbody id="topPagesTable">
@@ -10611,8 +10629,12 @@ ${htmlParagraphs}
                     return;
                 }
 
-                // Show summary section
-                document.getElementById('searchConsoleSummary').style.display = 'block';
+                // Show summary section with fade-in animation
+                const summaryElement = document.getElementById('searchConsoleSummary');
+                summaryElement.style.display = 'block';
+                setTimeout(() => {
+                    summaryElement.style.opacity = '1';
+                }, 50);
 
                 const data = result.data;
 
@@ -10625,40 +10647,99 @@ ${htmlParagraphs}
                 // Render Performance Chart
                 renderPerformanceChart(data.timeSeries || []);
 
-                // Update countries table
+                // Update countries table with modern card design
                 const countriesTableBody = document.getElementById('countriesTableBody');
                 if (data.countries && data.countries.length > 0) {
-                    countriesTableBody.innerHTML = data.countries.map(country => {
+                    const maxClicks = Math.max(...data.countries.map(c => c.clicks));
+                    countriesTableBody.innerHTML = data.countries.map((country, index) => {
                         const countryName = getCountryName(country.country);
                         const countryFlag = getCountryFlag(country.country);
+                        const percentage = maxClicks > 0 ? ((country.clicks / maxClicks) * 100).toFixed(1) : 0;
+                        const barColor = index === 0 ? '#667eea' : index === 1 ? '#764ba2' : index === 2 ? '#f093fb' : '#a0a0a0';
+
                         return `
-                        <tr>
-                            <td><strong>${countryFlag} ${countryName}</strong></td>
-                            <td>${country.clicks.toLocaleString()}</td>
-                            <td>${country.impressions.toLocaleString()}</td>
-                            <td>${country.ctr}%</td>
-                        </tr>
+                        <div style="background: linear-gradient(135deg, ${barColor}08 0%, ${barColor}03 100%); border: 1px solid ${barColor}30; border-radius: 12px; padding: 16px; transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateX(5px)'; this.style.boxShadow='0 4px 15px ${barColor}20'" onmouseout="this.style.transform='translateX(0)'; this.style.boxShadow='none'">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 24px;">${countryFlag}</span>
+                                    <strong style="font-size: 15px; color: #333;">${countryName}</strong>
+                                </div>
+                                <span style="background: ${barColor}; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700;">#${index + 1}</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 10px;">
+                                <div>
+                                    <div style="font-size: 11px; color: #666; margin-bottom: 4px; font-weight: 600;">Clicks</div>
+                                    <div style="font-size: 16px; font-weight: 700; color: ${barColor};">${country.clicks.toLocaleString()}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 11px; color: #666; margin-bottom: 4px; font-weight: 600;">Impressions</div>
+                                    <div style="font-size: 16px; font-weight: 700; color: #555;">${country.impressions.toLocaleString()}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 11px; color: #666; margin-bottom: 4px; font-weight: 600;">CTR</div>
+                                    <div style="font-size: 16px; font-weight: 700; color: #555;">${country.ctr}%</div>
+                                </div>
+                            </div>
+                            <div style="background: #e0e0e0; height: 8px; border-radius: 10px; overflow: hidden; position: relative;">
+                                <div style="background: linear-gradient(90deg, ${barColor} 0%, ${barColor}dd 100%); height: 100%; width: ${percentage}%; border-radius: 10px; transition: width 1s ease; box-shadow: 0 2px 8px ${barColor}40;"></div>
+                            </div>
+                            <div style="text-align: right; margin-top: 6px; font-size: 11px; color: #888; font-weight: 600;">${percentage}% of top performer</div>
+                        </div>
                     `}).join('');
                 } else {
-                    countriesTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No countries data yet</td></tr>';
+                    countriesTableBody.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;"><div style="font-size: 48px; margin-bottom: 10px;">🌍</div><div style="font-size: 14px;">No countries data yet</div></div>';
                 }
 
-                // Update devices table
+                // Update devices table with visual cards
                 const devicesTableBody = document.getElementById('devicesTableBody');
                 if (data.devices && data.devices.length > 0) {
+                    const totalClicks = data.devices.reduce((sum, d) => sum + d.clicks, 0);
+                    const deviceColors = {
+                        'MOBILE': { gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', bg: '#667eea', light: '#667eea15' },
+                        'DESKTOP': { gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', bg: '#f093fb', light: '#f093fb15' },
+                        'TABLET': { gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', bg: '#4facfe', light: '#4facfe15' }
+                    };
+
                     devicesTableBody.innerHTML = data.devices.map(device => {
                         const deviceIcon = getDeviceIcon(device.device);
                         const deviceName = device.device.charAt(0) + device.device.slice(1).toLowerCase();
+                        const percentage = totalClicks > 0 ? ((device.clicks / totalClicks) * 100).toFixed(1) : 0;
+                        const colors = deviceColors[device.device.toUpperCase()] || deviceColors['MOBILE'];
+
                         return `
-                        <tr>
-                            <td><strong>${deviceIcon} ${deviceName}</strong></td>
-                            <td>${device.clicks.toLocaleString()}</td>
-                            <td>${device.impressions.toLocaleString()}</td>
-                            <td>${device.ctr}%</td>
-                        </tr>
+                        <div style="background: ${colors.light}; border: 2px solid ${colors.bg}30; border-radius: 14px; padding: 20px; transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 25px ${colors.bg}30'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="background: ${colors.gradient}; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 15px ${colors.bg}40;">
+                                        ${deviceIcon}
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 18px; font-weight: 700; color: #333; margin-bottom: 2px;">${deviceName}</div>
+                                        <div style="font-size: 12px; color: #666; font-weight: 600;">${percentage}% of traffic</div>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 28px; font-weight: 800; background: ${colors.gradient}; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">${device.clicks.toLocaleString()}</div>
+                                    <div style="font-size: 11px; color: #666; font-weight: 600;">Clicks</div>
+                                </div>
+                            </div>
+                            <div style="background: #f5f5f5; border-radius: 8px; padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div>
+                                    <div style="font-size: 11px; color: #666; margin-bottom: 4px; font-weight: 600;">Impressions</div>
+                                    <div style="font-size: 15px; font-weight: 700; color: #333;">${device.impressions.toLocaleString()}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 11px; color: #666; margin-bottom: 4px; font-weight: 600;">CTR</div>
+                                    <div style="font-size: 15px; font-weight: 700; color: #333;">${device.ctr}%</div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 12px; background: #e0e0e0; height: 6px; border-radius: 10px; overflow: hidden;">
+                                <div style="background: ${colors.gradient}; height: 100%; width: ${percentage}%; border-radius: 10px; transition: width 1s ease;"></div>
+                            </div>
+                        </div>
                     `}).join('');
                 } else {
-                    devicesTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No devices data yet</td></tr>';
+                    devicesTableBody.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;"><div style="font-size: 48px; margin-bottom: 10px;">📱</div><div style="font-size: 14px;">No devices data yet</div></div>';
                 }
 
                 // Update search queries table with notice handling
@@ -10668,40 +10749,67 @@ ${htmlParagraphs}
 
                 if (data.queries && data.queries.length > 0) {
                     queriesNotice.style.display = 'none';
-                    queriesTable.innerHTML = data.queries.map(query => `
-                        <tr>
-                            <td><strong>${escapeHtml(query.query)}</strong></td>
-                            <td>${query.clicks}</td>
-                            <td>${query.impressions.toLocaleString()}</td>
-                            <td>${query.ctr}%</td>
-                            <td>${query.position}</td>
+                    queriesTable.innerHTML = data.queries.map((query, index) => {
+                        const positionColor = query.position <= 3 ? '#4caf50' : query.position <= 10 ? '#667eea' : query.position <= 20 ? '#ff9800' : '#999';
+                        return `
+                        <tr style="border-bottom: 1px solid #f0f0f0; transition: all 0.2s ease;" onmouseover="this.style.background='linear-gradient(135deg, rgba(102,126,234,0.05) 0%, rgba(118,75,162,0.05) 100%)'" onmouseout="this.style.background='transparent'">
+                            <td style="padding: 16px; font-weight: 600; color: #333;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="color: #667eea; font-weight: 700; font-size: 13px;">#${index + 1}</span>
+                                    <span>${escapeHtml(query.query)}</span>
+                                </div>
+                            </td>
+                            <td style="padding: 16px; text-align: center; font-weight: 700; color: #667eea;">${query.clicks}</td>
+                            <td style="padding: 16px; text-align: center; color: #555; font-weight: 600;">${query.impressions.toLocaleString()}</td>
+                            <td style="padding: 16px; text-align: center; color: #555; font-weight: 600;">${query.ctr}%</td>
+                            <td style="padding: 16px; text-align: center;">
+                                <span style="background: ${positionColor}; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block;">${query.position}</span>
+                            </td>
                         </tr>
-                    `).join('');
+                    `}).join('');
                 } else {
                     // Show notice if provided
                     if (data.note) {
                         queriesNotice.style.display = 'block';
                         queriesNoteText.textContent = data.note;
                     }
-                    queriesTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #999;">No search queries data available yet</td></tr>';
+                    queriesTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><div style="color: #999; font-size: 48px; margin-bottom: 10px;">🔎</div><div style="color: #999; font-size: 14px;">No search queries data available yet</div></td></tr>';
                 }
 
                 // Update top pages table
                 const pagesTable = document.getElementById('topPagesTable');
                 if (data.pages && data.pages.length > 0) {
-                    pagesTable.innerHTML = data.pages.map(page => {
-                        const displayUrl = page.page.replace('https://tafsirkurd.com', '') || '/';
+                    pagesTable.innerHTML = data.pages.map((page, index) => {
+                        let displayUrl = page.page.replace('https://tafsirkurd.com', '') || '/';
+                        // Truncate long URLs smartly
+                        if (displayUrl.length > 50) {
+                            const parts = displayUrl.split('/');
+                            if (parts.length > 3) {
+                                displayUrl = '/' + parts[1] + '/.../' + parts[parts.length - 1];
+                            } else {
+                                displayUrl = displayUrl.substring(0, 47) + '...';
+                            }
+                        }
+                        const positionColor = page.position <= 3 ? '#4caf50' : page.position <= 10 ? '#667eea' : page.position <= 20 ? '#ff9800' : '#999';
+
                         return `
-                        <tr>
-                            <td><a href="${page.page}" target="_blank" style="color: #667eea; text-decoration: none; font-weight: 500;">${escapeHtml(displayUrl)}</a></td>
-                            <td>${page.clicks}</td>
-                            <td>${page.impressions.toLocaleString()}</td>
-                            <td>${page.ctr}%</td>
-                            <td>${page.position}</td>
+                        <tr style="border-bottom: 1px solid #f0f0f0; transition: all 0.2s ease;" onmouseover="this.style.background='linear-gradient(135deg, rgba(102,126,234,0.05) 0%, rgba(118,75,162,0.05) 100%)'" onmouseout="this.style.background='transparent'">
+                            <td style="padding: 16px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 18px;">📄</span>
+                                    <a href="${page.page}" target="_blank" style="color: #667eea; text-decoration: none; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="${escapeHtml(page.page.replace('https://tafsirkurd.com', ''))}">${escapeHtml(displayUrl)}</a>
+                                </div>
+                            </td>
+                            <td style="padding: 16px; text-align: center; font-weight: 700; color: #667eea;">${page.clicks}</td>
+                            <td style="padding: 16px; text-align: center; color: #555; font-weight: 600;">${page.impressions.toLocaleString()}</td>
+                            <td style="padding: 16px; text-align: center; color: #555; font-weight: 600;">${page.ctr}%</td>
+                            <td style="padding: 16px; text-align: center;">
+                                <span style="background: ${positionColor}; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block;">${page.position}</span>
+                            </td>
                         </tr>
                     `}).join('');
                 } else {
-                    pagesTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No pages data yet</td></tr>';
+                    pagesTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><div style="color: #999; font-size: 48px; margin-bottom: 10px;">📄</div><div style="color: #999; font-size: 14px;">No pages data yet</div></td></tr>';
                 }
 
                 console.log('✅ Search Console data loaded successfully');
@@ -10761,27 +10869,43 @@ ${htmlParagraphs}
                             label: 'Clicks',
                             data: clicks,
                             borderColor: '#667eea',
-                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            backgroundColor: function(context) {
+                                const ctx = context.chart.ctx;
+                                const gradient = ctx.createLinearGradient(0, 0, 0, 350);
+                                gradient.addColorStop(0, 'rgba(102, 126, 234, 0.25)');
+                                gradient.addColorStop(1, 'rgba(102, 126, 234, 0.01)');
+                                return gradient;
+                            },
                             tension: 0.4,
                             fill: true,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
                             pointBackgroundColor: '#667eea',
                             pointBorderColor: '#fff',
-                            pointBorderWidth: 2
+                            pointBorderWidth: 3,
+                            pointHoverBorderWidth: 4
                         },
                         {
                             label: 'Impressions',
                             data: impressions,
                             borderColor: '#764ba2',
-                            backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                            backgroundColor: function(context) {
+                                const ctx = context.chart.ctx;
+                                const gradient = ctx.createLinearGradient(0, 0, 0, 350);
+                                gradient.addColorStop(0, 'rgba(118, 75, 162, 0.25)');
+                                gradient.addColorStop(1, 'rgba(118, 75, 162, 0.01)');
+                                return gradient;
+                            },
                             tension: 0.4,
                             fill: true,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
                             pointBackgroundColor: '#764ba2',
                             pointBorderColor: '#fff',
-                            pointBorderWidth: 2
+                            pointBorderWidth: 3,
+                            pointHoverBorderWidth: 4
                         }
                     ]
                 },
@@ -10798,25 +10922,37 @@ ${htmlParagraphs}
                             position: 'top',
                             labels: {
                                 usePointStyle: true,
-                                padding: 15,
+                                padding: 20,
                                 font: {
-                                    size: 13,
-                                    weight: '600'
-                                }
+                                    size: 14,
+                                    weight: '700',
+                                    family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                                },
+                                color: '#333',
+                                boxWidth: 12,
+                                boxHeight: 12
                             }
                         },
                         tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            padding: 12,
+                            backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                            titleColor: '#333',
+                            bodyColor: '#555',
+                            borderColor: 'rgba(102, 126, 234, 0.3)',
+                            borderWidth: 2,
+                            padding: 16,
+                            boxPadding: 8,
+                            cornerRadius: 12,
+                            displayColors: true,
                             titleFont: {
                                 size: 14,
-                                weight: 'bold'
+                                weight: '700',
+                                family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
                             },
                             bodyFont: {
-                                size: 13
+                                size: 13,
+                                weight: '600',
+                                family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
                             },
-                            cornerRadius: 8,
-                            displayColors: true,
                             callbacks: {
                                 label: function(context) {
                                     let label = context.dataset.label || '';
@@ -10833,14 +10969,24 @@ ${htmlParagraphs}
                         y: {
                             beginAtZero: true,
                             grid: {
-                                color: 'rgba(0, 0, 0, 0.05)',
-                                drawBorder: false
+                                color: 'rgba(102, 126, 234, 0.1)',
+                                drawBorder: false,
+                                lineWidth: 1
+                            },
+                            border: {
+                                display: false
                             },
                             ticks: {
                                 font: {
-                                    size: 12
+                                    size: 13,
+                                    weight: '600',
+                                    family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
                                 },
-                                padding: 8
+                                color: '#666',
+                                padding: 12,
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
                             }
                         },
                         x: {
@@ -10848,12 +10994,19 @@ ${htmlParagraphs}
                                 display: false,
                                 drawBorder: false
                             },
+                            border: {
+                                display: false
+                            },
                             ticks: {
                                 font: {
-                                    size: 11
+                                    size: 12,
+                                    weight: '600',
+                                    family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
                                 },
+                                color: '#666',
                                 maxRotation: 45,
-                                minRotation: 0
+                                minRotation: 0,
+                                padding: 8
                             }
                         }
                     }
