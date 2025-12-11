@@ -77,6 +77,10 @@ exports.handler = async (event, context) => {
       }
     });
 
+    // Log the API response for debugging
+    console.log('Search Console API Response:', JSON.stringify(response.data, null, 2));
+    console.log('Number of rows returned:', response.data.rows ? response.data.rows.length : 0);
+
     // Process the data
     const rows = response.data.rows || [];
 
@@ -188,6 +192,9 @@ exports.handler = async (event, context) => {
 
   } catch (error) {
     console.error('Search Console API Error:', error);
+    console.error('Error details:', JSON.stringify(error, null, 2));
+    console.error('Error message:', error.message);
+    console.error('Error code:', error.code);
 
     // Check if it's an authentication error
     if (error.message && error.message.includes('invalid_grant')) {
