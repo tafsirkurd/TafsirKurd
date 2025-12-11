@@ -56,16 +56,28 @@ exports.handler = async (event, context) => {
       auth: oauth2Client
     });
 
-    // Calculate date range (last 90 days to capture more data)
+    // Calculate date range (last 28 days)
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 90);
+    startDate.setDate(startDate.getDate() - 28);
 
     const formatDate = (date) => {
       return date.toISOString().split('T')[0];
     };
 
-    // Fetch search analytics data (using just 'query' dimension for better compatibility)
+    // Try without dimensions first to get summary data
+    const summaryResponse = await searchconsole.searchanalytics.query({
+      siteUrl: 'https://tafsirkurd.com/',
+      requestBody: {
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
+        rowLimit: 1
+      }
+    });
+
+    console.log('Summary Response (no dimensions):', JSON.stringify(summaryResponse.data, null, 2));
+
+    // Fetch search analytics data with query dimension
     const response = await searchconsole.searchanalytics.query({
       siteUrl: 'https://tafsirkurd.com/',
       requestBody: {
