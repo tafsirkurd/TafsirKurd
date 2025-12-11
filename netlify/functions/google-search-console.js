@@ -119,7 +119,64 @@ exports.handler = async (event, context) => {
       page: row.keys[0],
       clicks: row.clicks || 0,
       impressions: row.impressions || 0,
-      ctr: row.clicks > 0 ? ((row.clicks / row.impressions) * 100).toFixed(2) : '0.00',
+      ctr: row.ctr ? (row.ctr * 100).toFixed(2) : '0.00',
+      position: (row.position || 0).toFixed(1)
+    }));
+
+    // Get time series data (daily breakdown)
+    const dateResponse = await searchconsole.searchanalytics.query({
+      siteUrl: 'https://tafsirkurd.com/',
+      requestBody: {
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
+        dimensions: ['date'],
+        rowLimit: 100
+      }
+    });
+
+    const timeSeries = (dateResponse.data.rows || []).map(row => ({
+      date: row.keys[0],
+      clicks: row.clicks || 0,
+      impressions: row.impressions || 0,
+      ctr: row.ctr ? (row.ctr * 100).toFixed(2) : '0.00',
+      position: (row.position || 0).toFixed(1)
+    }));
+
+    // Get countries breakdown
+    const countryResponse = await searchconsole.searchanalytics.query({
+      siteUrl: 'https://tafsirkurd.com/',
+      requestBody: {
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
+        dimensions: ['country'],
+        rowLimit: 20
+      }
+    });
+
+    const countries = (countryResponse.data.rows || []).map(row => ({
+      country: row.keys[0],
+      clicks: row.clicks || 0,
+      impressions: row.impressions || 0,
+      ctr: row.ctr ? (row.ctr * 100).toFixed(2) : '0.00',
+      position: (row.position || 0).toFixed(1)
+    }));
+
+    // Get devices breakdown
+    const deviceResponse = await searchconsole.searchanalytics.query({
+      siteUrl: 'https://tafsirkurd.com/',
+      requestBody: {
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
+        dimensions: ['device'],
+        rowLimit: 10
+      }
+    });
+
+    const devices = (deviceResponse.data.rows || []).map(row => ({
+      device: row.keys[0],
+      clicks: row.clicks || 0,
+      impressions: row.impressions || 0,
+      ctr: row.ctr ? (row.ctr * 100).toFixed(2) : '0.00',
       position: (row.position || 0).toFixed(1)
     }));
 
@@ -176,9 +233,13 @@ exports.handler = async (event, context) => {
               end: formatDate(endDate)
             }
           },
+          timeSeries: timeSeries, // Daily breakdown for charts
           queries: queries.slice(0, 50), // Top 50 queries
           pages: pages.slice(0, 20), // Top 20 pages
-          lastUpdated: new Date().toISOString()
+          countries: countries.slice(0, 20), // Top 20 countries
+          devices: devices, // Device breakdown
+          lastUpdated: new Date().toISOString(),
+          note: queries.length === 0 ? 'Query-level data not yet available. This is normal for new sites - it can take 2-4 weeks for query breakdowns to appear.' : null
         }
       })
     };
