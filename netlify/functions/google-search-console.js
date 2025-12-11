@@ -65,15 +65,14 @@ exports.handler = async (event, context) => {
       return date.toISOString().split('T')[0];
     };
 
-    // Fetch search analytics data
+    // Fetch search analytics data (using just 'query' dimension for better compatibility)
     const response = await searchconsole.searchanalytics.query({
       siteUrl: 'https://tafsirkurd.com/',
       requestBody: {
         startDate: formatDate(startDate),
         endDate: formatDate(endDate),
-        dimensions: ['query', 'page', 'country', 'device'],
-        rowLimit: 100,
-        dimensionFilterGroups: []
+        dimensions: ['query'],
+        rowLimit: 100
       }
     });
 
@@ -84,34 +83,13 @@ exports.handler = async (event, context) => {
     // Process the data
     const rows = response.data.rows || [];
 
-    // Aggregate by query
-    const queryMap = new Map();
-    rows.forEach(row => {
-      const query = row.keys[0];
-      if (!queryMap.has(query)) {
-        queryMap.set(query, {
-          query: query,
-          clicks: 0,
-          impressions: 0,
-          ctr: 0,
-          position: 0,
-          count: 0
-        });
-      }
-      const data = queryMap.get(query);
-      data.clicks += row.clicks || 0;
-      data.impressions += row.impressions || 0;
-      data.position += row.position || 0;
-      data.count += 1;
-    });
-
-    // Calculate averages and format data
-    const queries = Array.from(queryMap.values()).map(item => ({
-      query: item.query,
-      clicks: item.clicks,
-      impressions: item.impressions,
-      ctr: item.clicks > 0 ? ((item.clicks / item.impressions) * 100).toFixed(2) : '0.00',
-      position: (item.position / item.count).toFixed(1)
+    // Format query data (already aggregated by query dimension)
+    const queries = rows.map(row => ({
+      query: row.keys[0],
+      clicks: row.clicks || 0,
+      impressions: row.impressions || 0,
+      ctr: row.ctr ? (row.ctr * 100).toFixed(2) : '0.00',
+      position: row.position ? row.position.toFixed(1) : '0.0'
     })).sort((a, b) => b.impressions - a.impressions);
 
     // Get top pages
