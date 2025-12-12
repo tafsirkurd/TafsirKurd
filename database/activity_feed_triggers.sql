@@ -337,25 +337,28 @@ EXECUTE FUNCTION notify_translation_updated();
 CREATE OR REPLACE FUNCTION notify_background_updated()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO admin_activity_feed (
-        event_type, category, priority, title, message, icon,
-        metadata, source_table, source_id, section
-    ) VALUES (
-        'background_updated',
-        'content',
-        'low',
-        'Background Image Updated',
-        format('%s background changed', COALESCE(NEW.page_name, 'Page')),
-        '🖼️',
-        jsonb_build_object(
-            'pageName', NEW.page_name,
-            'imageUrl', NEW.image_url,
-            'isActive', NEW.is_active
-        ),
-        'background_images',
-        NEW.id,
-        'backgrounds'
-    );
+    -- Only notify on INSERT or when image_url changes on UPDATE
+    IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND OLD.image_url IS DISTINCT FROM NEW.image_url) THEN
+        INSERT INTO admin_activity_feed (
+            event_type, category, priority, title, message, icon,
+            metadata, source_table, source_id, section
+        ) VALUES (
+            'background_updated',
+            'content',
+            'low',
+            'Background Image Updated',
+            format('%s background changed', COALESCE(NEW.page_name, 'Page')),
+            '🖼️',
+            jsonb_build_object(
+                'pageName', NEW.page_name,
+                'imageUrl', NEW.image_url,
+                'isActive', NEW.is_active
+            ),
+            'background_images',
+            NEW.id,
+            'backgrounds'
+        );
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -366,7 +369,6 @@ DROP TRIGGER IF EXISTS background_update_notification ON background_images;
 CREATE TRIGGER background_update_notification
 AFTER INSERT OR UPDATE ON background_images
 FOR EACH ROW
-WHEN (TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND OLD.image_url IS DISTINCT FROM NEW.image_url))
 EXECUTE FUNCTION notify_background_updated();
 
 -- ================================================
