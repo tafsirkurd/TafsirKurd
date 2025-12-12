@@ -1934,6 +1934,17 @@
                             <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 8px;">Active Readers</div>
                             <div style="font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; display: inline-block;" id="readingChange">Reading now</div>
                         </div>
+
+                        <!-- Activity Feed Card -->
+                        <div class="dashboard-card" data-card-id="activityFeed" draggable="false" onclick="switchSection('activityFeed')" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 25px; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="font-size: 40px; margin-bottom: 12px; position: relative;">
+                                🔔
+                                <span id="activityBadge" style="display: none; position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 12px; box-shadow: 0 2px 8px rgba(239,68,68,0.4);"></span>
+                            </div>
+                            <div style="font-size: 36px; font-weight: 800; color: white; margin-bottom: 5px; text-shadow: 0 2px 8px rgba(0,0,0,0.2);" id="totalActivities">0</div>
+                            <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 8px;">Activity Feed</div>
+                            <div style="font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; display: inline-block;" id="unreadActivities">0 unread</div>
+                        </div>
                     </div>
 
                     <!-- Additional Detailed Stats -->
@@ -3741,8 +3752,353 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Activity Feed Section -->
+            <section id="activityFeedSection" class="section" style="display: none;">
+                <button class="back-button" onclick="switchSection('dashboard')" style="margin-bottom: 20px;">
+                    ← Back to Dashboard
+                </button>
+
+                <!-- Section Header -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 40px; margin-bottom: 30px; box-shadow: 0 10px 40px rgba(102,126,234,0.3);">
+                    <div style="text-align: center;">
+                        <div style="font-size: 64px; margin-bottom: 15px;">🔔</div>
+                        <h2 style="margin: 0 0 10px 0; font-size: 36px; font-weight: 800; color: white;">Activity Feed</h2>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 18px;">All platform updates in one place</p>
+                    </div>
+                </div>
+
+                <!-- Filter Bar -->
+                <div style="background: white; border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                    <!-- Category Filter Chips -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 12px; font-size: 14px;">Filter by Category:</label>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="activity-filter-chip active" data-filter="all" onclick="filterActivities('all')">
+                                All <span class="chip-count" id="countAll">0</span>
+                            </button>
+                            <button class="activity-filter-chip" data-filter="users" onclick="filterActivities('users')">
+                                👥 Users <span class="chip-count" id="countUsers">0</span>
+                            </button>
+                            <button class="activity-filter-chip" data-filter="content" onclick="filterActivities('content')">
+                                📝 Content <span class="chip-count" id="countContent">0</span>
+                            </button>
+                            <button class="activity-filter-chip" data-filter="security" onclick="filterActivities('security')">
+                                🔒 Security <span class="chip-count" id="countSecurity">0</span>
+                            </button>
+                            <button class="activity-filter-chip" data-filter="analytics" onclick="filterActivities('analytics')">
+                                📊 Analytics <span class="chip-count" id="countAnalytics">0</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Additional Filters -->
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <input type="text" id="activitySearch" placeholder="🔍 Search activities..."
+                                   oninput="searchActivities(this.value)"
+                                   style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.3s;">
+                        </div>
+
+                        <select id="priorityFilter" onchange="applyActivityFilters()"
+                                style="padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; background: white;">
+                            <option value="all">All Priorities</option>
+                            <option value="urgent">🔴 Urgent Only</option>
+                            <option value="high">🟠 High Priority</option>
+                            <option value="normal">🟢 Normal</option>
+                        </select>
+
+                        <select id="timeFilter" onchange="applyActivityFilters()"
+                                style="padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; background: white;">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="all">All Time</option>
+                        </select>
+
+                        <button onclick="markAllActivitiesAsRead()"
+                                style="padding: 12px 20px; background: #10b981; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap;">
+                            ✓ Mark All Read
+                        </button>
+
+                        <button onclick="refreshActivityFeed()"
+                                style="padding: 12px 20px; background: #667eea; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Activity Timeline -->
+                <div id="activityTimeline">
+                    <!-- Events will be rendered here -->
+                    <div class="loading" style="text-align: center; padding: 60px 20px;">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Loading activities...</div>
+                    </div>
+                </div>
+
+                <!-- Load More Button -->
+                <div id="loadMoreContainer" style="display: none; text-align: center; margin-top: 30px;">
+                    <button onclick="loadMoreActivities()" id="loadMoreBtn"
+                            style="padding: 14px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(102,126,234,0.3); transition: all 0.3s;">
+                        Load More Activities
+                    </button>
+                </div>
+            </section>
         </div>
     </div>
+
+    <!-- CSS Styles for Activity Feed -->
+    <style>
+        .activity-filter-chip {
+            padding: 10px 18px;
+            background: #f3f4f6;
+            border: 2px solid #e5e7eb;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .activity-filter-chip:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+
+        .activity-filter-chip.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+
+        .chip-count {
+            background: rgba(255,255,255,0.3);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .activity-filter-chip.active .chip-count {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .timeline-date-group {
+            margin-bottom: 35px;
+        }
+
+        .timeline-date {
+            font-size: 16px;
+            font-weight: 700;
+            color: #6b7280;
+            margin-bottom: 15px;
+            padding-left: 15px;
+            border-left: 4px solid #e5e7eb;
+        }
+
+        .activity-event {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            display: flex;
+            gap: 18px;
+            align-items: flex-start;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .activity-event:hover {
+            box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+            transform: translateX(5px);
+        }
+
+        .activity-event.unread {
+            border-left: 5px solid #667eea;
+            background: linear-gradient(90deg, rgba(102,126,234,0.05) 0%, white 100%);
+        }
+
+        .activity-event.unread::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 100%;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .priority-indicator {
+            width: 8px;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .priority-urgent { background: #ef4444; }
+        .priority-high { background: #f59e0b; }
+        .priority-normal { background: #10b981; }
+        .priority-low { background: #3b82f6; }
+
+        .event-icon {
+            font-size: 36px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .event-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            gap: 15px;
+        }
+
+        .event-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+
+        .event-time {
+            font-size: 13px;
+            color: #9ca3af;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .event-message {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0 0 12px 0;
+            line-height: 1.6;
+        }
+
+        .event-metadata {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .metadata-pill {
+            background: #f3f4f6;
+            padding: 5px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .event-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .event-actions button {
+            padding: 8px 16px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .event-actions button:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .event-actions button.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .event-actions button.primary:hover {
+            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+        }
+
+        .section-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(102,126,234,0.1);
+            color: #667eea;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 18px;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .pulse {
+            animation: pulse 1s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+    </style>
 
     <!-- Add Background Image Modal -->
     <div id="addBackgroundModal" class="modal">
@@ -11403,6 +11759,725 @@ ${htmlParagraphs}
         }
 
         // ==================== END BACKGROUND IMAGES MANAGER ====================
+
+        // ========================================
+        // ACTIVITY FEED SYSTEM
+        // ========================================
+
+        let activityFeedData = [];
+        let activityCurrentPage = 0;
+        let activitySubscription = null;
+        const ACTIVITY_PAGE_SIZE = 50;
+        let activityFilters = {
+            category: 'all',
+            priority: 'all',
+            timeRange: 'week',
+            searchQuery: ''
+        };
+
+        // Load Activity Feed
+        async function loadActivityFeed() {
+            try {
+                console.log('📡 Loading activity feed...');
+
+                const { data, error, count } = await supabase
+                    .from('admin_activity_feed')
+                    .select('*', { count: 'exact' })
+                    .order('created_at', { ascending: false })
+                    .limit(ACTIVITY_PAGE_SIZE);
+
+                if (error) {
+                    console.error('❌ Error loading activities:', error);
+                    showActivityError('Failed to load activities');
+                    return;
+                }
+
+                activityFeedData = data || [];
+                activityCurrentPage = 0;
+
+                console.log(`✅ Loaded ${activityFeedData.length} activities`);
+
+                renderActivityTimeline(activityFeedData);
+                updateActivityStats();
+                updateCategoryCounts();
+
+                // Subscribe to real-time updates
+                subscribeToActivityFeed();
+
+            } catch (error) {
+                console.error('❌ Activity feed error:', error);
+                showActivityError('Unexpected error loading activities');
+            }
+        }
+
+        // Render Activity Timeline
+        function renderActivityTimeline(events) {
+            const container = document.getElementById('activityTimeline');
+
+            if (!events || events.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <p>No activities yet</p>
+                        <p style="font-size: 14px; color: #9ca3af; margin-top: 10px;">
+                            Activities will appear here as things happen on your platform
+                        </p>
+                    </div>
+                `;
+                document.getElementById('loadMoreContainer').style.display = 'none';
+                return;
+            }
+
+            // Group events by date
+            const grouped = groupEventsByDate(events);
+
+            container.innerHTML = Object.entries(grouped).map(([date, dateEvents]) => `
+                <div class="timeline-date-group">
+                    <h3 class="timeline-date">${formatDateHeader(date)}</h3>
+                    ${dateEvents.map(event => renderEventCard(event)).join('')}
+                </div>
+            `).join('');
+
+            // Show load more button if there might be more events
+            if (events.length >= ACTIVITY_PAGE_SIZE) {
+                document.getElementById('loadMoreContainer').style.display = 'block';
+            }
+        }
+
+        // Render Single Event Card
+        function renderEventCard(event) {
+            const timeAgo = getTimeAgo(event.created_at);
+            const priorityClass = `priority-${event.priority}`;
+            const unreadClass = event.is_read ? '' : 'unread';
+
+            // Extract metadata for display
+            const metadata = event.metadata || {};
+            const metadataPills = generateMetadataPills(event.event_type, metadata);
+
+            return `
+                <div class="activity-event ${unreadClass}"
+                     data-event-id="${event.id}"
+                     data-category="${event.category}"
+                     data-priority="${event.priority}"
+                     onclick="markEventAsRead(${event.id})">
+
+                    <div class="priority-indicator ${priorityClass}"></div>
+
+                    <div class="event-icon">${event.icon}</div>
+
+                    <div class="event-content">
+                        <div class="event-header">
+                            <h4 class="event-title">${escapeHtml(event.title)}</h4>
+                            <span class="event-time">${timeAgo}</span>
+                        </div>
+
+                        <p class="event-message">${escapeHtml(event.message)}</p>
+
+                        ${metadataPills ? `
+                            <div class="event-metadata">
+                                ${metadataPills}
+                            </div>
+                        ` : ''}
+
+                        <div class="event-actions">
+                            ${getEventActions(event)}
+                        </div>
+
+                        <div class="section-badge">${event.section || 'System'}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Generate Metadata Pills
+        function generateMetadataPills(eventType, metadata) {
+            const pills = [];
+
+            if (metadata.email) {
+                pills.push(`<span class="metadata-pill">📧 ${escapeHtml(metadata.email)}</span>`);
+            }
+
+            if (metadata.city && metadata.country) {
+                pills.push(`<span class="metadata-pill">📍 ${escapeHtml(metadata.city)}, ${escapeHtml(metadata.country)}</span>`);
+            } else if (metadata.country) {
+                pills.push(`<span class="metadata-pill">📍 ${escapeHtml(metadata.country)}</span>`);
+            }
+
+            if (metadata.milestone) {
+                pills.push(`<span class="metadata-pill">🎯 ${metadata.milestone} ayahs</span>`);
+            }
+
+            if (metadata.totalAyahs) {
+                pills.push(`<span class="metadata-pill">📖 Total: ${metadata.totalAyahs}</span>`);
+            }
+
+            if (metadata.ipAddress) {
+                pills.push(`<span class="metadata-pill">🌐 ${metadata.ipAddress}</span>`);
+            }
+
+            return pills.join('');
+        }
+
+        // Get Event-Specific Actions
+        function getEventActions(event) {
+            const actions = [];
+
+            // Common actions
+            if (!event.is_read) {
+                actions.push(`<button onclick="event.stopPropagation(); markEventAsRead(${event.id})">✓ Mark Read</button>`);
+            }
+
+            // Event-specific actions
+            switch (event.event_type) {
+                case 'new_user_signup':
+                    if (event.metadata.userId) {
+                        actions.push(`<button class="primary" onclick="event.stopPropagation(); viewUserFromActivity('${event.metadata.userId}')">👤 View User</button>`);
+                    }
+                    break;
+
+                case 'new_message':
+                    actions.push(`<button class="primary" onclick="event.stopPropagation(); switchSection('messages')">📧 View Messages</button>`);
+                    break;
+
+                case 'milestone_reached':
+                case 'quran_completion':
+                    if (event.metadata.userId) {
+                        actions.push(`<button class="primary" onclick="event.stopPropagation(); viewUserFromActivity('${event.metadata.userId}')">👤 View Progress</button>`);
+                    }
+                    break;
+
+                case 'security_alert':
+                    actions.push(`<button class="primary" onclick="event.stopPropagation(); switchSection('bots')">🔒 View Security</button>`);
+                    break;
+
+                case 'video_added':
+                    actions.push(`<button class="primary" onclick="event.stopPropagation(); switchSection('videos')">🎥 View Videos</button>`);
+                    break;
+            }
+
+            actions.push(`<button onclick="event.stopPropagation(); dismissEvent(${event.id})">✕ Dismiss</button>`);
+
+            return actions.join('');
+        }
+
+        // View User from Activity
+        async function viewUserFromActivity(userId) {
+            try {
+                // Switch to users section
+                switchSection('users');
+
+                // Wait for users to load
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // Search for the user
+                const searchBox = document.getElementById('userSearch');
+                if (searchBox) {
+                    searchBox.value = userId;
+                    searchBox.dispatchEvent(new Event('input'));
+                }
+            } catch (error) {
+                console.error('Error viewing user:', error);
+            }
+        }
+
+        // Mark Event as Read
+        async function markEventAsRead(eventId) {
+            try {
+                const { error } = await supabase
+                    .from('admin_activity_feed')
+                    .update({
+                        is_read: true,
+                        read_at: new Date().toISOString()
+                    })
+                    .eq('id', eventId);
+
+                if (error) throw error;
+
+                // Update UI
+                const eventElement = document.querySelector(`[data-event-id="${eventId}"]`);
+                if (eventElement) {
+                    eventElement.classList.remove('unread');
+                }
+
+                // Update local data
+                const event = activityFeedData.find(e => e.id === eventId);
+                if (event) {
+                    event.is_read = true;
+                }
+
+                updateActivityStats();
+
+            } catch (error) {
+                console.error('Error marking event as read:', error);
+            }
+        }
+
+        // Mark All as Read
+        async function markAllActivitiesAsRead() {
+            try {
+                const { error } = await supabase
+                    .from('admin_activity_feed')
+                    .update({
+                        is_read: true,
+                        read_at: new Date().toISOString()
+                    })
+                    .eq('is_read', false);
+
+                if (error) throw error;
+
+                // Update UI
+                document.querySelectorAll('.activity-event.unread').forEach(el => {
+                    el.classList.remove('unread');
+                });
+
+                // Update local data
+                activityFeedData.forEach(event => {
+                    event.is_read = true;
+                });
+
+                updateActivityStats();
+                showNotification('✅ All activities marked as read', 'success');
+
+            } catch (error) {
+                console.error('Error marking all as read:', error);
+                showNotification('❌ Failed to mark all as read', 'error');
+            }
+        }
+
+        // Dismiss Event
+        async function dismissEvent(eventId) {
+            if (!confirm('Dismiss this activity? It will be hidden from the feed.')) {
+                return;
+            }
+
+            try {
+                const { error } = await supabase
+                    .from('admin_activity_feed')
+                    .update({ is_dismissed: true })
+                    .eq('id', eventId);
+
+                if (error) throw error;
+
+                // Remove from UI
+                const eventElement = document.querySelector(`[data-event-id="${eventId}"]`);
+                if (eventElement) {
+                    eventElement.style.opacity = '0';
+                    eventElement.style.transform = 'translateX(-100%)';
+                    setTimeout(() => eventElement.remove(), 300);
+                }
+
+                // Remove from local data
+                activityFeedData = activityFeedData.filter(e => e.id !== eventId);
+
+                updateActivityStats();
+                updateCategoryCounts();
+
+            } catch (error) {
+                console.error('Error dismissing event:', error);
+            }
+        }
+
+        // Filter Activities by Category
+        function filterActivities(category) {
+            activityFilters.category = category;
+
+            // Update UI
+            document.querySelectorAll('.activity-filter-chip').forEach(chip => {
+                chip.classList.toggle('active', chip.dataset.filter === category);
+            });
+
+            applyActivityFilters();
+        }
+
+        // Apply All Filters
+        function applyActivityFilters() {
+            const category = activityFilters.category;
+            const priority = document.getElementById('priorityFilter').value;
+            const timeRange = document.getElementById('timeFilter').value;
+            const searchQuery = activityFilters.searchQuery.toLowerCase();
+
+            let filtered = [...activityFeedData];
+
+            // Category filter
+            if (category !== 'all') {
+                filtered = filtered.filter(e => e.category === category);
+            }
+
+            // Priority filter
+            if (priority !== 'all') {
+                filtered = filtered.filter(e => e.priority === priority);
+            }
+
+            // Time range filter
+            if (timeRange !== 'all') {
+                const cutoff = getTimeRangeCutoff(timeRange);
+                filtered = filtered.filter(e => new Date(e.created_at) >= cutoff);
+            }
+
+            // Search filter
+            if (searchQuery) {
+                filtered = filtered.filter(e => {
+                    const searchText = `${e.title} ${e.message} ${JSON.stringify(e.metadata)}`.toLowerCase();
+                    return searchText.includes(searchQuery);
+                });
+            }
+
+            renderActivityTimeline(filtered);
+        }
+
+        // Search Activities
+        function searchActivities(query) {
+            activityFilters.searchQuery = query;
+            applyActivityFilters();
+        }
+
+        // Get Time Range Cutoff
+        function getTimeRangeCutoff(range) {
+            const now = new Date();
+            switch (range) {
+                case 'today':
+                    const today = new Date(now);
+                    today.setHours(0, 0, 0, 0);
+                    return today;
+                case 'week':
+                    return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                case 'month':
+                    return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                default:
+                    return new Date(0);
+            }
+        }
+
+        // Group Events by Date
+        function groupEventsByDate(events) {
+            const grouped = {};
+
+            events.forEach(event => {
+                const date = new Date(event.created_at).toDateString();
+                if (!grouped[date]) {
+                    grouped[date] = [];
+                }
+                grouped[date].push(event);
+            });
+
+            return grouped;
+        }
+
+        // Format Date Header
+        function formatDateHeader(dateString) {
+            const date = new Date(dateString);
+            const today = new Date().toDateString();
+            const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
+
+            if (dateString === today) {
+                return '📅 Today';
+            } else if (dateString === yesterday) {
+                return '📅 Yesterday';
+            } else {
+                return `📅 ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+            }
+        }
+
+        // Get Time Ago String
+        function getTimeAgo(timestamp) {
+            const now = new Date();
+            const time = new Date(timestamp);
+            const diffMs = now - time;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+
+            return time.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        // Update Activity Stats
+        function updateActivityStats() {
+            const total = activityFeedData.length;
+            const unread = activityFeedData.filter(e => !e.is_read).length;
+
+            // Update dashboard card
+            const totalEl = document.getElementById('totalActivities');
+            const unreadEl = document.getElementById('unreadActivities');
+
+            if (totalEl) totalEl.textContent = total;
+            if (unreadEl) unreadEl.textContent = `${unread} unread`;
+
+            // Update badge
+            const badge = document.getElementById('activityBadge');
+            if (badge) {
+                if (unread > 0) {
+                    badge.textContent = unread > 99 ? '99+' : unread;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        // Update Category Counts
+        function updateCategoryCounts() {
+            const counts = {
+                all: activityFeedData.length,
+                users: activityFeedData.filter(e => e.category === 'users').length,
+                content: activityFeedData.filter(e => e.category === 'content').length,
+                security: activityFeedData.filter(e => e.category === 'security').length,
+                analytics: activityFeedData.filter(e => e.category === 'analytics').length
+            };
+
+            Object.entries(counts).forEach(([key, value]) => {
+                const el = document.getElementById(`count${key.charAt(0).toUpperCase() + key.slice(1)}`);
+                if (el) el.textContent = value;
+            });
+        }
+
+        // Load More Activities
+        async function loadMoreActivities() {
+            try {
+                activityCurrentPage++;
+                const offset = activityCurrentPage * ACTIVITY_PAGE_SIZE;
+
+                const { data, error } = await supabase
+                    .from('admin_activity_feed')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .range(offset, offset + ACTIVITY_PAGE_SIZE - 1);
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    activityFeedData = [...activityFeedData, ...data];
+                    applyActivityFilters();
+                } else {
+                    document.getElementById('loadMoreContainer').style.display = 'none';
+                    showNotification('No more activities to load', 'info');
+                }
+
+            } catch (error) {
+                console.error('Error loading more activities:', error);
+                showNotification('Failed to load more activities', 'error');
+            }
+        }
+
+        // Refresh Activity Feed
+        async function refreshActivityFeed() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Refreshing...';
+
+            await loadActivityFeed();
+
+            btn.disabled = false;
+            btn.textContent = '🔄 Refresh';
+            showNotification('✅ Activity feed refreshed', 'success');
+        }
+
+        // Subscribe to Real-time Updates
+        function subscribeToActivityFeed() {
+            // Unsubscribe if already subscribed
+            if (activitySubscription) {
+                activitySubscription.unsubscribe();
+            }
+
+            console.log('📡 Subscribing to real-time activity feed...');
+
+            activitySubscription = supabase
+                .channel('admin_activity_feed_changes')
+                .on('postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'admin_activity_feed' },
+                    (payload) => {
+                        console.log('🔔 New activity received:', payload.new);
+                        handleNewActivity(payload.new);
+                    }
+                )
+                .subscribe((status) => {
+                    console.log('Subscription status:', status);
+                });
+        }
+
+        // Handle New Activity
+        function handleNewActivity(newEvent) {
+            // Add to beginning of data array
+            activityFeedData.unshift(newEvent);
+
+            // Re-render timeline
+            renderActivityTimeline(activityFeedData);
+
+            // Update stats
+            updateActivityStats();
+            updateCategoryCounts();
+
+            // Show toast notification
+            showActivityToast(newEvent);
+
+            // Play sound for urgent events
+            if (newEvent.priority === 'urgent') {
+                playNotificationSound();
+            }
+
+            // Animate badge
+            const badge = document.getElementById('activityBadge');
+            if (badge) {
+                badge.classList.add('pulse');
+                setTimeout(() => badge.classList.remove('pulse'), 1000);
+            }
+        }
+
+        // Show Activity Toast Notification
+        function showActivityToast(event) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                border-radius: 12px;
+                padding: 20px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                max-width: 400px;
+                z-index: 10000;
+                animation: slideInRight 0.3s ease-out;
+                border-left: 5px solid ${getPriorityColor(event.priority)};
+            `;
+
+            toast.innerHTML = `
+                <div style="display: flex; gap: 15px; align-items: flex-start;">
+                    <div style="font-size: 32px;">${event.icon}</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; font-size: 14px; color: #111827; margin-bottom: 5px;">
+                            ${escapeHtml(event.title)}
+                        </div>
+                        <div style="font-size: 13px; color: #6b7280;">
+                            ${escapeHtml(event.message)}
+                        </div>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()"
+                            style="background: none; border: none; font-size: 18px; cursor: pointer; color: #9ca3af; padding: 0;">
+                        ✕
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(toast);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // Get Priority Color
+        function getPriorityColor(priority) {
+            const colors = {
+                urgent: '#ef4444',
+                high: '#f59e0b',
+                normal: '#10b981',
+                low: '#3b82f6'
+            };
+            return colors[priority] || colors.normal;
+        }
+
+        // Play Notification Sound
+        function playNotificationSound() {
+            // Create a simple beep sound using Web Audio API
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (error) {
+                console.log('Could not play sound:', error);
+            }
+        }
+
+        // Show Activity Error
+        function showActivityError(message) {
+            document.getElementById('activityTimeline').innerHTML = `
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 64px; margin-bottom: 20px;">⚠️</div>
+                    <p style="font-size: 18px; color: #ef4444; font-weight: 600;">${message}</p>
+                    <button onclick="loadActivityFeed()"
+                            style="margin-top: 20px; padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                        Try Again
+                    </button>
+                </div>
+            `;
+        }
+
+        // HTML Escape Utility
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Modify switchSection to load activity feed when switching to it
+        const originalSwitchSection = switchSection;
+        switchSection = function(section) {
+            originalSwitchSection(section);
+            if (section === 'activityFeed') {
+                loadActivityFeed();
+            }
+        };
+
+        // Load activity stats on dashboard load - wrap existing loadDashboardData
+        const originalLoadDashboardData = loadDashboardData;
+        loadDashboardData = async function() {
+            await originalLoadDashboardData();
+
+            // Load activity feed summary for dashboard
+            try {
+                const { count: totalCount } = await supabase
+                    .from('admin_activity_feed')
+                    .select('*', { count: 'exact', head: true });
+
+                const { count: unreadCount } = await supabase
+                    .from('admin_activity_feed')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('is_read', false);
+
+                const totalEl = document.getElementById('totalActivities');
+                const unreadEl = document.getElementById('unreadActivities');
+
+                if (totalEl) totalEl.textContent = totalCount || 0;
+                if (unreadEl) unreadEl.textContent = `${unreadCount || 0} unread`;
+
+                if (unreadCount > 0) {
+                    const badge = document.getElementById('activityBadge');
+                    if (badge) {
+                        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                        badge.style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading activity stats:', error);
+            }
+        };
+
+        // ========================================
+        // END ACTIVITY FEED SYSTEM
+        // ========================================
 
     </script>
 </body>
