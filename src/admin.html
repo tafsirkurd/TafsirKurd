@@ -3755,23 +3755,50 @@
                     ← Back to Dashboard
                 </button>
 
-                <!-- Section Header -->
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 40px; margin-bottom: 30px; box-shadow: 0 10px 40px rgba(102,126,234,0.3);">
-                    <div style="text-align: center;">
-                        <div style="font-size: 64px; margin-bottom: 15px;">🔔</div>
-                        <h2 style="margin: 0 0 10px 0; font-size: 36px; font-weight: 800; color: white;">Activity Feed</h2>
-                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 18px;">All platform updates in one place</p>
+                <!-- Section Header - ULTIMATE PREMIUM -->
+                <div style="position: relative; background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); border-radius: 24px; padding: 50px 40px; margin-bottom: 30px; box-shadow: 0 20px 60px rgba(102,126,234,0.4), 0 0 0 1px rgba(255,255,255,0.1) inset; overflow: hidden;">
+                    <!-- Animated Background Particles -->
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; opacity: 0.1;">
+                        <div style="position: absolute; width: 300px; height: 300px; border-radius: 50%; background: white; top: -100px; left: -100px; animation: float 6s ease-in-out infinite;"></div>
+                        <div style="position: absolute; width: 200px; height: 200px; border-radius: 50%; background: white; bottom: -50px; right: -50px; animation: float 8s ease-in-out infinite reverse;"></div>
+                    </div>
+
+                    <div style="position: relative; z-index: 1; text-align: center;">
+                        <div style="font-size: 72px; margin-bottom: 20px; animation: bellRing 3s ease-in-out infinite; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));">🔔</div>
+                        <h2 style="margin: 0 0 12px 0; font-size: 42px; font-weight: 900; color: white; text-shadow: 0 4px 20px rgba(0,0,0,0.2); letter-spacing: -1px;">Activity Feed</h2>
+                        <p style="margin: 0 0 20px 0; color: rgba(255,255,255,0.95); font-size: 18px; font-weight: 500;">Real-time platform monitoring • All updates in one place</p>
+
+                        <!-- Live Stats Bar -->
+                        <div style="display: inline-flex; gap: 20px; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 15px 30px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.1);">
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; font-weight: 800; color: white;" id="headerTotalActivities">0</div>
+                                <div style="font-size: 11px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Total</div>
+                            </div>
+                            <div style="width: 1px; background: rgba(255,255,255,0.3);"></div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; font-weight: 800; color: #fbbf24;" id="headerUnreadActivities">0</div>
+                                <div style="font-size: 11px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Unread</div>
+                            </div>
+                            <div style="width: 1px; background: rgba(255,255,255,0.3);"></div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; font-weight: 800; color: #10b981;">●</div>
+                                <div style="font-size: 11px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Live</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Filter Bar -->
-                <div style="background: white; border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                <!-- Filter Bar - GLASSMORPHISM DESIGN -->
+                <div style="background: rgba(255,255,255,0.7); backdrop-filter: blur(20px); border-radius: 20px; padding: 30px; margin-bottom: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.08), 0 0 0 1px rgba(255,255,255,0.8) inset; border: 1px solid rgba(255,255,255,0.5);">
                     <!-- Category Filter Chips -->
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 12px; font-size: 14px;">Filter by Category:</label>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div style="margin-bottom: 25px;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #1f2937; margin-bottom: 16px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <span style="width: 4px; height: 16px; background: linear-gradient(180deg, #667eea 0%, #764ba2 100%); border-radius: 2px;"></span>
+                            Filter by Category
+                        </label>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                             <button class="activity-filter-chip active" data-filter="all" onclick="filterActivities('all')">
-                                All <span class="chip-count" id="countAll">0</span>
+                                ⚡ All <span class="chip-count" id="countAll">0</span>
                             </button>
                             <button class="activity-filter-chip" data-filter="users" onclick="filterActivities('users')">
                                 👥 Users <span class="chip-count" id="countUsers">0</span>
@@ -3788,37 +3815,50 @@
                         </div>
                     </div>
 
+                    <div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent); margin: 25px 0;"></div>
+
                     <!-- Additional Filters -->
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
-                        <div style="flex: 1; min-width: 200px;">
-                            <input type="text" id="activitySearch" placeholder="🔍 Search activities..."
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                        <div style="flex: 1; min-width: 250px; position: relative;">
+                            <input type="text" id="activitySearch" placeholder="🔍 Search by title, message, or metadata..."
                                    oninput="searchActivities(this.value)"
-                                   style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.3s;">
+                                   style="width: 100%; padding: 14px 20px; border: 2px solid rgba(102,126,234,0.2); border-radius: 12px; font-size: 14px; transition: all 0.3s; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.04);"
+                                   onfocus="this.style.borderColor='#667eea'; this.style.boxShadow='0 4px 16px rgba(102,126,234,0.15)'"
+                                   onblur="this.style.borderColor='rgba(102,126,234,0.2)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)'">
                         </div>
 
                         <select id="priorityFilter" onchange="applyActivityFilters()"
-                                style="padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; background: white;">
-                            <option value="all">All Priorities</option>
+                                style="padding: 14px 18px; border: 2px solid rgba(102,126,234,0.2); border-radius: 12px; font-size: 14px; background: white; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.04);"
+                                onfocus="this.style.borderColor='#667eea'; this.style.boxShadow='0 4px 16px rgba(102,126,234,0.15)'"
+                                onblur="this.style.borderColor='rgba(102,126,234,0.2)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)'">
+                            <option value="all">🎯 All Priorities</option>
                             <option value="urgent">🔴 Urgent Only</option>
                             <option value="high">🟠 High Priority</option>
                             <option value="normal">🟢 Normal</option>
+                            <option value="low">🔵 Low Priority</option>
                         </select>
 
                         <select id="timeFilter" onchange="applyActivityFilters()"
-                                style="padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; background: white;">
-                            <option value="today">Today</option>
-                            <option value="week">This Week</option>
-                            <option value="month">This Month</option>
-                            <option value="all">All Time</option>
+                                style="padding: 14px 18px; border: 2px solid rgba(102,126,234,0.2); border-radius: 12px; font-size: 14px; background: white; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.04);"
+                                onfocus="this.style.borderColor='#667eea'; this.style.boxShadow='0 4px 16px rgba(102,126,234,0.15)'"
+                                onblur="this.style.borderColor='rgba(102,126,234,0.2)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)'">
+                            <option value="today">📅 Today</option>
+                            <option value="week">📆 This Week</option>
+                            <option value="month">🗓️ This Month</option>
+                            <option value="all">🕐 All Time</option>
                         </select>
 
                         <button onclick="markAllActivitiesAsRead()"
-                                style="padding: 12px 20px; background: #10b981; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap;">
+                                style="padding: 14px 24px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s; white-space: nowrap; box-shadow: 0 4px 16px rgba(16,185,129,0.3); font-size: 14px;"
+                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 24px rgba(16,185,129,0.4)'"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 16px rgba(16,185,129,0.3)'">
                             ✓ Mark All Read
                         </button>
 
                         <button onclick="refreshActivityFeed()"
-                                style="padding: 12px 20px; background: #667eea; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                                style="padding: 14px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 16px rgba(102,126,234,0.3); font-size: 14px;"
+                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 24px rgba(102,126,234,0.4)'"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 16px rgba(102,126,234,0.3)'">
                             🔄 Refresh
                         </button>
                     </div>
@@ -3846,31 +3886,92 @@
 
     <!-- CSS Styles for Activity Feed -->
     <style>
+        /* ULTIMATE PREMIUM ANIMATIONS */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        @keyframes bellRing {
+            0%, 100% { transform: rotate(0deg); }
+            10%, 30% { transform: rotate(-10deg); }
+            20%, 40% { transform: rotate(10deg); }
+            50% { transform: rotate(0deg); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(102,126,234,0.3); }
+            50% { box-shadow: 0 0 40px rgba(102,126,234,0.6), 0 0 60px rgba(102,126,234,0.4); }
+        }
+
+        /* FILTER CHIPS - PREMIUM DESIGN */
         .activity-filter-chip {
-            padding: 10px 18px;
-            background: #f3f4f6;
-            border: 2px solid #e5e7eb;
-            border-radius: 24px;
+            padding: 12px 22px;
+            background: rgba(255,255,255,0.9);
+            border: 2px solid rgba(102,126,234,0.15);
+            border-radius: 30px;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 700;
             color: #6b7280;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .activity-filter-chip::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .activity-filter-chip:hover::before {
+            left: 100%;
         }
 
         .activity-filter-chip:hover {
-            background: #e5e7eb;
-            transform: translateY(-2px);
+            background: rgba(102,126,234,0.08);
+            border-color: rgba(102,126,234,0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.15);
         }
 
         .activity-filter-chip.active {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+            border-color: transparent;
+            box-shadow: 0 8px 24px rgba(102,126,234,0.4), 0 0 0 4px rgba(102,126,234,0.1);
+            transform: translateY(-2px);
+        }
+
+        .activity-filter-chip.active:hover {
+            box-shadow: 0 12px 32px rgba(102,126,234,0.5), 0 0 0 4px rgba(102,126,234,0.15);
+            transform: translateY(-4px);
         }
 
         .chip-count {
@@ -3885,41 +3986,71 @@
             background: rgba(255,255,255,0.3);
         }
 
+        /* TIMELINE STYLING - PREMIUM */
         .timeline-date-group {
-            margin-bottom: 35px;
+            margin-bottom: 40px;
+            animation: slideInUp 0.6s ease-out;
         }
 
         .timeline-date {
-            font-size: 16px;
-            font-weight: 700;
-            color: #6b7280;
-            margin-bottom: 15px;
-            padding-left: 15px;
-            border-left: 4px solid #e5e7eb;
+            font-size: 15px;
+            font-weight: 800;
+            color: #374151;
+            margin-bottom: 20px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, rgba(102,126,234,0.08) 0%, rgba(118,75,162,0.08) 100%);
+            border-left: 5px solid #667eea;
+            border-radius: 0 12px 12px 0;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.1);
         }
 
+        /* ACTIVITY EVENT CARDS - ULTIMATE DESIGN */
         .activity-event {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
             display: flex;
-            gap: 18px;
+            gap: 20px;
             align-items: flex-start;
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            animation: slideInUp 0.5s ease-out;
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+
+        .activity-event::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102,126,234,0.03));
+            opacity: 0;
+            transition: opacity 0.4s;
         }
 
         .activity-event:hover {
-            box-shadow: 0 6px 24px rgba(0,0,0,0.12);
-            transform: translateX(5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(102,126,234,0.2);
+            transform: translateY(-4px) translateX(4px);
+            border-color: rgba(102,126,234,0.2);
+        }
+
+        .activity-event:hover::after {
+            opacity: 1;
         }
 
         .activity-event.unread {
-            border-left: 5px solid #667eea;
-            background: linear-gradient(90deg, rgba(102,126,234,0.05) 0%, white 100%);
+            background: linear-gradient(135deg, rgba(102,126,234,0.08) 0%, rgba(255,255,255,1) 100%);
+            border-left: 6px solid #667eea;
+            box-shadow: 0 4px 20px rgba(102,126,234,0.15), 0 0 0 1px rgba(102,126,234,0.1);
+            animation: slideInUp 0.5s ease-out, glow 3s ease-in-out infinite;
         }
 
         .activity-event.unread::before {
@@ -3927,9 +4058,14 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 8px;
+            width: 6px;
             height: 100%;
             background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 0 15px rgba(102,126,234,0.6);
+        }
+
+        .activity-event.unread:hover {
+            box-shadow: 0 12px 40px rgba(102,126,234,0.25), 0 0 0 1px rgba(102,126,234,0.3);
         }
 
         .priority-indicator {
@@ -3945,106 +4081,144 @@
         .priority-normal { background: #10b981; }
         .priority-low { background: #3b82f6; }
 
+        /* EVENT ICON - 3D EFFECT */
         .event-icon {
-            font-size: 36px;
+            font-size: 48px;
             line-height: 1;
             flex-shrink: 0;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+            animation: float 4s ease-in-out infinite;
+            transition: transform 0.3s;
+        }
+
+        .activity-event:hover .event-icon {
+            transform: scale(1.1) rotate(5deg);
         }
 
         .event-content {
             flex: 1;
             min-width: 0;
+            position: relative;
+            z-index: 1;
         }
 
         .event-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             gap: 15px;
         }
 
         .event-title {
-            font-size: 16px;
-            font-weight: 700;
+            font-size: 17px;
+            font-weight: 800;
             color: #111827;
             margin: 0;
+            letter-spacing: -0.3px;
+            line-height: 1.3;
         }
 
         .event-time {
-            font-size: 13px;
+            font-size: 12px;
             color: #9ca3af;
             white-space: nowrap;
             flex-shrink: 0;
+            padding: 4px 12px;
+            background: rgba(156,163,175,0.1);
+            border-radius: 20px;
+            font-weight: 600;
         }
 
         .event-message {
             font-size: 14px;
-            color: #6b7280;
-            margin: 0 0 12px 0;
-            line-height: 1.6;
-        }
-
-        .event-metadata {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
-        }
-
-        .metadata-pill {
-            background: #f3f4f6;
-            padding: 5px 12px;
-            border-radius: 16px;
-            font-size: 12px;
-            color: #6b7280;
+            color: #4b5563;
+            margin: 0 0 14px 0;
+            line-height: 1.7;
             font-weight: 500;
         }
 
-        .event-actions {
+        /* METADATA PILLS - PREMIUM */
+        .event-metadata {
             display: flex;
             gap: 10px;
-            margin-top: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
         }
 
-        .event-actions button {
-            padding: 8px 16px;
-            background: #f3f4f6;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #6b7280;
-            cursor: pointer;
+        .metadata-pill {
+            background: linear-gradient(135deg, rgba(102,126,234,0.08) 0%, rgba(118,75,162,0.08) 100%);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 700;
+            border: 1px solid rgba(102,126,234,0.15);
             transition: all 0.3s;
         }
 
+        .metadata-pill:hover {
+            background: linear-gradient(135deg, rgba(102,126,234,0.15) 0%, rgba(118,75,162,0.15) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.2);
+        }
+
+        /* EVENT ACTION BUTTONS - MODERN */
+        .event-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .event-actions button {
+            padding: 10px 18px;
+            background: rgba(243,244,246,0.8);
+            border: 2px solid rgba(0,0,0,0.06);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
         .event-actions button:hover {
-            background: #e5e7eb;
+            background: rgba(229,231,235,0.9);
             color: #374151;
+            border-color: rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .event-actions button.primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 16px rgba(102,126,234,0.3);
         }
 
         .event-actions button.primary:hover {
-            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+            box-shadow: 0 8px 24px rgba(102,126,234,0.5);
+            transform: translateY(-3px);
         }
 
+        /* SECTION BADGE - FLOATING PILL */
         .section-badge {
             position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(102,126,234,0.1);
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(102,126,234,0.12) 0%, rgba(118,75,162,0.12) 100%);
             color: #667eea;
-            padding: 4px 12px;
-            border-radius: 12px;
+            padding: 6px 16px;
+            border-radius: 20px;
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            border: 1px solid rgba(102,126,234,0.2);
+            box-shadow: 0 2px 8px rgba(102,126,234,0.15);
         }
 
         .empty-state {
