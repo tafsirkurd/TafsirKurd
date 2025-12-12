@@ -117,24 +117,30 @@ COMMENT ON COLUMN admin_activity_feed.section IS
 -- Enable RLS on the table
 ALTER TABLE admin_activity_feed ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Admin users can view all activities" ON admin_activity_feed;
+DROP POLICY IF EXISTS "System can insert activities" ON admin_activity_feed;
+DROP POLICY IF EXISTS "Admin can update activities" ON admin_activity_feed;
+DROP POLICY IF EXISTS "Admin can delete activities" ON admin_activity_feed;
+
 -- Policy: Allow admin users to view all activities
-CREATE POLICY IF NOT EXISTS "Admin users can view all activities"
+CREATE POLICY "Admin users can view all activities"
 ON admin_activity_feed FOR SELECT
 USING (true);  -- All authenticated users can read (adjust as needed)
 
 -- Policy: Allow system/triggers to insert activities
-CREATE POLICY IF NOT EXISTS "System can insert activities"
+CREATE POLICY "System can insert activities"
 ON admin_activity_feed FOR INSERT
 WITH CHECK (true);  -- Triggers and functions can insert
 
 -- Policy: Allow admin to update activities (mark as read/dismissed)
-CREATE POLICY IF NOT EXISTS "Admin can update activities"
+CREATE POLICY "Admin can update activities"
 ON admin_activity_feed FOR UPDATE
 USING (true)
 WITH CHECK (true);
 
 -- Policy: Allow admin to delete old activities
-CREATE POLICY IF NOT EXISTS "Admin can delete activities"
+CREATE POLICY "Admin can delete activities"
 ON admin_activity_feed FOR DELETE
 USING (true);
 
