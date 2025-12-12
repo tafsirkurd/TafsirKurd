@@ -2,13 +2,18 @@
   publish = "src"  # 👈 CHANGE THIS from "." to "src"
   functions = "netlify/functions"
 
-# Scheduled Functions - Weekly Quran Email Reminders
+# Scheduled Functions
 [functions]
   # Send weekly email reminders every Friday at 8 PM Iraq time (17:00 UTC)
   # Iraq is UTC+3, so 8 PM Iraq time = 17:00 UTC = 5 PM UTC
   # Cron format: minute hour day-of-month month day-of-week
   # 0 17 * * 5 = Every Friday at 5 PM UTC (8 PM Iraq time)
   "scheduled-daily-reminders" = {schedule = "0 17 * * 5"}  # Every Friday at 5 PM UTC = 8 PM Iraq time
+
+  # Activity Feed Cleanup - Daily at 2 AM UTC
+  # Removes old activity feed entries based on priority and age
+  # 0 2 * * * = Every day at 2 AM UTC
+  "scheduled-cleanup-activities" = {schedule = "0 2 * * *"}  # Daily at 2 AM UTC
 
 [[headers]]
   for = "/*.html"
