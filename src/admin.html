@@ -4105,10 +4105,9 @@
         .event-header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            align-items: center;
             margin-bottom: 10px;
             gap: 15px;
-            padding-right: 120px; /* Leave space for section badge */
         }
 
         .event-title {
@@ -4207,14 +4206,11 @@
             transform: translateY(-3px);
         }
 
-        /* SECTION BADGE - FLOATING PILL */
-        .section-badge {
-            position: absolute;
-            top: 24px;
-            right: 24px;
+        /* SECTION BADGE - INLINE VERSION */
+        .section-badge-inline {
             background: linear-gradient(135deg, rgba(102,126,234,0.12) 0%, rgba(118,75,162,0.12) 100%);
             color: #667eea;
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 16px;
             font-size: 10px;
             font-weight: 800;
@@ -4222,29 +4218,19 @@
             letter-spacing: 0.8px;
             border: 1px solid rgba(102,126,234,0.2);
             box-shadow: 0 2px 8px rgba(102,126,234,0.15);
-            max-width: 100px;
-            text-align: center;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         /* Mobile responsive adjustments */
         @media (max-width: 768px) {
             .event-header {
-                padding-right: 0;
-                flex-direction: column;
-                gap: 10px;
+                flex-wrap: wrap;
+                gap: 8px;
             }
 
-            .event-time {
-                align-self: flex-start;
-            }
-
-            .section-badge {
-                position: static;
-                display: inline-block;
-                margin-top: 10px;
+            .event-title {
+                font-size: 16px;
+                flex: 1 1 100%;
             }
 
             .event-icon {
@@ -4253,6 +4239,11 @@
 
             .activity-event {
                 padding: 20px;
+            }
+
+            .section-badge-inline {
+                font-size: 9px;
+                padding: 4px 10px;
             }
         }
 
@@ -12073,7 +12064,10 @@ ${htmlParagraphs}
                     <div class="event-content">
                         <div class="event-header">
                             <h4 class="event-title">${escapeHtml(event.title)}</h4>
-                            <span class="event-time">${timeAgo}</span>
+                            <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                                <span class="event-time">${timeAgo}</span>
+                                <span class="section-badge-inline">${event.section || 'System'}</span>
+                            </div>
                         </div>
 
                         <p class="event-message">${escapeHtml(event.message)}</p>
@@ -12087,8 +12081,6 @@ ${htmlParagraphs}
                         <div class="event-actions">
                             ${getEventActions(event)}
                         </div>
-
-                        <div class="section-badge">${event.section || 'System'}</div>
                     </div>
                 </div>
             `;
