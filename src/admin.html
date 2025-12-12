@@ -10645,13 +10645,22 @@ ${htmlParagraphs}
                 document.getElementById('gscAvgPosition').textContent = data.summary.avgPosition;
 
                 // Render Performance Chart
-                renderPerformanceChart(data.timeSeries || []);
+                try {
+                    renderPerformanceChart(data.timeSeries || []);
+                    console.log('✅ Chart rendered');
+                } catch(e) {
+                    console.error('❌ Chart error:', e);
+                }
 
                 // Update countries table with modern card design
                 const countriesTableBody = document.getElementById('countriesTableBody');
+                console.log('📊 Countries data:', data.countries);
+                console.log('📍 Countries element:', countriesTableBody);
+
                 if (data.countries && data.countries.length > 0) {
-                    const maxClicks = Math.max(...data.countries.map(c => c.clicks));
-                    countriesTableBody.innerHTML = data.countries.map((country, index) => {
+                    try {
+                        const maxClicks = Math.max(...data.countries.map(c => c.clicks));
+                        countriesTableBody.innerHTML = data.countries.map((country, index) => {
                         const countryName = getCountryName(country.country);
                         const countryFlag = getCountryFlag(country.country);
                         const percentage = maxClicks > 0 ? ((country.clicks / maxClicks) * 100).toFixed(1) : 0;
@@ -10686,8 +10695,14 @@ ${htmlParagraphs}
                             <div style="text-align: right; margin-top: 6px; font-size: 11px; color: #888; font-weight: 600;">${percentage}% of top performer</div>
                         </div>
                     `}).join('');
+                        console.log('✅ Countries rendered:', data.countries.length);
+                    } catch(e) {
+                        console.error('❌ Countries error:', e);
+                        countriesTableBody.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44336;"><div style="font-size: 16px; font-weight: 600;">Error loading countries</div><div style="font-size: 12px; margin-top: 8px;">' + e.message + '</div></div>';
+                    }
                 } else {
                     countriesTableBody.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;"><div style="font-size: 48px; margin-bottom: 10px;">🌍</div><div style="font-size: 14px;">No countries data yet</div></div>';
+                    console.log('⚠️ No countries data');
                 }
 
                 // Update devices table with visual cards
@@ -10778,8 +10793,12 @@ ${htmlParagraphs}
 
                 // Update top pages table
                 const pagesTable = document.getElementById('topPagesTable');
+                console.log('📄 Pages data:', data.pages);
+                console.log('📍 Pages element:', pagesTable);
+
                 if (data.pages && data.pages.length > 0) {
-                    pagesTable.innerHTML = data.pages.map((page, index) => {
+                    try {
+                        pagesTable.innerHTML = data.pages.map((page, index) => {
                         let displayUrl = page.page.replace('https://tafsirkurd.com', '') || '/';
                         // Truncate long URLs smartly
                         if (displayUrl.length > 50) {
@@ -10808,8 +10827,14 @@ ${htmlParagraphs}
                             </td>
                         </tr>
                     `}).join('');
+                        console.log('✅ Pages rendered:', data.pages.length);
+                    } catch(e) {
+                        console.error('❌ Pages error:', e);
+                        pagesTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #f44336;"><div style="font-size: 16px; font-weight: 600;">Error loading pages</div><div style="font-size: 12px; margin-top: 8px;">' + e.message + '</div></td></tr>';
+                    }
                 } else {
                     pagesTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><div style="color: #999; font-size: 48px; margin-bottom: 10px;">📄</div><div style="color: #999; font-size: 14px;">No pages data yet</div></td></tr>';
+                    console.log('⚠️ No pages data');
                 }
 
                 console.log('✅ Search Console data loaded successfully');
