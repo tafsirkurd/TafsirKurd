@@ -1815,6 +1815,13 @@
                         <option value="/login.html">🔐 Login</option>
                     </select>
 
+                    <!-- Notification Bell Icon -->
+                    <button onclick="switchSection('activityFeed')" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%); background-size: 200% 200%; animation: gradientShift 3s ease infinite; color: white; border: none; padding: 10px 16px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 24px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); display: flex; align-items: center; justify-content: center; position: relative;" onmouseover="this.style.transform='translateY(-2px) scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.3)'" onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)'" title="Activity Feed - View all notifications">
+                        <span style="font-size: 24px;">🔔</span>
+                        <!-- Notification Badge -->
+                        <span id="headerActivityBadge" style="display: none; position: absolute; top: -8px; right: -8px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; font-size: 11px; font-weight: 800; padding: 3px 7px; border-radius: 12px; box-shadow: 0 2px 8px rgba(239,68,68,0.5), 0 0 0 2px #1a1a1a; min-width: 20px; text-align: center; animation: pulse 2s ease-in-out infinite;">0</span>
+                    </button>
+
                     <!-- Logout Button -->
                     <button class="btn-logout" onclick="logout()" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%); background-size: 200% 200%; animation: gradientShift 3s ease infinite; color: white; border: none; padding: 10px 24px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); display: flex; align-items: center; gap: 8px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)'">
                         <span style="font-size: 18px;">🚪</span>
@@ -12207,7 +12214,7 @@ ${htmlParagraphs}
             if (totalEl) totalEl.textContent = total;
             if (unreadEl) unreadEl.textContent = `${unread} unread`;
 
-            // Update badge
+            // Update dashboard card badge
             const badge = document.getElementById('activityBadge');
             if (badge) {
                 if (unread > 0) {
@@ -12215,6 +12222,17 @@ ${htmlParagraphs}
                     badge.style.display = 'block';
                 } else {
                     badge.style.display = 'none';
+                }
+            }
+
+            // Update header badge (persistent notification bell)
+            const headerBadge = document.getElementById('headerActivityBadge');
+            if (headerBadge) {
+                if (unread > 0) {
+                    headerBadge.textContent = unread > 99 ? '99+' : unread;
+                    headerBadge.style.display = 'block';
+                } else {
+                    headerBadge.style.display = 'none';
                 }
             }
         }
@@ -12319,11 +12337,17 @@ ${htmlParagraphs}
                 playNotificationSound();
             }
 
-            // Animate badge
+            // Animate both badges
             const badge = document.getElementById('activityBadge');
             if (badge) {
                 badge.classList.add('pulse');
                 setTimeout(() => badge.classList.remove('pulse'), 1000);
+            }
+
+            const headerBadge = document.getElementById('headerActivityBadge');
+            if (headerBadge) {
+                headerBadge.classList.add('pulse');
+                setTimeout(() => headerBadge.classList.remove('pulse'), 1000);
             }
         }
 
@@ -12463,12 +12487,25 @@ ${htmlParagraphs}
                 if (totalEl) totalEl.textContent = totalCount || 0;
                 if (unreadEl) unreadEl.textContent = `${unreadCount || 0} unread`;
 
+                // Update both badges
                 if (unreadCount > 0) {
                     const badge = document.getElementById('activityBadge');
                     if (badge) {
                         badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
                         badge.style.display = 'block';
                     }
+
+                    const headerBadge = document.getElementById('headerActivityBadge');
+                    if (headerBadge) {
+                        headerBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                        headerBadge.style.display = 'block';
+                    }
+                } else {
+                    const badge = document.getElementById('activityBadge');
+                    if (badge) badge.style.display = 'none';
+
+                    const headerBadge = document.getElementById('headerActivityBadge');
+                    if (headerBadge) headerBadge.style.display = 'none';
                 }
             } catch (error) {
                 console.error('Error loading activity stats:', error);
