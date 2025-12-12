@@ -2268,7 +2268,7 @@
                                             <th style="padding: 12px 8px; font-size: 13px;">%</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="countriesTableBody">
+                                    <tbody id="geoAnalyticsCountriesBody">
                                         <tr>
                                             <td colspan="4" style="text-align: center; padding: 20px; font-size: 14px; color: #999;">Loading...</td>
                                         </tr>
@@ -2428,7 +2428,7 @@
                         <h2 class="table-title">📄 Top Pages & Detailed Reader Activity</h2>
                         <button onclick="refreshPageAnalytics()" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">🔄 Refresh</button>
                     </div>
-                    <div id="topPagesTable" class="mobile-table">
+                    <div id="pageAnalyticsTable" class="mobile-table">
                         <div class="loading">
                             <div class="loading-spinner"></div>
                             <div class="loading-text">Loading detailed page analytics...</div>
@@ -4413,7 +4413,7 @@
 
         // Load Top Pages Analytics with Detailed Reader Information
         function loadTopPagesAnalytics() {
-            const container = document.getElementById('topPagesTable');
+            const container = document.getElementById('pageAnalyticsTable');
             if (!container) return;
 
             // Calculate detailed reader statistics
@@ -5405,7 +5405,7 @@
                     document.getElementById('totalGeoVisits').textContent = data.total_visits.toLocaleString();
 
                     // Populate countries table (filter out Unknown)
-                    const countriesBody = document.getElementById('countriesTableBody');
+                    const countriesBody = document.getElementById('geoAnalyticsCountriesBody');
                     const validCountries = data.countries.filter(c => c.country !== 'Unknown' && c.country !== 'Local/Private Network');
 
                     if (validCountries.length === 0) {
