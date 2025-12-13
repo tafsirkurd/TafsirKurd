@@ -9445,9 +9445,13 @@
                 el.classList.remove('playing');
             });
 
-            // Remove playing state from buttons
+            // Remove playing state from buttons and reset to play icon
             document.querySelectorAll('.play-btn').forEach(btn => {
                 btn.classList.remove('playing');
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    icon.className = 'fas fa-play';
+                }
             });
 
             audioPlayerState.isPlaying = false;
