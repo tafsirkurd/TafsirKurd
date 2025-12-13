@@ -2991,19 +2991,27 @@
             font-weight: 600;
         }
 
+        .submenu-arrow {
+            font-size: 0.8rem;
+            transition: transform var(--transition);
+        }
+
+        .player-menu-submenu.open .submenu-arrow {
+            transform: rotate(180deg);
+        }
+
         /* Speed Options */
         .speed-options {
             display: none;
             flex-wrap: wrap;
             gap: 8px;
-            margin-top: 10px;
-            padding: 10px;
+            padding: 10px 15px;
             background: var(--bg);
             border-radius: 10px;
+            margin: 5px 0;
         }
 
-        .player-menu-submenu:hover .speed-options,
-        .player-menu-submenu:hover .reciter-options {
+        .speed-options.active {
             display: flex;
         }
 
@@ -3031,12 +3039,33 @@
             display: none;
             flex-direction: column;
             gap: 6px;
-            margin-top: 10px;
-            padding: 10px;
+            padding: 10px 15px;
             background: var(--bg);
             border-radius: 10px;
-            max-height: 300px;
+            max-height: 250px;
             overflow-y: auto;
+            margin: 5px 0;
+        }
+
+        .reciter-options.active {
+            display: flex;
+        }
+
+        .reciter-options::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .reciter-options::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .reciter-options::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .reciter-options::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
         }
 
         .reciter-option {
@@ -8999,20 +9028,31 @@
         // Initialize Audio Player
         function initializeAudioPlayer() {
             const audio = document.getElementById('quranAudio');
+            if (!audio) {
+                console.error('Audio element not found');
+                return;
+            }
 
             // Load saved preferences from localStorage
             const savedState = localStorage.getItem('audioPlayerState');
             if (savedState) {
-                const parsed = JSON.parse(savedState);
-                audioPlayerState.reciter = parsed.reciter || audioPlayerState.reciter;
-                audioPlayerState.playbackSpeed = parsed.playbackSpeed || 1;
-                audioPlayerState.volume = parsed.volume || 100;
-                audioPlayerState.repeatMode = parsed.repeatMode || 'none';
+                try {
+                    const parsed = JSON.parse(savedState);
+                    audioPlayerState.reciter = parsed.reciter || audioPlayerState.reciter;
+                    audioPlayerState.playbackSpeed = parsed.playbackSpeed || 1;
+                    audioPlayerState.volume = parsed.volume || 100;
+                    audioPlayerState.repeatMode = parsed.repeatMode || 'none';
+                } catch (e) {
+                    console.error('Failed to parse audio state:', e);
+                }
             }
 
             // Set initial volume
             audio.volume = audioPlayerState.volume / 100;
-            document.getElementById('volumeSlider').value = audioPlayerState.volume;
+            const volumeSlider = document.getElementById('volumeSlider');
+            if (volumeSlider) {
+                volumeSlider.value = audioPlayerState.volume;
+            }
 
             // Populate reciter dropdown
             populateReciterOptions();
@@ -9025,6 +9065,8 @@
 
             // Update repeat icon
             updateRepeatModeDisplay();
+
+            console.log('✅ Audio player initialized successfully');
         }
 
         // Toggle Ayah Playback (from play button on ayah)
@@ -9226,25 +9268,34 @@
         }
 
         function onAudioEnded() {
+            console.log('🎵 Audio ended. Repeat mode:', audioPlayerState.repeatMode);
             audioPlayerState.isPlaying = false;
 
             // Handle repeat modes
             if (audioPlayerState.repeatMode === 'ayah') {
+                console.log('🔁 Repeating current ayah');
                 // Repeat current ayah
                 playAyah(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
             } else if (audioPlayerState.repeatMode === 'surah') {
+                console.log('🔁 Repeat surah mode');
                 // Play next ayah in surah, or repeat surah
                 const currentSurah = quranData[audioPlayerState.currentSurah];
+                if (!currentSurah) {
+                    console.error('Current surah data not found');
+                    return;
+                }
                 const totalAyahs = currentSurah.verses.length;
 
                 if (audioPlayerState.currentAyah < totalAyahs) {
                     playNextAyah();
                 } else {
                     // Restart surah
+                    console.log('🔄 Restarting surah from ayah 1');
                     playAyah(audioPlayerState.currentSurah, 1);
                 }
             } else {
                 // Auto-continue to next ayah
+                console.log('⏭️ Auto-continuing to next ayah');
                 playNextAyah();
             }
         }
@@ -9306,6 +9357,46 @@
             menu.classList.toggle('active');
         }
 
+        // Toggle Speed Options
+        function toggleSpeedOptions(event) {
+            event.stopPropagation();
+            const speedOptions = document.getElementById('speedOptions');
+            const reciterOptions = document.getElementById('reciterOptions');
+            const speedBtn = event.currentTarget;
+
+            // Close reciter options if open
+            reciterOptions.classList.remove('active');
+            document.querySelectorAll('.player-menu-submenu').forEach(item => {
+                if (item !== speedBtn) {
+                    item.classList.remove('open');
+                }
+            });
+
+            // Toggle speed options
+            speedOptions.classList.toggle('active');
+            speedBtn.classList.toggle('open');
+        }
+
+        // Toggle Reciter Options
+        function toggleReciterOptions(event) {
+            event.stopPropagation();
+            const reciterOptions = document.getElementById('reciterOptions');
+            const speedOptions = document.getElementById('speedOptions');
+            const reciterBtn = event.currentTarget;
+
+            // Close speed options if open
+            speedOptions.classList.remove('active');
+            document.querySelectorAll('.player-menu-submenu').forEach(item => {
+                if (item !== reciterBtn) {
+                    item.classList.remove('open');
+                }
+            });
+
+            // Toggle reciter options
+            reciterOptions.classList.toggle('active');
+            reciterBtn.classList.toggle('open');
+        }
+
         // Close menu when clicking outside
         document.addEventListener('click', function(e) {
             const menu = document.getElementById('playerMenu');
@@ -9313,6 +9404,12 @@
 
             if (menu && menuBtn && !menu.contains(e.target) && !menuBtn.contains(e.target)) {
                 menu.classList.remove('active');
+                // Close submenus
+                document.getElementById('speedOptions')?.classList.remove('active');
+                document.getElementById('reciterOptions')?.classList.remove('active');
+                document.querySelectorAll('.player-menu-submenu').forEach(item => {
+                    item.classList.remove('open');
+                });
             }
         });
 
@@ -9395,9 +9492,14 @@
         // Reciter Selection
         function populateReciterOptions() {
             const container = document.getElementById('reciterOptions');
-            if (!container) return;
+            if (!container) {
+                console.error('Reciter options container not found');
+                return;
+            }
 
             container.innerHTML = '';
+
+            console.log(`📋 Populating ${RECITERS.length} reciters`);
 
             RECITERS.forEach(reciter => {
                 const option = document.createElement('div');
@@ -9409,6 +9511,8 @@
                 option.onclick = () => selectReciter(reciter.id);
                 container.appendChild(option);
             });
+
+            console.log('✅ Reciters populated successfully');
         }
 
         function selectReciter(reciterId) {
@@ -9579,26 +9683,28 @@
             </div>
 
             <!-- Speed Control -->
-            <div class="player-menu-item player-menu-submenu">
+            <div class="player-menu-item player-menu-submenu" onclick="toggleSpeedOptions(event)">
                 <i class="fas fa-tachometer-alt"></i>
                 <span>خێرایی</span>
-                <div class="speed-options">
-                    <button onclick="changePlaybackSpeed(0.5)">0.5x</button>
-                    <button onclick="changePlaybackSpeed(0.75)">0.75x</button>
-                    <button onclick="changePlaybackSpeed(1)" class="active">1x</button>
-                    <button onclick="changePlaybackSpeed(1.25)">1.25x</button>
-                    <button onclick="changePlaybackSpeed(1.5)">1.5x</button>
-                    <button onclick="changePlaybackSpeed(2)">2x</button>
-                </div>
+                <i class="fas fa-chevron-down submenu-arrow"></i>
+            </div>
+            <div class="speed-options" id="speedOptions">
+                <button onclick="changePlaybackSpeed(0.5)">0.5x</button>
+                <button onclick="changePlaybackSpeed(0.75)">0.75x</button>
+                <button onclick="changePlaybackSpeed(1)" class="active">1x</button>
+                <button onclick="changePlaybackSpeed(1.25)">1.25x</button>
+                <button onclick="changePlaybackSpeed(1.5)">1.5x</button>
+                <button onclick="changePlaybackSpeed(2)">2x</button>
             </div>
 
             <!-- Reciter Selection -->
-            <div class="player-menu-item player-menu-submenu">
+            <div class="player-menu-item player-menu-submenu" onclick="toggleReciterOptions(event)">
                 <i class="fas fa-user"></i>
                 <span>قاری</span>
-                <div class="reciter-options" id="reciterOptions">
-                    <!-- Populated dynamically via JavaScript -->
-                </div>
+                <i class="fas fa-chevron-down submenu-arrow"></i>
+            </div>
+            <div class="reciter-options" id="reciterOptions">
+                <!-- Populated dynamically via JavaScript -->
             </div>
         </div>
     </div>
