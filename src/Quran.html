@@ -4459,6 +4459,31 @@
             }
         };
 
+        // Audio Player State - Initialize early to avoid reference errors
+        const audioPlayerState = {
+            isPlaying: false,
+            currentSurah: null,
+            currentAyah: null,
+            repeatMode: 'none', // 'none', 'ayah', 'surah'
+            playbackSpeed: 1,
+            volume: 100,
+            isMuted: false,
+            reciter: 'Mishary_Rashid_Alafasy_64kbps', // Default reciter
+            autoScroll: true
+        };
+
+        // Reciter List
+        const RECITERS = [
+            { id: 'Mishary_Rashid_Alafasy_64kbps', name: 'میشاری راشید العفاسی', nameAr: 'مشاري راشد العفاسي' },
+            { id: 'Abdul_Basit_Murattal_64kbps', name: 'عبدالباسط عبدالسمد', nameAr: 'عبد الباسط عبد الصمد' },
+            { id: 'Hudhaify_64kbps', name: 'علی الحذیفی', nameAr: 'علي الحذيفي' },
+            { id: 'Minshawy_Murattal_128kbps', name: 'محمد صدیق المنشاوی', nameAr: 'محمد صديق المنشاوي' },
+            { id: 'Ghamadi_40kbps', name: 'سعود الشریم', nameAr: 'سعود الشريم' },
+            { id: 'Muhammad_Jibreel_64kbps', name: 'محمد جبریل', nameAr: 'محمد جبريل' },
+            { id: 'Maher_AlMuaiqly_64kbps', name: 'ماهر المعیقلی', nameAr: 'ماهر المعيقلي' },
+            { id: 'Saad_Al-Ghamadi_64kbps', name: 'سعد الغامدی', nameAr: 'سعد الغامدي' }
+        ];
+
         // Helper function to get decorative surah name code for SurahName font
         function getDecorativeSurahCode(surahNumber) {
             // SurahName font uses codes like "surah001", "surah002", etc.
@@ -8962,31 +8987,6 @@
         /* ==========================================
            AUDIO PLAYER FUNCTIONALITY
            ========================================== */
-
-        // Audio Player State
-        const audioPlayerState = {
-            isPlaying: false,
-            currentSurah: null,
-            currentAyah: null,
-            repeatMode: 'none', // 'none', 'ayah', 'surah'
-            playbackSpeed: 1,
-            volume: 100,
-            isMuted: false,
-            reciter: 'Mishary_Rashid_Alafasy_64kbps', // Default reciter
-            autoScroll: true
-        };
-
-        // Reciter List
-        const RECITERS = [
-            { id: 'Mishary_Rashid_Alafasy_64kbps', name: 'میشاری راشید العفاسی', nameAr: 'مشاري راشد العفاسي' },
-            { id: 'Abdul_Basit_Murattal_64kbps', name: 'عبدالباسط عبدالسمد', nameAr: 'عبد الباسط عبد الصمد' },
-            { id: 'Hudhaify_64kbps', name: 'علی الحذیفی', nameAr: 'علي الحذيفي' },
-            { id: 'Minshawy_Murattal_128kbps', name: 'محمد صدیق المنشاوی', nameAr: 'محمد صديق المنشاوي' },
-            { id: 'Ghamadi_40kbps', name: 'سعود الشریم', nameAr: 'سعود الشريم' },
-            { id: 'Muhammad_Jibreel_64kbps', name: 'محمد جبریل', nameAr: 'محمد جبريل' },
-            { id: 'Maher_AlMuaiqly_64kbps', name: 'ماهر المعیقلی', nameAr: 'ماهر المعيقلي' },
-            { id: 'Saad_Al-Ghamadi_64kbps', name: 'سعد الغامدی', nameAr: 'سعد الغامدي' }
-        ];
 
         // Initialize Audio Player
         function initializeAudioPlayer() {
