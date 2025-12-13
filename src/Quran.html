@@ -2664,6 +2664,27 @@
                 text-align: center;
                 gap: 15px;
             }
+
+            /* Audio Player Extra Small Mobile */
+            .audio-player-content {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .audio-player-info {
+                flex: 0 0 100%;
+                text-align: center;
+                min-width: auto;
+            }
+
+            .audio-player-controls {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .audio-player-settings {
+                flex: 0 0 auto;
+            }
         }
 
         /* Home Page */
@@ -2760,6 +2781,315 @@
             background: transparent;
             color: var(--primary);
             border: 2px solid var(--primary);
+        }
+
+        /* ==========================================
+           AUDIO PLAYER STYLES
+           ========================================== */
+
+        /* Main Audio Player Container */
+        .audio-player {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+            border-top: 2px solid var(--primary);
+            z-index: 9999;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            direction: rtl;
+        }
+
+        .audio-player.active {
+            transform: translateY(0);
+        }
+
+        /* Audio Player Content */
+        .audio-player-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 25px;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Currently Playing Info */
+        .audio-player-info {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .audio-player-surah {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        .audio-player-ayah {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        /* Playback Controls */
+        .audio-player-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 0 0 auto;
+        }
+
+        .player-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .player-btn:hover {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+            transform: scale(1.08);
+        }
+
+        .player-btn-main {
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .player-btn-main:hover {
+            transform: scale(1.12);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Volume & Settings Section */
+        .audio-player-settings {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            justify-content: flex-end;
+        }
+
+        /* Volume Control */
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .volume-slider {
+            width: 100px;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--border);
+            outline: none;
+            cursor: pointer;
+            -webkit-appearance: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .volume-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: none;
+            transition: all var(--transition);
+        }
+
+        .volume-slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* Player Menu Dropdown */
+        .player-menu {
+            position: absolute;
+            bottom: calc(100% + 10px);
+            right: 20px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            border: 2px solid var(--border);
+            padding: 10px;
+            min-width: 280px;
+            max-height: 400px;
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all var(--transition);
+            z-index: 10000;
+        }
+
+        .player-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .player-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            color: var(--text);
+            position: relative;
+        }
+
+        .player-menu-item:hover {
+            background: var(--bg);
+            color: var(--primary);
+        }
+
+        .player-menu-item i {
+            width: 20px;
+            text-align: center;
+            color: var(--primary);
+        }
+
+        .player-menu-item span {
+            flex: 1;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        /* Speed Options */
+        .speed-options {
+            display: none;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--bg);
+            border-radius: 10px;
+        }
+
+        .player-menu-submenu:hover .speed-options,
+        .player-menu-submenu:hover .reciter-options {
+            display: flex;
+        }
+
+        .speed-options button {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        .speed-options button:hover,
+        .speed-options button.active {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+        }
+
+        /* Reciter Options */
+        .reciter-options {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--bg);
+            border-radius: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .reciter-option {
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            text-align: right;
+        }
+
+        .reciter-option:hover,
+        .reciter-option.active {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+        }
+
+        /* Playing Ayah Highlight */
+        .ayah.playing {
+            background: rgba(0, 136, 255, 0.08);
+            border-right: 6px solid #0088ff;
+            animation: playingPulse 2s ease-in-out infinite;
+        }
+
+        [data-theme="dark"] .ayah.playing {
+            background: rgba(0, 136, 255, 0.15);
+        }
+
+        @keyframes playingPulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: var(--shadow-sm);
+            }
+            50% {
+                transform: scale(1.005);
+                box-shadow: var(--shadow-md);
+            }
+        }
+
+        /* Play Button States */
+        .play-btn.playing {
+            background: #0088ff !important;
+            color: white !important;
+            border-color: #0088ff !important;
+        }
+
+        .play-btn.playing i::before {
+            content: "\f04c"; /* Pause icon */
         }
 
         /* Responsive */
@@ -3107,6 +3437,45 @@
                 padding: 12px 18px !important;
                 font-size: 0.9rem !important;
                 text-align: center;
+            }
+
+            /* Audio Player Mobile */
+            .audio-player-content {
+                padding: 12px 15px;
+                gap: 10px;
+            }
+
+            .audio-player-info {
+                min-width: 100px;
+            }
+
+            .audio-player-surah {
+                font-size: 0.9rem;
+            }
+
+            .audio-player-ayah {
+                font-size: 0.75rem;
+            }
+
+            .player-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 0.8rem;
+            }
+
+            .player-btn-main {
+                width: 45px;
+                height: 45px;
+                font-size: 1rem;
+            }
+
+            .volume-control {
+                display: none; /* Hide on mobile for space */
+            }
+
+            .player-menu {
+                right: 10px;
+                min-width: 260px;
             }
 
             /* Make specific cards more compact */
@@ -5779,6 +6148,13 @@
                         <div class="ayah-header">
                             <div class="ayah-number">${KurdishNumbers.toKurdish(verse.verse)}</div>
                             <div class="ayah-actions">
+                                <button class="ayah-action-btn play-btn"
+                                        onclick="toggleAyahPlayback(${surahNum}, ${verse.verse})"
+                                        title="گوێگرتن"
+                                        data-surah="${surahNum}"
+                                        data-ayah="${verse.verse}">
+                                    <i class="fas fa-play"></i>
+                                </button>
                                 <button class="ayah-action-btn"
                                         onclick="openCopyModal(${surahNum}, ${verse.verse})"
                                         title="کۆپیکرن">
@@ -6014,6 +6390,13 @@
                         <div class="ayah-header">
                             <div class="ayah-number">${KurdishNumbers.toKurdish(verse.verse)}</div>
                             <div class="ayah-actions">
+                                <button class="ayah-action-btn play-btn"
+                                        onclick="toggleAyahPlayback(${surahNum}, ${verse.verse})"
+                                        title="گوێگرتن"
+                                        data-surah="${surahNum}"
+                                        data-ayah="${verse.verse}">
+                                    <i class="fas fa-play"></i>
+                                </button>
                                 <button class="ayah-action-btn"
                                         onclick="openCopyModal(${surahNum}, ${verse.verse})"
                                         title="کۆپیکرن">
@@ -8576,6 +8959,502 @@
             }
         }
 
+        /* ==========================================
+           AUDIO PLAYER FUNCTIONALITY
+           ========================================== */
+
+        // Audio Player State
+        const audioPlayerState = {
+            isPlaying: false,
+            currentSurah: null,
+            currentAyah: null,
+            repeatMode: 'none', // 'none', 'ayah', 'surah'
+            playbackSpeed: 1,
+            volume: 100,
+            isMuted: false,
+            reciter: 'Mishary_Rashid_Alafasy_64kbps', // Default reciter
+            autoScroll: true
+        };
+
+        // Reciter List
+        const RECITERS = [
+            { id: 'Mishary_Rashid_Alafasy_64kbps', name: 'میشاری راشید العفاسی', nameAr: 'مشاري راشد العفاسي' },
+            { id: 'Abdul_Basit_Murattal_64kbps', name: 'عبدالباسط عبدالسمد', nameAr: 'عبد الباسط عبد الصمد' },
+            { id: 'Hudhaify_64kbps', name: 'علی الحذیفی', nameAr: 'علي الحذيفي' },
+            { id: 'Minshawy_Murattal_128kbps', name: 'محمد صدیق المنشاوی', nameAr: 'محمد صديق المنشاوي' },
+            { id: 'Ghamadi_40kbps', name: 'سعود الشریم', nameAr: 'سعود الشريم' },
+            { id: 'Muhammad_Jibreel_64kbps', name: 'محمد جبریل', nameAr: 'محمد جبريل' },
+            { id: 'Maher_AlMuaiqly_64kbps', name: 'ماهر المعیقلی', nameAr: 'ماهر المعيقلي' },
+            { id: 'Saad_Al-Ghamadi_64kbps', name: 'سعد الغامدی', nameAr: 'سعد الغامدي' }
+        ];
+
+        // Initialize Audio Player
+        function initializeAudioPlayer() {
+            const audio = document.getElementById('quranAudio');
+
+            // Load saved preferences from localStorage
+            const savedState = localStorage.getItem('audioPlayerState');
+            if (savedState) {
+                const parsed = JSON.parse(savedState);
+                audioPlayerState.reciter = parsed.reciter || audioPlayerState.reciter;
+                audioPlayerState.playbackSpeed = parsed.playbackSpeed || 1;
+                audioPlayerState.volume = parsed.volume || 100;
+                audioPlayerState.repeatMode = parsed.repeatMode || 'none';
+            }
+
+            // Set initial volume
+            audio.volume = audioPlayerState.volume / 100;
+            document.getElementById('volumeSlider').value = audioPlayerState.volume;
+
+            // Populate reciter dropdown
+            populateReciterOptions();
+
+            // Audio event listeners
+            audio.addEventListener('ended', onAudioEnded);
+            audio.addEventListener('play', onAudioPlay);
+            audio.addEventListener('pause', onAudioPause);
+            audio.addEventListener('error', onAudioError);
+
+            // Update repeat icon
+            updateRepeatModeDisplay();
+        }
+
+        // Toggle Ayah Playback (from play button on ayah)
+        function toggleAyahPlayback(surahNum, ayahNum) {
+            const isSameAyah = audioPlayerState.currentSurah === surahNum &&
+                               audioPlayerState.currentAyah === ayahNum;
+
+            if (isSameAyah && audioPlayerState.isPlaying) {
+                pauseAudio();
+            } else {
+                playAyah(surahNum, ayahNum);
+            }
+        }
+
+        // Play Specific Ayah
+        function playAyah(surahNum, ayahNum) {
+            const audio = document.getElementById('quranAudio');
+            const audioPlayer = document.getElementById('audioPlayer');
+
+            // Update state
+            audioPlayerState.currentSurah = surahNum;
+            audioPlayerState.currentAyah = ayahNum;
+
+            // Format surah and ayah numbers (3 digits)
+            const surahFormatted = String(surahNum).padStart(3, '0');
+            const ayahFormatted = String(ayahNum).padStart(3, '0');
+
+            // Build audio URL
+            const audioUrl = `https://everyayah.com/data/${audioPlayerState.reciter}/${surahFormatted}_${ayahFormatted}.mp3`;
+
+            // Set audio source and play
+            audio.src = audioUrl;
+            audio.playbackRate = audioPlayerState.playbackSpeed;
+            audio.play().catch(err => {
+                console.error('Playback error:', err);
+                showNotification('هەڵە د لیستانا دەنگی دا', 'error');
+            });
+
+            // Show audio player
+            audioPlayer.classList.add('active');
+
+            // Update player UI
+            updatePlayerInfo(surahNum, ayahNum);
+
+            // Highlight ayah
+            highlightPlayingAyah(surahNum, ayahNum);
+
+            // Update play buttons
+            updatePlayButtons(surahNum, ayahNum);
+        }
+
+        // Pause Audio
+        function pauseAudio() {
+            const audio = document.getElementById('quranAudio');
+            audio.pause();
+        }
+
+        // Toggle Play/Pause (main button)
+        function togglePlayPause() {
+            const audio = document.getElementById('quranAudio');
+
+            if (audioPlayerState.isPlaying) {
+                pauseAudio();
+            } else {
+                if (audioPlayerState.currentSurah && audioPlayerState.currentAyah) {
+                    audio.play().catch(err => {
+                        console.error('Playback error:', err);
+                        showNotification('هەڵە د لیستانا دەنگی دا', 'error');
+                    });
+                }
+            }
+        }
+
+        // Play Next Ayah
+        function playNextAyah() {
+            if (!audioPlayerState.currentSurah) return;
+
+            const currentSurah = quranData[audioPlayerState.currentSurah];
+            const totalAyahs = currentSurah.verses.length;
+
+            let nextAyah = audioPlayerState.currentAyah + 1;
+            let nextSurah = audioPlayerState.currentSurah;
+
+            // Check if we need to move to next surah
+            if (nextAyah > totalAyahs) {
+                nextSurah = audioPlayerState.currentSurah + 1;
+                nextAyah = 1;
+
+                // Check if we've reached the end of the Quran
+                if (nextSurah > 114) {
+                    showNotification('ئاخری قورئانێ گەهشتی', 'info');
+                    closeAudioPlayer();
+                    return;
+                }
+            }
+
+            playAyah(nextSurah, nextAyah);
+        }
+
+        // Play Previous Ayah
+        function playPreviousAyah() {
+            if (!audioPlayerState.currentSurah) return;
+
+            let prevAyah = audioPlayerState.currentAyah - 1;
+            let prevSurah = audioPlayerState.currentSurah;
+
+            // Check if we need to move to previous surah
+            if (prevAyah < 1) {
+                prevSurah = audioPlayerState.currentSurah - 1;
+
+                // Check if we've reached the beginning
+                if (prevSurah < 1) {
+                    showNotification('ئاخری قورئانێ گەهشتی', 'info');
+                    return;
+                }
+
+                // Get last ayah of previous surah
+                const prevSurahData = quranData[prevSurah];
+                prevAyah = prevSurahData.verses.length;
+            }
+
+            playAyah(prevSurah, prevAyah);
+        }
+
+        // Update Player Info Display
+        function updatePlayerInfo(surahNum, ayahNum) {
+            const surahInfo = surahNames[surahNum];
+            const surahName = surahInfo ? surahInfo.arabic : 'سوورەت';
+            const ayahNumberKurdish = KurdishNumbers.toKurdish(ayahNum);
+
+            document.getElementById('playerSurahName').textContent = surahName;
+            document.getElementById('playerAyahNumber').textContent = `ئایەت ${ayahNumberKurdish}`;
+        }
+
+        // Highlight Currently Playing Ayah
+        function highlightPlayingAyah(surahNum, ayahNum) {
+            // Remove previous highlight
+            document.querySelectorAll('.ayah.playing').forEach(el => {
+                el.classList.remove('playing');
+            });
+
+            // Add highlight to current ayah
+            const ayahElement = document.getElementById(`ayah-${ayahNum}`);
+            if (ayahElement) {
+                ayahElement.classList.add('playing');
+
+                // Auto-scroll to playing ayah
+                if (audioPlayerState.autoScroll) {
+                    setTimeout(() => {
+                        ayahElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }, 300);
+                }
+            }
+        }
+
+        // Update Play Button States
+        function updatePlayButtons(surahNum, ayahNum) {
+            // Remove playing state from all buttons
+            document.querySelectorAll('.play-btn').forEach(btn => {
+                btn.classList.remove('playing');
+            });
+
+            // Add playing state to current button
+            const currentBtn = document.querySelector(
+                `.play-btn[data-surah="${surahNum}"][data-ayah="${ayahNum}"]`
+            );
+            if (currentBtn) {
+                currentBtn.classList.add('playing');
+            }
+
+            // Update main play/pause button
+            const mainBtn = document.getElementById('playPauseBtn');
+            if (mainBtn) {
+                const icon = mainBtn.querySelector('i');
+                icon.className = audioPlayerState.isPlaying ? 'fas fa-pause' : 'fas fa-play';
+            }
+        }
+
+        // Audio Event Handlers
+        function onAudioPlay() {
+            audioPlayerState.isPlaying = true;
+            updatePlayButtons(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
+        }
+
+        function onAudioPause() {
+            audioPlayerState.isPlaying = false;
+            updatePlayButtons(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
+        }
+
+        function onAudioEnded() {
+            audioPlayerState.isPlaying = false;
+
+            // Handle repeat modes
+            if (audioPlayerState.repeatMode === 'ayah') {
+                // Repeat current ayah
+                playAyah(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
+            } else if (audioPlayerState.repeatMode === 'surah') {
+                // Play next ayah in surah, or repeat surah
+                const currentSurah = quranData[audioPlayerState.currentSurah];
+                const totalAyahs = currentSurah.verses.length;
+
+                if (audioPlayerState.currentAyah < totalAyahs) {
+                    playNextAyah();
+                } else {
+                    // Restart surah
+                    playAyah(audioPlayerState.currentSurah, 1);
+                }
+            } else {
+                // Auto-continue to next ayah
+                playNextAyah();
+            }
+        }
+
+        function onAudioError(e) {
+            console.error('Audio playback error:', e);
+            showNotification('هەڵە د لیستانا دەنگی دا', 'error');
+            audioPlayerState.isPlaying = false;
+            updatePlayButtons(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
+        }
+
+        // Volume Controls
+        function changeVolume(value) {
+            audioPlayerState.volume = parseInt(value);
+            audioPlayerState.isMuted = false;
+
+            const audio = document.getElementById('quranAudio');
+            audio.volume = value / 100;
+
+            // Update volume icon
+            updateVolumeIcon();
+
+            // Save to localStorage
+            saveAudioPlayerState();
+        }
+
+        function toggleMute() {
+            const audio = document.getElementById('quranAudio');
+            audioPlayerState.isMuted = !audioPlayerState.isMuted;
+
+            if (audioPlayerState.isMuted) {
+                audio.volume = 0;
+            } else {
+                audio.volume = audioPlayerState.volume / 100;
+            }
+
+            updateVolumeIcon();
+        }
+
+        function updateVolumeIcon() {
+            const volumeBtn = document.getElementById('volumeBtn');
+            if (!volumeBtn) return;
+
+            const icon = volumeBtn.querySelector('i');
+            const volume = audioPlayerState.volume;
+
+            if (audioPlayerState.isMuted || volume === 0) {
+                icon.className = 'fas fa-volume-mute';
+            } else if (volume < 50) {
+                icon.className = 'fas fa-volume-down';
+            } else {
+                icon.className = 'fas fa-volume-up';
+            }
+        }
+
+        // Player Menu Controls
+        function togglePlayerMenu() {
+            const menu = document.getElementById('playerMenu');
+            menu.classList.toggle('active');
+        }
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('playerMenu');
+            const menuBtn = document.getElementById('playerMenuBtn');
+
+            if (menu && menuBtn && !menu.contains(e.target) && !menuBtn.contains(e.target)) {
+                menu.classList.remove('active');
+            }
+        });
+
+        // Download Current Ayah
+        function downloadCurrentAyah() {
+            if (!audioPlayerState.currentSurah || !audioPlayerState.currentAyah) {
+                showNotification('هیچ ئایەتەک نەهاتیە ڤەبژارتن', 'warning');
+                return;
+            }
+
+            const surahFormatted = String(audioPlayerState.currentSurah).padStart(3, '0');
+            const ayahFormatted = String(audioPlayerState.currentAyah).padStart(3, '0');
+            const audioUrl = `https://everyayah.com/data/${audioPlayerState.reciter}/${surahFormatted}_${ayahFormatted}.mp3`;
+
+            // Create download link
+            const link = document.createElement('a');
+            link.href = audioUrl;
+            link.download = `${surahFormatted}_${ayahFormatted}.mp3`;
+            link.click();
+
+            showNotification('دابەزین دەستپێکرە', 'success');
+            togglePlayerMenu();
+        }
+
+        // Repeat Mode Cycling
+        function cycleRepeatMode() {
+            const modes = ['none', 'ayah', 'surah'];
+            const currentIndex = modes.indexOf(audioPlayerState.repeatMode);
+            const nextIndex = (currentIndex + 1) % modes.length;
+            audioPlayerState.repeatMode = modes[nextIndex];
+
+            updateRepeatModeDisplay();
+            saveAudioPlayerState();
+        }
+
+        function updateRepeatModeDisplay() {
+            const repeatText = document.getElementById('repeatText');
+            const repeatIcon = document.getElementById('repeatIcon');
+
+            if (!repeatText || !repeatIcon) return;
+
+            switch (audioPlayerState.repeatMode) {
+                case 'none':
+                    repeatText.textContent = 'دووبارەکرن: نەخێر';
+                    repeatIcon.className = 'fas fa-repeat';
+                    repeatIcon.style.color = '';
+                    break;
+                case 'ayah':
+                    repeatText.textContent = 'دووبارەکرنا ئایەتێ';
+                    repeatIcon.className = 'fas fa-repeat';
+                    repeatIcon.style.color = '#0088ff';
+                    break;
+                case 'surah':
+                    repeatText.textContent = 'دووبارەکرنا سوورەتێ';
+                    repeatIcon.className = 'fas fa-repeat';
+                    repeatIcon.style.color = '#00cc66';
+                    break;
+            }
+        }
+
+        // Playback Speed Control
+        function changePlaybackSpeed(speed) {
+            audioPlayerState.playbackSpeed = speed;
+
+            const audio = document.getElementById('quranAudio');
+            audio.playbackRate = speed;
+
+            // Update active button
+            document.querySelectorAll('.speed-options button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === `${speed}x`) {
+                    btn.classList.add('active');
+                }
+            });
+
+            saveAudioPlayerState();
+            showNotification(`خێرایی: ${speed}x`, 'success');
+        }
+
+        // Reciter Selection
+        function populateReciterOptions() {
+            const container = document.getElementById('reciterOptions');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            RECITERS.forEach(reciter => {
+                const option = document.createElement('div');
+                option.className = 'reciter-option';
+                if (reciter.id === audioPlayerState.reciter) {
+                    option.classList.add('active');
+                }
+                option.textContent = reciter.name;
+                option.onclick = () => selectReciter(reciter.id);
+                container.appendChild(option);
+            });
+        }
+
+        function selectReciter(reciterId) {
+            audioPlayerState.reciter = reciterId;
+
+            // Update active state
+            document.querySelectorAll('.reciter-option').forEach(opt => {
+                opt.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // If currently playing, reload with new reciter
+            if (audioPlayerState.isPlaying) {
+                playAyah(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
+            }
+
+            saveAudioPlayerState();
+
+            const reciterName = RECITERS.find(r => r.id === reciterId)?.name || '';
+            showNotification(`قاری: ${reciterName}`, 'success');
+        }
+
+        // Close Audio Player
+        function closeAudioPlayer() {
+            const audio = document.getElementById('quranAudio');
+            const audioPlayer = document.getElementById('audioPlayer');
+
+            audio.pause();
+            audio.src = '';
+            audioPlayer.classList.remove('active');
+
+            // Remove all highlights
+            document.querySelectorAll('.ayah.playing').forEach(el => {
+                el.classList.remove('playing');
+            });
+
+            // Remove playing state from buttons
+            document.querySelectorAll('.play-btn').forEach(btn => {
+                btn.classList.remove('playing');
+            });
+
+            audioPlayerState.isPlaying = false;
+            audioPlayerState.currentSurah = null;
+            audioPlayerState.currentAyah = null;
+        }
+
+        // Save State to localStorage
+        function saveAudioPlayerState() {
+            const stateToSave = {
+                reciter: audioPlayerState.reciter,
+                playbackSpeed: audioPlayerState.playbackSpeed,
+                volume: audioPlayerState.volume,
+                repeatMode: audioPlayerState.repeatMode
+            };
+            localStorage.setItem('audioPlayerState', JSON.stringify(stateToSave));
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAudioPlayer();
+        });
+
 
         // Handle browser back/forward buttons
         window.addEventListener('popstate', function(event) {
@@ -8610,6 +9489,99 @@
             }
         }, 2000);
     </script>
+
+    <!-- Audio Player Mini Bar -->
+    <div class="audio-player" id="audioPlayer">
+        <audio id="quranAudio" preload="metadata"></audio>
+
+        <div class="audio-player-content">
+            <!-- Current Ayah Info -->
+            <div class="audio-player-info">
+                <div class="audio-player-surah" id="playerSurahName">سوورەت</div>
+                <div class="audio-player-ayah" id="playerAyahNumber">ئایەت ١</div>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="audio-player-controls">
+                <button class="player-btn" onclick="playPreviousAyah()" title="ئایەتا پێشتر">
+                    <i class="fas fa-step-backward"></i>
+                </button>
+
+                <button class="player-btn player-btn-main" id="playPauseBtn" onclick="togglePlayPause()" title="لیستان/وەستان">
+                    <i class="fas fa-play"></i>
+                </button>
+
+                <button class="player-btn" onclick="playNextAyah()" title="ئایەتا دواتر">
+                    <i class="fas fa-step-forward"></i>
+                </button>
+            </div>
+
+            <!-- Volume & Settings -->
+            <div class="audio-player-settings">
+                <!-- Volume Control -->
+                <div class="volume-control">
+                    <button class="player-btn" onclick="toggleMute()" id="volumeBtn">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                    <input type="range"
+                           class="volume-slider"
+                           id="volumeSlider"
+                           min="0"
+                           max="100"
+                           value="100"
+                           oninput="changeVolume(this.value)">
+                </div>
+
+                <!-- Settings Menu Button -->
+                <button class="player-btn" onclick="togglePlayerMenu()" id="playerMenuBtn" title="ڕێکخستنان">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+
+                <!-- Close Button -->
+                <button class="player-btn" onclick="closeAudioPlayer()" title="دایخستن">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dropdown Menu -->
+        <div class="player-menu" id="playerMenu">
+            <!-- Download Option -->
+            <div class="player-menu-item" onclick="downloadCurrentAyah()">
+                <i class="fas fa-download"></i>
+                <span>دابەزینا ئایەتێ</span>
+            </div>
+
+            <!-- Repeat Mode -->
+            <div class="player-menu-item" onclick="cycleRepeatMode()">
+                <i class="fas fa-repeat" id="repeatIcon"></i>
+                <span id="repeatText">دووبارەکرن: نەخێر</span>
+            </div>
+
+            <!-- Speed Control -->
+            <div class="player-menu-item player-menu-submenu">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>خێرایی</span>
+                <div class="speed-options">
+                    <button onclick="changePlaybackSpeed(0.5)">0.5x</button>
+                    <button onclick="changePlaybackSpeed(0.75)">0.75x</button>
+                    <button onclick="changePlaybackSpeed(1)" class="active">1x</button>
+                    <button onclick="changePlaybackSpeed(1.25)">1.25x</button>
+                    <button onclick="changePlaybackSpeed(1.5)">1.5x</button>
+                    <button onclick="changePlaybackSpeed(2)">2x</button>
+                </div>
+            </div>
+
+            <!-- Reciter Selection -->
+            <div class="player-menu-item player-menu-submenu">
+                <i class="fas fa-user"></i>
+                <span>قاری</span>
+                <div class="reciter-options" id="reciterOptions">
+                    <!-- Populated dynamically via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Simple Location Tracker -->
     <script src="/utils/simple-location-tracker.js"></script>
