@@ -301,50 +301,16 @@
             background: var(--card-bg) !important;
         }
 
-        .daily-verse-card:hover {
-            transform: translateY(-4px) scale(1);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.15) !important;
-            background: linear-gradient(135deg, var(--card-bg) 0%, var(--bg) 100%) !important;
-        }
-
-        /* Decorative elements - hidden by default, appear on hover */
+        /* Decorative elements - hidden by default */
         .daily-verse-card .corner-decor,
         .daily-verse-card .top-stripe-decor {
-            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             opacity: 0 !important;
         }
 
-        .daily-verse-card:hover .corner-decor-top {
-            opacity: 0.15 !important;
-            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .daily-verse-card:hover .corner-decor-bottom {
-            opacity: 0.10 !important;
-            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .daily-verse-card:hover .top-stripe-decor {
-            opacity: 0.6 !important;
-            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Star animation - only on hover */
+        /* Star animation - disabled */
         .daily-verse-card .fa-star {
             animation: none !important;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: scale(1) rotate(0deg);
             opacity: 1;
-        }
-
-        .daily-verse-card:hover .fa-star {
-            animation: pulse-star 2s ease-in-out infinite !important;
-        }
-
-        /* Ensure smooth animation return when hover ends */
-        .daily-verse-card .fa-star,
-        .daily-verse-card::before {
-            will-change: transform, opacity;
         }
 
         /* Smooth hide/show animations */
@@ -415,30 +381,6 @@
             opacity: 0;
             animation: none;
             filter: blur(8px);
-            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .daily-verse-card:hover::before {
-            opacity: 0.6;
-            animation: glow-border 3s ease-in-out infinite;
-            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .daily-verse-card button {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        }
-
-        .daily-verse-card button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
-        }
-
-        .daily-verse-card button > div {
-            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .daily-verse-card button:hover > div {
-            opacity: 1 !important;
         }
 
         .preloader-title {
@@ -2816,6 +2758,14 @@
             transform: translateY(0);
         }
 
+        /* Shift audio player when sidebar is open */
+        .audio-player.shifted {
+            left: var(--sidebar-width);
+            right: auto;
+            width: calc(100% - var(--sidebar-width));
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         /* Audio Player Content */
         .audio-player-content {
             display: flex;
@@ -3251,6 +3201,11 @@
 
             .main-content.shifted {
                 margin-left: 0;
+            }
+
+            .audio-player.shifted {
+                left: 0;
+                width: 100%;
             }
 
             .sidebar-toggle {
@@ -6039,6 +5994,7 @@
             const sidebar = document.getElementById('sidebar');
             const toggle = document.getElementById('sidebarToggle');
             const mainContent = document.getElementById('mainContent');
+            const audioPlayer = document.getElementById('audioPlayer');
 
             // Use requestAnimationFrame for smoother animation
             requestAnimationFrame(() => {
@@ -6049,6 +6005,9 @@
                     // Slight delay for content shift to sync with sidebar
                     requestAnimationFrame(() => {
                         mainContent.classList.toggle('shifted');
+                        if (audioPlayer) {
+                            audioPlayer.classList.toggle('shifted');
+                        }
                     });
                 }
             });
@@ -6058,6 +6017,10 @@
             document.getElementById('sidebar').classList.remove('visible');
             document.getElementById('sidebarToggle').classList.remove('active');
             document.getElementById('mainContent').classList.remove('shifted');
+            const audioPlayer = document.getElementById('audioPlayer');
+            if (audioPlayer) {
+                audioPlayer.classList.remove('shifted');
+            }
         }
 
         function selectSurah(num) {
