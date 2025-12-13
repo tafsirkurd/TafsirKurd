@@ -92,6 +92,10 @@
     <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=16" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/assets/fonts/hafs.woff2?v=16" as="font" type="font/woff2" crossorigin>
 
+    <!-- Preload Critical Data - Faster initial load -->
+    <link rel="preload" href="/data/quran.json" as="fetch" crossorigin>
+    <link rel="preload" href="/data/kurdish_tafsir.json" as="fetch" crossorigin>
+
     <!-- Local Fonts - Zero external requests, instant loading -->
     <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
 
@@ -3519,6 +3523,70 @@
                 font-size: clamp(6rem, 20vw, 10rem) !important;
             }
 
+        }
+
+        /* Extra Small Mobile - 320px to 480px */
+        @media (max-width: 480px) {
+            .audio-player-content {
+                padding: 8px 10px;
+                gap: 8px;
+                flex-wrap: nowrap;
+            }
+
+            .audio-player-info {
+                min-width: 80px;
+                flex: 0 0 auto;
+            }
+
+            .audio-player-surah {
+                font-size: 0.8rem;
+            }
+
+            .audio-player-ayah {
+                font-size: 0.7rem;
+            }
+
+            .player-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 0.75rem;
+            }
+
+            .player-btn-main {
+                width: 40px;
+                height: 40px;
+                font-size: 0.9rem;
+            }
+
+            .player-menu {
+                min-width: 240px;
+                max-height: 400px;
+                right: 5px;
+            }
+
+            .ayah {
+                padding: 12px;
+            }
+
+            .ayah-arabic {
+                font-size: 1.3rem;
+            }
+
+            .ayah-action-btn {
+                width: 26px;
+                height: 26px;
+                font-size: 0.7rem;
+            }
+
+            #randomAyahArabic {
+                font-size: 1.4rem !important;
+                padding: 15px 10px !important;
+            }
+
+            #randomAyahKurdish {
+                font-size: 0.9rem !important;
+                padding: 12px !important;
+            }
         }
 
         .hidden {
