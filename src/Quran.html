@@ -3088,10 +3088,6 @@
             border-color: #0088ff !important;
         }
 
-        .play-btn.playing i::before {
-            content: "\f04c"; /* Pause icon */
-        }
-
         /* Responsive */
         @media (max-width: 768px) {
             :root {
@@ -9189,17 +9185,25 @@
 
         // Update Play Button States
         function updatePlayButtons(surahNum, ayahNum) {
-            // Remove playing state from all buttons
+            // Reset all ayah play buttons to play icon
             document.querySelectorAll('.play-btn').forEach(btn => {
                 btn.classList.remove('playing');
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    icon.className = 'fas fa-play';
+                }
             });
 
-            // Add playing state to current button
+            // Update currently playing button to pause icon
             const currentBtn = document.querySelector(
                 `.play-btn[data-surah="${surahNum}"][data-ayah="${ayahNum}"]`
             );
             if (currentBtn) {
                 currentBtn.classList.add('playing');
+                const icon = currentBtn.querySelector('i');
+                if (icon) {
+                    icon.className = audioPlayerState.isPlaying ? 'fas fa-pause' : 'fas fa-play';
+                }
             }
 
             // Update main play/pause button
