@@ -8937,15 +8937,29 @@
             populateReciterOptions();
 
             // Audio event listeners
+            console.log('🎧 Attaching audio event listeners...');
             audio.addEventListener('ended', onAudioEnded);
             audio.addEventListener('play', onAudioPlay);
             audio.addEventListener('pause', onAudioPause);
             audio.addEventListener('error', onAudioError);
 
+            // CRITICAL DEBUG - Also add inline test
+            audio.addEventListener('ended', function() {
+                console.log('🔴🔴🔴 INLINE ENDED LISTENER FIRED! 🔴🔴🔴');
+            });
+
+            // Log when audio time updates to verify it's playing
+            audio.addEventListener('timeupdate', function() {
+                if (audio.currentTime > 0 && audio.currentTime < 1) {
+                    console.log('▶️ Audio is playing, currentTime:', audio.currentTime);
+                }
+            });
+
             // Update repeat icon
             updateRepeatModeDisplay();
 
             console.log('✅ Audio player initialized successfully');
+            console.log('🎧 Event listeners attached. Audio element:', audio);
         }
 
         // Toggle Ayah Playback (from play button on ayah)
@@ -9171,20 +9185,28 @@
         }
 
         function onAudioEnded() {
+            // CRITICAL DEBUG - Force visible alert
+            console.log('🔴🔴🔴 AUDIO ENDED EVENT FIRED! 🔴🔴🔴');
             console.log('🎵 Audio ended. Current:', audioPlayerState.currentSurah, audioPlayerState.currentAyah);
             console.log('🔁 Repeat mode:', audioPlayerState.repeatMode);
+            console.log('📊 quranData exists:', !!quranData);
+
             audioPlayerState.isPlaying = false;
 
             // Safety check
             if (!audioPlayerState.currentSurah || !audioPlayerState.currentAyah) {
                 console.error('❌ No current ayah set');
+                alert('DEBUG: No current ayah set!');
                 return;
             }
 
             if (!quranData) {
                 console.error('❌ Quran data not loaded');
+                alert('DEBUG: Quran data not loaded!');
                 return;
             }
+
+            console.log('✅ All checks passed, proceeding with auto-continue...');
 
             // Handle repeat modes
             if (audioPlayerState.repeatMode === 'ayah') {
@@ -9209,6 +9231,7 @@
             } else {
                 // Auto-continue to next ayah (default mode)
                 console.log('⏭️ Auto-continuing to next ayah (default mode)');
+                console.log('📍 About to call playNextAyah()...');
                 playNextAyah();
             }
         }
