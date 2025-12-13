@@ -1797,100 +1797,6 @@
             border-top: 1px solid var(--border);
         }
 
-        /* Scroll to Top Button - Enhanced Animation */
-        .scroll-to-top {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary) 0%, #333 100%);
-            color: var(--accent);
-            border: 2px solid var(--accent);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 0 0 0 rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            animation: scrollButtonPulse 2s infinite;
-        }
-
-        @keyframes scrollButtonPulse {
-            0%, 100% {
-                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(0, 0, 0, 0.4);
-            }
-            50% {
-                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), 0 0 0 15px rgba(0, 0, 0, 0);
-            }
-        }
-
-        @keyframes scrollButtonBounce {
-            0%, 20%, 50%, 80%, 100% {
-                transform: translateY(0) scale(1);
-            }
-            40% {
-                transform: translateY(-8px) scale(1.05);
-            }
-            60% {
-                transform: translateY(-4px) scale(1.02);
-            }
-        }
-
-        .scroll-to-top.visible {
-            opacity: 1;
-            visibility: visible;
-            animation: scrollButtonBounce 1s ease-in-out, scrollButtonPulse 2s infinite 1s;
-        }
-
-        .scroll-to-top:hover {
-            transform: scale(1.15) translateY(-8px) rotate(360deg);
-            background: linear-gradient(135deg, #222 0%, var(--primary) 100%);
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), 0 0 0 0 rgba(0, 0, 0, 0.5);
-        }
-
-        .scroll-to-top:active {
-            transform: scale(0.95) translateY(-5px);
-        }
-
-        .scroll-to-top i {
-            animation: arrowBounce 1.5s ease-in-out infinite;
-        }
-
-        @keyframes arrowBounce {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-5px);
-            }
-        }
-
-        [data-theme="dark"] .scroll-to-top {
-            background: linear-gradient(135deg, var(--primary) 0%, #555 100%);
-        }
-
-        [data-theme="dark"] .scroll-to-top:hover {
-            background: linear-gradient(135deg, #555 0%, var(--primary) 100%);
-        }
-
-        /* Hide scroll-to-top when user menu is open */
-        .feather-overlay.active ~ .scroll-to-top {
-            opacity: 0 !important;
-            visibility: hidden !important;
-            pointer-events: none;
-        }
-
-        /* Move scroll-to-top up when audio player is active */
-        .audio-player.active ~ .scroll-to-top {
-            bottom: 140px;
-        }
-
         /* Surah Reader Page */
         .surah-reader-page {
             display: none;
@@ -2098,36 +2004,6 @@
 
         [data-theme="dark"] .ayah.highlight {
             background: rgba(255, 255, 255, 0.1);
-        }
-
-        /* Read ayah indicator - clean minimal style */
-        .ayah.ayah-read {
-            position: relative;
-            border-right: 4px solid var(--primary);
-        }
-
-        .ayah.ayah-read::after {
-            content: '\f00c';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            width: 20px;
-            height: 20px;
-            background: var(--primary);
-            color: var(--accent);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            opacity: 0.9;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        [data-theme="dark"] .ayah.ayah-read::after {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .ayah-header {
@@ -3214,14 +3090,6 @@
                 font-size: 0.9rem;
             }
 
-            .scroll-to-top {
-                bottom: 15px;
-                right: 15px;
-                width: 45px;
-                height: 45px;
-                font-size: 1rem;
-            }
-
             .surah-reader-page {
                 padding: 10px;
             }
@@ -3974,11 +3842,6 @@
                 <span>دەستپێکرن ڤە ژ دەستپێکێ</span>
             </button>
         </div>
-    </div>
-
-    <!-- Scroll to Top Button -->
-    <div class="scroll-to-top" id="scrollToTop">
-        <i class="fas fa-arrow-up"></i>
     </div>
 
     <div class="main-content" id="mainContent" style="opacity: 0; visibility: hidden;">
@@ -4775,7 +4638,6 @@
                 // Initialize UI immediately (don't wait for data)
                 checkAuthentication();
                 initializeApp();
-                initScrollToTop();
 
                 // Set a maximum timeout for loading (10 seconds)
                 loadTimeout = setTimeout(() => {
@@ -5704,26 +5566,6 @@
             document.documentElement.setAttribute('data-theme', 'light');
 
             showNotification('رێکخستن گەڕیانڤە بۆ بنەڕەت');
-        }
-
-        // Scroll to Top functionality
-        function initScrollToTop() {
-            const scrollBtn = document.getElementById('scrollToTop');
-
-            window.addEventListener('scroll', () => {
-                if (window.pageYOffset > 300) {
-                    scrollBtn.classList.add('visible');
-                } else {
-                    scrollBtn.classList.remove('visible');
-                }
-            });
-
-            scrollBtn.addEventListener('click', () => {
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-            });
         }
 
         // Render Surah Grid - ALL 114 SURAHS
