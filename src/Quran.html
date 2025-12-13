@@ -4468,20 +4468,20 @@
             playbackSpeed: 1,
             volume: 100,
             isMuted: false,
-            reciter: 'Mishary_Rashid_Alafasy_64kbps', // Default reciter
+            reciter: 'Alafasy_128kbps', // Default reciter
             autoScroll: true
         };
 
-        // Reciter List
+        // Reciter List - Using everyayah.com format
         const RECITERS = [
-            { id: 'Mishary_Rashid_Alafasy_64kbps', name: 'میشاری راشید العفاسی', nameAr: 'مشاري راشد العفاسي' },
-            { id: 'Abdul_Basit_Murattal_64kbps', name: 'عبدالباسط عبدالسمد', nameAr: 'عبد الباسط عبد الصمد' },
-            { id: 'Hudhaify_64kbps', name: 'علی الحذیفی', nameAr: 'علي الحذيفي' },
+            { id: 'Alafasy_128kbps', name: 'میشاری راشید العفاسی', nameAr: 'مشاري راشد العفاسي' },
+            { id: 'Abdul_Basit_Murattal_192kbps', name: 'عبدالباسط عبدالسمد', nameAr: 'عبد الباسط عبد الصمد' },
+            { id: 'Hudhaify_128kbps', name: 'علی الحذیفی', nameAr: 'علي الحذيفي' },
             { id: 'Minshawy_Murattal_128kbps', name: 'محمد صدیق المنشاوی', nameAr: 'محمد صديق المنشاوي' },
-            { id: 'Ghamadi_40kbps', name: 'سعود الشریم', nameAr: 'سعود الشريم' },
-            { id: 'Muhammad_Jibreel_64kbps', name: 'محمد جبریل', nameAr: 'محمد جبريل' },
-            { id: 'Maher_AlMuaiqly_64kbps', name: 'ماهر المعیقلی', nameAr: 'ماهر المعيقلي' },
-            { id: 'Saad_Al-Ghamadi_64kbps', name: 'سعد الغامدی', nameAr: 'سعد الغامدي' }
+            { id: 'Abu_Bakr_Ash-Shaatree_128kbps', name: 'ئەبووبەکر شاتری', nameAr: 'أبو بكر الشاطري' },
+            { id: 'muhammad_jibreel_128kbps', name: 'محمد جبریل', nameAr: 'محمد جبريل' },
+            { id: 'Maher_AlMuaiqly_128kbps', name: 'ماهر المعیقلی', nameAr: 'ماهر المعيقلي' },
+            { id: 'Yasser_Ad-Dussary_128kbps', name: 'یاسر دوسری', nameAr: 'ياسر الدوسري' }
         ];
 
         // Helper function to get decorative surah name code for SurahName font
@@ -9044,8 +9044,8 @@
             const surahFormatted = String(surahNum).padStart(3, '0');
             const ayahFormatted = String(ayahNum).padStart(3, '0');
 
-            // Build audio URL
-            const audioUrl = `https://everyayah.com/data/${audioPlayerState.reciter}/${surahFormatted}_${ayahFormatted}.mp3`;
+            // Build audio URL (format: 001001.mp3 - no underscore)
+            const audioUrl = `https://everyayah.com/data/${audioPlayerState.reciter}/${surahFormatted}${ayahFormatted}.mp3`;
 
             // Set audio source and play
             audio.src = audioUrl;
@@ -9309,12 +9309,12 @@
 
             const surahFormatted = String(audioPlayerState.currentSurah).padStart(3, '0');
             const ayahFormatted = String(audioPlayerState.currentAyah).padStart(3, '0');
-            const audioUrl = `https://everyayah.com/data/${audioPlayerState.reciter}/${surahFormatted}_${ayahFormatted}.mp3`;
+            const audioUrl = `https://everyayah.com/data/${audioPlayerState.reciter}/${surahFormatted}${ayahFormatted}.mp3`;
 
             // Create download link
             const link = document.createElement('a');
             link.href = audioUrl;
-            link.download = `${surahFormatted}_${ayahFormatted}.mp3`;
+            link.download = `${surahFormatted}${ayahFormatted}.mp3`;
             link.click();
 
             showNotification('دابەزین دەستپێکرە', 'success');
