@@ -8906,11 +8906,20 @@
 
         // Initialize Audio Player
         function initializeAudioPlayer() {
+            console.log('🔴🔴🔴 INITIALIZING AUDIO PLAYER - START 🔴🔴🔴');
+            console.log('📍 DOMContentLoaded fired, searching for audio element...');
+
             const audio = document.getElementById('quranAudio');
+            console.log('🔴 Audio element query result:', audio);
+            console.log('🔴 Audio element exists:', !!audio);
+
             if (!audio) {
-                console.error('Audio element not found');
+                console.error('❌❌❌ CRITICAL: Audio element not found in DOM!');
+                alert('CRITICAL ERROR: Audio element #quranAudio not found in DOM!');
                 return;
             }
+
+            console.log('✅ Audio element found successfully:', audio.tagName, audio.id);
 
             // Load saved preferences from localStorage
             const savedState = localStorage.getItem('audioPlayerState');
@@ -8976,13 +8985,27 @@
 
         // Play Specific Ayah
         function playAyah(surahNum, ayahNum) {
+            console.log('🔴🔴🔴 playAyah() CALLED 🔴🔴🔴');
+            console.log('📍 Requested: Surah', surahNum, 'Ayah', ayahNum);
+
             const audio = document.getElementById('quranAudio');
             const audioPlayer = document.getElementById('audioPlayer');
+
+            console.log('🔴 Audio element in playAyah:', !!audio);
+            console.log('🔴 Audio player element:', !!audioPlayer);
+
+            if (!audio) {
+                console.error('❌ Audio element not found in playAyah!');
+                alert('ERROR: Audio element disappeared!');
+                return;
+            }
 
             // Update state
             audioPlayerState.currentSurah = surahNum;
             audioPlayerState.currentAyah = ayahNum;
             audioPlayerState.isPlaying = true; // Set immediately to update UI correctly
+
+            console.log('📊 Updated state:', audioPlayerState);
 
             // Format surah and ayah numbers (3 digits)
             const surahFormatted = String(surahNum).padStart(3, '0');
@@ -8991,11 +9014,15 @@
             // Build audio URL (format: 001001.mp3 - no underscore)
             const audioUrl = `https://everyayah.com/data/${audioPlayerState.reciter}/${surahFormatted}${ayahFormatted}.mp3`;
 
+            console.log('🎵 Audio URL:', audioUrl);
+
             // Set audio source and play
             audio.src = audioUrl;
             audio.playbackRate = audioPlayerState.playbackSpeed;
+
+            console.log('▶️ Calling audio.play()...');
             audio.play().catch(err => {
-                console.error('Playback error:', err);
+                console.error('❌ Playback error:', err);
                 audioPlayerState.isPlaying = false; // Reset on error
                 showNotification('هەڵە د لیستانا دەنگی دا', 'error');
             });
@@ -9516,7 +9543,10 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔴🔴🔴 DOMContentLoaded EVENT FIRED 🔴🔴🔴');
+            console.log('📍 About to call initializeAudioPlayer()...');
             initializeAudioPlayer();
+            console.log('📍 initializeAudioPlayer() call completed');
         });
 
 
