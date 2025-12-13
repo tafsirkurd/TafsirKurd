@@ -1856,18 +1856,18 @@
             position: fixed;
             bottom: 30px;
             right: 30px;
-            width: 60px;
-            height: 60px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--primary) 0%, #333 100%);
             color: var(--accent);
-            border: 3px solid var(--accent);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(0, 0, 0, 0.4);
+            border: 2px solid var(--accent);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 0 0 0 rgba(0, 0, 0, 0.3);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             z-index: 1000;
             opacity: 0;
             visibility: hidden;
@@ -1938,6 +1938,11 @@
             opacity: 0 !important;
             visibility: hidden !important;
             pointer-events: none;
+        }
+
+        /* Move scroll-to-top up when audio player is active */
+        .audio-player.active ~ .scroll-to-top {
+            bottom: 140px;
         }
 
         /* Surah Reader Page */
@@ -2127,6 +2132,11 @@
         .ayah:hover {
             box-shadow: var(--shadow-md);
             transform: translateX(3px);
+        }
+
+        /* Disable hover animation when ayah is playing */
+        .ayah.playing:hover {
+            transform: none;
         }
 
         .ayah.highlight {
@@ -3042,7 +3052,7 @@
             padding: 10px 15px;
             background: var(--bg);
             border-radius: 10px;
-            max-height: 250px;
+            max-height: 400px;
             overflow-y: auto;
             margin: 5px 0;
         }
@@ -9504,6 +9514,7 @@
             RECITERS.forEach(reciter => {
                 const option = document.createElement('div');
                 option.className = 'reciter-option';
+                option.dataset.reciterId = reciter.id;
                 if (reciter.id === audioPlayerState.reciter) {
                     option.classList.add('active');
                 }
@@ -9518,11 +9529,14 @@
         function selectReciter(reciterId) {
             audioPlayerState.reciter = reciterId;
 
-            // Update active state
+            // Update active state - find the matching reciter option
             document.querySelectorAll('.reciter-option').forEach(opt => {
-                opt.classList.remove('active');
+                if (opt.dataset.reciterId === reciterId) {
+                    opt.classList.add('active');
+                } else {
+                    opt.classList.remove('active');
+                }
             });
-            event.target.classList.add('active');
 
             // If currently playing, reload with new reciter
             if (audioPlayerState.isPlaying) {
