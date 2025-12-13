@@ -2096,10 +2096,8 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
-        /* Read ayah indicator */
+        /* Read ayah indicator - simple checkmark only */
         .ayah.ayah-read {
-            border-right-color: #2ecc71;
-            background: rgba(46, 204, 113, 0.03);
             position: relative;
         }
 
@@ -2108,22 +2106,11 @@
             font-family: 'Font Awesome 6 Free';
             font-weight: 900;
             position: absolute;
-            bottom: 10px;
-            left: 10px;
-            width: 24px;
-            height: 24px;
-            background: #2ecc71;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            opacity: 0.8;
-        }
-
-        [data-theme="dark"] .ayah.ayah-read {
-            background: rgba(46, 204, 113, 0.08);
+            bottom: 8px;
+            left: 8px;
+            color: var(--text-muted);
+            font-size: 14px;
+            opacity: 0.5;
         }
 
         .ayah-header {
@@ -3048,33 +3035,29 @@
             border-color: var(--primary);
         }
 
-        /* Playing Ayah Highlight */
+        /* Playing Ayah Highlight - Black/White Theme */
         .ayah.playing {
-            background: rgba(0, 136, 255, 0.08);
-            border-right: 6px solid #0088ff;
-            animation: playingPulse 2s ease-in-out infinite;
+            background: rgba(0, 0, 0, 0.05);
+            border-right: 6px solid var(--text);
+            box-shadow: var(--shadow-sm);
         }
 
         [data-theme="dark"] .ayah.playing {
-            background: rgba(0, 136, 255, 0.15);
-        }
-
-        @keyframes playingPulse {
-            0%, 100% {
-                transform: scale(1);
-                box-shadow: var(--shadow-sm);
-            }
-            50% {
-                transform: scale(1.005);
-                box-shadow: var(--shadow-md);
-            }
+            background: rgba(255, 255, 255, 0.08);
+            border-right: 6px solid var(--accent);
         }
 
         /* Play Button States */
         .play-btn.playing {
-            background: #0088ff !important;
-            color: white !important;
-            border-color: #0088ff !important;
+            background: var(--text) !important;
+            color: var(--accent) !important;
+            border-color: var(--text) !important;
+        }
+
+        [data-theme="dark"] .play-btn.playing {
+            background: var(--accent) !important;
+            color: var(--text) !important;
+            border-color: var(--accent) !important;
         }
 
         /* Responsive */
@@ -9062,6 +9045,7 @@
             // Update state
             audioPlayerState.currentSurah = surahNum;
             audioPlayerState.currentAyah = ayahNum;
+            audioPlayerState.isPlaying = true; // Set immediately to update UI correctly
 
             // Format surah and ayah numbers (3 digits)
             const surahFormatted = String(surahNum).padStart(3, '0');
@@ -9075,6 +9059,7 @@
             audio.playbackRate = audioPlayerState.playbackSpeed;
             audio.play().catch(err => {
                 console.error('Playback error:', err);
+                audioPlayerState.isPlaying = false; // Reset on error
                 showNotification('هەڵە د لیستانا دەنگی دا', 'error');
             });
 
@@ -9087,7 +9072,7 @@
             // Highlight ayah
             highlightPlayingAyah(surahNum, ayahNum);
 
-            // Update play buttons
+            // Update play buttons (will now show pause icon because isPlaying = true)
             updatePlayButtons(surahNum, ayahNum);
         }
 
@@ -9241,34 +9226,44 @@
         }
 
         function onAudioEnded() {
-            console.log('🎵 Audio ended. Repeat mode:', audioPlayerState.repeatMode);
+            console.log('🎵 Audio ended. Current:', audioPlayerState.currentSurah, audioPlayerState.currentAyah);
+            console.log('🔁 Repeat mode:', audioPlayerState.repeatMode);
             audioPlayerState.isPlaying = false;
+
+            // Safety check
+            if (!audioPlayerState.currentSurah || !audioPlayerState.currentAyah) {
+                console.error('❌ No current ayah set');
+                return;
+            }
+
+            if (!quranData) {
+                console.error('❌ Quran data not loaded');
+                return;
+            }
 
             // Handle repeat modes
             if (audioPlayerState.repeatMode === 'ayah') {
                 console.log('🔁 Repeating current ayah');
-                // Repeat current ayah
                 playAyah(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
             } else if (audioPlayerState.repeatMode === 'surah') {
                 console.log('🔁 Repeat surah mode');
-                // Play next ayah in surah, or repeat surah
                 const currentSurah = quranData[audioPlayerState.currentSurah];
                 if (!currentSurah) {
-                    console.error('Current surah data not found');
+                    console.error('❌ Current surah data not found');
                     return;
                 }
                 const totalAyahs = currentSurah.verses.length;
 
                 if (audioPlayerState.currentAyah < totalAyahs) {
+                    console.log('▶️ Playing next ayah in surah');
                     playNextAyah();
                 } else {
-                    // Restart surah
                     console.log('🔄 Restarting surah from ayah 1');
                     playAyah(audioPlayerState.currentSurah, 1);
                 }
             } else {
-                // Auto-continue to next ayah
-                console.log('⏭️ Auto-continuing to next ayah');
+                // Auto-continue to next ayah (default mode)
+                console.log('⏭️ Auto-continuing to next ayah (default mode)');
                 playNextAyah();
             }
         }
