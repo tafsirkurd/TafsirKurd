@@ -2096,9 +2096,10 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
-        /* Read ayah indicator - simple checkmark only */
+        /* Read ayah indicator - clean minimal style */
         .ayah.ayah-read {
             position: relative;
+            border-right: 4px solid var(--primary);
         }
 
         .ayah.ayah-read::after {
@@ -2106,11 +2107,23 @@
             font-family: 'Font Awesome 6 Free';
             font-weight: 900;
             position: absolute;
-            bottom: 8px;
-            left: 8px;
-            color: var(--text-muted);
-            font-size: 14px;
-            opacity: 0.5;
+            bottom: 10px;
+            left: 10px;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            color: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            opacity: 0.9;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] .ayah.ayah-read::after {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .ayah-header {
@@ -9100,27 +9113,49 @@
 
         // Play Next Ayah
         function playNextAyah() {
-            if (!audioPlayerState.currentSurah) return;
+            console.log('🔄 playNextAyah called');
+            console.log('📍 Current state:', audioPlayerState.currentSurah, audioPlayerState.currentAyah);
+
+            if (!audioPlayerState.currentSurah) {
+                console.error('❌ No current surah');
+                return;
+            }
+
+            if (!quranData) {
+                console.error('❌ Quran data not available');
+                return;
+            }
 
             const currentSurah = quranData[audioPlayerState.currentSurah];
+            if (!currentSurah) {
+                console.error('❌ Current surah not found in data');
+                return;
+            }
+
             const totalAyahs = currentSurah.verses.length;
+            console.log('📊 Total ayahs in surah:', totalAyahs);
 
             let nextAyah = audioPlayerState.currentAyah + 1;
             let nextSurah = audioPlayerState.currentSurah;
 
+            console.log('➡️ Next ayah will be:', nextAyah);
+
             // Check if we need to move to next surah
             if (nextAyah > totalAyahs) {
+                console.log('📖 Moving to next surah');
                 nextSurah = audioPlayerState.currentSurah + 1;
                 nextAyah = 1;
 
                 // Check if we've reached the end of the Quran
                 if (nextSurah > 114) {
+                    console.log('🏁 Reached end of Quran');
                     showNotification('ئاخری قورئانێ گەهشتی', 'info');
                     closeAudioPlayer();
                     return;
                 }
             }
 
+            console.log('▶️ Playing surah:', nextSurah, 'ayah:', nextAyah);
             playAyah(nextSurah, nextAyah);
         }
 
