@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v416-spacing-fix';
+const CACHE_NAME = 'tafsir-kurd-v417-back-btn-visible';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -45,7 +45,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v416-spacing-fix');
+  console.log('[ServiceWorker] Installing v417-back-btn-visible');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
