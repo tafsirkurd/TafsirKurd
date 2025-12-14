@@ -953,7 +953,7 @@
             z-index: 1001;
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
-            transition: transform 0.3s ease-in-out;
+            transition: transform 0.2s ease-out;
         }
 
         .professional-header.header-hidden {
@@ -1849,7 +1849,7 @@
             padding: 12px 0;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
-            transition: top 0.3s ease-in-out, box-shadow 0.3s ease;
+            transition: top 0.2s ease-out, box-shadow 0.2s ease;
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
@@ -3506,7 +3506,7 @@
             .sticky-progress-header {
                 padding: 6px 0; /* Compact on mobile */
                 top: 56px; /* Below compact header */
-                transition: top 0.3s ease-in-out;
+                transition: top 0.2s ease-out;
                 display: block !important;
                 visibility: visible !important;
             }
@@ -9405,9 +9405,13 @@
 
         // Set initial position on page load
         const stickyProgress = document.getElementById('stickyProgressHeader');
+        const isMobileDevice = window.innerWidth <= 768;
+        const mobileHeaderHeight = 56;
+        const desktopHeaderHeight = 85;
+
         if (stickyProgress) {
-            const isMobile = window.innerWidth <= 768;
-            stickyProgress.style.top = isMobile ? '56px' : '85px';
+            const headerHeight = isMobileDevice ? mobileHeaderHeight : desktopHeaderHeight;
+            stickyProgress.style.top = headerHeight + 'px';
             stickyProgress.style.display = 'block';
             stickyProgress.style.visibility = 'visible';
         }
@@ -9417,6 +9421,9 @@
             const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
             if (currentScroll > 100) {
                 header.classList.add('header-hidden');
+                if (stickyProgress) {
+                    stickyProgress.style.top = '0px';
+                }
             } else {
                 header.classList.remove('header-hidden');
             }
@@ -9433,10 +9440,12 @@
                 const isMobile = window.innerWidth <= 768;
                 const scrollDifference = scrollTop - lastScrollTop;
 
-                // Need at least 5px scroll to trigger (prevents jitter)
-                if (Math.abs(scrollDifference) < 5) {
+                // Need at least 3px scroll to trigger (faster response)
+                if (Math.abs(scrollDifference) < 3) {
                     return;
                 }
+
+                const headerHeight = isMobile ? mobileHeaderHeight : desktopHeaderHeight;
 
                 if (scrollTop > lastScrollTop && scrollTop > 100) {
                     // Scrolling DOWN & past 100px - HIDE header
@@ -9448,7 +9457,7 @@
                     // Scrolling UP or at top - SHOW header
                     header.classList.remove('header-hidden');
                     if (stickyProgress) {
-                        stickyProgress.style.top = isMobile ? '56px' : '85px';
+                        stickyProgress.style.top = headerHeight + 'px';
                     }
                 }
 
@@ -9462,7 +9471,7 @@
                         localStorage.setItem('lastScrollPosition', scrollTop);
                     }
                 }, 500);
-            }, 50);
+            }, 0); // Instant response - no delay
         });
 
         // Restore last viewed page on refresh
