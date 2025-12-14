@@ -9542,12 +9542,23 @@
         }
 
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.error('🔴🔴🔴 DOMContentLoaded EVENT FIRED 🔴🔴🔴');
-            console.error('📍 About to call initializeAudioPlayer()...');
+        // Check if DOM is already loaded (script runs after DOMContentLoaded)
+        if (document.readyState === 'loading') {
+            // DOM is still loading, wait for DOMContentLoaded
+            console.error('🔴 DOM is loading, waiting for DOMContentLoaded...');
+            document.addEventListener('DOMContentLoaded', function() {
+                console.error('🔴🔴🔴 DOMContentLoaded EVENT FIRED 🔴🔴🔴');
+                console.error('📍 About to call initializeAudioPlayer()...');
+                initializeAudioPlayer();
+                console.error('📍 initializeAudioPlayer() call completed');
+            });
+        } else {
+            // DOM already loaded (script ran after page load)
+            console.error('🔴🔴🔴 DOM ALREADY LOADED - calling initializeAudioPlayer() immediately 🔴🔴🔴');
+            console.error('📍 document.readyState:', document.readyState);
             initializeAudioPlayer();
             console.error('📍 initializeAudioPlayer() call completed');
-        });
+        }
 
 
         // Handle browser back/forward buttons
