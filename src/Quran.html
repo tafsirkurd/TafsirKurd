@@ -4913,6 +4913,9 @@
         // Initialize lastReadPosition - will be loaded from localStorage for guests or database for users
         let lastReadPosition = { surah: 1, ayah: 1 };
 
+        // Word-by-word timing data storage (must be declared globally before any functions use it)
+        let wordTimingData = {};
+
         // Load guest reading position immediately if exists
         (function initGuestPosition() {
             const guestPosition = localStorage.getItem('guestLastReadPosition');
@@ -9593,9 +9596,6 @@
         /* ==========================================
            AUDIO PLAYER FUNCTIONALITY
            ========================================== */
-
-        // Word-by-word timing data storage
-        let wordTimingData = {};
 
         // Load word timing data
         async function loadWordTimingData() {
