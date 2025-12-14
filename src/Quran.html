@@ -9602,7 +9602,7 @@
             try {
                 const response = await fetch('/data/alafasy_timing.json');
                 if (!response.ok) {
-                    console.log('Word timing data not available');
+                    showNotification('Timing data not found', 'error');
                     return;
                 }
                 const data = await response.json();
@@ -9613,9 +9613,9 @@
                     wordTimingData[key] = item.segments;
                 });
 
-                console.log('✅ Word timing data loaded');
+                showNotification(`✅ Word highlighting ready (${Object.keys(wordTimingData).length} ayahs)`, 'success');
             } catch (error) {
-                console.log('Could not load timing data');
+                showNotification('Could not load timing data', 'error');
             }
         }
 
@@ -9945,6 +9945,13 @@
             const currentTime = audio.currentTime * 1000; // Convert to milliseconds
             const ayahKey = `${audioPlayerState.currentSurah}-${audioPlayerState.currentAyah}`;
             const segments = wordTimingData[ayahKey];
+
+            // Update player with current time (for debugging)
+            const playerAyahNum = document.getElementById('playerAyahNumber');
+            if (playerAyahNum && segments) {
+                const timeDisplay = `${(currentTime / 1000).toFixed(1)}s`;
+                playerAyahNum.setAttribute('title', timeDisplay);
+            }
 
             if (!segments || segments.length === 0) {
                 // No timing data available for this ayah
