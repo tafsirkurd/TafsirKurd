@@ -9641,10 +9641,8 @@
                 pauseAudio();
             } else {
                 if (audioPlayerState.currentSurah && audioPlayerState.currentAyah) {
-                    audio.play().catch(err => {
-                        console.error('Playback error:', err);
-                        showNotification('هەڵە د لیستانا دەنگی دا', 'error');
-                    });
+                    // Resume playback - replay current ayah
+                    playAyah(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
                 }
             }
         }
