@@ -9601,8 +9601,8 @@
             const surahFormatted = String(surahNum).padStart(3, '0');
             const ayahFormatted = String(ayahNum).padStart(3, '0');
 
-            // Build audio URL (format: 001_001.mp3)
-            const audioUrl = `https://everyayah.com/data/${audioPlayerState.reciter}/${surahFormatted}_${ayahFormatted}.mp3`;
+            // Build audio URL (format: 001001.mp3 - NO underscore!)
+            const audioUrl = `https://everyayah.com/data/${audioPlayerState.reciter}/${surahFormatted}${ayahFormatted}.mp3`;
 
             // Set audio source and play
             audio.src = audioUrl;
