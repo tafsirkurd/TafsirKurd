@@ -9376,8 +9376,9 @@
         });
 
         // Header hide on scroll down, show on scroll up
-        let lastScrollTop = 0;
+        let lastScrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
         let scrollTimeout;
+        const header = document.querySelector('.professional-header');
 
         // Set initial position on page load
         const stickyProgress = document.getElementById('stickyProgressHeader');
@@ -9388,32 +9389,47 @@
             stickyProgress.style.visibility = 'visible';
         }
 
+        // Initialize header state on page load
+        if (header) {
+            const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+            if (currentScroll > 100) {
+                header.classList.add('header-hidden');
+            } else {
+                header.classList.remove('header-hidden');
+            }
+        }
+
         let saveScrollTimeout;
         window.addEventListener('scroll', function() {
+            if (!header) return; // Exit if header not found
+
             clearTimeout(scrollTimeout);
 
             scrollTimeout = setTimeout(function() {
-                const header = document.querySelector('.professional-header');
-                if (!header) return; // Exit if header not found
-
                 let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
                 const isMobile = window.innerWidth <= 768;
+                const scrollDifference = scrollTop - lastScrollTop;
+
+                // Need at least 5px scroll to trigger (prevents jitter)
+                if (Math.abs(scrollDifference) < 5) {
+                    return;
+                }
 
                 if (scrollTop > lastScrollTop && scrollTop > 100) {
-                    // Scrolling down & past 100px - HIDE header
+                    // Scrolling DOWN & past 100px - HIDE header
                     header.classList.add('header-hidden');
                     if (stickyProgress) {
                         stickyProgress.style.top = isMobile ? '0px' : '0px';
                     }
-                } else if (scrollTop < lastScrollTop) {
-                    // Scrolling up - SHOW header
+                } else if (scrollTop < lastScrollTop || scrollTop <= 100) {
+                    // Scrolling UP or at top - SHOW header
                     header.classList.remove('header-hidden');
                     if (stickyProgress) {
                         stickyProgress.style.top = isMobile ? '55px' : '85px';
                     }
                 }
 
-                lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; // For Mobile or negative scrolling
+                lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
 
                 // Save scroll position for refresh persistence (debounced)
                 clearTimeout(saveScrollTimeout);
@@ -9423,7 +9439,7 @@
                         localStorage.setItem('lastScrollPosition', scrollTop);
                     }
                 }, 500);
-            }, 10);
+            }, 50);
         });
 
         // Restore last viewed page on refresh
