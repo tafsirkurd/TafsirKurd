@@ -4909,20 +4909,20 @@
             autoScroll: true
         };
 
-        // Reciter List - Using everyayah.com format (20 popular reciters)
+        // Reciter List - Using everyayah.com VERIFIED format
         const RECITERS = [
             { id: 'Alafasy_128kbps', name: 'میشاری راشید العفاسی', nameAr: 'مشاري راشد العفاسي' },
             { id: 'Abdul_Basit_Murattal_192kbps', name: 'عبدالباسط عبدالسمد', nameAr: 'عبد الباسط عبد الصمد' },
             { id: 'Hudhaify_128kbps', name: 'علی الحذیفی', nameAr: 'علي الحذيفي' },
             { id: 'Minshawy_Murattal_128kbps', name: 'محمد صدیق المنشاوی', nameAr: 'محمد صديق المنشاوي' },
             { id: 'Abu_Bakr_Ash-Shaatree_128kbps', name: 'ئەبووبەکر شاتری', nameAr: 'أبو بكر الشاطري' },
-            { id: 'muhammad_jibreel_128kbps', name: 'محمد جبریل', nameAr: 'محمد جبريل' },
-            { id: 'Maher_AlMuaiqly_128kbps', name: 'ماهر المعیقلی', nameAr: 'ماهر المعيقلي' },
+            { id: 'Muhammad_Jibreel_128kbps', name: 'محمد جبریل', nameAr: 'محمد جبريل' },
+            { id: 'MaherAlMuaiqly128kbps', name: 'ماهر المعیقلی', nameAr: 'ماهر المعيقلي' },
             { id: 'Yasser_Ad-Dussary_128kbps', name: 'یاسر دوسری', nameAr: 'ياسر الدوسري' },
             { id: 'Abdurrahmaan_As-Sudais_192kbps', name: 'عبدالرحمن السدیس', nameAr: 'عبد الرحمن السديس' },
-            { id: 'Saood_bin_Ibraaheem_Ash-Shuraym_128kbps', name: 'سعود الشریم', nameAr: 'سعود الشريم' },
+            { id: 'Saood_ash-Shuraym_128kbps', name: 'سعود الشریم', nameAr: 'سعود الشريم' },
             { id: 'Abdullah_Basfar_192kbps', name: 'عبدالله بصفر', nameAr: 'عبد الله بصفر' },
-            { id: 'Ahmed_ibn_Ali_al-Ajamy_128kbps', name: 'أحمد العجمی', nameAr: 'أحمد بن علي العجمي' },
+            { id: 'Ahmed_ibn_Ali_al-Ajamy_128kbps-almanar', name: 'أحمد العجمی', nameAr: 'أحمد بن علي العجمي' },
             { id: 'Hani_Rifai_192kbps', name: 'هانی رفاعی', nameAr: 'هاني الرفاعي' },
             { id: 'Muhammad_Ayyoub_128kbps', name: 'محمد أیوب', nameAr: 'محمد أيوب' },
             { id: 'Ghamadi_40kbps', name: 'سعد الغامدی', nameAr: 'سعد الغامدي' },
@@ -9550,6 +9550,14 @@
                 }
             }
 
+            // Validate reciter ID - if invalid, reset to default
+            const validReciterIds = RECITERS.map(r => r.id);
+            if (!validReciterIds.includes(audioPlayerState.reciter)) {
+                // Invalid reciter - reset to default (Alafasy)
+                audioPlayerState.reciter = 'Alafasy_128kbps';
+                saveAudioPlayerState();
+            }
+
             // Set initial volume
             audio.volume = audioPlayerState.volume / 100;
             const volumeSlider = document.getElementById('volumeSlider');
@@ -9604,20 +9612,12 @@
             // Build audio URL (format: 001001.mp3 - NO underscore!)
             const audioUrl = `https://everyayah.com/data/${audioPlayerState.reciter}/${surahFormatted}${ayahFormatted}.mp3`;
 
-            // DEBUG: Log the URL being loaded
-            console.log('🎵 Loading audio:', audioUrl);
-            console.log('   Reciter:', audioPlayerState.reciter);
-            console.log('   Surah:', surahFormatted, 'Ayah:', ayahFormatted);
-
             // Set audio source and play
             audio.src = audioUrl;
             audio.playbackRate = audioPlayerState.playbackSpeed;
 
             audio.play().catch(err => {
-                // DEBUG: Log playback error
-                console.log('❌ Playback Error:', err.name, '-', err.message);
-                console.log('   URL attempted:', audioUrl);
-
+                // Silent fail - audio errors are handled via user notification
                 audioPlayerState.isPlaying = false; // Reset on error
                 showNotification('هەڵە د لیستانا دەنگی دا', 'error');
             });
@@ -9805,15 +9805,7 @@
         }
 
         function onAudioError(e) {
-            // DEBUG: Log detailed error info
-            const audio = document.getElementById('quranAudio');
-            console.log('❌ Audio Error Details:');
-            console.log('   Current src:', audio.src);
-            console.log('   Error code:', audio.error ? audio.error.code : 'unknown');
-            console.log('   Error message:', audio.error ? audio.error.message : 'unknown');
-            console.log('   Network state:', audio.networkState);
-            console.log('   Ready state:', audio.readyState);
-
+            // Silent fail - audio errors are handled via user notification
             showNotification('هەڵە د لیستانا دەنگی دا', 'error');
             audioPlayerState.isPlaying = false;
             updatePlayButtons(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
