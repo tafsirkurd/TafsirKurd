@@ -1778,34 +1778,17 @@
             margin-bottom: 5px;
         }
 
-        /* Reader header surah title container */
-        .reader-surah-title {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            direction: rtl;
-        }
-
-        /* سورة prefix in beautiful Arabic font */
-        .surah-prefix {
-            font-family: 'KFGQPC Hafs', 'Amiri Quran', 'Scheherazade New', 'Traditional Arabic', serif;
-            font-size: 4.5rem;
-            font-weight: 400;
-            color: var(--text);
-            line-height: 1.2;
-        }
-
         /* Reader header decorative icon - always visible, bigger and centered */
         .reader-header .surah-card-arabic {
             color: var(--text) !important;
             filter: none !important;
-            font-size: 4.5rem; /* Bigger decorative surah name icon */
+            font-size: 4.5rem; /* Bigger decorative surah name icon (includes سورة + name) */
             font-family: 'SurahName', 'Scheherazade New', 'Traditional Arabic', serif; /* SurahName decorative font */
             font-weight: normal;
             line-height: 1.2;
-            display: inline-block;
+            text-align: center;
+            display: block;
+            margin: 0 auto 20px;
         }
 
         .surah-card-english {
@@ -4680,10 +4663,7 @@
             </button>
 
             <div class="reader-header">
-                <div class="reader-surah-title">
-                    <span class="surah-prefix">سورة</span>
-                    <span class="surah-card-arabic no-kurdish-convert" id="readerSurahIcon">surah001</span>
-                </div>
+                <div class="surah-card-arabic no-kurdish-convert" id="readerSurahIcon" style="margin-bottom: 15px;">surah001</div>
                 <h2 class="reader-surah-name" id="readerSurahName">Al-Fatihah (الفاتحة)</h2>
                 <p class="reader-surah-info" id="readerSurahInfo">٧ ئایەت</p>
             </div>
