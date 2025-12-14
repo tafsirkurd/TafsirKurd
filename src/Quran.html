@@ -2076,8 +2076,9 @@
         .ayah-menu {
             position: absolute;
             top: 100%;
-            right: 0;
-            left: auto;
+            right: auto;
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
             margin-top: 8px;
             background: var(--card-bg);
             border: 2px solid var(--border);
@@ -2087,7 +2088,6 @@
             max-width: 250px;
             opacity: 0;
             visibility: hidden;
-            transform: translateY(-10px);
             transition: all 0.3s ease;
             z-index: 1000;
             overflow: hidden;
@@ -2096,7 +2096,7 @@
         .ayah-menu.active {
             opacity: 1;
             visibility: visible;
-            transform: translateY(0);
+            transform: translateX(-50%) translateY(0);
         }
 
         .ayah-menu-item {
@@ -3857,17 +3857,17 @@
                 font-size: 0.95rem;
             }
 
-            /* Ayah Menu Mobile */
+            /* Ayah Menu Mobile - Centered under button */
             .ayah-menu {
-                right: 10px;
-                left: auto;
-                transform: translateY(-10px);
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%) translateY(-10px);
                 min-width: 180px;
                 max-width: calc(100vw - 30px);
             }
 
             .ayah-menu.active {
-                transform: translateY(0);
+                transform: translateX(-50%) translateY(0);
             }
 
             .ayah-menu-item {
