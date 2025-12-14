@@ -9035,7 +9035,7 @@
             // Check if we've reached the end of the surah - STOP instead of continuing
             if (nextAyah > totalAyahs) {
                 showNotification('ئاخری سوورەتێ گەهشتی', 'info');
-                closeAudioPlayer();
+                pauseAudio();
                 return;
             }
 
@@ -9517,16 +9517,19 @@
             <div class="audio-player-settings">
                 <!-- Volume Control -->
                 <div class="volume-control">
-                    <button class="player-btn" onclick="toggleMute()" id="volumeBtn">
-                        <i class="fas fa-volume-up"></i>
-                    </button>
+                    <i class="fas fa-volume-down" style="color: var(--text); opacity: 0.5; font-size: 0.75rem;"></i>
                     <input type="range"
                            class="volume-slider"
                            id="volumeSlider"
                            min="0"
                            max="100"
                            value="100"
-                           oninput="changeVolume(this.value)">
+                           oninput="changeVolume(this.value)"
+                           title="دەنگ: کەم ← زۆر">
+                    <i class="fas fa-volume-up" style="color: var(--text); opacity: 0.5; font-size: 0.75rem;"></i>
+                    <button class="player-btn" onclick="toggleMute()" id="volumeBtn" title="بێدەنگکرن">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
                 </div>
 
                 <!-- Settings Menu Button -->
