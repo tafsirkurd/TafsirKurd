@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v420-decorative-font';
+const CACHE_NAME = 'tafsir-kurd-v421-surah-prefix';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -45,7 +45,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v420-decorative-font');
+  console.log('[ServiceWorker] Installing v421-surah-prefix');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
