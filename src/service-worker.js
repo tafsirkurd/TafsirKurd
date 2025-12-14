@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v417-back-btn-visible';
+const CACHE_NAME = 'tafsir-kurd-v418-surah-title';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -45,7 +45,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v417-back-btn-visible');
+  console.log('[ServiceWorker] Installing v418-surah-title');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
