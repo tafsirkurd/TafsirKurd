@@ -3339,39 +3339,48 @@
             }
 
             .home-page {
-                padding-top: 65px; /* Space for fixed header on mobile */
+                padding-top: 56px; /* Space for compact fixed header on mobile */
             }
 
             .surah-reader-page {
                 padding: 15px;
-                padding-top: 95px; /* Space for header (65px) + sticky progress (30px) on mobile */
+                padding-top: 90px; /* Space for header (56px) + sticky progress (34px) on mobile */
             }
 
             .professional-header {
-                padding: 10px 0; /* Reduced padding on mobile */
+                padding: 8px 0; /* Compact padding on mobile */
             }
 
             .header-container {
                 padding: 0 10px;
-                height: 45px; /* Reduced height on mobile */
+                height: auto; /* Auto height for better fit */
+            }
+
+            .header-logo-section {
+                gap: 10px; /* Reduced gap between logo and title */
             }
 
             .header-title {
-                font-size: 1.8rem;
+                font-size: 1.25rem; /* Smaller, balanced title */
             }
 
             .header-logo-img {
-                width: 55px;
-                height: 55px;
+                width: 40px; /* Smaller logo on mobile */
+                height: 40px;
             }
 
             .header-btn {
-                padding: 6px 10px;
-                font-size: 0.85rem;
+                padding: 8px 10px; /* Better touch target */
+                font-size: 0.9rem; /* Slightly larger for readability */
+                min-height: 38px; /* Ensure good touch target */
+            }
+
+            .header-btn i {
+                font-size: 1rem; /* Proper icon size */
             }
 
             .header-btn span {
-                display: none;
+                display: none; /* Hide text, show only icons */
             }
 
             .hero-section {
@@ -3495,8 +3504,8 @@
             }
 
             .sticky-progress-header {
-                padding: 8px 0;
-                top: 65px;
+                padding: 6px 0; /* Compact on mobile */
+                top: 56px; /* Below compact header */
                 transition: top 0.3s ease-in-out;
                 display: block !important;
                 visibility: visible !important;
@@ -3515,22 +3524,22 @@
             }
 
             .sticky-surah-name {
-                font-size: 0.75rem;
+                font-size: 0.8rem;
                 white-space: nowrap;
             }
 
             .progress-percentage {
-                font-size: 0.7rem;
-                min-width: 30px;
+                font-size: 0.75rem;
+                min-width: 32px;
             }
 
             .sticky-ayah-count {
-                font-size: 0.7rem;
+                font-size: 0.75rem;
                 white-space: nowrap;
             }
 
             .progress-bar-sticky {
-                width: 120px;
+                width: 100px; /* Slightly smaller on mobile */
                 height: 4px;
             }
 
@@ -9398,7 +9407,7 @@
         const stickyProgress = document.getElementById('stickyProgressHeader');
         if (stickyProgress) {
             const isMobile = window.innerWidth <= 768;
-            stickyProgress.style.top = isMobile ? '65px' : '85px';
+            stickyProgress.style.top = isMobile ? '56px' : '85px';
             stickyProgress.style.display = 'block';
             stickyProgress.style.visibility = 'visible';
         }
@@ -9439,7 +9448,7 @@
                     // Scrolling UP or at top - SHOW header
                     header.classList.remove('header-hidden');
                     if (stickyProgress) {
-                        stickyProgress.style.top = isMobile ? '65px' : '85px';
+                        stickyProgress.style.top = isMobile ? '56px' : '85px';
                     }
                 }
 
