@@ -2077,12 +2077,14 @@
             position: absolute;
             top: 100%;
             right: 0;
+            left: auto;
             margin-top: 8px;
             background: var(--card-bg);
             border: 2px solid var(--border);
             border-radius: 12px;
             box-shadow: var(--shadow-lg);
             min-width: 180px;
+            max-width: 250px;
             opacity: 0;
             visibility: hidden;
             transform: translateY(-10px);
@@ -3857,15 +3859,15 @@
 
             /* Ayah Menu Mobile */
             .ayah-menu {
-                right: auto;
-                left: 50%;
-                transform: translateX(-50%) translateY(-10px);
-                min-width: 200px;
-                max-width: 90vw;
+                right: 10px;
+                left: auto;
+                transform: translateY(-10px);
+                min-width: 180px;
+                max-width: calc(100vw - 30px);
             }
 
             .ayah-menu.active {
-                transform: translateX(-50%) translateY(0);
+                transform: translateY(0);
             }
 
             .ayah-menu-item {
@@ -6817,10 +6819,8 @@
             // Update navigation
             updateNavigation(surahNum);
 
-            // Only scroll to top if NOT restoring from refresh
-            if (!window.isRestoringScroll) {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+            // Always scroll to top when opening a surah
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function loadAyahs(surahNum, highlightAyah) {
