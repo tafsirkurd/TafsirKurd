@@ -4807,7 +4807,7 @@
                     console.log('⚡ INSTANT: Data pre-loaded from cache synchronously');
                 }
             } catch (e) {
-                console.warn('Cache pre-load failed:', e);
+                // Cache pre-load failed - not critical, will load normally
             }
         })();
 
@@ -5228,7 +5228,7 @@
                                         sessionStorage.removeItem('scroll_' + pageKey);
                                         break;
                                     } catch (e) {
-                                        console.warn('Failed to parse universal scroll data:', e);
+                                        // Failed to parse scroll data - not critical
                                     }
                                 }
                             }
@@ -5511,7 +5511,7 @@
                     localStorage.setItem(TAFSIR_CACHE_KEY, JSON.stringify(tafsirData));
                     console.log('💾 Quran data cached for instant future loads');
                 } catch (e) {
-                    console.warn('⚠️ Could not cache data (localStorage full)');
+                    // Could not cache - localStorage full or disabled, not critical
                 }
 
                 console.log('✅ Quran data loaded successfully');
@@ -7007,7 +7007,7 @@
                             console.log('📍 Found scroll position with key:', pageKey, 'Position:', savedPosition);
                             break;
                         } catch (e) {
-                            console.warn('Failed to parse universal scroll data');
+                            // Failed to parse scroll data - not critical
                         }
                     }
                 }
@@ -8295,9 +8295,8 @@
                 if (data.stats) {
                     userStats = { ...data.stats }; // Create new object to avoid reference issues
                     console.log('✅ userStats set to:', userStats);
-                } else {
-                    console.warn('⚠️ No stats in loaded data, keeping defaults');
                 }
+                // If no stats, keep defaults - this is normal for new users
 
                 bookmarkedAyahs = data.bookmarks || [];
                 lastReadPosition = data.lastRead || { surah: 1, ayah: 1 };
@@ -8331,9 +8330,8 @@
                 calculateRealStats(data);
 
                 console.log('✅ Final userStats after load:', userStats);
-            } else {
-                console.warn('⚠️ No saved data found in localStorage');
             }
+            // If no saved data, defaults are used - this is normal for new/guest users
 
             updateStatsUI();
             updateContinueReading();
@@ -8499,12 +8497,11 @@
 
                 const result = await response.json();
                 if (result.success) {
-                    console.log('✅ Data backed up to cloud');
-                } else {
-                    console.warn('⚠️ Cloud backup failed:', result.error);
+                    // Cloud backup successful - silent success
                 }
+                // Silent fail - cloud backup is optional, localStorage is primary
             } catch (error) {
-                console.warn('⚠️ Cloud backup error:', error.message);
+                // Silent fail - cloud backup is optional, localStorage is primary
             }
         }
 
@@ -8525,7 +8522,7 @@
                 const result = await response.json();
                 return result.success ? result.data : null;
             } catch (error) {
-                console.error('⚠️ Cloud fetch error:', error);
+                // Silent fail - cloud backup is optional
                 return null;
             }
         }
@@ -8556,7 +8553,7 @@
                     return false;
                 }
             } catch (error) {
-                console.error('⚠️ Cloud restore error:', error);
+                // Silent fail - cloud backup is optional
                 return false;
             }
         }
