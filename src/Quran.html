@@ -2731,6 +2731,25 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            position: relative;
+        }
+
+        .volume-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .volume-slider-container.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+            pointer-events: all;
         }
 
         .volume-slider {
@@ -9192,6 +9211,11 @@
             saveAudioPlayerState();
         }
 
+        function toggleVolumeSlider() {
+            const container = document.getElementById('volumeSliderContainer');
+            container.classList.toggle('visible');
+        }
+
         function toggleMute() {
             const audio = document.getElementById('quranAudio');
             audioPlayerState.isMuted = !audioPlayerState.isMuted;
@@ -9517,17 +9541,19 @@
             <div class="audio-player-settings">
                 <!-- Volume Control -->
                 <div class="volume-control">
-                    <i class="fas fa-volume-down" style="color: var(--text); opacity: 0.5; font-size: 0.75rem;"></i>
-                    <input type="range"
-                           class="volume-slider"
-                           id="volumeSlider"
-                           min="0"
-                           max="100"
-                           value="100"
-                           oninput="changeVolume(this.value)"
-                           title="دەنگ: کەم ← زۆر">
-                    <i class="fas fa-volume-up" style="color: var(--text); opacity: 0.5; font-size: 0.75rem;"></i>
-                    <button class="player-btn" onclick="toggleMute()" id="volumeBtn" title="بێدەنگکرن">
+                    <div class="volume-slider-container" id="volumeSliderContainer">
+                        <i class="fas fa-volume-down" style="color: var(--text); opacity: 0.5; font-size: 0.75rem;"></i>
+                        <input type="range"
+                               class="volume-slider"
+                               id="volumeSlider"
+                               min="0"
+                               max="100"
+                               value="100"
+                               oninput="changeVolume(this.value)"
+                               title="دەنگ: کەم ← زۆر">
+                        <i class="fas fa-volume-up" style="color: var(--text); opacity: 0.5; font-size: 0.75rem;"></i>
+                    </div>
+                    <button class="player-btn" onclick="toggleVolumeSlider()" id="volumeBtn" title="دەنگ">
                         <i class="fas fa-volume-up"></i>
                     </button>
                 </div>
