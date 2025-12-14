@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v431-audio-error-throttle';
+const CACHE_NAME = 'tafsir-kurd-v432-responsive-logo';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -45,7 +45,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v431-audio-error-throttle');
+  console.log('[ServiceWorker] Installing v432-responsive-logo');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
