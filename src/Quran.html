@@ -9532,7 +9532,7 @@
         function initializeAudioPlayer() {
             const audio = document.getElementById('quranAudio');
             if (!audio) {
-                console.error('Audio element not found');
+                // Silent fail - audio element not found
                 return;
             }
 
@@ -9546,7 +9546,7 @@
                     audioPlayerState.volume = parsed.volume || 100;
                     audioPlayerState.repeatMode = parsed.repeatMode || 'none';
                 } catch (e) {
-                    console.error('Failed to parse audio state:', e);
+                    // Silent fail - invalid saved state, use defaults
                 }
             }
 
@@ -9588,7 +9588,7 @@
             const audioPlayer = document.getElementById('audioPlayer');
 
             if (!audio) {
-                console.error('Audio element not found');
+                // Silent fail - audio element not found
                 return;
             }
 
@@ -9601,15 +9601,15 @@
             const surahFormatted = String(surahNum).padStart(3, '0');
             const ayahFormatted = String(ayahNum).padStart(3, '0');
 
-            // Build audio URL (format: 001001.mp3 - no underscore)
-            const audioUrl = `https://everyayah.com/data/${audioPlayerState.reciter}/${surahFormatted}${ayahFormatted}.mp3`;
+            // Build audio URL (format: 001_001.mp3)
+            const audioUrl = `https://everyayah.com/data/${audioPlayerState.reciter}/${surahFormatted}_${ayahFormatted}.mp3`;
 
             // Set audio source and play
             audio.src = audioUrl;
             audio.playbackRate = audioPlayerState.playbackSpeed;
 
             audio.play().catch(err => {
-                console.error('Playback error:', err);
+                // Silent fail - audio errors are handled via user notification
                 audioPlayerState.isPlaying = false; // Reset on error
                 showNotification('هەڵە د لیستانا دەنگی دا', 'error');
             });
@@ -9799,7 +9799,7 @@
         }
 
         function onAudioError(e) {
-            console.error('Audio playback error:', e);
+            // Silent fail - audio errors are handled via user notification
             showNotification('هەڵە د لیستانا دەنگی دا', 'error');
             audioPlayerState.isPlaying = false;
             updatePlayButtons(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
