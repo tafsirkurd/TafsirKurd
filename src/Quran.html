@@ -9378,10 +9378,9 @@
         // Header hide on scroll down, show on scroll up
         let lastScrollTop = 0;
         let scrollTimeout;
-        const header = document.querySelector('.professional-header');
-        const stickyProgress = document.getElementById('stickyProgressHeader');
 
         // Set initial position on page load
+        const stickyProgress = document.getElementById('stickyProgressHeader');
         if (stickyProgress) {
             const isMobile = window.innerWidth <= 768;
             stickyProgress.style.top = isMobile ? '55px' : '85px';
@@ -9394,25 +9393,27 @@
             clearTimeout(scrollTimeout);
 
             scrollTimeout = setTimeout(function() {
-                let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const header = document.querySelector('.professional-header');
+                if (!header) return; // Exit if header not found
 
+                let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
                 const isMobile = window.innerWidth <= 768;
 
                 if (scrollTop > lastScrollTop && scrollTop > 100) {
-                    // Scrolling down & past 100px
+                    // Scrolling down & past 100px - HIDE header
                     header.classList.add('header-hidden');
                     if (stickyProgress) {
                         stickyProgress.style.top = isMobile ? '0px' : '0px';
                     }
-                } else {
-                    // Scrolling up or at top
+                } else if (scrollTop < lastScrollTop) {
+                    // Scrolling up - SHOW header
                     header.classList.remove('header-hidden');
                     if (stickyProgress) {
                         stickyProgress.style.top = isMobile ? '55px' : '85px';
                     }
                 }
 
-                lastScrollTop = scrollTop;
+                lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; // For Mobile or negative scrolling
 
                 // Save scroll position for refresh persistence (debounced)
                 clearTimeout(saveScrollTimeout);
