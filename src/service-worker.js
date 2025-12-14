@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v426-menu-right';
+const CACHE_NAME = 'tafsir-kurd-v427-word-highlight';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -16,6 +16,7 @@ const urlsToCache = [
   // Skip admin.html - too large (614KB), rarely needed offline
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
+  '/data/alafasy_timing.json',
   '/styles/mobile-optimize.css',
   '/utils/console-cleaner.js',
   '/utils/kurdish-numbers.js',
@@ -45,7 +46,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v426-menu-right');
+  console.log('[ServiceWorker] Installing v427-word-highlight');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {

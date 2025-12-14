@@ -2158,6 +2158,45 @@
             color: var(--text);
         }
 
+        /* Word-by-word highlighting */
+        .quran-word {
+            display: inline-block;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            padding: 2px 4px;
+        }
+
+        .quran-word.word-active {
+            background: linear-gradient(135deg,
+                rgba(96, 165, 250, 0.25) 0%,
+                rgba(59, 130, 246, 0.3) 100%);
+            color: var(--primary);
+            transform: scale(1.08);
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+            animation: wordPulse 0.3s ease;
+        }
+
+        @keyframes wordPulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.12);
+            }
+            100% {
+                transform: scale(1.08);
+            }
+        }
+
+        /* Dark mode word highlighting */
+        [data-theme="dark"] .quran-word.word-active {
+            background: linear-gradient(135deg,
+                rgba(96, 165, 250, 0.2) 0%,
+                rgba(59, 130, 246, 0.25) 100%);
+            box-shadow: 0 2px 8px rgba(96, 165, 250, 0.3);
+        }
+
         .tafsir-label {
             font-weight: 700;
             color: var(--primary);
@@ -4818,7 +4857,7 @@
                         &copy; <span id="year"></span> تەفسیر کورد. هەمی ماف پاراستی نە. خودایێ مەزن بەرەکەتێ بێخیتە هەول و ماندبوونا مە.
                     </p>
                     <p class="footer-brand-seo" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; opacity: 0.7;">
-                        تەفسیر کورد – تەفسیرا قورئانا پیرۆز ب زمانی کوردی (بادینی)
+                       قورئانا پیرۆز – وەرگێڕان و تەفسیر ب کوردی
                     </p>
                     <div class="footer-meta-links">
                         <a href="/privacy-policy" class="footer-meta-link">پاراستنا تایبەتمەندیێ</a>
@@ -6628,6 +6667,9 @@
                         ayahDiv.classList.add('bookmarked');
                     }
 
+                    // Wrap Arabic words in spans for word-by-word highlighting
+                    const wrappedArabicText = wrapWordsInSpans(verse.text, surahNum, verse.verse);
+
                     ayahDiv.innerHTML = `
                         <div class="ayah-header">
                             <div class="ayah-number">${KurdishNumbers.toKurdish(verse.verse)}</div>
@@ -6665,7 +6707,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="ayah-arabic">${verse.text}</div>
+                        <div class="ayah-arabic">${wrappedArabicText}</div>
                         ${tafsir ? `
                             <div class="tafsir-label">تەفسیرا ساناهی:</div>
                             <div class="tafsir-content">${tafsir}</div>
@@ -6880,6 +6922,9 @@
                         ayahDiv.classList.add('highlight');
                     }
 
+                    // Wrap Arabic words in spans for word-by-word highlighting
+                    const wrappedArabicText = wrapWordsInSpans(verse.text, surahNum, verse.verse);
+
                     ayahDiv.innerHTML = `
                         <div class="ayah-header">
                             <div class="ayah-number">${KurdishNumbers.toKurdish(verse.verse)}</div>
@@ -6917,7 +6962,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="ayah-arabic">${verse.text}</div>
+                        <div class="ayah-arabic">${wrappedArabicText}</div>
                         ${tafsir ? `
                             <div class="tafsir-label">تەفسیرا ساناهی:</div>
                             <div class="tafsir-content">${tafsir}</div>
@@ -9549,6 +9594,52 @@
            AUDIO PLAYER FUNCTIONALITY
            ========================================== */
 
+        // Word-by-word timing data storage
+        let wordTimingData = {};
+
+        // Load word timing data
+        async function loadWordTimingData() {
+            try {
+                const response = await fetch('/data/alafasy_timing.json');
+                if (!response.ok) {
+                    console.log('Word timing data not available');
+                    return;
+                }
+                const data = await response.json();
+
+                // Convert array to map for faster lookup: {surah-ayah: segments}
+                data.forEach(item => {
+                    const key = `${item.surah}-${item.ayah}`;
+                    wordTimingData[key] = item.segments;
+                });
+
+                console.log('✅ Word timing data loaded');
+            } catch (error) {
+                console.log('Could not load timing data');
+            }
+        }
+
+        // Wrap Arabic words in spans for highlighting
+        function wrapWordsInSpans(text, surahNum, ayahNum) {
+            // Split Arabic text by spaces (preserving spaces)
+            const words = text.split(/(\s+)/);
+
+            let wordIndex = 0;
+            const wrappedWords = words.map(word => {
+                // If it's whitespace, return as is
+                if (/^\s+$/.test(word)) {
+                    return word;
+                }
+
+                // Wrap word in span with data attributes
+                const span = `<span class="quran-word" data-word-index="${wordIndex}" data-surah="${surahNum}" data-ayah="${ayahNum}">${word}</span>`;
+                wordIndex++;
+                return span;
+            });
+
+            return wrappedWords.join('');
+        }
+
         // Initialize Audio Player
         function initializeAudioPlayer() {
             const audio = document.getElementById('quranAudio');
@@ -9556,6 +9647,9 @@
                 // Silent fail - audio element not found
                 return;
             }
+
+            // Load word timing data
+            loadWordTimingData();
 
             // Load saved preferences from localStorage
             const savedState = localStorage.getItem('audioPlayerState');
@@ -9594,6 +9688,7 @@
             audio.addEventListener('play', onAudioPlay);
             audio.addEventListener('pause', onAudioPause);
             audio.addEventListener('error', onAudioError);
+            audio.addEventListener('timeupdate', onAudioTimeUpdate);
 
             // Update repeat icon
             updateRepeatModeDisplay();
@@ -9796,10 +9891,20 @@
         function onAudioPause() {
             audioPlayerState.isPlaying = false;
             updatePlayButtons(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
+
+            // Clear word highlights when paused
+            document.querySelectorAll('.quran-word.word-active').forEach(el => {
+                el.classList.remove('word-active');
+            });
         }
 
         function onAudioEnded() {
             audioPlayerState.isPlaying = false;
+
+            // Clear word highlights when audio ends
+            document.querySelectorAll('.quran-word.word-active').forEach(el => {
+                el.classList.remove('word-active');
+            });
 
             // Safety check
             if (!audioPlayerState.currentSurah || !audioPlayerState.currentAyah || !quranData) {
@@ -9830,6 +9935,44 @@
             showNotification('هەڵە د لیستانا دەنگی دا', 'error');
             audioPlayerState.isPlaying = false;
             updatePlayButtons(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
+        }
+
+        // Word-by-word highlighting synchronization
+        function onAudioTimeUpdate() {
+            const audio = document.getElementById('quranAudio');
+            if (!audio || !audioPlayerState.isPlaying) return;
+
+            const currentTime = audio.currentTime * 1000; // Convert to milliseconds
+            const ayahKey = `${audioPlayerState.currentSurah}-${audioPlayerState.currentAyah}`;
+            const segments = wordTimingData[ayahKey];
+
+            if (!segments || segments.length === 0) {
+                // No timing data available for this ayah
+                return;
+            }
+
+            // Remove all previous word highlights
+            document.querySelectorAll('.quran-word.word-active').forEach(el => {
+                el.classList.remove('word-active');
+            });
+
+            // Find and highlight the current word based on timing
+            for (let i = 0; i < segments.length; i++) {
+                const [wordStartIndex, wordEndIndex, startMs, endMs] = segments[i];
+
+                // Check if current time is within this word's timeframe
+                if (currentTime >= startMs && currentTime < endMs) {
+                    // Highlight this word
+                    const wordElements = document.querySelectorAll(
+                        `.quran-word[data-surah="${audioPlayerState.currentSurah}"][data-ayah="${audioPlayerState.currentAyah}"][data-word-index="${wordStartIndex}"]`
+                    );
+
+                    wordElements.forEach(el => {
+                        el.classList.add('word-active');
+                    });
+                    break;
+                }
+            }
         }
 
         // Volume Controls
