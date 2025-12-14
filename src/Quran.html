@@ -4947,6 +4947,10 @@
             isPlaying: false
         };
 
+        // Audio error throttle - prevent spam notifications
+        let lastAudioErrorTime = 0;
+        const AUDIO_ERROR_THROTTLE = 3000; // 3 seconds between error notifications
+
         // Reciter List - Using everyayah.com VERIFIED format
         const RECITERS = [
             { id: 'Alafasy_128kbps', name: 'میشاری راشید العفاسی', nameAr: 'مشاري راشد العفاسي' },
@@ -9663,9 +9667,9 @@
             audio.playbackRate = audioPlayerState.playbackSpeed;
 
             audio.play().catch(err => {
-                // Silent fail - audio errors are handled via user notification
+                // Silent fail - audio errors are handled via onAudioError event
                 audioPlayerState.isPlaying = false; // Reset on error
-                showNotification('هەڵە د لیستانا دەنگی دا', 'error');
+                // Don't show notification here - onAudioError will handle it
             });
 
             // Show audio player
@@ -9851,7 +9855,18 @@
         }
 
         function onAudioError(e) {
-            // Silent fail - audio errors are handled via user notification
+            // Throttle error notifications to prevent spam
+            const now = Date.now();
+            if (now - lastAudioErrorTime < AUDIO_ERROR_THROTTLE) {
+                // Too soon since last error - skip notification
+                audioPlayerState.isPlaying = false;
+                updatePlayButtons(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
+                return;
+            }
+
+            lastAudioErrorTime = now;
+
+            // Show error notification (throttled)
             showNotification('هەڵە د لیستانا دەنگی دا', 'error');
             audioPlayerState.isPlaying = false;
             updatePlayButtons(audioPlayerState.currentSurah, audioPlayerState.currentAyah);

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v430-repeat-scope-fix';
+const CACHE_NAME = 'tafsir-kurd-v431-audio-error-throttle';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -45,7 +45,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v430-repeat-scope-fix');
+  console.log('[ServiceWorker] Installing v431-audio-error-throttle');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
