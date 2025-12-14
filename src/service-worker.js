@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v411-audio-fix';
+const CACHE_NAME = 'tafsir-kurd-v412-audio-fix2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -45,7 +45,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v411-audio-fix');
+  console.log('[ServiceWorker] Installing v412-audio-fix2');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
