@@ -9416,17 +9416,9 @@
             stickyProgress.style.visibility = 'visible';
         }
 
-        // Initialize header state on page load
+        // Initialize header state on page load - ALWAYS show header on load
         if (header) {
-            const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-            if (currentScroll > 100) {
-                header.classList.add('header-hidden');
-                if (stickyProgress) {
-                    stickyProgress.style.top = '0px';
-                }
-            } else {
-                header.classList.remove('header-hidden');
-            }
+            header.classList.remove('header-hidden');
         }
 
         let saveScrollTimeout;
