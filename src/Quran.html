@@ -3291,6 +3291,13 @@
                 --tafsir-size: 0.95rem; /* Slightly larger for mobile */
             }
 
+            /* Prevent horizontal overflow on mobile */
+            body {
+                overflow-x: hidden !important;
+                width: 100% !important;
+                max-width: 100vw !important;
+            }
+
             /* Ensure all touch targets are at least 44x44px (Apple guidelines) */
             button, a, .clickable {
                 min-height: 44px;
@@ -3300,6 +3307,28 @@
             /* Better mobile scrolling */
             * {
                 -webkit-overflow-scrolling: touch;
+            }
+
+            /* Prevent text from being too small on mobile */
+            .ayah-tafsir,
+            p,
+            span:not(.ayah-arabic) {
+                font-size: max(14px, 0.95rem) !important;
+            }
+
+            /* Make sure images don't overflow */
+            img {
+                max-width: 100% !important;
+                height: auto !important;
+            }
+
+            /* Ensure containers don't overflow */
+            .home-page,
+            .surah-reader-page,
+            .ayah-container {
+                width: 100% !important;
+                max-width: 100vw !important;
+                overflow-x: hidden !important;
             }
 
             .surah-reader-page {
@@ -3721,6 +3750,102 @@
                 font-size: clamp(6rem, 20vw, 10rem) !important;
             }
 
+            /* Repeat Manager Mobile */
+            .repeat-manager-modal {
+                padding: 0;
+            }
+
+            .repeat-manager-content {
+                max-width: 100%;
+                width: 100%;
+                height: 100%;
+                max-height: 100%;
+                border-radius: 0;
+                animation: slideUpFromBottom 0.3s ease;
+            }
+
+            @keyframes slideUpFromBottom {
+                from {
+                    transform: translateY(100%);
+                }
+                to {
+                    transform: translateY(0);
+                }
+            }
+
+            .repeat-manager-header {
+                padding: 15px 20px;
+            }
+
+            .repeat-manager-header h3 {
+                font-size: 1.2rem;
+            }
+
+            .repeat-mode-tabs {
+                padding: 15px;
+                gap: 8px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .repeat-tab {
+                padding: 10px 12px;
+                font-size: 0.85rem;
+                white-space: nowrap;
+                min-width: 100px;
+            }
+
+            .repeat-mode-content {
+                padding: 15px 20px;
+            }
+
+            .verse-input-group input,
+            .surah-select {
+                padding: 10px 12px;
+                font-size: 0.95rem;
+            }
+
+            .repeat-counter-group label {
+                font-size: 0.9rem;
+            }
+
+            .counter-value {
+                font-size: 1.2rem;
+            }
+
+            .counter-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+
+            .repeat-action-group {
+                padding: 15px 20px;
+            }
+
+            .start-repeat-btn {
+                padding: 12px 20px;
+                font-size: 0.95rem;
+            }
+
+            /* Ayah Menu Mobile */
+            .ayah-menu {
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%) translateY(-10px);
+                min-width: 200px;
+                max-width: 90vw;
+            }
+
+            .ayah-menu.active {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            .ayah-menu-item {
+                padding: 12px 16px;
+                font-size: 0.95rem;
+            }
+
         }
 
         /* Extra Small Mobile - 320px to 480px */
@@ -3784,6 +3909,47 @@
             #randomAyahKurdish {
                 font-size: 0.9rem !important;
                 padding: 12px !important;
+            }
+
+            /* Repeat Manager Extra Small */
+            .repeat-manager-header h3 {
+                font-size: 1.1rem;
+            }
+
+            .repeat-tab {
+                font-size: 0.8rem;
+                padding: 8px 10px;
+                min-width: 90px;
+            }
+
+            .verse-input-group label {
+                font-size: 0.85rem;
+            }
+
+            .verse-input-group input,
+            .surah-select {
+                font-size: 0.9rem;
+            }
+
+            .counter-value {
+                font-size: 1.1rem;
+            }
+
+            .counter-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+            }
+
+            /* Ayah Menu Extra Small */
+            .ayah-menu {
+                min-width: 180px;
+                font-size: 0.85rem;
+            }
+
+            .ayah-menu-item {
+                padding: 10px 14px;
+                font-size: 0.9rem;
             }
         }
 
