@@ -9604,12 +9604,20 @@
             // Build audio URL (format: 001001.mp3 - NO underscore!)
             const audioUrl = `https://everyayah.com/data/${audioPlayerState.reciter}/${surahFormatted}${ayahFormatted}.mp3`;
 
+            // DEBUG: Log the URL being loaded
+            console.log('🎵 Loading audio:', audioUrl);
+            console.log('   Reciter:', audioPlayerState.reciter);
+            console.log('   Surah:', surahFormatted, 'Ayah:', ayahFormatted);
+
             // Set audio source and play
             audio.src = audioUrl;
             audio.playbackRate = audioPlayerState.playbackSpeed;
 
             audio.play().catch(err => {
-                // Silent fail - audio errors are handled via user notification
+                // DEBUG: Log playback error
+                console.log('❌ Playback Error:', err.name, '-', err.message);
+                console.log('   URL attempted:', audioUrl);
+
                 audioPlayerState.isPlaying = false; // Reset on error
                 showNotification('هەڵە د لیستانا دەنگی دا', 'error');
             });
@@ -9797,7 +9805,15 @@
         }
 
         function onAudioError(e) {
-            // Silent fail - audio errors are handled via user notification
+            // DEBUG: Log detailed error info
+            const audio = document.getElementById('quranAudio');
+            console.log('❌ Audio Error Details:');
+            console.log('   Current src:', audio.src);
+            console.log('   Error code:', audio.error ? audio.error.code : 'unknown');
+            console.log('   Error message:', audio.error ? audio.error.message : 'unknown');
+            console.log('   Network state:', audio.networkState);
+            console.log('   Ready state:', audio.readyState);
+
             showNotification('هەڵە د لیستانا دەنگی دا', 'error');
             audioPlayerState.isPlaying = false;
             updatePlayButtons(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
