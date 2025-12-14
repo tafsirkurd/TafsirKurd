@@ -1,9 +1,8 @@
-const CACHE_NAME = 'tafsir-kurd-v409-performance';
+const CACHE_NAME = 'tafsir-kurd-v410-clean';
 const urlsToCache = [
   '/',
   '/index.html',
   '/Quran.html',
-  '/Dashboard.html',
   '/bookmarks.html',
   '/profile.html',
   '/goals.html',
@@ -46,7 +45,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v409-performance');
+  console.log('[ServiceWorker] Installing v410-clean');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
