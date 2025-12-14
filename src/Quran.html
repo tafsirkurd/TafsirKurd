@@ -3338,14 +3338,22 @@
                 overflow-x: hidden !important;
             }
 
+            .home-page {
+                padding-top: 65px; /* Space for fixed header on mobile */
+            }
+
             .surah-reader-page {
                 padding: 15px;
-                padding-top: 95px; /* Space for fixed sticky progress header on mobile */
+                padding-top: 95px; /* Space for header (65px) + sticky progress (30px) on mobile */
+            }
+
+            .professional-header {
+                padding: 10px 0; /* Reduced padding on mobile */
             }
 
             .header-container {
                 padding: 0 10px;
-                height: 55px;
+                height: 45px; /* Reduced height on mobile */
             }
 
             .header-title {
@@ -3488,7 +3496,7 @@
 
             .sticky-progress-header {
                 padding: 8px 0;
-                top: 55px;
+                top: 65px;
                 transition: top 0.3s ease-in-out;
                 display: block !important;
                 visibility: visible !important;
@@ -9390,7 +9398,7 @@
         const stickyProgress = document.getElementById('stickyProgressHeader');
         if (stickyProgress) {
             const isMobile = window.innerWidth <= 768;
-            stickyProgress.style.top = isMobile ? '55px' : '85px';
+            stickyProgress.style.top = isMobile ? '65px' : '85px';
             stickyProgress.style.display = 'block';
             stickyProgress.style.visibility = 'visible';
         }
@@ -9425,13 +9433,13 @@
                     // Scrolling DOWN & past 100px - HIDE header
                     header.classList.add('header-hidden');
                     if (stickyProgress) {
-                        stickyProgress.style.top = isMobile ? '0px' : '0px';
+                        stickyProgress.style.top = '0px';
                     }
                 } else if (scrollTop < lastScrollTop || scrollTop <= 100) {
                     // Scrolling UP or at top - SHOW header
                     header.classList.remove('header-hidden');
                     if (stickyProgress) {
-                        stickyProgress.style.top = isMobile ? '55px' : '85px';
+                        stickyProgress.style.top = isMobile ? '65px' : '85px';
                     }
                 }
 
