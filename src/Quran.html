@@ -101,6 +101,18 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
+        /* Prevent horizontal overflow */
+        html,
+        body {
+            overflow-x: hidden;
+            max-width: 100vw;
+            position: relative;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         @font-face {
             font-family: "SurahName";
             src: url("/assets/fonts/surah-name-v4.woff2") format("woff2");
