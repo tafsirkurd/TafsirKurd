@@ -4932,6 +4932,21 @@
             autoScroll: true
         };
 
+        // Repeat Manager State - Initialize early to avoid reference errors
+        const repeatManagerState = {
+            mode: 'single', // single, range, surah
+            singleVerse: { surah: 1, ayah: 1 },
+            rangeStart: { surah: 1, ayah: 1 },
+            rangeEnd: { surah: 1, ayah: 7 },
+            selectedSurah: 1,
+            playRange: 2,
+            repeatVerse: 1,
+            delay: 0,
+            currentPlayCount: 0,
+            currentVerseRepeat: 0,
+            isPlaying: false
+        };
+
         // Reciter List - Using everyayah.com VERIFIED format
         const RECITERS = [
             { id: 'Alafasy_128kbps', name: 'میشاری راشید العفاسی', nameAr: 'مشاري راشد العفاسي' },
@@ -10121,20 +10136,6 @@
         /* ==========================================
            REPEAT MANAGER FUNCTIONALITY
            ========================================== */
-
-        const repeatManagerState = {
-            mode: 'single', // single, range, surah
-            singleVerse: { surah: 1, ayah: 1 },
-            rangeStart: { surah: 1, ayah: 1 },
-            rangeEnd: { surah: 1, ayah: 7 },
-            selectedSurah: 1,
-            playRange: 2,
-            repeatVerse: 1,
-            delay: 0,
-            currentPlayCount: 0,
-            currentVerseRepeat: 0,
-            isPlaying: false
-        };
 
         function openRepeatManager() {
             const modal = document.getElementById('repeatManagerModal');
