@@ -1414,6 +1414,21 @@
                 url('https://images.unsplash.com/photo-1535552081922-631f7dea1e9d?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1600') center/cover;
         }
 
+        .hero-logo-static {
+            height: 150px;
+            width: auto;
+            margin-bottom: 30px;
+            filter: brightness(0) invert(1);
+        }
+
+        /* Tablet - Medium logo size */
+        @media (max-width: 1024px) {
+            .hero-logo-static {
+                height: 110px;
+                margin-bottom: 25px;
+            }
+        }
+
         .hero-search {
             max-width: 1200px;
             margin: 0 auto;
@@ -3407,6 +3422,11 @@
                 padding: 30px 10px;
             }
 
+            .hero-logo-static {
+                height: 80px; /* Much smaller on mobile */
+                margin-bottom: 20px;
+            }
+
             .hero-search-input {
                 padding: 10px 40px 10px 15px;
                 font-size: 0.85rem;
@@ -4419,7 +4439,7 @@
         <div class="home-page" id="homePage">
             <!-- Hero Section -->
             <section class="hero-section">
-                <img src="/assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-logo-static" style="height: 150px; width: auto; margin-bottom: 30px; filter: brightness(0) invert(1);">
+                <img src="/assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-logo-static">
                 <div class="hero-search">
                     <input
                         type="text"
