@@ -8906,12 +8906,12 @@
 
         // Initialize Audio Player
         function initializeAudioPlayer() {
-            console.log('🔴🔴🔴 INITIALIZING AUDIO PLAYER - START 🔴🔴🔴');
-            console.log('📍 DOMContentLoaded fired, searching for audio element...');
+            console.error('🔴🔴🔴 INITIALIZING AUDIO PLAYER - START 🔴🔴🔴');
+            console.error('📍 DOMContentLoaded fired, searching for audio element...');
 
             const audio = document.getElementById('quranAudio');
-            console.log('🔴 Audio element query result:', audio);
-            console.log('🔴 Audio element exists:', !!audio);
+            console.error('🔴 Audio element query result:', audio);
+            console.error('🔴 Audio element exists:', !!audio);
 
             if (!audio) {
                 console.error('❌❌❌ CRITICAL: Audio element not found in DOM!');
@@ -8919,7 +8919,7 @@
                 return;
             }
 
-            console.log('✅ Audio element found successfully:', audio.tagName, audio.id);
+            console.error('✅ Audio element found successfully:', audio.tagName, audio.id);
 
             // Load saved preferences from localStorage
             const savedState = localStorage.getItem('audioPlayerState');
@@ -8946,7 +8946,7 @@
             populateReciterOptions();
 
             // Audio event listeners
-            console.log('🎧 Attaching audio event listeners...');
+            console.error('🎧 Attaching audio event listeners...');
             audio.addEventListener('ended', onAudioEnded);
             audio.addEventListener('play', onAudioPlay);
             audio.addEventListener('pause', onAudioPause);
@@ -8954,21 +8954,21 @@
 
             // CRITICAL DEBUG - Also add inline test
             audio.addEventListener('ended', function() {
-                console.log('🔴🔴🔴 INLINE ENDED LISTENER FIRED! 🔴🔴🔴');
+                console.error('🔴🔴🔴 INLINE ENDED LISTENER FIRED! 🔴🔴🔴');
             });
 
             // Log when audio time updates to verify it's playing
             audio.addEventListener('timeupdate', function() {
                 if (audio.currentTime > 0 && audio.currentTime < 1) {
-                    console.log('▶️ Audio is playing, currentTime:', audio.currentTime);
+                    console.error('▶️ Audio is playing, currentTime:', audio.currentTime);
                 }
             });
 
             // Update repeat icon
             updateRepeatModeDisplay();
 
-            console.log('✅ Audio player initialized successfully');
-            console.log('🎧 Event listeners attached. Audio element:', audio);
+            console.error('✅ Audio player initialized successfully');
+            console.error('🎧 Event listeners attached. Audio element:', audio);
         }
 
         // Toggle Ayah Playback (from play button on ayah)
@@ -8985,14 +8985,14 @@
 
         // Play Specific Ayah
         function playAyah(surahNum, ayahNum) {
-            console.log('🔴🔴🔴 playAyah() CALLED 🔴🔴🔴');
-            console.log('📍 Requested: Surah', surahNum, 'Ayah', ayahNum);
+            console.error('🔴🔴🔴 playAyah() CALLED 🔴🔴🔴');
+            console.error('📍 Requested: Surah', surahNum, 'Ayah', ayahNum);
 
             const audio = document.getElementById('quranAudio');
             const audioPlayer = document.getElementById('audioPlayer');
 
-            console.log('🔴 Audio element in playAyah:', !!audio);
-            console.log('🔴 Audio player element:', !!audioPlayer);
+            console.error('🔴 Audio element in playAyah:', !!audio);
+            console.error('🔴 Audio player element:', !!audioPlayer);
 
             if (!audio) {
                 console.error('❌ Audio element not found in playAyah!');
@@ -9005,7 +9005,7 @@
             audioPlayerState.currentAyah = ayahNum;
             audioPlayerState.isPlaying = true; // Set immediately to update UI correctly
 
-            console.log('📊 Updated state:', audioPlayerState);
+            console.error('📊 Updated state:', audioPlayerState);
 
             // Format surah and ayah numbers (3 digits)
             const surahFormatted = String(surahNum).padStart(3, '0');
@@ -9014,13 +9014,13 @@
             // Build audio URL (format: 001001.mp3 - no underscore)
             const audioUrl = `https://everyayah.com/data/${audioPlayerState.reciter}/${surahFormatted}${ayahFormatted}.mp3`;
 
-            console.log('🎵 Audio URL:', audioUrl);
+            console.error('🎵 Audio URL:', audioUrl);
 
             // Set audio source and play
             audio.src = audioUrl;
             audio.playbackRate = audioPlayerState.playbackSpeed;
 
-            console.log('▶️ Calling audio.play()...');
+            console.error('▶️ Calling audio.play()...');
             audio.play().catch(err => {
                 console.error('❌ Playback error:', err);
                 audioPlayerState.isPlaying = false; // Reset on error
@@ -9064,8 +9064,8 @@
 
         // Play Next Ayah
         function playNextAyah() {
-            console.log('🔄 playNextAyah called');
-            console.log('📍 Current state:', audioPlayerState.currentSurah, audioPlayerState.currentAyah);
+            console.error('🔄 playNextAyah called');
+            console.error('📍 Current state:', audioPlayerState.currentSurah, audioPlayerState.currentAyah);
 
             if (!audioPlayerState.currentSurah) {
                 console.error('❌ No current surah');
@@ -9084,29 +9084,29 @@
             }
 
             const totalAyahs = currentSurah.verses.length;
-            console.log('📊 Total ayahs in surah:', totalAyahs);
+            console.error('📊 Total ayahs in surah:', totalAyahs);
 
             let nextAyah = audioPlayerState.currentAyah + 1;
             let nextSurah = audioPlayerState.currentSurah;
 
-            console.log('➡️ Next ayah will be:', nextAyah);
+            console.error('➡️ Next ayah will be:', nextAyah);
 
             // Check if we need to move to next surah
             if (nextAyah > totalAyahs) {
-                console.log('📖 Moving to next surah');
+                console.error('📖 Moving to next surah');
                 nextSurah = audioPlayerState.currentSurah + 1;
                 nextAyah = 1;
 
                 // Check if we've reached the end of the Quran
                 if (nextSurah > 114) {
-                    console.log('🏁 Reached end of Quran');
+                    console.error('🏁 Reached end of Quran');
                     showNotification('ئاخری قورئانێ گەهشتی', 'info');
                     closeAudioPlayer();
                     return;
                 }
             }
 
-            console.log('▶️ Playing surah:', nextSurah, 'ayah:', nextAyah);
+            console.error('▶️ Playing surah:', nextSurah, 'ayah:', nextAyah);
             playAyah(nextSurah, nextAyah);
         }
 
@@ -9213,10 +9213,10 @@
 
         function onAudioEnded() {
             // CRITICAL DEBUG - Force visible alert
-            console.log('🔴🔴🔴 AUDIO ENDED EVENT FIRED! 🔴🔴🔴');
-            console.log('🎵 Audio ended. Current:', audioPlayerState.currentSurah, audioPlayerState.currentAyah);
-            console.log('🔁 Repeat mode:', audioPlayerState.repeatMode);
-            console.log('📊 quranData exists:', !!quranData);
+            console.error('🔴🔴🔴 AUDIO ENDED EVENT FIRED! 🔴🔴🔴');
+            console.error('🎵 Audio ended. Current:', audioPlayerState.currentSurah, audioPlayerState.currentAyah);
+            console.error('🔁 Repeat mode:', audioPlayerState.repeatMode);
+            console.error('📊 quranData exists:', !!quranData);
 
             audioPlayerState.isPlaying = false;
 
@@ -9233,14 +9233,14 @@
                 return;
             }
 
-            console.log('✅ All checks passed, proceeding with auto-continue...');
+            console.error('✅ All checks passed, proceeding with auto-continue...');
 
             // Handle repeat modes
             if (audioPlayerState.repeatMode === 'ayah') {
-                console.log('🔁 Repeating current ayah');
+                console.error('🔁 Repeating current ayah');
                 playAyah(audioPlayerState.currentSurah, audioPlayerState.currentAyah);
             } else if (audioPlayerState.repeatMode === 'surah') {
-                console.log('🔁 Repeat surah mode');
+                console.error('🔁 Repeat surah mode');
                 const currentSurah = quranData[audioPlayerState.currentSurah];
                 if (!currentSurah) {
                     console.error('❌ Current surah data not found');
@@ -9249,16 +9249,16 @@
                 const totalAyahs = currentSurah.verses.length;
 
                 if (audioPlayerState.currentAyah < totalAyahs) {
-                    console.log('▶️ Playing next ayah in surah');
+                    console.error('▶️ Playing next ayah in surah');
                     playNextAyah();
                 } else {
-                    console.log('🔄 Restarting surah from ayah 1');
+                    console.error('🔄 Restarting surah from ayah 1');
                     playAyah(audioPlayerState.currentSurah, 1);
                 }
             } else {
                 // Auto-continue to next ayah (default mode)
-                console.log('⏭️ Auto-continuing to next ayah (default mode)');
-                console.log('📍 About to call playNextAyah()...');
+                console.error('⏭️ Auto-continuing to next ayah (default mode)');
+                console.error('📍 About to call playNextAyah()...');
                 playNextAyah();
             }
         }
@@ -9543,10 +9543,10 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🔴🔴🔴 DOMContentLoaded EVENT FIRED 🔴🔴🔴');
-            console.log('📍 About to call initializeAudioPlayer()...');
+            console.error('🔴🔴🔴 DOMContentLoaded EVENT FIRED 🔴🔴🔴');
+            console.error('📍 About to call initializeAudioPlayer()...');
             initializeAudioPlayer();
-            console.log('📍 initializeAudioPlayer() call completed');
+            console.error('📍 initializeAudioPlayer() call completed');
         });
 
 
