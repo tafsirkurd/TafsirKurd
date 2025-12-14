@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v419-no-space';
+const CACHE_NAME = 'tafsir-kurd-v420-decorative-font';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -45,7 +45,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v419-no-space');
+  console.log('[ServiceWorker] Installing v420-decorative-font');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
