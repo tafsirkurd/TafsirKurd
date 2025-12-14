@@ -6661,6 +6661,11 @@
                                             <i class="fas fa-share-alt"></i>
                                             <span>پارڤەکرن</span>
                                         </button>
+                                        <button class="ayah-menu-item"
+                                                onclick="openRepeatManager()">
+                                            <i class="fas fa-redo-alt"></i>
+                                            <span>بەڕێڤەبەرا دووبارەکرنێ</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -6912,6 +6917,11 @@
                                                 onclick="shareAyah(${surahNum}, ${verse.verse})">
                                             <i class="fas fa-share-alt"></i>
                                             <span>پارڤەکرن</span>
+                                        </button>
+                                        <button class="ayah-menu-item"
+                                                onclick="openRepeatManager()">
+                                            <i class="fas fa-redo-alt"></i>
+                                            <span>بەڕێڤەبەرا دووبارەکرنێ</span>
                                         </button>
                                     </div>
                                 </div>
@@ -10397,11 +10407,6 @@
 
             <!-- Volume & Settings -->
             <div class="audio-player-settings">
-                <!-- Repeat Manager Button -->
-                <button class="player-btn" onclick="openRepeatManager()" title="بەڕێڤەبەرا دووبارەکرنێ">
-                    <i class="fas fa-redo-alt"></i>
-                </button>
-
                 <!-- Volume Control -->
                 <div class="volume-control">
                     <div class="volume-slider-container" id="volumeSliderContainer">
@@ -10439,6 +10444,12 @@
             <div class="player-menu-item" onclick="downloadCurrentAyah()">
                 <i class="fas fa-download"></i>
                 <span>دابەزینا ئایەتێ</span>
+            </div>
+
+            <!-- Repeat Manager -->
+            <div class="player-menu-item" onclick="openRepeatManager()">
+                <i class="fas fa-redo-alt"></i>
+                <span>بەڕێڤەبەرا دووبارەکرنێ</span>
             </div>
 
             <!-- Repeat Mode -->
