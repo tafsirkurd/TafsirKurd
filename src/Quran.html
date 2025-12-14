@@ -3006,6 +3006,258 @@
             border-color: var(--primary);
         }
 
+        /* ==========================================
+           REPEAT MANAGER MODAL
+           ========================================== */
+        .repeat-manager-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .repeat-manager-modal.active {
+            display: flex;
+        }
+
+        .repeat-manager-content {
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--shadow-xl);
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUpFade 0.3s ease;
+        }
+
+        @keyframes slideUpFade {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .repeat-manager-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .repeat-manager-header h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0;
+        }
+
+        .close-repeat-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+        }
+
+        .close-repeat-btn:hover {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        /* Mode Tabs */
+        .repeat-mode-tabs {
+            display: flex;
+            gap: 10px;
+            padding: 20px 25px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .repeat-tab {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .repeat-tab:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .repeat-tab.active {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+        }
+
+        /* Mode Content */
+        .repeat-mode-content {
+            padding: 20px 25px;
+        }
+
+        .repeat-mode-content.hidden {
+            display: none;
+        }
+
+        .verse-input-group {
+            margin-bottom: 15px;
+        }
+
+        .verse-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .verse-input-group input,
+        .surah-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            direction: ltr;
+        }
+
+        .verse-input-group input:focus,
+        .surah-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Repeat Controls */
+        .repeat-controls {
+            padding: 20px 25px;
+            border-top: 2px solid var(--border);
+        }
+
+        .repeat-control-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .repeat-control-item span {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .counter-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .counter-controls button {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+        }
+
+        .counter-controls button:hover {
+            background: var(--primary);
+            color: var(--accent);
+            border-color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .counter-controls span {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .times-label {
+            font-size: 0.9rem !important;
+            font-weight: 600 !important;
+            color: var(--text-secondary) !important;
+        }
+
+        /* Action Buttons */
+        .repeat-action-buttons {
+            display: flex;
+            gap: 15px;
+            padding: 20px 25px;
+            border-top: 2px solid var(--border);
+        }
+
+        .repeat-cancel-btn,
+        .repeat-start-btn {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            border: none;
+        }
+
+        .repeat-cancel-btn {
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .repeat-cancel-btn:hover {
+            background: var(--border);
+        }
+
+        .repeat-start-btn {
+            background: var(--primary);
+            color: var(--accent);
+        }
+
+        .repeat-start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
+        }
+
         /* Playing Ayah Highlight - Black/White Theme */
         .ayah.playing {
             background: rgba(0, 0, 0, 0.05);
@@ -9624,6 +9876,228 @@
             localStorage.setItem('audioPlayerState', JSON.stringify(stateToSave));
         }
 
+        /* ==========================================
+           REPEAT MANAGER FUNCTIONALITY
+           ========================================== */
+
+        const repeatManagerState = {
+            mode: 'single', // single, range, surah
+            singleVerse: { surah: 1, ayah: 1 },
+            rangeStart: { surah: 1, ayah: 1 },
+            rangeEnd: { surah: 1, ayah: 7 },
+            selectedSurah: 1,
+            playRange: 2,
+            repeatVerse: 1,
+            delay: 0,
+            currentPlayCount: 0,
+            currentVerseRepeat: 0,
+            isPlaying: false
+        };
+
+        function openRepeatManager() {
+            const modal = document.getElementById('repeatManagerModal');
+            modal.classList.add('active');
+
+            // Set single verse input to currently playing ayah
+            if (audioPlayerState.currentSurah && audioPlayerState.currentAyah) {
+                repeatManagerState.singleVerse = {
+                    surah: audioPlayerState.currentSurah,
+                    ayah: audioPlayerState.currentAyah
+                };
+                document.getElementById('singleVerseInput').value =
+                    `${audioPlayerState.currentSurah}:${audioPlayerState.currentAyah}`;
+            }
+
+            // Populate surah select
+            populateSurahSelect();
+        }
+
+        function closeRepeatManager() {
+            const modal = document.getElementById('repeatManagerModal');
+            modal.classList.remove('active');
+        }
+
+        function switchRepeatMode(mode) {
+            repeatManagerState.mode = mode;
+
+            // Update tabs
+            document.querySelectorAll('.repeat-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.mode === mode) {
+                    tab.classList.add('active');
+                }
+            });
+
+            // Update content visibility
+            document.querySelectorAll('.repeat-mode-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            if (mode === 'single') {
+                document.getElementById('singleMode').classList.remove('hidden');
+            } else if (mode === 'range') {
+                document.getElementById('rangeMode').classList.remove('hidden');
+            } else if (mode === 'surah') {
+                document.getElementById('surahMode').classList.remove('hidden');
+            }
+        }
+
+        function populateSurahSelect() {
+            const select = document.getElementById('surahSelect');
+            select.innerHTML = '';
+
+            for (let i = 1; i <= 114; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                const surahInfo = surahNames[i];
+                option.textContent = `${i}. ${surahInfo.arabic} (${surahInfo.english})`;
+                if (i === audioPlayerState.currentSurah) {
+                    option.selected = true;
+                    repeatManagerState.selectedSurah = i;
+                }
+                select.appendChild(option);
+            }
+
+            select.addEventListener('change', (e) => {
+                repeatManagerState.selectedSurah = parseInt(e.target.value);
+            });
+        }
+
+        function incrementCounter(type) {
+            if (type === 'playRange') {
+                repeatManagerState.playRange++;
+                document.getElementById('playRangeCount').textContent = repeatManagerState.playRange;
+            } else if (type === 'repeatVerse') {
+                repeatManagerState.repeatVerse++;
+                document.getElementById('repeatVerseCount').textContent = repeatManagerState.repeatVerse;
+            } else if (type === 'delay') {
+                repeatManagerState.delay++;
+                document.getElementById('delayCount').textContent = repeatManagerState.delay;
+            }
+        }
+
+        function decrementCounter(type) {
+            if (type === 'playRange' && repeatManagerState.playRange > 1) {
+                repeatManagerState.playRange--;
+                document.getElementById('playRangeCount').textContent = repeatManagerState.playRange;
+            } else if (type === 'repeatVerse' && repeatManagerState.repeatVerse > 1) {
+                repeatManagerState.repeatVerse--;
+                document.getElementById('repeatVerseCount').textContent = repeatManagerState.repeatVerse;
+            } else if (type === 'delay' && repeatManagerState.delay > 0) {
+                repeatManagerState.delay--;
+                document.getElementById('delayCount').textContent = repeatManagerState.delay;
+            }
+        }
+
+        function startRepeatPlayback() {
+            const mode = repeatManagerState.mode;
+
+            if (mode === 'single') {
+                const verse = repeatManagerState.singleVerse;
+                playRepeatSequence([verse]);
+            } else if (mode === 'range') {
+                // Parse range inputs
+                const startInput = document.getElementById('rangeStartInput').value;
+                const endInput = document.getElementById('rangeEndInput').value;
+
+                const startParts = startInput.split(':');
+                const endParts = endInput.split(':');
+
+                if (startParts.length === 2 && endParts.length === 2) {
+                    const startSurah = parseInt(startParts[0]);
+                    const startAyah = parseInt(startParts[1]);
+                    const endSurah = parseInt(endParts[0]);
+                    const endAyah = parseInt(endParts[1]);
+
+                    // Build verse list
+                    const verses = [];
+                    if (startSurah === endSurah) {
+                        for (let i = startAyah; i <= endAyah; i++) {
+                            verses.push({ surah: startSurah, ayah: i });
+                        }
+                    }
+                    playRepeatSequence(verses);
+                }
+            } else if (mode === 'surah') {
+                const surah = repeatManagerState.selectedSurah;
+                const surahData = quranData[surah];
+                if (surahData) {
+                    const verses = surahData.verses.map(v => ({ surah: surah, ayah: v.verse }));
+                    playRepeatSequence(verses);
+                }
+            }
+
+            closeRepeatManager();
+        }
+
+        function playRepeatSequence(verses) {
+            if (!verses || verses.length === 0) return;
+
+            repeatManagerState.isPlaying = true;
+            repeatManagerState.currentPlayCount = 0;
+            repeatManagerState.currentVerseRepeat = 0;
+
+            const playNextInSequence = () => {
+                if (!repeatManagerState.isPlaying) return;
+
+                // Check if we've completed all play ranges
+                if (repeatManagerState.currentPlayCount >= repeatManagerState.playRange) {
+                    showNotification('دووبارەکرن تەواو بوو', 'success');
+                    repeatManagerState.isPlaying = false;
+                    return;
+                }
+
+                // Play all verses in sequence
+                let currentVerseIndex = 0;
+
+                const playVerse = () => {
+                    if (!repeatManagerState.isPlaying) return;
+                    if (currentVerseIndex >= verses.length) {
+                        // Completed one full sequence
+                        repeatManagerState.currentPlayCount++;
+                        if (repeatManagerState.currentPlayCount < repeatManagerState.playRange) {
+                            setTimeout(playNextInSequence, repeatManagerState.delay * 1000);
+                        } else {
+                            showNotification('دووبارەکرن تەواو بوو', 'success');
+                            repeatManagerState.isPlaying = false;
+                        }
+                        return;
+                    }
+
+                    const verse = verses[currentVerseIndex];
+
+                    // Play this verse repeatVerse times
+                    let verseRepeatCount = 0;
+                    const repeatVerse = () => {
+                        if (!repeatManagerState.isPlaying) return;
+                        if (verseRepeatCount >= repeatManagerState.repeatVerse) {
+                            // Move to next verse
+                            currentVerseIndex++;
+                            setTimeout(playVerse, repeatManagerState.delay * 1000);
+                            return;
+                        }
+
+                        playAyah(verse.surah, verse.ayah);
+                        verseRepeatCount++;
+
+                        // Wait for ayah to finish before repeating
+                        const audio = document.getElementById('quranAudio');
+                        const onEnded = () => {
+                            audio.removeEventListener('ended', onEnded);
+                            setTimeout(repeatVerse, repeatManagerState.delay * 1000);
+                        };
+                        audio.addEventListener('ended', onEnded);
+                    };
+
+                    repeatVerse();
+                };
+
+                playVerse();
+            };
+
+            playNextInSequence();
+        }
+
         // NOTE: Audio player initialization moved to after HTML (bottom of page)
         // This code is kept for reference but not executed
         // The audio element doesn't exist yet at this point in the script
@@ -9691,6 +10165,11 @@
 
             <!-- Volume & Settings -->
             <div class="audio-player-settings">
+                <!-- Repeat Manager Button -->
+                <button class="player-btn" onclick="openRepeatManager()" title="بەڕێڤەبەرا دووبارەکرنێ">
+                    <i class="fas fa-redo-alt"></i>
+                </button>
+
                 <!-- Volume Control -->
                 <div class="volume-control">
                     <div class="volume-slider-container" id="volumeSliderContainer">
@@ -9759,6 +10238,103 @@
             </div>
             <div class="reciter-options" id="reciterOptions">
                 <!-- Populated dynamically via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Repeat Manager Modal -->
+    <div class="repeat-manager-modal" id="repeatManagerModal">
+        <div class="repeat-manager-content">
+            <div class="repeat-manager-header">
+                <h3>بەڕێڤەبەرا دووبارەکرنێ</h3>
+                <button class="close-repeat-btn" onclick="closeRepeatManager()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Mode Tabs -->
+            <div class="repeat-mode-tabs">
+                <button class="repeat-tab active" data-mode="single" onclick="switchRepeatMode('single')">
+                    <span>ئایەتێ تاک</span>
+                </button>
+                <button class="repeat-tab" data-mode="range" onclick="switchRepeatMode('range')">
+                    <span>مەودایێ ئایەتان</span>
+                </button>
+                <button class="repeat-tab" data-mode="surah" onclick="switchRepeatMode('surah')">
+                    <span>تەڤاهیا سوورەتێ</span>
+                </button>
+            </div>
+
+            <!-- Single Verse Mode -->
+            <div class="repeat-mode-content" id="singleMode">
+                <div class="verse-input-group">
+                    <label>ئایەتا ئێکێ:</label>
+                    <input type="text" id="singleVerseInput" placeholder="1:1" value="" readonly>
+                </div>
+            </div>
+
+            <!-- Range Mode -->
+            <div class="repeat-mode-content hidden" id="rangeMode">
+                <div class="verse-input-group">
+                    <label>ژ ئایەتێ:</label>
+                    <input type="text" id="rangeStartInput" placeholder="1:1" value="">
+                </div>
+                <div class="verse-input-group">
+                    <label>هەتا ئایەتێ:</label>
+                    <input type="text" id="rangeEndInput" placeholder="1:7" value="">
+                </div>
+            </div>
+
+            <!-- Surah Mode -->
+            <div class="repeat-mode-content hidden" id="surahMode">
+                <div class="verse-input-group">
+                    <label>سوورەت:</label>
+                    <select id="surahSelect" class="surah-select">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Repeat Controls -->
+            <div class="repeat-controls">
+                <!-- Play Range Times -->
+                <div class="repeat-control-item">
+                    <span>ژمارا لیستانێ</span>
+                    <div class="counter-controls">
+                        <button onclick="decrementCounter('playRange')"><i class="fas fa-minus"></i></button>
+                        <span id="playRangeCount">2</span>
+                        <button onclick="incrementCounter('playRange')"><i class="fas fa-plus"></i></button>
+                        <span class="times-label">جار</span>
+                    </div>
+                </div>
+
+                <!-- Repeat Each Verse -->
+                <div class="repeat-control-item">
+                    <span>دووبارەکرنا هەر ئایەتێ</span>
+                    <div class="counter-controls">
+                        <button onclick="decrementCounter('repeatVerse')"><i class="fas fa-minus"></i></button>
+                        <span id="repeatVerseCount">1</span>
+                        <button onclick="incrementCounter('repeatVerse')"><i class="fas fa-plus"></i></button>
+                        <span class="times-label">جار</span>
+                    </div>
+                </div>
+
+                <!-- Delay Between Verses -->
+                <div class="repeat-control-item">
+                    <span>دیرەنگیا نێوان ئایەتان</span>
+                    <div class="counter-controls">
+                        <button onclick="decrementCounter('delay')"><i class="fas fa-minus"></i></button>
+                        <span id="delayCount">0</span>
+                        <button onclick="incrementCounter('delay')"><i class="fas fa-plus"></i></button>
+                        <span class="times-label">چرکە</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="repeat-action-buttons">
+                <button class="repeat-cancel-btn" onclick="closeRepeatManager()">پاشڤەکرن</button>
+                <button class="repeat-start-btn" onclick="startRepeatPlayback()">دەستپێکرن</button>
             </div>
         </div>
     </div>
