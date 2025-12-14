@@ -6518,7 +6518,7 @@
             // Set initial header to first surah
             currentSurahNumber = startPosition.surah;
             const firstSurah = surahNames[startPosition.surah];
-            document.getElementById('readerSurahIcon').textContent = `سورة ${firstSurah.arabic}`;
+            document.getElementById('readerSurahIcon').textContent = `سورة${firstSurah.arabic}`;
             document.getElementById('readerSurahName').textContent = `${firstSurah.english} (${firstSurah.arabic})`;
             document.getElementById('readerSurahInfo').textContent = `${KurdishNumbers.toKurdish(firstSurah.ayahs)} ئایەت`;
 
@@ -6690,7 +6690,7 @@
 
                             // Update header to show current surah
                             const surah = surahNames[surahNum];
-                            document.getElementById('readerSurahIcon').textContent = `سورة ${surah.arabic}`;
+                            document.getElementById('readerSurahIcon').textContent = `سورة${surah.arabic}`;
                             document.getElementById('readerSurahName').textContent = `${surah.english} (${surah.arabic})`;
                             document.getElementById('readerSurahInfo').textContent = `${KurdishNumbers.toKurdish(surah.ayahs)} ئایەت`;
 
@@ -6804,7 +6804,7 @@
             document.getElementById('surahReaderPage').classList.add('visible');
 
             const info = surahNames[surahNum];
-            document.getElementById('readerSurahIcon').textContent = `سورة ${info.arabic}`;
+            document.getElementById('readerSurahIcon').textContent = `سورة${info.arabic}`;
             document.getElementById('readerSurahName').textContent = `${info.english} (${info.arabic})`;
             document.getElementById('readerSurahInfo').textContent = `${KurdishNumbers.toKurdish(info.ayahs)} ئایەت`;
 

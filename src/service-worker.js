@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v418-surah-title';
+const CACHE_NAME = 'tafsir-kurd-v419-no-space';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -45,7 +45,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v418-surah-title');
+  console.log('[ServiceWorker] Installing v419-no-space');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
