@@ -10394,16 +10394,39 @@
         window.addEventListener('popstate', function(event) {
             console.log('🔙 Browser back button clicked', event.state);
 
+            // First check if we have state
             if (event.state && event.state.page === 'surah') {
-                // Going back to a surah page
+                // Going back to a surah page (with state)
                 if (event.state.ayah) {
                     openSurahWithAyah(event.state.surah, event.state.ayah);
                 } else {
                     openSurah(event.state.surah);
                 }
             } else {
-                // Going back to home page or external site
-                showHomePage();
+                // No state - check URL parameters as fallback
+                const urlParams = new URLSearchParams(window.location.search);
+                const surahParam = urlParams.get('surah');
+                const ayahParam = urlParams.get('ayah');
+
+                if (surahParam) {
+                    // URL has surah parameter - load it
+                    const surahNum = parseInt(surahParam);
+                    const ayahNum = ayahParam ? parseInt(ayahParam) : null;
+
+                    if (surahNum >= 1 && surahNum <= 114) {
+                        console.log('🔙 Loading surah from URL params:', surahNum, ayahNum);
+                        if (ayahNum) {
+                            openSurahWithAyah(surahNum, ayahNum);
+                        } else {
+                            openSurah(surahNum);
+                        }
+                    } else {
+                        showHomePage();
+                    }
+                } else {
+                    // No state, no URL params - go to home page
+                    showHomePage();
+                }
             }
         });
 
