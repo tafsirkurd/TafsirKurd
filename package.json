@@ -35,7 +35,8 @@
     "dependencies": {
         "@supabase/supabase-js": "^2.55.0",
         "googleapis": "^140.0.0",
-        "jsonwebtoken": "^9.0.2"
+        "jsonwebtoken": "^9.0.2",
+        "tweetnacl": "^1.0.3"
     },
     "devDependencies": {
         "netlify-cli": "^17.0.0"
