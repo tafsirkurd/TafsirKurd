@@ -10374,8 +10374,28 @@
 
 
         // Handle browser back/forward buttons
-        window.addEventListener('popstate', function(event) {
+        window.addEventListener('popstate', async function(event) {
             console.log('🔙 Browser back button clicked', event.state);
+
+            // Wait for quranData to be ready before navigating
+            async function waitForData() {
+                let attempts = 0;
+                while (!quranData || Object.keys(quranData).length === 0) {
+                    if (attempts > 50) { // Max 5 seconds wait
+                        console.error('Timeout waiting for Quran data');
+                        return false;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                return true;
+            }
+
+            const dataReady = await waitForData();
+            if (!dataReady) {
+                console.error('Cannot navigate: Quran data not loaded');
+                return;
+            }
 
             // First check if we have state
             if (event.state && event.state.page === 'surah') {
