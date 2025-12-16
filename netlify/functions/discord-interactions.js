@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const crypto = require('crypto');
+const nacl = require('tweetnacl');
 
 // Discord interaction types
 const InteractionType = {
@@ -106,23 +106,11 @@ exports.handler = async (event, context) => {
 // Verify Discord request signature using Ed25519
 function verifyDiscordSignature(publicKey, signature, timestamp, body) {
     try {
-        const publicKeyBuffer = Buffer.from(publicKey, 'hex');
-        const signatureBuffer = Buffer.from(signature, 'hex');
         const message = Buffer.from(timestamp + body);
+        const sig = Buffer.from(signature, 'hex');
+        const pub = Buffer.from(publicKey, 'hex');
 
-        // Use Node.js crypto to verify Ed25519 signature
-        const isValid = crypto.verify(
-            null,
-            message,
-            {
-                key: publicKeyBuffer,
-                format: 'der',
-                type: 'spki'
-            },
-            signatureBuffer
-        );
-
-        return isValid;
+        return nacl.sign.detached.verify(message, sig, pub);
     } catch (error) {
         console.error('Signature verification error:', error);
         return false;
