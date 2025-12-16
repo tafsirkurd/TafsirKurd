@@ -3718,9 +3718,6 @@ async function loadSocialStats() {
                     <div class="stat-label">${stat.stat_label}</div>
                 </div>
             `).join('');
-
-            // Re-initialize number animation after updating HTML
-            initNumberAnimation();
         }
     } catch (error) {
         console.error('Failed to load social stats:', error);
