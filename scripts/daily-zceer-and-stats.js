@@ -2,7 +2,8 @@ const https = require('https');
 const { createClient } = require('@supabase/supabase-js');
 
 // Configuration
-const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
+const DISCORD_WEBHOOK_STATS = process.env.DISCORD_WEBHOOK_STATS; // For stats
+const DISCORD_WEBHOOK_ZCEER = process.env.DISCORD_WEBHOOK_ZCEER; // For zceer/dhikr
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://nvwgepkhzobgwnzibpvq.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
@@ -331,14 +332,26 @@ async function sendDailyReport() {
             }
         }));
 
-        // Send to Discord
-        await sendDiscordWebhook(DISCORD_WEBHOOK_URL, {
-            username: 'Tafsir Kurd Daily Report',
-            avatar_url: 'https://tafsirkurd.com/logo512.png',
-            embeds: [statsEmbed, ...zceerEmbeds]
-        });
+        // Send Stats to Stats Channel
+        if (DISCORD_WEBHOOK_STATS) {
+            await sendDiscordWebhook(DISCORD_WEBHOOK_STATS, {
+                username: 'Tafsir Kurd Stats',
+                avatar_url: 'https://tafsirkurd.com/logo512.png',
+                embeds: [statsEmbed]
+            });
+            console.log('✅ Stats sent to stats channel!');
+        }
 
-        console.log('✅ Daily report sent successfully!');
+        // Send Zceer to Zceer Channel
+        if (DISCORD_WEBHOOK_ZCEER) {
+            await sendDiscordWebhook(DISCORD_WEBHOOK_ZCEER, {
+                username: 'Daily Zceer',
+                avatar_url: 'https://tafsirkurd.com/logo512.png',
+                embeds: zceerEmbeds
+            });
+            console.log('✅ Zceer sent to zceer channel!');
+        }
+
         console.log(`📊 Stats: ${stats.totalUsers} total users, ${stats.todayUsers} new today`);
         console.log(`🌙 Sent 3 Dhikr: ${zceerList.map(z => z.category).join(', ')}\n`);
 
