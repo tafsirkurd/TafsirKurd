@@ -9,13 +9,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/assets/images/logo.png",
+      "src": "/assets/images/TafsirKurd.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/assets/images/logo.png",
+      "src": "/assets/images/TafsirKurd.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
