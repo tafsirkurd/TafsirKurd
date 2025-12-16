@@ -1,17 +1,25 @@
 # SIMPLE SETUP - Everything in One Place
 
-## Your Discord Webhook (ONE for EVERYTHING):
+## Your Discord Webhooks (TWO Channels):
+
+### Webhook 1 - Stats & Notifications:
 ```
 https://discord.com/api/webhooks/1450630296943857727/dHv-ipJ4IwUx6N8QdDPkumd54VEWID_1hLOL11sTy4v9UOVMu-SasqW9JH6iPdrNMbcd
 ```
-
-This ONE webhook sends:
+Sends:
 - ✅ New user signups
 - ✅ Contact messages
 - ✅ Daily stats report
-- ✅ 3 random Zceer (Arabic dhikr) every day
 - ✅ Hourly activity summaries
 - ✅ All website notifications
+
+### Webhook 2 - Daily Zceer (Arabic Dhikr):
+```
+https://discord.com/api/webhooks/1450631760147779767/t08tzCCtcMbz2_r8BN2VIwSV4yreuNUrUS5xJMmxNs9Akx_IKov-EsR_14Y4qhXxX2Yb
+```
+Sends:
+- 🌙 3 random Arabic Zceer every day
+- 📿 20 different dhikr categories (never repeats)
 
 ---
 
@@ -44,9 +52,9 @@ C:\TafsirKurd\run-daily-report.bat
 ```
 
 You'll see in Discord:
-- 📊 Your platform stats
-- 🌙 3 random Arabic Zceer with benefits
-- All formatted beautifully!
+- 📊 Your platform stats (in Stats channel)
+- 🌙 3 random Arabic Zceer with benefits (in Zceer channel)
+- All formatted beautifully in separate channels!
 
 ---
 
@@ -83,9 +91,8 @@ Same as above, but with the new webhook!
 
 ### After Step 2 (Daily Report):
 Every day at 9 AM:
-- Platform statistics
-- 3 different Arabic Zceer
-- Growth trends
+- **Stats Channel:** Platform statistics, growth trends
+- **Zceer Channel:** 3 different Arabic Zceer with benefits
 
 ### Hourly Summary (Optional):
 Double-click: `run-hourly-summary.bat`
@@ -106,16 +113,17 @@ Shows:
 2. ✅ Test daily report (double-click bat file)
 3. ✅ Make it automatic (Task Scheduler - optional)
 
-**ONE webhook does EVERYTHING!** 🎉
+**TWO separate channels:** Stats in one, Zceer in another! 🎉
 
 ---
 
-## Need to Change the Webhook Later?
+## Need to Change the Webhooks Later?
 
-Just update it in:
-1. Netlify environment variables
-2. Both .bat files (already updated for you!)
-3. Redeploy
+Just update them in:
+1. Netlify environment variables (DISCORD_WEBHOOK_URL for stats)
+2. run-daily-report.bat (both DISCORD_WEBHOOK_STATS and DISCORD_WEBHOOK_ZCEER)
+3. run-hourly-summary.bat (DISCORD_WEBHOOK_URL for stats)
+4. Redeploy Netlify
 
 ---
 
