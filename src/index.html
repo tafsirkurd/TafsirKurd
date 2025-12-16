@@ -3508,8 +3508,8 @@ function setupContactForm() {
 
             if (error) throw error;
 
-            // Send Telegram notification (don't await, send async)
-            fetch('/.netlify/functions/telegram-notify', {
+            // Send Discord notification (don't await, send async)
+            fetch('/.netlify/functions/discord-notify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

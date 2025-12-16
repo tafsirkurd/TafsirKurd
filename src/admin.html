@@ -2170,11 +2170,11 @@
                         <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">Backup and restore database operations</p>
                     </div>
 
-                    <!-- Telegram Card -->
-                    <div class="dashboard-card" data-card-id="telegram" draggable="false" onclick="switchSection('telegram')" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(86, 171, 47, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(86, 171, 47, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(86, 171, 47, 0.3)'">
-                        <div style="font-size: 56px; margin-bottom: 15px;">💬</div>
-                        <h3 style="margin: 0 0 10px 0; color: white; font-size: 24px; font-weight: 700;">Telegram</h3>
-                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">Configure Telegram bot notifications</p>
+                    <!-- Discord Card -->
+                    <div class="dashboard-card" data-card-id="telegram" draggable="false" onclick="switchSection('telegram')" style="background: linear-gradient(135deg, #5865F2 0%, #7289DA 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(88, 101, 242, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(88, 101, 242, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(88, 101, 242, 0.3)'">
+                        <div style="font-size: 56px; margin-bottom: 15px;">🎮</div>
+                        <h3 style="margin: 0 0 10px 0; color: white; font-size: 24px; font-weight: 700;">Discord</h3>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">Configure Discord bot notifications</p>
                     </div>
 
                     <!-- Search Console SEO Card -->
@@ -2991,11 +2991,11 @@
                 </div>
 
                 <!-- Status Card -->
-                <div class="table-card" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid #0088cc; margin-bottom: 30px;">
+                <div class="table-card" style="background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%); border: 2px solid #5865F2; margin-bottom: 30px;">
                     <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
-                        <div style="font-size: 64px;">📱</div>
+                        <div style="font-size: 64px;">🎮</div>
                         <div style="flex: 1;">
-                            <h3 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 700;">Telegram Bot Status</h3>
+                            <h3 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 700;">Discord Bot Status</h3>
                             <div id="telegramStatus" style="display: flex; align-items: center; gap: 10px;">
                                 <span class="badge" id="telegramStatusBadge" style="background: #ef4444; font-size: 14px;">⚠️ Not Configured</span>
                                 <button class="btn" style="padding: 8px 16px; font-size: 14px;" onclick="toggleTelegramNotifications()">
@@ -3011,27 +3011,27 @@
                             🤖 Setup Instructions
                         </h4>
                         <div style="color: #78350f; line-height: 1.8; font-size: 14px;">
-                            <p style="margin: 0 0 15px 0;"><strong>Step 1:</strong> Create a Telegram Bot</p>
+                            <p style="margin: 0 0 15px 0;"><strong>Step 1:</strong> Create a Discord Server & Channel</p>
                             <ol style="margin: 0 0 15px 0; padding-left: 20px;">
-                                <li>Open Telegram and search for <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">@BotFather</code></li>
-                                <li>Send the command <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">/newbot</code></li>
-                                <li>Follow the instructions to create your bot</li>
-                                <li>Copy the <strong>Bot Token</strong> (looks like: 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11)</li>
+                                <li>Open Discord and create a new server or use an existing one</li>
+                                <li>Create a dedicated channel for notifications (e.g., <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">#admin-notifications</code>)</li>
+                                <li>Right-click the channel → Edit Channel → Integrations → Webhooks</li>
+                                <li>Click <strong>New Webhook</strong> and give it a name (e.g., "Tafsir Kurd Admin")</li>
                             </ol>
 
-                            <p style="margin: 0 0 15px 0;"><strong>Step 2:</strong> Get Your Chat ID</p>
+                            <p style="margin: 0 0 15px 0;"><strong>Step 2:</strong> Copy Webhook URL</p>
                             <ol style="margin: 0 0 15px 0; padding-left: 20px;">
-                                <li>Search for your bot in Telegram and start a conversation with <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">/start</code></li>
-                                <li>Go to <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">@userinfobot</code> and send <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">/start</code></li>
-                                <li>Copy your <strong>Chat ID</strong> (a number like: 123456789)</li>
+                                <li>Click <strong>Copy Webhook URL</strong></li>
+                                <li>The URL looks like: <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;">https://discord.com/api/webhooks/...</code></li>
+                                <li>Keep this URL secure - anyone with it can send messages to your channel</li>
                             </ol>
 
                             <p style="margin: 0 0 15px 0;"><strong>Step 3:</strong> Add to Netlify Environment Variables</p>
                             <ol style="margin: 0 0 0 0; padding-left: 20px;">
-                                <li>Go to your <a href="https://app.netlify.com/sites/tafsirkurd/settings/deploys#environment" target="_blank" style="color: #0088cc; text-decoration: underline;">Netlify Dashboard → Site Settings → Environment Variables</a></li>
-                                <li>Add variable: <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">TELEGRAM_BOT_TOKEN</code> = (your bot token)</li>
-                                <li>Add variable: <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">TELEGRAM_CHAT_ID</code> = (your chat ID)</li>
+                                <li>Go to your <a href="https://app.netlify.com/sites/tafsirkurd/settings/deploys#environment" target="_blank" style="color: #5865F2; text-decoration: underline;">Netlify Dashboard → Site Settings → Environment Variables</a></li>
+                                <li>Add variable: <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">DISCORD_WEBHOOK_URL</code> = (your webhook URL)</li>
                                 <li>Redeploy your site for changes to take effect</li>
+                                <li>Come back here and click "Enable Notifications" button above</li>
                             </ol>
                         </div>
                     </div>
@@ -5382,13 +5382,13 @@
             document.getElementById('adminNotifications').style.display = 'none';
         }
 
-        // Send notification to Telegram
+        // Send notification to Discord
         async function sendTelegramNotification(notification) {
             try {
-                // Check if Telegram is enabled in localStorage
-                const telegramEnabled = localStorage.getItem('telegramNotificationsEnabled');
-                if (telegramEnabled !== 'true') {
-                    return; // Telegram notifications disabled
+                // Check if Discord is enabled in localStorage
+                const discordEnabled = localStorage.getItem('discordNotificationsEnabled');
+                if (discordEnabled !== 'true') {
+                    return; // Discord notifications disabled
                 }
 
                 // Prepare notification data
@@ -5401,7 +5401,7 @@
                 };
 
                 // Send to Netlify function
-                const response = await fetch('/.netlify/functions/telegram-notify', {
+                const response = await fetch('/.netlify/functions/discord-notify', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -6954,8 +6954,8 @@
                 }]);
                 if (error) throw error;
 
-                // Send Telegram notification (async, don't wait)
-                fetch('/.netlify/functions/telegram-notify', {
+                // Send Discord notification (async, don't wait)
+                fetch('/.netlify/functions/discord-notify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -7976,22 +7976,22 @@
             }
         }
 
-        // Telegram Notification Functions
+        // Discord Notification Functions
         function toggleTelegramNotifications() {
-            const currentStatus = localStorage.getItem('telegramNotificationsEnabled');
+            const currentStatus = localStorage.getItem('discordNotificationsEnabled');
             const newStatus = currentStatus === 'true' ? 'false' : 'true';
-            localStorage.setItem('telegramNotificationsEnabled', newStatus);
+            localStorage.setItem('discordNotificationsEnabled', newStatus);
             updateTelegramStatus();
 
             if (newStatus === 'true') {
-                alert('✅ Telegram notifications enabled!\n\nMake sure you have configured the TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID environment variables in Netlify.');
+                alert('✅ Discord notifications enabled!\n\nMake sure you have configured the DISCORD_WEBHOOK_URL environment variable in Netlify.');
             } else {
-                alert('🔕 Telegram notifications disabled.');
+                alert('🔕 Discord notifications disabled.');
             }
         }
 
         function updateTelegramStatus() {
-            const enabled = localStorage.getItem('telegramNotificationsEnabled') === 'true';
+            const enabled = localStorage.getItem('discordNotificationsEnabled') === 'true';
             const statusBadge = document.getElementById('telegramStatusBadge');
             const toggleButton = document.getElementById('toggleButtonText');
 
@@ -8008,13 +8008,13 @@
 
         async function sendTestNotification() {
             try {
-                const enabled = localStorage.getItem('telegramNotificationsEnabled');
+                const enabled = localStorage.getItem('discordNotificationsEnabled');
                 if (enabled !== 'true') {
-                    alert('⚠️ Please enable Telegram notifications first!');
+                    alert('⚠️ Please enable Discord notifications first!');
                     return;
                 }
 
-                const response = await fetch('/.netlify/functions/telegram-notify', {
+                const response = await fetch('/.netlify/functions/discord-notify', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -8023,7 +8023,7 @@
                         type: 'info',
                         title: 'Test Notification',
                         message: 'This is a test notification from your Tafsir Kurd admin panel!',
-                        details: 'If you received this message on Telegram, your notifications are working correctly! 🎉',
+                        details: 'If you received this message on Discord, your notifications are working correctly! 🎉',
                         data: {
                             location: 'Admin Panel'
                         }

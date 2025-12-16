@@ -20,17 +20,17 @@ async function sendTelegramNotification(type, title, message, details, data) {
             data
         };
 
-        const response = await fetch('https://tafsirkurd.com/.netlify/functions/telegram-notify', {
+        const response = await fetch('https://tafsirkurd.com/.netlify/functions/discord-notify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(notificationData)
         });
 
         if (!response.ok) {
-            console.error('Failed to send Telegram notification');
+            console.error('Failed to send Discord notification');
         }
     } catch (error) {
-        console.error('Error sending Telegram notification:', error);
+        console.error('Error sending Discord notification:', error);
     }
 }
 

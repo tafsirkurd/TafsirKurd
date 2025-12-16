@@ -792,8 +792,8 @@
                             })
                         }).catch(err => console.error('Failed to save notification settings:', err));
 
-                        // Send confirmation notification to admin via Telegram
-                        fetch('/.netlify/functions/telegram-notify', {
+                        // Send confirmation notification to admin via Discord
+                        fetch('/.netlify/functions/discord-notify', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
