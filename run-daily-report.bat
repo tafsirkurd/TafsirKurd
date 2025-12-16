@@ -1,7 +1,6 @@
 @echo off
 cd /d C:\TafsirKurd
 set DISCORD_WEBHOOK_STATS=https://discord.com/api/webhooks/1450630296943857727/dHv-ipJ4IwUx6N8QdDPkumd54VEWID_1hLOL11sTy4v9UOVMu-SasqW9JH6iPdrNMbcd
-set DISCORD_WEBHOOK_ZCEER=https://discord.com/api/webhooks/1450631760147779767/t08tzCCtcMbz2_r8BN2VIwSV4yreuNUrUS5xJMmxNs9Akx_IKov-EsR_14Y4qhXxX2Yb
 set SUPABASE_URL=https://nvwgepkhzobgwnzibpvq.supabase.co
 set SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d2dlcGtoemJvZ3due2licHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMxNTUwMjIsImV4cCI6MjA0ODczMTAyMn0.FW_a9X7sWZNe8yh0ykf9MNwxIgxsxUGBj3XjfIqYYlY
 node scripts/daily-zceer-and-stats.js

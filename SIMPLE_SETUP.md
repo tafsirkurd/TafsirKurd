@@ -13,13 +13,14 @@ Sends:
 - ✅ Hourly activity summaries
 - ✅ All website notifications
 
-### Webhook 2 - Daily Zceer (Arabic Dhikr):
+### Webhook 2 - Random Zceer (Arabic Dhikr):
 ```
 https://discord.com/api/webhooks/1450631760147779767/t08tzCCtcMbz2_r8BN2VIwSV4yreuNUrUS5xJMmxNs9Akx_IKov-EsR_14Y4qhXxX2Yb
 ```
 Sends:
-- 🌙 3 random Arabic Zceer every day
-- 📿 20 different dhikr categories (never repeats)
+- 🌙 Simple Arabic Zceer (just Arabic text, nothing else)
+- 🎲 At random times throughout the day
+- 📿 One at a time, 20 different dhikr to choose from
 
 ---
 
@@ -44,28 +45,40 @@ Sends:
 
 ---
 
-## Step 2: Test Daily Report (Run Once to See It Work)
+## Step 2: Test Daily Stats Report
 
 **Just double-click this file:**
 ```
 C:\TafsirKurd\run-daily-report.bat
 ```
 
-You'll see in Discord:
-- 📊 Your platform stats (in Stats channel)
-- 🌙 3 random Arabic Zceer with benefits (in Zceer channel)
-- All formatted beautifully in separate channels!
+You'll see in Discord Stats channel:
+- 📊 Your platform stats
+- 👥 User counts and growth trends
+- 📖 Total ayahs read
+- All formatted beautifully!
+
+## Step 3: Test Random Zceer
+
+**Double-click this file:**
+```
+C:\TafsirKurd\send-random-zceer.bat
+```
+
+You'll see in Discord Zceer channel:
+- 🌙 ONE simple Arabic zceer (just Arabic text, no translation)
 
 ---
 
-## Step 3: Make Daily Report Automatic (Optional)
+## Step 4: Make It Automatic (Optional)
 
-### Windows Task Scheduler:
+### For Daily Stats Report:
 
+**Windows Task Scheduler:**
 1. Press `Win + R`, type `taskschd.msc`, press Enter
 2. Click **Create Task**
 3. **General Tab:**
-   - Name: `Tafsir Kurd Daily Report`
+   - Name: `Tafsir Kurd Daily Stats`
    - ✅ Run whether user is logged on or not
 4. **Triggers Tab:**
    - New → Daily → Time: `9:00 AM`
@@ -74,7 +87,20 @@ You'll see in Discord:
    - Program: `C:\TafsirKurd\run-daily-report.bat`
 6. Click **OK**
 
-Now you get stats + 3 Zceer automatically every day at 9 AM!
+Now you get daily stats automatically every day at 9 AM!
+
+### For Random Zceer Throughout the Day:
+
+See detailed instructions here: `RANDOM_ZCEER_SETUP.md`
+
+**Quick summary:** Create 5 tasks with random delays to get zceer at random times:
+- Morning (7 AM + random 0-3 hours)
+- Midday (12 PM + random 0-2 hours)
+- Afternoon (3 PM + random 0-2 hours)
+- Evening (6 PM + random 0-3 hours)
+- Night (9 PM + random 0-2 hours)
+
+This gives you **5 random Arabic zceer per day** at completely unpredictable times!
 
 ---
 
@@ -82,17 +108,19 @@ Now you get stats + 3 Zceer automatically every day at 9 AM!
 
 ### Right Now (Already Working):
 When someone:
-- Signs up → Discord notification
-- Sends contact message → Discord notification
-- Completes Quran → Discord celebration
+- Signs up → Discord notification (Stats channel)
+- Sends contact message → Discord notification (Stats channel)
+- Completes Quran → Discord celebration (Stats channel)
 
 ### After Step 1 (Netlify Update):
 Same as above, but with the new webhook!
 
-### After Step 2 (Daily Report):
-Every day at 9 AM:
-- **Stats Channel:** Platform statistics, growth trends
-- **Zceer Channel:** 3 different Arabic Zceer with benefits
+### After Step 4 (Automatic Setup):
+**Daily at 9 AM:**
+- 📊 Platform statistics and growth trends (Stats channel)
+
+**5 Random Times Per Day:**
+- 🌙 Simple Arabic zceer - just the Arabic text (Zceer channel)
 
 ### Hourly Summary (Optional):
 Double-click: `run-hourly-summary.bat`
@@ -108,12 +136,15 @@ Shows:
 
 ## That's It!
 
-**THREE simple steps:**
+**FOUR simple steps:**
 1. ✅ Update Netlify webhook (one time)
-2. ✅ Test daily report (double-click bat file)
-3. ✅ Make it automatic (Task Scheduler - optional)
+2. ✅ Test daily stats (double-click bat file)
+3. ✅ Test random zceer (double-click bat file)
+4. ✅ Make it automatic (Task Scheduler - optional)
 
-**TWO separate channels:** Stats in one, Zceer in another! 🎉
+**TWO separate channels:**
+- **Stats:** Website notifications & daily statistics
+- **Zceer:** Simple Arabic dhikr at random times 🎉
 
 ---
 
@@ -121,17 +152,25 @@ Shows:
 
 Just update them in:
 1. Netlify environment variables (DISCORD_WEBHOOK_URL for stats)
-2. run-daily-report.bat (both DISCORD_WEBHOOK_STATS and DISCORD_WEBHOOK_ZCEER)
-3. run-hourly-summary.bat (DISCORD_WEBHOOK_URL for stats)
-4. Redeploy Netlify
+2. run-daily-report.bat (DISCORD_WEBHOOK_STATS for daily stats)
+3. send-random-zceer.bat (DISCORD_WEBHOOK_ZCEER for zceer)
+4. run-hourly-summary.bat (DISCORD_WEBHOOK_URL for stats)
+5. Redeploy Netlify
 
 ---
 
 ## Quick Test Right Now:
 
+**Test Daily Stats:**
 ```powershell
 cd C:\TafsirKurd
 .\run-daily-report.bat
 ```
+Check Discord Stats channel - you should see your daily report! 📊
 
-Check Discord - you should see your report! 📊
+**Test Random Zceer:**
+```powershell
+cd C:\TafsirKurd
+.\send-random-zceer.bat
+```
+Check Discord Zceer channel - you should see ONE simple Arabic zceer! 🌙
