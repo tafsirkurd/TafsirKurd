@@ -60,7 +60,20 @@
       "Bash(powershell -Command:*)",
       "Bash(cp:*)",
       "Bash(ls:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(test:*)",
+      "Bash(awk:*)",
+      "Bash(winget install OpenJS.NodeJS.LTS)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:quranicaudio.com)",
+      "WebFetch(domain:everyayah.com)",
+      "WebFetch(domain:server8.mp3quran.net)",
+      "WebSearch",
+      "Bash(git revert:*)",
+      "Bash(git checkout:*)",
+      "WebFetch(domain:qul.tarteel.ai)",
+      "Bash(git restore:*)",
+      "WebFetch(domain:tafsir.app)"
     ],
     "deny": [],
     "ask": []
