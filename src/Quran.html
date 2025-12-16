@@ -109,10 +109,24 @@
             font-display: swap;
         }
 
+        /* Al-Fatiha special font - using system installed font */
+        @font-face {
+            font-family: "AQF Fatiha";
+            src: local("AQF_P001_HA");
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
         /* Force KFGQPC Hafs Uthmanic Script for Quran ayah text */
         .ayah-arabic,
         .arabic-text {
             font-family: 'KFGQPC Hafs', 'Scheherazade New', 'Traditional Arabic', serif !important;
+        }
+
+        /* Special font for Al-Fatiha (Surah 1) */
+        [data-surah="1"] .ayah-arabic {
+            font-family: 'AQF Fatiha', 'KFGQPC Hafs', 'Scheherazade New', serif !important;
         }
 
         :root {
