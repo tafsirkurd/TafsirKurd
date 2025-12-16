@@ -1,0 +1,6 @@
+@echo off
+cd /d C:\TafsirKurd
+set DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1450609878207959162/39_Z0gobcAMpB96iOq6ioWZpsvF5dGZe4_aTjg0VwLq6bKUBhQjtCPLauKR-F35_nw8d
+set SUPABASE_URL=https://nvwgepkhzobgwnzibpvq.supabase.co
+set SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d2dlcGtoemJvZ3due2licHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMxNTUwMjIsImV4cCI6MjA0ODczMTAyMn0.FW_a9X7sWZNe8yh0ykf9MNwxIgxsxUGBj3XjfIqYYlY
+node scripts/hourly-activity-summary.js
