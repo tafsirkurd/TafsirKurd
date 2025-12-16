@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v434-fix-back-navigation';
+const CACHE_NAME = 'tafsir-kurd-v435-enhanced-title';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -45,7 +45,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v434-fix-back-navigation');
+  console.log('[ServiceWorker] Installing v435-enhanced-title');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
