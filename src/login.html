@@ -962,10 +962,10 @@
                     console.log('✅ User profile already complete, skipping save to prevent overwrite');
                 }
 
-                // Send instant Telegram notification for new users
+                // Send instant Discord notification for new users
                 if (isNewUser) {
-                    console.log('🎉 New user detected - sending Telegram notification');
-                    fetch('/.netlify/functions/telegram-notify', {
+                    console.log('🎉 New user detected - sending Discord notification');
+                    fetch('/.netlify/functions/discord-notify', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
