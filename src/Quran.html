@@ -10376,30 +10376,34 @@
         // Handle browser back/forward buttons
         window.addEventListener('popstate', async function(event) {
             console.log('🔙 Browser back button clicked', event.state);
+            console.log('🔙 Current URL:', window.location.href);
 
-            // Wait for quranData to be ready before navigating
+            // Wait for both quranData and surahNames to be ready before navigating
             async function waitForData() {
                 let attempts = 0;
-                while (!quranData || Object.keys(quranData).length === 0) {
+                while ((!quranData || Object.keys(quranData).length === 0) || !surahNames) {
                     if (attempts > 50) { // Max 5 seconds wait
-                        console.error('Timeout waiting for Quran data');
+                        console.error('⚠️ Timeout waiting for data. quranData:', !!quranData, 'surahNames:', !!surahNames);
                         return false;
                     }
                     await new Promise(resolve => setTimeout(resolve, 100));
                     attempts++;
                 }
+                console.log('✅ Data ready for navigation');
                 return true;
             }
 
             const dataReady = await waitForData();
             if (!dataReady) {
-                console.error('Cannot navigate: Quran data not loaded');
+                console.error('❌ Cannot navigate: Data not loaded. Showing homepage instead.');
+                showHomePage();
                 return;
             }
 
             // First check if we have state
             if (event.state && event.state.page === 'surah') {
                 // Going back to a surah page (with state)
+                console.log('📖 Opening surah from history state:', event.state.surah, event.state.ayah);
                 if (event.state.ayah) {
                     openSurahWithAyah(event.state.surah, event.state.ayah);
                 } else {
@@ -10417,17 +10421,19 @@
                     const ayahNum = ayahParam ? parseInt(ayahParam) : null;
 
                     if (surahNum >= 1 && surahNum <= 114) {
-                        console.log('🔙 Loading surah from URL params:', surahNum, ayahNum);
+                        console.log('📖 Loading surah from URL params:', surahNum, ayahNum);
                         if (ayahNum) {
                             openSurahWithAyah(surahNum, ayahNum);
                         } else {
                             openSurah(surahNum);
                         }
                     } else {
+                        console.log('🏠 Invalid surah number, showing homepage');
                         showHomePage();
                     }
                 } else {
                     // No state, no URL params - go to home page
+                    console.log('🏠 No surah parameter, showing homepage');
                     showHomePage();
                 }
             }
