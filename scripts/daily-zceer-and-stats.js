@@ -258,7 +258,6 @@ async function sendDailyReport() {
 
     try {
         const stats = await getDailyStats();
-        const zceerList = getRandomZceer(3);
 
         // Daily Stats Embed
         const statsEmbed = {
@@ -304,34 +303,6 @@ async function sendDailyReport() {
             timestamp: new Date().toISOString()
         };
 
-        // Zceer Embeds (Arabic only)
-        const zceerEmbeds = zceerList.map((zceer, index) => ({
-            title: `${['🌙', '✨', '💫'][index]} Daily Dhikr ${index + 1} - ${zceer.category}`,
-            description: `\n**${zceer.arabic}**\n\n`,
-            color: [0x00FF00, 0xFFD700, 0x1ABC9C][index],
-            fields: [
-                {
-                    name: '📝 Transliteration',
-                    value: zceer.transliteration,
-                    inline: false
-                },
-                {
-                    name: '🇬🇧 Translation',
-                    value: zceer.english,
-                    inline: false
-                },
-                {
-                    name: '🎁 Benefit',
-                    value: zceer.benefit,
-                    inline: false
-                }
-            ],
-            footer: {
-                text: 'Daily Dhikr from Tafsir Kurd',
-                icon_url: 'https://tafsirkurd.com/logo192.png'
-            }
-        }));
-
         // Send Stats to Stats Channel
         if (DISCORD_WEBHOOK_STATS) {
             await sendDiscordWebhook(DISCORD_WEBHOOK_STATS, {
@@ -342,18 +313,7 @@ async function sendDailyReport() {
             console.log('✅ Stats sent to stats channel!');
         }
 
-        // Send Zceer to Zceer Channel
-        if (DISCORD_WEBHOOK_ZCEER) {
-            await sendDiscordWebhook(DISCORD_WEBHOOK_ZCEER, {
-                username: 'Daily Zceer',
-                avatar_url: 'https://tafsirkurd.com/logo512.png',
-                embeds: zceerEmbeds
-            });
-            console.log('✅ Zceer sent to zceer channel!');
-        }
-
-        console.log(`📊 Stats: ${stats.totalUsers} total users, ${stats.todayUsers} new today`);
-        console.log(`🌙 Sent 3 Dhikr: ${zceerList.map(z => z.category).join(', ')}\n`);
+        console.log(`📊 Stats: ${stats.totalUsers} total users, ${stats.todayUsers} new today\n`);
 
     } catch (error) {
         console.error('❌ Error sending daily report:', error.message);

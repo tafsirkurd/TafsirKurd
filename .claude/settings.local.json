@@ -73,7 +73,12 @@
       "Bash(git checkout:*)",
       "WebFetch(domain:qul.tarteel.ai)",
       "Bash(git restore:*)",
-      "WebFetch(domain:tafsir.app)"
+      "WebFetch(domain:tafsir.app)",
+      "Bash(run-daily-report.bat)",
+      "Bash(cmd /c \"C:\\TafsirKurd\\run-daily-report.bat\")",
+      "Bash(set DISCORD_WEBHOOK_STATS=https://discord.com/api/webhooks/1450630296943857727/dHv-ipJ4IwUx6N8QdDPkumd54VEWID_1hLOL11sTy4v9UOVMu-SasqW9JH6iPdrNMbcd:*)",
+      "Bash(set:*)",
+      "Bash(set SUPABASE_URL=https://nvwgepkhzobgwnzibpvq.supabase.co)"
     ],
     "deny": [],
     "ask": []
