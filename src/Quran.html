@@ -1632,65 +1632,6 @@
             padding: 0 30px;
         }
 
-        .surah-list-title {
-            font-size: 2.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary) 0%, #2563eb 50%, var(--primary) 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-align: center;
-            margin-bottom: 40px;
-            position: relative;
-            padding-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        .surah-list-title::before {
-            content: '📖';
-            font-size: 2.2rem;
-            animation: pulse 2s ease-in-out infinite;
-            filter: drop-shadow(0 2px 8px rgba(59, 130, 246, 0.3));
-        }
-
-        .surah-list-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 120px;
-            height: 4px;
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            border-radius: 2px;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1.1);
-                opacity: 0.8;
-            }
-        }
-
-        /* Dark mode enhancements */
-        [data-theme="dark"] .surah-list-title {
-            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #60a5fa 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        [data-theme="dark"] .surah-list-title::before {
-            filter: drop-shadow(0 2px 12px rgba(96, 165, 250, 0.4));
-        }
-
         /* Filter and Sort Controls */
         .filter-sort-controls {
             display: flex;
@@ -3533,21 +3474,6 @@
                 padding: 0 10px;
             }
 
-            .surah-list-title {
-                font-size: 1.5rem;
-                gap: 10px;
-                margin-bottom: 30px;
-            }
-
-            .surah-list-title::before {
-                font-size: 1.3rem;
-            }
-
-            .surah-list-title::after {
-                width: 80px;
-                height: 3px;
-            }
-
             .surah-grid {
                 grid-template-columns: 1fr;
                 justify-items: center;
@@ -4724,11 +4650,6 @@
 
             <!-- Surah List Section - ALL 114 SURAHS -->
             <section class="surah-list-container" id="surahListSection">
-                <h2 class="surah-list-title">
-                    <i class="fas fa-book-open"></i>
-                    هەمی سوڕەتێن قورئانێ
-                </h2>
-
                 <!-- Filter and Sort Controls -->
                 <div class="filter-sort-controls">
                     <div class="filter-group">
