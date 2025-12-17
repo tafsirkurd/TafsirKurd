@@ -9385,6 +9385,13 @@
             // Track Geographic Visit
             async function trackGeoVisit() {
                 try {
+                    // Don't track logged-in users (only track real visitors)
+                    const userData = localStorage.getItem('userData');
+                    if (userData) {
+                        console.log('⏭️ Skipping visitor tracking - user is logged in');
+                        return;
+                    }
+
                     // Check if already tracked in this session
                     const lastTracked = sessionStorage.getItem('geo_tracked_time');
                     const now = Date.now();
