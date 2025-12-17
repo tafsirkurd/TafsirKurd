@@ -20,7 +20,7 @@ https://discord.com/api/webhooks/1450631760147779767/t08tzCCtcMbz2_r8BN2VIwSV4yr
 Sends:
 - 🌙 Simple Arabic Zceer (just Arabic text, nothing else)
 - 🎲 At random times throughout the day
-- 📿 One at a time, 20 different dhikr to choose from
+- 📿 One at a time, 615+ different dhikr to choose from
 
 ---
 

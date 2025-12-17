@@ -7,18 +7,24 @@ Get random Arabic Zceer (dhikr) throughout the day at random times!
 - **Simple Arabic text only** - No translations, no benefits, just pure Arabic
 - **Random times** - Not at specific times, but spread throughout the day
 - **One at a time** - Not 3 together, just one random zceer
-- **20 different dhikr** - From different categories, randomly selected
+- **615+ different dhikr** - Huge collection from different categories, randomly selected
 
 ---
 
 ## How It Works:
 
-The script will send ONE random Arabic zceer from this collection:
+The script will send ONE random Arabic zceer from a huge collection of 615+ dhikr including:
 
-1. سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ سُبْحَانَ اللّٰهِ الْعَظِيمِ
-2. لَا إِلٰهَ إِلَّا اللّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ...
-3. اَللّٰهُمَّ صَلِّ عَلٰى مُحَمَّدٍ وَعَلٰى آلِ مُحَمَّدٍ...
-4. And 17 more beautiful dhikr
+**Categories include:**
+- Tasbih (SubhanAllah - 50+ variations)
+- Tahlil & Tawhid (La ilaha illa Allah - 50+ variations)
+- Hamd (Alhamdulillah - 50+ variations)
+- Takbir (Allahu Akbar - 50+ variations)
+- Salawat (Prayers upon the Prophet - 50+ variations)
+- Istighfar (Seeking forgiveness - 50+ variations)
+- Duas & Supplications (300+ variations)
+- Quranic Duas (50+ from the Quran)
+- And many more authentic dhikr from Sunnah
 
 ---
 
