@@ -12,10 +12,23 @@ exports.handler = async (event, context) => {
     try {
         const { type, title, message, details, data } = JSON.parse(event.body);
 
-        // Get Discord webhook URL from environment variables
-        const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
+        // Get Discord webhook URL based on notification type
+        let webhookURL;
 
-        if (!DISCORD_WEBHOOK_URL) {
+        // Use separate webhook for messages
+        if (type === 'new_message' || type === 'contact') {
+            webhookURL = process.env.DISCORD_WEBHOOK_MESSAGES || process.env.DISCORD_WEBHOOK_URL;
+        }
+        // Use separate webhook for visitors
+        else if (type === 'visitor' || type === 'page_view') {
+            webhookURL = process.env.DISCORD_WEBHOOK_VISITORS || process.env.DISCORD_WEBHOOK_URL;
+        }
+        // Default to stats webhook
+        else {
+            webhookURL = process.env.DISCORD_WEBHOOK_URL;
+        }
+
+        if (!webhookURL) {
             console.error('Missing Discord webhook URL');
             return {
                 statusCode: 500,
@@ -24,19 +37,26 @@ exports.handler = async (event, context) => {
         }
 
         // Parse webhook URL to get host and path
-        const webhookUrl = new URL(DISCORD_WEBHOOK_URL);
+        const webhookUrl = new URL(webhookURL);
 
         // Determine embed color based on notification type
         const embedColors = {
-            'new_user': 0x00FF00,      // Green
-            'user_login': 0x0099FF,    // Blue
-            'contact': 0xFF9900,       // Orange
-            'completion': 0xFFD700,    // Gold
-            'daily': 0x9966FF,         // Purple
-            'reading': 0x00FFFF,       // Cyan
-            'goal': 0xFF1493,          // Pink
-            'region': 0x32CD32,        // Lime Green
-            'default': 0x5865F2        // Discord Blurple
+            'new_user': 0x00FF00,       // Green
+            'user_login': 0x0099FF,     // Blue
+            'contact': 0xFF6B6B,        // Red (Messages)
+            'new_message': 0xFF6B6B,    // Red (Messages)
+            'visitor': 0x4ECDC4,        // Teal (Visitors)
+            'page_view': 0x4ECDC4,      // Teal (Visitors)
+            'duhok_visitor': 0xFFA500,  // Orange (Duhok visitors)
+            'completion': 0xFFD700,     // Gold
+            'daily': 0x9966FF,          // Purple
+            'reading': 0x00FFFF,        // Cyan
+            'goal': 0xFF1493,           // Pink
+            'region': 0x32CD32,         // Lime Green
+            'duhok_user': 0xFFA500,     // Orange (Duhok users)
+            'milestone': 0xFF69B4,      // Hot Pink
+            'quran_complete': 0xFFD700, // Gold
+            'default': 0x5865F2         // Discord Blurple
         };
 
         const color = embedColors[type] || embedColors['default'];

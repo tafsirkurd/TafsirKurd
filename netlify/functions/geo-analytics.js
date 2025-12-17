@@ -319,6 +319,30 @@ exports.handler = async (event, context) => {
 
             console.log('💾 Visit saved successfully');
 
+            // Send Discord notification for visitor (don't await, run async)
+            const isDuhok = geoData.city.toLowerCase().includes('duhok') ||
+                           geoData.city.toLowerCase().includes('dihok') ||
+                           geoData.region.toLowerCase().includes('duhok') ||
+                           geoData.region.toLowerCase().includes('dihok');
+
+            fetch('https://tafsirkurd.com/.netlify/functions/discord-notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: isDuhok ? 'duhok_visitor' : 'visitor',
+                    title: isDuhok ? '📍 New Visitor from Duhok!' : '👋 New Website Visitor',
+                    message: `Someone from ${geoData.city}, ${geoData.country} visited the site`,
+                    details: `Page: ${body.page_url || '/'}`,
+                    data: {
+                        city: geoData.city,
+                        region: geoData.region,
+                        country: geoData.country,
+                        page: body.page_url || '/',
+                        referrer: body.referrer || 'Direct'
+                    }
+                })
+            }).catch(err => console.error('Notification error:', err));
+
             return {
                 statusCode: 200,
                 headers,
