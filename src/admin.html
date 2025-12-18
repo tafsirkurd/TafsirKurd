@@ -4439,9 +4439,36 @@
 
         async function initSupabase() {
             try {
+                // Wait for Supabase library to load (it's deferred)
+                if (!window.supabase) {
+                    console.log('⏳ Waiting for Supabase library to load...');
+                    await new Promise((resolve) => {
+                        const checkInterval = setInterval(() => {
+                            if (window.supabase) {
+                                clearInterval(checkInterval);
+                                resolve();
+                            }
+                        }, 100);
+                        // Timeout after 10 seconds
+                        setTimeout(() => {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }, 10000);
+                    });
+                }
+
+                if (!window.supabase) {
+                    throw new Error('Supabase library failed to load');
+                }
+
                 const response = await fetch('/.netlify/functions/config');
                 if (!response.ok) throw new Error('Failed to fetch config');
                 const config = await response.json();
+
+                if (!config.supabaseUrl || !config.supabaseKey) {
+                    throw new Error('Invalid config received from server');
+                }
+
                 supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
                 console.log('✅ Supabase initialized securely');
                 return true;
