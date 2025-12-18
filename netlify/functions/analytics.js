@@ -8,7 +8,8 @@ const {
 } = require('./utils/security');
 
 exports.handler = async (event, context) => {
-    const headers = getSecureHeaders('*');
+    const requestOrigin = event.headers.origin || event.headers.referer;
+    const headers = getSecureHeaders(requestOrigin);
 
     if (event.httpMethod === 'OPTIONS') {
         return { statusCode: 200, headers, body: '' };

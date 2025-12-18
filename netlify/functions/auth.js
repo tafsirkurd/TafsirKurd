@@ -10,10 +10,15 @@ const {
     detectSQLInjection,
     validateBodySize
 } = require('./utils/security');
+const {
+    comparePassword,
+    generateSession
+} = require('./utils/auth-utils');
 
 exports.handler = async (event, context) => {
-    // Set secure CORS headers
-    const headers = getSecureHeaders('*');
+    // Set secure CORS headers with origin validation
+    const requestOrigin = event.headers.origin || event.headers.referer;
+    const headers = getSecureHeaders(requestOrigin);
 
     // Handle preflight requests
     if (event.httpMethod === 'OPTIONS') {
@@ -52,23 +57,15 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        console.log('Environment variables check:', {
-            hasSupabaseUrl: !!process.env.SUPABASE_URL,
-            hasSupabaseAnonKey: !!process.env.SUPABASE_ANON_KEY,
-            hasAdminEmail: !!process.env.ADMIN_EMAIL,
-            hasAdminPassword: !!process.env.ADMIN_PASSWORD,
-            supabaseUrlPrefix: process.env.SUPABASE_URL?.substring(0, 30)
-        });
-
         // Check environment variables
         if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-            console.error("Missing Supabase environment variables");
+            logSecurityEvent(event, 'Missing Supabase environment variables', 'error');
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({ 
-                    success: false, 
-                    message: 'Server configuration error - missing Supabase config' 
+                body: JSON.stringify({
+                    success: false,
+                    message: 'Server configuration error'
                 }),
             };
         }
@@ -112,23 +109,8 @@ exports.handler = async (event, context) => {
                     };
                 }
             } catch (supabaseError) {
-                console.log('Supabase token validation failed:', supabaseError.message);
-            }
-
-            // Fallback: check if it's a simple JWT with admin credentials
-            // This is a simplified check - in production, use proper JWT validation
-            if (token === 'admin-session-token') {
-                return {
-                    statusCode: 200,
-                    headers,
-                    body: JSON.stringify({ 
-                        success: true, 
-                        user: {
-                            id: 'admin',
-                            email: process.env.ADMIN_EMAIL || 'admin@tafsirkurd.com'
-                        }
-                    })
-                };
+                // Supabase validation failed, token is invalid
+                logSecurityEvent(event, 'Invalid token validation attempt', 'warning');
             }
 
             return {
@@ -203,58 +185,15 @@ exports.handler = async (event, context) => {
                 };
             }
 
-            // Check against environment variables first (fallback authentication)
-            if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
-                if (trimmedEmail === process.env.ADMIN_EMAIL && trimmedPassword === process.env.ADMIN_PASSWORD) {
-                    console.log('Environment variable auth successful');
-                    return {
-                        statusCode: 200,
-                        headers,
-                        body: JSON.stringify({
-                            success: true,
-                            user: {
-                                id: 'admin',
-                                email: trimmedEmail
-                            },
-                            token: 'admin-session-token',
-                            expires: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
-                        })
-                    };
-                }
-            }
-
             // Try Supabase authentication
-            console.log('Attempting Supabase auth for:', trimmedEmail);
-            
             const { data, error } = await supabase.auth.signInWithPassword({
                 email: trimmedEmail,
                 password: trimmedPassword,
             });
 
             if (error) {
-                console.error('Supabase auth error:', {
-                    message: error.message,
-                    status: error.status,
-                    code: error.code
-                });
-
-                // Check if this matches the hardcoded credentials as final fallback
-                if (trimmedEmail === 'admin@tafsirkurd.com' && trimmedPassword === 'TafsirKurd2024!') {
-                    console.log('Using hardcoded fallback credentials');
-                    return {
-                        statusCode: 200,
-                        headers,
-                        body: JSON.stringify({
-                            success: true,
-                            user: {
-                                id: 'admin-fallback',
-                                email: trimmedEmail
-                            },
-                            token: 'admin-session-token',
-                            expires: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
-                        })
-                    };
-                }
+                // Log failed auth attempt for security monitoring
+                logSecurityEvent(event, `Failed login attempt for ${trimmedEmail}`, 'warning');
 
                 let clientMessage = 'Authentication failed';
                 if (error.message.includes('Invalid login credentials')) {

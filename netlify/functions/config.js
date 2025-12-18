@@ -7,8 +7,9 @@ const {
 } = require('./utils/security');
 
 exports.handler = async (event, context) => {
-    // Set CORS headers for all responses
-    const headers = getSecureHeaders('*');
+    // Set CORS headers with origin validation
+    const requestOrigin = event.headers.origin || event.headers.referer;
+    const headers = getSecureHeaders(requestOrigin);
 
     // Handle preflight OPTIONS request
     if (event.httpMethod === 'OPTIONS') {
