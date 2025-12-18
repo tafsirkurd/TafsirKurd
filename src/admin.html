@@ -6574,6 +6574,7 @@
                     return;
                 }
 
+                await ensureSupabase();
                 const { data, error} = await supabase
                     .from('contact_messages')
                     .select('*')
@@ -7119,6 +7120,7 @@
                     return;
                 }
 
+                await ensureSupabase();
                 // Optimized query: order by created_at DESC for faster queries with index
                 const { data, error } = await supabase
                     .from('user_data')
