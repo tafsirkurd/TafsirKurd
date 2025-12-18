@@ -15,11 +15,16 @@ set SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
 set SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY_HERE
 
 REM Discord Webhook URLs
-set DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_STATS_WEBHOOK
+REM General notifications channel (for stats, visitors, etc.)
+set DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_NOTIFICATIONS_WEBHOOK
+set DISCORD_WEBHOOK_VISITORS=https://discord.com/api/webhooks/YOUR_NOTIFICATIONS_WEBHOOK
+set DISCORD_WEBHOOK_STATS=https://discord.com/api/webhooks/YOUR_NOTIFICATIONS_WEBHOOK
+REM Member signups channel
+set DISCORD_WEBHOOK_MEMBERS=https://discord.com/api/webhooks/YOUR_MEMBERS_WEBHOOK
+REM Contact messages channel
 set DISCORD_WEBHOOK_MESSAGES=https://discord.com/api/webhooks/YOUR_MESSAGES_WEBHOOK
-set DISCORD_WEBHOOK_VISITORS=https://discord.com/api/webhooks/YOUR_VISITORS_WEBHOOK
+REM Zceer (dhikr) channel
 set DISCORD_WEBHOOK_ZCEER=https://discord.com/api/webhooks/YOUR_ZCEER_WEBHOOK
-set DISCORD_WEBHOOK_STATS=https://discord.com/api/webhooks/YOUR_STATS_WEBHOOK
 
 REM ========================================
 REM HOW TO GET THESE VALUES:
