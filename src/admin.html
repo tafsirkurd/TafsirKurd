@@ -4451,6 +4451,18 @@
             }
         }
 
+        // Helper function to ensure Supabase is initialized
+        async function ensureSupabase() {
+            if (!supabase) {
+                console.warn('⚠️ Supabase not initialized, initializing now...');
+                await initSupabase();
+            }
+            if (!supabase) {
+                throw new Error('Failed to initialize Supabase. Please refresh the page.');
+            }
+            return supabase;
+        }
+
         // Global data storage
         let allUsers = [];
         let allMessages = [];
@@ -6752,6 +6764,7 @@
 
         async function toggleMessageStatus(id, currentStatus, forceRead = false) {
             try {
+                await ensureSupabase();
                 const newStatus = forceRead ? 'read' : (currentStatus === 'read' ? 'unread' : 'read');
                 const { error } = await supabase.from('contact_messages').update({ status: newStatus }).eq('id', id);
                 if (error) throw error;
@@ -6759,20 +6772,21 @@
                 await loadDashboardData();
             } catch (error) {
                 console.error('Error toggling status:', error);
-                if (!forceRead) alert('Error updating status');
+                if (!forceRead) alert('Error updating status: ' + error.message);
             }
         }
 
         async function deleteMessage(id) {
             if (!confirm('Delete this message?')) return;
             try {
+                await ensureSupabase();
                 const { error } = await supabase.from('contact_messages').delete().eq('id', id);
                 if (error) throw error;
                 await loadMessages();
                 await loadDashboardData();
             } catch (error) {
                 console.error('Error deleting message:', error);
-                alert('Error deleting message');
+                alert('Error deleting message: ' + error.message);
             }
         }
 
@@ -6782,6 +6796,7 @@
             container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading videos...</div></div>';
 
             try {
+                await ensureSupabase();
                 const { data, error } = await supabase.from('featured_videos').select('*').order('position', { ascending: true });
                 if (error) throw error;
 
@@ -6924,6 +6939,7 @@
             }
 
             try {
+                await ensureSupabase();
                 // Get ALL videos with their positions and IDs
                 const { data: videos, error: fetchError } = await supabase
                     .from('featured_videos')
@@ -6990,6 +7006,7 @@
         async function deleteVideo(id) {
             if (!confirm('Delete this video?')) return;
             try {
+                await ensureSupabase();
                 const { error } = await supabase.from('featured_videos').delete().eq('id', id);
                 if (error) throw error;
                 await loadVideos();
@@ -7031,6 +7048,7 @@
             }
 
             try {
+                await ensureSupabase();
                 // Check if another video already has this position
                 const { data: existingVideo } = await supabase
                     .from('featured_videos')
@@ -7438,6 +7456,7 @@
         async function deleteUser(id) {
             if (!confirm('Delete this user? This cannot be undone.')) return;
             try {
+                await ensureSupabase();
                 const { error } = await supabase.from('user_data').delete().eq('id', id);
                 if (error) throw error;
                 await loadUsers();
@@ -7919,6 +7938,7 @@
 
         async function backupTable(tableName) {
             try {
+                await ensureSupabase();
                 const { data, error } = await supabase.from(tableName).select('*');
                 if (error) throw error;
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -7946,6 +7966,7 @@
 
         async function backupAllTables() {
             try {
+                await ensureSupabase();
                 const tables = ['user_data', 'featured_videos', 'contact_messages'];
                 const allData = {};
                 for (const table of tables) {
