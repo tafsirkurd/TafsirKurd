@@ -34,8 +34,11 @@
     "homepage": "https://tafsirkurd.com",
     "dependencies": {
         "@supabase/supabase-js": "^2.55.0",
+        "@upstash/redis": "^1.35.8",
         "bcrypt": "^6.0.0",
+        "dompurify": "^3.3.1",
         "googleapis": "^140.0.0",
+        "isomorphic-dompurify": "^2.34.0",
         "jsonwebtoken": "^9.0.2",
         "tweetnacl": "^1.0.3"
     },

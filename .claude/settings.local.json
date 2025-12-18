@@ -86,7 +86,10 @@
       "Bash(netlify link:*)",
       "Bash(call config.bat)",
       "Bash(cmd /c \"call config.bat && node scripts\\random-zceer.js\")",
-      "Bash(cmd /c test-zceer.bat)"
+      "Bash(cmd /c test-zceer.bat)",
+      "Bash(netlify status:*)",
+      "Bash(netlify env:set:*)",
+      "Bash(netlify env:list:*)"
     ],
     "deny": [],
     "ask": []

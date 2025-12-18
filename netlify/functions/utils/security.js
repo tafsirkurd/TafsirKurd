@@ -1,20 +1,58 @@
 // Security utilities for serverless functions
 // Implements rate limiting, input validation, and security headers
 
-// In-memory rate limiting store (for serverless, consider using Redis for production)
+const { Redis } = require('@upstash/redis');
+
+// Initialize Redis client (Upstash Redis for serverless)
+let redis = null;
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    redis = new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+}
+
+// Fallback: In-memory rate limiting store (only if Redis not configured)
 const rateLimitStore = new Map();
 
 /**
- * Rate limiter middleware
+ * Rate limiter middleware - Redis-based for serverless
  * @param {string} identifier - Usually IP address or user ID
  * @param {number} maxRequests - Maximum requests allowed
  * @param {number} windowMs - Time window in milliseconds
- * @returns {boolean} - Returns true if rate limit exceeded
+ * @returns {Promise<boolean>} - Returns true if rate limit exceeded
  */
-function checkRateLimit(identifier, maxRequests = 100, windowMs = 60000) {
+async function checkRateLimit(identifier, maxRequests = 100, windowMs = 60000) {
+    const key = `ratelimit:${identifier}`;
     const now = Date.now();
-    const key = `${identifier}`;
 
+    // Use Redis if available (production)
+    if (redis) {
+        try {
+            const current = await redis.get(key);
+
+            if (!current) {
+                // First request, set count to 1 with expiry
+                await redis.set(key, 1, { px: windowMs });
+                return false;
+            }
+
+            const count = parseInt(current, 10);
+
+            if (count >= maxRequests) {
+                return true; // Rate limit exceeded
+            }
+
+            // Increment counter
+            await redis.incr(key);
+            return false;
+        } catch (error) {
+            console.error('Redis rate limit error:', error);
+            // Fall back to in-memory on Redis error
+        }
+    }
+
+    // Fallback: In-memory rate limiting (development only)
     if (!rateLimitStore.has(key)) {
         rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
         return false;
@@ -40,7 +78,7 @@ function checkRateLimit(identifier, maxRequests = 100, windowMs = 60000) {
 }
 
 /**
- * Clean up old rate limit entries (should be called periodically)
+ * Clean up old rate limit entries (only for in-memory fallback)
  */
 function cleanupRateLimitStore() {
     const now = Date.now();
@@ -51,8 +89,10 @@ function cleanupRateLimitStore() {
     }
 }
 
-// Clean up every 5 minutes
-setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
+// Clean up every 5 minutes (only for in-memory fallback)
+if (!redis) {
+    setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
+}
 
 /**
  * Get client IP address from event

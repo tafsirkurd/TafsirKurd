@@ -31,7 +31,7 @@ exports.handler = async (event, context) => {
 
     // Rate limiting - 50 requests per minute per IP
     const clientIP = getClientIP(event);
-    if (checkRateLimit(clientIP, 50, 60000)) {
+    if (await checkRateLimit(clientIP, 50, 60000)) {
         logSecurityEvent(event, 'Config rate limit exceeded', 'warning');
         return {
             statusCode: 429,

@@ -1,0 +1,872 @@
+{
+  "timestamp": "2025-12-18T08:55:15.631Z",
+  "totalVulnerabilities": 122,
+  "byRisk": {
+    "critical": 0,
+    "high": 0,
+    "medium": 1,
+    "low": 121
+  },
+  "details": {
+    "CRITICAL": [],
+    "HIGH": [],
+    "MEDIUM": [
+      {
+        "file": "src/admin.html",
+        "line": 8769,
+        "code": "preview.innerHTML = `<i class=\"${iconClass}\"></i>`;",
+        "pattern": "innerHTML assignment",
+        "risk": "MEDIUM"
+      }
+    ],
+    "LOW": [
+      {
+        "file": "src/admin.html",
+        "line": 4509,
+        "code": "this.innerHTML = '👁️‍🗨️'; // Eye with line (hidden)",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 4512,
+        "code": "this.innerHTML = '👁️'; // Eye (visible)",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 5055,
+        "code": "container.innerHTML = pages.map((page, index) => `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 5359,
+        "code": "listContainer.innerHTML = adminNotifications.map((notif, index) => `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 5541,
+        "code": "container.innerHTML = '<div class=\"empty-state\"><div class=\"empty-icon\">📊</div><div class=\"empty-te",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 5549,
+        "code": "container.innerHTML = activity.slice(0, 10).map(item => `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 5563,
+        "code": "container.innerHTML = '<div class=\"empty-state\"><div class=\"empty-text\" style=\"color: var(--danger);",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 5727,
+        "code": "container.innerHTML = Object.entries(botTypes)",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 5751,
+        "code": "container.innerHTML = '<p style=\"text-align: center; color: #999; padding: 20px;\">No bot activity in",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 5755,
+        "code": "container.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 5794,
+        "code": "container.innerHTML = '<p style=\"text-align: center; color: #999; padding: 20px;\">No bot logs found<",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 5798,
+        "code": "container.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 5964,
+        "code": "countriesBody.innerHTML = '<tr><td colspan=\"4\" style=\"text-align: center; padding: 20px; color: #999",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 5967,
+        "code": "countriesBody.innerHTML = validCountries.slice(0, 10).map((country, index) => {",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 5996,
+        "code": "regionsBody.innerHTML = '<tr><td colspan=\"4\" style=\"text-align: center; padding: 20px; color: #999; ",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 5998,
+        "code": "regionsBody.innerHTML = validRegions.slice(0, 10).map((region, index) => `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6013,
+        "code": "citiesBody.innerHTML = '<tr><td colspan=\"4\" style=\"text-align: center; padding: 20px; color: #999; f",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6018,
+        "code": "citiesBody.innerHTML = validCities.slice(0, 15).map((city, index) => {",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6083,
+        "code": "tbody.innerHTML = `<tr><td colspan=\"6\" style=\"text-align: center; padding: 40px; color: #e74c3c;\">",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6090,
+        "code": "tbody.innerHTML = `<tr><td colspan=\"6\" style=\"text-align: center; padding: 40px;\">",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6101,
+        "code": "tbody.innerHTML = users.map((user, index) => {",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6125,
+        "code": "tbody.innerHTML = `<tr><td colspan=\"6\" style=\"text-align: center; padding: 40px; color: #e74c3c;\">",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6182,
+        "code": "detailsContainer.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6553,
+        "code": "container.innerHTML = '<div class=\"loading\"><div class=\"loading-spinner\"></div><div class=\"loading-t",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6579,
+        "code": "container.innerHTML = '<div class=\"empty-state\"><div class=\"empty-text\" style=\"color: var(--danger);",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6619,
+        "code": "container.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6688,
+        "code": "container.innerHTML = '<div class=\"empty-state\"><div class=\"empty-icon\">📧</div><div class=\"empty-te",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6692,
+        "code": "container.innerHTML = filtered.map(msg => `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6782,
+        "code": "container.innerHTML = '<div class=\"loading\"><div class=\"loading-spinner\"></div><div class=\"loading-t",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6792,
+        "code": "container.innerHTML = '<div class=\"empty-state\"><div class=\"empty-icon\">🎥</div><div class=\"empty-te",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6796,
+        "code": "container.innerHTML = allVideos.map((video, index) => `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6815,
+        "code": "container.innerHTML = '<div class=\"empty-state\"><div class=\"empty-text\" style=\"color: var(--danger);",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 6855,
+        "code": "container.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 7091,
+        "code": "container.innerHTML = '<div class=\"loading\"><div class=\"loading-spinner\"></div><div class=\"loading-t",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 7189,
+        "code": "container.innerHTML = '<div class=\"empty-state\"><div class=\"empty-text\" style=\"color: var(--danger);",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 7219,
+        "code": "container.innerHTML = '<div class=\"empty-state\"><div class=\"empty-icon\">👥</div><div class=\"empty-te",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 7223,
+        "code": "container.innerHTML = filtered.map((user) => {",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 7556,
+        "code": "container.innerHTML = '<div class=\"empty-state\"><div class=\"empty-icon\">📖</div><div class=\"empty-te",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 7560,
+        "code": "container.innerHTML = topReaders.map((user, index) => {",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 7633,
+        "code": "container.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 7789,
+        "code": "container.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 7799,
+        "code": "container.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 7860,
+        "code": "container.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 8072,
+        "code": "document.getElementById('socialStatsEditor').innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 8093,
+        "code": "container.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 8273,
+        "code": "messageDiv.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 8298,
+        "code": "messageDiv.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 8707,
+        "code": "dropdown.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 8723,
+        "code": "grid.innerHTML = '';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 8733,
+        "code": "item.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 8825,
+        "code": "document.getElementById('featuresEditor').innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 8837,
+        "code": "container.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 8980,
+        "code": "messageDiv.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 8994,
+        "code": "messageDiv.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9029,
+        "code": "document.getElementById('scheduleEditor').innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9041,
+        "code": "container.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9206,
+        "code": "messageDiv.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9220,
+        "code": "messageDiv.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9262,
+        "code": "document.getElementById('translationsEditor').innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9295,
+        "code": "container.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9340,
+        "code": "container.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9452,
+        "code": "saveBtn.innerHTML = '⏳ Saving...';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9489,
+        "code": "saveBtn.innerHTML = '✅ Saved!';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9492,
+        "code": "saveBtn.innerHTML = originalText;",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9499,
+        "code": "saveBtn.innerHTML = '❌ Error';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9502,
+        "code": "saveBtn.innerHTML = originalText;",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9558,
+        "code": "messageDiv.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9573,
+        "code": "messageDiv.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9682,
+        "code": "content.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 9877,
+        "code": "modal.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 10135,
+        "code": "modal.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 10518,
+        "code": "notification.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 10535,
+        "code": "content.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 10780,
+        "code": "document.getElementById('emailSendingResult').innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11037,
+        "code": "historyTable.innerHTML = '<tr><td colspan=\"6\" style=\"text-align: center; padding: 30px; color: #999;",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11039,
+        "code": "historyTable.innerHTML = filteredEvents.map(event => {",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11215,
+        "code": "countriesTableBody.innerHTML = data.countries.map((country, index) => {",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11253,
+        "code": "countriesTableBody.innerHTML = '<div style=\"text-align: center; padding: 40px; color: #f44336;\"><div",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11256,
+        "code": "countriesTableBody.innerHTML = '<div style=\"text-align: center; padding: 40px; color: #999;\"><div st",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11270,
+        "code": "devicesTableBody.innerHTML = data.devices.map(device => {",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11309,
+        "code": "devicesTableBody.innerHTML = '<div style=\"text-align: center; padding: 40px; color: #999;\"><div styl",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11319,
+        "code": "queriesTable.innerHTML = data.queries.map((query, index) => {",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11343,
+        "code": "queriesTable.innerHTML = '<tr><td colspan=\"5\" style=\"text-align: center; padding: 40px;\"><div style=",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11353,
+        "code": "pagesTable.innerHTML = data.pages.map((page, index) => {",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11385,
+        "code": "pagesTable.innerHTML = '<tr><td colspan=\"5\" style=\"text-align: center; padding: 40px; color: #f44336",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11388,
+        "code": "pagesTable.innerHTML = '<tr><td colspan=\"5\" style=\"text-align: center; padding: 40px;\"><div style=\"c",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11693,
+        "code": "tbody.innerHTML = '';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11730,
+        "code": "grid.innerHTML = '<div style=\"grid-column: 1/-1; text-align: center; padding: 40px; color: #999;\">Lo",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11743,
+        "code": "grid.innerHTML = `<div style=\"grid-column: 1/-1; text-align: center; padding: 60px;\">",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11751,
+        "code": "grid.innerHTML = data.map((img, index) => `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 11777,
+        "code": "grid.innerHTML = `<div style=\"grid-column: 1/-1; text-align: center; padding: 40px; color: #ff4444;\"",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 12014,
+        "code": "container.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 12030,
+        "code": "container.innerHTML = Object.entries(grouped).map(([date, dateEvents]) => `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 12568,
+        "code": "toast.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/admin.html",
+        "line": 12632,
+        "code": "document.getElementById('activityTimeline').innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 5399,
+        "code": "document.getElementById('authSection').innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 5429,
+        "code": "document.getElementById('authSection').innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6142,
+        "code": "container.innerHTML = '<div style=\"text-align: center; padding: 40px; color: var(--text-muted);\"><i ",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6146,
+        "code": "container.innerHTML = '';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6167,
+        "code": "card.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6209,
+        "code": "header.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6235,
+        "code": "surahRow.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6258,
+        "code": "container.innerHTML = '';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6275,
+        "code": "item.innerHTML = surahContent;",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6316,
+        "code": "container.innerHTML = '';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6337,
+        "code": "juzItem.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6369,
+        "code": "surahItem.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6591,
+        "code": "container.innerHTML = '<div style=\"text-align: center; padding: 40px;\"><i class=\"fas fa-spinner fa-s",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6595,
+        "code": "container.innerHTML = '<p style=\"text-align: center; padding: 40px;\">زانیاری بەردەست نینە</p>';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6600,
+        "code": "container.innerHTML = '';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6619,
+        "code": "surahHeaderDiv.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6653,
+        "code": "ayahDiv.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6873,
+        "code": "container.innerHTML = '<div style=\"text-align: center; padding: 40px;\"><i class=\"fas fa-spinner fa-s",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6876,
+        "code": "container.innerHTML = '<p style=\"text-align: center; padding: 40px;\">زانیاری بەردەست نینە</p>';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6881,
+        "code": "container.innerHTML = '';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 6910,
+        "code": "ayahDiv.innerHTML = `",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 7619,
+        "code": "dropdown.innerHTML = '<div class=\"search-no-results\">چ ژ ئەنجامان نەهاتە دیتن</div>';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 7641,
+        "code": "dropdown.innerHTML = resultsHTML;",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 7649,
+        "code": "dropdown.innerHTML = '';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 10089,
+        "code": "container.innerHTML = '';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      },
+      {
+        "file": "src/Quran.html",
+        "line": 10224,
+        "code": "select.innerHTML = '';",
+        "pattern": "innerHTML assignment",
+        "risk": "LOW"
+      }
+    ]
+  }
+}
