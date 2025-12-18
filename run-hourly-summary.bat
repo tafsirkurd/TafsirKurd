@@ -1,6 +1,14 @@
 @echo off
 cd /d C:\TafsirKurd
-set DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1450630296943857727/dHv-ipJ4IwUx6N8QdDPkumd54VEWID_1hLOL11sTy4v9UOVMu-SasqW9JH6iPdrNMbcd
-set SUPABASE_URL=https://nvwgepkhzobgwnzibpvq.supabase.co
-set SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d2dlcGtoemJvZ3due2licHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMxNTUwMjIsImV4cCI6MjA0ODczMTAyMn0.FW_a9X7sWZNe8yh0ykf9MNwxIgxsxUGBj3XjfIqYYlY
+
+REM Load environment variables from config.bat
+if exist config.bat (
+    call config.bat
+) else (
+    echo ERROR: config.bat not found!
+    echo Please copy config.bat.example to config.bat and fill in your credentials
+    pause
+    exit /b 1
+)
+
 node scripts/hourly-activity-summary.js

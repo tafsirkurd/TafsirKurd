@@ -1,4 +1,14 @@
 @echo off
 cd /d C:\TafsirKurd
-set DISCORD_WEBHOOK_ZCEER=https://discord.com/api/webhooks/1450631760147779767/t08tzCCtcMbz2_r8BN2VIwSV4yreuNUrUS5xJMmxNs9Akx_IKov-EsR_14Y4qhXxX2Yb
+
+REM Load environment variables from config.bat
+if exist config.bat (
+    call config.bat
+) else (
+    echo ERROR: config.bat not found!
+    echo Please copy config.bat.example to config.bat and fill in your credentials
+    pause
+    exit /b 1
+)
+
 node scripts/random-zceer.js
