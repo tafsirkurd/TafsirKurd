@@ -11744,6 +11744,7 @@ ${htmlParagraphs}
             grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">Loading...</div>';
 
             try {
+                await ensureSupabase();
                 const { data, error } = await supabase
                     .from('background_images')
                     .select('*')
@@ -11990,6 +11991,7 @@ ${htmlParagraphs}
             try {
                 console.log('📡 Loading activity feed...');
 
+                await ensureSupabase();
                 const { data, error, count } = await supabase
                     .from('admin_activity_feed')
                     .select('*', { count: 'exact' })
@@ -12470,6 +12472,7 @@ ${htmlParagraphs}
                 activityCurrentPage++;
                 const offset = activityCurrentPage * ACTIVITY_PAGE_SIZE;
 
+                await ensureSupabase();
                 const { data, error } = await supabase
                     .from('admin_activity_feed')
                     .select('*')
