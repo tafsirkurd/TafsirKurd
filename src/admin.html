@@ -5670,18 +5670,8 @@
         async function loadBotProtection() {
             console.log('🤖 Loading bot protection data...');
 
-            // Ensure Supabase is initialized
-            if (!supabase) {
-                console.warn('⚠️ Supabase not initialized, waiting...');
-                await initSupabase();
-            }
-
-            if (!supabase) {
-                console.error('❌ Failed to initialize Supabase');
-                return;
-            }
-
             try {
+                await ensureSupabase();
                 // Load all bot logs
                 const { data: botLogs, error } = await supabase
                     .from('bot_logs')
@@ -6083,6 +6073,7 @@
             const tbody = document.getElementById('visitorIPsTableBody');
 
             try {
+                await ensureSupabase();
                 // Fetch user data (show all users, location fields may or may not exist)
                 const { data: users, error } = await supabase
                     .from('user_data')
