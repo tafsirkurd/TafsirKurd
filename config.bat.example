@@ -1,0 +1,40 @@
+@echo off
+REM ========================================
+REM Configuration file for TafsirKurd
+REM ========================================
+REM
+REM INSTRUCTIONS:
+REM 1. Copy this file to "config.bat" (without .example)
+REM 2. Replace all placeholder values with your actual credentials
+REM 3. NEVER commit config.bat to git (it's already in .gitignore)
+REM
+REM ========================================
+
+REM Supabase Configuration
+set SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
+set SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY_HERE
+
+REM Discord Webhook URLs
+set DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_STATS_WEBHOOK
+set DISCORD_WEBHOOK_MESSAGES=https://discord.com/api/webhooks/YOUR_MESSAGES_WEBHOOK
+set DISCORD_WEBHOOK_VISITORS=https://discord.com/api/webhooks/YOUR_VISITORS_WEBHOOK
+set DISCORD_WEBHOOK_ZCEER=https://discord.com/api/webhooks/YOUR_ZCEER_WEBHOOK
+set DISCORD_WEBHOOK_STATS=https://discord.com/api/webhooks/YOUR_STATS_WEBHOOK
+
+REM ========================================
+REM HOW TO GET THESE VALUES:
+REM ========================================
+REM
+REM SUPABASE:
+REM 1. Go to https://supabase.com/dashboard
+REM 2. Select your project
+REM 3. Settings > API
+REM 4. Copy "Project URL" and "anon/public" key
+REM
+REM DISCORD WEBHOOKS:
+REM 1. Go to your Discord server
+REM 2. Right-click the channel > Edit Channel
+REM 3. Integrations > Webhooks > New Webhook
+REM 4. Copy the Webhook URL
+REM
+REM ========================================
