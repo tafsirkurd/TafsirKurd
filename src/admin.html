@@ -4659,7 +4659,7 @@
                 }
 
                 // Save session to database
-                const { data: sessionData, error } = await supabase
+                const { data: sessionData, error } = await supabaseClient
                     .from('admin_login_sessions')
                     .insert([{
                         email: email,
@@ -4699,7 +4699,7 @@
 
                     // Update online status every 30 seconds
                     const onlineStatusInterval = setInterval(async () => {
-                        await supabase
+                        await supabaseClient
                             .from('admin_login_sessions')
                             .update({ last_active: new Date().toISOString(), is_online: true })
                             .eq('id', sessionData.id);
@@ -4784,7 +4784,7 @@
             // Mark session as offline
             if (sessionId) {
                 try {
-                    await supabase
+                    await supabaseClient
                         .from('admin_login_sessions')
                         .update({
                             is_online: false,
@@ -5700,7 +5700,7 @@
             try {
                 await ensureSupabase();
                 // Load all bot logs
-                const { data: botLogs, error } = await supabase
+                const { data: botLogs, error } = await supabaseClient
                     .from('bot_logs')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -6102,7 +6102,7 @@
             try {
                 await ensureSupabase();
                 // Fetch user data (show all users, location fields may or may not exist)
-                const { data: users, error } = await supabase
+                const { data: users, error } = await supabaseClient
                     .from('user_data')
                     .select('*')
                     .order('updated_at', { ascending: false })
@@ -6593,7 +6593,7 @@
                 }
 
                 await ensureSupabase();
-                const { data, error} = await supabase
+                const { data, error} = await supabaseClient
                     .from('contact_messages')
                     .select('*')
                     .order('id', { ascending: false })
@@ -6960,7 +6960,7 @@
             try {
                 await ensureSupabase();
                 // Get ALL videos with their positions and IDs
-                const { data: videos, error: fetchError } = await supabase
+                const { data: videos, error: fetchError } = await supabaseClient
                     .from('featured_videos')
                     .select('id, position')
                     .order('position', { ascending: true });
@@ -7069,7 +7069,7 @@
             try {
                 await ensureSupabase();
                 // Check if another video already has this position
-                const { data: existingVideo } = await supabase
+                const { data: existingVideo } = await supabaseClient
                     .from('featured_videos')
                     .select('id, position')
                     .eq('position', position)
@@ -7079,7 +7079,7 @@
                 // If position is taken, swap positions
                 if (existingVideo) {
                     // Get current video's position
-                    const { data: currentVideo } = await supabase
+                    const { data: currentVideo } = await supabaseClient
                         .from('featured_videos')
                         .select('position')
                         .eq('id', currentEditVideoId)
@@ -7087,7 +7087,7 @@
 
                     if (currentVideo) {
                         // Swap: move other video to current video's old position
-                        await supabase
+                        await supabaseClient
                             .from('featured_videos')
                             .update({ position: currentVideo.position })
                             .eq('id', existingVideo.id);
@@ -7095,7 +7095,7 @@
                 }
 
                 // Update current video
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('featured_videos')
                     .update({
                         video_url: url,
@@ -7140,7 +7140,7 @@
 
                 await ensureSupabase();
                 // Optimized query: order by created_at DESC for faster queries with index
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('user_data')
                     .select('*')
                     .order('id', { ascending: true })
@@ -8097,7 +8097,7 @@
             }
 
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('social_stats')
                     .select('*')
                     .order('display_order', { ascending: true });
@@ -8299,7 +8299,7 @@
 
                 // Update each stat
                 for (const update of updates) {
-                    const { error } = await supabase
+                    const { error } = await supabaseClient
                         .from('social_stats')
                         .update({
                             stat_value: update.stat_value,
@@ -8851,7 +8851,7 @@
             if (!supabaseClient) await initSupabase();
 
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('features')
                     .select('*')
                     .order('display_order', { ascending: true });
@@ -8989,7 +8989,7 @@
 
                 // Delete removed features first
                 for (const id of deletedFeatureIds) {
-                    const { error } = await supabase
+                    const { error } = await supabaseClient
                         .from('features')
                         .delete()
                         .eq('id', id);
@@ -9000,7 +9000,7 @@
                 for (const feature of updates) {
                     if (feature.id) {
                         // Update existing feature
-                        const { error } = await supabase
+                        const { error } = await supabaseClient
                             .from('features')
                             .update(feature)
                             .eq('id', feature.id);
@@ -9008,7 +9008,7 @@
                     } else {
                         // Insert new feature
                         delete feature.id;
-                        const { error } = await supabase
+                        const { error } = await supabaseClient
                             .from('features')
                             .insert([feature]);
                         if (error) throw error;
@@ -9055,7 +9055,7 @@
             if (!supabaseClient) await initSupabase();
 
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('schedule')
                     .select('*')
                     .order('display_order', { ascending: true });
@@ -9215,7 +9215,7 @@
 
                 // Delete removed schedule items first
                 for (const id of deletedScheduleIds) {
-                    const { error } = await supabase
+                    const { error } = await supabaseClient
                         .from('schedule')
                         .delete()
                         .eq('id', id);
@@ -9226,7 +9226,7 @@
                 for (const item of updates) {
                     if (item.id) {
                         // Update existing item
-                        const { error } = await supabase
+                        const { error } = await supabaseClient
                             .from('schedule')
                             .update(item)
                             .eq('id', item.id);
@@ -9234,7 +9234,7 @@
                     } else {
                         // Insert new item
                         delete item.id;
-                        const { error } = await supabase
+                        const { error } = await supabaseClient
                             .from('schedule')
                             .insert([item]);
                         if (error) throw error;
@@ -9282,7 +9282,7 @@
             if (!supabaseClient) await initSupabase();
 
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('kurdish_translations')
                     .select('*')
                     .order('category', { ascending: true })
@@ -9509,7 +9509,7 @@
 
                 if (updatedTranslation.id) {
                     // Update existing
-                    const { error } = await supabase
+                    const { error } = await supabaseClient
                         .from('kurdish_translations')
                         .update(updatedTranslation)
                         .eq('id', updatedTranslation.id);
@@ -9517,7 +9517,7 @@
                 } else {
                     // Insert new
                     delete updatedTranslation.id;
-                    const { data, error } = await supabase
+                    const { data, error } = await supabaseClient
                         .from('kurdish_translations')
                         .insert([updatedTranslation])
                         .select();
@@ -9567,7 +9567,7 @@
 
                 // Delete removed translations
                 for (const id of deletedTranslationIds) {
-                    const { error } = await supabase
+                    const { error } = await supabaseClient
                         .from('kurdish_translations')
                         .delete()
                         .eq('id', id);
@@ -9578,7 +9578,7 @@
                 for (const translation of updates) {
                     if (translation.id) {
                         // Update existing
-                        const { error } = await supabase
+                        const { error } = await supabaseClient
                             .from('kurdish_translations')
                             .update(translation)
                             .eq('id', translation.id);
@@ -9586,7 +9586,7 @@
                     } else {
                         // Insert new
                         delete translation.id;
-                        const { error } = await supabase
+                        const { error } = await supabaseClient
                             .from('kurdish_translations')
                             .insert([translation]);
                         if (error) throw error;
@@ -9667,7 +9667,7 @@
 
                 for (const label of speedLabels) {
                     // Check if already exists
-                    const { data: existing } = await supabase
+                    const { data: existing } = await supabaseClient
                         .from('kurdish_translations')
                         .select('id')
                         .eq('key_id', label.key)
@@ -9679,7 +9679,7 @@
                     }
 
                     // Insert new label
-                    const { error } = await supabase
+                    const { error } = await supabaseClient
                         .from('kurdish_translations')
                         .insert({
                             key_id: label.key,
@@ -11772,7 +11772,7 @@ ${htmlParagraphs}
 
             try {
                 await ensureSupabase();
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('background_images')
                     .select('*')
                     .eq('page_name', currentBackgroundPage)
@@ -11889,7 +11889,7 @@ ${htmlParagraphs}
 
             try {
                 // Get current max order
-                const { data: maxData } = await supabase
+                const { data: maxData } = await supabaseClient
                     .from('background_images')
                     .select('image_order')
                     .eq('page_name', page)
@@ -11899,7 +11899,7 @@ ${htmlParagraphs}
                 const newOrder = maxData && maxData.length > 0 ? maxData[0].image_order + 1 : 1;
 
                 // Insert new image
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('background_images')
                     .insert({
                         page_name: page,
@@ -11929,7 +11929,7 @@ ${htmlParagraphs}
         async function moveBackgroundImage(id, direction) {
             try {
                 // Get current image
-                const { data: currentImg, error: e1 } = await supabase
+                const { data: currentImg, error: e1 } = await supabaseClient
                     .from('background_images')
                     .select('*')
                     .eq('id', id)
@@ -11938,7 +11938,7 @@ ${htmlParagraphs}
                 if (e1) throw e1;
 
                 // Get adjacent image
-                const { data: adjacentData, error: e2 } = await supabase
+                const { data: adjacentData, error: e2 } = await supabaseClient
                     .from('background_images')
                     .select('*')
                     .eq('page_name', currentImg.page_name)
@@ -11957,12 +11957,12 @@ ${htmlParagraphs}
                 const adjacentImg = adjacentData[0];
 
                 // Swap orders
-                await supabase
+                await supabaseClient
                     .from('background_images')
                     .update({ image_order: adjacentImg.image_order })
                     .eq('id', currentImg.id);
 
-                await supabase
+                await supabaseClient
                     .from('background_images')
                     .update({ image_order: currentImg.image_order })
                     .eq('id', adjacentImg.id);
@@ -11981,7 +11981,7 @@ ${htmlParagraphs}
             }
 
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('background_images')
                     .delete()
                     .eq('id', id);
@@ -12019,7 +12019,7 @@ ${htmlParagraphs}
                 console.log('📡 Loading activity feed...');
 
                 await ensureSupabase();
-                const { data, error, count } = await supabase
+                const { data, error, count } = await supabaseClient
                     .from('admin_activity_feed')
                     .select('*', { count: 'exact' })
                     .order('created_at', { ascending: false })
@@ -12223,7 +12223,7 @@ ${htmlParagraphs}
         // Mark Event as Read
         async function markEventAsRead(eventId) {
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('admin_activity_feed')
                     .update({
                         is_read: true,
@@ -12255,7 +12255,7 @@ ${htmlParagraphs}
         // Mark All as Read
         async function markAllActivitiesAsRead() {
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('admin_activity_feed')
                     .update({
                         is_read: true,
@@ -12291,7 +12291,7 @@ ${htmlParagraphs}
             }
 
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('admin_activity_feed')
                     .update({ is_dismissed: true })
                     .eq('id', eventId);
@@ -12500,7 +12500,7 @@ ${htmlParagraphs}
                 const offset = activityCurrentPage * ACTIVITY_PAGE_SIZE;
 
                 await ensureSupabase();
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('admin_activity_feed')
                     .select('*')
                     .order('created_at', { ascending: false })
@@ -12544,7 +12544,7 @@ ${htmlParagraphs}
 
             console.log('📡 Subscribing to real-time activity feed...');
 
-            activitySubscription = supabase
+            activitySubscription = supabaseClient
                 .channel('admin_activity_feed_changes')
                 .on('postgres_changes',
                     { event: 'INSERT', schema: 'public', table: 'admin_activity_feed' },
@@ -12713,11 +12713,11 @@ ${htmlParagraphs}
 
             // Load activity feed summary for dashboard
             try {
-                const { count: totalCount } = await supabase
+                const { count: totalCount } = await supabaseClient
                     .from('admin_activity_feed')
                     .select('*', { count: 'exact', head: true });
 
-                const { count: unreadCount } = await supabase
+                const { count: unreadCount } = await supabaseClient
                     .from('admin_activity_feed')
                     .select('*', { count: 'exact', head: true })
                     .eq('is_read', false);
