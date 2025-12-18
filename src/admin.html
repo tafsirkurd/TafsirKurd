@@ -4435,7 +4435,7 @@
         }
 
         // Secure Configuration - Load from server
-        let supabase = null;
+        let supabaseClient = null;
 
         async function initSupabase() {
             try {
@@ -4469,7 +4469,7 @@
                     throw new Error('Invalid config received from server');
                 }
 
-                supabase = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
                 console.log('✅ Supabase initialized securely');
                 return true;
             } catch (error) {
@@ -4480,14 +4480,14 @@
 
         // Helper function to ensure Supabase is initialized
         async function ensureSupabase() {
-            if (!supabase) {
+            if (!supabaseClient) {
                 console.warn('⚠️ Supabase not initialized, initializing now...');
                 await initSupabase();
             }
-            if (!supabase) {
+            if (!supabaseClient) {
                 throw new Error('Failed to initialize Supabase. Please refresh the page.');
             }
-            return supabase;
+            return supabaseClient;
         }
 
         // Global data storage
@@ -4903,12 +4903,12 @@
                 console.log('📊 Loading dashboard data...');
 
                 // Ensure Supabase is initialized
-                if (!supabase) {
+                if (!supabaseClient) {
                     console.warn('⚠️ Supabase not initialized, waiting...');
                     await initSupabase();
                 }
 
-                if (!supabase) {
+                if (!supabaseClient) {
                     console.error('❌ Failed to initialize Supabase');
                     return;
                 }
@@ -4925,9 +4925,9 @@
 
                 // Load minimal data for dashboard (counts only, full details loaded per section)
                 const [usersResult, messagesResult, videosResult] = await Promise.all([
-                    supabase.from('user_data').select('*').limit(1000),
-                    supabase.from('contact_messages').select('*').limit(100),
-                    supabase.from('featured_videos').select('*')
+                    supabaseClient.from('user_data').select('*').limit(1000),
+                    supabaseClient.from('contact_messages').select('*').limit(100),
+                    supabaseClient.from('featured_videos').select('*')
                 ]);
 
                 // Check for errors
@@ -6785,7 +6785,7 @@
             try {
                 await ensureSupabase();
                 const newStatus = forceRead ? 'read' : (currentStatus === 'read' ? 'unread' : 'read');
-                const { error } = await supabase.from('contact_messages').update({ status: newStatus }).eq('id', id);
+                const { error } = await supabaseClient.from('contact_messages').update({ status: newStatus }).eq('id', id);
                 if (error) throw error;
                 await loadMessages();
                 await loadDashboardData();
@@ -6799,7 +6799,7 @@
             if (!confirm('Delete this message?')) return;
             try {
                 await ensureSupabase();
-                const { error } = await supabase.from('contact_messages').delete().eq('id', id);
+                const { error } = await supabaseClient.from('contact_messages').delete().eq('id', id);
                 if (error) throw error;
                 await loadMessages();
                 await loadDashboardData();
@@ -6816,7 +6816,7 @@
 
             try {
                 await ensureSupabase();
-                const { data, error } = await supabase.from('featured_videos').select('*').order('position', { ascending: true });
+                const { data, error } = await supabaseClient.from('featured_videos').select('*').order('position', { ascending: true });
                 if (error) throw error;
 
                 allVideos = data || [];
@@ -6983,7 +6983,7 @@
                 console.log('[Admin] V50 - Next position will be:', nextPosition);
 
                 // Insert video with position
-                const { error } = await supabase.from('featured_videos').insert([{
+                const { error } = await supabaseClient.from('featured_videos').insert([{
                     video_url: url,
                     position: nextPosition
                 }]);
@@ -7026,7 +7026,7 @@
             if (!confirm('Delete this video?')) return;
             try {
                 await ensureSupabase();
-                const { error } = await supabase.from('featured_videos').delete().eq('id', id);
+                const { error } = await supabaseClient.from('featured_videos').delete().eq('id', id);
                 if (error) throw error;
                 await loadVideos();
                 await loadDashboardData();
@@ -7477,7 +7477,7 @@
             if (!confirm('Delete this user? This cannot be undone.')) return;
             try {
                 await ensureSupabase();
-                const { error } = await supabase.from('user_data').delete().eq('id', id);
+                const { error } = await supabaseClient.from('user_data').delete().eq('id', id);
                 if (error) throw error;
                 await loadUsers();
                 await loadDashboardData();
@@ -7959,7 +7959,7 @@
         async function backupTable(tableName) {
             try {
                 await ensureSupabase();
-                const { data, error } = await supabase.from(tableName).select('*');
+                const { data, error } = await supabaseClient.from(tableName).select('*');
                 if (error) throw error;
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
@@ -7990,7 +7990,7 @@
                 const tables = ['user_data', 'featured_videos', 'contact_messages'];
                 const allData = {};
                 for (const table of tables) {
-                    const { data, error } = await supabase.from(table).select('*');
+                    const { data, error } = await supabaseClient.from(table).select('*');
                     if (error) throw error;
                     allData[table] = data;
                 }
@@ -8092,7 +8092,7 @@
         async function loadSocialStats() {
             console.log('📱 Loading social stats...');
 
-            if (!supabase) {
+            if (!supabaseClient) {
                 await initSupabase();
             }
 
@@ -8848,7 +8848,7 @@
 
         async function loadFeatures() {
             console.log('⭐ Loading features...');
-            if (!supabase) await initSupabase();
+            if (!supabaseClient) await initSupabase();
 
             try {
                 const { data, error } = await supabase
@@ -9052,7 +9052,7 @@
 
         async function loadSchedule() {
             console.log('📅 Loading schedule...');
-            if (!supabase) await initSupabase();
+            if (!supabaseClient) await initSupabase();
 
             try {
                 const { data, error } = await supabase
@@ -9279,7 +9279,7 @@
 
         async function loadTranslations() {
             console.log('🌐 Loading translations...');
-            if (!supabase) await initSupabase();
+            if (!supabaseClient) await initSupabase();
 
             try {
                 const { data, error } = await supabase
@@ -9646,7 +9646,7 @@
 
         // Bulk add auto scroll speed labels (Run in console: addAutoScrollSpeedLabels())
         async function addAutoScrollSpeedLabels() {
-            if (!supabase) await initSupabase();
+            if (!supabaseClient) await initSupabase();
 
             const speedLabels = [
                 { key: 'autoScrollSpeed1', text: '١ - زۆر زۆر هێواش', context: 'Auto scroll speed level 1 - Very very slow' },
@@ -11864,14 +11864,14 @@ ${htmlParagraphs}
                     const fileName = `background-${page}-${timestamp}-${fileInput.name}`;
 
                     // Upload to Supabase Storage
-                    const { data: uploadData, error: uploadError } = await supabase.storage
+                    const { data: uploadData, error: uploadError } = await supabaseClient.storage
                         .from('background-images')
                         .upload(fileName, fileInput);
 
                     if (uploadError) throw uploadError;
 
                     // Get public URL
-                    const { data: urlData } = supabase.storage
+                    const { data: urlData } = supabaseClient.storage
                         .from('background-images')
                         .getPublicUrl(fileName);
 
