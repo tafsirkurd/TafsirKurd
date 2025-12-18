@@ -102,16 +102,32 @@ function isStrongPassword(password) {
 /**
  * Secure headers for all responses
  */
-function getSecureHeaders(origin = '*') {
+function getSecureHeaders(requestOrigin) {
+    // Allowed origins for CORS
+    const allowedOrigins = [
+        'https://tafsirkurd.com',
+        'https://www.tafsirkurd.com',
+        'http://localhost:8888', // Netlify dev
+        'http://localhost:3000'  // Local development
+    ];
+
+    // Validate origin and set CORS header
+    let corsOrigin = 'https://tafsirkurd.com'; // Default to production
+    if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+        corsOrigin = requestOrigin;
+    }
+
     return {
-        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Origin': corsOrigin,
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Credentials': 'true',
         'Content-Type': 'application/json',
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
         'X-XSS-Protection': '1; mode=block',
-        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
         'Cache-Control': 'no-store, no-cache, must-revalidate, private'
     };
 }
