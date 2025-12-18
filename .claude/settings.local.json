@@ -83,7 +83,10 @@
       "Bash(cmd /c send-random-zceer.bat)",
       "Bash(cmd /c backfill-discord-history.bat)",
       "Bash(netlify deploy:*)",
-      "Bash(netlify link:*)"
+      "Bash(netlify link:*)",
+      "Bash(call config.bat)",
+      "Bash(cmd /c \"call config.bat && node scripts\\random-zceer.js\")",
+      "Bash(cmd /c test-zceer.bat)"
     ],
     "deny": [],
     "ask": []
