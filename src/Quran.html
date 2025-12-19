@@ -9874,6 +9874,13 @@
         }
 
         function onAudioError(e) {
+            // Don't show error if audio player is being closed
+            const audio = document.getElementById('quranAudio');
+            if (!audio || !audio.src || audio.src === '' || audio.src === window.location.href) {
+                audioPlayerState.isPlaying = false;
+                return;
+            }
+
             // Throttle error notifications to prevent spam
             const now = Date.now();
             if (now - lastAudioErrorTime < AUDIO_ERROR_THROTTLE) {
