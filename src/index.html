@@ -671,6 +671,27 @@ nav.scrolled-nav {
 
 .hero-logo-static {
     object-fit: contain;
+    height: 150px !important;
+    width: auto;
+}
+
+/* Responsive logo sizing - must use !important to override inline style */
+@media (max-width: 1024px) {
+    .hero-logo-static {
+        height: 90px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-logo-static {
+        height: 70px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-logo-static {
+        height: 50px !important;
+    }
 }
 
 .hamburger-menu {
