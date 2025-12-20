@@ -3,10 +3,13 @@
 // Environment variable DISCORD_WEBHOOK_ZCEER configured in Netlify
 
 const https = require('https');
+const path = require('path');
+const fs = require('fs');
 
 // Large Zceer Collection (266 Arabic dhikr and duas)
 // Loaded from external JSON file to reduce function size
-const ZCEER_COLLECTION = require('./zceer-collection.json');
+const zceerPath = path.join(__dirname, 'zceer-collection.json');
+const ZCEER_COLLECTION = JSON.parse(fs.readFileSync(zceerPath, 'utf8'));
 
 // Send to Discord webhook using https module
 function sendDiscordWebhook(webhookUrl, payload) {
