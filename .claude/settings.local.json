@@ -89,7 +89,22 @@
       "Bash(cmd /c test-zceer.bat)",
       "Bash(netlify status:*)",
       "Bash(netlify env:set:*)",
-      "Bash(netlify env:list:*)"
+      "Bash(netlify env:list:*)",
+      "Bash(schtasks /query:*)",
+      "Bash(cmd /c \"schtasks /query /fo LIST\")",
+      "Bash(export DISCORD_WEBHOOK_ZCEER=\"https://discord.com/api/webhooks/1451128446192451746/UWkNzC59g02R6VIqiJUoUAoaF75wpuGQ5RYo3f2x2PDjXCaU9yO8h8wbjOK16n41ibR3\")",
+      "Bash(cmd /c 'schtasks /query /fo CSV')",
+      "Bash(cmd /c 'schtasks /create /tn \"\"TafsirKurd Zceer Morning\"\" /tr \"\"C:\\TafsirKurd\\send-random-zceer.bat\"\" /sc daily /st 08:00 /rl highest /f')",
+      "Bash(netlify --version)",
+      "Bash(cmd /c 'schtasks /query /tn \"\"TafsirKurd Zceer Morning\"\" /fo LIST /v | findstr /i \"\"Next Run Time Last Run Time Schedule Type\"\"')",
+      "Bash(cmd /c 'schtasks /query /tn \"\"TafsirKurd Zceer Afternoon\"\" /fo LIST /v | findstr /i \"\"Next Run Time Last Run Time Schedule Type\"\"')",
+      "Bash(cmd /c 'schtasks /query /tn \"\"TafsirKurd Zceer Evening\"\" /fo LIST /v | findstr /i \"\"Next Run Time Last Run Time Schedule Type\"\"')",
+      "Bash(time:*)",
+      "Bash(cmd /c \"call config.bat && node scripts/random-zceer.js\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File C:TafsirKurdsetup-zceer-automatic.ps1)",
+      "Bash(powershell -ExecutionPolicy Bypass -File ./setup-zceer-automatic.ps1)",
+      "Bash(cmd /c \"powershell -ExecutionPolicy Bypass -File C:\\\\TafsirKurd\\\\setup-zceer-automatic.ps1\")",
+      "Bash(cmd /c \"C:\\\\TafsirKurd\\\\run-setup-auto.bat\")"
     ],
     "deny": [],
     "ask": []
