@@ -7147,10 +7147,14 @@
                 if (isCacheValid('users')) {
                     console.log('⚡ Using cached user data');
                     const cachedData = getCachedData('users');
-                    allUsers = cachedData;
-                    displayUsers(allUsers);
-                    updateUsersStats(allUsers);
-                    return;
+                    if (cachedData && Array.isArray(cachedData)) {
+                        allUsers = cachedData;
+                        displayUsers(allUsers);
+                        updateUsersStats(allUsers);
+                        return;
+                    } else {
+                        console.warn('⚠️ Cached data is invalid, fetching fresh data');
+                    }
                 }
 
                 await ensureSupabase();
@@ -7261,6 +7265,12 @@
         function displayUsers(users) {
             const container = document.getElementById('usersTable');
             const search = document.getElementById('userSearch')?.value.toLowerCase() || '';
+
+            // Handle null/undefined users
+            if (!users || !Array.isArray(users)) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">No user data available</div></div>';
+                return;
+            }
 
             let filtered = users.filter(user => {
                 return !search ||
