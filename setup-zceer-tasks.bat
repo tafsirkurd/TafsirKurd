@@ -20,20 +20,17 @@ echo.
 echo Creating new tasks...
 echo.
 
-REM Morning zceer (8 AM with random delay up to 2 hours)
-echo [1/3] Creating Morning Zceer task (8-10 AM)...
-schtasks /create /tn "TafsirKurd Zceer Morning" /tr "C:\TafsirKurd\send-random-zceer.bat" /sc daily /st 08:00 /rl highest /f
-schtasks /change /tn "TafsirKurd Zceer Morning" /delay 0000:00-0002:00
+REM Morning zceer (8 AM)
+echo [1/3] Creating Morning Zceer task (8:00 AM)...
+powershell -Command "$action = New-ScheduledTaskAction -Execute 'C:\TafsirKurd\send-random-zceer.bat' -WorkingDirectory 'C:\TafsirKurd'; $trigger = New-ScheduledTaskTrigger -Daily -At 08:00; $principal = New-ScheduledTaskPrincipal -UserId '%USERNAME%' -RunLevel Highest; Register-ScheduledTask -TaskName 'TafsirKurd Zceer Morning' -Action $action -Trigger $trigger -Principal $principal -Force"
 
-REM Afternoon zceer (2 PM with random delay up to 2 hours)
-echo [2/3] Creating Afternoon Zceer task (2-4 PM)...
-schtasks /create /tn "TafsirKurd Zceer Afternoon" /tr "C:\TafsirKurd\send-random-zceer.bat" /sc daily /st 14:00 /rl highest /f
-schtasks /change /tn "TafsirKurd Zceer Afternoon" /delay 0000:00-0002:00
+REM Afternoon zceer (2 PM)
+echo [2/3] Creating Afternoon Zceer task (2:00 PM)...
+powershell -Command "$action = New-ScheduledTaskAction -Execute 'C:\TafsirKurd\send-random-zceer.bat' -WorkingDirectory 'C:\TafsirKurd'; $trigger = New-ScheduledTaskTrigger -Daily -At 14:00; $principal = New-ScheduledTaskPrincipal -UserId '%USERNAME%' -RunLevel Highest; Register-ScheduledTask -TaskName 'TafsirKurd Zceer Afternoon' -Action $action -Trigger $trigger -Principal $principal -Force"
 
-REM Evening zceer (8 PM with random delay up to 2 hours)
-echo [3/3] Creating Evening Zceer task (8-10 PM)...
-schtasks /create /tn "TafsirKurd Zceer Evening" /tr "C:\TafsirKurd\send-random-zceer.bat" /sc daily /st 20:00 /rl highest /f
-schtasks /change /tn "TafsirKurd Zceer Evening" /delay 0000:00-0002:00
+REM Evening zceer (8 PM)
+echo [3/3] Creating Evening Zceer task (8:00 PM)...
+powershell -Command "$action = New-ScheduledTaskAction -Execute 'C:\TafsirKurd\send-random-zceer.bat' -WorkingDirectory 'C:\TafsirKurd'; $trigger = New-ScheduledTaskTrigger -Daily -At 20:00; $principal = New-ScheduledTaskPrincipal -UserId '%USERNAME%' -RunLevel Highest; Register-ScheduledTask -TaskName 'TafsirKurd Zceer Evening' -Action $action -Trigger $trigger -Principal $principal -Force"
 
 echo.
 echo ========================================
@@ -47,9 +44,9 @@ schtasks /query /fo LIST /tn "TafsirKurd Zceer Evening" | findstr "TaskName Next
 
 echo.
 echo You will receive 3 random zceer notifications daily:
-echo   - Morning: 8:00-10:00 AM
-echo   - Afternoon: 2:00-4:00 PM
-echo   - Evening: 8:00-10:00 PM
+echo   - Morning: 8:00 AM
+echo   - Afternoon: 2:00 PM
+echo   - Evening: 8:00 PM
 echo.
 echo Check Discord channel: #🤲-zceer
 echo.
