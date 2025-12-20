@@ -7275,7 +7275,8 @@
             let filtered = users.filter(user => {
                 return !search ||
                     (user.name && user.name.toLowerCase().includes(search)) ||
-                    (user.email && user.email.toLowerCase().includes(search));
+                    (user.email && user.email.toLowerCase().includes(search)) ||
+                    (user.user_id && user.user_id.toLowerCase().includes(search));
             });
 
             if (filtered.length === 0) {
