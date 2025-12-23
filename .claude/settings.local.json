@@ -104,7 +104,9 @@
       "Bash(powershell -ExecutionPolicy Bypass -File C:TafsirKurdsetup-zceer-automatic.ps1)",
       "Bash(powershell -ExecutionPolicy Bypass -File ./setup-zceer-automatic.ps1)",
       "Bash(cmd /c \"powershell -ExecutionPolicy Bypass -File C:\\\\TafsirKurd\\\\setup-zceer-automatic.ps1\")",
-      "Bash(cmd /c \"C:\\\\TafsirKurd\\\\run-setup-auto.bat\")"
+      "Bash(cmd /c \"C:\\\\TafsirKurd\\\\run-setup-auto.bat\")",
+      "Bash(netlify functions:list:*)",
+      "Bash(netlify functions:invoke:*)"
     ],
     "deny": [],
     "ask": []
