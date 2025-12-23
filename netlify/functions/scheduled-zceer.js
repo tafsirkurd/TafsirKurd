@@ -288,6 +288,7 @@ const ZCEER_COLLECTION = [
     'اَللّٰهُمَّ اجْعَلْنِي مِنَ التَّوَّابِينَ',
     'اَللّٰهُمَّ اجْعَلْنِي مِنَ الصَّابِرِينَ',
     'اَللّٰهُمَّ اجْعَلْنِي مِنَ الشَّاكِرِينَ'
+];
 
 function sendDiscordWebhook(webhookUrl, payload) {
     return new Promise((resolve, reject) => {
