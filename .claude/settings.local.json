@@ -106,7 +106,9 @@
       "Bash(cmd /c \"powershell -ExecutionPolicy Bypass -File C:\\\\TafsirKurd\\\\setup-zceer-automatic.ps1\")",
       "Bash(cmd /c \"C:\\\\TafsirKurd\\\\run-setup-auto.bat\")",
       "Bash(netlify functions:list:*)",
-      "Bash(netlify functions:invoke:*)"
+      "Bash(netlify functions:invoke:*)",
+      "Bash(for file in netlify/functions/*.js)",
+      "Bash(do echo \"Checking $file...\")"
     ],
     "deny": [],
     "ask": []
