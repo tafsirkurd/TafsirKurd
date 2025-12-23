@@ -16,15 +16,15 @@
   # 0 2 * * * = Every day at 2 AM UTC
   "scheduled-cleanup-activities" = {schedule = "0 2 * * *"}  # Daily at 2 AM UTC
 
-  # Random Islamic Zceer - 3 times daily at contextually appropriate times
+  # Random Islamic Zceer - 3 times daily at contextually appropriate times (TEMPORARILY DISABLED)
   # Morning adhkar at 8 AM Iraq time (5 AM UTC)
-  "scheduled-zceer-morning" = {schedule = "0 5 * * *"}  # Daily at 8 AM Iraq time
+  # "scheduled-zceer-morning" = {schedule = "0 5 * * *"}  # Daily at 8 AM Iraq time
 
   # General powerful zceer at 2 PM Iraq time (11 AM UTC)
-  "scheduled-zceer" = {schedule = "0 11 * * *"}  # Daily at 2 PM Iraq time
+  # "scheduled-zceer" = {schedule = "0 11 * * *"}  # Daily at 2 PM Iraq time
 
   # Evening adhkar at 8 PM Iraq time (17:00 UTC)
-  "scheduled-zceer-evening" = {schedule = "0 17 * * *"}  # Daily at 8 PM Iraq time
+  # "scheduled-zceer-evening" = {schedule = "0 17 * * *"}  # Daily at 8 PM Iraq time
 
 [[headers]]
   for = "/*.html"
