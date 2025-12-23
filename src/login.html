@@ -962,34 +962,10 @@
                     console.log('✅ User profile already complete, skipping save to prevent overwrite');
                 }
 
-                // Send instant Discord notification for new users
+                // REMOVED: Duplicate Discord notification (now only sent from backend after signup completion)
+                // Backend notification in user-data.js has accurate location data
                 if (isNewUser) {
-                    console.log('🎉 New user detected - sending Discord notification');
-                    fetch('/.netlify/functions/discord-notify', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            type: 'new_user',
-                            title: '🎉 New User Just Joined!',
-                            message: `${currentUser.name} just completed signup`,
-                            details: null,
-                            data: {
-                                userName: currentUser.name,
-                                email: currentUser.email,
-                                picture: currentUser.picture,
-                                profilePicture: currentUser.picture,
-                                location: 'Not set yet',
-                                city: 'Unknown',
-                                region: 'Unknown',
-                                country: 'Unknown',
-                                dailyGoal: 'Not set',
-                                currentSurah: 'Not started',
-                                currentAyah: '-',
-                                totalRead: 0,
-                                completion: 0
-                            }
-                        })
-                    }).catch(err => console.error('Notification error:', err));
+                    console.log('🎉 New user detected - notification will be sent after signup completion');
                 }
             } catch (error) {
                 console.error('Error saving Google user info:', error);
