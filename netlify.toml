@@ -1,3 +1,4 @@
+# Build Configuration
 [build]
   publish = "src"  # 👈 CHANGE THIS from "." to "src"
   functions = "netlify/functions"
