@@ -4,6 +4,7 @@
 const https = require('https');
 
 // General Powerful Zceer Collection (268 items)
+const ZCEER_COLLECTION = [
     // Tasbih (1-100)
     'سُبْحَانَ اللّٰهِ',
     'سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ',
