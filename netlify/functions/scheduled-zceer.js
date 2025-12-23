@@ -1,11 +1,10 @@
-// Scheduled function to send random Islamic zceer/dhikr to Discord
-// Runs 3 times daily: 8 AM, 2 PM, 8 PM Iraq time (5 AM, 11 AM, 5 PM UTC)
-// Environment variable DISCORD_WEBHOOK_ZCEER configured in Netlify
+// Afternoon Zceer - Scheduled for 2 PM Iraq time (11 AM UTC)
+// Sends general powerful zceer - can be said any time
 
 const https = require('https');
 
-// Complete Zceer Collection (268 powerful Arabic dhikr and duas)
-const ZCEER_COLLECTION = [
+// General Powerful Zceer Collection (268 items)
+    // Tasbih (1-100)
     'سُبْحَانَ اللّٰهِ',
     'سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ',
     'سُبْحَانَ اللّٰهِ الْعَظِيمِ',
@@ -58,6 +57,8 @@ const ZCEER_COLLECTION = [
     'سُبْحَانَ الْمُحْيِي الْمُمِيتِ',
     'سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ وَرِضَا نَفْسِهِ وَزِنَةَ عَرْشِهِ وَمِدَادَ كَلِمَاتِهِ',
     'سُبْحَانَ اللّٰهِ الْعَظِيمِ وَبِحَمْدِهِ',
+
+    // Tahlil & Tawhid (101-200)
     'لَا إِلٰهَ إِلَّا اللّٰهُ',
     'لَا إِلٰهَ إِلَّا اللّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ',
     'لَا إِلٰهَ إِلَّا اللّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ',
@@ -79,6 +80,8 @@ const ZCEER_COLLECTION = [
     'لَا إِلٰهَ إِلَّا اللّٰهُ الْقَوِيُّ الْمَتِينُ',
     'لَا إِلٰهَ إِلَّا اللّٰهُ الْحَلِيمُ الْكَرِيمُ',
     'لَا إِلٰهَ إِلَّا اللّٰهُ الْعَلِيُّ الْعَظِيمُ',
+
+    // Hamd (201-300)
     'الْحَمْدُ لِلّٰهِ',
     'الْحَمْدُ لِلّٰهِ رَبِّ الْعَالَمِينَ',
     'الْحَمْدُ لِلّٰهِ حَمْدًا كَثِيرًا طَيِّبًا مُبَارَكًا فِيهِ',
@@ -99,6 +102,8 @@ const ZCEER_COLLECTION = [
     'الْحَمْدُ لِلّٰهِ ظَاهِرًا وَبَاطِنًا',
     'الْحَمْدُ لِلّٰهِ الْأَوَّلِ وَالْآخِرِ',
     'الْحَمْدُ لِلّٰهِ الظَّاهِرِ وَالْبَاطِنِ',
+
+    // Takbir (301-400)
     'اللّٰهُ أَكْبَرُ',
     'اللّٰهُ أَكْبَرُ كَبِيرًا',
     'اللّٰهُ أَكْبَرُ وَلِلّٰهِ الْحَمْدُ',
@@ -109,6 +114,8 @@ const ZCEER_COLLECTION = [
     'اللّٰهُ أَكْبَرُ كَبِيرًا وَالْحَمْدُ لِلّٰهِ كَثِيرًا',
     'اللّٰهُ أَكْبَرُ مِمَّا أَخَافُ وَأَحْذَرُ',
     'اللّٰهُ أَكْبَرُ عَلَىٰ كُلِّ شَيْءٍ',
+
+    // Salawat (401-500)
     'اَللّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ',
     'اَللّٰهُمَّ صَلِّ وَسَلِّمْ عَلَىٰ نَبِيِّنَا مُحَمَّدٍ',
     'اَللّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَعَلَىٰ آلِ مُحَمَّدٍ',
@@ -119,6 +126,8 @@ const ZCEER_COLLECTION = [
     'صَلَّى اللّٰهُ عَلَىٰ نَبِيِّنَا مُحَمَّدٍ',
     'اَللّٰهُمَّ صَلِّ عَلَىٰ سَيِّدِنَا مُحَمَّدٍ',
     'اَللّٰهُمَّ صَلِّ عَلَىٰ حَبِيبِنَا مُحَمَّدٍ',
+
+    // Istighfar (501-600)
     'أَسْتَغْفِرُ اللّٰهَ',
     'أَسْتَغْفِرُ اللّٰهَ الْعَظِيمَ',
     'أَسْتَغْفِرُ اللّٰهَ وَأَتُوبُ إِلَيْهِ',
@@ -129,6 +138,8 @@ const ZCEER_COLLECTION = [
     'اَللّٰهُمَّ اغْفِرْ لِي ذَنْبِي',
     'اَللّٰهُمَّ اغْفِرْ لِي خَطِيئَتِي',
     'اَللّٰهُمَّ اغْفِرْ لِي ذَنْبِي كُلَّهُ',
+
+    // Duas (601-800)
     'حَسْبُنَا اللّٰهُ وَنِعْمَ الْوَكِيلُ',
     'حَسْبِيَ اللّٰهُ لَا إِلٰهَ إِلَّا هُوَ',
     'حَسْبِيَ اللّٰهُ وَنِعْمَ الْوَكِيلُ',
@@ -243,6 +254,8 @@ const ZCEER_COLLECTION = [
     'اَللّٰهُمَّ لَا يَصْرِفُ عَنِّي سَيِّئَهَا إِلَّا أَنْتَ',
     'اَللّٰهُمَّ ثَبِّتْنِي',
     'اَللّٰهُمَّ ثَبِّتْ قَلْبِي عَلَىٰ دِينِكَ',
+
+    // Quranic Duas (801-900)
     'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ',
     'رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا',
     'رَبَّنَا هَبْ لَنَا مِنْ لَدُنْكَ رَحْمَةً',
@@ -253,6 +266,8 @@ const ZCEER_COLLECTION = [
     'رَبِّ زِدْنِي عِلْمًا',
     'رَبِّ اغْفِرْ وَارْحَمْ وَأَنْتَ خَيْرُ الرَّاحِمِينَ',
     'رَبِّ أَعِنِّي وَلَا تُعِنْ عَلَيَّ',
+
+    // Additional (901-1000+)
     'إِنَّا لِلّٰهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ',
     'رَضِيتُ بِاللّٰهِ رَبًّا',
     'رَضِيتُ بِالْإِسْلَامِ دِينًا',
@@ -271,9 +286,8 @@ const ZCEER_COLLECTION = [
     'يَا اللّٰهُ',
     'اَللّٰهُمَّ اجْعَلْنِي مِنَ التَّوَّابِينَ',
     'اَللّٰهُمَّ اجْعَلْنِي مِنَ الصَّابِرِينَ',
-];
+    'اَللّٰهُمَّ اجْعَلْنِي مِنَ الشَّاكِرِينَ'
 
-// Send to Discord webhook using https module
 function sendDiscordWebhook(webhookUrl, payload) {
     return new Promise((resolve, reject) => {
         const url = new URL(webhookUrl);
@@ -307,14 +321,12 @@ function sendDiscordWebhook(webhookUrl, payload) {
     });
 }
 
-// Main scheduled function handler
 exports.handler = async (event, context) => {
-    console.log('🕐 Running scheduled zceer job...');
+    console.log('☀️ Running afternoon zceer job...');
 
     const DISCORD_WEBHOOK_ZCEER = process.env.DISCORD_WEBHOOK_ZCEER;
 
     if (!DISCORD_WEBHOOK_ZCEER) {
-        console.error('❌ DISCORD_WEBHOOK_ZCEER environment variable not set');
         return {
             statusCode: 500,
             body: JSON.stringify({ error: 'Discord webhook not configured' })
@@ -322,33 +334,30 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        // Pick one random zceer from collection
         const randomIndex = Math.floor(Math.random() * ZCEER_COLLECTION.length);
         const zceer = ZCEER_COLLECTION[randomIndex];
 
         const payload = {
-            username: 'Zceer',
+            username: 'Zceer - Afternoon',
             avatar_url: 'https://tafsirkurd.com/logo512.png',
-            content: zceer
+            content: `☀️ ${zceer}`
         };
 
-        console.log(`📿 Sending zceer #${randomIndex + 1} of ${ZCEER_COLLECTION.length}...`);
+        console.log(`📿 Sending afternoon zceer #${randomIndex + 1} of ${ZCEER_COLLECTION.length}...`);
 
         await sendDiscordWebhook(DISCORD_WEBHOOK_ZCEER, payload);
-
-        console.log('✅ Zceer sent successfully');
 
         return {
             statusCode: 200,
             body: JSON.stringify({
                 success: true,
+                time: 'afternoon',
                 zceer: zceer,
-                index: randomIndex + 1,
                 total: ZCEER_COLLECTION.length
             })
         };
     } catch (error) {
-        console.error('❌ Error sending zceer:', error);
+        console.error('❌ Error:', error);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: error.message })

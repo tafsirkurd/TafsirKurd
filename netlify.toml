@@ -15,10 +15,15 @@
   # 0 2 * * * = Every day at 2 AM UTC
   "scheduled-cleanup-activities" = {schedule = "0 2 * * *"}  # Daily at 2 AM UTC
 
-  # Random Islamic Zceer - 3 times daily at Iraq prayer times
-  # Sends random dhikr/zceer to Discord webhook
-  # 0 5,11,17 * * * = Daily at 5 AM, 11 AM, 5 PM UTC = 8 AM, 2 PM, 8 PM Iraq time
-  "scheduled-zceer" = {schedule = "0 5,11,17 * * *"}  # 3x daily at 8 AM, 2 PM, 8 PM Iraq time
+  # Random Islamic Zceer - 3 times daily at contextually appropriate times
+  # Morning adhkar at 8 AM Iraq time (5 AM UTC)
+  "scheduled-zceer-morning" = {schedule = "0 5 * * *"}  # Daily at 8 AM Iraq time
+
+  # General powerful zceer at 2 PM Iraq time (11 AM UTC)
+  "scheduled-zceer" = {schedule = "0 11 * * *"}  # Daily at 2 PM Iraq time
+
+  # Evening adhkar at 8 PM Iraq time (17:00 UTC)
+  "scheduled-zceer-evening" = {schedule = "0 17 * * *"}  # Daily at 8 PM Iraq time
 
 [[headers]]
   for = "/*.html"
