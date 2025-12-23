@@ -34,6 +34,14 @@ function sendDiscordWebhook(webhookUrl, payload) {
     });
 }
 
+const ZCEER_COLLECTION = [
+    'سُبْحَانَ اللّٰهِ',
+    'الْحَمْدُ لِلّٰهِ',
+    'لَا إِلٰهَ إِلَّا اللّٰهُ',
+    'اللّٰهُ أَكْبَرُ',
+    'أَسْتَغْفِرُ اللّٰهَ'
+];
+
 exports.handler = async (event, context) => {
     console.log('Test function called');
 
@@ -47,17 +55,25 @@ exports.handler = async (event, context) => {
     }
 
     try {
+        const randomIndex = Math.floor(Math.random() * ZCEER_COLLECTION.length);
+        const zceer = ZCEER_COLLECTION[randomIndex];
+
         const payload = {
-            username: 'Test Zceer',
+            username: 'Zceer',
             avatar_url: 'https://tafsirkurd.com/logo512.png',
-            content: 'سُبْحَانَ اللّٰهِ - Test from minimal function'
+            content: zceer
         };
 
         await sendDiscordWebhook(DISCORD_WEBHOOK_ZCEER, payload);
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: 'Test zceer sent successfully' })
+            body: JSON.stringify({
+                message: 'Zceer sent successfully',
+                zceer: zceer,
+                index: randomIndex + 1,
+                total: ZCEER_COLLECTION.length
+            })
         };
     } catch (error) {
         return {
