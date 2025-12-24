@@ -12,21 +12,8 @@ exports.handler = async (event, context) => {
     try {
         const { type, title, message, details, data } = JSON.parse(event.body);
 
-        // Get Discord webhook URL based on notification type
-        let webhookURL;
-
-        // Use separate webhook for messages
-        if (type === 'new_message' || type === 'contact') {
-            webhookURL = process.env.DISCORD_WEBHOOK_MESSAGES || process.env.DISCORD_WEBHOOK_URL;
-        }
-        // Use separate webhook for visitors
-        else if (type === 'visitor' || type === 'page_view') {
-            webhookURL = process.env.DISCORD_WEBHOOK_VISITORS || process.env.DISCORD_WEBHOOK_URL;
-        }
-        // Default to stats webhook
-        else {
-            webhookURL = process.env.DISCORD_WEBHOOK_URL;
-        }
+        // Get Discord webhook URL - ALL notifications go to ONE channel
+        const webhookURL = process.env.DISCORD_WEBHOOK_URL;
 
         if (!webhookURL) {
             console.error('Missing Discord webhook URL');
