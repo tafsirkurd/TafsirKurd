@@ -15,6 +15,7 @@
         currentSpeed: 1,
         subtitlesEnabled: false,
         autoPlayNext: true,
+        audioOnlyMode: false,
         skipIntroTime: { start: 5, end: 65 }, // seconds
         chapters: []
     };
@@ -50,6 +51,8 @@
         shareBtn: document.getElementById('shareBtn'),
         playlistBtn: document.getElementById('playlistBtn'),
         pipBtn: document.getElementById('pipBtn'),
+        audioOnlyBtn: document.getElementById('audioOnlyBtn'),
+        audioOnlyOverlay: document.getElementById('audioOnlyOverlay'),
 
         // Modals
         searchModal: document.getElementById('searchModal'),
@@ -107,6 +110,19 @@
             state.currentSpeed = parseFloat(savedSpeed);
             elements.video.playbackRate = state.currentSpeed;
         }
+
+        // Load audio-only mode preference
+        const savedAudioOnly = localStorage.getItem('audioOnlyMode');
+        if (savedAudioOnly === 'true') {
+            state.audioOnlyMode = true;
+            if (elements.audioOnlyOverlay) {
+                elements.audioOnlyOverlay.classList.add('active');
+            }
+            if (elements.audioOnlyBtn) {
+                elements.audioOnlyBtn.classList.add('active');
+                elements.audioOnlyBtn.innerHTML = '<i class="fas fa-video"></i> پیشاندانا ڤیدیۆ';
+            }
+        }
     }
 
     // ===== EVENT LISTENERS =====
@@ -158,6 +174,9 @@
         elements.shareBtn.addEventListener('click', openShareModal);
         elements.playlistBtn.addEventListener('click', openPlaylistModal);
         elements.pipBtn.addEventListener('click', togglePiP);
+        if (elements.audioOnlyBtn) {
+            elements.audioOnlyBtn.addEventListener('click', toggleAudioOnly);
+        }
 
         // Skip intro
         elements.skipIntroBtn.addEventListener('click', skipIntro);
@@ -632,6 +651,34 @@
             document.exitPictureInPicture();
         }
     };
+
+    // ===== AUDIO ONLY MODE =====
+    function toggleAudioOnly() {
+        state.audioOnlyMode = !state.audioOnlyMode;
+
+        if (state.audioOnlyMode) {
+            // Enable audio-only mode
+            if (elements.audioOnlyOverlay) {
+                elements.audioOnlyOverlay.classList.add('active');
+            }
+            elements.audioOnlyBtn.classList.add('active');
+            elements.audioOnlyBtn.innerHTML = '<i class="fas fa-video"></i> پیشاندانا ڤیدیۆ';
+            showNotification('🎧 حالەتا دەنگ تەنێ چالاککری');
+            console.log('🎧 Audio-only mode enabled');
+        } else {
+            // Disable audio-only mode
+            if (elements.audioOnlyOverlay) {
+                elements.audioOnlyOverlay.classList.remove('active');
+            }
+            elements.audioOnlyBtn.classList.remove('active');
+            elements.audioOnlyBtn.innerHTML = '<i class="fas fa-headphones"></i> دەنگ تەنێ';
+            showNotification('🎥 حالەتا ڤیدیۆ چالاککری');
+            console.log('🎥 Audio-only mode disabled');
+        }
+
+        // Save preference
+        localStorage.setItem('audioOnlyMode', state.audioOnlyMode);
+    }
 
     // ===== SHARE =====
     function openShareModal() {
