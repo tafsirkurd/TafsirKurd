@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تەفسیر TV - کەناڵا ڤیدیویی یا ئیسلامی</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="تەفسیر TV - ببینە زنجیرەیێن ڤیدیویی یێن ئیسلامی ب زمانێ کوردی">
+    <meta name="keywords" content="تەفسیر, قورئان, کوردی, ئیسلام, ڤیدیۆ, TV">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="تەفسیر TV">
+    <meta property="og:description" content="کەناڵا ڤیدیویی یا ئیسلامی ب زمانێ کوردی">
+    <meta property="og:type" content="website">
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#000000">
+
+    <!-- Fonts -->
+    <link rel="stylesheet" href="/assets/fonts/fonts.css">
+    <link rel="stylesheet" href="/assets/fontawesome/all.min.css">
+
+    <style>
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            --primary: #000000;
+            --primary-light: #333333;
+            --accent: #ffffff;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #ffffff;
+            --text-muted: #999999;
+            --border: #2a2a2a;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #3498db;
+            --purple: #9b59b6;
+            --pink: #e91e63;
+
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
+
+            --transition-fast: 0.2s;
+            --transition-medium: 0.4s;
+            --cubic: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="light"] {
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #000000;
+            --text-muted: #666666;
+            --border: #e8e8e8;
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ===== RESET ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ===== NAVIGATION ===== */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
+            z-index: 1000;
+            transition: background var(--transition-medium);
+        }
+
+        .nav.scrolled {
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            max-width: 1920px;
+            margin: 0 auto;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .nav-logo img {
+            height: 40px;
+            filter: brightness(0) invert(1);
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color var(--transition-fast);
+            opacity: 0.8;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            opacity: 1;
+            color: #ffffff;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            position: relative;
+        }
+
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        /* ===== VIDEO PLAYER ===== */
+        .player-section {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: #000;
+        }
+
+        .player-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+
+        .player-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
+            padding: 2rem;
+            opacity: 0;
+            transition: opacity var(--transition-medium);
+        }
+
+        .player-container:hover .player-overlay,
+        .player-overlay.show {
+            opacity: 1;
+        }
+
+        .video-info {
+            margin-bottom: 1rem;
+        }
+
+        .video-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .video-meta {
+            display: flex;
+            gap: 1rem;
+            color: #999;
+            font-size: 0.9rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .rating-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .view-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .action-btn.active {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .video-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+            min-width: 200px;
+        }
+
+        .progress-filled {
+            height: 100%;
+            background: var(--danger);
+            border-radius: 5px;
+            transition: width 0.1s linear;
+            position: relative;
+        }
+
+        .progress-handle {
+            position: absolute;
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background: #ffffff;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+
+        .progress-bar:hover .progress-handle {
+            opacity: 1;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform var(--transition-fast);
+            padding: 0.5rem;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .time-display {
+            color: #ffffff;
+            font-size: 0.9rem;
+            min-width: 100px;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .volume-slider {
+            width: 80px;
+        }
+
+        /* Advanced Controls */
+        .advanced-controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .speed-selector,
+        .quality-selector,
+        .subtitle-selector {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            display: none;
+            min-width: 150px;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: #ffffff;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .dropdown-item.active {
+            color: var(--danger);
+        }
+
+        .dropdown-item.active::after {
+            content: '✓';
+            font-weight: 700;
+        }
+
+        /* Chapter Markers */
+        .chapter-markers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .chapter-marker {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* ===== CONTENT SECTIONS ===== */
+        .content {
+            padding: 2rem;
+            max-width: 1920px;
+            margin: 0 auto;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .view-all {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color var(--transition-fast);
+        }
+
+        .view-all:hover {
+            color: var(--text);
+        }
+
+        /* ===== EPISODE GRID ===== */
+        .episodes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .episode-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all var(--transition-medium) var(--cubic);
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .episode-card:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--text);
+        }
+
+        .episode-thumbnail {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            overflow: hidden;
+        }
+
+        .episode-thumbnail img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .episode-duration {
+            position: absolute;
+            bottom: 0.5rem;
+            left: 0.5rem;
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .episode-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: var(--danger);
+            transition: width var(--transition-medium);
+        }
+
+        .play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity var(--transition-medium);
+        }
+
+        .episode-card:hover .play-overlay {
+            opacity: 1;
+        }
+
+        .play-overlay i {
+            color: #000;
+            font-size: 1.5rem;
+            margin-right: -3px;
+        }
+
+        .quick-actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity var(--transition-medium);
+        }
+
+        .episode-card:hover .quick-actions {
+            opacity: 1;
+        }
+
+        .quick-btn {
+            width: 32px;
+            height: 32px;
+            background: rgba(0, 0, 0, 0.8);
+            border: none;
+            border-radius: 50%;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .quick-btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            transform: scale(1.1);
+        }
+
+        .episode-info {
+            padding: 1rem;
+        }
+
+        .episode-number {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .episode-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .episode-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .episode-stats {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .episode-stat {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        /* ===== SERIES SELECTOR ===== */
+        .series-selector {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding: 1rem 0;
+            scrollbar-width: thin;
+        }
+
+        .series-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            color: var(--text);
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all var(--transition-medium);
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .series-btn:hover,
+        .series-btn.active {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
+            transform: translateY(-2px);
+        }
+
+        /* ===== CATEGORIES ===== */
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .category-card {
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+        }
+
+        .category-card:hover {
+            background: var(--text);
+            color: var(--bg);
+            transform: scale(1.05);
+        }
+
+        .category-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .category-name {
+            font-weight: 600;
+        }
+
+        /* ===== UPLOAD SECTION ===== */
+        .upload-section {
+            background: var(--card-bg);
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .upload-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-desc {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-btn {
+            background: var(--text);
+            color: var(--bg);
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            font-family: inherit;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* ===== MODALS ===== */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        /* Search Modal */
+        .search-container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            font-size: 1.5rem;
+            color: var(--text);
+            font-family: inherit;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--text);
+        }
+
+        .search-results {
+            margin-top: 2rem;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        /* Share Modal */
+        .share-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .share-btn {
+            padding: 1rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text);
+        }
+
+        .share-btn:hover {
+            background: var(--text);
+            color: var(--bg);
+            transform: translateY(-3px);
+        }
+
+        .share-btn i {
+            font-size: 1.5rem;
+        }
+
+        /* Playlist Modal */
+        .playlist-items {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .playlist-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+        }
+
+        .playlist-item:hover {
+            background: var(--border);
+        }
+
+        .playlist-item.playing {
+            border: 2px solid var(--danger);
+        }
+
+        .playlist-thumb {
+            width: 80px;
+            height: 45px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .playlist-info {
+            flex: 1;
+        }
+
+        .playlist-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .playlist-duration {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== FLOATING ELEMENTS ===== */
+        .floating-player {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 400px;
+            height: 225px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            z-index: 1500;
+            display: none;
+        }
+
+        .floating-player.active {
+            display: block;
+        }
+
+        .floating-player video {
+            width: 100%;
+            height: 100%;
+        }
+
+        .floating-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border: none;
+            color: #ffffff;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        /* ===== NOTIFICATIONS ===== */
+        .notification {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            box-shadow: var(--shadow-lg);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .notification.show {
+            display: flex;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        .notification-icon {
+            font-size: 1.5rem;
+        }
+
+        /* ===== NEW BADGE ===== */
+        .new-badge {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: var(--danger);
+            color: #ffffff;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .trending-badge {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .top-badge {
+            background: linear-gradient(135deg, #ffd700, #ffa500);
+            color: #000;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 1rem;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .player-section {
+                height: 60vh;
+            }
+
+            .video-title {
+                font-size: 1.5rem;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+
+            .episodes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .categories {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .video-controls {
+                flex-wrap: wrap;
+            }
+
+            .volume-control,
+            .advanced-controls {
+                display: none;
+            }
+
+            .floating-player {
+                width: 300px;
+                height: 169px;
+                bottom: 80px;
+                left: 10px;
+            }
+
+            .video-actions {
+                flex-wrap: wrap;
+            }
+
+            .action-btn {
+                font-size: 0.85rem;
+                padding: 0.5rem 1rem;
+            }
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease;
+        }
+
+        /* Skip Buttons */
+        .skip-btn {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+            padding: 1rem 2rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            display: none;
+            transition: all var(--transition-medium);
+        }
+
+        .skip-btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+        }
+
+        .skip-btn.show {
+            display: block;
+        }
+
+        /* Next Episode Countdown */
+        .next-episode-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            display: none;
+        }
+
+        .next-episode-overlay.show {
+            display: block;
+        }
+
+        .countdown {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--danger);
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav" id="nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/assets/images/TafsirKurd.png" alt="تەفسیر کورد">
+                <span>تەفسیر TV</span>
+            </a>
+
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">سەرەکی</a></li>
+                <li><a href="/tv.html" class="nav-link active">TV</a></li>
+                <li><a href="/quran.html" class="nav-link">قورئان</a></li>
+                <li><a href="#categories" class="nav-link">پۆلێن</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <button class="icon-btn" id="notificationBtn" aria-label="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+                <button class="icon-btn" id="searchBtn" aria-label="Search">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button class="icon-btn" id="themeToggle" aria-label="Toggle theme">
+                    <i class="fas fa-sun"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Video Player Section -->
+    <section class="player-section" id="playerSection">
+        <div class="player-container">
+            <video class="video-player" id="videoPlayer" poster="/assets/images/video-placeholder.jpg">
+                <source src="" type="video/mp4">
+                <track kind="subtitles" src="" srclang="ku" label="کوردی">
+                <track kind="subtitles" src="" srclang="ar" label="عربی">
+                پشتگیری یا بروزەر تە بۆ ڤیدیۆ نینە.
+            </video>
+
+            <!-- Skip Intro Button -->
+            <button class="skip-btn" id="skipIntroBtn">
+                <i class="fas fa-forward"></i>
+                هەڵبەزینا پێشوتریێ
+            </button>
+
+            <!-- Next Episode Countdown -->
+            <div class="next-episode-overlay" id="nextEpisodeOverlay">
+                <h3>بەشا داهاتی دەستپێدکەت د</h3>
+                <div class="countdown" id="countdown">5</div>
+                <button class="action-btn" onclick="cancelAutoPlay()">بەتاڵکرن</button>
+            </div>
+
+            <div class="player-overlay" id="playerOverlay">
+                <div class="video-info">
+                    <h1 class="video-title" id="currentVideoTitle">تەفسیرا سورەتا الفاتحة</h1>
+                    <div class="video-meta">
+                        <span>بەشا ١ - زنجیرەیا تەفسیر</span>
+                        <span>•</span>
+                        <span>٤٥ خولەک</span>
+                        <span>•</span>
+                        <span>٢٠٢٥</span>
+                        <span>•</span>
+                        <span class="rating-badge">
+                            <i class="fas fa-star"></i>
+                            ٤.٩
+                        </span>
+                        <span>•</span>
+                        <span class="view-count">
+                            <i class="fas fa-eye"></i>
+                            ٦٥٠ھ بینەر
+                        </span>
+                    </div>
+
+                    <div class="video-actions">
+                        <button class="action-btn" id="addToListBtn">
+                            <i class="fas fa-plus"></i>
+                            زێدەبکە لیستێ
+                        </button>
+                        <button class="action-btn" id="likeBtn">
+                            <i class="far fa-thumbs-up"></i>
+                            حەزلێبکە
+                        </button>
+                        <button class="action-btn" id="shareBtn">
+                            <i class="fas fa-share-alt"></i>
+                            پارڤەبکە
+                        </button>
+                        <button class="action-btn" id="playlistBtn">
+                            <i class="fas fa-list"></i>
+                            لیستا لێدانێ
+                        </button>
+                        <button class="action-btn" id="pipBtn">
+                            <i class="fas fa-window-restore"></i>
+                            PiP
+                        </button>
+                    </div>
+                </div>
+
+                <div class="video-controls">
+                    <button class="control-btn" id="playPauseBtn">
+                        <i class="fas fa-play"></i>
+                    </button>
+
+                    <button class="control-btn" id="rewindBtn" title="10 چرکە پاشڤە">
+                        <i class="fas fa-backward"></i>
+                    </button>
+
+                    <button class="control-btn" id="forwardBtn" title="10 چرکە پێشڤە">
+                        <i class="fas fa-forward"></i>
+                    </button>
+
+                    <div class="progress-bar" id="progressBar">
+                        <div class="chapter-markers" id="chapterMarkers"></div>
+                        <div class="progress-filled" id="progressFilled">
+                            <div class="progress-handle"></div>
+                        </div>
+                    </div>
+
+                    <span class="time-display" id="timeDisplay">٠:٠٠ / ٠:٠٠</span>
+
+                    <div class="volume-control">
+                        <button class="control-btn" id="muteBtn">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100">
+                    </div>
+
+                    <div class="advanced-controls">
+                        <!-- Speed Control -->
+                        <div class="speed-selector">
+                            <button class="control-btn" id="speedBtn" title="خێرایی">
+                                <span style="font-size: 0.8rem; font-weight: 700;">1x</span>
+                            </button>
+                            <div class="dropdown-menu" id="speedMenu">
+                                <div class="dropdown-item" data-speed="0.5">٠.٥x</div>
+                                <div class="dropdown-item" data-speed="0.75">٠.٧٥x</div>
+                                <div class="dropdown-item active" data-speed="1">١x</div>
+                                <div class="dropdown-item" data-speed="1.25">١.٢٥x</div>
+                                <div class="dropdown-item" data-speed="1.5">١.٥x</div>
+                                <div class="dropdown-item" data-speed="2">٢x</div>
+                            </div>
+                        </div>
+
+                        <!-- Quality Control -->
+                        <div class="quality-selector">
+                            <button class="control-btn" id="qualityBtn" title="کواڵتی">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <div class="dropdown-menu" id="qualityMenu">
+                                <div class="dropdown-item" data-quality="360">360p</div>
+                                <div class="dropdown-item" data-quality="480">480p</div>
+                                <div class="dropdown-item" data-quality="720">720p HD</div>
+                                <div class="dropdown-item active" data-quality="1080">1080p Full HD</div>
+                                <div class="dropdown-item" data-quality="2160">4K Ultra HD</div>
+                                <div class="dropdown-item" data-quality="auto">خودکار</div>
+                            </div>
+                        </div>
+
+                        <!-- Subtitle Control -->
+                        <div class="subtitle-selector">
+                            <button class="control-btn" id="subtitleBtn" title="ژێرنڤیس">
+                                <i class="fas fa-closed-captioning"></i>
+                            </button>
+                            <div class="dropdown-menu" id="subtitleMenu">
+                                <div class="dropdown-item active" data-subtitle="off">داگرتی</div>
+                                <div class="dropdown-item" data-subtitle="ku">کوردی</div>
+                                <div class="dropdown-item" data-subtitle="ar">عربی</div>
+                                <div class="dropdown-item" data-subtitle="en">ئینگلیزی</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="control-btn" id="fullscreenBtn">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Floating Picture-in-Picture Player -->
+    <div class="floating-player" id="floatingPlayer">
+        <button class="floating-close" onclick="closePiP()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Upload Section (for admin) -->
+        <section class="upload-section" id="uploadSection">
+            <div class="upload-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <h2 class="upload-title">باڕکرنا بەشێن نوی</h2>
+            <p class="upload-desc">بارکە ڤیدیۆیێن ئیسلامی یێن نوی بۆ کۆمەڵگەهێ</p>
+            <input type="file" class="file-input" id="fileInput" accept="video/*" multiple>
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-upload"></i>
+                هەڵبژێرە ڤیدیۆ
+            </button>
+        </section>
+
+        <!-- Categories -->
+        <section class="section" id="categories">
+            <div class="section-header">
+                <h2 class="section-title">پۆلێن</h2>
+            </div>
+
+            <div class="categories">
+                <div class="category-card" onclick="filterByCategory('tafsir')">
+                    <div class="category-icon">📖</div>
+                    <div class="category-name">تەفسیر</div>
+                </div>
+
+                <div class="category-card" onclick="filterByCategory('hadith')">
+                    <div class="category-icon">📚</div>
+                    <div class="category-name">حەدیس</div>
+                </div>
+
+                <div class="category-card" onclick="filterByCategory('seerah')">
+                    <div class="category-icon">🕌</div>
+                    <div class="category-name">سیرەت</div>
+                </div>
+
+                <div class="category-card" onclick="filterByCategory('fiqh')">
+                    <div class="category-icon">⚖️</div>
+                    <div class="category-name">فقه</div>
+                </div>
+
+                <div class="category-card" onclick="filterByCategory('stories')">
+                    <div class="category-icon">📜</div>
+                    <div class="category-name">چیڕۆکێن پێغەمبەران</div>
+                </div>
+
+                <div class="category-card" onclick="filterByCategory('aqeedah')">
+                    <div class="category-icon">💎</div>
+                    <div class="category-name">عەقیدە</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Series Selector -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">زنجیرەیێن</h2>
+            </div>
+
+            <div class="series-selector">
+                <button class="series-btn active" onclick="loadSeries('tafsir')">زنجیرەیا تەفسیر</button>
+                <button class="series-btn" onclick="loadSeries('ramadan')">وانێن ڕەمەزان</button>
+                <button class="series-btn" onclick="loadSeries('stories')">چیڕۆکێن قورئانی</button>
+                <button class="series-btn" onclick="loadSeries('fiqh')">فقها ڕۆژانە</button>
+                <button class="series-btn" onclick="loadSeries('seerah')">ژیاننامەیا پێغەمبەر ﷺ</button>
+            </div>
+        </section>
+
+        <!-- Continue Watching -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">بەردەوام ببە ل بینینێ</h2>
+                <a href="#" class="view-all">هەمی ببینە</a>
+            </div>
+
+            <div class="episodes-grid" id="continueWatching">
+                <!-- Will be populated dynamically -->
+            </div>
+        </section>
+
+        <!-- Trending Now -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-fire" style="color: #e74c3c;"></i>
+                    بەرچاڤ ئێستا
+                </h2>
+                <a href="#" class="view-all">هەمی ببینە</a>
+            </div>
+
+            <div class="episodes-grid">
+                <div class="episode-card" onclick="playVideo(1)">
+                    <div class="episode-thumbnail">
+                        <div class="trending-badge new-badge">
+                            <i class="fas fa-fire"></i>
+                            بەرچاڤ
+                        </div>
+                        <div class="quick-actions">
+                            <button class="quick-btn" onclick="event.stopPropagation(); addToWatchlist(1)" title="زێدەبکە لیستێ">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button class="quick-btn" onclick="event.stopPropagation(); shareEpisode(1)" title="پارڤەبکە">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
+                        </div>
+                        <img src="/assets/images/episode-placeholder.jpg" alt="Episode">
+                        <div class="episode-duration">٤٥:٣٠</div>
+                        <div class="episode-progress" style="width: 35%;"></div>
+                        <div class="play-overlay">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="episode-info">
+                        <div class="episode-number">بەشا ١ - زنجیرەیا تەفسیر</div>
+                        <h3 class="episode-title">تەفسیرا سورەتا الفاتحة</h3>
+                        <p class="episode-desc">
+                            شرۆڤەکرنا ووردبین یا سورەتا الفاتحة، دایکا کتێبێ
+                        </p>
+                        <div class="episode-stats">
+                            <span class="episode-stat">
+                                <i class="fas fa-star" style="color: #ffc107;"></i>
+                                ٤.٩
+                            </span>
+                            <span class="episode-stat">
+                                <i class="fas fa-eye"></i>
+                                ٦٥٠ھ
+                            </span>
+                            <span class="episode-stat">
+                                <i class="fas fa-thumbs-up"></i>
+                                ١٢ھ
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Latest Episodes -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">بەشێن نوی</h2>
+                <a href="#" class="view-all">هەمی ببینە</a>
+            </div>
+
+            <div class="episodes-grid" id="latestEpisodes">
+                <!-- More episodes here -->
+            </div>
+        </section>
+
+        <!-- Top Rated -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-crown" style="color: #ffd700;"></i>
+                    باشترین
+                </h2>
+                <a href="#" class="view-all">هەمی ببینە</a>
+            </div>
+
+            <div class="episodes-grid">
+                <div class="episode-card" onclick="playVideo(2)">
+                    <div class="episode-thumbnail">
+                        <div class="top-badge new-badge">
+                            <i class="fas fa-crown"></i>
+                            TOP
+                        </div>
+                        <div class="quick-actions">
+                            <button class="quick-btn" onclick="event.stopPropagation(); addToWatchlist(2)">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button class="quick-btn" onclick="event.stopPropagation(); shareEpisode(2)">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
+                        </div>
+                        <img src="/assets/images/episode-placeholder.jpg" alt="Episode">
+                        <div class="episode-duration">٥٢:١٥</div>
+                        <div class="play-overlay">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="episode-info">
+                        <div class="episode-number">بەشا ٥ - زنجیرەیا چیڕۆک</div>
+                        <h3 class="episode-title">چیڕۆکا یوسف علیهی السلام</h3>
+                        <p class="episode-desc">
+                            چیڕۆکەکا جوان ترین ل قورئانێ - ژیانا یوسف پێغەمبەر
+                        </p>
+                        <div class="episode-stats">
+                            <span class="episode-stat">
+                                <i class="fas fa-star" style="color: #ffc107;"></i>
+                                ٥.٠
+                            </span>
+                            <span class="episode-stat">
+                                <i class="fas fa-eye"></i>
+                                ١.٢م
+                            </span>
+                            <span class="episode-stat">
+                                <i class="fas fa-thumbs-up"></i>
+                                ٤٥ھ
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Search Modal -->
+    <div class="modal" id="searchModal">
+        <div class="search-container">
+            <input
+                type="text"
+                class="search-input"
+                id="searchInput"
+                placeholder="بگەڕێ بۆ بەش، زنجیرە، یان بابەت..."
+                autocomplete="off"
+            >
+            <div class="search-results" id="searchResults"></div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal" id="shareModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">پارڤەبکە</h3>
+                <button class="close-btn" onclick="closeShareModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="share-options">
+                <button class="share-btn" onclick="shareOn('whatsapp')">
+                    <i class="fab fa-whatsapp" style="color: #25D366;"></i>
+                    <span>WhatsApp</span>
+                </button>
+                <button class="share-btn" onclick="shareOn('telegram')">
+                    <i class="fab fa-telegram" style="color: #0088cc;"></i>
+                    <span>Telegram</span>
+                </button>
+                <button class="share-btn" onclick="shareOn('facebook')">
+                    <i class="fab fa-facebook" style="color: #1877F2;"></i>
+                    <span>Facebook</span>
+                </button>
+                <button class="share-btn" onclick="shareOn('twitter')">
+                    <i class="fab fa-twitter" style="color: #1DA1F2;"></i>
+                    <span>Twitter</span>
+                </button>
+                <button class="share-btn" onclick="copyLink()">
+                    <i class="fas fa-link"></i>
+                    <span>کۆپیکرنا لینکێ</span>
+                </button>
+                <button class="share-btn" onclick="shareOn('email')">
+                    <i class="fas fa-envelope"></i>
+                    <span>ئیمەیل</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Playlist Modal -->
+    <div class="modal" id="playlistModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">لیستا لێدانێ</h3>
+                <button class="close-btn" onclick="closePlaylistModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="playlist-items" id="playlistItems">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle notification-icon" style="color: #2ecc71;"></i>
+        <span id="notificationText">زێدەکری بۆ لیستا تە!</span>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="/tv-player.js"></script>
+</body>
+</html>
