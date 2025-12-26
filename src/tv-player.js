@@ -914,25 +914,25 @@
                 playerOverlay.style.display = 'none';
             }
 
-            // Create YouTube iframe
+            // Create Vimeo iframe
             const iframeHTML = `
                 <iframe
                     id="youtubePlayer"
                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;"
                     frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                     allowfullscreen
                 ></iframe>
             `;
             playerContainer.insertAdjacentHTML('beforeend', iframeHTML);
             iframe = document.getElementById('youtubePlayer');
 
-            console.log('✅ Created YouTube iframe player');
+            console.log('✅ Created Vimeo iframe player');
         }
 
-        // Update iframe source
-        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
-        console.log('▶️ Loading video:', `https://www.youtube.com/embed/${videoId}`);
+        // Update iframe source (Vimeo player)
+        iframe.src = `https://player.vimeo.com/video/${videoId}?autoplay=1&title=0&byline=0&portrait=0`;
+        console.log('▶️ Loading video:', `https://player.vimeo.com/video/${videoId}`);
 
         // Update video title in the existing overlay
         const videoTitle = playerSection.querySelector('.video-title');

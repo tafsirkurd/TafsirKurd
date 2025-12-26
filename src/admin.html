@@ -2819,48 +2819,48 @@
                 <div style="margin-top: 40px; padding: 30px; background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-radius: 16px; border: 2px solid #e0e0e0;">
                     <div style="text-align: center; margin-bottom: 30px;">
                         <div style="font-size: 3rem; margin-bottom: 1rem;">
-                            <i class="fab fa-youtube" style="color: #FF0000;"></i>
+                            <i class="fab fa-vimeo" style="color: #1ab7ea;"></i>
                         </div>
-                        <h2 style="margin-bottom: 0.5rem; font-size: 1.8rem;">Add YouTube Video to TV Page</h2>
-                        <p style="color: #666; font-size: 1rem;">Upload unlimited videos for FREE using YouTube embeds</p>
+                        <h2 style="margin-bottom: 0.5rem; font-size: 1.8rem;">Add Vimeo Video to TV Page</h2>
+                        <p style="color: #666; font-size: 1rem;">Professional video hosting with clean, ad-free player</p>
                     </div>
 
                     <div style="max-width: 700px; margin: 0 auto;">
                         <!-- Instructions -->
-                        <div style="background: #fff3cd; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border-left: 4px solid #ffc107;">
+                        <div style="background: #e8f5fc; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border-left: 4px solid #1ab7ea;">
                             <h3 style="margin-bottom: 1rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
                                 <i class="fas fa-info-circle"></i>
                                 How to Add a Video:
                             </h3>
                             <ol style="line-height: 2.2; color: #666; padding-left: 1.5rem;">
-                                <li>Upload your video to <strong>YouTube.com</strong></li>
-                                <li>Set visibility to <strong>"Public"</strong> or <strong>"Unlisted"</strong></li>
-                                <li>Copy the <strong>Video ID</strong> from the URL (after <code style="background: rgba(0,0,0,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">watch?v=</code>)</li>
-                                <li>Example: <code style="background: rgba(0,0,0,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">youtube.com/watch?v=<strong style="color: #e74c3c;">dQw4w9WgXcQ</strong></code></li>
+                                <li>Upload your video to <strong>Vimeo.com</strong></li>
+                                <li>Set privacy to <strong>"Public"</strong>, <strong>"Unlisted"</strong>, or <strong>"Anyone with link"</strong></li>
+                                <li>Copy the <strong>Video ID</strong> (numbers) from the URL</li>
+                                <li>Example: <code style="background: rgba(0,0,0,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">vimeo.com/<strong style="color: #1ab7ea;">123456789</strong></code></li>
                                 <li>Paste the ID below and fill in the details</li>
                             </ol>
                         </div>
 
-                        <!-- YouTube Video ID Input -->
+                        <!-- Vimeo Video ID Input -->
                         <div style="margin-bottom: 1.5rem;">
                             <label style="display: block; margin-bottom: 0.75rem; font-weight: 700; font-size: 1.1rem;">
-                                <i class="fab fa-youtube" style="color: #FF0000;"></i>
-                                YouTube Video ID *
+                                <i class="fab fa-vimeo" style="color: #1ab7ea;"></i>
+                                Vimeo Video ID *
                             </label>
                             <input
                                 type="text"
                                 id="adminYoutubeVideoId"
                                 style="width: 100%; padding: 1rem; background: #fff; border: 2px solid #ddd; border-radius: 12px; color: #000; font-family: 'Courier New', monospace; font-size: 1.1rem; text-align: center; transition: border-color 0.3s;"
-                                placeholder="Paste YouTube Video ID here..."
+                                placeholder="Paste Vimeo Video ID here..."
                                 required
                             >
                             <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666; text-align: center;">
                                 <i class="fas fa-lightbulb"></i>
-                                You can paste the full URL or just the ID
+                                You can paste the full URL or just the ID (numbers only)
                             </p>
                         </div>
 
-                        <!-- YouTube Preview -->
+                        <!-- Vimeo Preview -->
                         <div id="adminYoutubePreview" style="display: none; margin-bottom: 2rem;">
                             <label style="display: block; margin-bottom: 0.75rem; font-weight: 700; font-size: 1.1rem;">
                                 <i class="fas fa-eye"></i>
@@ -13122,7 +13122,7 @@ ${htmlParagraphs}
         // Load suggestions on page load
         loadVideoSuggestions();
 
-        // YouTube Video ID input handler for admin panel
+        // Vimeo Video ID input handler for admin panel
         const adminYoutubeIdInput = document.getElementById('adminYoutubeVideoId');
         if (adminYoutubeIdInput) {
             adminYoutubeIdInput.addEventListener('input', (e) => {
@@ -13130,21 +13130,21 @@ ${htmlParagraphs}
 
                 // Extract video ID from full URL if pasted
                 let cleanId = videoId;
-                if (videoId.includes('youtube.com') || videoId.includes('youtu.be')) {
-                    const match = videoId.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+                if (videoId.includes('vimeo.com')) {
+                    const match = videoId.match(/vimeo\.com\/(\d+)/);
                     if (match) {
                         cleanId = match[1];
                         e.target.value = cleanId;
-                        showAdminNotification('✓ YouTube ID extracted!', 'success');
+                        showAdminNotification('✓ Vimeo ID extracted!', 'success');
                     }
                 }
 
-                // Show preview and form if valid ID
-                if (cleanId && cleanId.length === 11) {
+                // Show preview and form if valid ID (Vimeo IDs are typically 8-10 digits)
+                if (cleanId && /^\d{6,12}$/.test(cleanId)) {
                     // Show preview
                     document.getElementById('adminYoutubePreview').style.display = 'block';
                     document.getElementById('adminYoutubePreviewFrame').src =
-                        `https://www.youtube.com/embed/${cleanId}`;
+                        `https://player.vimeo.com/video/${cleanId}`;
 
                     // Show metadata form
                     document.getElementById('adminVideoMetadataForm').style.display = 'block';
@@ -13195,14 +13195,26 @@ ${htmlParagraphs}
                 return;
             }
 
-            // Validate video ID format
-            if (videoId.length !== 11) {
-                showAdminNotification('Invalid YouTube Video ID!', 'error');
+            // Validate video ID format (Vimeo IDs are numeric, typically 6-12 digits)
+            if (!/^\d{6,12}$/.test(videoId)) {
+                showAdminNotification('Invalid Vimeo Video ID! Must be 6-12 digits.', 'error');
                 return;
             }
 
             // Parse tags into array
             const tagsArray = tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [];
+
+            // Fetch Vimeo thumbnail (using oEmbed API)
+            let thumbnailUrl = '/assets/images/video-placeholder.jpg'; // Default
+            try {
+                const response = await fetch(`https://vimeo.com/api/oembed.json?url=https://vimeo.com/${videoId}`);
+                const data = await response.json();
+                if (data.thumbnail_url) {
+                    thumbnailUrl = data.thumbnail_url;
+                }
+            } catch (err) {
+                console.warn('Could not fetch Vimeo thumbnail:', err);
+            }
 
             // Create video data object with ALL fields
             const videoData = {
@@ -13221,8 +13233,8 @@ ${htmlParagraphs}
                 difficulty: difficulty,
                 featured: featured,
                 recommended: recommended,
-                thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-                embedUrl: `https://www.youtube.com/embed/${videoId}`,
+                thumbnail: thumbnailUrl,
+                embedUrl: `https://player.vimeo.com/video/${videoId}`,
                 viewCount: 0,
                 likeCount: 0,
                 rating: 0,
