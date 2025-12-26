@@ -942,27 +942,35 @@
 
             console.log('✅ Video saved to localStorage:', videoData);
 
-            // Option 2: If you want to use Supabase database later (just for metadata, not file storage)
+            // Optional: Save to Supabase database (metadata only) - if table exists
             if (typeof supabase !== 'undefined') {
-                const { data, error } = await supabase
-                    .from('tv_episodes')
-                    .insert([{
-                        title,
-                        description: desc,
-                        video_url: videoId,
-                        video_type: 'youtube',
-                        series,
-                        category,
-                        duration: 0,
-                        thumbnail_url: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-                        view_count: 0,
-                        like_count: 0,
-                        rating: 0,
-                        created_at: new Date().toISOString()
-                    }]);
+                try {
+                    const { data, error } = await supabase
+                        .from('tv_episodes')
+                        .insert([{
+                            title,
+                            description: desc,
+                            video_url: videoId,
+                            video_type: 'youtube',
+                            series,
+                            category,
+                            duration: 0,
+                            thumbnail_url: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+                            view_count: 0,
+                            like_count: 0,
+                            rating: 0,
+                            created_at: new Date().toISOString()
+                        }]);
 
-                if (error) throw error;
-                console.log('✅ Video also saved to Supabase database:', data);
+                    if (error) {
+                        console.warn('⚠️ Supabase save skipped (table not created):', error.message);
+                    } else {
+                        console.log('✅ Video also saved to Supabase database:', data);
+                    }
+                } catch (dbError) {
+                    console.warn('⚠️ Supabase save skipped:', dbError.message);
+                    // Continue without Supabase - localStorage is enough
+                }
             }
 
             showNotification('✓ ڤیدیۆیا YouTube ب سەرکەفتی تۆمارکری!');
