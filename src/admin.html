@@ -2926,6 +2926,150 @@
                                 </div>
                             </div>
 
+                            <!-- Section & Episode Number -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                        Section
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Optional)</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="adminYoutubeSection"
+                                        list="sectionSuggestions"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
+                                        placeholder="e.g., Latest, Featured, Trending..."
+                                    >
+                                    <datalist id="sectionSuggestions">
+                                        <option value="Latest Episodes">
+                                        <option value="Featured">
+                                        <option value="Trending">
+                                        <option value="Continue Watching">
+                                    </datalist>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                        Episode Number
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Optional)</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="adminYoutubeEpisodeNum"
+                                        min="1"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
+                                        placeholder="e.g., 1, 2, 3..."
+                                    >
+                                </div>
+                            </div>
+
+                            <!-- Speaker & Language -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                        Speaker/Teacher
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Optional)</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="adminYoutubeSpeaker"
+                                        list="speakerSuggestions"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
+                                        placeholder="e.g., Sheikh name..."
+                                    >
+                                    <datalist id="speakerSuggestions"></datalist>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                        Language
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Optional)</span>
+                                    </label>
+                                    <select
+                                        id="adminYoutubeLanguage"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
+                                    >
+                                        <option value="Kurdish">کوردی (Kurdish)</option>
+                                        <option value="Arabic">عربی (Arabic)</option>
+                                        <option value="English">English</option>
+                                        <option value="Turkish">Türkçe (Turkish)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Tags -->
+                            <div style="margin-bottom: 1.5rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                    Tags
+                                    <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Comma-separated)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="adminYoutubeTags"
+                                    style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
+                                    placeholder="e.g., quran, tafsir, ramadan, seerah..."
+                                >
+                                <p style="margin-top: 0.25rem; font-size: 0.8rem; color: #999;">
+                                    <i class="fas fa-tags"></i> Separate tags with commas
+                                </p>
+                            </div>
+
+                            <!-- Duration & Difficulty -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                        Duration (minutes)
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Optional)</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="adminYoutubeDuration"
+                                        min="1"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
+                                        placeholder="e.g., 25"
+                                    >
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                        Difficulty Level
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Optional)</span>
+                                    </label>
+                                    <select
+                                        id="adminYoutubeDifficulty"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
+                                    >
+                                        <option value="">Not specified</option>
+                                        <option value="Beginner">Beginner / دەستپێکی</option>
+                                        <option value="Intermediate">Intermediate / ناڤینی</option>
+                                        <option value="Advanced">Advanced / پێشکەڤتی</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Featured & Recommended -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: #f8f9fa; border-radius: 8px;">
+                                    <input
+                                        type="checkbox"
+                                        id="adminYoutubeFeatured"
+                                        style="width: 20px; height: 20px; cursor: pointer;"
+                                    >
+                                    <label for="adminYoutubeFeatured" style="font-weight: 600; cursor: pointer; user-select: none;">
+                                        <i class="fas fa-star" style="color: #ffc107;"></i>
+                                        Featured Video
+                                    </label>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: #f8f9fa; border-radius: 8px;">
+                                    <input
+                                        type="checkbox"
+                                        id="adminYoutubeRecommended"
+                                        style="width: 20px; height: 20px; cursor: pointer;"
+                                    >
+                                    <label for="adminYoutubeRecommended" style="font-weight: 600; cursor: pointer; user-select: none;">
+                                        <i class="fas fa-thumbs-up" style="color: #28a745;"></i>
+                                        Recommended
+                                    </label>
+                                </div>
+                            </div>
+
                             <button onclick="saveAdminYoutubeVideo()" style="width: 100%; padding: 1.25rem; font-size: 1.1rem; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
                                 <i class="fas fa-save"></i>
                                 Save Video to TV Page
@@ -12912,11 +13056,12 @@ ${htmlParagraphs}
         // TV YOUTUBE UPLOAD SYSTEM
         // ========================================
 
-        // Load and populate series/category suggestions from localStorage
+        // Load and populate series/category/speaker suggestions from localStorage
         function loadVideoSuggestions() {
-            // Get saved series and categories
+            // Get saved series, categories, and speakers
             const savedSeries = JSON.parse(localStorage.getItem('tvVideoSeries') || '[]');
             const savedCategories = JSON.parse(localStorage.getItem('tvVideoCategories') || '[]');
+            const savedSpeakers = JSON.parse(localStorage.getItem('tvVideoSpeakers') || '[]');
 
             // Populate series suggestions
             const seriesDatalist = document.getElementById('seriesSuggestions');
@@ -12939,11 +13084,31 @@ ${htmlParagraphs}
                     categoryDatalist.appendChild(option);
                 });
             }
+
+            // Populate speaker suggestions
+            const speakerDatalist = document.getElementById('speakerSuggestions');
+            if (speakerDatalist) {
+                speakerDatalist.innerHTML = '';
+                savedSpeakers.forEach(speaker => {
+                    const option = document.createElement('option');
+                    option.value = speaker;
+                    speakerDatalist.appendChild(option);
+                });
+            }
         }
 
-        // Save new series/category to suggestions
+        // Save new series/category/speaker to suggestions
         function saveVideoSuggestion(type, value) {
-            const key = type === 'series' ? 'tvVideoSeries' : 'tvVideoCategories';
+            if (!value) return; // Skip if empty
+
+            const keyMap = {
+                'series': 'tvVideoSeries',
+                'category': 'tvVideoCategories',
+                'speaker': 'tvVideoSpeakers'
+            };
+            const key = keyMap[type];
+            if (!key) return;
+
             let saved = JSON.parse(localStorage.getItem(key) || '[]');
 
             // Add if not already exists
@@ -13010,8 +13175,19 @@ ${htmlParagraphs}
             const videoId = document.getElementById('adminYoutubeVideoId').value.trim();
             const title = document.getElementById('adminYoutubeTitle').value.trim();
             const desc = document.getElementById('adminYoutubeDesc').value.trim();
-            const series = document.getElementById('adminYoutubeSeries').value;
-            const category = document.getElementById('adminYoutubeCategory').value;
+            const series = document.getElementById('adminYoutubeSeries').value.trim();
+            const category = document.getElementById('adminYoutubeCategory').value.trim();
+
+            // Get all optional fields
+            const section = document.getElementById('adminYoutubeSection')?.value.trim() || '';
+            const episodeNum = document.getElementById('adminYoutubeEpisodeNum')?.value || null;
+            const speaker = document.getElementById('adminYoutubeSpeaker')?.value.trim() || '';
+            const language = document.getElementById('adminYoutubeLanguage')?.value || 'Kurdish';
+            const tags = document.getElementById('adminYoutubeTags')?.value.trim() || '';
+            const duration = document.getElementById('adminYoutubeDuration')?.value || null;
+            const difficulty = document.getElementById('adminYoutubeDifficulty')?.value || '';
+            const featured = document.getElementById('adminYoutubeFeatured')?.checked || false;
+            const recommended = document.getElementById('adminYoutubeRecommended')?.checked || false;
 
             // Validate
             if (!videoId || !title || !series || !category) {
@@ -13025,7 +13201,10 @@ ${htmlParagraphs}
                 return;
             }
 
-            // Create video data object
+            // Parse tags into array
+            const tagsArray = tags ? tags.split(',').map(tag => tag.trim()).filter(Boolean) : [];
+
+            // Create video data object with ALL fields
             const videoData = {
                 id: Date.now(), // Unique ID
                 videoId: videoId,
@@ -13033,6 +13212,15 @@ ${htmlParagraphs}
                 description: desc,
                 series: series,
                 category: category,
+                section: section,
+                episodeNumber: episodeNum ? parseInt(episodeNum) : null,
+                speaker: speaker,
+                language: language,
+                tags: tagsArray,
+                duration: duration ? parseInt(duration) : null,
+                difficulty: difficulty,
+                featured: featured,
+                recommended: recommended,
                 thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
                 embedUrl: `https://www.youtube.com/embed/${videoId}`,
                 viewCount: 0,
@@ -13080,9 +13268,10 @@ ${htmlParagraphs}
                     }
                 }
 
-                // Save series and category for autocomplete suggestions
+                // Save series, category, and speaker for autocomplete suggestions
                 saveVideoSuggestion('series', series);
                 saveVideoSuggestion('category', category);
+                saveVideoSuggestion('speaker', speaker);
 
                 // Reload suggestions to show new ones
                 loadVideoSuggestions();
@@ -13106,6 +13295,15 @@ ${htmlParagraphs}
             document.getElementById('adminYoutubeDesc').value = '';
             document.getElementById('adminYoutubeSeries').value = '';
             document.getElementById('adminYoutubeCategory').value = '';
+            document.getElementById('adminYoutubeSection').value = '';
+            document.getElementById('adminYoutubeEpisodeNum').value = '';
+            document.getElementById('adminYoutubeSpeaker').value = '';
+            document.getElementById('adminYoutubeLanguage').value = 'Kurdish';
+            document.getElementById('adminYoutubeTags').value = '';
+            document.getElementById('adminYoutubeDuration').value = '';
+            document.getElementById('adminYoutubeDifficulty').value = '';
+            document.getElementById('adminYoutubeFeatured').checked = false;
+            document.getElementById('adminYoutubeRecommended').checked = false;
             document.getElementById('adminYoutubePreview').style.display = 'none';
             document.getElementById('adminVideoMetadataForm').style.display = 'none';
         }
