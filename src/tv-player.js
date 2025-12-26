@@ -848,278 +848,55 @@
         // Implement series loading logic
     };
 
-    // ===== UPLOAD SYSTEM =====
-
-    // Switch between Supabase and YouTube upload tabs
-    window.switchUploadTab = function(tab) {
-        // Update active tab
-        document.querySelectorAll('.upload-tab').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-
-        // Show/hide upload methods
-        document.getElementById('supabaseUpload').style.display = tab === 'supabase' ? 'block' : 'none';
-        document.getElementById('youtubeUpload').style.display = tab === 'youtube' ? 'block' : 'none';
-    };
-
-    // File input change handler
-    let selectedFile = null;
-    document.getElementById('fileInput').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-
-        if (!file) return;
-
-        selectedFile = file;
-
-        // Validate file type
-        if (!file.type.startsWith('video/')) {
-            showNotification('تکایە فایلەکێ ڤیدیۆ هەڵبژێرە!');
-            return;
-        }
-
-        // Validate file size (5GB limit)
-        const maxSize = 5 * 1024 * 1024 * 1024; // 5GB
-        if (file.size > maxSize) {
-            showNotification('قەبارەیا فایلێ گەلەک مەزنە! (Max 5GB). تکایە YouTube بکاربهێنە بۆ ڤیدیۆیێن مەزن.');
-            selectedFile = null;
-            e.target.value = '';
-            return;
-        }
-
-        // Show file size
-        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-        showNotification(`فایل هەڵبژێردرا: ${file.name} (${sizeMB} MB)`);
-
-        // Show details form
-        document.getElementById('videoDetailsForm').style.display = 'block';
-        document.getElementById('videoDetailsForm').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
-
-    // Start Supabase Upload with chunked/resumable upload
-    window.startSupabaseUpload = async function() {
-        if (!selectedFile) {
-            showNotification('تکایە یەکەم فایلەکێ هەڵبژێرە!');
-            return;
-        }
-
-        // Validate form
-        const title = document.getElementById('videoTitle').value.trim();
-        const series = document.getElementById('videoSeries').value;
-        const category = document.getElementById('videoCategory').value;
-
-        if (!title || !series || !category) {
-            showNotification('تکایە هەمی خانەیێن پێدڤی پڕبکە!');
-            return;
-        }
-
-        const desc = document.getElementById('videoDesc').value.trim();
-
-        // Disable upload button
-        document.getElementById('startUploadBtn').disabled = true;
-        document.getElementById('startUploadBtn').textContent = 'دابەزاندنا...';
-
-        // Show progress container
-        document.getElementById('uploadProgressContainer').style.display = 'block';
-        document.getElementById('uploadFileName').textContent = selectedFile.name;
-
-        try {
-            // Upload to Supabase Storage with progress tracking
-            await uploadToSupabase(selectedFile, {
-                title,
-                description: desc,
-                series,
-                category
-            });
-
-            // Success
-            showNotification('ڤیدیۆ ب سەرکەفتی بارکری!');
-
-            // Reset form
-            resetUploadForm();
-
-            // Reload episodes (in real implementation)
-            // loadEpisodes();
-
-        } catch (error) {
-            console.error('Upload error:', error);
-            showNotification('هەڵەیەک هاتە دەستڤە: ' + error.message);
-        } finally {
-            document.getElementById('startUploadBtn').disabled = false;
-            document.getElementById('startUploadBtn').innerHTML = '<i class="fas fa-cloud-upload-alt"></i> دەستپێکرنا باڕکرنێ';
-        }
-    };
-
-    // Upload to Supabase Storage with chunked upload
-    async function uploadToSupabase(file, metadata) {
-        // NOTE: This requires Supabase client library
-        // Add to your HTML: <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-        // Check if Supabase is available
-        if (typeof supabase === 'undefined') {
-            console.log('Supabase not initialized. Demo mode.');
-            return simulateUpload(file);
-        }
-
-        const fileName = `videos/${Date.now()}-${file.name}`;
-        const chunkSize = 6 * 1024 * 1024; // 6MB chunks
-        const totalChunks = Math.ceil(file.size / chunkSize);
-
-        let uploadedChunks = 0;
-        let startTime = Date.now();
-
-        // For files under 6MB, use simple upload
-        if (file.size <= chunkSize) {
-            const { data, error } = await supabase.storage
-                .from('episode-videos')
-                .upload(fileName, file, {
-                    cacheControl: '3600',
-                    upsert: false,
-                    onUploadProgress: (progress) => {
-                        updateProgress(progress.loaded, file.size, startTime);
-                    }
-                });
-
-            if (error) throw error;
-
-            // Save metadata to database
-            await saveVideoMetadata(data.path, metadata);
-            return data;
-        }
-
-        // For larger files, use chunked upload
-        for (let i = 0; i < totalChunks; i++) {
-            const start = i * chunkSize;
-            const end = Math.min(start + chunkSize, file.size);
-            const chunk = file.slice(start, end);
-
-            const { error } = await supabase.storage
-                .from('episode-videos')
-                .upload(`${fileName}.part${i}`, chunk, {
-                    cacheControl: '3600',
-                    upsert: false
-                });
-
-            if (error) throw error;
-
-            uploadedChunks++;
-            updateProgress(end, file.size, startTime);
-        }
-
-        // Merge chunks (this would need a backend function)
-        const { data, error } = await supabase.functions.invoke('merge-video-chunks', {
-            body: { fileName, totalChunks }
-        });
-
-        if (error) throw error;
-
-        // Save metadata to database
-        await saveVideoMetadata(fileName, metadata);
-
-        return data;
-    }
-
-    // Simulate upload for demo (when Supabase not connected)
-    function simulateUpload(file) {
-        return new Promise((resolve) => {
-            let progress = 0;
-            const startTime = Date.now();
-
-            const interval = setInterval(() => {
-                progress += Math.random() * 15;
-                if (progress >= 100) {
-                    progress = 100;
-                    clearInterval(interval);
-                    updateProgress(file.size, file.size, startTime);
-                    setTimeout(resolve, 500);
-                } else {
-                    updateProgress((file.size * progress) / 100, file.size, startTime);
-                }
-            }, 300);
-        });
-    }
-
-    // Update upload progress UI
-    function updateProgress(loaded, total, startTime) {
-        const percent = Math.round((loaded / total) * 100);
-        const elapsed = (Date.now() - startTime) / 1000; // seconds
-        const speed = loaded / elapsed; // bytes per second
-        const remaining = (total - loaded) / speed; // seconds
-
-        // Update progress bar
-        document.getElementById('uploadProgressBar').style.width = percent + '%';
-        document.getElementById('uploadPercent').textContent = percent + '%';
-
-        // Update speed
-        let speedText;
-        if (speed > 1024 * 1024) {
-            speedText = (speed / (1024 * 1024)).toFixed(2) + ' MB/s';
-        } else {
-            speedText = (speed / 1024).toFixed(2) + ' KB/s';
-        }
-        document.getElementById('uploadSpeed').textContent = speedText;
-
-        // Update time remaining
-        let timeText;
-        if (remaining < 60) {
-            timeText = Math.ceil(remaining) + ' چرکە';
-        } else {
-            timeText = Math.ceil(remaining / 60) + ' خولەک';
-        }
-        document.getElementById('uploadTimeRemaining').textContent = timeText + ' ماوە';
-    }
-
-    // Save video metadata to database
-    async function saveVideoMetadata(videoPath, metadata) {
-        if (typeof supabase === 'undefined') {
-            console.log('Would save to database:', { videoPath, metadata });
-            return;
-        }
-
-        const { data, error } = await supabase
-            .from('tv_episodes')
-            .insert([{
-                title: metadata.title,
-                description: metadata.description,
-                video_url: videoPath,
-                video_type: 'supabase',
-                series: metadata.series,
-                category: metadata.category,
-                duration: 0, // Would be extracted from video
-                thumbnail_url: null, // Would be generated
-                view_count: 0,
-                like_count: 0,
-                rating: 0,
-                created_at: new Date().toISOString()
-            }]);
-
-        if (error) throw error;
-        return data;
-    }
+    // ===== YOUTUBE VIDEO UPLOAD SYSTEM =====
 
     // YouTube Video ID input handler
-    document.getElementById('youtubeVideoId')?.addEventListener('input', (e) => {
-        const videoId = e.target.value.trim();
+    const youtubeIdInput = document.getElementById('youtubeVideoId');
+    if (youtubeIdInput) {
+        youtubeIdInput.addEventListener('input', (e) => {
+            const videoId = e.target.value.trim();
 
-        // Extract video ID from full URL if pasted
-        let cleanId = videoId;
-        if (videoId.includes('youtube.com') || videoId.includes('youtu.be')) {
-            const match = videoId.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
-            if (match) {
-                cleanId = match[1];
-                e.target.value = cleanId;
+            // Extract video ID from full URL if pasted
+            let cleanId = videoId;
+            if (videoId.includes('youtube.com') || videoId.includes('youtu.be')) {
+                const match = videoId.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+                if (match) {
+                    cleanId = match[1];
+                    e.target.value = cleanId;
+                    showNotification('✓ IDیا YouTube دەستڤەگیرا!');
+                }
             }
-        }
 
-        // Show preview if valid ID
-        if (cleanId && cleanId.length === 11) {
-            document.getElementById('youtubePreview').style.display = 'block';
-            document.getElementById('youtubePreviewFrame').src =
-                `https://www.youtube.com/embed/${cleanId}`;
-        } else {
-            document.getElementById('youtubePreview').style.display = 'none';
-        }
-    });
+            // Show preview and form if valid ID
+            if (cleanId && cleanId.length === 11) {
+                // Show preview
+                document.getElementById('youtubePreview').style.display = 'block';
+                document.getElementById('youtubePreviewFrame').src =
+                    `https://www.youtube.com/embed/${cleanId}`;
+
+                // Show metadata form
+                document.getElementById('videoMetadataForm').style.display = 'block';
+
+                // Scroll to form
+                setTimeout(() => {
+                    document.getElementById('videoMetadataForm').scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest'
+                    });
+                }, 100);
+
+                // Highlight input border (valid)
+                e.target.style.borderColor = '#2ecc71';
+            } else {
+                // Hide preview and form
+                document.getElementById('youtubePreview').style.display = 'none';
+                document.getElementById('videoMetadataForm').style.display = 'none';
+
+                // Reset input border
+                e.target.style.borderColor = 'var(--border)';
+            }
+        });
+    }
 
     // Save YouTube video
     window.saveYoutubeVideo = async function() {
@@ -1141,8 +918,31 @@
             return;
         }
 
+        // Create video data object
+        const videoData = {
+            id: Date.now(), // Unique ID
+            videoId: videoId,
+            title: title,
+            description: desc,
+            series: series,
+            category: category,
+            thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+            embedUrl: `https://www.youtube.com/embed/${videoId}`,
+            viewCount: 0,
+            likeCount: 0,
+            rating: 0,
+            createdAt: new Date().toISOString()
+        };
+
         try {
-            // Save to database
+            // Option 1: Save to localStorage (for now)
+            let savedVideos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
+            savedVideos.unshift(videoData); // Add to beginning
+            localStorage.setItem('tvEpisodes', JSON.stringify(savedVideos));
+
+            console.log('✅ Video saved to localStorage:', videoData);
+
+            // Option 2: If you want to use Supabase database later (just for metadata, not file storage)
             if (typeof supabase !== 'undefined') {
                 const { data, error } = await supabase
                     .from('tv_episodes')
@@ -1162,10 +962,18 @@
                     }]);
 
                 if (error) throw error;
+                console.log('✅ Video also saved to Supabase database:', data);
             }
 
-            showNotification('ڤیدیۆیا YouTube ب سەرکەفتی تۆمارکری!');
+            showNotification('✓ ڤیدیۆیا YouTube ب سەرکەفتی تۆمارکری!');
+
+            // Reset form
             resetYoutubeForm();
+
+            // Reload episodes on page (if loadEpisodes function exists)
+            if (typeof loadEpisodes === 'function') {
+                loadEpisodes();
+            }
 
         } catch (error) {
             console.error('Save error:', error);
@@ -1173,26 +981,19 @@
         }
     };
 
-    // Reset upload form
-    function resetUploadForm() {
-        document.getElementById('fileInput').value = '';
-        document.getElementById('videoTitle').value = '';
-        document.getElementById('videoDesc').value = '';
-        document.getElementById('videoSeries').value = '';
-        document.getElementById('videoCategory').value = '';
-        document.getElementById('videoDetailsForm').style.display = 'none';
-        document.getElementById('uploadProgressContainer').style.display = 'none';
-        selectedFile = null;
-    }
-
     // Reset YouTube form
     function resetYoutubeForm() {
         document.getElementById('youtubeVideoId').value = '';
+        document.getElementById('youtubeVideoId').style.borderColor = 'var(--border)';
         document.getElementById('youtubeTitle').value = '';
         document.getElementById('youtubeDesc').value = '';
         document.getElementById('youtubeSeries').value = '';
         document.getElementById('youtubeCategory').value = '';
         document.getElementById('youtubePreview').style.display = 'none';
+        document.getElementById('videoMetadataForm').style.display = 'none';
+
+        // Scroll back to top of upload section
+        document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
     }
 
     // ===== INITIALIZE ON LOAD =====
