@@ -10,7 +10,7 @@
         playlist: [],
         watchlist: [],
         watchProgress: {},
-        liked Episodes: [],
+        likedEpisodes: [],
         currentQuality: '1080',
         currentSpeed: 1,
         subtitlesEnabled: false,
