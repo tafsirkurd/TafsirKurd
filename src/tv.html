@@ -286,6 +286,74 @@
             border-color: var(--danger);
         }
 
+        #audioOnlyBtn.active {
+            background: #1ab7ea;
+            border-color: #1ab7ea;
+        }
+
+        /* Audio Only Mode Overlay */
+        .audio-only-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .audio-only-overlay.active {
+            display: flex;
+        }
+
+        .audio-visualizer {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1ab7ea 0%, #0d5d7a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 60px rgba(26, 183, 234, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .audio-visualizer i {
+            font-size: 5rem;
+            color: #ffffff;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 60px rgba(26, 183, 234, 0.5);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 80px rgba(26, 183, 234, 0.8);
+            }
+        }
+
+        .audio-only-text {
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .audio-only-text h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .audio-only-text p {
+            font-size: 1.2rem;
+            color: #999;
+        }
+
         .video-controls {
             display: flex;
             align-items: center;
@@ -1133,6 +1201,17 @@
                 پشتگیری یا بروزەر تە بۆ ڤیدیۆ نینە.
             </video>
 
+            <!-- Audio Only Mode Overlay -->
+            <div class="audio-only-overlay" id="audioOnlyOverlay">
+                <div class="audio-visualizer">
+                    <i class="fas fa-headphones"></i>
+                </div>
+                <div class="audio-only-text">
+                    <h2>دەنگ تەنێ</h2>
+                    <p>گوهدارکرن ب تەنێ - ڤیدیۆ ڤەمرا یە</p>
+                </div>
+            </div>
+
             <!-- Skip Intro Button -->
             <button class="skip-btn" id="skipIntroBtn">
                 <i class="fas fa-forward"></i>
@@ -1187,6 +1266,10 @@
                         <button class="action-btn" id="pipBtn">
                             <i class="fas fa-window-restore"></i>
                             PiP
+                        </button>
+                        <button class="action-btn" id="audioOnlyBtn" title="دەنگ تەنێ">
+                            <i class="fas fa-headphones"></i>
+                            دەنگ تەنێ
                         </button>
                     </div>
                 </div>
@@ -1550,6 +1633,6 @@
     </div>
 
     <!-- JavaScript -->
-    <script src="/tv-player.js?v=20251227-sections"></script>
+    <script src="/tv-player.js?v=20251227-audio"></script>
 </body>
 </html>
