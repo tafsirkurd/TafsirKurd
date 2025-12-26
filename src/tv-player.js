@@ -789,59 +789,57 @@
         }
     }
 
-    // Render episodes in the grids
+    // Render episodes in the grids based on their section
     function renderEpisodes() {
         const videos = state.playlist;
 
         console.log('🎬 renderEpisodes called with', videos.length, 'videos');
-
-        // Get grid containers
-        const latestEpisodesGrid = document.getElementById('latestEpisodes');
-        const continueWatchingGrid = document.getElementById('continueWatching');
-
-        console.log('📍 Grid elements:', {
-            latestEpisodesGrid: !!latestEpisodesGrid,
-            continueWatchingGrid: !!continueWatchingGrid
-        });
 
         if (!videos || videos.length === 0) {
             console.warn('⚠️ No videos to render');
             return;
         }
 
-        // Render latest episodes
-        if (latestEpisodesGrid) {
-            latestEpisodesGrid.innerHTML = '';
+        // Get all section grids
+        const latestEpisodesGrid = document.getElementById('latestEpisodes');
+        const continueWatchingGrid = document.getElementById('continueWatching');
+        const trendingGrid = document.querySelector('#categories .episodes-grid');
+        const topRatedGrid = document.querySelector('.section:has(.fa-crown) .episodes-grid');
 
-            const videosToShow = videos.slice(0, 6);
-            console.log(`📺 Rendering ${videosToShow.length} videos in Latest Episodes`);
+        // Clear all grids
+        if (latestEpisodesGrid) latestEpisodesGrid.innerHTML = '';
+        if (continueWatchingGrid) continueWatchingGrid.innerHTML = '';
 
-            videosToShow.forEach((video, index) => {
-                const episodeCard = createEpisodeCard(video);
-                latestEpisodesGrid.innerHTML += episodeCard;
-                console.log(`  ✅ Added video ${index + 1}:`, video.title);
-            });
-        } else {
-            console.error('❌ latestEpisodesGrid not found!');
-        }
+        // Group videos by section
+        videos.forEach((video, index) => {
+            const section = video.section || 'Latest Episodes'; // Default section
+            const episodeCard = createEpisodeCard(video);
 
-        // Render continue watching (videos with progress)
-        if (continueWatchingGrid) {
-            const videosWithProgress = videos.filter(v =>
-                state.watchProgress[v.id] && state.watchProgress[v.id].percent < 90
-            );
-
-            if (videosWithProgress.length > 0) {
-                continueWatchingGrid.innerHTML = '';
-                videosWithProgress.slice(0, 6).forEach(video => {
-                    const episodeCard = createEpisodeCard(video, true);
-                    continueWatchingGrid.innerHTML += episodeCard;
-                });
-                console.log(`📺 Rendered ${videosWithProgress.length} videos in Continue Watching`);
-            } else {
-                console.log('ℹ️ No videos with watch progress');
+            // Render to specific section based on video.section field
+            switch(section) {
+                case 'Continue Watching':
+                    if (continueWatchingGrid) {
+                        continueWatchingGrid.innerHTML += episodeCard;
+                    }
+                    break;
+                case 'Trending':
+                    if (trendingGrid) {
+                        trendingGrid.innerHTML += episodeCard;
+                    }
+                    break;
+                case 'Featured':
+                case 'Latest Episodes':
+                default:
+                    if (latestEpisodesGrid) {
+                        latestEpisodesGrid.innerHTML += episodeCard;
+                    }
+                    break;
             }
-        }
+
+            console.log(`  ✅ Added "${video.title}" to ${section}`);
+        });
+
+        console.log(`📺 Rendered ${videos.length} videos total`);
     }
 
     // Create episode card HTML
