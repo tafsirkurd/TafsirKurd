@@ -865,6 +865,9 @@
                         <button class="quick-btn" onclick="event.stopPropagation(); shareEpisode(${video.id})" title="پارڤەبکە">
                             <i class="fas fa-share-alt"></i>
                         </button>
+                        <button class="quick-btn quick-btn-delete" onclick="event.stopPropagation(); deleteVideo(${video.id}, '${video.title}')" title="سڕینەوە">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="episode-info">
@@ -888,50 +891,72 @@
 
     // Play YouTube video in the player
     window.playYouTubeVideo = function(videoId, title, episodeId) {
+        console.log('🎬 Playing YouTube video:', videoId, title, episodeId);
+
         // Update current episode
         state.currentEpisode = episodeId;
 
-        // Find video player section (you'll need to add an iframe for YouTube)
+        // Find or create YouTube iframe
+        let iframe = document.getElementById('youtubePlayer');
         const playerSection = document.getElementById('playerSection');
 
-        if (!playerSection) {
-            // Create player section if it doesn't exist
-            const content = document.querySelector('.content');
-            const playerHTML = `
-                <section id="playerSection" class="section" style="margin-bottom: 2rem;">
-                    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; background: #000;">
-                        <iframe
-                            id="youtubePlayer"
-                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
-                            frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowfullscreen
-                        ></iframe>
-                    </div>
-                    <div style="margin-top: 1rem;">
-                        <h2 id="currentVideoTitle" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></h2>
-                        <p id="currentVideoDescription" style="color: var(--text-muted);"></p>
-                    </div>
-                </section>
+        if (!iframe) {
+            // Create iframe if it doesn't exist
+            const playerContainer = playerSection.querySelector('.player-container');
+
+            // Hide the regular video element
+            const videoElement = document.getElementById('videoPlayer');
+            if (videoElement) {
+                videoElement.style.display = 'none';
+            }
+
+            // Hide the player overlay (controls for regular video)
+            const playerOverlay = playerContainer.querySelector('.player-overlay');
+            if (playerOverlay) {
+                playerOverlay.style.display = 'none';
+            }
+
+            // Create YouTube iframe
+            const iframeHTML = `
+                <iframe
+                    id="youtubePlayer"
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen
+                ></iframe>
             `;
-            content.insertAdjacentHTML('afterbegin', playerHTML);
+            playerContainer.insertAdjacentHTML('beforeend', iframeHTML);
+            iframe = document.getElementById('youtubePlayer');
+
+            console.log('✅ Created YouTube iframe player');
         }
 
-        // Update player
-        const iframe = document.getElementById('youtubePlayer');
-        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+        // Update iframe source
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+        console.log('▶️ Loading video:', `https://www.youtube.com/embed/${videoId}`);
 
-        // Update title
-        document.getElementById('currentVideoTitle').textContent = title;
+        // Update video title in the existing overlay
+        const videoTitle = playerSection.querySelector('.video-title');
+        if (videoTitle) {
+            videoTitle.textContent = title;
+        }
 
-        // Find and display description
+        // Update video description
         const video = state.playlist.find(v => v.id === episodeId);
         if (video && video.description) {
-            document.getElementById('currentVideoDescription').textContent = video.description;
+            const videoDesc = playerSection.querySelector('.video-description');
+            if (videoDesc) {
+                videoDesc.textContent = video.description;
+            }
         }
 
-        // Scroll to player
-        document.getElementById('playerSection').scrollIntoView({ behavior: 'smooth' });
+        // Show player section if hidden
+        if (playerSection) {
+            playerSection.style.display = 'block';
+            // Scroll to player
+            playerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
 
         // Track view
         trackVideoView(episodeId);
@@ -950,6 +975,64 @@
             state.playlist = videos;
         }
     }
+
+    // Delete video
+    window.deleteVideo = async function(videoId, videoTitle) {
+        console.log('🗑️ Delete video requested:', videoId, videoTitle);
+
+        // Confirm deletion
+        const confirmDelete = confirm(`ئایا تو دڵنیای کە دڤێت ئەڤ ڤیدیۆیێ بسڕیتەڤە؟\n\n"${videoTitle}"\n\nئەڤ کار ناکرێ پاشتر بگەڕێنەڤە!`);
+
+        if (!confirmDelete) {
+            console.log('❌ Delete cancelled');
+            return;
+        }
+
+        try {
+            // 1. Delete from localStorage
+            let videos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
+            const initialCount = videos.length;
+            videos = videos.filter(v => v.id !== videoId);
+            const newCount = videos.length;
+
+            if (initialCount === newCount) {
+                showNotification('⚠️ ڤیدیۆ نەهاتە دیتن!', 'warning');
+                return;
+            }
+
+            localStorage.setItem('tvEpisodes', JSON.stringify(videos));
+            console.log(`✅ Deleted from localStorage (${initialCount} → ${newCount} videos)`);
+
+            // 2. Delete from Supabase (if exists)
+            if (typeof supabase !== 'undefined') {
+                try {
+                    const { error } = await supabase
+                        .from('tv_episodes')
+                        .delete()
+                        .eq('id', videoId);
+
+                    if (error) {
+                        console.warn('⚠️ Could not delete from Supabase:', error.message);
+                    } else {
+                        console.log('✅ Also deleted from Supabase database');
+                    }
+                } catch (dbError) {
+                    console.warn('⚠️ Supabase delete error:', dbError.message);
+                }
+            }
+
+            // 3. Update state and re-render
+            state.playlist = videos;
+            renderEpisodes();
+
+            showNotification('✅ ڤیدیۆ هاتە سڕینەڤە!');
+            console.log('✅ Video deleted successfully');
+
+        } catch (error) {
+            console.error('❌ Delete error:', error);
+            showNotification('❌ هەڵە: ' + error.message, 'error');
+        }
+    };
 
     // ===== SEARCH =====
     function openSearchModal() {
