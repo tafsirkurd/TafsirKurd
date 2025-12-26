@@ -2885,27 +2885,44 @@
 
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                                 <div>
-                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Series *</label>
-                                    <select id="adminYoutubeSeries" style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;" required>
-                                        <option value="">Select...</option>
-                                        <option value="tafsir">Tafsir Series</option>
-                                        <option value="ramadan">Ramadan Lessons</option>
-                                        <option value="stories">Quran Stories</option>
-                                        <option value="fiqh">Daily Fiqh</option>
-                                        <option value="seerah">Prophet's Biography</option>
-                                    </select>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                        Series *
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Type anything)</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="adminYoutubeSeries"
+                                        list="seriesSuggestions"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
+                                        placeholder="e.g., Tafsir Series, Ramadan..."
+                                        required
+                                    >
+                                    <datalist id="seriesSuggestions">
+                                        <!-- Will be populated from localStorage -->
+                                    </datalist>
+                                    <p style="margin-top: 0.25rem; font-size: 0.8rem; color: #999;">
+                                        <i class="fas fa-info-circle"></i> Auto-saves for next time
+                                    </p>
                                 </div>
                                 <div>
-                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Category *</label>
-                                    <select id="adminYoutubeCategory" style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;" required>
-                                        <option value="">Select...</option>
-                                        <option value="tafsir">Tafsir</option>
-                                        <option value="hadith">Hadith</option>
-                                        <option value="seerah">Seerah</option>
-                                        <option value="fiqh">Fiqh</option>
-                                        <option value="stories">Stories</option>
-                                        <option value="aqeedah">Aqeedah</option>
-                                    </select>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
+                                        Category *
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Type anything)</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="adminYoutubeCategory"
+                                        list="categorySuggestions"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
+                                        placeholder="e.g., Tafsir, Hadith, Fiqh..."
+                                        required
+                                    >
+                                    <datalist id="categorySuggestions">
+                                        <!-- Will be populated from localStorage -->
+                                    </datalist>
+                                    <p style="margin-top: 0.25rem; font-size: 0.8rem; color: #999;">
+                                        <i class="fas fa-info-circle"></i> Auto-saves for next time
+                                    </p>
                                 </div>
                             </div>
 
@@ -12895,6 +12912,51 @@ ${htmlParagraphs}
         // TV YOUTUBE UPLOAD SYSTEM
         // ========================================
 
+        // Load and populate series/category suggestions from localStorage
+        function loadVideoSuggestions() {
+            // Get saved series and categories
+            const savedSeries = JSON.parse(localStorage.getItem('tvVideoSeries') || '[]');
+            const savedCategories = JSON.parse(localStorage.getItem('tvVideoCategories') || '[]');
+
+            // Populate series suggestions
+            const seriesDatalist = document.getElementById('seriesSuggestions');
+            if (seriesDatalist) {
+                seriesDatalist.innerHTML = '';
+                savedSeries.forEach(series => {
+                    const option = document.createElement('option');
+                    option.value = series;
+                    seriesDatalist.appendChild(option);
+                });
+            }
+
+            // Populate category suggestions
+            const categoryDatalist = document.getElementById('categorySuggestions');
+            if (categoryDatalist) {
+                categoryDatalist.innerHTML = '';
+                savedCategories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    categoryDatalist.appendChild(option);
+                });
+            }
+        }
+
+        // Save new series/category to suggestions
+        function saveVideoSuggestion(type, value) {
+            const key = type === 'series' ? 'tvVideoSeries' : 'tvVideoCategories';
+            let saved = JSON.parse(localStorage.getItem(key) || '[]');
+
+            // Add if not already exists
+            if (!saved.includes(value)) {
+                saved.push(value);
+                localStorage.setItem(key, JSON.stringify(saved));
+                console.log(`✓ Saved new ${type}: ${value}`);
+            }
+        }
+
+        // Load suggestions on page load
+        loadVideoSuggestions();
+
         // YouTube Video ID input handler for admin panel
         const adminYoutubeIdInput = document.getElementById('adminYoutubeVideoId');
         if (adminYoutubeIdInput) {
@@ -13009,6 +13071,13 @@ ${htmlParagraphs}
                     if (error) throw error;
                     console.log('✅ Video also saved to Supabase database:', data);
                 }
+
+                // Save series and category for autocomplete suggestions
+                saveVideoSuggestion('series', series);
+                saveVideoSuggestion('category', category);
+
+                // Reload suggestions to show new ones
+                loadVideoSuggestions();
 
                 showAdminNotification('✓ Video saved successfully! Now visible on TV page.', 'success');
 
