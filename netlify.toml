@@ -206,3 +206,8 @@
   from = "/admin"
   to = "/admin.html"
   status = 200
+
+[[redirects]]
+  from = "/tv"
+  to = "/tv.html"
+  status = 200
