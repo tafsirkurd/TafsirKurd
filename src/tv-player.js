@@ -65,12 +65,13 @@
     };
 
     // ===== INITIALIZATION =====
-    function init() {
+    async function init() {
+        console.log('🚀 Initializing تەفسیر TV Player...');
         loadSavedData();
         setupEventListeners();
         setupKeyboardShortcuts();
-        loadPlaylist();
-        console.log('تەفسیر TV Player initialized');
+        await loadPlaylist(); // Wait for videos to load
+        console.log('✅ تەفسیر TV Player initialized');
     }
 
     // ===== LOAD SAVED DATA =====
@@ -713,18 +714,78 @@
         `).join('');
     }
 
-    function loadPlaylist() {
-        // Load videos from localStorage
-        const savedVideos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
+    async function loadPlaylist() {
+        let allVideos = [];
 
-        if (savedVideos.length > 0) {
-            state.playlist = savedVideos;
-            console.log(`✅ Loaded ${savedVideos.length} videos from localStorage`);
+        // 1. Load from localStorage first
+        const localVideos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
+        if (localVideos.length > 0) {
+            allVideos = [...localVideos];
+            console.log(`✅ Loaded ${localVideos.length} videos from localStorage`);
+        }
+
+        // 2. Load from Supabase database (if available)
+        if (typeof supabase !== 'undefined') {
+            try {
+                const { data, error } = await supabase
+                    .from('tv_episodes')
+                    .select('*')
+                    .eq('video_type', 'youtube')
+                    .order('created_at', { ascending: false });
+
+                if (!error && data && data.length > 0) {
+                    console.log(`✅ Loaded ${data.length} videos from Supabase`);
+
+                    // Convert Supabase format to our format
+                    const supabaseVideos = data.map(v => ({
+                        id: v.id,
+                        videoId: v.video_url,
+                        title: v.title,
+                        description: v.description,
+                        series: v.series,
+                        category: v.category,
+                        thumbnail: v.thumbnail_url || `https://img.youtube.com/vi/${v.video_url}/maxresdefault.jpg`,
+                        embedUrl: `https://www.youtube.com/embed/${v.video_url}`,
+                        viewCount: v.view_count || 0,
+                        likeCount: v.like_count || 0,
+                        rating: v.rating || 0,
+                        createdAt: v.created_at
+                    }));
+
+                    // Merge with local videos (avoid duplicates by video_url)
+                    const existingVideoIds = new Set(allVideos.map(v => v.videoId));
+                    const newVideos = supabaseVideos.filter(v => !existingVideoIds.has(v.videoId));
+
+                    allVideos = [...allVideos, ...newVideos];
+                } else if (error) {
+                    console.warn('⚠️ Supabase load skipped:', error.message);
+                }
+            } catch (err) {
+                console.warn('⚠️ Supabase load error:', err.message);
+            }
+        }
+
+        // 3. Update state and render
+        if (allVideos.length > 0) {
+            state.playlist = allVideos;
+            console.log(`📺 Total videos loaded: ${allVideos.length}`);
 
             // Render videos in the page
             renderEpisodes();
         } else {
             console.log('⚠️ No videos found. Upload some in the admin panel!');
+
+            // Show message on page
+            const latestGrid = document.getElementById('latestEpisodes');
+            if (latestGrid) {
+                latestGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                        <i class="fas fa-video" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                        <h3 style="color: var(--text-muted);">هێچ ڤیدیۆیەک نینە</h3>
+                        <p style="color: var(--text-muted); margin-top: 0.5rem;">بچە پانێلا ئیدارێ بۆ زێدەکرنا ڤیدیۆیان</p>
+                    </div>
+                `;
+            }
         }
     }
 
@@ -732,20 +793,36 @@
     function renderEpisodes() {
         const videos = state.playlist;
 
+        console.log('🎬 renderEpisodes called with', videos.length, 'videos');
+
         // Get grid containers
         const latestEpisodesGrid = document.getElementById('latestEpisodes');
         const continueWatchingGrid = document.getElementById('continueWatching');
 
-        if (!videos || videos.length === 0) return;
+        console.log('📍 Grid elements:', {
+            latestEpisodesGrid: !!latestEpisodesGrid,
+            continueWatchingGrid: !!continueWatchingGrid
+        });
+
+        if (!videos || videos.length === 0) {
+            console.warn('⚠️ No videos to render');
+            return;
+        }
 
         // Render latest episodes
         if (latestEpisodesGrid) {
             latestEpisodesGrid.innerHTML = '';
 
-            videos.slice(0, 6).forEach(video => {
+            const videosToShow = videos.slice(0, 6);
+            console.log(`📺 Rendering ${videosToShow.length} videos in Latest Episodes`);
+
+            videosToShow.forEach((video, index) => {
                 const episodeCard = createEpisodeCard(video);
                 latestEpisodesGrid.innerHTML += episodeCard;
+                console.log(`  ✅ Added video ${index + 1}:`, video.title);
             });
+        } else {
+            console.error('❌ latestEpisodesGrid not found!');
         }
 
         // Render continue watching (videos with progress)
@@ -760,6 +837,9 @@
                     const episodeCard = createEpisodeCard(video, true);
                     continueWatchingGrid.innerHTML += episodeCard;
                 });
+                console.log(`📺 Rendered ${videosWithProgress.length} videos in Continue Watching`);
+            } else {
+                console.log('ℹ️ No videos with watch progress');
             }
         }
     }
