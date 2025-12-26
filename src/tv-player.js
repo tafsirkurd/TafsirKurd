@@ -714,13 +714,161 @@
     }
 
     function loadPlaylist() {
-        // In real implementation, load from database
-        state.playlist = [
-            { id: 1, title: 'تەفسیرا سورەتا الفاتحة', duration: '٤٥:٣٠', thumbnail: '/assets/images/episode-placeholder.jpg' },
-            { id: 2, title: 'تەفسیرا سورەتا البقرة (بەشا یەکەم)', duration: '٣٨:١٥', thumbnail: '/assets/images/episode-placeholder.jpg' },
-            { id: 3, title: 'تەفسیرا سورەتا البقرة (بەشا دوویەم)', duration: '٥٢:٤٥', thumbnail: '/assets/images/episode-placeholder.jpg' },
-            { id: 4, title: 'تەفسیرا سورەتا ئال عمران', duration: '٤١:٢٠', thumbnail: '/assets/images/episode-placeholder.jpg' }
-        ];
+        // Load videos from localStorage
+        const savedVideos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
+
+        if (savedVideos.length > 0) {
+            state.playlist = savedVideos;
+            console.log(`✅ Loaded ${savedVideos.length} videos from localStorage`);
+
+            // Render videos in the page
+            renderEpisodes();
+        } else {
+            console.log('⚠️ No videos found. Upload some in the admin panel!');
+        }
+    }
+
+    // Render episodes in the grids
+    function renderEpisodes() {
+        const videos = state.playlist;
+
+        // Get grid containers
+        const latestEpisodesGrid = document.getElementById('latestEpisodes');
+        const continueWatchingGrid = document.getElementById('continueWatching');
+
+        if (!videos || videos.length === 0) return;
+
+        // Render latest episodes
+        if (latestEpisodesGrid) {
+            latestEpisodesGrid.innerHTML = '';
+
+            videos.slice(0, 6).forEach(video => {
+                const episodeCard = createEpisodeCard(video);
+                latestEpisodesGrid.innerHTML += episodeCard;
+            });
+        }
+
+        // Render continue watching (videos with progress)
+        if (continueWatchingGrid) {
+            const videosWithProgress = videos.filter(v =>
+                state.watchProgress[v.id] && state.watchProgress[v.id].percent < 90
+            );
+
+            if (videosWithProgress.length > 0) {
+                continueWatchingGrid.innerHTML = '';
+                videosWithProgress.slice(0, 6).forEach(video => {
+                    const episodeCard = createEpisodeCard(video, true);
+                    continueWatchingGrid.innerHTML += episodeCard;
+                });
+            }
+        }
+    }
+
+    // Create episode card HTML
+    function createEpisodeCard(video, showProgress = false) {
+        const progress = showProgress && state.watchProgress[video.id]
+            ? state.watchProgress[video.id].percent
+            : 0;
+
+        return `
+            <div class="episode-card" onclick="playYouTubeVideo('${video.videoId}', '${video.title}', ${video.id})">
+                <div class="episode-thumbnail">
+                    <img src="${video.thumbnail}" alt="${video.title}" onerror="this.src='/assets/images/episode-placeholder.jpg'">
+                    ${showProgress ? `<div class="episode-progress" style="width: ${progress}%;"></div>` : ''}
+                    <div class="play-overlay">
+                        <i class="fas fa-play"></i>
+                    </div>
+                    <div class="quick-actions">
+                        <button class="quick-btn" onclick="event.stopPropagation(); addToWatchlist(${video.id})" title="زێدەبکە لیستێ">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button class="quick-btn" onclick="event.stopPropagation(); shareEpisode(${video.id})" title="پارڤەبکە">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="episode-info">
+                    <div class="episode-number">${video.series}</div>
+                    <h3 class="episode-title">${video.title}</h3>
+                    <p class="episode-desc">${video.description || ''}</p>
+                    <div class="episode-stats">
+                        <span class="episode-stat">
+                            <i class="fas fa-eye"></i>
+                            ${video.viewCount || 0}
+                        </span>
+                        <span class="episode-stat">
+                            <i class="fas fa-thumbs-up"></i>
+                            ${video.likeCount || 0}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Play YouTube video in the player
+    window.playYouTubeVideo = function(videoId, title, episodeId) {
+        // Update current episode
+        state.currentEpisode = episodeId;
+
+        // Find video player section (you'll need to add an iframe for YouTube)
+        const playerSection = document.getElementById('playerSection');
+
+        if (!playerSection) {
+            // Create player section if it doesn't exist
+            const content = document.querySelector('.content');
+            const playerHTML = `
+                <section id="playerSection" class="section" style="margin-bottom: 2rem;">
+                    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; background: #000;">
+                        <iframe
+                            id="youtubePlayer"
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen
+                        ></iframe>
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <h2 id="currentVideoTitle" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></h2>
+                        <p id="currentVideoDescription" style="color: var(--text-muted);"></p>
+                    </div>
+                </section>
+            `;
+            content.insertAdjacentHTML('afterbegin', playerHTML);
+        }
+
+        // Update player
+        const iframe = document.getElementById('youtubePlayer');
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+
+        // Update title
+        document.getElementById('currentVideoTitle').textContent = title;
+
+        // Find and display description
+        const video = state.playlist.find(v => v.id === episodeId);
+        if (video && video.description) {
+            document.getElementById('currentVideoDescription').textContent = video.description;
+        }
+
+        // Scroll to player
+        document.getElementById('playerSection').scrollIntoView({ behavior: 'smooth' });
+
+        // Track view
+        trackVideoView(episodeId);
+
+        showNotification('▶️ دەستپێکرنا ڤیدیۆ...');
+    };
+
+    // Track video view
+    function trackVideoView(episodeId) {
+        const videos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
+        const video = videos.find(v => v.id === episodeId);
+
+        if (video) {
+            video.viewCount = (video.viewCount || 0) + 1;
+            localStorage.setItem('tvEpisodes', JSON.stringify(videos));
+            state.playlist = videos;
+        }
     }
 
     // ===== SEARCH =====
