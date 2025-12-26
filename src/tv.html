@@ -747,6 +747,37 @@
             display: none;
         }
 
+        .upload-tab {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            font-family: inherit;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .upload-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .upload-tab.active {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         /* ===== MODALS ===== */
         .modal {
             position: fixed;
@@ -1328,12 +1359,150 @@
                 <i class="fas fa-cloud-upload-alt"></i>
             </div>
             <h2 class="upload-title">باڕکرنا بەشێن نوی</h2>
-            <p class="upload-desc">بارکە ڤیدیۆیێن ئیسلامی یێن نوی بۆ کۆمەڵگەهێ</p>
-            <input type="file" class="file-input" id="fileInput" accept="video/*" multiple>
-            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
-                <i class="fas fa-upload"></i>
-                هەڵبژێرە ڤیدیۆ
-            </button>
+            <p class="upload-desc">هەڵبژێرە ڕێگەیا باڕکرنێ</p>
+
+            <!-- Upload Method Tabs -->
+            <div class="upload-tabs" style="display: flex; gap: 1rem; justify-content: center; margin: 1.5rem 0;">
+                <button class="upload-tab active" data-tab="supabase" onclick="switchUploadTab('supabase')">
+                    <i class="fas fa-upload"></i>
+                    باڕکرنا ڤیدیۆ
+                </button>
+                <button class="upload-tab" data-tab="youtube" onclick="switchUploadTab('youtube')">
+                    <i class="fab fa-youtube"></i>
+                    لینکا YouTube
+                </button>
+            </div>
+
+            <!-- Supabase Upload -->
+            <div class="upload-method" id="supabaseUpload">
+                <input type="file" class="file-input" id="fileInput" accept="video/*">
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-upload"></i>
+                    هەڵبژێرە ڤیدیۆ (تا ٥GB)
+                </button>
+
+                <!-- Upload Progress -->
+                <div class="upload-progress-container" id="uploadProgressContainer" style="display: none; margin-top: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span id="uploadFileName">دابەزاندن...</span>
+                        <span id="uploadPercent">٠%</span>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;">
+                        <div id="uploadProgressBar" style="height: 100%; background: linear-gradient(90deg, #e74c3c, #c0392b); width: 0%; transition: width 0.3s;"></div>
+                    </div>
+                    <div style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">
+                        <span id="uploadSpeed">٠ KB/s</span> •
+                        <span id="uploadTimeRemaining">دەستپێکرن...</span>
+                    </div>
+                </div>
+
+                <!-- Video Details Form (shown after file selected) -->
+                <div class="video-details-form" id="videoDetailsForm" style="display: none; margin-top: 2rem; text-align: right;">
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ناڤێ بەشێ *</label>
+                        <input type="text" id="videoTitle" style="width: 100%; padding: 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit;" placeholder="مثلاً: تەفسیرا سورەتا البقرة" required>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">وەسف</label>
+                        <textarea id="videoDesc" rows="3" style="width: 100%; padding: 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; resize: vertical;" placeholder="وەسفەکا کورت..."></textarea>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">زنجیرە *</label>
+                            <select id="videoSeries" style="width: 100%; padding: 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit;" required>
+                                <option value="">هەڵبژێرە...</option>
+                                <option value="tafsir">زنجیرەیا تەفسیر</option>
+                                <option value="ramadan">وانێن ڕەمەزان</option>
+                                <option value="stories">چیڕۆکێن قورئانی</option>
+                                <option value="fiqh">فقها ڕۆژانە</option>
+                                <option value="seerah">ژیاننامەیا پێغەمبەر ﷺ</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">پۆل *</label>
+                            <select id="videoCategory" style="width: 100%; padding: 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit;" required>
+                                <option value="">هەڵبژێرە...</option>
+                                <option value="tafsir">تەفسیر</option>
+                                <option value="hadith">حەدیس</option>
+                                <option value="seerah">سیرەت</option>
+                                <option value="fiqh">فقه</option>
+                                <option value="stories">چیڕۆکێن پێغەمبەران</option>
+                                <option value="aqeedah">عەقیدە</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="upload-btn" onclick="startSupabaseUpload()" id="startUploadBtn">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        دەستپێکرنا باڕکرنێ
+                    </button>
+                </div>
+            </div>
+
+            <!-- YouTube Upload -->
+            <div class="upload-method" id="youtubeUpload" style="display: none;">
+                <div style="max-width: 600px; margin: 0 auto; text-align: right;">
+                    <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">چۆن یا دەستڤەگرتنا IDیا YouTube:</h3>
+                        <ol style="line-height: 2; color: var(--text-muted); padding-right: 1.5rem;">
+                            <li>بچە YouTube و ڤیدیۆیا خوە باربکە</li>
+                            <li>ڤیدیۆ وەک "Unlisted" یان "Public" دیاربکە</li>
+                            <li>ژ URLێ IDێ کۆپیکە (دوایی watch?v=)</li>
+                            <li>مثال: youtube.com/watch?v=<strong>dQw4w9WgXcQ</strong></li>
+                        </ol>
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">IDیا ڤیدیۆیا YouTube *</label>
+                        <input type="text" id="youtubeVideoId" style="width: 100%; padding: 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit;" placeholder="dQw4w9WgXcQ" required>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ناڤێ بەشێ *</label>
+                        <input type="text" id="youtubeTitle" style="width: 100%; padding: 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit;" placeholder="مثلاً: تەفسیرا سورەتا البقرة" required>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">وەسف</label>
+                        <textarea id="youtubeDesc" rows="3" style="width: 100%; padding: 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; resize: vertical;" placeholder="وەسفەکا کورت..."></textarea>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">زنجیرە *</label>
+                            <select id="youtubeSeries" style="width: 100%; padding: 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit;" required>
+                                <option value="">هەڵبژێرە...</option>
+                                <option value="tafsir">زنجیرەیا تەفسیر</option>
+                                <option value="ramadan">وانێن ڕەمەزان</option>
+                                <option value="stories">چیڕۆکێن قورئانی</option>
+                                <option value="fiqh">فقها ڕۆژانە</option>
+                                <option value="seerah">ژیاننامەیا پێغەمبەر ﷺ</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">پۆل *</label>
+                            <select id="youtubeCategory" style="width: 100%; padding: 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit;" required>
+                                <option value="">هەڵبژێرە...</option>
+                                <option value="tafsir">تەفسیر</option>
+                                <option value="hadith">حەدیس</option>
+                                <option value="seerah">سیرەت</option>
+                                <option value="fiqh">فقه</option>
+                                <option value="stories">چیڕۆکێن پێغەمبەران</option>
+                                <option value="aqeedah">عەقیدە</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- YouTube Preview -->
+                    <div id="youtubePreview" style="display: none; margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">پێشدیتن:</label>
+                        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; background: #000;">
+                            <iframe id="youtubePreviewFrame" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                    </div>
+
+                    <button class="upload-btn" onclick="saveYoutubeVideo()">
+                        <i class="fab fa-youtube"></i>
+                        تۆمارکرنا ڤیدیۆ
+                    </button>
+                </div>
+            </div>
         </section>
 
         <!-- Series Selector -->
