@@ -988,8 +988,46 @@
         }
 
         // Update iframe source (Vimeo player)
-        iframe.src = `https://player.vimeo.com/video/${videoId}?autoplay=1&title=0&byline=0&portrait=0`;
+        // Parameters explanation:
+        // - autoplay=1: Auto-play video
+        // - title=0: Hide video title
+        // - byline=0: Hide author name
+        // - portrait=0: Hide author portrait
+        // - dnt=1: Do Not Track (privacy)
+        // - color=4ECDC4: Custom player color (TafsirKurd brand color)
+        // - controls=1: Show player controls
+        // - playsinline=1: Play inline on mobile
+        iframe.src = `https://player.vimeo.com/video/${videoId}?autoplay=1&title=0&byline=0&portrait=0&dnt=1&color=4ECDC4&controls=1&playsinline=1`;
         console.log('▶️ Loading video:', `https://player.vimeo.com/video/${videoId}`);
+
+        // Initialize Vimeo Player SDK to handle end event and hide suggested videos
+        if (window.Vimeo && window.Vimeo.Player) {
+            setTimeout(() => {
+                try {
+                    const player = new Vimeo.Player(iframe);
+
+                    // When video ends, hide the iframe to prevent suggested videos overlay
+                    player.on('ended', function() {
+                        console.log('🎬 Video ended - hiding iframe to prevent Vimeo suggestions');
+                        iframe.style.opacity = '0';
+                        iframe.style.pointerEvents = 'none';
+
+                        // Show custom end screen message
+                        showNotification('✅ ڤیدیۆ کۆتایی هات - دەستنیشانکرنا ڤیدیۆیێن دی ژ خوارێ ڤە');
+
+                        // Re-enable iframe after 2 seconds for next video
+                        setTimeout(() => {
+                            iframe.style.opacity = '1';
+                            iframe.style.pointerEvents = 'auto';
+                        }, 2000);
+                    });
+
+                    console.log('✅ Vimeo Player SDK initialized successfully');
+                } catch (error) {
+                    console.warn('⚠️ Could not initialize Vimeo Player SDK:', error);
+                }
+            }, 1000); // Wait 1 second for iframe to load
+        }
 
         // Update video title in the existing overlay
         const videoTitle = playerSection.querySelector('.video-title');
