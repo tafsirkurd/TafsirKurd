@@ -13523,37 +13523,6 @@ ${htmlParagraphs}
 
                 console.log('✅ Video saved to localStorage:', videoData);
 
-                // Optional: Save to Supabase database (metadata only) - if table exists
-                if (typeof supabaseClient !== 'undefined') {
-                    try {
-                        const { data, error } = await supabaseClient
-                            .from('tv_episodes')
-                            .insert([{
-                                title,
-                                description: desc,
-                                video_url: videoId,
-                                video_type: 'youtube',
-                                series,
-                                category,
-                                duration: 0,
-                                thumbnail_url: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-                                view_count: 0,
-                                like_count: 0,
-                                rating: 0,
-                                created_at: new Date().toISOString()
-                            }]);
-
-                        if (error) {
-                            console.warn('⚠️ Supabase save skipped (table not created):', error.message);
-                        } else {
-                            console.log('✅ Video also saved to Supabase database:', data);
-                        }
-                    } catch (dbError) {
-                        console.warn('⚠️ Supabase save skipped:', dbError.message);
-                        // Continue without Supabase - localStorage is enough
-                    }
-                }
-
                 // Save series, category, and speaker for autocomplete suggestions
                 saveVideoSuggestion('series', series);
                 saveVideoSuggestion('category', category);
