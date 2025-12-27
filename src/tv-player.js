@@ -1467,33 +1467,23 @@
 
     // ===== PLAY VIDEO =====
     window.playVideo = function(episodeId) {
-        state.currentEpisode = episodeId;
+        console.log('🎬 playVideo called with episodeId:', episodeId);
 
-        // Scroll to player
-        document.getElementById('playerSection').scrollIntoView({ behavior: 'smooth' });
-
-        // Update title
+        // Find the episode data
         const episode = state.playlist.find(ep => ep.id === episodeId);
-        if (episode) {
-            document.getElementById('currentVideoTitle').textContent = episode.title;
+        if (!episode) {
+            console.error('❌ Episode not found:', episodeId);
+            showNotification('⚠️ ڤیدیۆ نەهاتە دیتن!');
+            return;
         }
 
-        // In real implementation, load video URL
-        // elements.video.src = getVideoUrl(episodeId);
-
-        // Auto play if video source is set
-        if (elements.video.src) {
-            elements.video.play();
-            elements.playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-        }
-
-        // Update watchlist button state
-        if (state.watchlist.includes(episodeId)) {
-            elements.addToListBtn.classList.add('active');
-            elements.addToListBtn.innerHTML = '<i class="fas fa-check"></i> ل لیستێ دایە';
+        // Call playYouTubeVideo with the video data
+        if (episode.videoId) {
+            console.log('▶️ Playing YouTube video:', episode.videoId);
+            window.playYouTubeVideo(episode.videoId, episode.title, episode.id);
         } else {
-            elements.addToListBtn.classList.remove('active');
-            elements.addToListBtn.innerHTML = '<i class="fas fa-plus"></i> زێدەبکە لیستێ';
+            console.error('❌ No videoId found for episode:', episode);
+            showNotification('⚠️ ڤیدیۆ ID نینە!');
         }
 
         // Update like button state
