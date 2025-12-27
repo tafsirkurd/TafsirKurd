@@ -13919,8 +13919,8 @@ ${htmlParagraphs}
         async function editTVSeries(id) {
             try {
                 const [seriesResult, categoriesResult] = await Promise.all([
-                    supabase.from('tv_series').select('*').eq('id', id).single(),
-                    supabase.from('tv_categories').select('*').order('display_order')
+                    supabaseClient.from('tv_series').select('*').eq('id', id).single(),
+                    supabaseClient.from('tv_categories').select('*').order('display_order')
                 ]);
 
                 if (seriesResult.error) throw seriesResult.error;
@@ -14218,8 +14218,8 @@ ${htmlParagraphs}
         async function editTVEpisode(id) {
             try {
                 const [episodeResult, seriesResult] = await Promise.all([
-                    supabase.from('tv_episodes').select('*').eq('id', id).single(),
-                    supabase.from('tv_series').select('id, name_ku, tv_categories(name_ku, icon)').order('display_order')
+                    supabaseClient.from('tv_episodes').select('*').eq('id', id).single(),
+                    supabaseClient.from('tv_series').select('id, name_ku, tv_categories(name_ku, icon)').order('display_order')
                 ]);
 
                 if (episodeResult.error) throw episodeResult.error;
