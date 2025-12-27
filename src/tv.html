@@ -1112,13 +1112,14 @@
 
         .auth-modal-container {
             position: relative;
-            max-width: 1000px;
-            width: 90%;
-            max-height: 90vh;
-            background: #1a1a1a;
+            max-width: 550px;
+            width: 95%;
+            max-height: 95vh;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
             border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             animation: slideUp 0.4s ease-out;
         }
 
@@ -1157,54 +1158,72 @@
         }
 
         .auth-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            min-height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: auto;
+            max-height: 85vh;
+            overflow-y: auto;
         }
 
         .auth-form-side {
-            padding: 60px 50px;
+            padding: 50px 60px;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            width: 100%;
+            max-width: 500px;
         }
 
         .auth-logo {
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
+            text-align: center;
         }
 
         .auth-title {
-            font-size: 2.2rem;
+            font-size: 2.5rem;
             font-weight: 700;
             color: #ffffff;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+            text-align: center;
+            background: linear-gradient(135deg, #ffffff 0%, #cccccc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .auth-subtitle {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             color: #999;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
+            text-align: center;
+            line-height: 1.6;
         }
 
         .auth-social-buttons {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
             margin-bottom: 2rem;
         }
 
         .auth-social-btn {
-            padding: 14px 20px;
+            padding: 18px 24px;
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 1.05rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 12px;
             transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .auth-social-btn i {
+            font-size: 1.3rem;
         }
 
         .google-btn {
@@ -1213,29 +1232,9 @@
         }
 
         .google-btn:hover {
-            background: #f0f0f0;
-            transform: translateY(-2px);
-        }
-
-        .facebook-btn {
-            background: #1877F2;
-            color: #ffffff;
-        }
-
-        .facebook-btn:hover {
-            background: #0c63d4;
-            transform: translateY(-2px);
-        }
-
-        .apple-btn {
-            background: #000000;
-            color: #ffffff;
-            border: 1px solid #333;
-        }
-
-        .apple-btn:hover {
-            background: #1a1a1a;
-            transform: translateY(-2px);
+            background: #f5f5f5;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
         }
 
         .auth-divider {
@@ -1343,65 +1342,27 @@
             text-decoration: underline;
         }
 
-        .auth-illustration-side {
-            background: linear-gradient(135deg, #2c1810 0%, #1a0f0a 100%);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .auth-illustration {
-            position: relative;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 3rem;
-        }
-
-        .auth-image {
-            max-width: 100%;
-            max-height: 400px;
-            object-fit: contain;
-            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
-        }
-
-        .auth-illustration-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 3rem;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
-            color: #ffffff;
-            text-align: center;
-        }
-
-        .auth-illustration-overlay h3 {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            font-weight: 700;
-        }
-
-        .auth-illustration-overlay p {
-            color: #ccc;
-            font-size: 1rem;
-        }
-
         @media (max-width: 768px) {
-            .auth-content {
-                grid-template-columns: 1fr;
-            }
-
-            .auth-illustration-side {
-                display: none;
-            }
-
             .auth-form-side {
                 padding: 40px 30px;
             }
 
-            .auth-social-buttons {
-                grid-template-columns: 1fr;
+            .auth-title {
+                font-size: 1.8rem;
+            }
+
+            .auth-subtitle {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-form-side {
+                padding: 30px 20px;
+            }
+
+            .auth-title {
+                font-size: 1.6rem;
             }
         }
 
@@ -1974,15 +1935,7 @@
                     <div class="auth-social-buttons">
                         <button class="auth-social-btn google-btn" onclick="signInWithGoogle()">
                             <i class="fab fa-google"></i>
-                            <span>Google</span>
-                        </button>
-                        <button class="auth-social-btn facebook-btn" onclick="signInWithFacebook()">
-                            <i class="fab fa-facebook-f"></i>
-                            <span>Facebook</span>
-                        </button>
-                        <button class="auth-social-btn apple-btn" onclick="signInWithApple()">
-                            <i class="fab fa-apple"></i>
-                            <span>Apple</span>
+                            <span>دەستنیشانبکە ب Google</span>
                         </button>
                     </div>
 
@@ -2012,17 +1965,6 @@
                         <a href="/terms" target="_blank">مەرجێن خزمەتگوزاری</a> و
                         <a href="/privacy" target="_blank">سیاسەتا تایبەتمەندی</a>
                     </p>
-                </div>
-
-                <!-- Right Side: Illustration -->
-                <div class="auth-illustration-side">
-                    <div class="auth-illustration">
-                        <img src="/assets/images/auth-books.png" alt="Islamic Books" class="auth-image">
-                        <div class="auth-illustration-overlay">
-                            <h3>بچە ناڤ ژێدەرەکا پێشکەڤتی یا زانینێ ئیسلامی</h3>
-                            <p>هەزاران ڤیدیۆیێن تەفسیر، حەدیس، فقه، و زێدەتر</p>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
