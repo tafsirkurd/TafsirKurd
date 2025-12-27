@@ -14043,25 +14043,27 @@ ${htmlParagraphs}
                     return;
                 }
 
-                let html = '<table class="data-table"><thead><tr><th>Series</th><th>Title</th><th>Episode #</th><th>Vimeo ID</th><th>Duration</th><th>Views</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
+                let html = '<table class="data-table"><thead><tr><th>Series</th><th>Title</th><th>Episode #</th><th>Video Source</th><th>Duration</th><th>Views</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
 
                 data.forEach(ep => {
                     const createdDate = new Date(ep.created_at).toLocaleDateString('en-US');
                     const seriesName = ep.tv_series ? ep.tv_series.name_ku : 'N/A';
                     const categoryIcon = ep.tv_series?.tv_categories?.icon || '📁';
+                    const videoSource = ep.video_type === 'vimeo' ? `📹 Vimeo: ${ep.video_url}` : '📤 Uploaded';
+                    const title = ep.title_ku || ep.title || 'Untitled';
 
                     html += `
                         <tr>
                             <td>${categoryIcon} ${seriesName}</td>
-                            <td><strong>${ep.title_ku}</strong></td>
+                            <td><strong>${title}</strong></td>
                             <td>#${ep.episode_number || '-'}</td>
-                            <td><code>${ep.vimeo_id}</code></td>
+                            <td><small>${videoSource}</small></td>
                             <td>${ep.duration || '-'}</td>
-                            <td>${ep.views || 0}</td>
+                            <td>${ep.view_count || 0}</td>
                             <td>${createdDate}</td>
                             <td>
                                 <button onclick="editTVEpisode('${ep.id}')" class="btn-edit">✏️ Edit</button>
-                                <button onclick="deleteTVEpisode('${ep.id}', '${ep.title_ku}')" class="btn-delete">🗑️ Delete</button>
+                                <button onclick="deleteTVEpisode('${ep.id}', '${title}')" class="btn-delete">🗑️ Delete</button>
                             </td>
                         </tr>
                     `;
@@ -14122,9 +14124,29 @@ ${htmlParagraphs}
                             </div>
 
                             <div style="margin-bottom: 20px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Vimeo Video ID *</label>
-                                <input type="text" id="episodeVimeoId" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;" placeholder="123456789">
-                                <small style="color: #666;">Only the numbers from the Vimeo URL</small>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Video Source *</label>
+                                <select id="videoSourceType" onchange="toggleVideoSource()" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; margin-bottom: 15px;">
+                                    <option value="vimeo">📹 Vimeo</option>
+                                    <option value="upload">📤 Upload Video</option>
+                                </select>
+
+                                <div id="vimeoSection">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Vimeo Video ID *</label>
+                                    <input type="text" id="episodeVimeoId" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;" placeholder="123456789">
+                                    <small style="color: #666;">Only the numbers from the Vimeo URL</small>
+                                </div>
+
+                                <div id="uploadSection" style="display: none;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Upload Video File *</label>
+                                    <input type="file" id="videoFileInput" accept="video/*" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                    <small style="color: #666;">Supported formats: MP4, WebM, MOV (max 500MB)</small>
+                                    <div id="uploadProgress" style="display: none; margin-top: 10px;">
+                                        <div style="background: #f0f0f0; border-radius: 10px; overflow: hidden;">
+                                            <div id="uploadProgressBar" style="height: 8px; background: linear-gradient(90deg, #667eea, #764ba2); width: 0%; transition: width 0.3s;"></div>
+                                        </div>
+                                        <p id="uploadProgressText" style="margin: 5px 0 0 0; font-size: 14px; color: #666;">Uploading...</p>
+                                    </div>
+                                </div>
                             </div>
 
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
@@ -14159,25 +14181,103 @@ ${htmlParagraphs}
             if (modal) modal.remove();
         }
 
+        function toggleVideoSource() {
+            const sourceType = document.getElementById('videoSourceType').value;
+            const vimeoSection = document.getElementById('vimeoSection');
+            const uploadSection = document.getElementById('uploadSection');
+
+            if (sourceType === 'vimeo') {
+                vimeoSection.style.display = 'block';
+                uploadSection.style.display = 'none';
+                document.getElementById('episodeVimeoId').required = true;
+                document.getElementById('videoFileInput').required = false;
+            } else {
+                vimeoSection.style.display = 'none';
+                uploadSection.style.display = 'block';
+                document.getElementById('episodeVimeoId').required = false;
+                document.getElementById('videoFileInput').required = true;
+            }
+        }
+
         async function saveTVEpisode(event) {
             event.preventDefault();
 
             const seriesId = document.getElementById('episodeSeriesId').value;
             const titleKu = document.getElementById('episodeTitleKu').value.trim();
             const descKu = document.getElementById('episodeDescKu').value.trim();
-            const vimeoId = document.getElementById('episodeVimeoId').value.trim();
             const episodeNum = document.getElementById('episodeNumber').value ? parseInt(document.getElementById('episodeNumber').value) : null;
             const duration = document.getElementById('episodeDuration').value.trim();
             const thumb = document.getElementById('episodeThumb').value.trim();
+            const sourceType = document.getElementById('videoSourceType').value;
 
             try {
+                let videoUrl = '';
+                let videoType = '';
+
+                if (sourceType === 'vimeo') {
+                    const vimeoId = document.getElementById('episodeVimeoId').value.trim();
+                    if (!vimeoId) {
+                        showNotification('⚠️ Please enter a Vimeo ID!', 'warning');
+                        return;
+                    }
+                    videoUrl = vimeoId;
+                    videoType = 'vimeo';
+                } else {
+                    // Handle video upload
+                    const fileInput = document.getElementById('videoFileInput');
+                    const file = fileInput.files[0];
+
+                    if (!file) {
+                        showNotification('⚠️ Please select a video file!', 'warning');
+                        return;
+                    }
+
+                    // Show upload progress
+                    const progressDiv = document.getElementById('uploadProgress');
+                    const progressBar = document.getElementById('uploadProgressBar');
+                    const progressText = document.getElementById('uploadProgressText');
+                    progressDiv.style.display = 'block';
+
+                    // Create unique filename
+                    const timestamp = Date.now();
+                    const sanitizedTitle = titleKu.replace(/[^a-zA-Z0-9]/g, '_');
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${timestamp}_${sanitizedTitle}.${fileExt}`;
+
+                    // Upload to Supabase Storage
+                    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                        .from('tv-videos')
+                        .upload(fileName, file, {
+                            cacheControl: '3600',
+                            upsert: false,
+                            onUploadProgress: (progress) => {
+                                const percent = (progress.loaded / progress.total) * 100;
+                                progressBar.style.width = percent + '%';
+                                progressText.textContent = `Uploading... ${Math.round(percent)}%`;
+                            }
+                        });
+
+                    if (uploadError) throw uploadError;
+
+                    // Get public URL
+                    const { data: urlData } = supabaseClient.storage
+                        .from('tv-videos')
+                        .getPublicUrl(fileName);
+
+                    videoUrl = urlData.publicUrl;
+                    videoType = 'uploaded';
+                    progressText.textContent = 'Upload complete! ✅';
+                }
+
+                // Insert episode into database
                 const { error } = await supabaseClient
                     .from('tv_episodes')
                     .insert([{
                         series_id: seriesId,
                         title_ku: titleKu,
                         description_ku: descKu,
-                        vimeo_id: vimeoId,
+                        video_url: videoUrl,
+                        video_type: videoType,
                         episode_number: episodeNum,
                         duration: duration,
                         thumbnail_url: thumb
