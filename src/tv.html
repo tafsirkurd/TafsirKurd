@@ -979,26 +979,32 @@
         .notification {
             position: fixed;
             top: 100px;
-            left: 50%;
-            transform: translateX(-50%);
+            right: 30px;
             background: var(--card-bg);
             padding: 1rem 2rem;
-            border-radius: 50px;
+            border-radius: 12px;
             box-shadow: var(--shadow-lg);
             z-index: 3000;
             display: none;
             align-items: center;
             gap: 1rem;
+            min-width: 300px;
         }
 
         .notification.show {
             display: flex;
-            animation: slideDown 0.3s ease;
+            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        @keyframes slideDown {
-            from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
-            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         .notification-icon {

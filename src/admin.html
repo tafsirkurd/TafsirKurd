@@ -2136,6 +2136,13 @@
                         <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">Manage video content and YouTube links</p>
                     </div>
 
+                    <!-- TV Management Card -->
+                    <div class="dashboard-card" data-card-id="tv-management" draggable="false" onclick="switchSection('tv-management')" style="background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(255, 107, 107, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(255, 107, 107, 0.3)'">
+                        <div style="font-size: 56px; margin-bottom: 15px;">📺</div>
+                        <h3 style="margin: 0 0 10px 0; color: white; font-size: 24px; font-weight: 700;">TV Management</h3>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">Manage categories, series, and TV episodes</p>
+                    </div>
+
                     <!-- Social Stats Card -->
                     <div class="dashboard-card" data-card-id="social" draggable="false" onclick="switchSection('social')" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); padding: 30px; border-radius: 20px; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(48, 207, 208, 0.3);" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 40px rgba(48, 207, 208, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(48, 207, 208, 0.3)'">
                         <div style="font-size: 56px; margin-bottom: 15px;">📱</div>
@@ -2503,6 +2510,95 @@
                 <div style="margin-top: 30px;">
                     <h3 class="section-subtitle">All Bot Logs</h3>
                     <div id="allBotsTable"></div>
+                </div>
+            </section>
+
+            <!-- TV Management Section -->
+            <section id="tv-managementSection" class="section">
+                <div style="background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%); padding: 40px 30px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 20px 60px rgba(255, 107, 107, 0.3);">
+                    <div style="text-align: center; color: white;">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">📺</div>
+                        <h1 style="margin: 0 0 15px 0; font-size: 2.5rem; font-weight: 800;">TV Management</h1>
+                        <p style="margin: 0; font-size: 1.1rem; opacity: 0.95;">Manage categories, series, and episodes for TafsirKurd TV</p>
+                    </div>
+                </div>
+
+                <!-- TV Management Tabs -->
+                <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <div style="display: flex; gap: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px;">
+                        <button class="tv-tab active" onclick="switchTVTab('categories')" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                            📁 Categories
+                        </button>
+                        <button class="tv-tab" onclick="switchTVTab('series')" style="padding: 12px 24px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                            📚 Series
+                        </button>
+                        <button class="tv-tab" onclick="switchTVTab('episodes')" style="padding: 12px 24px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                            🎬 Episodes
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Categories Tab -->
+                <div id="tvCategoriesTab" class="tv-tab-content">
+                    <div class="table-container">
+                        <div class="table-header" style="background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%); border: 2px solid #fde047; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                                <div>
+                                    <h2 class="table-title" style="margin: 0 0 8px 0;">📁 TV Categories</h2>
+                                    <p style="margin: 0; color: #666; font-size: 14px;">Organize your TV content into categories</p>
+                                </div>
+                                <button class="btn-add" onclick="openAddCategoryModal()">+ Add Category</button>
+                            </div>
+                        </div>
+                        <div id="tvCategoriesTable">
+                            <div class="loading">
+                                <div class="loading-spinner"></div>
+                                <div class="loading-text">Loading categories...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Series Tab -->
+                <div id="tvSeriesTab" class="tv-tab-content" style="display: none;">
+                    <div class="table-container">
+                        <div class="table-header" style="background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%); border: 2px solid #38bdf8; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                                <div>
+                                    <h2 class="table-title" style="margin: 0 0 8px 0;">📚 TV Series</h2>
+                                    <p style="margin: 0; color: #666; font-size: 14px;">Manage series within categories</p>
+                                </div>
+                                <button class="btn-add" onclick="openAddSeriesModal()">+ Add Series</button>
+                            </div>
+                        </div>
+                        <div id="tvSeriesTable">
+                            <div class="loading">
+                                <div class="loading-spinner"></div>
+                                <div class="loading-text">Loading series...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Episodes Tab -->
+                <div id="tvEpisodesTab" class="tv-tab-content" style="display: none;">
+                    <div class="table-container">
+                        <div class="table-header" style="background: linear-gradient(135deg, #fce7f3 0%, #ffffff 100%); border: 2px solid #f472b6; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                                <div>
+                                    <h2 class="table-title" style="margin: 0 0 8px 0;">🎬 TV Episodes</h2>
+                                    <p style="margin: 0; color: #666; font-size: 14px;">Add and manage video episodes</p>
+                                </div>
+                                <button class="btn-add" onclick="openAddEpisodeModal()">+ Add Episode</button>
+                            </div>
+                        </div>
+                        <div id="tvEpisodesTable">
+                            <div class="loading">
+                                <div class="loading-spinner"></div>
+                                <div class="loading-text">Loading episodes...</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
