@@ -17,7 +17,19 @@
         autoPlayNext: true,
         audioOnlyMode: false,
         skipIntroTime: { start: 5, end: 65 }, // seconds
-        chapters: []
+        chapters: [],
+
+        // NEW: Streaming platform features
+        continueWatching: [],
+        watchHistory: [],
+        seriesProgress: {},
+        bookmarks: [],
+        userPreferences: {
+            audioOnlyMode: false,
+            autoPlayNext: true,
+            defaultQuality: '1080p',
+            playbackSpeed: 1
+        }
     };
 
     // ===== YOUTUBE PLAYER =====
@@ -1690,6 +1702,276 @@
 
         // Scroll back to top of upload section
         document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ===== STREAMING PLATFORM TRACKING FUNCTIONS =====
+
+    // Continue Watching Logic
+    function updateContinueWatching(episodeId, currentTime, duration) {
+        const percent = (currentTime / duration) * 100;
+
+        // Only show in "Continue Watching" if >5% and <95% watched
+        if (percent > 5 && percent < 95) {
+            const episode = state.playlist.find(e => e.id === episodeId);
+            if (!episode) return;
+
+            const continueItem = {
+                episodeId,
+                seriesId: episode.series || null,
+                timestamp: Date.now(),
+                currentTime,
+                duration,
+                percent
+            };
+
+            // Remove if already exists
+            state.continueWatching = state.continueWatching.filter(
+                item => item.episodeId !== episodeId
+            );
+
+            // Add to beginning
+            state.continueWatching.unshift(continueItem);
+
+            // Limit to 12 items
+            if (state.continueWatching.length > 12) {
+                state.continueWatching = state.continueWatching.slice(0, 12);
+            }
+
+            localStorage.setItem('continueWatching', JSON.stringify(state.continueWatching));
+            syncToSupabase('continueWatching', state.continueWatching);
+        }
+    }
+
+    // Watch History
+    function addToWatchHistory(episodeId, completed = false) {
+        const episode = state.playlist.find(e => e.id === episodeId);
+        if (!episode) return;
+
+        const historyItem = {
+            episodeId,
+            seriesId: episode.series || null,
+            watchedAt: Date.now(),
+            completed
+        };
+
+        // Remove duplicates
+        state.watchHistory = state.watchHistory.filter(
+            item => item.episodeId !== episodeId
+        );
+
+        state.watchHistory.unshift(historyItem);
+
+        // Limit to 100 items
+        if (state.watchHistory.length > 100) {
+            state.watchHistory = state.watchHistory.slice(0, 100);
+        }
+
+        localStorage.setItem('watchHistory', JSON.stringify(state.watchHistory));
+        syncToSupabase('watchHistory', state.watchHistory);
+    }
+
+    // Series Progress Tracking
+    function updateSeriesProgress(seriesId, episodeId, completed = false) {
+        if (!seriesId) return;
+
+        if (!state.seriesProgress[seriesId]) {
+            state.seriesProgress[seriesId] = {
+                completedEpisodes: [],
+                totalEpisodes: getTotalEpisodesForSeries(seriesId),
+                percent: 0,
+                lastWatchedEpisode: null,
+                lastWatchedAt: null
+            };
+        }
+
+        const progress = state.seriesProgress[seriesId];
+
+        if (completed && !progress.completedEpisodes.includes(episodeId)) {
+            progress.completedEpisodes.push(episodeId);
+        }
+
+        progress.lastWatchedEpisode = episodeId;
+        progress.lastWatchedAt = Date.now();
+        progress.percent = (progress.completedEpisodes.length / progress.totalEpisodes) * 100;
+
+        localStorage.setItem('seriesProgress', JSON.stringify(state.seriesProgress));
+        syncToSupabase('seriesProgress', state.seriesProgress);
+    }
+
+    // Get total episodes for a series
+    function getTotalEpisodesForSeries(seriesId) {
+        return state.playlist.filter(e => e.series === seriesId).length;
+    }
+
+    // Get next episode in series
+    function getNextEpisodeInSeries(seriesId, currentEpisodeId) {
+        const seriesEpisodes = state.playlist
+            .filter(e => e.series === seriesId)
+            .sort((a, b) => (a.episodeNumber || 0) - (b.episodeNumber || 0));
+
+        const currentIndex = seriesEpisodes.findIndex(e => e.id === currentEpisodeId);
+        if (currentIndex === -1 || currentIndex === seriesEpisodes.length - 1) {
+            return null;
+        }
+
+        return seriesEpisodes[currentIndex + 1];
+    }
+
+    // Next Up Algorithm
+    function getNextUpVideos() {
+        const nextUp = [];
+
+        // 1. Next episode in series you're watching
+        Object.keys(state.seriesProgress).forEach(seriesId => {
+            const progress = state.seriesProgress[seriesId];
+            if (progress.percent < 100 && progress.lastWatchedEpisode) {
+                const nextEpisode = getNextEpisodeInSeries(seriesId, progress.lastWatchedEpisode);
+                if (nextEpisode) {
+                    nextUp.push({
+                        ...nextEpisode,
+                        reason: 'Next in series',
+                        priority: 1
+                    });
+                }
+            }
+        });
+
+        // 2. Recommended based on watch history (last watched category)
+        if (state.watchHistory.length > 0) {
+            const lastWatched = state.watchHistory[0];
+            const lastEpisode = state.playlist.find(e => e.id === lastWatched.episodeId);
+            if (lastEpisode && lastEpisode.category) {
+                const recommendations = state.playlist
+                    .filter(e =>
+                        e.category === lastEpisode.category &&
+                        e.id !== lastEpisode.id &&
+                        !state.watchHistory.some(h => h.episodeId === e.id)
+                    )
+                    .slice(0, 6);
+
+                nextUp.push(...recommendations.map(r => ({
+                    ...r,
+                    reason: 'Recommended',
+                    priority: 2
+                })));
+            }
+        }
+
+        // 3. Featured/Trending
+        const trending = state.playlist.filter(e => e.featured).slice(0, 6);
+        nextUp.push(...trending.map(t => ({
+            ...t,
+            reason: 'Trending',
+            priority: 3
+        })));
+
+        // Sort by priority and return top 12
+        return nextUp
+            .sort((a, b) => a.priority - b.priority)
+            .slice(0, 12);
+    }
+
+    // Bookmark System
+    function toggleBookmark(episodeId) {
+        const episode = state.playlist.find(e => e.id === episodeId);
+        if (!episode) return;
+
+        const existingIndex = state.bookmarks.findIndex(b => b.episodeId === episodeId);
+
+        if (existingIndex > -1) {
+            // Remove bookmark
+            state.bookmarks.splice(existingIndex, 1);
+            showNotification('حەزفکری ژ خەزنکراوان');
+        } else {
+            // Add bookmark
+            state.bookmarks.unshift({
+                episodeId,
+                seriesId: episode.series || null,
+                bookmarkedAt: Date.now()
+            });
+            showNotification('زێدەکری بۆ خەزنکراوان');
+        }
+
+        localStorage.setItem('bookmarks', JSON.stringify(state.bookmarks));
+        syncToSupabase('bookmarks', state.bookmarks);
+
+        return !existingIndex > -1; // Return new bookmark state
+    }
+
+    // Check if episode is bookmarked
+    function isBookmarked(episodeId) {
+        return state.bookmarks.some(b => b.episodeId === episodeId);
+    }
+
+    // Supabase Sync
+    async function syncToSupabase(dataType, data) {
+        if (typeof supabase === 'undefined') return;
+
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        if (!user) return;
+
+        try {
+            const { error } = await supabase
+                .from('user_data')
+                .upsert({
+                    user_id: user.id,
+                    [dataType]: data,
+                    updated_at: new Date().toISOString()
+                }, {
+                    onConflict: 'user_id'
+                });
+
+            if (error) console.warn('Sync error:', error);
+        } catch (err) {
+            console.warn('Sync failed:', err);
+        }
+    }
+
+    // Load from Supabase on login
+    async function loadUserDataFromSupabase() {
+        if (typeof supabase === 'undefined') return;
+
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        if (!user) return;
+
+        try {
+            const { data, error } = await supabase
+                .from('user_data')
+                .select('*')
+                .eq('user_id', user.id)
+                .single();
+
+            if (data && !error) {
+                // Merge with localStorage (server data takes precedence)
+                if (data.watch_progress) state.watchProgress = data.watch_progress;
+                if (data.bookmarks) state.bookmarks = data.bookmarks;
+                if (data.watch_history) state.watchHistory = data.watch_history;
+                if (data.series_progress) state.seriesProgress = data.series_progress;
+                if (data.continueWatching) state.continueWatching = data.continueWatching;
+
+                // Update localStorage
+                localStorage.setItem('watchProgress', JSON.stringify(state.watchProgress));
+                localStorage.setItem('bookmarks', JSON.stringify(state.bookmarks));
+                localStorage.setItem('watchHistory', JSON.stringify(state.watchHistory));
+                localStorage.setItem('seriesProgress', JSON.stringify(state.seriesProgress));
+                localStorage.setItem('continueWatching', JSON.stringify(state.continueWatching));
+            }
+        } catch (err) {
+            console.warn('Load from Supabase failed:', err);
+        }
+    }
+
+    // Load state from localStorage on init
+    function loadStateFromLocalStorage() {
+        const continueWatching = localStorage.getItem('continueWatching');
+        const watchHistory = localStorage.getItem('watchHistory');
+        const seriesProgress = localStorage.getItem('seriesProgress');
+        const bookmarks = localStorage.getItem('bookmarks');
+
+        if (continueWatching) state.continueWatching = JSON.parse(continueWatching);
+        if (watchHistory) state.watchHistory = JSON.parse(watchHistory);
+        if (seriesProgress) state.seriesProgress = JSON.parse(seriesProgress);
+        if (bookmarks) state.bookmarks = JSON.parse(bookmarks);
     }
 
     // ===== INITIALIZE ON LOAD =====
