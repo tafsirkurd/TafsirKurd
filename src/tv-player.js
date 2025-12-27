@@ -20,6 +20,151 @@
         chapters: []
     };
 
+    // ===== YOUTUBE PLAYER =====
+    let youtubePlayer = null;
+
+    // Initialize YouTube Player with custom settings
+    function initializeYouTubePlayer(videoId) {
+        console.log('🎬 Initializing YouTube player for video:', videoId);
+
+        youtubePlayer = new YT.Player('youtubePlayer', {
+            videoId: videoId,
+            playerVars: {
+                'autoplay': 1,                  // Auto-play video
+                'controls': 0,                  // Hide YouTube controls (use custom)
+                'rel': 0,                       // Only show related from same channel
+                'modestbranding': 1,            // Hide YouTube logo
+                'fs': 1,                        // Allow fullscreen
+                'iv_load_policy': 3,            // Hide annotations
+                'cc_load_policy': 0,            // Hide captions by default
+                'disablekb': 0,                 // Enable keyboard controls
+                'playsinline': 1,               // Play inline on iOS
+                'enablejsapi': 1,               // Enable JavaScript API
+                'origin': window.location.origin
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange,
+                'onError': onPlayerError
+            }
+        });
+    }
+
+    // Player ready event
+    function onPlayerReady(event) {
+        console.log('✅ YouTube player ready!');
+        event.target.playVideo();
+        setupCustomControls();
+    }
+
+    // Player state change event
+    function onPlayerStateChange(event) {
+        // YT.PlayerState: UNSTARTED (-1), ENDED (0), PLAYING (1), PAUSED (2), BUFFERING (3), CUED (5)
+
+        if (event.data === YT.PlayerState.ENDED) {
+            console.log('🎬 Video ended - hiding player to prevent YouTube suggestions');
+
+            // Hide player to prevent end screen
+            const playerDiv = document.getElementById('youtubePlayer');
+            if (playerDiv) {
+                playerDiv.style.opacity = '0';
+                playerDiv.style.pointerEvents = 'none';
+            }
+
+            showNotification('✅ ڤیدیۆ کۆتایی هات - دەستنیشانکرنا ڤیدیۆیێن دی ژ خوارێ ڤە');
+
+            // Reset player after 2 seconds
+            setTimeout(() => {
+                if (playerDiv) {
+                    playerDiv.style.opacity = '1';
+                    playerDiv.style.pointerEvents = 'auto';
+                }
+            }, 2000);
+        } else if (event.data === YT.PlayerState.PLAYING) {
+            updatePlayButton(true);
+        } else if (event.data === YT.PlayerState.PAUSED) {
+            updatePlayButton(false);
+        }
+    }
+
+    // Player error event
+    function onPlayerError(event) {
+        console.error('❌ YouTube player error:', event.data);
+        showNotification('⚠️ هەڵەیەک ل دەم بارکرنا ڤیدیۆیێ رویدا');
+    }
+
+    // Setup custom controls
+    function setupCustomControls() {
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const rewindBtn = document.getElementById('rewindBtn');
+        const forwardBtn = document.getElementById('forwardBtn');
+
+        if (playPauseBtn) {
+            playPauseBtn.onclick = function() {
+                if (youtubePlayer) {
+                    const state = youtubePlayer.getPlayerState();
+                    if (state === YT.PlayerState.PLAYING) {
+                        youtubePlayer.pauseVideo();
+                    } else {
+                        youtubePlayer.playVideo();
+                    }
+                }
+            };
+        }
+
+        if (rewindBtn) {
+            rewindBtn.onclick = function() {
+                if (youtubePlayer) {
+                    const currentTime = youtubePlayer.getCurrentTime();
+                    youtubePlayer.seekTo(currentTime - 10, true);
+                }
+            };
+        }
+
+        if (forwardBtn) {
+            forwardBtn.onclick = function() {
+                if (youtubePlayer) {
+                    const currentTime = youtubePlayer.getCurrentTime();
+                    youtubePlayer.seekTo(currentTime + 10, true);
+                }
+            };
+        }
+
+        // Update progress bar
+        setInterval(() => {
+            if (youtubePlayer && youtubePlayer.getCurrentTime) {
+                try {
+                    const currentTime = youtubePlayer.getCurrentTime();
+                    const duration = youtubePlayer.getDuration();
+                    if (duration > 0) {
+                        const progress = (currentTime / duration) * 100;
+                        const progressFilled = document.getElementById('progressFilled');
+                        if (progressFilled) {
+                            progressFilled.style.width = progress + '%';
+                        }
+                    }
+                } catch (e) {
+                    // Player not ready yet
+                }
+            }
+        }, 1000);
+    }
+
+    // Update play/pause button icon
+    function updatePlayButton(isPlaying) {
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        if (playPauseBtn) {
+            const icon = playPauseBtn.querySelector('i');
+            if (icon) {
+                if (isPlaying) {
+                    icon.className = 'fas fa-pause';
+                } else {
+                    icon.className = 'fas fa-play';
+                }
+            }
+        }
+    }
+
     // ===== DOM ELEMENTS =====
     const elements = {
         video: document.getElementById('videoPlayer'),
@@ -971,62 +1116,24 @@
                 playerOverlay.style.display = 'none';
             }
 
-            // Create Vimeo iframe
-            const iframeHTML = `
-                <iframe
-                    id="youtubePlayer"
-                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                    allowfullscreen
-                ></iframe>
+            // Create YouTube player div
+            const playerHTML = `
+                <div id="youtubePlayer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;"></div>
             `;
-            playerContainer.insertAdjacentHTML('beforeend', iframeHTML);
-            iframe = document.getElementById('youtubePlayer');
+            playerContainer.insertAdjacentHTML('beforeend', playerHTML);
 
-            console.log('✅ Created Vimeo iframe player');
+            console.log('✅ Created YouTube player container');
         }
 
-        // Update iframe source (Vimeo player)
-        // Parameters explanation:
-        // - autoplay=1: Auto-play video
-        // - title=0: Hide video title
-        // - byline=0: Hide author name
-        // - portrait=0: Hide author portrait
-        // - dnt=1: Do Not Track (privacy)
-        // - color=4ECDC4: Custom player color (TafsirKurd brand color)
-        // - controls=1: Show player controls
-        // - playsinline=1: Play inline on mobile
-        iframe.src = `https://player.vimeo.com/video/${videoId}?autoplay=1&title=0&byline=0&portrait=0&dnt=1&color=4ECDC4&controls=1&playsinline=1`;
-        console.log('▶️ Loading video:', `https://player.vimeo.com/video/${videoId}`);
-
-        // Initialize Vimeo Player SDK to handle end event and hide suggested videos
-        if (window.Vimeo && window.Vimeo.Player) {
-            setTimeout(() => {
-                try {
-                    const player = new Vimeo.Player(iframe);
-
-                    // When video ends, hide the iframe to prevent suggested videos overlay
-                    player.on('ended', function() {
-                        console.log('🎬 Video ended - hiding iframe to prevent Vimeo suggestions');
-                        iframe.style.opacity = '0';
-                        iframe.style.pointerEvents = 'none';
-
-                        // Show custom end screen message
-                        showNotification('✅ ڤیدیۆ کۆتایی هات - دەستنیشانکرنا ڤیدیۆیێن دی ژ خوارێ ڤە');
-
-                        // Re-enable iframe after 2 seconds for next video
-                        setTimeout(() => {
-                            iframe.style.opacity = '1';
-                            iframe.style.pointerEvents = 'auto';
-                        }, 2000);
-                    });
-
-                    console.log('✅ Vimeo Player SDK initialized successfully');
-                } catch (error) {
-                    console.warn('⚠️ Could not initialize Vimeo Player SDK:', error);
-                }
-            }, 1000); // Wait 1 second for iframe to load
+        // Initialize YouTube Player with IFrame API
+        // Store player globally for custom controls
+        if (typeof YT !== 'undefined' && YT.Player) {
+            initializeYouTubePlayer(videoId);
+        } else {
+            // Wait for YouTube API to load
+            window.onYouTubeIframeAPIReady = function() {
+                initializeYouTubePlayer(videoId);
+            };
         }
 
         // Update video title in the existing overlay
