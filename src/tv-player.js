@@ -936,7 +936,17 @@
 
     // Play YouTube video in the player
     window.playYouTubeVideo = function(videoId, title, episodeId) {
-        console.log('🎬 Playing YouTube video:', videoId, title, episodeId);
+        console.log('🎬 Play video requested:', videoId, title, episodeId);
+
+        // Check if user is authenticated
+        if (!isAuthenticated()) {
+            console.log('🔒 User not authenticated - showing auth modal');
+            showAuthModal();
+            showNotification('🔐 تکایە دەستنیشان بکە بۆ بینینی ڤیدیۆ', 4000);
+            return;
+        }
+
+        console.log('✅ User authenticated - playing video');
 
         // Update current episode
         state.currentEpisode = episodeId;
@@ -1119,6 +1129,186 @@
             elements.notification.classList.remove('show');
         }, duration);
     }
+
+    // ===== AUTHENTICATION =====
+    let currentUser = null;
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+        // Check localStorage for session
+        const session = localStorage.getItem('userSession');
+        if (session) {
+            try {
+                currentUser = JSON.parse(session);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    // Show auth modal
+    window.showAuthModal = function() {
+        const authModal = document.getElementById('authModal');
+        if (authModal) {
+            authModal.classList.add('active');
+            console.log('📝 Auth modal opened');
+        }
+    };
+
+    // Close auth modal
+    window.closeAuthModal = function() {
+        const authModal = document.getElementById('authModal');
+        if (authModal) {
+            authModal.classList.remove('active');
+            console.log('✖️ Auth modal closed');
+        }
+    };
+
+    // Sign in with Google (Supabase Auth)
+    window.signInWithGoogle = async function() {
+        console.log('🔵 Google sign-in initiated');
+
+        // Check if Supabase is available
+        if (typeof supabase !== 'undefined') {
+            try {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/tv'
+                    }
+                });
+
+                if (error) {
+                    console.error('Google sign-in error:', error);
+                    showNotification('❌ هەڵەیەک ڕووی دا: ' + error.message, 5000);
+                } else {
+                    showNotification('✅ دەستنیشانبوون سەرکەوتوو بوو!');
+                }
+            } catch (err) {
+                console.error('Google sign-in exception:', err);
+                showNotification('❌ تکایە دواتر هەوڵ بدەرەوە', 5000);
+            }
+        } else {
+            // Fallback: Simple localStorage auth for testing
+            const mockUser = {
+                id: 'google_' + Date.now(),
+                email: 'user@gmail.com',
+                provider: 'google',
+                created_at: new Date().toISOString()
+            };
+            localStorage.setItem('userSession', JSON.stringify(mockUser));
+            currentUser = mockUser;
+            closeAuthModal();
+            showNotification('✅ دەستنیشانبوون سەرکەوتوو بوو!');
+            console.log('✅ Signed in with Google (mock):', mockUser);
+        }
+    };
+
+    // Sign in with Facebook
+    window.signInWithFacebook = async function() {
+        console.log('🔵 Facebook sign-in initiated');
+
+        if (typeof supabase !== 'undefined') {
+            try {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'facebook',
+                    options: {
+                        redirectTo: window.location.origin + '/tv'
+                    }
+                });
+
+                if (error) {
+                    console.error('Facebook sign-in error:', error);
+                    showNotification('❌ هەڵەیەک ڕووی دا', 5000);
+                }
+            } catch (err) {
+                console.error('Facebook sign-in exception:', err);
+                showNotification('❌ تکایە دواتر هەوڵ بدەرەوە', 5000);
+            }
+        } else {
+            showNotification('⚠️ Facebook sign-in بەردەست نییە', 3000);
+        }
+    };
+
+    // Sign in with Apple
+    window.signInWithApple = async function() {
+        console.log('🍎 Apple sign-in initiated');
+
+        if (typeof supabase !== 'undefined') {
+            try {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'apple',
+                    options: {
+                        redirectTo: window.location.origin + '/tv'
+                    }
+                });
+
+                if (error) {
+                    console.error('Apple sign-in error:', error);
+                    showNotification('❌ هەڵەیەک ڕووی دا', 5000);
+                }
+            } catch (err) {
+                console.error('Apple sign-in exception:', err);
+                showNotification('❌ تکایە دواتر هەوڵ بدەرەوە', 5000);
+            }
+        } else {
+            showNotification('⚠️ Apple sign-in بەردەست نییە', 3000);
+        }
+    };
+
+    // Sign up with email
+    window.signUpWithEmail = async function(event) {
+        event.preventDefault();
+
+        const email = document.getElementById('authEmail').value.trim();
+        console.log('📧 Email sign-up initiated:', email);
+
+        if (!email) {
+            showNotification('❌ تکایە ئیمەیڵەکەت بنووسە', 3000);
+            return;
+        }
+
+        if (typeof supabase !== 'undefined') {
+            try {
+                const { data, error } = await supabase.auth.signInWithOtp({
+                    email: email,
+                    options: {
+                        emailRedirectTo: window.location.origin + '/tv'
+                    }
+                });
+
+                if (error) {
+                    console.error('Email sign-up error:', error);
+                    showNotification('❌ هەڵەیەک ڕووی دا', 5000);
+                } else {
+                    showNotification('✅ لینکێک بۆ ئیمەیلەکەت نێردرا!', 5000);
+                    closeAuthModal();
+                }
+            } catch (err) {
+                console.error('Email sign-up exception:', err);
+                showNotification('❌ تکایە دواتر هەوڵ بدەرەوە', 5000);
+            }
+        } else {
+            showNotification('⚠️ Email sign-up بەردەست نییە', 3000);
+        }
+    };
+
+    // Show sign-in form
+    window.showSignIn = function() {
+        // Switch to sign-in mode (to be implemented)
+        console.log('Switching to sign-in mode');
+        showNotification('ℹ️ Sign-in form coming soon!', 3000);
+    };
+
+    // Sign out
+    window.signOut = function() {
+        localStorage.removeItem('userSession');
+        currentUser = null;
+        showNotification('👋 تۆ دەرچووی', 3000);
+        console.log('✅ User signed out');
+    };
 
     // ===== PLAY VIDEO =====
     window.playVideo = function(episodeId) {
