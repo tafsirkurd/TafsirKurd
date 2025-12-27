@@ -1083,6 +1083,328 @@
             }
         }
 
+        /* ===== AUTH MODAL ===== */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-modal.active {
+            display: flex;
+        }
+
+        .auth-modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-modal-container {
+            position: relative;
+            max-width: 1000px;
+            width: 90%;
+            max-height: 90vh;
+            background: #1a1a1a;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #ffffff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .auth-close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .auth-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 600px;
+        }
+
+        .auth-form-side {
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .auth-logo {
+            margin-bottom: 2rem;
+        }
+
+        .auth-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-subtitle {
+            font-size: 1.1rem;
+            color: #999;
+            margin-bottom: 2rem;
+        }
+
+        .auth-social-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .auth-social-btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .google-btn {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .google-btn:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
+        .facebook-btn {
+            background: #1877F2;
+            color: #ffffff;
+        }
+
+        .facebook-btn:hover {
+            background: #0c63d4;
+            transform: translateY(-2px);
+        }
+
+        .apple-btn {
+            background: #000000;
+            color: #ffffff;
+            border: 1px solid #333;
+        }
+
+        .apple-btn:hover {
+            background: #1a1a1a;
+            transform: translateY(-2px);
+        }
+
+        .auth-divider {
+            text-align: center;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .auth-divider::before {
+            left: 0;
+        }
+
+        .auth-divider::after {
+            right: 0;
+        }
+
+        .auth-divider span {
+            color: #666;
+            background: #1a1a1a;
+            padding: 0 1rem;
+        }
+
+        .auth-input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-input-group label {
+            display: block;
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .auth-input-group input:focus {
+            outline: none;
+            border-color: #1ab7ea;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .auth-submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            border: none;
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .auth-submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.4);
+        }
+
+        .auth-signin-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #999;
+        }
+
+        .auth-signin-link a {
+            color: #1ab7ea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-signin-link a:hover {
+            text-decoration: underline;
+        }
+
+        .auth-terms {
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: #666;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .auth-terms a {
+            color: #999;
+            text-decoration: underline;
+        }
+
+        .auth-illustration-side {
+            background: linear-gradient(135deg, #2c1810 0%, #1a0f0a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-illustration {
+            position: relative;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+        }
+
+        .auth-image {
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
+        }
+
+        .auth-illustration-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 3rem;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .auth-illustration-overlay h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .auth-illustration-overlay p {
+            color: #ccc;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .auth-content {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-illustration-side {
+                display: none;
+            }
+
+            .auth-form-side {
+                padding: 40px 30px;
+            }
+
+            .auth-social-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar {
             width: 10px;
@@ -1626,6 +1948,82 @@
 
             <div class="playlist-items" id="playlistItems">
                 <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal (Sign Up / Sign In) -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-modal-overlay" onclick="closeAuthModal()"></div>
+        <div class="auth-modal-container">
+            <button class="auth-close-btn" onclick="closeAuthModal()">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="auth-content">
+                <!-- Left Side: Form -->
+                <div class="auth-form-side">
+                    <div class="auth-logo">
+                        <img src="/assets/images/logo.png" alt="تەفسیر كورد" style="height: 50px; filter: brightness(0) invert(1);">
+                    </div>
+
+                    <h2 class="auth-title">دروستکرنا هەژمارێ</h2>
+                    <p class="auth-subtitle">دەستنیشانبکە بۆ بینینا ڤیدیۆیان</p>
+
+                    <!-- Social Login Buttons -->
+                    <div class="auth-social-buttons">
+                        <button class="auth-social-btn google-btn" onclick="signInWithGoogle()">
+                            <i class="fab fa-google"></i>
+                            <span>Google</span>
+                        </button>
+                        <button class="auth-social-btn facebook-btn" onclick="signInWithFacebook()">
+                            <i class="fab fa-facebook-f"></i>
+                            <span>Facebook</span>
+                        </button>
+                        <button class="auth-social-btn apple-btn" onclick="signInWithApple()">
+                            <i class="fab fa-apple"></i>
+                            <span>Apple</span>
+                        </button>
+                    </div>
+
+                    <div class="auth-divider">
+                        <span>یان</span>
+                    </div>
+
+                    <!-- Email Form -->
+                    <form class="auth-email-form" id="authEmailForm" onsubmit="signUpWithEmail(event)">
+                        <div class="auth-input-group">
+                            <label>ئیمەیل</label>
+                            <input type="email" id="authEmail" placeholder="ئیمەیلێ خو بنڤیسە..." required>
+                        </div>
+
+                        <button type="submit" class="auth-submit-btn">
+                            پێشڤە
+                        </button>
+                    </form>
+
+                    <p class="auth-signin-link">
+                        جێهێ هەژمارەکێ هەیە؟
+                        <a href="#" onclick="showSignIn(); return false;">دەستنیشانبکە</a>
+                    </p>
+
+                    <p class="auth-terms">
+                        ب تۆمارکرنێ تو رازیی ل سەر
+                        <a href="/terms" target="_blank">مەرجێن خزمەتگوزاری</a> و
+                        <a href="/privacy" target="_blank">سیاسەتا تایبەتمەندی</a>
+                    </p>
+                </div>
+
+                <!-- Right Side: Illustration -->
+                <div class="auth-illustration-side">
+                    <div class="auth-illustration">
+                        <img src="/assets/images/auth-books.png" alt="Islamic Books" class="auth-image">
+                        <div class="auth-illustration-overlay">
+                            <h3>بچە ناڤ ژێدەرەکا پێشکەڤتی یا زانینێ ئیسلامی</h3>
+                            <p>هەزاران ڤیدیۆیێن تەفسیر، حەدیس، فقه، و زێدەتر</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
