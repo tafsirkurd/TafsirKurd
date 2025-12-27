@@ -5236,6 +5236,7 @@
                 case 'users': await loadUsers(); break;
                 case 'reading': await loadReadingStats(); break;
                 case 'searchConsole': await loadSearchConsoleData(); break;
+                case 'tv-management': await loadTVManagement(); break;
                 case 'database': await loadDatabaseStats(); break;
                 case 'emailTemplates': await loadEmailStats(); break;
             }
@@ -13465,6 +13466,874 @@ ${htmlParagraphs}
 
         // ========================================
         // END TV YOUTUBE UPLOAD SYSTEM
+        // ========================================
+
+        // ========================================
+        // TV MANAGEMENT SYSTEM
+        // ========================================
+
+        // Switch between TV Management tabs
+        function switchTVTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tv-tab').forEach(btn => {
+                btn.style.background = '#f5f5f5';
+                btn.style.color = '#666';
+            });
+            event.target.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            event.target.style.color = 'white';
+
+            // Update tab content
+            document.querySelectorAll('.tv-tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+
+            if (tab === 'categories') {
+                document.getElementById('tvCategoriesTab').style.display = 'block';
+                loadTVCategories();
+            } else if (tab === 'series') {
+                document.getElementById('tvSeriesTab').style.display = 'block';
+                loadTVSeries();
+            } else if (tab === 'episodes') {
+                document.getElementById('tvEpisodesTab').style.display = 'block';
+                loadTVEpisodes();
+            }
+        }
+
+        // Load TV Management (initial load)
+        async function loadTVManagement() {
+            await loadTVCategories();
+        }
+
+        // ==================== CATEGORIES ====================
+
+        async function loadTVCategories() {
+            const table = document.getElementById('tvCategoriesTable');
+            table.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading categories...</div></div>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('tv_categories')
+                    .select('*')
+                    .order('display_order', { ascending: true });
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    table.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">No categories yet. Click "+ Add Category" to create one.</div>';
+                    return;
+                }
+
+                let html = '<table class="data-table"><thead><tr><th>Icon</th><th>Name (Kurdish)</th><th>Slug</th><th>Order</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
+
+                data.forEach(cat => {
+                    const createdDate = new Date(cat.created_at).toLocaleDateString('en-US');
+                    html += `
+                        <tr>
+                            <td style="font-size: 24px;">${cat.icon || '📁'}</td>
+                            <td><strong>${cat.name_ku}</strong></td>
+                            <td><code>${cat.slug}</code></td>
+                            <td>${cat.display_order}</td>
+                            <td>${createdDate}</td>
+                            <td>
+                                <button onclick="editTVCategory('${cat.id}')" class="btn-edit">✏️ Edit</button>
+                                <button onclick="deleteTVCategory('${cat.id}', '${cat.name_ku}')" class="btn-delete">🗑️ Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                table.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                table.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error loading categories: ' + error.message + '</div>';
+            }
+        }
+
+        function openAddCategoryModal() {
+            const modal = document.createElement('div');
+            modal.id = 'tvCategoryModal';
+            modal.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;" onclick="if(event.target === this) closeTVCategoryModal()">
+                    <div style="background: white; border-radius: 20px; padding: 40px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                            <h2 style="margin: 0; font-size: 28px;">📁 Add New Category</h2>
+                            <button onclick="closeTVCategoryModal()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999;">&times;</button>
+                        </div>
+
+                        <form id="tvCategoryForm" onsubmit="saveTVCategory(event)">
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Category Name (Badini Kurdish) *</label>
+                                <input type="text" id="catNameKu" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;" placeholder="ناڤێ بەشێ (وەکو: تەفسیر، حەدیس، فقه)">
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Slug (URL-friendly) *</label>
+                                <input type="text" id="catSlug" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;" placeholder="tafsir, hadith, fiqh">
+                                <small style="color: #666;">Only lowercase letters, numbers, and hyphens</small>
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Icon (Emoji)</label>
+                                <input type="text" id="catIcon" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 24px;" placeholder="📚" maxlength="2">
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Display Order</label>
+                                <input type="number" id="catOrder" value="0" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                <small style="color: #666;">Lower numbers appear first</small>
+                            </div>
+
+                            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                                <button type="submit" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 16px; cursor: pointer;">💾 Save Category</button>
+                                <button type="button" onclick="closeTVCategoryModal()" style="padding: 14px 24px; background: #f5f5f5; color: #666; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function closeTVCategoryModal() {
+            const modal = document.getElementById('tvCategoryModal');
+            if (modal) modal.remove();
+        }
+
+        async function saveTVCategory(event) {
+            event.preventDefault();
+
+            const nameKu = document.getElementById('catNameKu').value.trim();
+            const slug = document.getElementById('catSlug').value.trim().toLowerCase();
+            const icon = document.getElementById('catIcon').value.trim() || '📁';
+            const order = parseInt(document.getElementById('catOrder').value) || 0;
+
+            try {
+                const { data, error } = await supabase
+                    .from('tv_categories')
+                    .insert([{
+                        name_ku: nameKu,
+                        slug: slug,
+                        icon: icon,
+                        display_order: order
+                    }])
+                    .select();
+
+                if (error) throw error;
+
+                showNotification('✅ Category added successfully!', 'success');
+                closeTVCategoryModal();
+                loadTVCategories();
+
+            } catch (error) {
+                console.error('Error saving category:', error);
+                showNotification('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteTVCategory(id, name) {
+            if (!confirm(`Delete category "${name}"? This will also delete all series and episodes in this category!`)) return;
+
+            try {
+                const { error } = await supabase
+                    .from('tv_categories')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showNotification('✅ Category deleted!', 'success');
+                loadTVCategories();
+
+            } catch (error) {
+                console.error('Error deleting category:', error);
+                showNotification('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function editTVCategory(id) {
+            try {
+                const { data, error } = await supabase
+                    .from('tv_categories')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+
+                if (error) throw error;
+
+                const modal = document.createElement('div');
+                modal.id = 'tvCategoryModal';
+                modal.innerHTML = `
+                    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;" onclick="if(event.target === this) closeTVCategoryModal()">
+                        <div style="background: white; border-radius: 20px; padding: 40px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                                <h2 style="margin: 0; font-size: 28px;">✏️ Edit Category</h2>
+                                <button onclick="closeTVCategoryModal()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999;">&times;</button>
+                            </div>
+
+                            <form id="tvCategoryForm" onsubmit="updateTVCategory(event, '${id}')">
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Category Name (Badini Kurdish) *</label>
+                                    <input type="text" id="catNameKu" value="${data.name_ku}" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Slug (URL-friendly) *</label>
+                                    <input type="text" id="catSlug" value="${data.slug}" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Icon (Emoji)</label>
+                                    <input type="text" id="catIcon" value="${data.icon || ''}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 24px;">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Display Order</label>
+                                    <input type="number" id="catOrder" value="${data.display_order}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                </div>
+
+                                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                                    <button type="submit" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 16px; cursor: pointer;">💾 Update Category</button>
+                                    <button type="button" onclick="closeTVCategoryModal()" style="padding: 14px 24px; background: #f5f5f5; color: #666; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+            } catch (error) {
+                console.error('Error loading category:', error);
+                showNotification('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function updateTVCategory(event, id) {
+            event.preventDefault();
+
+            const nameKu = document.getElementById('catNameKu').value.trim();
+            const slug = document.getElementById('catSlug').value.trim().toLowerCase();
+            const icon = document.getElementById('catIcon').value.trim() || '📁';
+            const order = parseInt(document.getElementById('catOrder').value) || 0;
+
+            try {
+                const { error } = await supabase
+                    .from('tv_categories')
+                    .update({
+                        name_ku: nameKu,
+                        slug: slug,
+                        icon: icon,
+                        display_order: order
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showNotification('✅ Category updated successfully!', 'success');
+                closeTVCategoryModal();
+                loadTVCategories();
+
+            } catch (error) {
+                console.error('Error updating category:', error);
+                showNotification('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // ==================== SERIES ====================
+
+        async function loadTVSeries() {
+            const table = document.getElementById('tvSeriesTable');
+            table.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading series...</div></div>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('tv_series')
+                    .select(`
+                        *,
+                        tv_categories (name_ku, icon)
+                    `)
+                    .order('display_order', { ascending: true });
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    table.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">No series yet. Click "+ Add Series" to create one.</div>';
+                    return;
+                }
+
+                let html = '<table class="data-table"><thead><tr><th>Category</th><th>Name</th><th>Description</th><th>Order</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
+
+                data.forEach(series => {
+                    const createdDate = new Date(series.created_at).toLocaleDateString('en-US');
+                    const categoryName = series.tv_categories ? `${series.tv_categories.icon} ${series.tv_categories.name_ku}` : 'N/A';
+                    const desc = series.description_ku ? (series.description_ku.substring(0, 50) + '...') : '-';
+
+                    html += `
+                        <tr>
+                            <td>${categoryName}</td>
+                            <td><strong>${series.name_ku}</strong></td>
+                            <td>${desc}</td>
+                            <td>${series.display_order}</td>
+                            <td>${createdDate}</td>
+                            <td>
+                                <button onclick="editTVSeries('${series.id}')" class="btn-edit">✏️ Edit</button>
+                                <button onclick="deleteTVSeries('${series.id}', '${series.name_ku}')" class="btn-delete">🗑️ Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                table.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading series:', error);
+                table.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error loading series: ' + error.message + '</div>';
+            }
+        }
+
+        async function openAddSeriesModal() {
+            // Load categories for dropdown
+            const { data: categories } = await supabase
+                .from('tv_categories')
+                .select('*')
+                .order('display_order');
+
+            if (!categories || categories.length === 0) {
+                showNotification('⚠️ Please create at least one category first!', 'warning');
+                return;
+            }
+
+            let categoryOptions = categories.map(cat =>
+                `<option value="${cat.id}">${cat.icon} ${cat.name_ku}</option>`
+            ).join('');
+
+            const modal = document.createElement('div');
+            modal.id = 'tvSeriesModal';
+            modal.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;" onclick="if(event.target === this) closeTVSeriesModal()">
+                    <div style="background: white; border-radius: 20px; padding: 40px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                            <h2 style="margin: 0; font-size: 28px;">📚 Add New Series</h2>
+                            <button onclick="closeTVSeriesModal()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999;">&times;</button>
+                        </div>
+
+                        <form id="tvSeriesForm" onsubmit="saveTVSeries(event)">
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Category *</label>
+                                <select id="seriesCategoryId" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                    <option value="">Select a category...</option>
+                                    ${categoryOptions}
+                                </select>
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Series Name (Badini Kurdish) *</label>
+                                <input type="text" id="seriesNameKu" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;" placeholder="ناڤێ زنجیرەیێ">
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Description (Badini Kurdish)</label>
+                                <textarea id="seriesDescKu" rows="4" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; resize: vertical;" placeholder="شرۆڤەکرنەکا کورت"></textarea>
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Thumbnail URL</label>
+                                <input type="url" id="seriesThumb" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;" placeholder="https://example.com/image.jpg">
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Display Order</label>
+                                <input type="number" id="seriesOrder" value="0" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                            </div>
+
+                            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                                <button type="submit" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 16px; cursor: pointer;">💾 Save Series</button>
+                                <button type="button" onclick="closeTVSeriesModal()" style="padding: 14px 24px; background: #f5f5f5; color: #666; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function closeTVSeriesModal() {
+            const modal = document.getElementById('tvSeriesModal');
+            if (modal) modal.remove();
+        }
+
+        async function saveTVSeries(event) {
+            event.preventDefault();
+
+            const categoryId = document.getElementById('seriesCategoryId').value;
+            const nameKu = document.getElementById('seriesNameKu').value.trim();
+            const descKu = document.getElementById('seriesDescKu').value.trim();
+            const thumb = document.getElementById('seriesThumb').value.trim();
+            const order = parseInt(document.getElementById('seriesOrder').value) || 0;
+
+            try {
+                const { error } = await supabase
+                    .from('tv_series')
+                    .insert([{
+                        category_id: categoryId,
+                        name_ku: nameKu,
+                        description_ku: descKu,
+                        thumbnail_url: thumb,
+                        display_order: order
+                    }]);
+
+                if (error) throw error;
+
+                showNotification('✅ Series added successfully!', 'success');
+                closeTVSeriesModal();
+                loadTVSeries();
+
+            } catch (error) {
+                console.error('Error saving series:', error);
+                showNotification('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteTVSeries(id, name) {
+            if (!confirm(`Delete series "${name}"? This will also delete all episodes in this series!`)) return;
+
+            try {
+                const { error } = await supabase
+                    .from('tv_series')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showNotification('✅ Series deleted!', 'success');
+                loadTVSeries();
+
+            } catch (error) {
+                console.error('Error deleting series:', error);
+                showNotification('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function editTVSeries(id) {
+            try {
+                const [seriesResult, categoriesResult] = await Promise.all([
+                    supabase.from('tv_series').select('*').eq('id', id).single(),
+                    supabase.from('tv_categories').select('*').order('display_order')
+                ]);
+
+                if (seriesResult.error) throw seriesResult.error;
+                const series = seriesResult.data;
+                const categories = categoriesResult.data || [];
+
+                let categoryOptions = categories.map(cat =>
+                    `<option value="${cat.id}" ${cat.id === series.category_id ? 'selected' : ''}>${cat.icon} ${cat.name_ku}</option>`
+                ).join('');
+
+                const modal = document.createElement('div');
+                modal.id = 'tvSeriesModal';
+                modal.innerHTML = `
+                    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;" onclick="if(event.target === this) closeTVSeriesModal()">
+                        <div style="background: white; border-radius: 20px; padding: 40px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                                <h2 style="margin: 0; font-size: 28px;">✏️ Edit Series</h2>
+                                <button onclick="closeTVSeriesModal()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999;">&times;</button>
+                            </div>
+
+                            <form id="tvSeriesForm" onsubmit="updateTVSeries(event, '${id}')">
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Category *</label>
+                                    <select id="seriesCategoryId" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                        ${categoryOptions}
+                                    </select>
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Series Name (Badini Kurdish) *</label>
+                                    <input type="text" id="seriesNameKu" value="${series.name_ku}" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Description (Badini Kurdish)</label>
+                                    <textarea id="seriesDescKu" rows="4" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; resize: vertical;">${series.description_ku || ''}</textarea>
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Thumbnail URL</label>
+                                    <input type="url" id="seriesThumb" value="${series.thumbnail_url || ''}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Display Order</label>
+                                    <input type="number" id="seriesOrder" value="${series.display_order}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                </div>
+
+                                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                                    <button type="submit" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 16px; cursor: pointer;">💾 Update Series</button>
+                                    <button type="button" onclick="closeTVSeriesModal()" style="padding: 14px 24px; background: #f5f5f5; color: #666; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+            } catch (error) {
+                console.error('Error loading series:', error);
+                showNotification('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function updateTVSeries(event, id) {
+            event.preventDefault();
+
+            const categoryId = document.getElementById('seriesCategoryId').value;
+            const nameKu = document.getElementById('seriesNameKu').value.trim();
+            const descKu = document.getElementById('seriesDescKu').value.trim();
+            const thumb = document.getElementById('seriesThumb').value.trim();
+            const order = parseInt(document.getElementById('seriesOrder').value) || 0;
+
+            try {
+                const { error } = await supabase
+                    .from('tv_series')
+                    .update({
+                        category_id: categoryId,
+                        name_ku: nameKu,
+                        description_ku: descKu,
+                        thumbnail_url: thumb,
+                        display_order: order
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showNotification('✅ Series updated successfully!', 'success');
+                closeTVSeriesModal();
+                loadTVSeries();
+
+            } catch (error) {
+                console.error('Error updating series:', error);
+                showNotification('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // ==================== EPISODES ====================
+
+        async function loadTVEpisodes() {
+            const table = document.getElementById('tvEpisodesTable');
+            table.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading episodes...</div></div>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('tv_episodes')
+                    .select(`
+                        *,
+                        tv_series (
+                            name_ku,
+                            tv_categories (name_ku, icon)
+                        )
+                    `)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    table.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">No episodes yet. Click "+ Add Episode" to create one.</div>';
+                    return;
+                }
+
+                let html = '<table class="data-table"><thead><tr><th>Series</th><th>Title</th><th>Episode #</th><th>Vimeo ID</th><th>Duration</th><th>Views</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
+
+                data.forEach(ep => {
+                    const createdDate = new Date(ep.created_at).toLocaleDateString('en-US');
+                    const seriesName = ep.tv_series ? ep.tv_series.name_ku : 'N/A';
+                    const categoryIcon = ep.tv_series?.tv_categories?.icon || '📁';
+
+                    html += `
+                        <tr>
+                            <td>${categoryIcon} ${seriesName}</td>
+                            <td><strong>${ep.title_ku}</strong></td>
+                            <td>#${ep.episode_number || '-'}</td>
+                            <td><code>${ep.vimeo_id}</code></td>
+                            <td>${ep.duration || '-'}</td>
+                            <td>${ep.views || 0}</td>
+                            <td>${createdDate}</td>
+                            <td>
+                                <button onclick="editTVEpisode('${ep.id}')" class="btn-edit">✏️ Edit</button>
+                                <button onclick="deleteTVEpisode('${ep.id}', '${ep.title_ku}')" class="btn-delete">🗑️ Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                table.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading episodes:', error);
+                table.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error loading episodes: ' + error.message + '</div>';
+            }
+        }
+
+        async function openAddEpisodeModal() {
+            // Load series for dropdown
+            const { data: series } = await supabase
+                .from('tv_series')
+                .select('id, name_ku, tv_categories(name_ku, icon)')
+                .order('display_order');
+
+            if (!series || series.length === 0) {
+                showNotification('⚠️ Please create at least one series first!', 'warning');
+                return;
+            }
+
+            let seriesOptions = series.map(s =>
+                `<option value="${s.id}">${s.tv_categories?.icon || '📁'} ${s.name_ku}</option>`
+            ).join('');
+
+            const modal = document.createElement('div');
+            modal.id = 'tvEpisodeModal';
+            modal.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;" onclick="if(event.target === this) closeTVEpisodeModal()">
+                    <div style="background: white; border-radius: 20px; padding: 40px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                            <h2 style="margin: 0; font-size: 28px;">🎬 Add New Episode</h2>
+                            <button onclick="closeTVEpisodeModal()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999;">&times;</button>
+                        </div>
+
+                        <form id="tvEpisodeForm" onsubmit="saveTVEpisode(event)">
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Series *</label>
+                                <select id="episodeSeriesId" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                    <option value="">Select a series...</option>
+                                    ${seriesOptions}
+                                </select>
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Episode Title (Badini Kurdish) *</label>
+                                <input type="text" id="episodeTitleKu" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;" placeholder="ناڤێ بەشێ">
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Description (Badini Kurdish)</label>
+                                <textarea id="episodeDescKu" rows="3" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; resize: vertical;" placeholder="شرۆڤەکرن"></textarea>
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Vimeo Video ID *</label>
+                                <input type="text" id="episodeVimeoId" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;" placeholder="123456789">
+                                <small style="color: #666;">Only the numbers from the Vimeo URL</small>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Episode Number</label>
+                                    <input type="number" id="episodeNumber" min="1" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;" placeholder="1">
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Duration</label>
+                                    <input type="text" id="episodeDuration" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;" placeholder="45:30">
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Thumbnail URL</label>
+                                <input type="url" id="episodeThumb" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;" placeholder="https://example.com/thumb.jpg">
+                            </div>
+
+                            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                                <button type="submit" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 16px; cursor: pointer;">💾 Save Episode</button>
+                                <button type="button" onclick="closeTVEpisodeModal()" style="padding: 14px 24px; background: #f5f5f5; color: #666; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function closeTVEpisodeModal() {
+            const modal = document.getElementById('tvEpisodeModal');
+            if (modal) modal.remove();
+        }
+
+        async function saveTVEpisode(event) {
+            event.preventDefault();
+
+            const seriesId = document.getElementById('episodeSeriesId').value;
+            const titleKu = document.getElementById('episodeTitleKu').value.trim();
+            const descKu = document.getElementById('episodeDescKu').value.trim();
+            const vimeoId = document.getElementById('episodeVimeoId').value.trim();
+            const episodeNum = document.getElementById('episodeNumber').value ? parseInt(document.getElementById('episodeNumber').value) : null;
+            const duration = document.getElementById('episodeDuration').value.trim();
+            const thumb = document.getElementById('episodeThumb').value.trim();
+
+            try {
+                const { error } = await supabase
+                    .from('tv_episodes')
+                    .insert([{
+                        series_id: seriesId,
+                        title_ku: titleKu,
+                        description_ku: descKu,
+                        vimeo_id: vimeoId,
+                        episode_number: episodeNum,
+                        duration: duration,
+                        thumbnail_url: thumb
+                    }]);
+
+                if (error) throw error;
+
+                showNotification('✅ Episode added successfully!', 'success');
+                closeTVEpisodeModal();
+                loadTVEpisodes();
+
+            } catch (error) {
+                console.error('Error saving episode:', error);
+                showNotification('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteTVEpisode(id, title) {
+            if (!confirm(`Delete episode "${title}"?`)) return;
+
+            try {
+                const { error } = await supabase
+                    .from('tv_episodes')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showNotification('✅ Episode deleted!', 'success');
+                loadTVEpisodes();
+
+            } catch (error) {
+                console.error('Error deleting episode:', error);
+                showNotification('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function editTVEpisode(id) {
+            try {
+                const [episodeResult, seriesResult] = await Promise.all([
+                    supabase.from('tv_episodes').select('*').eq('id', id).single(),
+                    supabase.from('tv_series').select('id, name_ku, tv_categories(name_ku, icon)').order('display_order')
+                ]);
+
+                if (episodeResult.error) throw episodeResult.error;
+                const episode = episodeResult.data;
+                const series = seriesResult.data || [];
+
+                let seriesOptions = series.map(s =>
+                    `<option value="${s.id}" ${s.id === episode.series_id ? 'selected' : ''}>${s.tv_categories?.icon || '📁'} ${s.name_ku}</option>`
+                ).join('');
+
+                const modal = document.createElement('div');
+                modal.id = 'tvEpisodeModal';
+                modal.innerHTML = `
+                    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;" onclick="if(event.target === this) closeTVEpisodeModal()">
+                        <div style="background: white; border-radius: 20px; padding: 40px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                                <h2 style="margin: 0; font-size: 28px;">✏️ Edit Episode</h2>
+                                <button onclick="closeTVEpisodeModal()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999;">&times;</button>
+                            </div>
+
+                            <form id="tvEpisodeForm" onsubmit="updateTVEpisode(event, '${id}')">
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Series *</label>
+                                    <select id="episodeSeriesId" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                        ${seriesOptions}
+                                    </select>
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Episode Title (Badini Kurdish) *</label>
+                                    <input type="text" id="episodeTitleKu" value="${episode.title_ku}" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Description (Badini Kurdish)</label>
+                                    <textarea id="episodeDescKu" rows="3" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; resize: vertical;">${episode.description_ku || ''}</textarea>
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Vimeo Video ID *</label>
+                                    <input type="text" id="episodeVimeoId" value="${episode.vimeo_id}" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Episode Number</label>
+                                        <input type="number" id="episodeNumber" value="${episode.episode_number || ''}" min="1" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Duration</label>
+                                        <input type="text" id="episodeDuration" value="${episode.duration || ''}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Thumbnail URL</label>
+                                    <input type="url" id="episodeThumb" value="${episode.thumbnail_url || ''}" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px;">
+                                </div>
+
+                                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                                    <button type="submit" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 16px; cursor: pointer;">💾 Update Episode</button>
+                                    <button type="button" onclick="closeTVEpisodeModal()" style="padding: 14px 24px; background: #f5f5f5; color: #666; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+            } catch (error) {
+                console.error('Error loading episode:', error);
+                showNotification('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        async function updateTVEpisode(event, id) {
+            event.preventDefault();
+
+            const seriesId = document.getElementById('episodeSeriesId').value;
+            const titleKu = document.getElementById('episodeTitleKu').value.trim();
+            const descKu = document.getElementById('episodeDescKu').value.trim();
+            const vimeoId = document.getElementById('episodeVimeoId').value.trim();
+            const episodeNum = document.getElementById('episodeNumber').value ? parseInt(document.getElementById('episodeNumber').value) : null;
+            const duration = document.getElementById('episodeDuration').value.trim();
+            const thumb = document.getElementById('episodeThumb').value.trim();
+
+            try {
+                const { error } = await supabase
+                    .from('tv_episodes')
+                    .update({
+                        series_id: seriesId,
+                        title_ku: titleKu,
+                        description_ku: descKu,
+                        vimeo_id: vimeoId,
+                        episode_number: episodeNum,
+                        duration: duration,
+                        thumbnail_url: thumb
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showNotification('✅ Episode updated successfully!', 'success');
+                closeTVEpisodeModal();
+                loadTVEpisodes();
+
+            } catch (error) {
+                console.error('Error updating episode:', error);
+                showNotification('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // ========================================
+        // END TV MANAGEMENT SYSTEM
         // ========================================
 
     </script>
