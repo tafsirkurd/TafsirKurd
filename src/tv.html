@@ -1112,15 +1112,14 @@
 
         .auth-modal-container {
             position: relative;
-            max-width: 550px;
+            max-width: 950px;
             width: 95%;
-            max-height: 95vh;
-            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-            border-radius: 24px;
+            max-height: 85vh;
+            background: #2a2a2a;
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            animation: slideUp 0.4s ease-out;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.9);
+            animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         @keyframes slideUp {
@@ -1138,9 +1137,9 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
             border: none;
-            color: #ffffff;
+            color: rgba(255, 255, 255, 0.7);
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -1153,93 +1152,149 @@
         }
 
         .auth-close-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
             transform: scale(1.1);
         }
 
         .auth-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: auto;
-            max-height: 85vh;
-            overflow-y: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 85vh;
+            max-height: 650px;
         }
 
         .auth-form-side {
-            padding: 50px 60px;
+            padding: 50px 45px;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            background: #2a2a2a;
+            position: relative;
+            z-index: 2;
+        }
+
+        .auth-image-side {
+            position: relative;
+            background: linear-gradient(135deg, #d4a574 0%, #c8956a 50%, #b8805c 100%);
+            overflow: hidden;
+        }
+
+        .auth-image-side::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('/assets/images/islamic-pattern.svg');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        .auth-image-content {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .auth-hero-image {
             width: 100%;
-            max-width: 500px;
+            max-width: 450px;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.3));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .auth-hero-text {
+            display: none;
+        }
+
+        .auth-stats {
+            display: none;
         }
 
         .auth-logo {
-            margin-bottom: 2.5rem;
+            margin-bottom: 1.8rem;
             text-align: center;
+        }
+
+        .auth-logo img {
+            height: 50px;
+            filter: brightness(0) invert(1);
         }
 
         .auth-title {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             font-weight: 700;
             color: #ffffff;
-            margin-bottom: 0.75rem;
-            text-align: center;
-            background: linear-gradient(135deg, #ffffff 0%, #cccccc 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            margin-bottom: 2rem;
+            text-align: left;
+            letter-spacing: -0.3px;
         }
 
         .auth-subtitle {
-            font-size: 1.15rem;
-            color: #999;
-            margin-bottom: 2.5rem;
-            text-align: center;
-            line-height: 1.6;
+            display: none;
         }
 
         .auth-social-buttons {
             display: flex;
-            flex-direction: column;
-            gap: 14px;
-            margin-bottom: 2rem;
+            flex-direction: row;
+            gap: 12px;
+            margin-bottom: 1.8rem;
         }
 
         .auth-social-btn {
-            padding: 18px 24px;
+            flex: 1;
+            padding: 16px 20px;
             border: none;
-            border-radius: 14px;
+            border-radius: 12px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 1.05rem;
+            font-size: 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
             transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
         }
 
         .auth-social-btn i {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
         }
 
         .google-btn {
-            background: #ffffff;
-            color: #000000;
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
         }
 
         .google-btn:hover {
-            background: #f5f5f5;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
         }
 
         .auth-divider {
             text-align: center;
-            margin: 1.5rem 0;
+            margin: 1.3rem 0;
             position: relative;
         }
 
@@ -1248,7 +1303,7 @@
             content: '';
             position: absolute;
             top: 50%;
-            width: 40%;
+            width: 42%;
             height: 1px;
             background: rgba(255, 255, 255, 0.1);
         }
@@ -1262,9 +1317,10 @@
         }
 
         .auth-divider span {
-            color: #666;
-            background: #1a1a1a;
+            color: rgba(255, 255, 255, 0.5);
+            background: #2a2a2a;
             padding: 0 1rem;
+            font-size: 0.85rem;
         }
 
         .auth-input-group {
@@ -1275,7 +1331,8 @@
             display: block;
             color: #ffffff;
             font-weight: 600;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.9rem;
         }
 
         .auth-input-group input {
@@ -1283,44 +1340,50 @@
             padding: 14px 16px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            border-radius: 10px;
             color: #ffffff;
             font-size: 1rem;
             transition: all 0.3s;
         }
 
+        .auth-input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
         .auth-input-group input:focus {
             outline: none;
-            border-color: #1ab7ea;
+            border-color: rgba(255, 255, 255, 0.2);
             background: rgba(255, 255, 255, 0.08);
         }
 
         .auth-submit-btn {
             width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            padding: 15px;
+            background: linear-gradient(135deg, #ff1744 0%, #e91e63 100%);
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             color: #ffffff;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(255, 23, 68, 0.3);
         }
 
         .auth-submit-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.4);
+            box-shadow: 0 8px 20px rgba(255, 23, 68, 0.4);
         }
 
         .auth-signin-link {
             text-align: center;
-            margin-top: 1.5rem;
-            color: #999;
+            margin-top: 1.3rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.95rem;
         }
 
         .auth-signin-link a {
-            color: #1ab7ea;
+            color: #ffffff;
             text-decoration: none;
             font-weight: 600;
         }
@@ -1331,15 +1394,33 @@
 
         .auth-terms {
             margin-top: 1.5rem;
-            font-size: 0.85rem;
-            color: #666;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
             text-align: center;
-            line-height: 1.6;
+            line-height: 1.5;
         }
 
         .auth-terms a {
-            color: #999;
+            color: rgba(255, 255, 255, 0.7);
             text-decoration: underline;
+        }
+
+        .auth-terms a:hover {
+            color: #ffffff;
+        }
+
+        @media (max-width: 968px) {
+            .auth-content {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-image-side {
+                display: none;
+            }
+
+            .auth-modal-container {
+                max-width: 550px;
+            }
         }
 
         @media (max-width: 768px) {
@@ -1348,7 +1429,7 @@
             }
 
             .auth-title {
-                font-size: 1.8rem;
+                font-size: 2.2rem;
             }
 
             .auth-subtitle {
@@ -1362,7 +1443,11 @@
             }
 
             .auth-title {
-                font-size: 1.6rem;
+                font-size: 1.8rem;
+            }
+
+            .auth-subtitle {
+                font-size: 0.95rem;
             }
         }
 
@@ -1925,46 +2010,52 @@
                 <!-- Left Side: Form -->
                 <div class="auth-form-side">
                     <div class="auth-logo">
-                        <img src="/assets/images/logo.png" alt="تەفسیر كورد" style="height: 50px; filter: brightness(0) invert(1);">
+                        <img src="/assets/images/logo.png" alt="تەفسیر كورد">
                     </div>
 
-                    <h2 class="auth-title">دروستکرنا هەژمارێ</h2>
-                    <p class="auth-subtitle">دەستنیشانبکە بۆ بینینا ڤیدیۆیان</p>
+                    <h2 class="auth-title">Create an Account</h2>
 
                     <!-- Social Login Buttons -->
                     <div class="auth-social-buttons">
                         <button class="auth-social-btn google-btn" onclick="signInWithGoogle()">
                             <i class="fab fa-google"></i>
-                            <span>دەستنیشانبکە ب Google</span>
+                            <span>Google</span>
                         </button>
                     </div>
 
                     <div class="auth-divider">
-                        <span>یان</span>
+                        <span>or</span>
                     </div>
 
                     <!-- Email Form -->
                     <form class="auth-email-form" id="authEmailForm" onsubmit="signUpWithEmail(event)">
                         <div class="auth-input-group">
-                            <label>ئیمەیل</label>
-                            <input type="email" id="authEmail" placeholder="ئیمەیلێ خو بنڤیسە..." required>
+                            <label>Email</label>
+                            <input type="email" id="authEmail" placeholder="Email..." required>
                         </div>
 
                         <button type="submit" class="auth-submit-btn">
-                            پێشڤە
+                            Next
                         </button>
                     </form>
 
                     <p class="auth-signin-link">
-                        جێهێ هەژمارەکێ هەیە؟
-                        <a href="#" onclick="showSignIn(); return false;">دەستنیشانبکە</a>
+                        Already a member? <a href="#" onclick="showSignIn(); return false;">Sign in</a>
                     </p>
 
                     <p class="auth-terms">
-                        ب تۆمارکرنێ تو رازیی ل سەر
-                        <a href="/terms" target="_blank">مەرجێن خزمەتگوزاری</a> و
-                        <a href="/privacy" target="_blank">سیاسەتا تایبەتمەندی</a>
+                        By registering you agree to TafsirKurd's <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>
                     </p>
+                </div>
+
+                <!-- Right Side: Image Side with Logo -->
+                <div class="auth-image-side">
+                    <div class="auth-image-content">
+                        <!-- Large centered logo/brand -->
+                        <div class="auth-brand-image">
+                            <img src="/assets/images/logo.png" alt="TafsirKurd" style="max-width: 200px; filter: brightness(0) invert(1); opacity: 0.9;">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
