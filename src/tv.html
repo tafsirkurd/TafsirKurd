@@ -1115,11 +1115,11 @@
             max-width: 950px;
             width: 95%;
             max-height: 85vh;
-            background: #2a2a2a;
-            border-radius: 20px;
+            background: linear-gradient(145deg, #2d2d2d 0%, #1f1f1f 100%);
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.9);
-            animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 50px 120px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         @keyframes slideUp {
@@ -1176,8 +1176,9 @@
 
         .auth-image-side {
             position: relative;
-            background: linear-gradient(135deg, #d4a574 0%, #c8956a 50%, #b8805c 100%);
+            background: linear-gradient(135deg, #d4a574 0%, #c8956a 30%, #b8805c 70%, #a67050 100%);
             overflow: hidden;
+            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.1);
         }
 
         .auth-image-side::before {
@@ -1190,8 +1191,14 @@
             background-image: url('/assets/images/islamic-pattern.svg');
             background-size: cover;
             background-position: center;
-            opacity: 0.1;
+            opacity: 0.08;
             z-index: 0;
+            animation: subtle-move 20s ease-in-out infinite;
+        }
+
+        @keyframes subtle-move {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.05) rotate(1deg); }
         }
 
         .auth-image-content {
@@ -1234,20 +1241,41 @@
         .auth-logo {
             margin-bottom: 1.8rem;
             text-align: center;
+            animation: fadeIn 0.8s ease-in-out;
         }
 
         .auth-logo img {
             height: 50px;
             filter: brightness(0) invert(1);
+            transition: transform 0.3s;
+        }
+
+        .auth-logo img:hover {
+            transform: scale(1.05);
         }
 
         .auth-title {
             font-size: 2.2rem;
             font-weight: 700;
-            color: #ffffff;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 2rem;
             text-align: left;
             letter-spacing: -0.3px;
+            animation: fadeInUp 0.6s ease-in-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .auth-subtitle {
@@ -1264,7 +1292,7 @@
         .auth-social-btn {
             flex: 1;
             padding: 16px 20px;
-            border: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             cursor: pointer;
             font-weight: 600;
@@ -1273,13 +1301,31 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             background: rgba(255, 255, 255, 0.08);
             color: #ffffff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-social-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .auth-social-btn:hover::before {
+            left: 100%;
         }
 
         .auth-social-btn i {
             font-size: 1.2rem;
+            transition: transform 0.3s;
         }
 
         .google-btn {
@@ -1288,8 +1334,14 @@
         }
 
         .google-btn:hover {
-            background: rgba(255, 255, 255, 0.12);
-            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .google-btn:hover i {
+            transform: scale(1.1);
         }
 
         .auth-divider {
@@ -1343,7 +1395,7 @@
             border-radius: 10px;
             color: #ffffff;
             font-size: 1rem;
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .auth-input-group input::placeholder {
@@ -1352,27 +1404,52 @@
 
         .auth-input-group input:focus {
             outline: none;
-            border-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 100, 120, 0.5);
             background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(255, 100, 120, 0.1);
+            transform: translateY(-1px);
         }
 
         .auth-submit-btn {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, #ff1744 0%, #e91e63 100%);
+            background: linear-gradient(135deg, #ff1744 0%, #f50057 50%, #e91e63 100%);
             border: none;
             border-radius: 10px;
             color: #ffffff;
             font-size: 1.05rem;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(255, 23, 68, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(255, 23, 68, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .auth-submit-btn:hover::before {
+            left: 100%;
         }
 
         .auth-submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 23, 68, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 23, 68, 0.6);
+            background: linear-gradient(135deg, #ff1744 0%, #ff4569 50%, #ff0844 100%);
+        }
+
+        .auth-submit-btn:active {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(255, 23, 68, 0.5);
         }
 
         .auth-signin-link {
@@ -1386,10 +1463,27 @@
             color: #ffffff;
             text-decoration: none;
             font-weight: 600;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .auth-signin-link a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #ff1744, #e91e63);
+            transition: width 0.3s;
         }
 
         .auth-signin-link a:hover {
-            text-decoration: underline;
+            color: #ff1744;
+        }
+
+        .auth-signin-link a:hover::after {
+            width: 100%;
         }
 
         .auth-terms {
@@ -2013,38 +2107,38 @@
                         <img src="/assets/images/logo.png" alt="تەفسیر كورد">
                     </div>
 
-                    <h2 class="auth-title">Create an Account</h2>
+                    <h2 class="auth-title">دروستکرنا هەژمارێ</h2>
 
                     <!-- Social Login Buttons -->
                     <div class="auth-social-buttons">
                         <button class="auth-social-btn google-btn" onclick="signInWithGoogle()">
                             <i class="fab fa-google"></i>
-                            <span>Google</span>
+                            <span>گووگڵ</span>
                         </button>
                     </div>
 
                     <div class="auth-divider">
-                        <span>or</span>
+                        <span>یان</span>
                     </div>
 
                     <!-- Email Form -->
                     <form class="auth-email-form" id="authEmailForm" onsubmit="signUpWithEmail(event)">
                         <div class="auth-input-group">
-                            <label>Email</label>
-                            <input type="email" id="authEmail" placeholder="Email..." required>
+                            <label>ئیمەیل</label>
+                            <input type="email" id="authEmail" placeholder="ئیمەیلێ خو بنڤیسە..." required>
                         </div>
 
                         <button type="submit" class="auth-submit-btn">
-                            Next
+                            پێشڤە
                         </button>
                     </form>
 
                     <p class="auth-signin-link">
-                        Already a member? <a href="#" onclick="showSignIn(); return false;">Sign in</a>
+                        جێهێ هەژمارەکێ هەیە؟ <a href="#" onclick="showSignIn(); return false;">دەستنیشانبکە</a>
                     </p>
 
                     <p class="auth-terms">
-                        By registering you agree to TafsirKurd's <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>
+                        ب تۆمارکرنێ تو رازیی ل سەر <a href="/terms" target="_blank">مەرجێن خزمەتگوزاری</a> و <a href="/privacy" target="_blank">سیاسەتا تایبەتمەندی</a> یا تەفسیرکورد
                     </p>
                 </div>
 
@@ -2053,7 +2147,7 @@
                     <div class="auth-image-content">
                         <!-- Large centered logo/brand -->
                         <div class="auth-brand-image">
-                            <img src="/assets/images/logo.png" alt="TafsirKurd" style="max-width: 200px; filter: brightness(0) invert(1); opacity: 0.9;">
+                            <img src="/assets/images/logo.png" alt="TafsirKurd" style="max-width: 200px; filter: brightness(0) invert(1) drop-shadow(0 10px 30px rgba(0,0,0,0.3)); opacity: 0.95;">
                         </div>
                     </div>
                 </div>
