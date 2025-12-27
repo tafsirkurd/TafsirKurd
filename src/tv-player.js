@@ -22,6 +22,7 @@
 
     // ===== YOUTUBE PLAYER =====
     let youtubePlayer = null;
+    let pendingVideoId = null; // Store video ID while waiting for API
 
     // Initialize YouTube Player with custom settings
     function initializeYouTubePlayer(videoId) {
@@ -164,6 +165,15 @@
             }
         }
     }
+
+    // Global callback for YouTube API ready
+    window.onYouTubeIframeAPIReady = function() {
+        console.log('✅ YouTube IFrame API is ready!');
+        if (pendingVideoId) {
+            console.log('▶️ Initializing player with pending video ID:', pendingVideoId);
+            initializeYouTubePlayer(pendingVideoId);
+        }
+    };
 
     // ===== DOM ELEMENTS =====
     const elements = {
@@ -1126,14 +1136,14 @@
         }
 
         // Initialize YouTube Player with IFrame API
-        // Store player globally for custom controls
+        // Store video ID for when API is ready
+        pendingVideoId = videoId;
+
         if (typeof YT !== 'undefined' && YT.Player) {
             initializeYouTubePlayer(videoId);
         } else {
-            // Wait for YouTube API to load
-            window.onYouTubeIframeAPIReady = function() {
-                initializeYouTubePlayer(videoId);
-            };
+            // Set global callback for when YouTube API loads
+            console.log('⏳ Waiting for YouTube API to load...');
         }
 
         // Update video title in the existing overlay
