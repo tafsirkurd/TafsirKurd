@@ -1672,7 +1672,12 @@
             width: 45px;
             height: 45px;
             object-fit: contain;
-            transition: transform var(--transition-medium);
+            filter: brightness(0) invert(1);
+            transition: transform var(--transition-medium), filter 0.3s ease;
+        }
+
+        [data-theme="light"] .footer-logo-img {
+            filter: none;
         }
 
         .footer-logo-img:hover {
