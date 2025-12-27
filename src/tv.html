@@ -1630,6 +1630,182 @@
             color: var(--danger);
             margin: 1rem 0;
         }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            margin-top: 80px;
+            padding: 60px 20px 30px;
+            text-align: right;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            direction: rtl;
+        }
+
+        .footer-main {
+            display: grid !important;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr !important;
+            gap: 40px !important;
+            margin-bottom: 40px;
+            width: 100%;
+            min-height: 200px;
+        }
+
+        .footer-brand {
+            display: flex !important;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .footer-logo-img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+            transition: transform var(--transition-medium);
+        }
+
+        .footer-logo-img:hover {
+            transform: scale(1.1) rotate(10deg);
+        }
+
+        .footer-brand-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        .footer-brand-tagline {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .footer-social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .footer-social-icons a {
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            transition: all var(--transition-medium);
+        }
+
+        .footer-social-icons a:hover {
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .footer-section {
+            display: flex !important;
+            flex-direction: column;
+            gap: 15px;
+            text-align: right;
+        }
+
+        .footer-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 5px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            text-align: right;
+        }
+
+        .footer-links {
+            display: flex !important;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .footer-contact-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .footer-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all var(--transition-medium);
+            width: fit-content;
+            white-space: nowrap;
+            display: inline-block;
+        }
+
+        .footer-link i {
+            margin-left: 8px;
+            font-size: 0.85rem;
+        }
+
+        .footer-link:hover {
+            color: var(--primary);
+            transform: translateX(-5px);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            padding-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            direction: rtl;
+        }
+
+        .footer-copyright {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-align: right;
+        }
+
+        .footer-meta-links {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .footer-meta-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color var(--transition-medium);
+            white-space: nowrap;
+        }
+
+        .footer-meta-link:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .footer-main {
+                grid-template-columns: 1fr !important;
+                gap: 30px !important;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
