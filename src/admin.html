@@ -2553,22 +2553,77 @@
                     </div>
                 </div>
 
-                <!-- TV Management Tabs -->
-                <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                    <div style="display: flex; gap: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px;">
-                        <button class="tv-tab active" onclick="switchTVTab('categories')" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
-                            📁 Categories
-                        </button>
-                        <button class="tv-tab" onclick="switchTVTab('series')" style="padding: 12px 24px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
-                            📚 Series
-                        </button>
-                        <button class="tv-tab" onclick="switchTVTab('episodes')" style="padding: 12px 24px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
-                            🎬 Episodes
-                        </button>
-                    </div>
+                <!-- Main Section Navigation -->
+                <div style="background: white; border-radius: 16px; padding: 8px; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); display: inline-flex; gap: 8px;">
+                    <button class="main-tv-section-tab active" onclick="switchMainTVSection('organize')" style="
+                        padding: 16px 32px;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        border: none;
+                        border-radius: 12px;
+                        font-weight: 700;
+                        font-size: 1.05rem;
+                        cursor: pointer;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    ">
+                        <i class="fas fa-folder-tree"></i> Organize
+                    </button>
+                    <button class="main-tv-section-tab" onclick="switchMainTVSection('upload')" style="
+                        padding: 16px 32px;
+                        background: #f5f5f5;
+                        color: #666;
+                        border: none;
+                        border-radius: 12px;
+                        font-weight: 700;
+                        font-size: 1.05rem;
+                        cursor: pointer;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    ">
+                        <i class="fas fa-cloud-upload-alt"></i> Upload New
+                    </button>
+                    <button class="main-tv-section-tab" onclick="switchMainTVSection('manage')" style="
+                        padding: 16px 32px;
+                        background: #f5f5f5;
+                        color: #666;
+                        border: none;
+                        border-radius: 12px;
+                        font-weight: 700;
+                        font-size: 1.05rem;
+                        cursor: pointer;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    ">
+                        <i class="fas fa-tasks"></i> Manage Videos
+                    </button>
                 </div>
 
-                <!-- Categories Tab -->
+                <!-- SECTION 1: Organize (Categories, Series, Episodes) -->
+                <div id="tvOrganizeSection" class="main-tv-section">
+                    <!-- Sub-tabs for Categories/Series/Episodes -->
+                    <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <div style="display: flex; gap: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px;">
+                            <button class="tv-tab active" onclick="switchTVTab('categories')" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                                📁 Categories
+                            </button>
+                            <button class="tv-tab" onclick="switchTVTab('series')" style="padding: 12px 24px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                                📚 Series
+                            </button>
+                            <button class="tv-tab" onclick="switchTVTab('episodes')" style="padding: 12px 24px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                                🎬 Episodes
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Categories Tab -->
                 <div id="tvCategoriesTab" class="tv-tab-content">
                     <div class="table-container">
                         <div class="table-header" style="background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%); border: 2px solid #fde047; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
@@ -2630,7 +2685,11 @@
                         </div>
                     </div>
                 </div>
+                </div>
+                <!-- END Organize Section -->
 
+                <!-- SECTION 2: Upload New Video -->
+                <div id="tvUploadSection" class="main-tv-section" style="display: none;">
                 <!-- TV Upload Section -->
                 <div style="
                     margin-top: 40px;
@@ -2924,7 +2983,11 @@
                         </div>
                     </div>
                 </div>
+                </div>
+                <!-- END Upload Section -->
 
+                <!-- SECTION 3: Manage Videos -->
+                <div id="tvManageSection" class="main-tv-section" style="display: none;">
                 <!-- Manage Existing Videos Section -->
                 <div style="
                     margin-top: 48px;
@@ -2966,6 +3029,8 @@
                         </div>
                     </div>
                 </div>
+                </div>
+                <!-- END Manage Section -->
             </section>
 
             <!-- Social Stats Section -->
@@ -13765,12 +13830,17 @@ ${htmlParagraphs}
             window._editingVideoId = videoId;
             window._editingVideoTitle = video.title;
 
+            // Switch to Upload section
+            switchMainTVSection('upload');
+
             // Find and scroll to upload section
-            const uploadSections = document.querySelectorAll('[style*="background: linear-gradient(135deg, #FF0000"]');
-            const uploadSection = uploadSections[uploadSections.length - 1]?.closest('div[style*="border-radius: 20px"]');
-            if (uploadSection) {
-                uploadSection.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
-            }
+            setTimeout(() => {
+                const uploadSections = document.querySelectorAll('[style*="background: linear-gradient(135deg, #FF0000"]');
+                const uploadSection = uploadSections[uploadSections.length - 1]?.closest('div[style*="border-radius: 20px"]');
+                if (uploadSection) {
+                    uploadSection.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                }
+            }, 100);
 
             // Populate form fields
             setTimeout(() => {
@@ -14013,6 +14083,41 @@ ${htmlParagraphs}
         // ========================================
         // TV MANAGEMENT SYSTEM
         // ========================================
+
+        // Switch between main TV sections (Organize, Upload, Manage)
+        function switchMainTVSection(section) {
+            // Hide all main sections
+            document.querySelectorAll('.main-tv-section').forEach(sec => {
+                sec.style.display = 'none';
+            });
+
+            // Update tab button styles
+            document.querySelectorAll('.main-tv-section-tab').forEach(btn => {
+                btn.style.background = '#f5f5f5';
+                btn.style.color = '#666';
+                btn.style.boxShadow = 'none';
+            });
+
+            // Show selected section
+            if (section === 'organize') {
+                document.getElementById('tvOrganizeSection').style.display = 'block';
+                event.target.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                event.target.style.color = 'white';
+                event.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
+                loadTVManagement();
+            } else if (section === 'upload') {
+                document.getElementById('tvUploadSection').style.display = 'block';
+                event.target.style.background = 'linear-gradient(135deg, #FF0000 0%, #CC0000 100%)';
+                event.target.style.color = 'white';
+                event.target.style.boxShadow = '0 4px 12px rgba(255, 0, 0, 0.3)';
+            } else if (section === 'manage') {
+                document.getElementById('tvManageSection').style.display = 'block';
+                event.target.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                event.target.style.color = 'white';
+                event.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
+                loadAdminVideosList();
+            }
+        }
 
         // Switch between TV Management tabs
         function switchTVTab(tab) {
