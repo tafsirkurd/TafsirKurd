@@ -1065,9 +1065,6 @@
                         <button class="quick-btn" onclick="event.stopPropagation(); shareEpisode(${video.id})" title="پارڤەبکە">
                             <i class="fas fa-share-alt"></i>
                         </button>
-                        <button class="quick-btn quick-btn-delete" onclick="event.stopPropagation(); deleteVideo(${video.id}, '${video.title}')" title="سڕینەوە">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
                     </div>
                 </div>
                 <div class="episode-info">

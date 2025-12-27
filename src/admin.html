@@ -2869,6 +2869,24 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Manage Existing Videos Section -->
+                <div style="margin-top: 40px; padding: 30px; background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%); border-radius: 16px; border: 2px solid #2196f3;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">
+                            📝
+                        </div>
+                        <h2 style="margin-bottom: 0.5rem; font-size: 1.6rem; color: #1976d2;">Manage Existing Videos</h2>
+                        <p style="color: #666; font-size: 0.95rem;">Edit or delete videos from your TV page</p>
+                    </div>
+
+                    <!-- Video List Container -->
+                    <div id="adminVideosList" style="max-width: 900px; margin: 0 auto;">
+                        <div style="text-align: center; padding: 40px; color: #999;">
+                            Loading videos...
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <!-- Social Stats Section -->
@@ -13478,6 +13496,185 @@ ${htmlParagraphs}
             }
         `;
         document.head.appendChild(style);
+
+        // ========================================
+        // ADMIN VIDEO LIST MANAGEMENT
+        // ========================================
+
+        // Load and display all videos from localStorage
+        function loadAdminVideosList() {
+            const container = document.getElementById('adminVideosList');
+            if (!container) return;
+
+            const videos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
+
+            if (videos.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #999;">
+                        <i class="fas fa-video" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                        <p>No videos yet. Add your first video above!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Create video cards
+            let html = '<div style="display: grid; gap: 20px;">';
+
+            videos.forEach((video, index) => {
+                html += `
+                    <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; gap: 20px; align-items: start;">
+                        <!-- Thumbnail -->
+                        <div style="flex-shrink: 0; width: 180px;">
+                            <img src="${video.thumbnail}" alt="${video.title}"
+                                 style="width: 100%; height: 100px; object-fit: cover; border-radius: 8px; background: #f0f0f0;"
+                                 onerror="this.src='/assets/images/episode-placeholder.jpg'">
+                            <div style="margin-top: 8px; text-align: center;">
+                                <a href="https://www.youtube.com/watch?v=${video.videoId}" target="_blank"
+                                   style="color: #FF0000; font-size: 0.85rem; text-decoration: none;">
+                                    <i class="fab fa-youtube"></i> View on YouTube
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Video Info -->
+                        <div style="flex: 1; min-width: 0;">
+                            <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: #333;">
+                                ${video.title}
+                            </h3>
+                            <p style="margin: 0 0 12px 0; color: #666; font-size: 0.9rem; line-height: 1.4;">
+                                ${video.description || 'No description'}
+                            </p>
+                            <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; font-size: 0.85rem; color: #888;">
+                                <span><i class="fas fa-folder"></i> ${video.category}</span>
+                                <span><i class="fas fa-layer-group"></i> ${video.series}</span>
+                                ${video.section ? `<span><i class="fas fa-tag"></i> ${video.section}</span>` : ''}
+                                ${video.speaker ? `<span><i class="fas fa-user"></i> ${video.speaker}</span>` : ''}
+                                ${video.language ? `<span><i class="fas fa-language"></i> ${video.language}</span>` : ''}
+                            </div>
+                            <div style="display: flex; gap: 8px; font-size: 0.8rem;">
+                                ${video.featured ? '<span style="background: #ffc107; color: #000; padding: 4px 8px; border-radius: 4px;"><i class="fas fa-star"></i> Featured</span>' : ''}
+                                ${video.recommended ? '<span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px;"><i class="fas fa-thumbs-up"></i> Recommended</span>' : ''}
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;">
+                            <button onclick="editAdminVideoFromList(${video.id})"
+                                    style="padding: 8px 16px; background: #2196f3; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; transition: background 0.2s;"
+                                    onmouseover="this.style.background='#1976d2'"
+                                    onmouseout="this.style.background='#2196f3'">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button onclick="deleteAdminVideoFromList(${video.id}, '${video.title.replace(/'/g, "\\'")}')"
+                                    style="padding: 8px 16px; background: #f44336; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; transition: background 0.2s;"
+                                    onmouseover="this.style.background='#d32f2f'"
+                                    onmouseout="this.style.background='#f44336'">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Delete video from admin list
+        window.deleteAdminVideoFromList = function(videoId, videoTitle) {
+            if (!confirm(`Are you sure you want to delete this video?\n\n"${videoTitle}"\n\nThis cannot be undone!`)) {
+                return;
+            }
+
+            try {
+                // Delete from localStorage
+                let videos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
+                videos = videos.filter(v => v.id !== videoId);
+                localStorage.setItem('tvEpisodes', JSON.stringify(videos));
+
+                // Reload the list
+                loadAdminVideosList();
+                showAdminNotification('✓ Video deleted successfully!', 'success');
+            } catch (error) {
+                console.error('Delete error:', error);
+                showAdminNotification('Error deleting video: ' + error.message, 'error');
+            }
+        };
+
+        // Edit video from admin list - populate form with existing data
+        window.editAdminVideoFromList = function(videoId) {
+            const videos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
+            const video = videos.find(v => v.id === videoId);
+
+            if (!video) {
+                showAdminNotification('Video not found!', 'error');
+                return;
+            }
+
+            // Scroll to form
+            document.getElementById('adminYoutubeVideoId').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Populate form fields
+            setTimeout(() => {
+                document.getElementById('adminYoutubeVideoId').value = video.videoId;
+                document.getElementById('adminYoutubeTitle').value = video.title;
+                document.getElementById('adminYoutubeDesc').value = video.description;
+                document.getElementById('adminYoutubeSeries').value = video.series;
+                document.getElementById('adminYoutubeCategory').value = video.category;
+                document.getElementById('adminYoutubeSection').value = video.section || '';
+                document.getElementById('adminYoutubeEpisodeNum').value = video.episodeNumber || '';
+                document.getElementById('adminYoutubeSpeaker').value = video.speaker || '';
+                document.getElementById('adminYoutubeLanguage').value = video.language || 'Kurdish';
+                document.getElementById('adminYoutubeTags').value = video.tags ? video.tags.join(', ') : '';
+                document.getElementById('adminYoutubeDuration').value = video.duration || '';
+                document.getElementById('adminYoutubeDifficulty').value = video.difficulty || '';
+                document.getElementById('adminYoutubeFeatured').checked = video.featured || false;
+                document.getElementById('adminYoutubeRecommended').checked = video.recommended || false;
+
+                // Show preview
+                document.getElementById('adminYoutubePreview').style.display = 'block';
+                document.getElementById('adminYoutubePreviewFrame').src =
+                    `https://www.youtube.com/embed/${video.videoId}?controls=0&modestbranding=1&rel=0`;
+                document.getElementById('adminVideoMetadataForm').style.display = 'block';
+
+                // Delete the old entry before saving (we'll add the updated one)
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete old entry';
+                deleteBtn.onclick = () => {
+                    let videos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
+                    videos = videos.filter(v => v.id !== videoId);
+                    localStorage.setItem('tvEpisodes', JSON.stringify(videos));
+                };
+                // Auto-delete on save - modify the save button behavior temporarily
+                window._editingVideoId = videoId;
+
+                showAdminNotification('✓ Form populated! Make changes and click Save to update.', 'info');
+            }, 500);
+        };
+
+        // Modify saveAdminYoutubeVideo to handle edits
+        const originalSave = window.saveAdminYoutubeVideo;
+        window.saveAdminYoutubeVideo = async function() {
+            // If editing, delete old entry first
+            if (window._editingVideoId) {
+                let videos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
+                videos = videos.filter(v => v.id !== window._editingVideoId);
+                localStorage.setItem('tvEpisodes', JSON.stringify(videos));
+                window._editingVideoId = null;
+            }
+
+            // Call original save function
+            await originalSave();
+
+            // Reload the admin list
+            loadAdminVideosList();
+        };
+
+        // Load the admin videos list when page loads
+        if (document.getElementById('adminVideosList')) {
+            loadAdminVideosList();
+        }
 
         // ========================================
         // END TV YOUTUBE UPLOAD SYSTEM
