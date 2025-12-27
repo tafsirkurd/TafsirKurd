@@ -32,6 +32,315 @@
         }
     };
 
+    // ===== SIDEBAR & NAVIGATION =====
+    let currentView = 'topics'; // Default view
+    let currentTopicId = null; // Track which topic/category is open
+
+    // Initialize sidebar navigation
+    function initSidebarNavigation() {
+        const sidebarBtns = document.querySelectorAll('.sidebar-btn[data-view]');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const sidebar = document.getElementById('sidebar');
+        const backToTopicsBtn = document.getElementById('backToTopicsBtn');
+
+        // Sidebar button clicks
+        sidebarBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const view = btn.getAttribute('data-view');
+                switchView(view);
+
+                // Update active state
+                sidebarBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Close sidebar on mobile
+                if (window.innerWidth <= 1024) {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                }
+            });
+        });
+
+        // Mobile sidebar toggle
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                sidebarOverlay.classList.toggle('active');
+            });
+        }
+
+        // Close sidebar when clicking overlay
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            });
+        }
+
+        // Back to topics button
+        if (backToTopicsBtn) {
+            backToTopicsBtn.addEventListener('click', () => {
+                switchView('topics');
+                // Re-activate topics sidebar button
+                sidebarBtns.forEach(btn => {
+                    if (btn.getAttribute('data-view') === 'topics') {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            });
+        }
+
+        // Update badge counts
+        updateBadgeCounts();
+    }
+
+    // Switch between views (topics, bookmarks, history, continue)
+    function switchView(viewName) {
+        currentView = viewName;
+        const viewContainers = document.querySelectorAll('.view-container');
+
+        viewContainers.forEach(container => {
+            container.classList.remove('active');
+        });
+
+        const targetView = document.getElementById(`${viewName}View`);
+        if (targetView) {
+            targetView.classList.add('active');
+
+            // Render content based on view
+            switch (viewName) {
+                case 'topics':
+                    renderTopics();
+                    break;
+                case 'bookmarks':
+                    renderBookmarks();
+                    break;
+                case 'history':
+                    renderHistory();
+                    break;
+                case 'continue':
+                    renderContinueWatching();
+                    break;
+            }
+        }
+    }
+
+    // Render topic cards (from categories/series)
+    function renderTopics() {
+        const topicsGrid = document.getElementById('topicsGrid');
+        if (!topicsGrid) return;
+
+        // Group episodes by category/series
+        const topics = {};
+        state.playlist.forEach(episode => {
+            const topicKey = episode.series || episode.category || 'general';
+            if (!topics[topicKey]) {
+                topics[topicKey] = {
+                    id: topicKey,
+                    title: episode.seriesTitle || episode.categoryTitle || 'عام',
+                    description: episode.seriesDescription || '',
+                    episodes: [],
+                    thumbnail: episode.thumbnail || '/assets/images/default-topic.jpg'
+                };
+            }
+            topics[topicKey].episodes.push(episode);
+        });
+
+        // Render topic cards
+        topicsGrid.innerHTML = Object.values(topics).map(topic => {
+            const episodeCount = topic.episodes.length;
+            const seriesProgress = state.seriesProgress[topic.id];
+            const completedCount = seriesProgress ? seriesProgress.completedEpisodes.length : 0;
+
+            return `
+                <div class="topic-card" onclick="window.tvApp.showTopic('${topic.id}')">
+                    <div class="topic-card-image">
+                        <img src="${topic.thumbnail}" alt="${topic.title}" loading="lazy">
+                        ${completedCount > 0 ? `
+                            <div class="topic-card-badge">
+                                ${completedCount}/${episodeCount} تەواو
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="topic-card-content">
+                        <h3 class="topic-card-title">${topic.title}</h3>
+                        ${topic.description ? `
+                            <p class="topic-card-description">${topic.description}</p>
+                        ` : ''}
+                        <div class="topic-card-meta">
+                            <span><i class="fas fa-play-circle"></i> ${episodeCount} بەش</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Show empty state if no topics
+        if (Object.keys(topics).length === 0) {
+            topicsGrid.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-folder-open"></i>
+                    <h3>هیچ بابەتەکێ نینە</h3>
+                    <p>ھێجا ھیچ بابەتەکێ نەھاتییە زێدەکرن</p>
+                </div>
+            `;
+        }
+    }
+
+    // Show topic's episodes
+    function showTopic(topicId) {
+        currentTopicId = topicId;
+        const episodes = state.playlist.filter(ep =>
+            (ep.series || ep.category || 'general') === topicId
+        );
+
+        if (episodes.length === 0) return;
+
+        // Update view header
+        const topicTitle = document.getElementById('topicTitle');
+        const topicDescription = document.getElementById('topicDescription');
+
+        topicTitle.textContent = episodes[0].seriesTitle || episodes[0].categoryTitle || 'بابەت';
+        topicDescription.textContent = `${episodes.length} بەش`;
+
+        // Render episodes list
+        renderEpisodesList(episodes, 'episodesList');
+
+        // Switch to episodes view
+        document.getElementById('topicsView').classList.remove('active');
+        document.getElementById('episodesView').classList.add('active');
+    }
+
+    // Render episodes list (generic function used by multiple views)
+    function renderEpisodesList(episodes, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        container.innerHTML = episodes.map((episode, index) => {
+            const progress = state.watchProgress[episode.id];
+            const isBookmarked = state.bookmarks.some(b => b.episodeId === episode.id);
+            const isCompleted = progress && progress.percent >= 95;
+
+            return `
+                <div class="episode-item ${isCompleted ? 'completed' : ''}" onclick="window.tvApp.playEpisode(${episode.id})">
+                    <div class="episode-number">${String(index + 1).padStart(2, '0')}</div>
+
+                    <div class="episode-thumbnail">
+                        <img src="${episode.thumbnail || '/assets/images/default-episode.jpg'}" alt="${episode.title}" loading="lazy">
+                        <div class="episode-play-overlay">
+                            <div class="episode-play-icon">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                        ${progress && progress.percent > 0 && progress.percent < 95 ? `
+                            <div class="episode-progress-bar">
+                                <div class="episode-progress-fill" style="width: ${progress.percent}%;"></div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="episode-info">
+                        <h4 class="episode-title">${episode.title}</h4>
+                        ${episode.description ? `
+                            <p class="episode-description">${episode.description}</p>
+                        ` : ''}
+                        <div class="episode-meta">
+                            ${episode.duration ? `<span><i class="fas fa-clock"></i> ${episode.duration} خولەک</span>` : ''}
+                            ${episode.views ? `<span><i class="fas fa-eye"></i> ${episode.views} بینەر</span>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="episode-actions" onclick="event.stopPropagation()">
+                        <button class="episode-action-btn ${isBookmarked ? 'active' : ''}"
+                                onclick="window.tvApp.toggleBookmark(${episode.id})"
+                                title="${isBookmarked ? 'حەزفکرن ژ خەزنکراوان' : 'خەزنکرن'}">
+                            <i class="fas fa-bookmark"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Empty state
+        if (episodes.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-film"></i>
+                    <h3>هیچ بەشەکێ نینە</h3>
+                    <p>ھێجا ھیچ بەشەکێ نەھاتییە زێدەکرن</p>
+                </div>
+            `;
+        }
+    }
+
+    // Render bookmarks
+    function renderBookmarks() {
+        const bookmarkedEpisodes = state.bookmarks.map(bookmark => {
+            return state.playlist.find(ep => ep.id === bookmark.episodeId);
+        }).filter(Boolean);
+
+        renderEpisodesList(bookmarkedEpisodes, 'bookmarksListContainer');
+    }
+
+    // Render history
+    function renderHistory() {
+        const historyEpisodes = state.watchHistory.map(history => {
+            return state.playlist.find(ep => ep.id === history.episodeId);
+        }).filter(Boolean);
+
+        renderEpisodesList(historyEpisodes, 'historyListContainer');
+    }
+
+    // Render continue watching
+    function renderContinueWatching() {
+        const continueEpisodes = state.continueWatching.map(item => {
+            return state.playlist.find(ep => ep.id === item.episodeId);
+        }).filter(Boolean);
+
+        renderEpisodesList(continueEpisodes, 'continueListContainer');
+    }
+
+    // Update badge counts in sidebar
+    function updateBadgeCounts() {
+        const bookmarkCount = document.getElementById('bookmarkCount');
+        const continueCount = document.getElementById('continueCount');
+
+        if (bookmarkCount) {
+            const count = state.bookmarks.length;
+            bookmarkCount.textContent = count;
+            bookmarkCount.style.display = count > 0 ? 'block' : 'none';
+        }
+
+        if (continueCount) {
+            const count = state.continueWatching.length;
+            continueCount.textContent = count;
+            continueCount.style.display = count > 0 ? 'block' : 'none';
+        }
+    }
+
+    // Play episode (wrapper for existing playVideo function)
+    function playEpisode(episodeId) {
+        const episode = state.playlist.find(ep => ep.id === episodeId);
+        if (episode) {
+            playVideo(episode);
+        }
+    }
+
+    // Expose functions to window for onclick handlers
+    window.tvApp = {
+        showTopic,
+        playEpisode,
+        toggleBookmark: function(episodeId) {
+            toggleBookmark(episodeId);
+            // Re-render current view
+            switchView(currentView);
+            updateBadgeCounts();
+        }
+    };
+
     // ===== YOUTUBE PLAYER =====
     let youtubePlayer = null;
     let pendingVideoId = null; // Store video ID while waiting for API
@@ -238,9 +547,11 @@
     async function init() {
         console.log('🚀 Initializing تەفسیر TV Player...');
         loadSavedData();
+        initSidebarNavigation(); // Initialize new sidebar navigation
         setupEventListeners();
         setupKeyboardShortcuts();
         await loadPlaylist(); // Wait for videos to load
+        renderTopics(); // Render topics on initial load
         console.log('✅ تەفسیر TV Player initialized');
     }
 
