@@ -13511,7 +13511,7 @@ ${htmlParagraphs}
             table.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading categories...</div></div>';
 
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('tv_categories')
                     .select('*')
                     .order('display_order', { ascending: true });
@@ -13610,7 +13610,7 @@ ${htmlParagraphs}
             const order = parseInt(document.getElementById('catOrder').value) || 0;
 
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('tv_categories')
                     .insert([{
                         name_ku: nameKu,
@@ -13636,7 +13636,7 @@ ${htmlParagraphs}
             if (!confirm(`Delete category "${name}"? This will also delete all series and episodes in this category!`)) return;
 
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('tv_categories')
                     .delete()
                     .eq('id', id);
@@ -13654,7 +13654,7 @@ ${htmlParagraphs}
 
         async function editTVCategory(id) {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('tv_categories')
                     .select('*')
                     .eq('id', id)
@@ -13718,7 +13718,7 @@ ${htmlParagraphs}
             const order = parseInt(document.getElementById('catOrder').value) || 0;
 
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('tv_categories')
                     .update({
                         name_ku: nameKu,
@@ -13747,7 +13747,7 @@ ${htmlParagraphs}
             table.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading series...</div></div>';
 
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('tv_series')
                     .select(`
                         *,
@@ -13795,7 +13795,7 @@ ${htmlParagraphs}
 
         async function openAddSeriesModal() {
             // Load categories for dropdown
-            const { data: categories } = await supabase
+            const { data: categories } = await supabaseClient
                 .from('tv_categories')
                 .select('*')
                 .order('display_order');
@@ -13874,7 +13874,7 @@ ${htmlParagraphs}
             const order = parseInt(document.getElementById('seriesOrder').value) || 0;
 
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('tv_series')
                     .insert([{
                         category_id: categoryId,
@@ -13900,7 +13900,7 @@ ${htmlParagraphs}
             if (!confirm(`Delete series "${name}"? This will also delete all episodes in this series!`)) return;
 
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('tv_series')
                     .delete()
                     .eq('id', id);
@@ -13995,7 +13995,7 @@ ${htmlParagraphs}
             const order = parseInt(document.getElementById('seriesOrder').value) || 0;
 
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('tv_series')
                     .update({
                         category_id: categoryId,
@@ -14025,7 +14025,7 @@ ${htmlParagraphs}
             table.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading episodes...</div></div>';
 
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('tv_episodes')
                     .select(`
                         *,
@@ -14078,7 +14078,7 @@ ${htmlParagraphs}
 
         async function openAddEpisodeModal() {
             // Load series for dropdown
-            const { data: series } = await supabase
+            const { data: series } = await supabaseClient
                 .from('tv_series')
                 .select('id, name_ku, tv_categories(name_ku, icon)')
                 .order('display_order');
@@ -14171,7 +14171,7 @@ ${htmlParagraphs}
             const thumb = document.getElementById('episodeThumb').value.trim();
 
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('tv_episodes')
                     .insert([{
                         series_id: seriesId,
@@ -14199,7 +14199,7 @@ ${htmlParagraphs}
             if (!confirm(`Delete episode "${title}"?`)) return;
 
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('tv_episodes')
                     .delete()
                     .eq('id', id);
@@ -14307,7 +14307,7 @@ ${htmlParagraphs}
             const thumb = document.getElementById('episodeThumb').value.trim();
 
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('tv_episodes')
                     .update({
                         series_id: seriesId,
