@@ -2605,48 +2605,54 @@
                 <div style="margin-top: 40px; padding: 30px; background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-radius: 16px; border: 2px solid #e0e0e0;">
                     <div style="text-align: center; margin-bottom: 30px;">
                         <div style="font-size: 3rem; margin-bottom: 1rem;">
-                            <i class="fab fa-vimeo" style="color: #1ab7ea;"></i>
+                            <i class="fab fa-youtube" style="color: #FF0000;"></i>
                         </div>
-                        <h2 style="margin-bottom: 0.5rem; font-size: 1.8rem;">Add Vimeo Video to TV Page</h2>
-                        <p style="color: #666; font-size: 1rem;">Professional video hosting with clean, ad-free player</p>
+                        <h2 style="margin-bottom: 0.5rem; font-size: 1.8rem;">Add YouTube Video to TV Page</h2>
+                        <p style="color: #666; font-size: 1rem;">Free unlimited hosting with custom TafsirKurd controls</p>
                     </div>
 
                     <div style="max-width: 700px; margin: 0 auto;">
                         <!-- Instructions -->
-                        <div style="background: #e8f5fc; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border-left: 4px solid #1ab7ea;">
+                        <div style="background: #fff3f3; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border-left: 4px solid #FF0000;">
                             <h3 style="margin-bottom: 1rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
                                 <i class="fas fa-info-circle"></i>
                                 How to Add a Video:
                             </h3>
                             <ol style="line-height: 2.2; color: #666; padding-left: 1.5rem;">
-                                <li>Upload your video to <strong>Vimeo.com</strong></li>
-                                <li>Set privacy to <strong>"Public"</strong>, <strong>"Unlisted"</strong>, or <strong>"Anyone with link"</strong></li>
-                                <li>Copy the <strong>Video ID</strong> (numbers) from the URL</li>
-                                <li>Example: <code style="background: rgba(0,0,0,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">vimeo.com/<strong style="color: #1ab7ea;">123456789</strong></code></li>
+                                <li>Upload your video to <strong>YouTube.com</strong></li>
+                                <li>Set privacy to <strong>"Public"</strong> or <strong>"Unlisted"</strong></li>
+                                <li>Copy the <strong>Video ID</strong> from the URL</li>
+                                <li>Example: <code style="background: rgba(0,0,0,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">youtube.com/watch?v=<strong style="color: #FF0000;">dQw4w9WgXcQ</strong></code></li>
                                 <li>Paste the ID below and fill in the details</li>
                             </ol>
+                            <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255, 215, 0, 0.1); border-radius: 8px; border-left: 3px solid #FFD700;">
+                                <p style="margin: 0; font-size: 0.9rem; color: #666;">
+                                    <i class="fas fa-star" style="color: #FFD700;"></i>
+                                    <strong>Your videos will play with TafsirKurd custom controls - NO YouTube branding!</strong>
+                                </p>
+                            </div>
                         </div>
 
-                        <!-- Vimeo Video ID Input -->
+                        <!-- YouTube Video ID Input -->
                         <div style="margin-bottom: 1.5rem;">
                             <label style="display: block; margin-bottom: 0.75rem; font-weight: 700; font-size: 1.1rem;">
-                                <i class="fab fa-vimeo" style="color: #1ab7ea;"></i>
-                                Vimeo Video ID *
+                                <i class="fab fa-youtube" style="color: #FF0000;"></i>
+                                YouTube Video ID *
                             </label>
                             <input
                                 type="text"
                                 id="adminYoutubeVideoId"
                                 style="width: 100%; padding: 1rem; background: #fff; border: 2px solid #ddd; border-radius: 12px; color: #000; font-family: 'Courier New', monospace; font-size: 1.1rem; text-align: center; transition: border-color 0.3s;"
-                                placeholder="Paste Vimeo Video ID here..."
+                                placeholder="Paste YouTube Video ID here..."
                                 required
                             >
                             <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666; text-align: center;">
                                 <i class="fas fa-lightbulb"></i>
-                                You can paste the full URL or just the ID (numbers only)
+                                You can paste the full URL or just the ID
                             </p>
                         </div>
 
-                        <!-- Vimeo Preview -->
+                        <!-- YouTube Preview -->
                         <div id="adminYoutubePreview" style="display: none; margin-bottom: 2rem;">
                             <label style="display: block; margin-bottom: 0.75rem; font-weight: 700; font-size: 1.1rem;">
                                 <i class="fas fa-eye"></i>
