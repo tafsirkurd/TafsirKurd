@@ -13761,8 +13761,16 @@ ${htmlParagraphs}
                 return;
             }
 
-            // Scroll to form
-            document.getElementById('adminYoutubeVideoId').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Store editing video ID and title
+            window._editingVideoId = videoId;
+            window._editingVideoTitle = video.title;
+
+            // Find and scroll to upload section
+            const uploadSections = document.querySelectorAll('[style*="background: linear-gradient(135deg, #FF0000"]');
+            const uploadSection = uploadSections[uploadSections.length - 1]?.closest('div[style*="border-radius: 20px"]');
+            if (uploadSection) {
+                uploadSection.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+            }
 
             // Populate form fields
             setTimeout(() => {
@@ -13787,34 +13795,207 @@ ${htmlParagraphs}
                     `https://www.youtube.com/embed/${video.videoId}?controls=0&modestbranding=1&rel=0`;
                 document.getElementById('adminVideoMetadataForm').style.display = 'block';
 
-                // Delete the old entry before saving (we'll add the updated one)
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = 'Delete old entry';
-                deleteBtn.onclick = () => {
-                    let videos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
-                    videos = videos.filter(v => v.id !== videoId);
-                    localStorage.setItem('tvEpisodes', JSON.stringify(videos));
-                };
-                // Auto-delete on save - modify the save button behavior temporarily
-                window._editingVideoId = videoId;
+                // Show edit mode UI
+                showEditMode(video.title, video.thumbnail);
 
-                showAdminNotification('✓ Form populated! Make changes and click Save to update.', 'info');
-            }, 500);
+                showAdminNotification('✓ Edit mode activated! Make your changes below.', 'info');
+            }, 600);
+        };
+
+        // Show edit mode banner and UI changes
+        function showEditMode(videoTitle, thumbnail) {
+            // Remove existing edit banner if any
+            const existingBanner = document.getElementById('editModeBanner');
+            if (existingBanner) existingBanner.remove();
+
+            // Create edit mode banner
+            const banner = document.createElement('div');
+            banner.id = 'editModeBanner';
+            banner.innerHTML = `
+                <div style="
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+                    color: white;
+                    padding: 24px 32px;
+                    margin: -40px -40px 32px -40px;
+                    box-shadow: 0 4px 20px rgba(33, 150, 243, 0.4);
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                    position: relative;
+                    overflow: hidden;
+                ">
+                    <!-- Decorative elements -->
+                    <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; filter: blur(20px);"></div>
+                    <div style="position: absolute; bottom: -20px; left: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%; filter: blur(20px);"></div>
+
+                    <div style="display: flex; align-items: center; gap: 20px; flex: 1; position: relative;">
+                        <!-- Video Thumbnail -->
+                        <div style="width: 120px; height: 68px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3); flex-shrink: 0;">
+                            <img src="${thumbnail}" alt="${videoTitle}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/assets/images/episode-placeholder.jpg'">
+                        </div>
+
+                        <!-- Edit Info -->
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                                <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <i class="fas fa-pencil-alt" style="font-size: 0.9rem;"></i>
+                                </div>
+                                <h3 style="margin: 0; font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px;">
+                                    EDITING MODE
+                                </h3>
+                            </div>
+                            <p style="margin: 0; font-size: 1rem; opacity: 0.95; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 48px;">
+                                <i class="fas fa-video" style="margin-right: 8px;"></i><strong>${videoTitle}</strong>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Cancel Button -->
+                    <button onclick="cancelEditMode()" style="
+                        background: rgba(255,255,255,0.2);
+                        backdrop-filter: blur(10px);
+                        border: 2px solid rgba(255,255,255,0.4);
+                        color: white;
+                        padding: 12px 24px;
+                        border-radius: 12px;
+                        cursor: pointer;
+                        font-weight: 700;
+                        transition: all 0.3s;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        font-size: 1rem;
+                        flex-shrink: 0;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.3)'; this.style.transform='translateY(-2px)'"
+                       onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='translateY(0)'">
+                        <i class="fas fa-times-circle"></i> Cancel
+                    </button>
+                </div>
+            `;
+
+            // Add animation keyframes if not already added
+            if (!document.getElementById('editModeStyles')) {
+                const style = document.createElement('style');
+                style.id = 'editModeStyles';
+                style.textContent = `
+                    @keyframes slideDown {
+                        from { transform: translateY(-30px); opacity: 0; }
+                        to { transform: translateY(0); opacity: 1; }
+                    }
+                    @keyframes slideUp {
+                        from { transform: translateY(0); opacity: 1; }
+                        to { transform: translateY(-30px); opacity: 0; }
+                    }
+                    @keyframes pulse {
+                        0%, 100% { box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3); }
+                        50% { box-shadow: 0 6px 20px rgba(33, 150, 243, 0.5); }
+                    }
+                    @keyframes borderPulse {
+                        0%, 100% { border-color: #2196F3; }
+                        50% { border-color: #1976D2; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            // Insert banner at the top of form content
+            const formContent = document.querySelector('[style*="padding: 40px"][style*="max-width: 800px"]');
+            if (formContent) {
+                formContent.insertBefore(banner, formContent.firstChild);
+            }
+
+            // Highlight the form container with animated border
+            const uploadSections = document.querySelectorAll('[style*="background: linear-gradient(135deg, #FF0000"]');
+            const uploadSection = uploadSections[uploadSections.length - 1]?.closest('div[style*="border-radius: 20px"]');
+            if (uploadSection) {
+                uploadSection.style.border = '3px solid #2196F3';
+                uploadSection.style.boxShadow = '0 12px 48px rgba(33, 150, 243, 0.35)';
+                uploadSection.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                uploadSection.style.animation = 'borderPulse 2s infinite';
+            }
+
+            // Change save button text and style
+            const saveBtn = document.querySelector('button[onclick="saveAdminYoutubeVideo()"]');
+            if (saveBtn) {
+                saveBtn.innerHTML = '<i class="fas fa-check-circle"></i> Update Video';
+                saveBtn.style.background = 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)';
+                saveBtn.style.animation = 'pulse 2s infinite';
+                saveBtn.style.fontSize = '1.15rem';
+                saveBtn.style.fontWeight = '700';
+            }
+        }
+
+        // Cancel edit mode
+        window.cancelEditMode = function() {
+            // Clear editing state
+            window._editingVideoId = null;
+            window._editingVideoTitle = null;
+
+            // Animate banner out and remove
+            const banner = document.getElementById('editModeBanner');
+            if (banner) {
+                banner.firstElementChild.style.animation = 'slideUp 0.3s ease';
+                setTimeout(() => banner.remove(), 300);
+            }
+
+            // Reset form container styling
+            const uploadSections = document.querySelectorAll('[style*="background: linear-gradient(135deg, #FF0000"]');
+            const uploadSection = uploadSections[uploadSections.length - 1]?.closest('div[style*="border-radius: 20px"]');
+            if (uploadSection) {
+                uploadSection.style.border = '1px solid #f0f0f0';
+                uploadSection.style.boxShadow = '0 8px 32px rgba(0,0,0,0.08)';
+                uploadSection.style.animation = 'none';
+            }
+
+            // Reset save button
+            const saveBtn = document.querySelector('button[onclick="saveAdminYoutubeVideo()"]');
+            if (saveBtn) {
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Video to TV Page';
+                saveBtn.style.background = '#28a745';
+                saveBtn.style.animation = 'none';
+                saveBtn.style.fontSize = '1.1rem';
+                saveBtn.style.fontWeight = '600';
+            }
+
+            // Reset form
+            resetAdminYoutubeForm();
+
+            showAdminNotification('✓ Edit mode cancelled', 'info');
         };
 
         // Modify saveAdminYoutubeVideo to handle edits
         const originalSave = window.saveAdminYoutubeVideo;
         window.saveAdminYoutubeVideo = async function() {
+            const wasEditing = !!window._editingVideoId;
+
             // If editing, delete old entry first
             if (window._editingVideoId) {
                 let videos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
                 videos = videos.filter(v => v.id !== window._editingVideoId);
                 localStorage.setItem('tvEpisodes', JSON.stringify(videos));
                 window._editingVideoId = null;
+                window._editingVideoTitle = null;
             }
 
             // Call original save function
             await originalSave();
+
+            // Clear edit mode UI if it was editing
+            if (wasEditing) {
+                // Remove edit banner
+                const banner = document.getElementById('editModeBanner');
+                if (banner) banner.remove();
+
+                // Reset form container styling
+                const uploadSections = document.querySelectorAll('[style*="background: linear-gradient(135deg, #FF0000"]');
+                const uploadSection = uploadSections[uploadSections.length - 1]?.closest('div[style*="border-radius: 20px"]');
+                if (uploadSection) {
+                    uploadSection.style.border = '1px solid #f0f0f0';
+                    uploadSection.style.boxShadow = '0 8px 32px rgba(0,0,0,0.08)';
+                    uploadSection.style.animation = 'none';
+                }
+            }
 
             // Reload the admin list
             loadAdminVideosList();
