@@ -1845,8 +1845,68 @@
         </div>
     </nav>
 
-    <!-- Video Player Section -->
-    <section class="player-section" id="playerSection" style="display: none;">
+    <!-- Hero Banner -->
+    <section class="hero-banner" id="heroBanner">
+        <div class="hero-background">
+            <img src="/assets/images/hero-bg.jpg" alt="Featured" id="heroImage">
+        </div>
+        <div class="hero-content">
+            <h1 class="hero-title" id="heroTitle">بخێربێن بۆ دەنگێ ئیسلامێ</h1>
+            <p class="hero-description" id="heroDescription">ببینە و گوهدار بکە بابەتێن ئیسلامی ب زمانێ کوردی</p>
+            <div class="hero-actions">
+                <button class="btn-play" id="heroPlayBtn">
+                    <i class="fas fa-play"></i>
+                    ببینە
+                </button>
+                <button class="btn-listen" id="heroListenBtn">
+                    <i class="fas fa-headphones"></i>
+                    گوهدار بکە
+                </button>
+                <button class="btn-bookmark" id="heroBookmarkBtn">
+                    <i class="far fa-bookmark"></i>
+                    خەزنبکە
+                </button>
+            </div>
+            <div class="series-meta" id="heroMeta" style="display: none;">
+                <span class="lesson-count" id="heroLessonCount"></span>
+                <span class="progress-indicator" id="heroProgress"></span>
+                <span class="duration" id="heroDuration"></span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tab Navigation -->
+    <div class="content-tabs sticky-tabs">
+        <button class="tab-btn active" data-tab="home">
+            <i class="fas fa-home"></i>
+            سەرەکی
+        </button>
+        <button class="tab-btn" data-tab="playlist">
+            <i class="fas fa-play-circle"></i>
+            لیستا لێدانێ
+        </button>
+        <button class="tab-btn" data-tab="bookmarks">
+            <i class="fas fa-bookmark"></i>
+            خەزنکراو
+        </button>
+        <button class="tab-btn" data-tab="history">
+            <i class="fas fa-history"></i>
+            مێژوو
+        </button>
+        <button class="tab-btn" data-tab="categories">
+            <i class="fas fa-th"></i>
+            پۆلێن
+        </button>
+    </div>
+
+    <!-- Video Player Modal (Fullscreen Overlay) -->
+    <div class="player-modal" id="playerModal">
+        <button class="close-player" id="closePlayerBtn">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <!-- Video Player Section -->
+        <section class="player-section" id="playerSection">
         <div class="player-container">
             <video class="video-player" id="videoPlayer" poster="/assets/images/video-placeholder.jpg">
                 <source src="" type="video/mp4">
@@ -2009,6 +2069,8 @@
             </div>
         </div>
     </section>
+    </div>
+    <!-- End Player Modal -->
 
     <!-- Floating Picture-in-Picture Player -->
     <div class="floating-player" id="floatingPlayer">
@@ -2019,81 +2081,125 @@
 
     <!-- Content -->
     <div class="content">
-        <!-- Series Selector - Will be dynamically populated from your admin uploads -->
-        <section class="section" id="seriesSection" style="display: none;">
-            <div class="section-header">
-                <h2 class="section-title">زنجیرەیێن</h2>
-            </div>
+        <!-- Home Tab -->
+        <div class="tab-content active" id="home-tab">
+            <!-- Continue Watching Row -->
+            <section class="content-row">
+                <div class="row-header">
+                    <h2 class="row-title">بەردەوام ببە ل بینینێ</h2>
+                    <a href="#" class="view-all">هەمی ببینە</a>
+                </div>
+                <div class="row-carousel" id="continueWatching">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </section>
 
-            <div class="series-selector" id="seriesSelector">
-                <!-- Will be populated dynamically from uploaded videos -->
-            </div>
-        </section>
+            <!-- Next Up Row -->
+            <section class="content-row">
+                <div class="row-header">
+                    <h2 class="row-title">
+                        <i class="fas fa-arrow-right" style="color: #3498db;"></i>
+                        بەشا داهاتی
+                    </h2>
+                </div>
+                <div class="row-carousel" id="nextUpEpisodes">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </section>
 
-        <!-- Continue Watching -->
-        <section class="section">
-            <div class="section-header">
-                <h2 class="section-title">بەردەوام ببە ل بینینێ</h2>
-                <a href="#" class="view-all">هەمی ببینە</a>
-            </div>
+            <!-- Series Progress Row -->
+            <section class="content-row">
+                <div class="row-header">
+                    <h2 class="row-title">پێشڤەچوونا زنجیرەیێن</h2>
+                </div>
+                <div class="row-carousel series-progress-cards" id="seriesProgress">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </section>
 
-            <div class="episodes-grid" id="continueWatching">
+            <!-- Trending Now Row -->
+            <section class="content-row">
+                <div class="row-header">
+                    <h2 class="row-title">
+                        <i class="fas fa-fire" style="color: #e74c3c;"></i>
+                        بەرچاڤ ئێستا
+                    </h2>
+                    <a href="#" class="view-all">هەمی ببینە</a>
+                </div>
+                <div class="row-carousel" id="trendingEpisodes">
+                    <!-- Will be populated from videos marked as Featured -->
+                </div>
+            </section>
+
+            <!-- Latest Episodes Row -->
+            <section class="content-row">
+                <div class="row-header">
+                    <h2 class="row-title">بەشێن نوی</h2>
+                    <a href="#" class="view-all">هەمی ببینە</a>
+                </div>
+                <div class="row-carousel" id="latestEpisodes">
+                    <!-- More episodes here -->
+                </div>
+            </section>
+
+            <!-- Top Rated Row -->
+            <section class="content-row">
+                <div class="row-header">
+                    <h2 class="row-title">
+                        <i class="fas fa-crown" style="color: #ffd700;"></i>
+                        باشترین
+                    </h2>
+                    <a href="#" class="view-all">هەمی ببینە</a>
+                </div>
+                <div class="row-carousel" id="topRatedEpisodes">
+                    <!-- Will be populated from videos marked as Recommended -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Playlist Tab -->
+        <div class="tab-content" id="playlist-tab">
+            <div class="tab-content-header">
+                <h1>لیستا لێدانێ</h1>
+                <p>هەمی ڤیدیۆیێن کو تو خستینە لیستا خو</p>
+            </div>
+            <div class="content-grid" id="playlistGrid">
                 <!-- Will be populated dynamically -->
             </div>
-        </section>
+        </div>
 
-        <!-- Trending Now - Populated from your uploads marked as Featured -->
-        <section class="section" id="trendingSection">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <i class="fas fa-fire" style="color: #e74c3c;"></i>
-                    بەرچاڤ ئێستا
-                </h2>
-                <a href="#" class="view-all">هەمی ببینە</a>
+        <!-- Bookmarks Tab -->
+        <div class="tab-content" id="bookmarks-tab">
+            <div class="tab-content-header">
+                <h1>خەزنکراو</h1>
+                <p>ڤیدیۆیێن کو تو خەزنکرینە بۆ بینینا پاشێ</p>
             </div>
-
-            <div class="episodes-grid" id="trendingEpisodes">
-                <!-- Will be populated from videos marked as Featured -->
+            <div class="content-grid" id="bookmarksGrid">
+                <!-- Will be populated dynamically -->
             </div>
-        </section>
+        </div>
 
-        <!-- Latest Episodes -->
-        <section class="section">
-            <div class="section-header">
-                <h2 class="section-title">بەشێن نوی</h2>
-                <a href="#" class="view-all">هەمی ببینە</a>
+        <!-- History Tab -->
+        <div class="tab-content" id="history-tab">
+            <div class="tab-content-header">
+                <h1>مێژوو</h1>
+                <p>هەمی ڤیدیۆیێن کو تو دیتینە</p>
             </div>
-
-            <div class="episodes-grid" id="latestEpisodes">
-                <!-- More episodes here -->
+            <div class="history-list" id="historyList">
+                <!-- Will be populated dynamically -->
             </div>
-        </section>
+        </div>
 
-        <!-- Top Rated - Populated from your uploads marked as Recommended -->
-        <section class="section" id="topRatedSection">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <i class="fas fa-crown" style="color: #ffd700;"></i>
-                    باشترین
-                </h2>
-                <a href="#" class="view-all">هەمی ببینە</a>
+        <!-- Categories Tab -->
+        <div class="tab-content" id="categories-tab">
+            <div class="tab-content-header">
+                <h1>پۆلێن</h1>
+                <p>گەڕێ ل گۆرێ بابەتان</p>
             </div>
-
-            <div class="episodes-grid" id="topRatedEpisodes">
-                <!-- Will be populated from videos marked as Recommended -->
-            </div>
-        </section>
-
-        <!-- Categories - Will be created from your admin panel in the future -->
-        <section class="section" id="categories" style="display: none;">
-            <div class="section-header">
-                <h2 class="section-title">پۆلێن</h2>
-            </div>
-
-            <div class="categories" id="categoriesGrid">
+            <div class="categories-grid" id="categoriesGrid">
                 <!-- Will be populated from categories you create in admin -->
             </div>
-        </section>
+        </div>
     </div>
 
     <!-- Search Modal -->
@@ -2302,7 +2408,7 @@
                     &copy; <span id="year"></span> تەفسیر کورد. هەمی ماف د پاراستینە. خودایێ مەزن بەرەکەتێ بێخیتە هەوڵ و ماندیبوونا مە.
                 </p>
                 <p class="footer-brand-seo" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; opacity: 0.7;">
-                    تەفسیر کورد – تەفسیرا قورئانا پیرۆز ب زمانی کوردی (بادینی)
+                    دەنگێ ئیسلامێ - ببینە زنجیرەیێن ڤیدیویی یێن ئیسلامی ب زمانێ کوردی
                 </p>
                 <div class="footer-meta-links">
                     <a href="/privacy-policy" class="footer-meta-link">پارێزراوی تایبەتمەندی</a>
