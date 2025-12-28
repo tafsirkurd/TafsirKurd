@@ -108,7 +108,12 @@
       "Bash(netlify functions:list:*)",
       "Bash(netlify functions:invoke:*)",
       "Bash(for file in netlify/functions/*.js)",
-      "Bash(do echo \"Checking $file...\")"
+      "Bash(do echo \"Checking $file...\")",
+      "Bash(git stash:*)",
+      "Bash(timeout 3 powershell:*)",
+      "Bash(ping:*)",
+      "Bash(netlify dev)",
+      "Bash(timeout 10 ping:*)"
     ],
     "deny": [],
     "ask": []
