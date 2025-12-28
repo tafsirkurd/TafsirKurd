@@ -103,6 +103,38 @@
             const registrationSource = user.user_metadata?.registration_source ||
                                       (user.user_metadata?.provider === 'google' ? 'google' : 'email');
 
+            // Check if a profile with this email already exists with different auth method
+            const { data: existingProfiles } = await supabase
+                .from('profiles')
+                .select('email, registration_source, id')
+                .eq('email', user.email)
+                .neq('id', user.id); // Different user ID
+
+            if (existingProfiles && existingProfiles.length > 0) {
+                const existingProfile = existingProfiles[0];
+                const existingMethod = existingProfile.registration_source;
+
+                // If trying to use Google but email account exists
+                if (registrationSource === 'google' && existingMethod === 'email') {
+                    console.error('Email already registered with email/password');
+                    // Sign out the Google user
+                    await supabase.auth.signOut();
+                    // Redirect to login with error
+                    alert('⚠️ تو ژبەر ئەژمارەکا خوە هەیە!\n\nئیمەیلا تە پەیوەستە ب ئەژمارەکا ئیمەیل. تکایە ب ئیمەیل بچۆ ژوورەوە.');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // If trying to use email but Google account exists (shouldn't happen but safeguard)
+                if (registrationSource === 'email' && existingMethod === 'google') {
+                    console.error('Email already registered with Google');
+                    await supabase.auth.signOut();
+                    alert('⚠️ تو ژبەر ئەژمارەکا خوە هەیە!\n\nئیمەیلا تە پەیوەستە ب ئەژمارەکا Google. تکایە ب Google بچۆ ژوورەوە.');
+                    window.location.href = '/login.html';
+                    return;
+                }
+            }
+
             const profile = {
                 id: user.id,
                 email: user.email,

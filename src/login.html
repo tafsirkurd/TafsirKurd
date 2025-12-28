@@ -881,14 +881,60 @@
                     picture: data.user.user_metadata?.avatar_url || null
                 };
 
-                localStorage.setItem('isAuthenticated', 'true');
-                localStorage.setItem('user', JSON.stringify(userData));
-                console.log('✅ User data saved to localStorage:', userData);
+                // DEBUG: Extensive localStorage testing
+                console.log('🔍 [DEBUG] About to set localStorage...');
+                console.log('🔍 [DEBUG] userData to save:', userData);
+
+                try {
+                    // Test if localStorage is available
+                    const testKey = '__localStorage_test__';
+                    localStorage.setItem(testKey, 'test');
+                    localStorage.removeItem(testKey);
+                    console.log('✅ [DEBUG] localStorage is available and working');
+
+                    // Now set the actual data
+                    console.log('🔍 [DEBUG] Setting isAuthenticated...');
+                    localStorage.setItem('isAuthenticated', 'true');
+                    console.log('✅ [DEBUG] isAuthenticated set');
+
+                    console.log('🔍 [DEBUG] Setting user data...');
+                    localStorage.setItem('user', JSON.stringify(userData));
+                    console.log('✅ [DEBUG] user data set');
+
+                    // VERIFY immediately
+                    const verifyAuth = localStorage.getItem('isAuthenticated');
+                    const verifyUser = localStorage.getItem('user');
+                    console.log('✅ [DEBUG] VERIFICATION - isAuthenticated:', verifyAuth);
+                    console.log('✅ [DEBUG] VERIFICATION - user:', verifyUser);
+
+                    if (verifyAuth !== 'true') {
+                        console.error('❌ [DEBUG] CRITICAL: isAuthenticated was not saved properly!');
+                    }
+                    if (!verifyUser) {
+                        console.error('❌ [DEBUG] CRITICAL: user data was not saved properly!');
+                    }
+
+                    console.log('✅ [DEBUG] localStorage operations completed successfully');
+                } catch (storageError) {
+                    console.error('❌ [DEBUG] localStorage ERROR:', storageError);
+                    console.error('❌ [DEBUG] localStorage may be disabled or blocked');
+                }
 
                 showMessage('سەرکەفتی! تو هاتی ژوورڤە...', 'success');
 
                 // Wait for auth redirect handler to load and session to persist
                 setTimeout(async () => {
+                    // VERIFY AGAIN right before redirect
+                    console.log('🔍 [DEBUG] Pre-redirect verification...');
+                    const preRedirectAuth = localStorage.getItem('isAuthenticated');
+                    const preRedirectUser = localStorage.getItem('user');
+                    console.log('🔍 [DEBUG] Pre-redirect isAuthenticated:', preRedirectAuth);
+                    console.log('🔍 [DEBUG] Pre-redirect user:', preRedirectUser);
+
+                    if (preRedirectAuth !== 'true') {
+                        console.error('❌ [DEBUG] CRITICAL: localStorage was cleared before redirect!');
+                    }
+
                     console.log('🚀 Redirecting to /quran.html...');
                     if (window.authRedirect) {
                         await window.authRedirect.handlePostLoginRedirect('/quran.html');
@@ -950,6 +996,43 @@
             setLoading('signUpBtn', true);
 
             try {
+                // Check if email already exists with different auth method
+                console.log('Checking if email already exists:', email);
+
+                try {
+                    const { data: existingProfiles } = await supabaseClient
+                        .from('profiles')
+                        .select('email, registration_source')
+                        .eq('email', email)
+                        .limit(1);
+
+                    if (existingProfiles && existingProfiles.length > 0) {
+                        const existingProfile = existingProfiles[0];
+                        const registrationMethod = existingProfile.registration_source;
+
+                        if (registrationMethod === 'google') {
+                            showMessage(
+                                '⚠️ تو ژبەر ئەژمارەکا خوە هەیە!<br><br>' +
+                                'ئیمەیلا تە پەیوەستە ب ئەژمارەکا Google. تکایە ب Google بچۆ ژوورەوە.',
+                                'error'
+                            );
+                            setLoading('signUpBtn', false);
+                            return false;
+                        } else if (registrationMethod === 'email') {
+                            showMessage(
+                                '⚠️ تو ژبەر ئەژمارەکا خوە هەیە!<br><br>' +
+                                'ئیمەیلا تە پەیوەستە ب ئەژمارەکا ئیمەیل. تکایە بچۆ ژوورەوە.',
+                                'error'
+                            );
+                            setLoading('signUpBtn', false);
+                            return false;
+                        }
+                    }
+                } catch (checkError) {
+                    console.warn('Failed to check existing email:', checkError);
+                    // Continue with signup if check fails
+                }
+
                 console.log('Sending OTP to:', email);
 
                 // Send OTP
@@ -1220,12 +1303,58 @@
                                 picture: data.user.user_metadata?.avatar_url || null
                             };
 
-                            localStorage.setItem('isAuthenticated', 'true');
-                            localStorage.setItem('user', JSON.stringify(userData));
-                            console.log('✅ User data saved to localStorage:', userData);
+                            // DEBUG: Extensive localStorage testing
+                            console.log('🔍 [DEBUG OTP] About to set localStorage...');
+                            console.log('🔍 [DEBUG OTP] userData to save:', userData);
+
+                            try {
+                                // Test if localStorage is available
+                                const testKey = '__localStorage_test__';
+                                localStorage.setItem(testKey, 'test');
+                                localStorage.removeItem(testKey);
+                                console.log('✅ [DEBUG OTP] localStorage is available and working');
+
+                                // Now set the actual data
+                                console.log('🔍 [DEBUG OTP] Setting isAuthenticated...');
+                                localStorage.setItem('isAuthenticated', 'true');
+                                console.log('✅ [DEBUG OTP] isAuthenticated set');
+
+                                console.log('🔍 [DEBUG OTP] Setting user data...');
+                                localStorage.setItem('user', JSON.stringify(userData));
+                                console.log('✅ [DEBUG OTP] user data set');
+
+                                // VERIFY immediately
+                                const verifyAuth = localStorage.getItem('isAuthenticated');
+                                const verifyUser = localStorage.getItem('user');
+                                console.log('✅ [DEBUG OTP] VERIFICATION - isAuthenticated:', verifyAuth);
+                                console.log('✅ [DEBUG OTP] VERIFICATION - user:', verifyUser);
+
+                                if (verifyAuth !== 'true') {
+                                    console.error('❌ [DEBUG OTP] CRITICAL: isAuthenticated was not saved properly!');
+                                }
+                                if (!verifyUser) {
+                                    console.error('❌ [DEBUG OTP] CRITICAL: user data was not saved properly!');
+                                }
+
+                                console.log('✅ [DEBUG OTP] localStorage operations completed successfully');
+                            } catch (storageError) {
+                                console.error('❌ [DEBUG OTP] localStorage ERROR:', storageError);
+                                console.error('❌ [DEBUG OTP] localStorage may be disabled or blocked');
+                            }
 
                             // Wait a bit more to ensure session is fully persisted
                             await new Promise(resolve => setTimeout(resolve, 500));
+
+                            // VERIFY AGAIN right before redirect
+                            console.log('🔍 [DEBUG OTP] Pre-redirect verification...');
+                            const preRedirectAuth = localStorage.getItem('isAuthenticated');
+                            const preRedirectUser = localStorage.getItem('user');
+                            console.log('🔍 [DEBUG OTP] Pre-redirect isAuthenticated:', preRedirectAuth);
+                            console.log('🔍 [DEBUG OTP] Pre-redirect user:', preRedirectUser);
+
+                            if (preRedirectAuth !== 'true') {
+                                console.error('❌ [DEBUG OTP] CRITICAL: localStorage was cleared before redirect!');
+                            }
 
                             // Auto sign-in successful, redirect with profile check
                             console.log('🚀 Redirecting to /quran.html...');
@@ -1341,22 +1470,44 @@
 
             // Check if user is already logged in
             try {
-                const { data: { session }, error } = await supabaseClient.auth.getSession();
+                console.log('🔍 [DEBUG LOGIN] Checking for existing session...');
+                const sessionResponse = await supabaseClient.auth.getSession();
+                console.log('🔍 [DEBUG LOGIN] Full getSession response:', sessionResponse);
+                console.log('🔍 [DEBUG LOGIN] sessionResponse.data:', sessionResponse.data);
+                console.log('🔍 [DEBUG LOGIN] sessionResponse.data.session:', sessionResponse.data?.session);
+
+                const { data: { session }, error } = sessionResponse;
 
                 if (error) {
-                    console.error('Session check error:', error);
+                    console.error('❌ [DEBUG LOGIN] Session check error:', error);
                     return;
                 }
 
                 if (session) {
-                    console.log('User already logged in, redirecting...');
+                    console.log('✅ [DEBUG LOGIN] User already logged in, session found:', session.user.email);
+                    console.log('🔍 [DEBUG LOGIN] Session expires at:', new Date(session.expires_at * 1000));
+                    console.log('🔍 [DEBUG LOGIN] Current time:', new Date());
+
+                    // Check if session is expired
+                    const isExpired = session.expires_at * 1000 < Date.now();
+                    console.log('🔍 [DEBUG LOGIN] Session expired?', isExpired);
+
+                    if (isExpired) {
+                        console.warn('⚠️ [DEBUG LOGIN] Session is expired, clearing it...');
+                        await supabaseClient.auth.signOut();
+                        console.log('✅ [DEBUG LOGIN] Expired session cleared');
+                        return;
+                    }
+
                     showMessage('تو ژبەر د ژوورڤە دایی. ڤەگوهاستن...', 'info');
                     setTimeout(() => {
                         window.location.href = '/quran.html';
                     }, 1000);
+                } else {
+                    console.log('ℹ️ [DEBUG LOGIN] No session found, user can log in');
                 }
             } catch (error) {
-                console.error('Error checking session:', error);
+                console.error('❌ [DEBUG LOGIN] Error checking session:', error);
             }
 
             // Listen for auth state changes
