@@ -49,6 +49,10 @@
     min-height: 100vh;
     padding-top: 70px; /* Nav height */
     background: var(--bg);
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 /* ===== SIDEBAR ===== */
@@ -94,6 +98,9 @@
     font-size: 1.2rem;
     font-weight: 700;
     color: var(--text);
+    white-space: nowrap;
+    overflow: visible;
+    flex: 1;
 }
 
 .sidebar-nav {
@@ -117,15 +124,21 @@
     gap: 1rem;
     transition: all var(--transition-fast);
     position: relative;
+    white-space: nowrap;
+    overflow: visible;
 }
 
 .sidebar-btn i {
     font-size: 1.2rem;
     min-width: 24px;
+    flex-shrink: 0;
 }
 
 .sidebar-btn span {
     flex: 1;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
 }
 
 .sidebar-btn .badge {
@@ -180,15 +193,18 @@
     margin-left: 0;
     margin-right: var(--sidebar-width);
     padding: 2rem;
-    max-width: 1400px;
-    margin-left: auto;
-    margin-right: auto;
+    max-width: calc(100% - var(--sidebar-width));
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 /* ===== VIEW CONTAINERS ===== */
 .view-container {
     display: none;
     animation: fadeIn 0.3s ease-in;
+    min-height: 60vh;
+    width: 100%;
 }
 
 .view-container.active {
@@ -208,6 +224,8 @@
 
 .view-header {
     margin-bottom: 2rem;
+    max-width: 100%;
+    overflow: visible;
 }
 
 .view-header h1 {
@@ -215,11 +233,19 @@
     font-weight: 700;
     margin-bottom: 0.5rem;
     color: var(--text);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.2;
+    max-width: 100%;
 }
 
 .view-header p {
     font-size: 1.1rem;
     color: var(--text-muted);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.6;
+    max-width: 100%;
 }
 
 .back-btn {
@@ -256,6 +282,17 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 2rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    min-height: 50vh;
+}
+
+/* When topics-grid contains only empty-state, make it full width */
+.topics-grid:has(.empty-state) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .topic-card {
@@ -265,6 +302,9 @@
     cursor: pointer;
     transition: transform var(--transition-medium) var(--cubic), box-shadow var(--transition-medium);
     border: 1px solid var(--border);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .topic-card:hover {
@@ -313,13 +353,22 @@
     font-weight: 700;
     margin-bottom: 0.5rem;
     color: var(--text);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.3;
 }
 
 .topic-card-description {
     font-size: 0.95rem;
     color: var(--text-muted);
     margin-bottom: 1rem;
-    line-height: 1.5;
+    line-height: 1.6;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .topic-card-meta {
@@ -339,6 +388,16 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    min-height: 50vh;
+}
+
+/* When episodes-list contains only empty-state, center it */
+.episodes-list:has(.empty-state) {
+    align-items: center;
+    justify-content: center;
 }
 
 .episode-item {
@@ -350,6 +409,10 @@
     gap: 1.5rem;
     cursor: pointer;
     transition: all var(--transition-fast);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .episode-item:hover {
@@ -437,17 +500,22 @@
     font-weight: 600;
     margin-bottom: 0.5rem;
     color: var(--text);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.4;
 }
 
 .episode-description {
     font-size: 0.95rem;
     color: var(--text-muted);
     margin-bottom: 0.75rem;
-    line-height: 1.5;
+    line-height: 1.6;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .episode-meta {
@@ -518,6 +586,16 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    min-height: 50vh;
+}
+
+/* When history-list contains only empty-state, center it */
+.history-list:has(.empty-state) {
+    align-items: center;
+    justify-content: center;
 }
 
 .history-date-group {
@@ -605,9 +683,17 @@
 
 /* ===== EMPTY STATES ===== */
 .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     padding: 4rem 2rem;
     color: var(--text-muted);
+    min-height: 50vh;
+    width: 100%;
+    max-width: 100%;
+    grid-column: 1 / -1; /* Span all columns if in a grid */
 }
 
 .empty-state i {
@@ -627,10 +713,36 @@
 }
 
 /* ===== MOBILE RESPONSIVE ===== */
+
+/* Large tablets and small desktops */
+@media (max-width: 1200px) {
+    .main-content {
+        max-width: 100%;
+        padding: 1.5rem;
+        width: 100%;
+    }
+
+    .topics-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+}
+
+/* Medium sized devices */
+@media (max-width: 900px) {
+    .topics-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 1.25rem;
+    }
+}
+
+/* Tablets */
 @media (max-width: 1024px) {
     .main-content {
         margin-right: 0;
         padding: 1.5rem;
+        max-width: 100%;
+        width: 100%;
     }
 
     .sidebar {
@@ -667,11 +779,33 @@
         flex-direction: row;
         justify-content: flex-start;
     }
+
+    .view-header h1 {
+        font-size: 2.2rem;
+    }
+
+    .empty-state {
+        min-height: 45vh;
+        padding: 3.5rem 2rem;
+    }
+
+    .empty-state i {
+        font-size: 3.75rem;
+    }
+
+    .empty-state h3 {
+        font-size: 1.4rem;
+    }
+
+    .empty-state p {
+        font-size: 0.98rem;
+    }
 }
 
+/* Mobile landscape and small tablets */
 @media (max-width: 768px) {
     .tv-container {
-        padding-top: 60px;
+        padding-top: 120px; /* Increased for wrapped navbar */
     }
 
     .sidebar {
@@ -679,17 +813,42 @@
         width: 280px;
     }
 
+    .main-content {
+        padding: 1.25rem;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .view-header {
+        padding: 0;
+        margin-bottom: 1.5rem;
+    }
+
     .view-header h1 {
-        font-size: 2rem;
+        font-size: 1.8rem;
+        line-height: 1.3;
+        margin-bottom: 0.75rem;
+    }
+
+    .view-header p {
+        font-size: 1rem;
+        line-height: 1.5;
     }
 
     .topics-grid {
         grid-template-columns: 1fr;
         gap: 1rem;
+        padding: 0;
     }
 
     .topic-card-title {
         font-size: 1.2rem;
+        line-height: 1.4;
+    }
+
+    .topic-card-description {
+        font-size: 0.9rem;
+        line-height: 1.5;
     }
 
     .episode-number {
@@ -699,32 +858,229 @@
 
     .episode-title {
         font-size: 1.1rem;
+        line-height: 1.4;
+    }
+
+    .episode-description {
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .episode-item {
+        padding: 1.25rem;
+    }
+
+    .sidebar-btn {
+        padding: 0.875rem 1.25rem;
+        font-size: 0.95rem;
+    }
+
+    .empty-state {
+        min-height: 40vh;
+        padding: 3rem 1.5rem;
+    }
+
+    .empty-state i {
+        font-size: 3.5rem;
+    }
+
+    .empty-state h3 {
+        font-size: 1.3rem;
+    }
+
+    .empty-state p {
+        font-size: 0.95rem;
     }
 }
 
+/* Mobile portrait */
 @media (max-width: 480px) {
+    .tv-container {
+        padding-top: 140px; /* Extra space for wrapped navbar */
+    }
+
     .main-content {
         padding: 1rem;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .view-header {
+        padding: 0;
+        margin-bottom: 1.25rem;
     }
 
     .view-header h1 {
-        font-size: 1.6rem;
+        font-size: 1.5rem;
+        line-height: 1.3;
+        margin-bottom: 0.5rem;
     }
 
     .view-header p {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
+        line-height: 1.4;
     }
 
     .topic-card-content {
         padding: 1rem;
     }
 
+    .topic-card-title {
+        font-size: 1.1rem;
+        line-height: 1.3;
+    }
+
+    .topic-card-description {
+        font-size: 0.85rem;
+        line-height: 1.4;
+        -webkit-line-clamp: 2;
+    }
+
     .episode-item {
         padding: 1rem;
+        gap: 0.75rem;
+    }
+
+    .episode-number {
+        font-size: 1rem;
+        min-width: 35px;
+    }
+
+    .episode-title {
+        font-size: 1rem;
+        line-height: 1.3;
+    }
+
+    .episode-description {
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+
+    .episode-meta {
+        font-size: 0.8rem;
+        flex-wrap: wrap;
     }
 
     .back-btn {
         font-size: 0.9rem;
         padding: 0.6rem 1rem;
+    }
+
+    .sidebar {
+        width: 100%;
+        max-width: 320px;
+    }
+
+    .sidebar-title {
+        font-size: 1.1rem;
+    }
+
+    .sidebar-btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        gap: 0.75rem;
+    }
+
+    .empty-state {
+        min-height: 35vh;
+        padding: 2.5rem 1rem;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+    }
+
+    .empty-state h3 {
+        font-size: 1.2rem;
+    }
+
+    .empty-state p {
+        font-size: 0.9rem;
+    }
+}
+
+/* Very small mobile devices */
+@media (max-width: 360px) {
+    .tv-container {
+        padding-top: 150px;
+    }
+
+    .main-content {
+        padding: 0.75rem;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .view-header {
+        margin-bottom: 1rem;
+    }
+
+    .view-header h1 {
+        font-size: 1.3rem;
+        line-height: 1.2;
+        margin-bottom: 0.4rem;
+    }
+
+    .view-header p {
+        font-size: 0.85rem;
+        line-height: 1.3;
+    }
+
+    .topic-card-content {
+        padding: 0.875rem;
+    }
+
+    .topic-card-title {
+        font-size: 1rem;
+        line-height: 1.3;
+    }
+
+    .topic-card-description {
+        font-size: 0.8rem;
+        line-height: 1.3;
+        -webkit-line-clamp: 2;
+    }
+
+    .episode-item {
+        padding: 0.75rem;
+    }
+
+    .episode-title {
+        font-size: 0.95rem;
+        line-height: 1.3;
+    }
+
+    .episode-description {
+        font-size: 0.8rem;
+        line-height: 1.3;
+    }
+
+    .sidebar-title {
+        font-size: 1rem;
+    }
+
+    .sidebar-btn {
+        padding: 0.65rem 0.875rem;
+        font-size: 0.85rem;
+        gap: 0.65rem;
+    }
+
+    .empty-state {
+        min-height: 30vh;
+        padding: 2rem 0.75rem;
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .empty-state h3 {
+        font-size: 1.1rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .empty-state p {
+        font-size: 0.85rem;
     }
 }
