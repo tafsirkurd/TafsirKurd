@@ -869,10 +869,27 @@
 
                 if (error) throw error;
 
+                console.log('✅ Sign-in successful:', data);
+                console.log('Session:', data.session);
+                console.log('User:', data.user);
+
+                // IMPORTANT: Set localStorage before redirect so quran.html can pick it up
+                const userData = {
+                    sub: data.user.id,
+                    name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email.split('@')[0],
+                    email: data.user.email,
+                    picture: data.user.user_metadata?.avatar_url || null
+                };
+
+                localStorage.setItem('isAuthenticated', 'true');
+                localStorage.setItem('user', JSON.stringify(userData));
+                console.log('✅ User data saved to localStorage:', userData);
+
                 showMessage('سەرکەفتی! تو هاتی ژوورڤە...', 'success');
 
-                // Wait for auth redirect handler to load
+                // Wait for auth redirect handler to load and session to persist
                 setTimeout(async () => {
+                    console.log('🚀 Redirecting to /quran.html...');
                     if (window.authRedirect) {
                         await window.authRedirect.handlePostLoginRedirect('/quran.html');
                     } else {
@@ -1179,17 +1196,39 @@
                 // Auto sign in the user after account creation
                 setTimeout(async () => {
                     try {
-                        const { error: signInError } = await supabaseClient.auth.signInWithPassword({
+                        console.log('🔐 Auto-signing in user after OTP verification...');
+                        const { data, error: signInError } = await supabaseClient.auth.signInWithPassword({
                             email: userEmail,
                             password: userPassword
                         });
 
                         if (signInError) {
+                            console.error('❌ Auto sign-in failed:', signInError);
                             // If auto sign-in fails, just show sign-in form
                             showForm('signin');
                             showMessage('حسابەکەت دروستکرا. تکایە بچۆ ژوورەوە.', 'info');
                         } else {
+                            console.log('✅ Auto sign-in successful:', data);
+                            console.log('Session:', data.session);
+                            console.log('User:', data.user);
+
+                            // IMPORTANT: Set localStorage before redirect so quran.html can pick it up
+                            const userData = {
+                                sub: data.user.id,
+                                name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email.split('@')[0],
+                                email: data.user.email,
+                                picture: data.user.user_metadata?.avatar_url || null
+                            };
+
+                            localStorage.setItem('isAuthenticated', 'true');
+                            localStorage.setItem('user', JSON.stringify(userData));
+                            console.log('✅ User data saved to localStorage:', userData);
+
+                            // Wait a bit more to ensure session is fully persisted
+                            await new Promise(resolve => setTimeout(resolve, 500));
+
                             // Auto sign-in successful, redirect with profile check
+                            console.log('🚀 Redirecting to /quran.html...');
                             if (window.authRedirect) {
                                 await window.authRedirect.handlePostLoginRedirect('/quran.html');
                             } else {

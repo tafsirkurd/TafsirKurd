@@ -5455,12 +5455,55 @@
             }
         }
 
+        // Background sync with Supabase profile (doesn't block UI)
+        async function syncSupabaseProfile() {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session && window.authRedirect) {
+                    const profile = await window.authRedirect.getUserProfile();
+                    if (profile) {
+                        // Update localStorage with fresh profile data
+                        currentUser.picture = profile.avatar_url;
+                        localStorage.setItem('user', JSON.stringify(currentUser));
+                        console.log('✅ Profile synced with Supabase');
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Profile sync error:', error);
+            }
+        }
+
         // Check Authentication - Load from Supabase profiles
         async function checkAuthentication() {
             console.log('🔍 Checking authentication...');
 
             try {
-                // First check Supabase session (for email/Google users)
+                // PRIORITY 1: Check localStorage first (most reliable after login redirect)
+                console.log('📦 Checking localStorage first...');
+                const isAuth = localStorage.getItem('isAuthenticated');
+                const userFromStorage = localStorage.getItem('user');
+
+                if (isAuth === 'true' && userFromStorage) {
+                    try {
+                        currentUser = JSON.parse(userFromStorage);
+                        isUserAuthenticated = true;
+                        console.log('✅ User authenticated via localStorage:', currentUser.email);
+                        console.log('👤 Current user data:', currentUser);
+                        onSignInSuccess();
+
+                        // Still check Supabase in background to sync data
+                        if (supabaseClient) {
+                            syncSupabaseProfile().catch(err => console.warn('Profile sync failed:', err));
+                        }
+
+                        return;
+                    } catch (parseError) {
+                        console.error('❌ Failed to parse user from localStorage:', parseError);
+                    }
+                }
+
+                // PRIORITY 2: Check Supabase session (for email/Google users)
+                console.log('📡 No localStorage auth, checking Supabase session...');
                 if (supabaseClient) {
                     console.log('📡 Checking Supabase session...');
                     const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
@@ -5546,19 +5589,8 @@
                     console.warn('⚠️ Supabase client not initialized');
                 }
 
-                // Fallback: Check localStorage (for backward compatibility)
-                console.log('📦 Checking localStorage...');
-                const isAuth = localStorage.getItem('isAuthenticated');
-                const user = localStorage.getItem('user');
-
-                if (isAuth === 'true' && user) {
-                    currentUser = JSON.parse(user);
-                    isUserAuthenticated = true;
-                    console.log('✅ User authenticated via localStorage:', currentUser.email);
-                    onSignInSuccess();
-                } else {
-                    console.log('ℹ️ No authentication found - user is guest');
-                }
+                // If we reach here, no authentication found
+                console.log('ℹ️ No authentication found - user is guest');
             } catch (error) {
                 console.error('❌ Error checking authentication:', error);
 
