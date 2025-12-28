@@ -155,6 +155,31 @@ exports.handler = async (event, context) => {
 
         console.log(`Account created successfully for ${email}`);
 
+        // Send Discord notification for new user signup
+        try {
+            const discordWebhook = process.env.DISCORD_WEBHOOK_URL;
+            if (discordWebhook) {
+                await fetch('https://tafsirkurd.com/.netlify/functions/discord-notify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'new_user',
+                        title: '🎉 New User Signup!',
+                        message: `A new user has joined via email verification`,
+                        data: {
+                            userName: name,
+                            email: email,
+                            registrationSource: 'email',
+                            timestamp: new Date().toISOString()
+                        }
+                    })
+                }).catch(err => console.error('Discord notification failed:', err));
+            }
+        } catch (error) {
+            console.error('Failed to send Discord notification:', error);
+            // Don't fail the signup if notification fails
+        }
+
         return {
             statusCode: 200,
             headers,

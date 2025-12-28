@@ -7687,27 +7687,43 @@
                 }
 
                 await ensureSupabase();
-                // Optimized query: order by created_at DESC for faster queries with index
-                const { data, error } = await supabaseClient
-                    .from('user_data')
-                    .select('*')
-                    .order('id', { ascending: true })
-                    .limit(1000); // Limit to 1000 users for performance
-                if (error) throw error;
 
-                console.log('[Admin] Raw user data from database:', data);
+                // Load both user_data and profiles tables
+                const [userDataResult, profilesResult] = await Promise.all([
+                    supabaseClient.from('user_data').select('*').order('id', { ascending: true }).limit(1000),
+                    supabaseClient.from('profiles').select('*').order('created_at', { ascending: true })
+                ]);
 
-                // Parse user data from JSON and assign sequential user numbers
-                allUsers = (data || []).map((user, index) => {
+                if (userDataResult.error && profilesResult.error) {
+                    throw new Error('Failed to load user data');
+                }
+
+                const userData = userDataResult.data || [];
+                const profiles = profilesResult.data || [];
+
+                console.log('[Admin] Raw user data from database:', userData);
+                console.log('[Admin] Raw profiles from database:', profiles);
+
+                // Create a map of profiles by user ID for easy lookup
+                const profilesMap = new Map();
+                profiles.forEach(profile => {
+                    profilesMap.set(profile.id, profile);
+                });
+
+                // Merge user_data with profiles and assign sequential user numbers
+                allUsers = (userData || []).map((user, index) => {
                     console.log('[Admin] Processing user:', user);
                     console.log('[Admin] User data field:', user.data);
 
                     // Extract data from the actual structure used by Quran.html
-                    const userData = user.data || {};
-                    const currentPos = userData.currentPosition || {};
-                    const stats = userData.stats || {};
-                    const readingGoal = userData.readingGoal || {};
-                    const readAyahs = userData.readAyahs || [];
+                    const userDataFields = user.data || {};
+                    const currentPos = userDataFields.currentPosition || {};
+                    const stats = userDataFields.stats || {};
+                    const readingGoal = userDataFields.readingGoal || {};
+                    const readAyahs = userDataFields.readAyahs || [];
+
+                    // Get profile from profiles table if exists
+                    const profile = profilesMap.get(user.user_id);
 
                     // Calculate total ayahs read from multiple possible sources
                     let totalRead = stats.totalAyahsRead || stats.ayahsRead || 0;
@@ -7743,19 +7759,53 @@
                     return {
                         ...user,
                         userNumber: index + 1, // Sequential user number based on join order (oldest = #1)
-                        full_name: userData.full_name || userData.userName || user.user_id?.split('|')[0] || 'User',
-                        name: userData.full_name || userData.userName || user.user_id?.split('|')[0] || 'User',
-                        email: userData.email || userData.userEmail || user.user_id || '-',
-                        picture: userData.picture || userData.userPicture || null,
+                        full_name: profile?.full_name || userDataFields.full_name || userDataFields.userName || user.user_id?.split('|')[0] || 'User',
+                        name: profile?.display_name || userDataFields.full_name || userDataFields.userName || user.user_id?.split('|')[0] || 'User',
+                        email: profile?.email || userDataFields.email || userDataFields.userEmail || user.user_id || '-',
+                        picture: profile?.avatar_url || userDataFields.picture || userDataFields.userPicture || null,
                         current_surah: currentPos.surah || stats.currentSurah || null,
                         current_ayah: currentPos.ayah || stats.currentAyah || null,
                         daily_goal: readingGoal.dailyTarget || readingGoal.goal || null,
                         total_read: totalRead,
                         completion: completion,
-                        last_read: userData.lastRead || stats.lastReadDate || null,
-                        city: userData.city || null,
-                        region: userData.region || null
+                        last_read: userDataFields.lastRead || stats.lastReadDate || null,
+                        city: userDataFields.city || null,
+                        region: userDataFields.region || null,
+                        registration_source: profile?.registration_source || null,
+                        has_completed_signup: profile?.has_completed_signup || null,
+                        first_login_at: profile?.first_login_at || null,
+                        profile_created_at: profile?.created_at || null
                     };
+                });
+
+                // Also add users who only exist in profiles table (new unified system)
+                profiles.forEach((profile, index) => {
+                    // Check if this profile is already in allUsers
+                    const existsInUserData = userData.some(u => u.user_id === profile.id);
+                    if (!existsInUserData) {
+                        allUsers.push({
+                            id: profile.id,
+                            user_id: profile.id,
+                            userNumber: userData.length + index + 1,
+                            full_name: profile.full_name || 'User',
+                            name: profile.display_name || profile.full_name || 'User',
+                            email: profile.email || '-',
+                            picture: profile.avatar_url,
+                            current_surah: null,
+                            current_ayah: null,
+                            daily_goal: null,
+                            total_read: 0,
+                            completion: 0,
+                            last_read: null,
+                            city: null,
+                            region: null,
+                            registration_source: profile.registration_source,
+                            has_completed_signup: profile.has_completed_signup,
+                            first_login_at: profile.first_login_at,
+                            profile_created_at: profile.created_at,
+                            data: {} // Empty data for new users
+                        });
+                    }
                 });
 
                 console.log('[Admin] Processed users:', allUsers);
@@ -8010,6 +8060,28 @@
                                 <span style="color: #666;">🔢 User Number:</span>
                                 <span style="font-weight: 600; color: #667eea; font-size: 16px;">#${userNumber}</span>
                             </div>
+                            ${user.registration_source ? `
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: #666;">📝 Registration Source:</span>
+                                <span style="padding: 4px 10px; background: ${user.registration_source === 'google' ? '#4285f4' : user.registration_source === 'email' ? '#10b981' : user.registration_source === 'tv' ? '#f59e0b' : '#667eea'}; color: white; border-radius: 12px; font-size: 11px; font-weight: 700;">
+                                    ${user.registration_source === 'google' ? '🔐 GOOGLE' : user.registration_source === 'email' ? '📧 EMAIL' : user.registration_source === 'tv' ? '📺 TV' : user.registration_source === 'quran' ? '📖 QURAN' : user.registration_source.toUpperCase()}
+                                </span>
+                            </div>
+                            ` : ''}
+                            ${user.has_completed_signup !== null && user.has_completed_signup !== undefined ? `
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="color: #666;">✅ Signup Complete:</span>
+                                <span style="padding: 4px 10px; background: ${user.has_completed_signup ? '#10b981' : '#f59e0b'}; color: white; border-radius: 12px; font-size: 11px; font-weight: 700;">
+                                    ${user.has_completed_signup ? 'YES' : 'PENDING'}
+                                </span>
+                            </div>
+                            ` : ''}
+                            ${user.first_login_at ? `
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #666;">🎯 First Login:</span>
+                                <span style="font-weight: 600; color: #333;">${new Date(user.first_login_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                            </div>
+                            ` : ''}
                             <div style="display: flex; justify-content: space-between;">
                                 <span style="color: #666;">🆔 Database ID:</span>
                                 <span style="font-weight: 600; color: #999; font-size: 11px;">${user.id}</span>
