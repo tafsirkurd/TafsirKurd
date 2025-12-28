@@ -1113,10 +1113,24 @@
                 localStorage.removeItem('isAuthenticated');
                 localStorage.removeItem('user');
 
+                // Clear ALL Supabase-related items from localStorage
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    // Remove Supabase keys but preserve Quran data
+                    if ((key.includes('supabase') || key.includes('sb-')) && !key.includes('quran_data')) {
+                        keysToRemove.push(key);
+                    }
+                }
+                keysToRemove.forEach(key => {
+                    console.log('🗑️ Removing:', key);
+                    localStorage.removeItem(key);
+                });
+
                 // Clear session storage as well
                 sessionStorage.clear();
 
-                console.log('✅ All auth data cleared');
+                console.log('✅ All auth data cleared (Quran data preserved)');
 
                 // Small delay to ensure session is fully cleared
                 await new Promise(resolve => setTimeout(resolve, 300));

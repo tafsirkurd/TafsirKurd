@@ -1474,10 +1474,35 @@
 
             if (isLogout) {
                 console.log('🚪 [DEBUG LOGIN] User just logged out, skipping auto-redirect');
-                // Clear any remaining session data
-                await supabaseClient.auth.signOut();
+
+                // AGGRESSIVE session clearing
+                try {
+                    // Sign out from Supabase
+                    await supabaseClient.auth.signOut();
+
+                    // Clear ALL Supabase-related items from localStorage
+                    const keysToRemove = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key.includes('supabase') || key.includes('sb-')) {
+                            keysToRemove.push(key);
+                        }
+                    }
+                    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+                    // Clear sessionStorage
+                    sessionStorage.clear();
+
+                    console.log('✅ [DEBUG LOGIN] All session data cleared');
+                } catch (e) {
+                    console.error('Error clearing session:', e);
+                }
+
                 // Clear URL parameter
                 window.history.replaceState({}, document.title, '/login.html');
+
+                // Show message
+                showMessage('ب سەرکەفتی دەرچویت. دشێیت ژ نوێڤە بچیتە ژوورەوە.', 'success');
                 return;
             }
 
