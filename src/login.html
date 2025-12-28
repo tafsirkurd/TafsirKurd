@@ -1468,6 +1468,19 @@
                 return;
             }
 
+            // Check if coming from logout (skip auto-redirect)
+            const urlParams = new URLSearchParams(window.location.search);
+            const isLogout = urlParams.get('logout') === 'true';
+
+            if (isLogout) {
+                console.log('🚪 [DEBUG LOGIN] User just logged out, skipping auto-redirect');
+                // Clear any remaining session data
+                await supabaseClient.auth.signOut();
+                // Clear URL parameter
+                window.history.replaceState({}, document.title, '/login.html');
+                return;
+            }
+
             // Check if user is already logged in
             try {
                 console.log('🔍 [DEBUG LOGIN] Checking for existing session...');
