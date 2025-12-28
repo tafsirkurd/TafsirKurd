@@ -1083,29 +1083,51 @@
         }
 
         // Logout
-        function logout() {
-            // Save Quran data before logout
-            const user = JSON.parse(localStorage.getItem('user'));
-            if (user) {
-                const userKey = 'quran_data_' + user.sub;
-                const saved = localStorage.getItem(userKey);
-                const existingData = saved ? JSON.parse(saved) : {};
+        async function logout() {
+            try {
+                console.log('🚪 Starting logout...');
 
-                const readingGoal = localStorage.getItem('readingGoal');
-                if (readingGoal) {
-                    existingData.readingGoal = JSON.parse(readingGoal);
-                    localStorage.setItem(userKey, JSON.stringify(existingData));
-                    console.log('✅ Quran data saved before logout');
+                // Save Quran data before logout
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user) {
+                    const userKey = 'quran_data_' + user.sub;
+                    const saved = localStorage.getItem(userKey);
+                    const existingData = saved ? JSON.parse(saved) : {};
+
+                    const readingGoal = localStorage.getItem('readingGoal');
+                    if (readingGoal) {
+                        existingData.readingGoal = JSON.parse(readingGoal);
+                        localStorage.setItem(userKey, JSON.stringify(existingData));
+                        console.log('✅ Quran data saved before logout');
+                    }
                 }
-            }
 
-            // Logout
-            if (supabaseClient) {
-                supabaseClient.auth.signOut();
+                // Logout from Supabase (WAIT for it to complete)
+                if (supabaseClient) {
+                    console.log('🔐 Signing out from Supabase...');
+                    await supabaseClient.auth.signOut();
+                    console.log('✅ Supabase sign out complete');
+                }
+
+                // Clear all auth data from localStorage
+                localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('user');
+
+                // Clear session storage as well
+                sessionStorage.clear();
+
+                console.log('✅ All auth data cleared');
+
+                // Small delay to ensure session is fully cleared
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                // Redirect to login with force logout parameter
+                window.location.href = '/login.html?logout=true';
+            } catch (error) {
+                console.error('Logout error:', error);
+                // Force redirect even if error
+                window.location.href = '/login.html?logout=true';
             }
-            localStorage.removeItem('isAuthenticated');
-            localStorage.removeItem('user');
-            window.location.href = '/login.html';
         }
 
         // Delete account
