@@ -585,6 +585,243 @@
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Edit Profile Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            animation: fadeInOverlay 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        @keyframes fadeInOverlay {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes slideUpModal {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .modal-close:hover {
+            background: var(--border);
+            color: var(--text);
+            transform: rotate(90deg);
+        }
+
+        .modal-header {
+            padding: 2rem 2rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-avatar {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 1rem;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid var(--border);
+            background: var(--bg);
+        }
+
+        .modal-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text);
+        }
+
+        .modal-body {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .modal-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .modal-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .modal-input {
+            padding: 0.875rem 1rem;
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-family: 'IBM Plex Arabic', 'Segoe UI', Arial, sans-serif;
+            transition: all 0.3s;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--card-bg);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem 2rem;
+            display: flex;
+            gap: 0.875rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 0.875rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'IBM Plex Arabic', 'Segoe UI', Arial, sans-serif;
+        }
+
+        .modal-btn-save {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 4px 14px rgba(231, 76, 60, 0.3);
+        }
+
+        .modal-btn-save:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+
+        .modal-btn-save:active {
+            transform: translateY(0);
+        }
+
+        .modal-btn-cancel {
+            background: transparent;
+            color: var(--text);
+            border: 1.5px solid var(--border);
+        }
+
+        .modal-btn-cancel:hover {
+            background: var(--bg);
+            border-color: var(--text-muted);
+        }
+
+        /* Modal Responsive */
+        @media (max-width: 576px) {
+            .modal-container {
+                border-radius: 20px 20px 0 0;
+                max-height: 85vh;
+                align-self: flex-end;
+                animation: slideUpFromBottom 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+
+            @keyframes slideUpFromBottom {
+                from {
+                    transform: translateY(100%);
+                }
+                to {
+                    transform: translateY(0);
+                }
+            }
+
+            .modal-header {
+                padding: 1.5rem 1.5rem 1rem;
+            }
+
+            .modal-body {
+                padding: 1.5rem;
+            }
+
+            .modal-footer {
+                padding: 1rem 1.5rem 1.5rem;
+                flex-direction: column-reverse;
+            }
+
+            .modal-btn {
+                width: 100%;
+            }
+
+            .modal-avatar {
+                width: 75px;
+                height: 75px;
+            }
+
+            .modal-title {
+                font-size: 1.2rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -598,6 +835,10 @@
             </div>
         </div>
         <div class="profile-header-actions">
+            <button class="header-btn" onclick="openEditModal()">
+                <i class="fas fa-edit"></i>
+                دەستکاریکرنا پرۆفایلێ
+            </button>
             <button class="header-btn" onclick="logout()">
                 <i class="fas fa-sign-out-alt"></i>
                 دەرچوون
@@ -608,6 +849,60 @@
             </button>
         </div>
     </header>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-container">
+            <button class="modal-close" onclick="closeEditModal()">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="modal-header">
+                <div class="modal-avatar">
+                    <img id="modalAvatar" src="" alt="Avatar">
+                </div>
+                <h2 class="modal-title">دەستکاریکرنا پرۆفایلێ</h2>
+            </div>
+
+            <div class="modal-body">
+                <div class="modal-form-group">
+                    <label class="modal-label">ناڤێ یەکەم</label>
+                    <input type="text" class="modal-input" id="modalFirstName" placeholder="ناڤێ یەکەم">
+                </div>
+
+                <div class="modal-form-group">
+                    <label class="modal-label">ناڤێ دووەم</label>
+                    <input type="text" class="modal-input" id="modalLastName" placeholder="ناڤێ دووەم">
+                </div>
+
+                <div class="modal-form-group">
+                    <label class="modal-label">ناڤنیشان</label>
+                    <input type="text" class="modal-input" id="modalAddress" placeholder="ناڤنیشان">
+                </div>
+
+                <div class="modal-form-group">
+                    <label class="modal-label">وەلات</label>
+                    <select class="modal-input" id="modalCountry">
+                        <option value="">وەلاتەکا خوە هەلبژێرە</option>
+                        <option value="IQ">عێراق</option>
+                        <option value="SY">سوریا</option>
+                        <option value="TR">تورکیە</option>
+                        <option value="IR">ئێران</option>
+                        <option value="other">یێن دی</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-save" onclick="saveProfile()">
+                    پارەبکە
+                </button>
+                <button class="modal-btn modal-btn-cancel" onclick="closeEditModal()">
+                    پاشگەزبوونەکە
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div class="profile-container">
         <!-- Sidebar -->
@@ -1235,6 +1530,128 @@
             });
             document.getElementById('currentDeviceInfo').textContent = `Logged in on: ${loginTime}`;
         }
+
+        // Modal Functions
+        function openEditModal() {
+            const modal = document.getElementById('editModal');
+            modal.classList.add('show');
+
+            // Populate modal with current user data
+            document.getElementById('modalAvatar').src = currentUser.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${currentUser.name}`;
+
+            // Split display_name into first and last name
+            const fullName = userProfile?.display_name || currentUser.name || '';
+            const nameParts = fullName.split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+
+            document.getElementById('modalFirstName').value = firstName;
+            document.getElementById('modalLastName').value = lastName;
+            document.getElementById('modalAddress').value = userProfile?.address || '';
+            document.getElementById('modalCountry').value = userProfile?.country || '';
+
+            // Prevent body scroll when modal is open
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editModal');
+            modal.classList.remove('show');
+
+            // Re-enable body scroll
+            document.body.style.overflow = '';
+        }
+
+        async function saveProfile() {
+            if (!supabaseClient) {
+                alert('هەلە: Supabase نەهاتە دەستپێکرن');
+                return;
+            }
+
+            try {
+                const firstName = document.getElementById('modalFirstName').value.trim();
+                const lastName = document.getElementById('modalLastName').value.trim();
+                const address = document.getElementById('modalAddress').value.trim();
+                const country = document.getElementById('modalCountry').value;
+
+                // Combine first and last name
+                const displayName = `${firstName} ${lastName}`.trim();
+
+                if (!displayName) {
+                    alert('تکایە ناڤێ خوە بنڤیسە');
+                    return;
+                }
+
+                // Get current session
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) {
+                    alert('هەلە: ھیچ سەشنەکا چالاک نینە');
+                    return;
+                }
+
+                // Update profile in Supabase
+                const { error } = await supabaseClient
+                    .from('profiles')
+                    .update({
+                        display_name: displayName,
+                        address: address,
+                        country: country,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', session.user.id);
+
+                if (error) throw error;
+
+                // Update local user object
+                currentUser.name = displayName;
+                localStorage.setItem('user', JSON.stringify(currentUser));
+
+                // Update UI
+                document.getElementById('headerName').textContent = displayName;
+                document.getElementById('displayName').value = displayName;
+                document.getElementById('country').value = country;
+
+                // Reload profile to get latest data
+                const { data: profile } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (profile) {
+                    userProfile = profile;
+                }
+
+                // Close modal
+                closeEditModal();
+
+                // Show success message
+                const successMsg = document.getElementById('profileSuccess');
+                successMsg.classList.add('show');
+                setTimeout(() => successMsg.classList.remove('show'), 3000);
+
+            } catch (error) {
+                console.error('Save profile error:', error);
+                alert('هەلە د پارەبکرنا پرۆفایلێ دا: ' + error.message);
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('editModal');
+                if (modal.classList.contains('show')) {
+                    closeEditModal();
+                }
+            }
+        });
 
         // Load on page load
         window.addEventListener('load', () => {
