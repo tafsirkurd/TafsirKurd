@@ -4882,8 +4882,8 @@
         })();
 
         // Initialize Supabase client for unified profiles
-        const supabaseUrl = 'https://nvwgepkhzobgwnzibpvq.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d2dlcGtoemJnZ3duemlicHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ3MDgzNzIsImV4cCI6MjA1MDI4NDM3Mn0.FJuZ7bPDIzLHN9n6H44JGDxmH_bLOWXgVDmw1qs8HFA';
+        const supabaseUrl = 'https://gijupzejtbpifjzwadee.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanVwemVqdGJwaWZqendhZGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDAyOTcsImV4cCI6MjA3MTExNjI5N30.-d33o2dDpfD6ywubBcc51srvf1VUewAJwpnd0OOo51M';
         let supabaseClient = null;
 
         // Initialize Supabase client immediately if library is loaded
@@ -5506,11 +5506,22 @@
                 console.log('📡 No localStorage auth, checking Supabase session...');
                 if (supabaseClient) {
                     console.log('📡 Checking Supabase session...');
-                    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+
+                    // DEBUG: Log the full response from getSession
+                    const sessionResponse = await supabaseClient.auth.getSession();
+                    console.log('🔍 [DEBUG] Full getSession response:', sessionResponse);
+                    console.log('🔍 [DEBUG] sessionResponse.data:', sessionResponse.data);
+                    console.log('🔍 [DEBUG] sessionResponse.data.session:', sessionResponse.data?.session);
+                    console.log('🔍 [DEBUG] sessionResponse.error:', sessionResponse.error);
+
+                    const { data: { session }, error: sessionError } = sessionResponse;
 
                     if (sessionError) {
                         console.warn('⚠️ Session error:', sessionError);
                     }
+
+                    console.log('🔍 [DEBUG] Extracted session:', session);
+                    console.log('🔍 [DEBUG] Session null check:', session === null, session === undefined);
 
                     if (!sessionError && session) {
                         console.log('✅ Supabase session found:', session.user.email);
