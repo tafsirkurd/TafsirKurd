@@ -401,6 +401,87 @@
             display: block;
         }
 
+        /* OTP Verification Styles */
+        .otp-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .otp-header h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .otp-header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .otp-input-container {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            margin: 2rem 0;
+            direction: ltr;
+        }
+
+        .otp-input {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg);
+            color: var(--text);
+            transition: all var(--transition);
+        }
+
+        .otp-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+            transform: scale(1.05);
+        }
+
+        [data-theme="dark"] .otp-input:focus {
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+
+        .resend-container {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .resend-container p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .resend-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.5rem;
+            transition: all var(--transition);
+        }
+
+        .resend-btn:hover {
+            text-decoration: underline;
+        }
+
+        .resend-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .auth-card {
@@ -565,6 +646,47 @@
 
                 <div class="back-link">
                     <a onclick="showForm('signin')">ژبەر حساب هەیە؟ چوونە ژوورڤە</a>
+                </div>
+            </div>
+
+            <!-- OTP Verification Form -->
+            <div class="form-section" id="otpForm">
+                <div class="otp-header">
+                    <h3>پشتڕاستکردنەوەی ئیمەیل</h3>
+                    <p>کۆدی ٦ ژمارەیی کە نێردراوە بۆ <strong id="otpEmail"></strong> بنووسە</p>
+                </div>
+
+                <form onsubmit="return handleOTPVerification(event)">
+                    <div class="form-group">
+                        <div class="otp-input-container">
+                            <input type="text" class="otp-input" id="otp1" maxlength="1" pattern="[0-9]" required>
+                            <input type="text" class="otp-input" id="otp2" maxlength="1" pattern="[0-9]" required>
+                            <input type="text" class="otp-input" id="otp3" maxlength="1" pattern="[0-9]" required>
+                            <input type="text" class="otp-input" id="otp4" maxlength="1" pattern="[0-9]" required>
+                            <input type="text" class="otp-input" id="otp5" maxlength="1" pattern="[0-9]" required>
+                            <input type="text" class="otp-input" id="otp6" maxlength="1" pattern="[0-9]" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="auth-button" id="verifyOtpBtn">
+                        <span class="spinner"></span>
+                        <span>پشتڕاستکردنەوە</span>
+                    </button>
+                </form>
+
+                <div class="resend-container">
+                    <p>کۆدەکەت وەرنەگرت؟</p>
+                    <button class="resend-btn" id="resendOtpBtn" onclick="resendOTP()">
+                        <span id="resendText">نێردنەوەی کۆد</span>
+                        <span id="resendTimer" style="display:none;"></span>
+                    </button>
+                </div>
+
+                <div class="back-link">
+                    <a onclick="showForm('signup')">
+                        <i class="fas fa-arrow-right"></i>
+                        گەڕانەوە
+                    </a>
                 </div>
             </div>
 
@@ -769,16 +891,13 @@
             return false;
         }
 
-        // Email Sign Up
+        // Store signup data temporarily for OTP verification
+        let signupData = null;
+
+        // Email Sign Up - Send OTP
         async function handleEmailSignUp(event) {
             event.preventDefault();
             clearMessage();
-
-            // Check if Supabase is initialized
-            if (!supabaseClient) {
-                showMessage('سیستەم ئامادە نییە. تکایە پەڕە نوێبکەرەوە.', 'error');
-                return false;
-            }
 
             const name = document.getElementById('signUpName').value.trim();
             const email = document.getElementById('signUpEmail').value.trim();
@@ -805,75 +924,41 @@
             setLoading('signUpBtn', true);
 
             try {
-                console.log('Starting sign up for:', email);
+                console.log('Sending OTP to:', email);
 
-                // Sign up with email confirmation required
-                const { data, error } = await supabaseClient.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        data: {
-                            full_name: name,
-                            display_name: name
-                        },
-                        emailRedirectTo: window.location.origin + '/quran.html',
-                        // This ensures email confirmation is required
-                        // User won't be created in auth.users until they verify
-                    }
+                // Send OTP
+                const response = await fetch('/.netlify/functions/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, name })
                 });
 
-                console.log('Sign up response:', { data, error });
+                const data = await response.json();
 
-                if (error) throw error;
-
-                // Important: With email confirmation enabled in Supabase,
-                // data.user will exist but data.session will be null
-                // User must verify email before they can sign in
-                if (data.user && !data.session) {
-                    showMessage(
-                        '✅ ئەژمارەکەت دروستکرا! <br><br>' +
-                        'ئێمە لینکێن پشتڕاستکرنێ نارین بۆ <strong>' + email + '</strong><br><br>' +
-                        'تکایە ئیمەیلا خوە ببینن و لینکێ کلیک بکە بۆ چالاککرنا ئەژمارێ. ' +
-                        'دووی ئەوەی کە ئیمەیلا خوە پشتڕاستکر، دشێی بچیتە ژوورڤە.',
-                        'success'
-                    );
-
-                    // Clear form
-                    document.getElementById('signUpName').value = '';
-                    document.getElementById('signUpEmail').value = '';
-                    document.getElementById('signUpPassword').value = '';
-
-                    // Switch to sign in form after 5 seconds
-                    setTimeout(() => {
-                        showForm('signin');
-                        showMessage('ئێستا دشێی بچیتە ژوورڤە دووی ئەوەی کە ئیمەیلا خوە پشتڕاستکریت.', 'info');
-                    }, 5000);
-                } else if (data.session) {
-                    // This shouldn't happen if email confirmation is enabled
-                    // But handle it just in case
-                    showMessage('سەرکەفتی! حسابا تە هاتە دروستکرن و تو هاتی ژوورڤە...', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/quran.html';
-                    }, 2000);
-                } else {
-                    throw new Error('Unexpected response from server');
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'Failed to send OTP');
                 }
+
+                // Store signup data for later use
+                signupData = { name, email, password };
+
+                // Show OTP form
+                document.getElementById('otpEmail').textContent = email;
+                showForm('otp');
+
+                showMessage('✅ کۆدی پشتڕاستکردنەوە نێردرا!<br><br>چاڤێ ئیمەیلەکەت بکە بۆ <strong>' + email + '</strong>', 'success');
+
+                // Start resend timer
+                startResendTimer();
+
+                // Focus first OTP input
+                setTimeout(() => {
+                    document.getElementById('otp1').focus();
+                }, 300);
 
             } catch (error) {
-                console.error('Sign up error:', error);
-                let errorMessage = 'هەلە د دروستکرنا حسابێ دا';
-
-                if (error.message.includes('User already registered') || error.message.includes('already registered')) {
-                    errorMessage = 'ئەڤ ئیمەیلە ژبەر هاتییە بکارهینان. دشێی بچیتە ژوورڤە یان پاسوۆردا خوە ڤەگەهەند.';
-                } else if (error.message.includes('Invalid email')) {
-                    errorMessage = 'ئیمەیلا نادروست';
-                } else if (error.message.includes('Password')) {
-                    errorMessage = 'پاسوۆرد دڤێ کەمتر ٦ پیت بیت';
-                } else if (error.message) {
-                    errorMessage = error.message;
-                }
-
-                showMessage(errorMessage, 'error');
+                console.error('Send OTP error:', error);
+                showMessage('هەڵە لە ناردنی کۆد: ' + error.message, 'error');
             } finally {
                 setLoading('signUpBtn', false);
             }
@@ -968,6 +1053,205 @@
             }
 
             return false;
+        }
+
+        // OTP Input Handling
+        document.addEventListener('DOMContentLoaded', () => {
+            const otpInputs = document.querySelectorAll('.otp-input');
+
+            otpInputs.forEach((input, index) => {
+                // Auto-focus next input on keyup
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1 && index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+                });
+
+                // Handle backspace
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        otpInputs[index - 1].focus();
+                    }
+                });
+
+                // Only allow numbers
+                input.addEventListener('keypress', (e) => {
+                    if (!/[0-9]/.test(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+
+                // Handle paste
+                input.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const paste = e.clipboardData.getData('text');
+                    const digits = paste.replace(/\D/g, '').split('').slice(0, 6);
+
+                    digits.forEach((digit, i) => {
+                        if (otpInputs[i]) {
+                            otpInputs[i].value = digit;
+                        }
+                    });
+
+                    if (digits.length > 0) {
+                        const lastIndex = Math.min(digits.length, otpInputs.length - 1);
+                        otpInputs[lastIndex].focus();
+                    }
+                });
+            });
+        });
+
+        // Handle OTP Verification
+        async function handleOTPVerification(event) {
+            event.preventDefault();
+            clearMessage();
+
+            if (!signupData) {
+                showMessage('داتای تۆمارکردن نەدۆزرایەوە. تکایە دووبارە هەوڵ بدەرەوە.', 'error');
+                showForm('signup');
+                return false;
+            }
+
+            // Get OTP code from inputs
+            const otp = Array.from(document.querySelectorAll('.otp-input'))
+                .map(input => input.value)
+                .join('');
+
+            if (otp.length !== 6) {
+                showMessage('تکایە کۆدی ٦ ژمارەیی بنووسە', 'error');
+                return false;
+            }
+
+            setLoading('verifyOtpBtn', true);
+
+            try {
+                console.log('Verifying OTP for:', signupData.email);
+
+                // Verify OTP and create account
+                const response = await fetch('/.netlify/functions/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: signupData.email,
+                        otp: otp,
+                        password: signupData.password,
+                        name: signupData.name
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'Verification failed');
+                }
+
+                // Success!
+                showMessage(
+                    '🎉 سەرکەفتی!<br><br>' +
+                    'ئەژمارەکەت دروستکرا و چالاککرا. ئێستا دەتوانیت بچیتە ژوورەوە.',
+                    'success'
+                );
+
+                // Clear signup data
+                signupData = null;
+
+                // Clear OTP inputs
+                document.querySelectorAll('.otp-input').forEach(input => input.value = '');
+
+                // Clear signup form
+                document.getElementById('signUpName').value = '';
+                document.getElementById('signUpEmail').value = '';
+                document.getElementById('signUpPassword').value = '';
+
+                // Switch to sign in form after 2 seconds
+                setTimeout(() => {
+                    showForm('signin');
+                }, 2000);
+
+            } catch (error) {
+                console.error('OTP verification error:', error);
+                showMessage('هەڵە: ' + error.message, 'error');
+
+                // If attempts left is in error, show it
+                if (error.attemptsLeft !== undefined) {
+                    showMessage(`کۆدی هەڵە. ${error.attemptsLeft} هەوڵی ماوە.`, 'error');
+                }
+            } finally {
+                setLoading('verifyOtpBtn', false);
+            }
+
+            return false;
+        }
+
+        // Resend OTP
+        let resendTimer = null;
+        async function resendOTP() {
+            if (!signupData) {
+                showMessage('داتای تۆمارکردن نەدۆزرایەوە. تکایە دووبارە تۆمار بکە.', 'error');
+                showForm('signup');
+                return;
+            }
+
+            clearMessage();
+
+            try {
+                console.log('Resending OTP to:', signupData.email);
+
+                const response = await fetch('/.netlify/functions/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: signupData.email,
+                        name: signupData.name
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'Failed to resend OTP');
+                }
+
+                showMessage('✅ کۆدێکی نوێ نێردرا بۆ ئیمەیلەکەت', 'success');
+
+                // Clear OTP inputs
+                document.querySelectorAll('.otp-input').forEach(input => input.value = '');
+                document.getElementById('otp1').focus();
+
+                // Start timer
+                startResendTimer();
+
+            } catch (error) {
+                console.error('Resend OTP error:', error);
+                showMessage('هەڵە لە ناردنەوەی کۆد: ' + error.message, 'error');
+            }
+        }
+
+        // Start resend timer (60 seconds)
+        function startResendTimer() {
+            const resendBtn = document.getElementById('resendOtpBtn');
+            const resendText = document.getElementById('resendText');
+            const resendTimerSpan = document.getElementById('resendTimer');
+
+            let seconds = 60;
+
+            resendBtn.disabled = true;
+            resendText.style.display = 'none';
+            resendTimerSpan.style.display = 'inline';
+
+            if (resendTimer) clearInterval(resendTimer);
+
+            resendTimer = setInterval(() => {
+                seconds--;
+                resendTimerSpan.textContent = `نێردنەوە (${seconds})`;
+
+                if (seconds <= 0) {
+                    clearInterval(resendTimer);
+                    resendBtn.disabled = false;
+                    resendText.style.display = 'inline';
+                    resendTimerSpan.style.display = 'none';
+                }
+            }, 1000);
         }
 
         // Initialize on page load
