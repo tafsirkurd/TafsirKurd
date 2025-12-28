@@ -822,6 +822,146 @@
                 font-size: 1.2rem;
             }
         }
+
+        /* Navigation Icons */
+        .nav-icon-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-icon-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        /* Profile Dropdown in Header */
+        .header-profile-dropdown {
+            position: relative;
+        }
+
+        .header-user-profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .header-user-profile-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .header-user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border);
+        }
+
+        .header-user-name {
+            color: var(--text);
+            font-weight: 500;
+            font-size: 0.9rem;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .header-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            min-width: 220px;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .header-dropdown.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .header-dropdown-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        .header-dropdown-name {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .header-dropdown-email {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .header-dropdown-item {
+            padding: 0.875rem 1rem;
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: background 0.3s;
+            cursor: pointer;
+        }
+
+        .header-dropdown-item:hover {
+            background: var(--bg);
+        }
+
+        .header-dropdown-item i {
+            width: 20px;
+            font-size: 1.1rem;
+        }
+
+        .header-dropdown-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 0.5rem 0;
+        }
+
+        .header-dropdown-item.logout {
+            color: var(--danger);
+        }
+
+        @media (max-width: 768px) {
+            .header-user-name {
+                display: none;
+            }
+
+            .header-user-profile-btn {
+                padding: 0.3rem;
+            }
+
+            .header-dropdown {
+                right: 0;
+                left: auto;
+            }
+        }
     </style>
 </head>
 <body>
@@ -835,18 +975,54 @@
             </div>
         </div>
         <div class="profile-header-actions">
-            <button class="header-btn" onclick="openEditModal()">
-                <i class="fas fa-edit"></i>
-                دەستکاریکرنا پرۆفایلێ
-            </button>
-            <button class="header-btn" onclick="logout()">
-                <i class="fas fa-sign-out-alt"></i>
-                دەرچوون
-            </button>
-            <button class="header-btn danger" onclick="deleteAccount()">
-                <i class="fas fa-trash"></i>
-                سڕینەڤا هەژمارێ
-            </button>
+            <!-- Navigation Icons -->
+            <a href="/" class="nav-icon-btn" title="سەرەکی">
+                <i class="fas fa-home"></i>
+            </a>
+            <a href="/Quran.html" class="nav-icon-btn" title="قورئان">
+                <i class="fas fa-book-quran"></i>
+            </a>
+            <a href="/tv.html" class="nav-icon-btn" title="دەنگێ ئیسلامێ">
+                <i class="fas fa-tv"></i>
+            </a>
+
+            <!-- Profile Dropdown -->
+            <div class="header-profile-dropdown">
+                <div class="header-user-profile-btn" onclick="toggleHeaderDropdown(event)">
+                    <img id="headerDropdownAvatar" class="header-user-avatar" src="" alt="User">
+                    <span id="headerDropdownName" class="header-user-name"></span>
+                    <i class="fas fa-chevron-down" style="color: var(--text-muted); font-size: 0.8rem;"></i>
+
+                    <!-- Dropdown Menu -->
+                    <div class="header-dropdown" id="headerDropdown" onclick="event.stopPropagation()">
+                        <div class="header-dropdown-header">
+                            <div class="header-dropdown-name" id="dropdownHeaderName"></div>
+                            <div class="header-dropdown-email" id="dropdownHeaderEmail"></div>
+                        </div>
+                        <a href="/profile.html" class="header-dropdown-item">
+                            <i class="fas fa-user"></i>
+                            پرۆفایل
+                        </a>
+                        <div class="header-dropdown-item" onclick="openEditModal()">
+                            <i class="fas fa-edit"></i>
+                            دەستکاریکرنا پرۆفایلێ
+                        </div>
+                        <a href="/settings.html" class="header-dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            رێکخستن
+                        </a>
+                        <a href="/bookmarks.html" class="header-dropdown-item">
+                            <i class="fas fa-bookmark"></i>
+                            نیشانەکراو
+                        </a>
+                        <div class="header-dropdown-divider"></div>
+                        <div class="header-dropdown-item logout" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            دەرچوون
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -1178,6 +1354,23 @@
         let userProfile = null;
 
         // Load user data
+        // Toggle header dropdown
+        function toggleHeaderDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('headerDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('headerDropdown');
+            const profileBtn = document.querySelector('.header-user-profile-btn');
+
+            if (dropdown && !profileBtn.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
         async function loadUserProfile() {
             const user = localStorage.getItem('user');
             if (!user) {
@@ -1189,10 +1382,18 @@
 
             currentUser = JSON.parse(user);
 
+            const avatar = currentUser.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${currentUser.name}`;
+
             // Set header info
-            document.getElementById('headerAvatar').src = currentUser.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${currentUser.name}`;
+            document.getElementById('headerAvatar').src = avatar;
             document.getElementById('headerName').textContent = currentUser.name;
             document.getElementById('headerEmail').textContent = currentUser.email;
+
+            // Set dropdown header info
+            document.getElementById('headerDropdownAvatar').src = avatar;
+            document.getElementById('headerDropdownName').textContent = currentUser.name;
+            document.getElementById('dropdownHeaderName').textContent = currentUser.name;
+            document.getElementById('dropdownHeaderEmail').textContent = currentUser.email;
 
             // Load profile from Supabase
             if (supabaseClient) {
