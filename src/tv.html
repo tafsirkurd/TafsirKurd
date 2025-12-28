@@ -27,6 +27,9 @@
     <link rel="stylesheet" href="/assets/fontawesome/all.min.css">
     <link rel="stylesheet" href="/css/tv.css">
 
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         /* ===== CSS VARIABLES ===== */
         :root {
@@ -1736,6 +1739,123 @@
             }
         }
 
+        /* ===== USER PROFILE DROPDOWN ===== */
+        .user-profile-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .user-profile-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .user-name {
+            color: #ffffff;
+            font-weight: 500;
+            font-size: 0.9rem;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            min-width: 220px;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .profile-dropdown.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .profile-dropdown-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        .profile-dropdown-name {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-dropdown-email {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .profile-dropdown-item {
+            padding: 0.875rem 1rem;
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: background 0.3s;
+            cursor: pointer;
+        }
+
+        .profile-dropdown-item:hover {
+            background: var(--bg);
+        }
+
+        .profile-dropdown-item i {
+            width: 20px;
+            font-size: 1.1rem;
+        }
+
+        .profile-dropdown-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 0.5rem 0;
+        }
+
+        .profile-dropdown-item.logout {
+            color: var(--danger);
+        }
+
+        @media (max-width: 768px) {
+            .user-name {
+                display: none;
+            }
+
+            .user-profile-btn {
+                padding: 0.3rem;
+            }
+
+            .profile-dropdown {
+                right: 0;
+                left: auto;
+            }
+        }
+
         /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar {
             width: 10px;
@@ -2328,9 +2448,43 @@
                 <button class="icon-btn" id="themeToggle" aria-label="Toggle theme" title="گۆڕینی ڕووناکی">
                     <i class="fas fa-sun"></i>
                 </button>
-                <a href="/profile.html" class="icon-btn" aria-label="Profile" title="پرۆفایل">
-                    <i class="fas fa-user"></i>
-                </a>
+
+                <!-- Login Button (shown when not authenticated) -->
+                <button class="icon-btn" id="loginBtn" onclick="openAuthModal()" aria-label="Login" title="چوونەژوورەوە" style="display: none;">
+                    <i class="fas fa-sign-in-alt"></i>
+                </button>
+
+                <!-- User Profile (shown when authenticated) -->
+                <div class="user-profile-btn" id="userProfileBtn" style="display: none;" onclick="toggleProfileDropdown()">
+                    <img id="userAvatar" class="user-avatar" src="" alt="User">
+                    <span id="userName" class="user-name"></span>
+                    <i class="fas fa-chevron-down" style="color: rgba(255,255,255,0.7); font-size: 0.8rem;"></i>
+
+                    <!-- Profile Dropdown -->
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="profile-dropdown-header">
+                            <div class="profile-dropdown-name" id="dropdownName"></div>
+                            <div class="profile-dropdown-email" id="dropdownEmail"></div>
+                        </div>
+                        <a href="/profile.html" class="profile-dropdown-item">
+                            <i class="fas fa-user"></i>
+                            پرۆفایل
+                        </a>
+                        <a href="/settings.html" class="profile-dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            رێکخستن
+                        </a>
+                        <a href="/bookmarks.html" class="profile-dropdown-item">
+                            <i class="fas fa-bookmark"></i>
+                            نیشانەکراو
+                        </a>
+                        <div class="profile-dropdown-divider"></div>
+                        <div class="profile-dropdown-item logout" onclick="logoutUser()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            دەرچوون
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -2853,6 +3007,220 @@
     <script>
         // Set current year in footer
         document.getElementById('year').textContent = new Date().getFullYear();
+
+        // ===== AUTHENTICATION SYSTEM =====
+        const supabaseUrl = 'https://nvwgepkhzobgwnzibpvq.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d2dlcGtoemJnZ3duemlicHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ3MDgzNzIsImV4cCI6MjA1MDI4NDM3Mn0.FJuZ7bPDIzLHN9n6H44JGDxmH_bLOWXgVDmw1qs8HFA';
+        let supabaseClient = null;
+        let currentUser = null;
+
+        // Initialize Supabase
+        async function initSupabase() {
+            if (typeof window.supabase !== 'undefined') {
+                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                console.log('✅ Supabase initialized on TV page');
+                return true;
+            }
+            return false;
+        }
+
+        // Check authentication status
+        async function checkAuth() {
+            await initSupabase();
+
+            // Check localStorage first
+            const user = localStorage.getItem('user');
+            const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+
+            if (user && isAuthenticated) {
+                currentUser = JSON.parse(user);
+                displayUserProfile();
+                return true;
+            }
+
+            // Check Supabase session
+            if (supabaseClient) {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) {
+                    currentUser = {
+                        sub: session.user.id,
+                        email: session.user.email,
+                        name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email,
+                        picture: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture
+                    };
+                    localStorage.setItem('user', JSON.stringify(currentUser));
+                    localStorage.setItem('isAuthenticated', 'true');
+                    displayUserProfile();
+                    return true;
+                }
+            }
+
+            // No authentication found
+            displayLoginButton();
+            return false;
+        }
+
+        // Display user profile in nav
+        function displayUserProfile() {
+            document.getElementById('loginBtn').style.display = 'none';
+            document.getElementById('userProfileBtn').style.display = 'flex';
+
+            const avatar = currentUser.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${currentUser.name}`;
+            document.getElementById('userAvatar').src = avatar;
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('dropdownName').textContent = currentUser.name;
+            document.getElementById('dropdownEmail').textContent = currentUser.email;
+        }
+
+        // Display login button
+        function displayLoginButton() {
+            document.getElementById('loginBtn').style.display = 'flex';
+            document.getElementById('userProfileBtn').style.display = 'none';
+        }
+
+        // Toggle profile dropdown
+        function toggleProfileDropdown() {
+            event.stopPropagation();
+            const dropdown = document.getElementById('profileDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('profileDropdown');
+            const profileBtn = document.getElementById('userProfileBtn');
+
+            if (dropdown && !profileBtn.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Open auth modal
+        function openAuthModal() {
+            document.getElementById('authModal').classList.add('active');
+        }
+
+        // Close auth modal
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.remove('active');
+        }
+
+        // Google Sign In
+        async function signInWithGoogle() {
+            if (!supabaseClient) {
+                alert('هەلە: Supabase نەهاتە دەستپێکرن');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/tv.html',
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent',
+                        }
+                    }
+                });
+
+                if (error) throw error;
+            } catch (error) {
+                console.error('Google sign in error:', error);
+                alert('هەلە د چوونەژوورەوە دا: ' + error.message);
+            }
+        }
+
+        // Email Sign Up
+        async function signUpWithEmail(event) {
+            event.preventDefault();
+            const email = document.getElementById('authEmail').value;
+
+            if (!supabaseClient) {
+                alert('هەلە: Supabase نەهاتە دەستپێکرن');
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient.auth.signInWithOtp({
+                    email: email,
+                    options: {
+                        emailRedirectTo: window.location.origin + '/tv.html',
+                    }
+                });
+
+                if (error) throw error;
+
+                alert('لینکەکا چوونەژوورەوە هاتە ناردنەڤە بۆ ئیمەیلێ تە. تکایە ئیمەیلا خوە بسەلمێنە.');
+                closeAuthModal();
+            } catch (error) {
+                console.error('Email signup error:', error);
+                alert('هەلە: ' + error.message);
+            }
+        }
+
+        // Logout
+        async function logoutUser() {
+            try {
+                if (supabaseClient) {
+                    await supabaseClient.auth.signOut();
+                }
+
+                // Clear localStorage (except Quran data)
+                localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('user');
+
+                // Clear Supabase keys
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if ((key.includes('supabase') || key.includes('sb-')) && !key.includes('quran_data')) {
+                        keysToRemove.push(key);
+                    }
+                }
+                keysToRemove.forEach(key => localStorage.removeItem(key));
+
+                sessionStorage.clear();
+
+                // Redirect to home or show login button
+                displayLoginButton();
+                alert('ب سەرکەفتی دەرچوویت');
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        // Show sign in form (for future implementation)
+        function showSignIn() {
+            // Could toggle between sign up and sign in forms
+            console.log('Show sign in form');
+        }
+
+        // Initialize auth on page load
+        window.addEventListener('load', async () => {
+            await checkAuth();
+
+            // Listen for auth state changes
+            if (supabaseClient) {
+                supabaseClient.auth.onAuthStateChange((event, session) => {
+                    console.log('Auth state changed:', event);
+                    if (event === 'SIGNED_IN' && session) {
+                        currentUser = {
+                            sub: session.user.id,
+                            email: session.user.email,
+                            name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email,
+                            picture: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture
+                        };
+                        localStorage.setItem('user', JSON.stringify(currentUser));
+                        localStorage.setItem('isAuthenticated', 'true');
+                        displayUserProfile();
+                        closeAuthModal();
+                    } else if (event === 'SIGNED_OUT') {
+                        displayLoginButton();
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
