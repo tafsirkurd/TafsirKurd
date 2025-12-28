@@ -5475,7 +5475,15 @@
                         // Load profile from Supabase profiles table
                         if (window.authRedirect) {
                             console.log('📋 Loading profile from database...');
-                            const profile = await window.authRedirect.getUserProfile();
+                            let profile = await window.authRedirect.getUserProfile();
+
+                            // If profile doesn't exist, create it
+                            if (!profile) {
+                                console.warn('⚠️ No profile found - creating one...');
+                                await window.authRedirect.createProfile(session.user);
+                                // Try loading again
+                                profile = await window.authRedirect.getUserProfile();
+                            }
 
                             if (profile) {
                                 console.log('✅ Profile loaded:', profile.email);
@@ -5496,10 +5504,40 @@
                                 onSignInSuccess();
                                 return;
                             } else {
-                                console.warn('⚠️ No profile found for user');
+                                console.error('❌ Failed to create/load profile');
+                                // Fallback to session user data
+                                currentUser = {
+                                    sub: session.user.id,
+                                    name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email.split('@')[0],
+                                    email: session.user.email,
+                                    picture: session.user.user_metadata?.avatar_url || null
+                                };
+
+                                localStorage.setItem('isAuthenticated', 'true');
+                                localStorage.setItem('user', JSON.stringify(currentUser));
+
+                                isUserAuthenticated = true;
+                                console.log('✅ User authenticated via session fallback');
+                                onSignInSuccess();
+                                return;
                             }
                         } else {
-                            console.warn('⚠️ authRedirect not available yet');
+                            console.warn('⚠️ authRedirect not available yet - using session data');
+                            // Fallback to session user data if authRedirect isn't loaded
+                            currentUser = {
+                                sub: session.user.id,
+                                name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email.split('@')[0],
+                                email: session.user.email,
+                                picture: session.user.user_metadata?.avatar_url || null
+                            };
+
+                            localStorage.setItem('isAuthenticated', 'true');
+                            localStorage.setItem('user', JSON.stringify(currentUser));
+
+                            isUserAuthenticated = true;
+                            console.log('✅ User authenticated via session (authRedirect unavailable)');
+                            onSignInSuccess();
+                            return;
                         }
                     } else {
                         console.log('ℹ️ No Supabase session found');
