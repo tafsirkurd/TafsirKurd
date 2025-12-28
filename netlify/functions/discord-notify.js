@@ -94,6 +94,29 @@ exports.handler = async (event, context) => {
                     inline: false
                 });
             }
+            if (data.registrationSource) {
+                const sourceEmojis = {
+                    'email': '📧',
+                    'google': '🔐',
+                    'quran': '📖',
+                    'tv': '📺'
+                };
+                fields.push({
+                    name: '📝 Registration Source',
+                    value: `${sourceEmojis[data.registrationSource] || '📝'} ${data.registrationSource.toUpperCase()}`,
+                    inline: true
+                });
+            }
+            if (data.timestamp) {
+                fields.push({
+                    name: '🕐 Timestamp',
+                    value: new Date(data.timestamp).toLocaleString('en-US', {
+                        dateStyle: 'medium',
+                        timeStyle: 'short'
+                    }),
+                    inline: true
+                });
+            }
             if (data.currentSurah) {
                 let reading = `Surah ${data.currentSurah}`;
                 if (data.currentAyah) reading += `:${data.currentAyah}`;
