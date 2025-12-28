@@ -127,7 +127,8 @@ exports.handler = async (event, context) => {
             email_confirm: true, // Mark email as confirmed immediately
             user_metadata: {
                 full_name: name,
-                display_name: name
+                display_name: name,
+                registration_source: 'email' // Track that this is an email signup
             }
         });
 

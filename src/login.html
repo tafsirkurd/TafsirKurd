@@ -31,6 +31,9 @@
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- Auth Redirect Handler -->
+    <script src="/utils/auth-redirect.js" defer></script>
+
     <style>
         :root {
             --primary: #000000;
@@ -867,8 +870,14 @@
                 if (error) throw error;
 
                 showMessage('سەرکەفتی! تو هاتی ژوورڤە...', 'success');
-                setTimeout(() => {
-                    window.location.href = '/quran.html';
+
+                // Wait for auth redirect handler to load
+                setTimeout(async () => {
+                    if (window.authRedirect) {
+                        await window.authRedirect.handlePostLoginRedirect('/quran.html');
+                    } else {
+                        window.location.href = '/quran.html';
+                    }
                 }, 1500);
 
             } catch (error) {
@@ -1148,9 +1157,13 @@
                 // Success!
                 showMessage(
                     '🎉 سەرکەفتی!<br><br>' +
-                    'ئەژمارەکەت دروستکرا و چالاککرا. ئێستا دەتوانیت بچیتە ژوورەوە.',
+                    'ئەژمارەکەت دروستکرا و چالاککرا. دەتوانیت ئێستا بچیتە ژوورەوە.',
                     'success'
                 );
+
+                // Store password before clearing signup data
+                const userPassword = signupData.password;
+                const userEmail = data.user.email;
 
                 // Clear signup data
                 signupData = null;
@@ -1163,9 +1176,30 @@
                 document.getElementById('signUpEmail').value = '';
                 document.getElementById('signUpPassword').value = '';
 
-                // Switch to sign in form after 2 seconds
-                setTimeout(() => {
-                    showForm('signin');
+                // Auto sign in the user after account creation
+                setTimeout(async () => {
+                    try {
+                        const { error: signInError } = await supabaseClient.auth.signInWithPassword({
+                            email: userEmail,
+                            password: userPassword
+                        });
+
+                        if (signInError) {
+                            // If auto sign-in fails, just show sign-in form
+                            showForm('signin');
+                            showMessage('حسابەکەت دروستکرا. تکایە بچۆ ژوورەوە.', 'info');
+                        } else {
+                            // Auto sign-in successful, redirect with profile check
+                            if (window.authRedirect) {
+                                await window.authRedirect.handlePostLoginRedirect('/quran.html');
+                            } else {
+                                window.location.href = '/quran.html';
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Auto sign-in error:', e);
+                        showForm('signin');
+                    }
                 }, 2000);
 
             } catch (error) {
