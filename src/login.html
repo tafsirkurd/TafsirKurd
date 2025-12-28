@@ -2,68 +2,62 @@
 <html dir="rtl" lang="ku">
 <head>
     <script src="/utils/theme-loader.js"></script>
-    <script src="/utils/scroll-position.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="چوونە ژوورڤە بۆ تەفسیر کورد">
     <meta name="theme-color" content="#000000">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
     <title>چوونە ژوورڤە - تەفسیر کورد</title>
 
-    <!-- Favicons - High quality with SVG for perfect scaling -->
+    <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
     <link rel="icon" type="image/png" sizes="96x96" href="assets/images/favicon-96x96.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="assets/images/web-app-manifest-512x512.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/web-app-manifest-192x192.png">
-    <link rel="shortcut icon" href="assets/images/favicon.ico" type="image/x-icon">
 
-    <!-- Console Cleaner - Clean console in production -->
-    <script src="/utils/console-cleaner.js"></script>
+    <!-- Resource Hints -->
+    <link rel="dns-prefetch" href="https://gijupzejtbpifjzwadee.supabase.co">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 
-    <!-- Kurdish Number Utility - Convert all numbers to Kurdish numerals -->
-    <script src="/utils/kurdish-numbers.js"></script>
-    <script src="/utils/auto-kurdish-numbers.js"></script>
-
-    <!-- Critical Font Preloading - Instant font display, zero FOIT/FOUT -->
+    <!-- Fonts -->
     <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=16" as="font" type="font/woff2" crossorigin>
-
-    <!-- Local Fonts - Zero external requests, instant loading -->
     <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
-
-    <!-- Local Font Awesome - Zero external requests -->
     <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
 
-    <!-- Cloudflare Turnstile - Bot Protection -->
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="/config/google-config.js"></script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root {
             --primary: #000000;
+            --primary-light: #333333;
             --accent: #ffffff;
             --bg: #fafafa;
             --card-bg: #ffffff;
             --text: #000000;
             --text-muted: #666666;
             --border: #e8e8e8;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
-            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         [data-theme="dark"] {
             --primary: #ffffff;
+            --primary-light: #cccccc;
             --accent: #000000;
             --bg: #0a0a0a;
             --card-bg: #1a1a1a;
             --text: #ffffff;
             --text-muted: #b0b0b0;
             --border: #2a2a2a;
+            --shadow: 0 4px 20px rgba(255, 255, 255, 0.05);
             --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.6);
         }
 
@@ -74,103 +68,27 @@
         }
 
         body {
-            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
             background: var(--bg);
             min-height: 100vh;
-            max-height: 100vh;
             color: var(--text);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 15px;
-            position: relative;
+            padding: 20px;
             overflow-x: hidden;
-            overflow-y: auto;
         }
 
-        /* Animated Background */
-        .bg-animation {
-            position: absolute;
+        .auth-container {
+            max-width: 450px;
             width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: 0;
+            animation: fadeInUp 0.5s ease-out;
         }
 
-        .shape {
-            position: absolute;
-            opacity: 0.1;
-            animation: float 20s infinite ease-in-out;
-        }
-
-        .shape:nth-child(1) {
-            width: 200px;
-            height: 200px;
-            background: var(--primary);
-            border-radius: 50%;
-            top: 10%;
-            left: 10%;
-            animation-delay: 0s;
-        }
-
-        .shape:nth-child(2) {
-            width: 150px;
-            height: 150px;
-            background: var(--primary);
-            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-            top: 60%;
-            right: 10%;
-            animation-delay: 2s;
-        }
-
-        .shape:nth-child(3) {
-            width: 180px;
-            height: 180px;
-            background: var(--primary);
-            border-radius: 50%;
-            bottom: 10%;
-            left: 50%;
-            animation-delay: 4s;
-        }
-
-        .shape:nth-child(4) {
-            width: 120px;
-            height: 120px;
-            background: var(--primary);
-            border-radius: 50%;
-            top: 30%;
-            right: 30%;
-            animation-delay: 1s;
-        }
-
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0) translateX(0) rotate(0deg) scale(1);
-            }
-            25% {
-                transform: translateY(-30px) translateX(20px) rotate(90deg) scale(1.1);
-            }
-            50% {
-                transform: translateY(0) translateX(40px) rotate(180deg) scale(1);
-            }
-            75% {
-                transform: translateY(30px) translateX(20px) rotate(270deg) scale(0.9);
-            }
-        }
-
-        .login-container {
-            max-width: 500px;
-            width: 100%;
-            position: relative;
-            z-index: 1;
-            animation: slideUp 0.6s ease-out;
-            margin: auto;
-        }
-
-        @keyframes slideUp {
+        @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
@@ -178,920 +96,931 @@
             }
         }
 
-        .login-header {
+        .auth-header {
             text-align: center;
-            margin-bottom: 18px;
-            color: var(--text);
+            margin-bottom: 2rem;
         }
 
-        .login-title {
-            font-size: 1.7rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            animation: fadeIn 0.8s ease-out;
+        .logo {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 1rem;
+            display: block;
         }
 
-        .login-subtitle {
-            font-size: 0.92rem;
-            line-height: 1.5;
-            max-width: 450px;
-            margin: 0 auto;
-            opacity: 0.95;
-            animation: fadeIn 1s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .login-card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 25px 20px;
-            box-shadow: var(--shadow-lg);
-            border: 3px solid var(--border);
-            backdrop-filter: blur(10px);
-            animation: scaleIn 0.5s ease-out;
-        }
-
-        @keyframes scaleIn {
-            from {
-                transform: scale(0.95);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        .logo-section {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        .logo-section img {
-            width: 55px;
-            height: 55px;
-            margin-bottom: 10px;
-            animation: bounce 2s infinite;
-            object-fit: contain;
-        }
-
-        [data-theme="dark"] .logo-section img {
+        [data-theme="dark"] .logo {
             filter: invert(1) brightness(1.2);
         }
 
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .logo-text {
-            font-size: 1.3rem;
+        .auth-title {
+            font-size: 2rem;
             font-weight: 700;
-            color: var(--primary);
-        }
-
-        .benefits-section {
-            margin: 15px 0;
-        }
-
-        .benefits-title {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--primary);
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .features-list {
-            text-align: right;
-            background: var(--bg);
-            padding: 14px;
-            border-radius: 12px;
-            border: 2px solid var(--border);
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 6px 0;
-            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
             color: var(--text);
-            animation: slideRight 0.5s ease-out backwards;
         }
 
-        .feature-item:nth-child(1) { animation-delay: 0.1s; }
-        .feature-item:nth-child(2) { animation-delay: 0.2s; }
-        .feature-item:nth-child(3) { animation-delay: 0.3s; }
-        .feature-item:nth-child(4) { animation-delay: 0.4s; }
-
-        @keyframes slideRight {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .feature-icon {
-            color: var(--primary);
-            font-weight: 700;
+        .auth-subtitle {
             font-size: 1rem;
-            min-width: 22px;
+            color: var(--text-muted);
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+        .auth-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
         }
 
-        .feature-badge {
-            background: linear-gradient(135deg, #000000 0%, #000000 100%);
-            color: white;
-            padding: 4px 12px;
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--bg);
+            padding: 0.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem;
+            background: transparent;
+            border: none;
             border-radius: 8px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            margin-right: 8px;
-            animation: glow 2s infinite;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--transition);
         }
 
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.5); }
-            50% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.8); }
+        .tab:hover {
+            background: rgba(0, 0, 0, 0.05);
         }
 
-        .google-signin-btn {
+        [data-theme="dark"] .tab:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab.active {
+            background: var(--card-bg);
+            color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .form-input {
             width: 100%;
-            padding: 12px;
+            padding: 1rem;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            color: var(--text);
+            transition: all var(--transition);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] .form-input:focus {
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .password-toggle {
+            position: relative;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .auth-button {
+            width: 100%;
+            padding: 1rem;
             background: var(--primary);
             color: var(--accent);
             border: none;
             border-radius: 12px;
-            font-size: 0.95rem;
+            font-family: inherit;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
+            transition: all var(--transition);
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            transition: all var(--transition);
-            margin: 15px 0;
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
-            position: relative;
-            overflow: hidden;
+            gap: 0.75rem;
         }
 
-        .google-signin-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.15);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        [data-theme="dark"] .google-signin-btn::before {
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        .google-signin-btn:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .google-signin-btn:hover {
+        .auth-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--shadow-lg);
         }
 
-        .google-signin-btn span {
-            position: relative;
-            z-index: 1;
+        .auth-button:active {
+            transform: translateY(0);
         }
 
-        .google-signin-btn i {
-            position: relative;
-            z-index: 1;
+        .auth-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
-        .divider {
-            text-align: center;
-            margin: 12px 0;
-            position: relative;
-        }
-
-        .divider-text {
-            background: var(--card-bg);
-            padding: 0 20px;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--border), transparent);
-        }
-
-        .back-link {
-            text-align: center;
-            margin: 12px 0 0 0;
-        }
-
-        .back-btn {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 9px 18px;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            background: var(--bg);
-            border: 2px solid var(--border);
-            font-size: 0.85rem;
-        }
-
-        .back-btn:hover {
-            background: var(--primary);
-            color: var(--accent);
-            border-color: var(--primary);
-            transform: translateX(5px);
-        }
-
-        .privacy-text {
-            text-align: center;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid var(--border);
-        }
-
-        .privacy-link {
-            color: var(--primary);
-            text-decoration: none;
-            border-bottom: 1px solid var(--primary);
-            transition: opacity 0.3s ease;
-        }
-
-        .privacy-link:hover {
-            opacity: 0.7;
-        }
-
-        .notification {
-            position: fixed;
-            right: 20px;
-            padding: 18px 30px;
-            background: linear-gradient(135deg, #000000 0%, #333333 100%);
-            color: white;
-            border-radius: 15px;
-            font-weight: 600;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            animation: slideInRight 0.4s ease;
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
-
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(100%);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes slideOutRight {
-            from {
-                opacity: 1;
-                transform: translateX(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateX(100%);
-            }
-        }
-
-        /* Loading Spinner */
-        .loading-spinner {
-            display: none;
-            width: 20px;
-            height: 20px;
-            border: 3px solid var(--border);
-            border-top-color: var(--accent);
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--accent);
+            border-top-color: transparent;
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            animation: spin 0.6s linear infinite;
+            display: none;
+        }
+
+        .auth-button.loading .spinner {
+            display: block;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        .google-signin-btn.loading .loading-spinner {
-            display: block;
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
         }
 
-        .google-signin-btn.loading span {
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .google-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--card-bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .google-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .google-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .forgot-password {
+            text-align: left;
+            margin-top: -0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .forgot-password a {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .back-link a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color var(--transition);
+            cursor: pointer;
+        }
+
+        .back-link a:hover {
+            color: var(--primary);
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
             display: none;
         }
 
-        /* Tablet */
-        @media (max-width: 992px) {
-            .login-card {
-                padding: 35px 28px;
-            }
-
-            .login-title {
-                font-size: 1.9rem;
-            }
-
-            .benefits-title {
-                font-size: 1rem;
-            }
+        .message strong {
+            font-weight: 600;
         }
 
-        /* Mobile Large */
+        .message.success {
+            background: rgba(46, 204, 113, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+            display: block;
+        }
+
+        .message.error {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+            display: block;
+        }
+
+        .message.info {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid #3498db;
+            color: #3498db;
+            display: block;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            body {
-                padding: 12px;
+            .auth-card {
+                padding: 2rem 1.5rem;
             }
 
-            .login-card {
-                padding: 28px 22px;
-                border-radius: 20px;
-            }
-
-            .login-title {
-                font-size: 1.7rem;
-                margin-bottom: 10px;
-            }
-
-            .login-subtitle {
-                font-size: 0.95rem;
-            }
-
-            .benefits-section {
-                margin: 18px 0;
-            }
-
-            .benefits-title {
-                font-size: 0.98rem;
-                margin-bottom: 10px;
-            }
-
-            .features-list {
-                padding: 16px;
-            }
-
-            .feature-item {
-                font-size: 0.88rem;
-                padding: 7px 0;
-                gap: 10px;
-            }
-
-            .feature-icon {
-                font-size: 1.05rem;
-                min-width: 23px;
-            }
-
-            .feature-badge {
-                font-size: 0.7rem;
-                padding: 3px 9px;
-            }
-
-            .google-signin-btn {
-                font-size: 0.98rem;
-                padding: 14px;
-                margin: 18px 0;
-            }
-
-            .logo-section img {
-                width: 55px;
-                height: 55px;
-                object-fit: contain;
-            }
-
-            .logo-text {
-                font-size: 1.4rem;
-            }
-
-            .notification {
-                top: 10px;
-                right: 10px;
-                left: 10px;
-                text-align: center;
+            .auth-title {
+                font-size: 1.75rem;
             }
         }
 
-        /* Mobile Small */
         @media (max-width: 480px) {
             body {
-                padding: 10px;
+                padding: 15px;
             }
 
-            .login-container {
-                max-width: 100%;
+            .auth-card {
+                padding: 1.75rem 1.25rem;
             }
 
-            .login-card {
-                padding: 25px 20px;
-                border-radius: 18px;
-            }
-
-            .login-title {
+            .auth-title {
                 font-size: 1.5rem;
             }
 
-            .login-subtitle {
-                font-size: 0.88rem;
-            }
-
-            .logo-section img {
-                width: 55px;
-                height: 55px;
-                margin-bottom: 15px;
-                object-fit: contain;
-            }
-
-            .logo-text {
-                font-size: 1.3rem;
-            }
-
-            .benefits-section {
-                margin: 18px 0;
-            }
-
-            .benefits-title {
-                font-size: 0.95rem;
-                margin-bottom: 10px;
-            }
-
-            .features-list {
-                padding: 15px;
-            }
-
-            .feature-item {
-                font-size: 0.85rem;
-                gap: 10px;
-                padding: 6px 0;
-            }
-
-            .feature-icon {
-                font-size: 1rem;
-                min-width: 22px;
-            }
-
-            .feature-badge {
-                font-size: 0.68rem;
-                padding: 3px 8px;
-            }
-
-            .google-signin-btn {
-                font-size: 0.95rem;
-                padding: 15px;
-                margin: 20px 0 18px 0;
-            }
-
-            .back-btn {
-                padding: 10px 20px;
-                font-size: 0.95rem;
-            }
-
-            .privacy-text {
-                font-size: 0.8rem;
-                margin-top: 20px;
-                padding-top: 20px;
-            }
-
-            .shape {
-                display: none;
-            }
-        }
-
-        /* Mobile Extra Small */
-        @media (max-width: 360px) {
-            .login-card {
-                padding: 20px 15px;
-            }
-
-            .login-title {
-                font-size: 1.3rem;
-            }
-
-            .benefits-title {
-                font-size: 0.88rem;
-            }
-
-            .feature-item {
-                font-size: 0.8rem;
-            }
-
-            .google-signin-btn {
-                font-size: 0.9rem;
-                padding: 14px;
+            .form-input,
+            .auth-button,
+            .google-btn {
+                padding: 0.875rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="bg-animation">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-    </div>
-
-    <div class="login-container">
-        <div class="login-header">
-            <h1 class="login-title">ب خێر بێی بۆ تەفسیر کورد</h1>
-            <p class="login-subtitle">
-                چوونە ژوورڤە بکە بۆ دەستگەهشتن ب تایبەتمەندییێن تایبەت
-            </p>
+    <div class="auth-container">
+        <div class="auth-header">
+            <img src="assets/images/logo.png" alt="تەفسیر کورد" class="logo">
+            <h1 class="auth-title">تەفسیر کورد</h1>
+            <p class="auth-subtitle">ب خێر بێی بۆ پلاتفۆرما تەفسیرا قورئانێ</p>
         </div>
 
-        <div class="login-card">
-            <div class="logo-section">
-                <img src="assets/images/logo.png" alt="تەفسیر کورد" width="150" height="150">
-                <div class="logo-text">تەفسیر کورد</div>
+        <div class="auth-card">
+            <div id="messageContainer"></div>
+
+            <!-- Tabs (only shown for signin/signup) -->
+            <div class="tabs" id="authTabs">
+                <button class="tab active" onclick="showForm('signin')">چوونە ژوورڤە</button>
+                <button class="tab" onclick="showForm('signup')">حسابێ نوی</button>
             </div>
 
-            <div class="benefits-section">
-                <h3 class="benefits-title">چ دێ ب دەستڤە ئینی پشتی چوونە ژوورڤە:</h3>
-                <div class="features-list">
-                    <div class="feature-item">
-                        <span class="feature-icon">✦</span>
-                        <div>
-                            <span class="feature-badge">نوی!</span>
-                            تێبینیێن تایبەت و نیشانەکرن
+            <!-- Sign In Form -->
+            <div class="form-section active" id="signinForm">
+                <form onsubmit="return handleEmailSignIn(event)">
+                    <div class="form-group">
+                        <label class="form-label">ئیمەیل</label>
+                        <input
+                            type="email"
+                            class="form-input"
+                            id="signInEmail"
+                            placeholder="ئیمەیلا خوە بنڤیسە"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">پاسوۆرد</label>
+                        <div class="password-toggle">
+                            <input
+                                type="password"
+                                class="form-input"
+                                id="signInPassword"
+                                placeholder="پاسوۆردا خوە بنڤیسە"
+                                required
+                            >
+                            <button type="button" class="password-toggle-btn" onclick="togglePassword('signInPassword')">
+                                <i class="fas fa-eye"></i>
+                            </button>
                         </div>
                     </div>
-                    <div class="feature-item">
-                        <span class="feature-icon">✦</span>
-                        <div>شوێنکەفتنا ئارمانج و پێشکەفتنا تە</div>
+
+                    <div class="forgot-password">
+                        <a onclick="showForm('forgot')">پاسوۆردا خوە ژبیرکری؟</a>
                     </div>
-                    <div class="feature-item">
-                        <span class="feature-icon">✦</span>
-                        <div>هەلگرتنا خواندنەکا بەردەوام</div>
+
+                    <button type="submit" class="auth-button" id="signInBtn">
+                        <span class="spinner"></span>
+                        <span>چوونە ژوورڤە</span>
+                    </button>
+                </form>
+
+                <div class="divider">یان</div>
+
+                <button class="google-btn" onclick="signInWithGoogle()">
+                    <svg class="google-icon" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    <span>چوونە ژوورڤە ب Google</span>
+                </button>
+            </div>
+
+            <!-- Sign Up Form -->
+            <div class="form-section" id="signupForm">
+                <form onsubmit="return handleEmailSignUp(event)">
+                    <div class="form-group">
+                        <label class="form-label">ناڤ</label>
+                        <input
+                            type="text"
+                            class="form-input"
+                            id="signUpName"
+                            placeholder="ناڤا خوە بنڤیسە"
+                            required
+                        >
                     </div>
-                    <div class="feature-item">
-                        <span class="feature-icon">✦</span>
-                        <div>هەڤدەمکرن د ناڤبەرا هەمی ئامیرێن تە دا</div>
+
+                    <div class="form-group">
+                        <label class="form-label">ئیمەیل</label>
+                        <input
+                            type="email"
+                            class="form-input"
+                            id="signUpEmail"
+                            placeholder="ئیمەیلا خوە بنڤیسە"
+                            required
+                        >
                     </div>
-                    <div class="feature-item">
-                        <span class="feature-icon">✦</span>
-                        <div>دەستگەهشتن ب تایبەتمەندیێن پێشکەفتی</div>
+
+                    <div class="form-group">
+                        <label class="form-label">پاسوۆرد</label>
+                        <div class="password-toggle">
+                            <input
+                                type="password"
+                                class="form-input"
+                                id="signUpPassword"
+                                placeholder="پاسوۆردێ بهێز دروستکە (کەمتر ٦ پیت)"
+                                minlength="6"
+                                required
+                            >
+                            <button type="button" class="password-toggle-btn" onclick="togglePassword('signUpPassword')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="feature-item">
-                        <span class="feature-icon">✦</span>
-                        <div>ئاگەهدارکرنا رۆژانە بۆ خواندنێ</div>
-                    </div>
+
+                    <button type="submit" class="auth-button" id="signUpBtn">
+                        <span class="spinner"></span>
+                        <span>دروستکرنا حساب</span>
+                    </button>
+                </form>
+
+                <div class="divider">یان</div>
+
+                <button class="google-btn" onclick="signInWithGoogle()">
+                    <svg class="google-icon" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    <span>دروستکرنا حساب ب Google</span>
+                </button>
+
+                <div class="back-link">
+                    <a onclick="showForm('signin')">ژبەر حساب هەیە؟ چوونە ژوورڤە</a>
                 </div>
             </div>
 
-            <!-- Cloudflare Turnstile - Hidden bot protection -->
-            <!-- Runs in background, completely invisible to users -->
-            <div id="turnstile-container" style="display: none;">
-                <div class="cf-turnstile"
-                     data-sitekey="0x4AAAAAAB_upPnAMJiWukSQ"
-                     data-callback="onTurnstileSuccess"
-                     data-theme="light"
-                     data-size="compact">
+            <!-- Forgot Password Form -->
+            <div class="form-section" id="forgotForm">
+                <form onsubmit="return handleForgotPassword(event)">
+                    <div class="form-group">
+                        <label class="form-label">ئیمەیل</label>
+                        <input
+                            type="email"
+                            class="form-input"
+                            id="forgotEmail"
+                            placeholder="ئیمەیلا خوە بنڤیسە"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" class="auth-button" id="forgotBtn">
+                        <span class="spinner"></span>
+                        <span>شاندنا لینکا ڤەگەهاندن</span>
+                    </button>
+                </form>
+
+                <div class="back-link">
+                    <a onclick="showForm('signin')">
+                        <i class="fas fa-arrow-right"></i>
+                        گەڕیان ڤە بۆ چوونە ژوورڤە
+                    </a>
                 </div>
-            </div>
-
-            <button class="google-signin-btn" id="googleSignInBtn" onclick="startGoogleSignIn()">
-                <div class="loading-spinner"></div>
-                <i class="fab fa-google"></i>
-                <span>چوونە ژوورڤە ب Google</span>
-            </button>
-
-            <div class="divider">
-                <span class="divider-text">یان</span>
             </div>
 
             <div class="back-link">
-                <a href="/quran" class="back-btn">
+                <a href="/quran.html">
                     <i class="fas fa-arrow-right"></i>
-                    گەڕیان ڤە بۆ سەرەتا
+                    گەڕیان ڤە بۆ سەرەکی
                 </a>
             </div>
-
-            <p class="privacy-text">
-                پاراستنا تایبەتمەندیا تە د پێشییێ دایە – ب چوونە ژوورڤە، رازی ی ب
-                <a href="/privacy-policy" class="privacy-link">سیاسەتا تایبەتمەندیێ</a> و
-                <a href="/terms-and-conditions" class="privacy-link">مەرج و بەند</a>مان
-            </p>
         </div>
     </div>
 
     <script>
-        const CLIENT_ID = window.GOOGLE_CONFIG.CLIENT_ID;
+        // Supabase client (initialized securely)
+        let supabaseClient = null;
 
-        let currentUser = null;
-        let tokenClient = null;
-        let turnstileToken = null;
-
-        // Turnstile success callback - INVISIBLE MODE
-        function onTurnstileSuccess(token) {
-            turnstileToken = token;
-            console.log('✅ Turnstile verification successful (invisible mode)');
-        }
-
-        function initGoogleSignIn() {
-            // Initialize OAuth2 token client for popup flow
-            tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: CLIENT_ID,
-                scope: 'openid profile email',
-                callback: handleTokenResponse,
-            });
-        }
-
-        function startGoogleSignIn() {
-            // Turnstile runs in background - don't block user sign-in
-            // Bot protection still active, but users aren't forced to wait
-
-            const btn = document.getElementById('googleSignInBtn');
-            btn.classList.add('loading');
-
+        // Initialize Supabase with secure credentials
+        async function initializeSupabase() {
             try {
-                // Request access token - this opens the Google popup
-                tokenClient.requestAccessToken();
+                // Fetch credentials from secure endpoint
+                const response = await fetch('/.netlify/functions/auth-config');
 
-                // Remove loading state after popup opens
-                setTimeout(() => {
-                    btn.classList.remove('loading');
-                }, 800);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch auth configuration');
+                }
+
+                const config = await response.json();
+
+                if (!config.supabaseUrl || !config.supabaseAnonKey) {
+                    throw new Error('Invalid auth configuration');
+                }
+
+                // Initialize Supabase client
+                supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+                console.log('✅ Supabase initialized securely');
+                return true;
+
             } catch (error) {
-                console.error('Google Sign-In error:', error);
-                btn.classList.remove('loading');
-                showNotification('خەلەتییەک چێبوو، تکایە دووبارە هەول بدە');
+                console.error('❌ Failed to initialize Supabase:', error);
+                showMessage('خەتایەک ڕوویدا لە دامەزراندنی سیستەم. تکایە دواتر هەوڵ بدەرەوە.', 'error');
+                return false;
             }
         }
 
-        async function handleTokenResponse(response) {
-            if (response.error) {
-                console.error('Token error:', response.error);
-                showNotification('چوونە ژوورڤە سەرکەفتی نەبوو');
-                return;
+        // Form switching
+        function showForm(formName) {
+            console.log('Switching to form:', formName);
+
+            // Hide all forms
+            document.querySelectorAll('.form-section').forEach(form => {
+                form.classList.remove('active');
+            });
+
+            // Show target form
+            const targetForm = document.getElementById(formName + 'Form');
+            if (targetForm) {
+                targetForm.classList.add('active');
             }
 
-            const btn = document.getElementById('googleSignInBtn');
-            btn.classList.add('loading');
+            // Update tabs (hide tabs for forgot password)
+            const tabsContainer = document.getElementById('authTabs');
+            if (formName === 'forgot') {
+                tabsContainer.style.display = 'none';
+            } else {
+                tabsContainer.style.display = 'flex';
+
+                // Update active tab
+                document.querySelectorAll('.tab').forEach((tab, index) => {
+                    tab.classList.remove('active');
+                    if ((formName === 'signin' && index === 0) || (formName === 'signup' && index === 1)) {
+                        tab.classList.add('active');
+                    }
+                });
+            }
+
+            clearMessage();
+        }
+
+        // Toggle password visibility
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const btn = input.parentElement.querySelector('.password-toggle-btn i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.classList.remove('fa-eye');
+                btn.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                btn.classList.remove('fa-eye-slash');
+                btn.classList.add('fa-eye');
+            }
+        }
+
+        // Show message
+        function showMessage(message, type = 'info') {
+            const container = document.getElementById('messageContainer');
+            container.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => clearMessage(), 5000);
+        }
+
+        function clearMessage() {
+            document.getElementById('messageContainer').innerHTML = '';
+        }
+
+        // Set loading state
+        function setLoading(buttonId, isLoading) {
+            const btn = document.getElementById(buttonId);
+            if (isLoading) {
+                btn.classList.add('loading');
+                btn.disabled = true;
+            } else {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        // Email Sign In
+        async function handleEmailSignIn(event) {
+            event.preventDefault();
+            clearMessage();
+
+            // Check if Supabase is initialized
+            if (!supabaseClient) {
+                showMessage('سیستەم ئامادە نییە. تکایە پەڕە نوێبکەرەوە.', 'error');
+                return false;
+            }
+
+            const email = document.getElementById('signInEmail').value.trim();
+            const password = document.getElementById('signInPassword').value;
+
+            // Validation
+            if (!email || !password) {
+                showMessage('تکایە ئیمەیل و پاسوۆرد بنڤیسە', 'error');
+                return false;
+            }
+
+            setLoading('signInBtn', true);
 
             try {
-                // Get user info using the access token
-                const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                    headers: {
-                        'Authorization': `Bearer ${response.access_token}`
+                console.log('Attempting sign in for:', email);
+
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                console.log('Sign in response:', { data, error });
+
+                if (error) throw error;
+
+                showMessage('سەرکەفتی! تو هاتی ژوورڤە...', 'success');
+                setTimeout(() => {
+                    window.location.href = '/quran.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error('Sign in error:', error);
+                let errorMessage = 'هەلە د چوونە ژوورڤە دا';
+
+                if (error.message.includes('Invalid login credentials')) {
+                    errorMessage = 'ئیمەیل یان پاسوۆردا نادروست';
+                } else if (error.message.includes('Email not confirmed')) {
+                    errorMessage = 'تکایە ئیمەیلا خوە پشتڕاستکە!<br><br>ئێمە لینکێن پشتڕاستکرنێ نارینە بۆ ئیمەیلا تە. چاڤێ ئیمەیلا خوە بکە و لینکێ کلیک بکە بۆ چالاککرنا ئەژمارێ.';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+
+                showMessage(errorMessage, 'error');
+            } finally {
+                setLoading('signInBtn', false);
+            }
+
+            return false;
+        }
+
+        // Email Sign Up
+        async function handleEmailSignUp(event) {
+            event.preventDefault();
+            clearMessage();
+
+            // Check if Supabase is initialized
+            if (!supabaseClient) {
+                showMessage('سیستەم ئامادە نییە. تکایە پەڕە نوێبکەرەوە.', 'error');
+                return false;
+            }
+
+            const name = document.getElementById('signUpName').value.trim();
+            const email = document.getElementById('signUpEmail').value.trim();
+            const password = document.getElementById('signUpPassword').value;
+
+            // Validation
+            if (!name || !email || !password) {
+                showMessage('تکایە هەمی خانەیان پڕبکە', 'error');
+                return false;
+            }
+
+            if (password.length < 6) {
+                showMessage('پاسوۆرد دڤێ کەمتر ٦ پیت بیت', 'error');
+                return false;
+            }
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showMessage('تکایە ئیمەیلەکا دروست بنڤیسە', 'error');
+                return false;
+            }
+
+            setLoading('signUpBtn', true);
+
+            try {
+                console.log('Starting sign up for:', email);
+
+                // Sign up with email confirmation required
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: name,
+                            display_name: name
+                        },
+                        emailRedirectTo: window.location.origin + '/quran.html',
+                        // This ensures email confirmation is required
+                        // User won't be created in auth.users until they verify
                     }
                 });
 
-                const userInfo = await userInfoResponse.json();
-                handleUserInfo(userInfo);
+                console.log('Sign up response:', { data, error });
+
+                if (error) throw error;
+
+                // Important: With email confirmation enabled in Supabase,
+                // data.user will exist but data.session will be null
+                // User must verify email before they can sign in
+                if (data.user && !data.session) {
+                    showMessage(
+                        '✅ ئەژمارەکەت دروستکرا! <br><br>' +
+                        'ئێمە لینکێن پشتڕاستکرنێ نارین بۆ <strong>' + email + '</strong><br><br>' +
+                        'تکایە ئیمەیلا خوە ببینن و لینکێ کلیک بکە بۆ چالاککرنا ئەژمارێ. ' +
+                        'دووی ئەوەی کە ئیمەیلا خوە پشتڕاستکر، دشێی بچیتە ژوورڤە.',
+                        'success'
+                    );
+
+                    // Clear form
+                    document.getElementById('signUpName').value = '';
+                    document.getElementById('signUpEmail').value = '';
+                    document.getElementById('signUpPassword').value = '';
+
+                    // Switch to sign in form after 5 seconds
+                    setTimeout(() => {
+                        showForm('signin');
+                        showMessage('ئێستا دشێی بچیتە ژوورڤە دووی ئەوەی کە ئیمەیلا خوە پشتڕاستکریت.', 'info');
+                    }, 5000);
+                } else if (data.session) {
+                    // This shouldn't happen if email confirmation is enabled
+                    // But handle it just in case
+                    showMessage('سەرکەفتی! حسابا تە هاتە دروستکرن و تو هاتی ژوورڤە...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/quran.html';
+                    }, 2000);
+                } else {
+                    throw new Error('Unexpected response from server');
+                }
+
             } catch (error) {
-                console.error('Failed to get user info:', error);
-                btn.classList.remove('loading');
-                showNotification('خەلەتییەک چێبوو، تکایە دووبارە هەول بدە');
+                console.error('Sign up error:', error);
+                let errorMessage = 'هەلە د دروستکرنا حسابێ دا';
+
+                if (error.message.includes('User already registered') || error.message.includes('already registered')) {
+                    errorMessage = 'ئەڤ ئیمەیلە ژبەر هاتییە بکارهینان. دشێی بچیتە ژوورڤە یان پاسوۆردا خوە ڤەگەهەند.';
+                } else if (error.message.includes('Invalid email')) {
+                    errorMessage = 'ئیمەیلا نادروست';
+                } else if (error.message.includes('Password')) {
+                    errorMessage = 'پاسوۆرد دڤێ کەمتر ٦ پیت بیت';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+
+                showMessage(errorMessage, 'error');
+            } finally {
+                setLoading('signUpBtn', false);
             }
+
+            return false;
         }
 
-        async function handleUserInfo(userInfo) {
+        // Google Sign In
+        async function signInWithGoogle() {
+            clearMessage();
+
+            // Check if Supabase is initialized
+            if (!supabaseClient) {
+                showMessage('سیستەم ئامادە نییە. تکایە پەڕە نوێبکەرەوە.', 'error');
+                return;
+            }
+
+            showMessage('ڤەگوهاستنا تە بۆ Google...', 'info');
+
             try {
-                currentUser = {
-                    name: userInfo.name,
-                    email: userInfo.email,
-                    picture: userInfo.picture,
-                    sub: userInfo.sub
-                };
-
-                // Store user data IMMEDIATELY
-                localStorage.setItem('user', JSON.stringify(currentUser));
-                localStorage.setItem('isAuthenticated', 'true');
-
-                console.log('✅ User authenticated:', currentUser.name);
-
-                // IMPORTANT: Save Google user info to database immediately with correct field names
-                let needsSetup = false;
-                let isNewUser = false;  // Declare outside try block so it's accessible in redirect logic
-                let userData = {};
-
-                try {
-                const response = await fetch('/.netlify/functions/user-data', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: currentUser.sub,
-                        action: 'load'
-                    })
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/quran.html',
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent'
+                        }
+                    }
                 });
 
-                const result = await response.json();
-                userData = result.data || {};  // Fixed: removed duplicate 'let' declaration
+                if (error) throw error;
 
-                // Check if user needs profile setup (was reset)
-                if (userData.needsProfileSetup === true) {
-                    needsSetup = true;
-                    console.log('⚠️ User needs profile setup - clearing local flags');
-                    // Clear all completion flags
-                    localStorage.removeItem('signupCompleted');
-                    localStorage.removeItem('onboardingCompleted');
-                    // Remove the flag from database
-                    delete userData.needsProfileSetup;
-                }
-
-                // Only update Google info if missing - don't overwrite entire object
-                // This preserves all existing stats, progress, sessions, etc.
-                if (!userData.full_name) userData.full_name = currentUser.name;
-                if (!userData.email) userData.email = currentUser.email;
-                if (!userData.picture) userData.picture = currentUser.picture;
-
-                // Check if this is a brand new user (no existing data)
-                isNewUser = !result.data || Object.keys(result.data).length === 0 || needsSetup;
-
-                // CRITICAL: Clear any leftover localStorage for brand new users
-                if (isNewUser) {
-                    console.log('🆕 Brand new user - clearing any leftover localStorage');
-                    localStorage.removeItem('readingGoal');
-                    localStorage.removeItem('signupCompleted');
-                    localStorage.removeItem('onboardingCompleted');
-                    localStorage.removeItem('userPreferences');
-                    // Don't clear user data or user key as we need those
-                }
-
-                // Only save if this is a new user OR if Google info was missing
-                const needsGoogleInfoUpdate = !result.data?.full_name || !result.data?.email || !result.data?.picture;
-
-                if (isNewUser || needsGoogleInfoUpdate) {
-                    // Save to database (backend will merge with existing data)
-                    await fetch('/.netlify/functions/user-data', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            userId: currentUser.sub,
-                            action: 'save',
-                            data: userData  // Backend will merge this with existing data
-                        })
-                    });
-
-                    console.log('✅ User profile saved:', isNewUser ? 'New user' : 'Updated Google info');
-                } else {
-                    console.log('✅ User profile already complete, skipping save to prevent overwrite');
-                }
-
-                // REMOVED: Duplicate Discord notification (now only sent from backend after signup completion)
-                // Backend notification in user-data.js has accurate location data
-                if (isNewUser) {
-                    console.log('🎉 New user detected - notification will be sent after signup completion');
-                }
             } catch (error) {
-                console.error('Error saving Google user info:', error);
-            }
-
-            // Check if this user has completed signup before (returning user)
-            // IMPORTANT: Check DATABASE first, then localStorage as fallback
-            const hasCompletedSignup = needsSetup ? false : (userData.signupCompleted === true || localStorage.getItem('signupCompleted') === 'true');
-            const hasCompletedOnboarding = needsSetup ? false : (userData.onboardingCompleted === true || localStorage.getItem('onboardingCompleted') === 'true');
-
-            // Sync database flags to localStorage for consistent state
-            if (userData.signupCompleted === true) {
-                localStorage.setItem('signupCompleted', 'true');
-            }
-            if (userData.onboardingCompleted === true) {
-                localStorage.setItem('onboardingCompleted', 'true');
-            }
-
-            // Redirect based on user status - STRICT FLOW: Onboarding → Complete Signup → Quran
-            // Immediate redirect for fast experience
-            if (isNewUser || needsSetup) {
-                // Brand new user or reset user - ALWAYS start with onboarding
-                console.log('🆕 New user - Starting onboarding flow');
-                sessionStorage.setItem('fromLogin', 'true');
-                localStorage.removeItem('signupCompleted'); // Clear to enforce flow
-                localStorage.removeItem('onboardingCompleted'); // Clear to enforce flow
-                window.location.href = '/onboarding';
-            } else if (hasCompletedSignup) {
-                // Returning user who completed signup - go straight to Quran
-                console.log('✅ Returning user - Going directly to Quran');
-                window.location.href = '/quran';
-            } else if (hasCompletedOnboarding) {
-                // User completed onboarding but not signup - go to complete signup
-                console.log('⏭️ Onboarding done - Going to complete signup');
-                window.location.href = '/complete-signup';
-            } else {
-                // Safety fallback - start onboarding
-                console.log('🔄 Unknown state - Starting onboarding');
-                sessionStorage.setItem('fromLogin', 'true');
-                window.location.href = '/onboarding';
-            }
-            } catch (error) {
-                console.error('❌ Error in handleUserInfo:', error);
-                // ALWAYS redirect even if there's an error
-                // For returning users, try to go to quran
-                const hasCompletedSignup = localStorage.getItem('signupCompleted') === 'true';
-                if (hasCompletedSignup) {
-                    console.log('🔄 Error occurred but user has completed signup - redirecting to quran');
-                    window.location.href = '/quran';
-                } else {
-                    console.log('🔄 Error occurred - redirecting to onboarding');
-                    sessionStorage.setItem('fromLogin', 'true');
-                    window.location.href = '/onboarding';
-                }
+                console.error('Google sign in error:', error);
+                showMessage('هەلە د چوونە ژوورڤە ب Google: ' + error.message, 'error');
             }
         }
 
-        function showNotification(msg) {
-            const notif = document.createElement('div');
-            notif.className = 'notification';
-            notif.textContent = msg;
+        // Forgot Password
+        async function handleForgotPassword(event) {
+            event.preventDefault();
+            clearMessage();
 
-            // Calculate position based on existing notifications
-            const existingNotifications = document.querySelectorAll('.notification');
-            let topPosition = 20; // Start position
+            // Check if Supabase is initialized
+            if (!supabaseClient) {
+                showMessage('سیستەم ئامادە نییە. تکایە پەڕە نوێبکەرەوە.', 'error');
+                return false;
+            }
 
-            existingNotifications.forEach((existing) => {
-                topPosition += existing.offsetHeight + 15; // Stack with 15px gap
-            });
+            const email = document.getElementById('forgotEmail').value.trim();
 
-            notif.style.top = topPosition + 'px';
-            document.body.appendChild(notif);
+            if (!email) {
+                showMessage('تکایە ئیمەیلا خوە بنڤیسە', 'error');
+                return false;
+            }
 
-            // Remove with animation after 3 seconds
-            setTimeout(() => {
-                notif.style.animation = 'slideOutRight 0.3s ease';
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showMessage('تکایە ئیمەیلەکا دروست بنڤیسە', 'error');
+                return false;
+            }
+
+            setLoading('forgotBtn', true);
+
+            try {
+                console.log('Sending password reset to:', email);
+
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + '/quran.html'
+                });
+
+                if (error) throw error;
+
+                showMessage(
+                    '✅ لینکا ڤەگەهاندنا پاسوۆردێ هاتە شاندن!<br><br>' +
+                    'چاڤێ ئیمەیلا خوە بکە بۆ <strong>' + email + '</strong> و لینکێ کلیک بکە بۆ ڤەگەهاندنا پاسوۆردا خوە.',
+                    'success'
+                );
+                document.getElementById('forgotEmail').value = '';
+
+                // Switch to sign in form after 3 seconds
                 setTimeout(() => {
-                    notif.remove();
-                    // Reposition remaining notifications
-                    repositionNotifications();
-                }, 300);
-            }, 3000);
+                    showForm('signin');
+                }, 3000);
+
+            } catch (error) {
+                console.error('Password reset error:', error);
+                showMessage('هەلە د شاندنا لینکا ڤەگەهاندنا پاسوۆردێ: ' + error.message, 'error');
+            } finally {
+                setLoading('forgotBtn', false);
+            }
+
+            return false;
         }
 
-        function repositionNotifications() {
-            const notifications = document.querySelectorAll('.notification');
-            let topPosition = 20;
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Initializing login page...');
 
-            notifications.forEach((notif) => {
-                notif.style.top = topPosition + 'px';
-                topPosition += notif.offsetHeight + 15;
-            });
-        }
+            // Initialize Supabase first
+            const initialized = await initializeSupabase();
 
-        // Check if user is already logged in
-        window.addEventListener('load', () => {
-            const isAuthenticated = localStorage.getItem('isAuthenticated');
-            if (isAuthenticated === 'true') {
-                const user = JSON.parse(localStorage.getItem('user'));
-                if (user) {
-                    showNotification('هەوە پێشتر چوو بوونە ژوورڤە');
-                    // Immediate redirect - no delay
-                    window.location.href = '/quran';
+            if (!initialized) {
+                console.error('Failed to initialize Supabase');
+                return;
+            }
+
+            // Check if user is already logged in
+            try {
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+
+                if (error) {
+                    console.error('Session check error:', error);
                     return;
                 }
+
+                if (session) {
+                    console.log('User already logged in, redirecting...');
+                    showMessage('تو ژبەر د ژوورڤە دایی. ڤەگوهاستن...', 'info');
+                    setTimeout(() => {
+                        window.location.href = '/quran.html';
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Error checking session:', error);
             }
 
-            // Wait for Google library to load, then initialize
-            const checkGoogleLoaded = setInterval(() => {
-                if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
-                    clearInterval(checkGoogleLoaded);
-                    initGoogleSignIn();
-                }
-            }, 100);
+            // Listen for auth state changes
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                console.log('Auth state changed:', event, session);
 
-            // Timeout after 10 seconds
-            setTimeout(() => {
-                clearInterval(checkGoogleLoaded);
-                if (!tokenClient) {
-                    console.error('Google library failed to load');
+                if (event === 'SIGNED_IN' && session) {
+                    console.log('User signed in, redirecting...');
+                    showMessage('سەرکەفتی! ڤەگوهاستن...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/quran.html';
+                    }, 1000);
                 }
-            }, 10000);
+
+                if (event === 'USER_UPDATED') {
+                    console.log('User data updated');
+                }
+            });
+
+            console.log('✅ Login page ready');
         });
-
-        // Don't register service worker on login page
-        // It will be registered on Quran.html after successful navigation
     </script>
 </body>
 </html>
