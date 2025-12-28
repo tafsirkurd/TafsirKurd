@@ -1029,10 +1029,29 @@
         </div>
     </div>
 
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
+        // Initialize Supabase
+        const supabaseUrl = 'https://nvwgepkhzobgwnzibpvq.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d2dlcGtoemJnZ3duemlicHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ3MDgzNzIsImV4cCI6MjA1MDI4NDM3Mn0.FJuZ7bPDIzLHN9n6H44JGDxmH_bLOWXgVDmw1qs8HFA';
+        let supabaseClient = null;
+
+        // Wait for Supabase to load
+        async function initSupabase() {
+            if (typeof window.supabase !== 'undefined') {
+                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                console.log('✅ Supabase initialized in profile page');
+                return true;
+            }
+            return false;
+        }
+
         let currentUser = null;
 
-        window.addEventListener('load', () => {
+        window.addEventListener('load', async () => {
+            await initSupabase();
             loadUserProfile();
         });
 
@@ -1246,19 +1265,65 @@
             }
         }
 
-        function deleteAccount() {
-            if (confirm('⚠️ ئاگاداربوونەوە: ئەم کردارە هەمیشەییە!\n\nهەموو زانیاریەکانت بە تەواوی دەسڕێتەوە و ناتوانیت بیگەڕێنیتەوە.\n\nئایا دڵنیایت لە سڕینەڤا هەژمارێ؟')) {
-                if (confirm('دڵنیایت؟ ئەم کارە ناگەڕێتەوە!')) {
-                    // Delete all user data
-                    const userKey = 'quran_data_' + currentUser.sub;
-                    localStorage.removeItem(userKey);
-                    localStorage.removeItem('quran_reading_data');
-                    localStorage.removeItem('isAuthenticated');
-                    localStorage.removeItem('user');
-                    
-                    alert('هەژمارا تە ب سەرکەفتی هاتە سڕینەڤە');
-                    window.location.href = '/login';
+        async function deleteAccount() {
+            if (!confirm('⚠️ ئاگاداربوونەوە: ئەم کردارە هەمیشەییە!\n\nهەموو زانیاریەکانت بە تەواوی دەسڕێتەوە و ناتوانیت بیگەڕێنیتەوە.\n\nئایا دڵنیایت لە سڕینەڤا هەژمارێ؟')) {
+                return;
+            }
+
+            if (!confirm('دڵنیایت؟ ئەم کارە ناگەڕێتەوە!')) {
+                return;
+            }
+
+            try {
+                console.log('🗑️ Starting account deletion...');
+
+                if (!supabaseClient) {
+                    throw new Error('Supabase not initialized');
                 }
+
+                // Get current session to get auth token
+                const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+
+                if (sessionError || !session) {
+                    throw new Error('No active session found - please log in again');
+                }
+
+                console.log('🗑️ Calling delete account API...');
+
+                // Call serverless function to delete account (requires admin privileges)
+                const response = await fetch('/.netlify/functions/delete-account', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to delete account');
+                }
+
+                console.log('✅ Account deleted from database');
+
+                // Delete all local user data
+                const userKey = 'quran_data_' + currentUser.sub;
+                localStorage.removeItem(userKey);
+                localStorage.removeItem('quran_reading_data');
+                localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('user');
+                localStorage.removeItem('readingGoal');
+
+                // Sign out locally
+                await supabaseClient.auth.signOut();
+
+                console.log('✅ Account deleted successfully');
+                alert('هەژمارا تە ب سەرکەفتی هاتە سڕینەڤە');
+                window.location.href = '/login.html';
+            } catch (error) {
+                console.error('❌ Error deleting account:', error);
+                alert('هەلە د سڕینەڤا هەژمارێ دا: ' + error.message);
             }
         }
 
