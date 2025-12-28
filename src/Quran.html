@@ -4886,6 +4886,13 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d2dlcGtoemJnZ3duemlicHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ3MDgzNzIsImV4cCI6MjA1MDI4NDM3Mn0.FJuZ7bPDIzLHN9n6H44JGDxmH_bLOWXgVDmw1qs8HFA';
         let supabaseClient = null;
 
+        // Initialize Supabase client immediately if library is loaded
+        if (typeof window.supabase !== 'undefined' && !supabaseClient) {
+            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+            window.supabaseClient = supabaseClient;
+            console.log('✅ Supabase client initialized immediately');
+        }
+
         // Wait for auth libraries to load
         async function waitForAuthLibraries() {
             const maxRetries = 50; // 5 seconds max wait
@@ -4896,7 +4903,7 @@
                 if (typeof window.supabase !== 'undefined' && !supabaseClient) {
                     supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
                     window.supabaseClient = supabaseClient;
-                    console.log('✅ Supabase client initialized');
+                    console.log('✅ Supabase client initialized in wait loop');
                 }
 
                 // Check if both are ready
@@ -10638,15 +10645,6 @@
         }
 
         console.log('✅ تەفسیر کورد - Quran Reader loaded successfully');
-        console.log('🧪 Debug functions available: testGuestReading(surah, ayah), checkGuestData()');
-
-        // Auto-check on load
-        setTimeout(() => {
-            if (!isUserAuthenticated) {
-                console.log('\n🔍 Auto-check for guest user:');
-                window.checkGuestData();
-            }
-        }, 2000);
     </script>
 
     <!-- Audio Player Mini Bar -->
