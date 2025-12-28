@@ -8,13 +8,33 @@
 (async function() {
     'use strict';
 
-    // Initialize Supabase client (assumes supabase is globally available)
-    if (typeof window.supabaseClient === 'undefined') {
-        console.error('Supabase client not initialized');
-        return;
+    // Wait for Supabase client to be initialized
+    async function waitForSupabase() {
+        const maxRetries = 50; // 5 seconds max
+        for (let i = 0; i < maxRetries; i++) {
+            if (typeof window.supabaseClient !== 'undefined' && window.supabaseClient !== null) {
+                console.log('✅ Auth redirect: Supabase client ready');
+                return window.supabaseClient;
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        console.error('❌ Auth redirect: Supabase client timeout');
+        return null;
     }
 
-    const supabase = window.supabaseClient;
+    const supabase = await waitForSupabase();
+    if (!supabase) {
+        console.error('Cannot initialize auth redirect without Supabase');
+        // Still expose empty functions to prevent errors
+        window.authRedirect = {
+            checkSignupStatus: async () => ({ needsCompletion: false, redirectUrl: null }),
+            handlePostLoginRedirect: async () => {},
+            markSignupCompleted: async () => false,
+            getUserProfile: async () => null,
+            createProfile: async () => {}
+        };
+        return;
+    }
 
     /**
      * Check if user needs to complete signup
