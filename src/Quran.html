@@ -4886,20 +4886,39 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d2dlcGtoemJnZ3duemlicHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ3MDgzNzIsImV4cCI6MjA1MDI4NDM3Mn0.FJuZ7bPDIzLHN9n6H44JGDxmH_bLOWXgVDmw1qs8HFA';
         let supabaseClient = null;
 
-        // Initialize Supabase when library is loaded
-        if (typeof window.supabase !== 'undefined') {
-            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-            window.supabaseClient = supabaseClient;
-            console.log('✅ Supabase client initialized');
-        } else {
-            // Wait for Supabase to load
-            window.addEventListener('load', () => {
-                if (typeof window.supabase !== 'undefined') {
+        // Wait for auth libraries to load
+        async function waitForAuthLibraries() {
+            const maxRetries = 50; // 5 seconds max wait
+            const retryDelay = 100; // 100ms between retries
+
+            for (let i = 0; i < maxRetries; i++) {
+                // Check if Supabase is loaded
+                if (typeof window.supabase !== 'undefined' && !supabaseClient) {
                     supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
                     window.supabaseClient = supabaseClient;
-                    console.log('✅ Supabase client initialized (delayed)');
+                    console.log('✅ Supabase client initialized');
                 }
-            });
+
+                // Check if both are ready
+                if (supabaseClient && typeof window.authRedirect !== 'undefined') {
+                    console.log('✅ All auth libraries loaded');
+                    return true;
+                }
+
+                // Wait before next retry
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+            }
+
+            console.warn('⚠️ Auth libraries timeout - proceeding anyway');
+
+            // Initialize Supabase if available but authRedirect isn't
+            if (typeof window.supabase !== 'undefined' && !supabaseClient) {
+                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                window.supabaseClient = supabaseClient;
+                console.log('✅ Supabase client initialized (timeout fallback)');
+            }
+
+            return false;
         }
 
         // Global State
@@ -5241,8 +5260,13 @@
             try {
                 initPreloader();
 
-                // Initialize UI immediately (don't wait for data)
-                checkAuthentication();
+                // Wait for Supabase and auth-redirect to load
+                await waitForAuthLibraries();
+
+                // Initialize authentication first (MUST await)
+                await checkAuthentication();
+
+                // Then initialize app
                 initializeApp();
 
                 // Set a maximum timeout for loading (10 seconds)
@@ -5426,17 +5450,29 @@
 
         // Check Authentication - Load from Supabase profiles
         async function checkAuthentication() {
+            console.log('🔍 Checking authentication...');
+
             try {
                 // First check Supabase session (for email/Google users)
                 if (supabaseClient) {
-                    const { data: { session }, error } = await supabaseClient.auth.getSession();
+                    console.log('📡 Checking Supabase session...');
+                    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
 
-                    if (!error && session) {
-                        // User is authenticated via Supabase
+                    if (sessionError) {
+                        console.warn('⚠️ Session error:', sessionError);
+                    }
+
+                    if (!sessionError && session) {
+                        console.log('✅ Supabase session found:', session.user.email);
+
                         // Load profile from Supabase profiles table
                         if (window.authRedirect) {
+                            console.log('📋 Loading profile from database...');
                             const profile = await window.authRedirect.getUserProfile();
+
                             if (profile) {
+                                console.log('✅ Profile loaded:', profile.email);
+
                                 currentUser = {
                                     sub: profile.id,
                                     name: profile.display_name || profile.full_name,
@@ -5449,24 +5485,37 @@
                                 localStorage.setItem('user', JSON.stringify(currentUser));
 
                                 isUserAuthenticated = true;
+                                console.log('✅ User authenticated via Supabase');
                                 onSignInSuccess();
                                 return;
+                            } else {
+                                console.warn('⚠️ No profile found for user');
                             }
+                        } else {
+                            console.warn('⚠️ authRedirect not available yet');
                         }
+                    } else {
+                        console.log('ℹ️ No Supabase session found');
                     }
+                } else {
+                    console.warn('⚠️ Supabase client not initialized');
                 }
 
                 // Fallback: Check localStorage (for backward compatibility)
+                console.log('📦 Checking localStorage...');
                 const isAuth = localStorage.getItem('isAuthenticated');
                 const user = localStorage.getItem('user');
 
                 if (isAuth === 'true' && user) {
                     currentUser = JSON.parse(user);
                     isUserAuthenticated = true;
+                    console.log('✅ User authenticated via localStorage:', currentUser.email);
                     onSignInSuccess();
+                } else {
+                    console.log('ℹ️ No authentication found - user is guest');
                 }
             } catch (error) {
-                console.error('Error checking authentication:', error);
+                console.error('❌ Error checking authentication:', error);
 
                 // Fallback to localStorage on error
                 const isAuth = localStorage.getItem('isAuthenticated');
@@ -5475,33 +5524,60 @@
                 if (isAuth === 'true' && user) {
                     currentUser = JSON.parse(user);
                     isUserAuthenticated = true;
+                    console.log('✅ User authenticated via localStorage (error fallback)');
                     onSignInSuccess();
                 }
             }
         }
 
         function onSignInSuccess() {
+            console.log('🎉 onSignInSuccess called');
+            console.log('👤 Current user:', currentUser);
+
             // Use default avatar if no picture provided
             const userAvatar = currentUser.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(currentUser.name || 'User')}`;
             const userName = currentUser.name || 'User';
             const userEmail = currentUser.email || '';
 
-            document.getElementById('authSection').innerHTML = `
-                <button class="user-profile-btn" onclick="openFeatherOverlay()">
-                    <img src="${userAvatar}" alt="${userName}" class="user-avatar" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userName)}'">
-                    <span class="user-name">${userName.split(' ')[0]}</span>
-                    <i class="fas fa-chevron-down"></i>
-                </button>
-            `;
+            console.log('🖼️ Avatar URL:', userAvatar);
 
-            document.getElementById('profileAvatar').src = userAvatar;
-            document.getElementById('profileAvatar').onerror = function() {
-                this.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userName)}`;
-            };
-            document.getElementById('profileName').textContent = userName;
-            document.getElementById('profileEmail').textContent = userEmail;
-            document.getElementById('profileSection').style.display = 'block';
-            document.getElementById('navMenuSection').style.display = 'block';
+            // Update auth section with profile button
+            const authSection = document.getElementById('authSection');
+            if (authSection) {
+                authSection.innerHTML = `
+                    <button class="user-profile-btn" onclick="openFeatherOverlay()">
+                        <img src="${userAvatar}" alt="${userName}" class="user-avatar" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userName)}'">
+                        <span class="user-name">${userName.split(' ')[0]}</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                `;
+                console.log('✅ Auth section updated');
+            } else {
+                console.error('❌ authSection element not found!');
+            }
+
+            // Update profile overlay
+            const profileAvatar = document.getElementById('profileAvatar');
+            if (profileAvatar) {
+                profileAvatar.src = userAvatar;
+                profileAvatar.onerror = function() {
+                    this.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userName)}`;
+                };
+            }
+
+            const profileName = document.getElementById('profileName');
+            if (profileName) profileName.textContent = userName;
+
+            const profileEmail = document.getElementById('profileEmail');
+            if (profileEmail) profileEmail.textContent = userEmail;
+
+            const profileSection = document.getElementById('profileSection');
+            if (profileSection) profileSection.style.display = 'block';
+
+            const navMenuSection = document.getElementById('navMenuSection');
+            if (navMenuSection) navMenuSection.style.display = 'block';
+
+            console.log('✅ Profile UI updated successfully');
 
             loadUserData();
         }
