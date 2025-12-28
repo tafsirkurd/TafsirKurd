@@ -143,7 +143,7 @@
                     title: episode.seriesTitle || episode.categoryTitle || 'عام',
                     description: episode.seriesDescription || '',
                     episodes: [],
-                    thumbnail: episode.thumbnail || '/assets/images/default-topic.jpg'
+                    thumbnail: episode.thumbnail || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="225"%3E%3Crect fill="%231a1a1a" width="400" height="225"/%3E%3Ctext fill="%23999" font-family="Arial" font-size="20" x="50%25" y="50%25" text-anchor="middle" dominant-baseline="middle"%3E%D9%88%DB%8E%D9%86%DB%95 %DA%A4%DB%8C%D8%AF%DB%8C%DB%86%3C/text%3E%3C/svg%3E'
                 };
             }
             topics[topicKey].episodes.push(episode);
@@ -229,7 +229,7 @@
                     <div class="episode-number">${String(index + 1).padStart(2, '0')}</div>
 
                     <div class="episode-thumbnail">
-                        <img src="${episode.thumbnail || '/assets/images/default-episode.jpg'}" alt="${episode.title}" loading="lazy">
+                        <img src="${episode.thumbnail || 'data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"120\" height=\"68\"%3E%3Crect fill=\"%231a1a1a\" width=\"120\" height=\"68\"/%3E%3Ctext fill=\"%23999\" font-family=\"Arial\" font-size=\"12\" x=\"50%25\" y=\"50%25\" text-anchor=\"middle\" dominant-baseline=\"middle\"%3E%D9%88%DB%8E%D9%86%DB%95%3C/text%3E%3C/svg%3E'}" alt="${episode.title}" loading="lazy">
                         <div class="episode-play-overlay">
                             <div class="episode-play-icon">
                                 <i class="fas fa-play"></i>
@@ -537,7 +537,9 @@
 
         // Other
         searchBtn: document.getElementById('searchBtn'),
+        navSearchInput: document.getElementById('navSearchInput'),
         themeToggle: document.getElementById('themeToggle'),
+        notificationBtn: document.getElementById('notificationBtn'),
         notification: document.getElementById('notification'),
         notificationText: document.getElementById('notificationText'),
         nav: document.getElementById('nav')
@@ -662,8 +664,24 @@
         // Theme toggle
         elements.themeToggle.addEventListener('click', toggleTheme);
 
-        // Search
-        elements.searchBtn.addEventListener('click', openSearchModal);
+        // Inline Search
+        if (elements.navSearchInput) {
+            elements.navSearchInput.addEventListener('input', handleInlineSearch);
+            elements.navSearchInput.addEventListener('focus', showSearchResults);
+            elements.navSearchInput.addEventListener('blur', () => {
+                setTimeout(hideSearchResults, 200); // Delay to allow clicking results
+            });
+        }
+
+        // Old search button (fallback)
+        if (elements.searchBtn) {
+            elements.searchBtn.addEventListener('click', openSearchModal);
+        }
+
+        // Notification button
+        if (elements.notificationBtn) {
+            elements.notificationBtn.addEventListener('click', toggleNotifications);
+        }
 
         // Modal clicks (close on backdrop)
         elements.searchModal.addEventListener('click', (e) => {
@@ -1376,7 +1394,7 @@
         return `
             <div class="episode-card" onclick="playYouTubeVideo('${video.videoId}', '${video.title}', ${video.id})">
                 <div class="episode-thumbnail">
-                    <img src="${video.thumbnail}" alt="${video.title}" onerror="this.src='/assets/images/episode-placeholder.jpg'">
+                    <img src="${video.thumbnail}" alt="${video.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22225%22%3E%3Crect fill=%22%231a1a1a%22 width=%22400%22 height=%22225%22/%3E%3Ctext fill=%22%23999%22 font-family=%22Arial%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3E%D9%88%DB%8E%D9%86%DB%95 %DA%A4%DB%8C%D8%AF%DB%8C%DB%86%3C/text%3E%3C/svg%3E'">
                     ${showProgress ? `<div class="episode-progress" style="width: ${progress}%;"></div>` : ''}
                     <div class="play-overlay">
                         <i class="fas fa-play"></i>
@@ -1572,6 +1590,123 @@
 
     function closeSearchModal() {
         elements.searchModal.classList.remove('active');
+    }
+
+    // ===== INLINE SEARCH =====
+    let searchResultsContainer = null;
+
+    function handleInlineSearch(e) {
+        const query = e.target.value.toLowerCase().trim();
+
+        if (!searchResultsContainer) {
+            createSearchResultsContainer();
+        }
+
+        if (query.length === 0) {
+            hideSearchResults();
+            return;
+        }
+
+        // Search through all episodes
+        const results = [];
+        state.playlist.forEach(video => {
+            if (video.title && video.title.toLowerCase().includes(query)) {
+                results.push(video);
+            } else if (video.description && video.description.toLowerCase().includes(query)) {
+                results.push(video);
+            } else if (video.category && video.category.toLowerCase().includes(query)) {
+                results.push(video);
+            } else if (video.series && video.series.toLowerCase().includes(query)) {
+                results.push(video);
+            }
+        });
+
+        displaySearchResults(results);
+    }
+
+    function createSearchResultsContainer() {
+        searchResultsContainer = document.createElement('div');
+        searchResultsContainer.className = 'search-results-dropdown';
+        searchResultsContainer.style.cssText = `
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            z-index: 1001;
+            display: none;
+        `;
+
+        const container = elements.navSearchInput.parentElement;
+        container.style.position = 'relative';
+        container.appendChild(searchResultsContainer);
+    }
+
+    function displaySearchResults(results) {
+        if (!searchResultsContainer) return;
+
+        if (results.length === 0) {
+            searchResultsContainer.innerHTML = `
+                <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                    <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                    <p>هیچ ئەنجامێ نەهاتە دیتن</p>
+                </div>
+            `;
+        } else {
+            searchResultsContainer.innerHTML = results.slice(0, 8).map(video => `
+                <div class="search-result-item" onclick="playVideo('${video.id}')" style="
+                    padding: 1rem;
+                    border-bottom: 1px solid var(--border);
+                    cursor: pointer;
+                    transition: background var(--transition-fast);
+                    display: flex;
+                    gap: 1rem;
+                    align-items: center;
+                " onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='transparent'">
+                    <div style="
+                        width: 80px;
+                        height: 45px;
+                        background: var(--bg);
+                        border-radius: 6px;
+                        flex-shrink: 0;
+                    "></div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 600; color: var(--text); margin-bottom: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${video.title || 'بێناڤ'}
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">
+                            ${video.category || video.series || ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        searchResultsContainer.style.display = 'block';
+    }
+
+    function showSearchResults() {
+        if (searchResultsContainer && elements.navSearchInput.value.trim().length > 0) {
+            searchResultsContainer.style.display = 'block';
+        }
+    }
+
+    function hideSearchResults() {
+        if (searchResultsContainer) {
+            searchResultsContainer.style.display = 'none';
+        }
+    }
+
+    // ===== NOTIFICATIONS =====
+    function toggleNotifications() {
+        showNotification('ئاگادارکرنەوەکان بەردەست نین ئێستا', 'info');
+        // TODO: Implement notification panel
+        console.log('Notifications clicked - to be implemented');
     }
 
     function closeAllModals() {
