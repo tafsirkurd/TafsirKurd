@@ -45,6 +45,12 @@
     <!-- Local Font Awesome - Zero external requests -->
     <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
 
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Auth Redirect Handler -->
+    <script src="/utils/auth-redirect.js" defer></script>
+
     <!-- Notification System -->
     <script src="/utils/notification-messages.js"></script>
     <script src="/utils/notification-scheduler.js"></script>
@@ -677,57 +683,77 @@
     </div>
 
     <script>
-        // Load user data
-        window.addEventListener('load', () => {
-            const user = JSON.parse(localStorage.getItem('user'));
+        // Initialize Supabase client
+        const supabaseUrl = 'https://nvwgepkhzobgwnzibpvq.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d2dlcGtoemJnZ3duemlicHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ3MDgzNzIsImV4cCI6MjA1MDI4NDM3Mn0.FJuZ7bPDIzLHN9n6H44JGDxmH_bLOWXgVDmw1qs8HFA';
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        window.supabaseClient = supabaseClient;
 
-            if (!user) {
-                // If no user data, redirect to login
-                window.location.href = '/login';
-                return;
+        // Load user data from Supabase
+        window.addEventListener('load', async () => {
+            try {
+                // Check if auth-redirect is loaded
+                if (!window.authRedirect) {
+                    console.error('Auth redirect handler not loaded');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // Get user profile from Supabase
+                const profile = await window.authRedirect.getUserProfile();
+
+                if (!profile) {
+                    // If no profile, redirect to login
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // Display user info with default avatar if needed
+                const userInfoDiv = document.getElementById('userInfo');
+                userInfoDiv.innerHTML = `
+                    <img src="${profile.avatar_url}" alt="${profile.display_name}" class="user-avatar">
+                    <div class="user-name" data-no-convert="true">${profile.display_name}</div>
+                    <div class="user-email" data-no-convert="true">${profile.email}</div>
+                `;
+
+                // Load saved preferences from Supabase profile
+                loadPreferences(profile);
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+                window.location.href = '/login.html';
             }
-
-            // Display user info (prevent Kurdish number conversion on email)
-            const userInfoDiv = document.getElementById('userInfo');
-            // Keep numbers in English for both name and email - don't convert
-            userInfoDiv.innerHTML = `
-                <img src="${user.picture}" alt="${user.name}" class="user-avatar">
-                <div class="user-name" data-no-convert="true">${user.name}</div>
-                <div class="user-email" data-no-convert="true">${user.email}</div>
-            `;
-
-            // Load saved preferences
-            loadPreferences();
         });
 
-        function loadPreferences() {
-            const savedPrefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
-            const savedTheme = localStorage.getItem('theme');
+        function loadPreferences(profile) {
+            // Load preferences from Supabase profile
+            const savedPrefs = profile.preferences || {
+                notifications: true,
+                darkMode: false,
+                autoSave: true,
+                fontSize: 'medium',
+                arabicFont: 'uthmanic'
+            };
 
-            // Set default preferences if not saved
-            if (Object.keys(savedPrefs).length === 0) {
-                savedPrefs.notifications = true;
-                savedPrefs.darkMode = false;
-                savedPrefs.autoSave = true;
-            }
-
-            // Sync theme with darkMode preference
-            if (savedTheme) {
-                savedPrefs.darkMode = (savedTheme === 'dark');
-            }
+            // Also check localStorage for backward compatibility
+            const localPrefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+            const mergedPrefs = { ...savedPrefs, ...localPrefs };
 
             // Apply saved theme
-            document.documentElement.setAttribute('data-theme', savedPrefs.darkMode ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', mergedPrefs.darkMode ? 'dark' : 'light');
+            localStorage.setItem('theme', mergedPrefs.darkMode ? 'dark' : 'light');
 
             // Apply saved preferences to toggles
             document.querySelectorAll('.toggle-switch').forEach(toggle => {
                 const pref = toggle.getAttribute('data-pref');
-                if (savedPrefs[pref]) {
+                if (mergedPrefs[pref]) {
                     toggle.classList.add('active');
                 } else {
                     toggle.classList.remove('active');
                 }
             });
+
+            // Save merged preferences to localStorage for immediate use
+            localStorage.setItem('userPreferences', JSON.stringify(mergedPrefs));
         }
 
         async function togglePreference(item, prefName) {
@@ -916,93 +942,106 @@
             btn.classList.add('loading');
 
             try {
-                // Save to localStorage
+                // Get current user session
+                const { data: { session } } = await supabaseClient.auth.getSession();
+
+                if (!session) {
+                    console.error('No active session');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // Get current preferences from UI
+                const preferences = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+
+                // Update profile in Supabase with preferences
+                const { error: updateError } = await supabaseClient
+                    .from('profiles')
+                    .update({
+                        preferences: preferences,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', session.user.id);
+
+                if (updateError) {
+                    console.error('Error updating preferences:', updateError);
+                }
+
+                // Save to localStorage for backward compatibility
                 localStorage.setItem('signupCompleted', 'true');
 
-                // Save to database so it persists after logout
-                const user = JSON.parse(localStorage.getItem('user'));
-                if (user && user.sub) {
-                    const userKey = 'quran_data_' + user.sub;
-                    const saved = localStorage.getItem(userKey);
-                    const userData = saved ? JSON.parse(saved) : {};
-
-                    // Mark signup and profile as completed in database
-                    userData.signupCompleted = true;
-                    userData.profileCompleted = true;
-
-                    await fetch('/.netlify/functions/user-data', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            userId: user.sub,
-                            action: 'save',
-                            data: userData
-                        })
-                    });
-
-                    console.log('✅ Signup completion saved to database');
-                }
+                console.log('✅ Preferences saved to Supabase profiles');
 
                 // Try to clear service worker caches (non-blocking)
                 clearAllCaches().catch(err => console.error('Cache clear error:', err));
 
-                // Always redirect after short delay, regardless of cache clearing
-                setTimeout(() => {
-                    window.location.href = '/quran?t=' + Date.now();
-                }, 800);
+                // Use auth-redirect handler to mark signup as completed and redirect
+                if (window.authRedirect) {
+                    await window.authRedirect.markSignupCompleted();
+                } else {
+                    // Fallback if auth-redirect not loaded
+                    window.location.href = '/quran.html';
+                }
             } catch (error) {
                 console.error('Signup completion error:', error);
                 // Force redirect even on error
-                window.location.href = '/quran?t=' + Date.now();
+                window.location.href = '/quran.html';
             }
         }
 
         async function skipToMain() {
             try {
+                // Get current user session
+                const { data: { session } } = await supabaseClient.auth.getSession();
+
+                if (!session) {
+                    console.error('No active session');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
                 // Save default preferences
                 const defaultPrefs = {
                     notifications: true,
                     darkMode: false,
-                    autoSave: true
+                    autoSave: true,
+                    fontSize: 'medium',
+                    arabicFont: 'uthmanic'
                 };
+
+                // Update profile in Supabase with default preferences
+                const { error: updateError } = await supabaseClient
+                    .from('profiles')
+                    .update({
+                        preferences: defaultPrefs,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', session.user.id);
+
+                if (updateError) {
+                    console.error('Error saving default preferences:', updateError);
+                }
+
+                // Save to localStorage for backward compatibility
                 localStorage.setItem('userPreferences', JSON.stringify(defaultPrefs));
                 localStorage.setItem('signupCompleted', 'true');
 
-                // Save to database so it persists after logout
-                const user = JSON.parse(localStorage.getItem('user'));
-                if (user && user.sub) {
-                    const userKey = 'quran_data_' + user.sub;
-                    const saved = localStorage.getItem(userKey);
-                    const userData = saved ? JSON.parse(saved) : {};
-
-                    // Mark signup and profile as completed in database
-                    userData.signupCompleted = true;
-                    userData.profileCompleted = true;
-
-                    await fetch('/.netlify/functions/user-data', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            userId: user.sub,
-                            action: 'save',
-                            data: userData
-                        })
-                    });
-
-                    console.log('✅ Signup completion saved to database (skipped)');
-                }
+                console.log('✅ Default preferences saved to Supabase (skipped)');
 
                 // Try to clear service worker caches (non-blocking)
                 clearAllCaches().catch(err => console.error('Cache clear error:', err));
 
-                // Always redirect after short delay
-                setTimeout(() => {
-                    window.location.href = '/quran?t=' + Date.now();
-                }, 500);
+                // Use auth-redirect handler to mark signup as completed and redirect
+                if (window.authRedirect) {
+                    await window.authRedirect.markSignupCompleted();
+                } else {
+                    // Fallback if auth-redirect not loaded
+                    window.location.href = '/quran.html';
+                }
             } catch (error) {
                 console.error('Skip error:', error);
                 // Force redirect even on error
-                window.location.href = '/quran?t=' + Date.now();
+                window.location.href = '/quran.html';
             }
         }
 
