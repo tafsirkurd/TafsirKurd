@@ -1400,8 +1400,8 @@
                     const response = await fetch('/config');
                     if (!response.ok) throw new Error('Failed to fetch auth configuration');
                     const config = await response.json();
-                    if (!config.supabaseUrl || !config.supabaseAnonKey) throw new Error('Invalid auth configuration');
-                    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+                    if (!config.supabaseUrl || !config.supabaseKey) throw new Error('Invalid auth configuration');
+                    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
                     console.log('✅ Supabase initialized securely on homepage');
                     return true;
                 } catch (error) {
