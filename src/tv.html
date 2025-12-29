@@ -17,6 +17,9 @@
     <!-- Theme Color -->
     <meta name="theme-color" content="#000000">
 
+    <!-- Security Module -->
+    <script src="/utils/security.js"></script>
+
     <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
     <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/favicon-96x96.png">
@@ -2532,7 +2535,7 @@
                 </button>
 
                 <!-- Login Button (shown when not authenticated) -->
-                <a href="/login.html" class="icon-btn" id="loginBtn" aria-label="Login" title="چوونەژوورەوە" style="display: none;">
+                <a href="/login.html?source=tv" class="icon-btn" id="loginBtn" aria-label="Login" title="چوونەژوورەوە" style="display: none;">
                     <i class="fas fa-sign-in-alt"></i>
                 </a>
 
@@ -3009,8 +3012,36 @@
                         <h2 class="footer-brand-name">تەفسیر کورد</h2>
                     </div>
                     <p class="footer-brand-tagline">
-                        پلاتفۆرمەکا ئارام بۆ خواندنێ، گەڕیان و رامان ل سەر قورئانا پیرۆز ب زمانێ کوردی (بادینی). قورئان بگەهیتە دەستێ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
-                    </p>
+        let supabaseClient = null;
+
+        // Initialize Supabase
+        async function initSupabase() {
+            if (typeof window.supabase !== 'undefined') {
+                try {
+                    // Fetch credentials from secure endpoint
+                    const response = await fetch('/.netlify/functions/auth-config');
+
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch auth configuration');
+                    }
+
+                    const config = await response.json();
+
+                    if (!config.supabaseUrl || !config.supabaseAnonKey) {
+                        throw new Error('Invalid auth configuration');
+                    }
+
+                    // Initialize Supabase client
+                    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+                    console.log('✅ Supabase initialized securely on TV page');
+                    return true;
+                } catch (error) {
+                    console.error('Supabase initialization error:', error);
+                    return false;
+                }
+            }
+            return false;
+        }
                     <div class="footer-social-icons">
                         <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                             <i class="fab fa-instagram"></i>
@@ -3275,6 +3306,16 @@
 // Mobile Menu Toggle        const mobileMenuToggle = document.getElementById('mobileMenuToggle');        const navMenu = document.querySelector('.nav-menu');        if (mobileMenuToggle && navMenu) {            mobileMenuToggle.addEventListener('click', function() {                this.classList.toggle('active');                navMenu.classList.toggle('active');            });            // Close menu when clicking on a link            navMenu.querySelectorAll('.nav-link').forEach(link => {                link.addEventListener('click', () => {                    mobileMenuToggle.classList.remove('active');                    navMenu.classList.remove('active');                });            });            // Close menu when clicking outside            document.addEventListener('click', function(event) {                if (!mobileMenuToggle.contains(event.target) && !navMenu.contains(event.target)) {                    mobileMenuToggle.classList.remove('active');                    navMenu.classList.remove('active');                }            });        }
         // Initialize auth on page load
         window.addEventListener('load', async () => {
+            // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
+            if (window.TafsirKurdSecurity) {
+                window.TafsirKurdSecurity.init({
+                    criticalElements: [],
+                    protectedFields: [],
+                    validateSession: true,
+                    securityLevel: 'nuclear'
+                });
+            }
+
             await checkAuth();
 
             // Listen for auth state changes

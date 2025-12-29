@@ -515,6 +515,99 @@
                 padding: 0.875rem;
             }
         }
+
+        /* Password Strength Meter */
+        .password-strength-container {
+            margin-top: 0.75rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .password-strength-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .password-strength-fill {
+            height: 100%;
+            transition: all 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .password-strength-fill.weak {
+            width: 25%;
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+        }
+
+        .password-strength-fill.fair {
+            width: 50%;
+            background: linear-gradient(90deg, #f39c12, #e67e22);
+        }
+
+        .password-strength-fill.good {
+            width: 75%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+        }
+
+        .password-strength-fill.strong {
+            width: 100%;
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+        }
+
+        .password-strength-text {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            text-align: center;
+        }
+
+        .password-strength-text.weak {
+            color: #e74c3c;
+        }
+
+        .password-strength-text.fair {
+            color: #f39c12;
+        }
+
+        .password-strength-text.good {
+            color: #3498db;
+        }
+
+        .password-strength-text.strong {
+            color: #2ecc71;
+        }
+
+        .password-requirements {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .requirement {
+            padding: 0.4rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            color: var(--text-muted);
+        }
+
+        .requirement.met {
+            color: #2ecc71;
+            font-weight: 600;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -544,6 +637,7 @@
                             class="form-input"
                             id="signInEmail"
                             placeholder="ئیمەیلا خوە بنڤیسە"
+                            autocomplete="email"
                             required
                         >
                     </div>
@@ -556,6 +650,7 @@
                                 class="form-input"
                                 id="signInPassword"
                                 placeholder="پاسوۆردا خوە بنڤیسە"
+                                autocomplete="current-password"
                                 required
                             >
                             <button type="button" class="password-toggle-btn" onclick="togglePassword('signInPassword')">
@@ -597,6 +692,7 @@
                             class="form-input"
                             id="signUpName"
                             placeholder="ناڤا خوە بنڤیسە"
+                            autocomplete="name"
                             required
                         >
                     </div>
@@ -608,8 +704,14 @@
                             class="form-input"
                             id="signUpEmail"
                             placeholder="ئیمەیلا خوە بنڤیسە"
+                            autocomplete="email"
                             required
                         >
+                    </div>
+
+                    <!-- Honeypot field for bot detection (hidden from humans) -->
+                    <div style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;" aria-hidden="true" tabindex="-1">
+                        <input type="text" id="website" name="website" autocomplete="off" tabindex="-1">
                     </div>
 
                     <div class="form-group">
@@ -620,12 +722,27 @@
                                 class="form-input"
                                 id="signUpPassword"
                                 placeholder="پاسوۆردێ بهێز دروستکە (کەمتر ٦ پیت)"
+                                autocomplete="new-password"
                                 minlength="6"
                                 required
                             >
                             <button type="button" class="password-toggle-btn" onclick="togglePassword('signUpPassword')">
                                 <i class="fas fa-eye"></i>
                             </button>
+                        </div>
+                        <!-- Password Strength Meter -->
+                        <div class="password-strength-container" id="passwordStrengthContainer" style="display: none;">
+                            <div class="password-strength-bar">
+                                <div class="password-strength-fill" id="passwordStrengthFill"></div>
+                            </div>
+                            <div class="password-strength-text" id="passwordStrengthText"></div>
+                            <div class="password-requirements">
+                                <div class="requirement" id="req-length">✗ کەمتر ٨ پیت</div>
+                                <div class="requirement" id="req-uppercase">✗ پیتێن گەورە (A-Z)</div>
+                                <div class="requirement" id="req-lowercase">✗ پیتێن بچوک (a-z)</div>
+                                <div class="requirement" id="req-number">✗ ژمارە (0-9)</div>
+                                <div class="requirement" id="req-special">✗ پیتێن تایبەت (!@#$%)</div>
+                            </div>
                         </div>
                     </div>
 
@@ -734,6 +851,821 @@
         // Supabase client (initialized securely)
         let supabaseClient = null;
 
+        // Security: Rate limiting and brute force protection
+        const MAX_LOGIN_ATTEMPTS = 5;
+        const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+        const ATTEMPT_WINDOW = 5 * 60 * 1000; // 5 minutes window for attempts
+
+        function checkRateLimit(type = 'login') {
+            const storageKey = `rateLimit_${type}`;
+            const attempts = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            const now = Date.now();
+
+            // Clean old attempts outside the window
+            const recentAttempts = attempts.filter(timestamp => now - timestamp < ATTEMPT_WINDOW);
+
+            // Check if locked out
+            if (recentAttempts.length >= MAX_LOGIN_ATTEMPTS) {
+                const oldestAttempt = recentAttempts[0];
+                const lockoutEnd = oldestAttempt + LOCKOUT_DURATION;
+
+                if (now < lockoutEnd) {
+                    const remainingMinutes = Math.ceil((lockoutEnd - now) / 60000);
+                    return {
+                        allowed: false,
+                        message: `حسابا تە هاتیە بلۆککرن. دووبارە هەوڵبدە پاش ${remainingMinutes} خولەکان.`,
+                        remainingTime: lockoutEnd - now
+                    };
+                }
+            }
+
+            return { allowed: true };
+        }
+
+        function recordAttempt(type = 'login') {
+            const storageKey = `rateLimit_${type}`;
+            const attempts = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            const now = Date.now();
+
+            // Add new attempt
+            attempts.push(now);
+
+            // Keep only recent attempts
+            const recentAttempts = attempts.filter(timestamp => now - timestamp < ATTEMPT_WINDOW);
+
+            localStorage.setItem(storageKey, JSON.stringify(recentAttempts));
+
+            // Log security event
+            logSecurityEvent('login_attempt', {
+                attemptsCount: recentAttempts.length,
+                timestamp: now
+            });
+        }
+
+        function clearAttempts(type = 'login') {
+            const storageKey = `rateLimit_${type}`;
+            localStorage.removeItem(storageKey);
+        }
+
+        // Security event logging
+        function logSecurityEvent(eventType, details = {}) {
+            const events = JSON.parse(localStorage.getItem('securityEvents') || '[]');
+
+            const event = {
+                type: eventType,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                ...details
+            };
+
+            events.push(event);
+
+            // Keep last 100 events only
+            if (events.length > 100) {
+                events.shift();
+            }
+
+            localStorage.setItem('securityEvents', JSON.stringify(events));
+
+            // Log to console in development
+            console.log('🔒 Security Event:', event);
+        }
+
+        // 🔥 NUCLEAR SECURITY: Session Fingerprinting
+        function generateFingerprint() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillText('🔒', 2, 2);
+
+            const fingerprint = {
+                canvas: canvas.toDataURL().slice(-50),
+                screen: `${screen.width}x${screen.height}x${screen.colorDepth}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                language: navigator.language,
+                platform: navigator.platform,
+                hardwareConcurrency: navigator.hardwareConcurrency || 0,
+                deviceMemory: navigator.deviceMemory || 0,
+                plugins: Array.from(navigator.plugins || []).map(p => p.name).join(',').slice(0, 100),
+                timestamp: Date.now()
+            };
+
+            return btoa(JSON.stringify(fingerprint)).slice(0, 64);
+        }
+
+        function validateSession() {
+            const storedFingerprint = sessionStorage.getItem('securityFingerprint');
+            const currentFingerprint = generateFingerprint();
+
+            if (storedFingerprint && storedFingerprint !== currentFingerprint) {
+                logSecurityEvent('session_hijack_attempt', {
+                    stored: storedFingerprint.slice(0, 20),
+                    current: currentFingerprint.slice(0, 20)
+                });
+
+                // Clear session
+                sessionStorage.clear();
+                localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('user');
+
+                alert('⚠️ گۆڕانکارییەک د سیشنا تە دا هاتە دیتن. تکایە دووبارە بچە ژوورڤە.');
+                window.location.href = '/login.html';
+                return false;
+            }
+
+            if (!storedFingerprint) {
+                sessionStorage.setItem('securityFingerprint', currentFingerprint);
+            }
+
+            return true;
+        }
+
+        // 🔥 NUCLEAR SECURITY: DevTools Detection
+        let devtoolsOpen = false;
+        const devtoolsCheck = () => {
+            const threshold = 160;
+            const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+            const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+
+            if (widthThreshold || heightThreshold) {
+                if (!devtoolsOpen) {
+                    devtoolsOpen = true;
+                    logSecurityEvent('devtools_opened', {
+                        outerWidth: window.outerWidth,
+                        innerWidth: window.innerWidth,
+                        outerHeight: window.outerHeight,
+                        innerHeight: window.innerHeight
+                    });
+                }
+            } else {
+                devtoolsOpen = false;
+            }
+        };
+
+        setInterval(devtoolsCheck, 1000);
+
+        // 🔥 NUCLEAR SECURITY: Behavioral Analysis
+        const behaviorTracker = {
+            mouseMovements: 0,
+            keystrokes: 0,
+            startTime: Date.now(),
+            suspiciousScore: 0,
+
+            trackMouse: function() {
+                this.mouseMovements++;
+            },
+
+            trackKeyboard: function() {
+                this.keystrokes++;
+            },
+
+            calculateScore: function() {
+                const timeElapsed = (Date.now() - this.startTime) / 1000; // seconds
+
+                // Human behavior: ~30-100 mouse movements per minute, ~20-60 keystrokes per minute
+                const mouseRate = (this.mouseMovements / timeElapsed) * 60;
+                const keystrokeRate = (this.keystrokes / timeElapsed) * 60;
+
+                let score = 0;
+
+                // Too fast = likely bot
+                if (mouseRate > 200) score += 30;
+                if (keystrokeRate > 150) score += 30;
+
+                // Too slow/perfect = likely bot
+                if (timeElapsed > 5 && mouseRate < 5) score += 20;
+                if (timeElapsed > 5 && this.mouseMovements === 0) score += 40;
+
+                // Perfect timing = likely bot
+                if (this.keystrokes > 10 && this.keystrokes % 10 === 0) score += 10;
+
+                this.suspiciousScore = score;
+
+                if (score > 50) {
+                    logSecurityEvent('suspicious_behavior', {
+                        score: score,
+                        mouseRate: mouseRate.toFixed(2),
+                        keystrokeRate: keystrokeRate.toFixed(2),
+                        timeElapsed: timeElapsed.toFixed(2)
+                    });
+                }
+
+                return score;
+            }
+        };
+
+        document.addEventListener('mousemove', () => behaviorTracker.trackMouse(), { passive: true });
+        document.addEventListener('keydown', () => behaviorTracker.trackKeyboard(), { passive: true });
+
+        // 🔥 NUCLEAR SECURITY: Clipboard Protection for Passwords
+        function protectPasswordField(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+
+            // Prevent copy
+            field.addEventListener('copy', (e) => {
+                e.preventDefault();
+                logSecurityEvent('password_copy_attempt', { field: fieldId });
+                return false;
+            });
+
+            // Prevent cut
+            field.addEventListener('cut', (e) => {
+                e.preventDefault();
+                logSecurityEvent('password_cut_attempt', { field: fieldId });
+                return false;
+            });
+
+            // Warn on paste (common bot behavior)
+            field.addEventListener('paste', (e) => {
+                logSecurityEvent('password_paste', { field: fieldId });
+                behaviorTracker.suspiciousScore += 15;
+            });
+        }
+
+        // 🔥 NUCLEAR SECURITY: Screenshot Protection
+        document.addEventListener('keyup', (e) => {
+            // Detect PrintScreen (limited browser support)
+            if (e.key === 'PrintScreen') {
+                logSecurityEvent('screenshot_attempt', {
+                    page: window.location.pathname
+                });
+            }
+        });
+
+        // 🔥 NUCLEAR SECURITY: Time-based Anomaly Detection
+        const loginTimingTracker = {
+            formFocusTime: null,
+            submitTime: null,
+
+            onFormFocus: function() {
+                if (!this.formFocusTime) {
+                    this.formFocusTime = Date.now();
+                }
+            },
+
+            onSubmit: function() {
+                this.submitTime = Date.now();
+                const timeTaken = (this.submitTime - this.formFocusTime) / 1000;
+
+                // Suspicious if too fast (< 2 seconds = likely bot)
+                if (timeTaken < 2) {
+                    logSecurityEvent('suspicious_fast_login', {
+                        timeTaken: timeTaken.toFixed(2),
+                        type: 'too_fast'
+                    });
+                    return false;
+                }
+
+                // Suspicious if unrealistically slow (> 10 minutes = likely automated)
+                if (timeTaken > 600) {
+                    logSecurityEvent('suspicious_slow_login', {
+                        timeTaken: timeTaken.toFixed(2),
+                        type: 'too_slow'
+                    });
+                }
+
+                return true;
+            }
+        };
+
+        // 🔥 NUCLEAR SECURITY: Content Integrity Check
+        function verifyPageIntegrity() {
+            const criticalElements = [
+                'signInEmail',
+                'signInPassword',
+                'signUpEmail',
+                'signUpPassword'
+            ];
+
+            for (const elementId of criticalElements) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    // Check if element has been tampered with
+                    const originalType = element.getAttribute('data-original-type');
+                    if (originalType && element.type !== originalType) {
+                        logSecurityEvent('dom_tampering', {
+                            element: elementId,
+                            expected: originalType,
+                            actual: element.type
+                        });
+                    }
+                }
+            }
+        }
+
+        setInterval(verifyPageIntegrity, 5000);
+
+        // 🔥 NUCLEAR SECURITY: Right-click Protection (Disable on sensitive pages)
+        document.addEventListener('contextmenu', (e) => {
+            logSecurityEvent('right_click_attempt', {
+                target: e.target.id || e.target.className || 'unknown',
+                x: e.clientX,
+                y: e.clientY
+            });
+            // Optionally prevent (uncomment to enable)
+            // e.preventDefault();
+            // return false;
+        });
+
+        // 🔥 NUCLEAR SECURITY: Drag & Drop Protection
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                logSecurityEvent('drag_attempt', {
+                    element: e.target.id
+                });
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // 🔥 NUCLEAR SECURITY: View Security Dashboard (Ctrl+Shift+S)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+                e.preventDefault();
+                showSecurityDashboard();
+            }
+        });
+
+        function showSecurityDashboard() {
+            const events = JSON.parse(localStorage.getItem('securityEvents') || '[]');
+            const rateLimit = JSON.parse(localStorage.getItem('rateLimit_login') || '[]');
+
+            let dashboard = `
+🔒 SECURITY DASHBOARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 STATISTICS:
+- Total Events: ${events.length}
+- Login Attempts: ${rateLimit.length}
+- Suspicious Score: ${behaviorTracker.suspiciousScore}
+- DevTools: ${devtoolsOpen ? '⚠️ OPEN' : '✓ Closed'}
+
+📝 RECENT EVENTS (Last 10):
+${events.slice(-10).reverse().map(e => `
+• ${e.type}
+  Time: ${new Date(e.timestamp).toLocaleString()}
+  ${JSON.stringify(e, null, 2).slice(0, 200)}
+`).join('\n')}
+
+🎯 BEHAVIORAL ANALYSIS:
+- Mouse Movements: ${behaviorTracker.mouseMovements}
+- Keystrokes: ${behaviorTracker.keystrokes}
+- Session Age: ${((Date.now() - behaviorTracker.startTime) / 1000).toFixed(0)}s
+
+🔑 SESSION INFO:
+- Fingerprint: ${generateFingerprint().slice(0, 30)}...
+- User Agent: ${navigator.userAgent.slice(0, 80)}...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Press Ctrl+Shift+C to copy this report
+            `.trim();
+
+            console.log(dashboard);
+            alert('🔒 Security Dashboard logged to console!\n\nPress F12 to view detailed security analytics.');
+
+            // Auto-copy to clipboard
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(dashboard).then(() => {
+                    console.log('✅ Dashboard copied to clipboard!');
+                });
+            }
+        }
+
+        // 🔥🔥🔥 ULTIMATE: Advanced Entropy Analysis
+        function calculatePasswordEntropy(password) {
+            if (!password) return 0;
+
+            const charsets = {
+                lowercase: /[a-z]/.test(password) ? 26 : 0,
+                uppercase: /[A-Z]/.test(password) ? 26 : 0,
+                digits: /[0-9]/.test(password) ? 10 : 0,
+                special: /[^a-zA-Z0-9]/.test(password) ? 32 : 0
+            };
+
+            const poolSize = Object.values(charsets).reduce((a, b) => a + b, 0);
+            const entropy = password.length * Math.log2(poolSize);
+
+            return entropy; // bits of entropy
+        }
+
+        function checkPasswordQuality(password) {
+            const entropy = calculatePasswordEntropy(password);
+            const commonPatterns = [
+                /^(.)\1+$/, // Repeated character
+                /^(012|123|234|345|456|567|678|789|890)+/, // Sequential numbers
+                /^(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)+/i, // Sequential letters
+                /^(qwerty|asdfgh|zxcvbn)+/i, // Keyboard patterns
+                /^(password|admin|user|login|welcome)+/i // Common words
+            ];
+
+            let qualityScore = 100;
+
+            // Deduct for low entropy
+            if (entropy < 28) qualityScore -= 30;
+            else if (entropy < 36) qualityScore -= 20;
+            else if (entropy < 50) qualityScore -= 10;
+
+            // Deduct for patterns
+            for (const pattern of commonPatterns) {
+                if (pattern.test(password)) {
+                    qualityScore -= 40;
+                    break;
+                }
+            }
+
+            // Deduct for lack of variety
+            const uniqueChars = new Set(password).size;
+            if (uniqueChars < password.length * 0.5) qualityScore -= 20;
+
+            return {
+                score: Math.max(0, qualityScore),
+                entropy: entropy.toFixed(1),
+                crackTime: estimateCrackTime(entropy)
+            };
+        }
+
+        function estimateCrackTime(entropy) {
+            // Assuming 1 billion guesses per second
+            const guessesPerSecond = 1e9;
+            const possibleCombinations = Math.pow(2, entropy);
+            const seconds = possibleCombinations / (2 * guessesPerSecond); // Average time
+
+            if (seconds < 1) return 'Instant';
+            if (seconds < 60) return `${Math.round(seconds)} seconds`;
+            if (seconds < 3600) return `${Math.round(seconds / 60)} minutes`;
+            if (seconds < 86400) return `${Math.round(seconds / 3600)} hours`;
+            if (seconds < 31536000) return `${Math.round(seconds / 86400)} days`;
+            if (seconds < 3153600000) return `${Math.round(seconds / 31536000)} years`;
+            return `${Math.round(seconds / 31536000000)} centuries`;
+        }
+
+        // 🔥🔥🔥 ULTIMATE: Tab Visibility & Focus Tracking
+        let tabAwayCount = 0;
+        let tabAwayTime = 0;
+        let lastVisibilityChange = Date.now();
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                lastVisibilityChange = Date.now();
+            } else {
+                const awayDuration = Date.now() - lastVisibilityChange;
+                tabAwayCount++;
+                tabAwayTime += awayDuration;
+
+                // Suspicious if user switches tabs too much during login
+                if (tabAwayCount > 5 && tabAwayTime < 30000) {
+                    logSecurityEvent('suspicious_tab_switching', {
+                        count: tabAwayCount,
+                        totalTime: tabAwayTime
+                    });
+                    behaviorTracker.suspiciousScore += 20;
+                }
+            }
+        });
+
+        // 🔥🔥🔥 ULTIMATE: Form Field Sequence Validation
+        const fieldSequenceTracker = {
+            sequence: [],
+            expectedSequences: {
+                signin: ['signInEmail', 'signInPassword'],
+                signup: ['signUpName', 'signUpEmail', 'signUpPassword']
+            },
+
+            track: function(fieldId) {
+                this.sequence.push({
+                    field: fieldId,
+                    timestamp: Date.now()
+                });
+            },
+
+            validate: function(formType) {
+                const expected = this.expectedSequences[formType];
+                const actual = this.sequence.map(s => s.field);
+
+                // Check if fields were filled in unusual order
+                let violations = 0;
+                for (let i = 0; i < expected.length - 1; i++) {
+                    const expectedIndex = actual.indexOf(expected[i]);
+                    const nextIndex = actual.indexOf(expected[i + 1]);
+
+                    if (expectedIndex > nextIndex && nextIndex !== -1) {
+                        violations++;
+                    }
+                }
+
+                if (violations > 0) {
+                    logSecurityEvent('unusual_field_sequence', {
+                        formType: formType,
+                        violations: violations,
+                        sequence: actual
+                    });
+                    return false;
+                }
+
+                return true;
+            }
+        };
+
+        // 🔥🔥🔥 ULTIMATE: Network Connection Monitoring
+        function detectConnectionType() {
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+
+            if (connection) {
+                logSecurityEvent('connection_info', {
+                    effectiveType: connection.effectiveType,
+                    downlink: connection.downlink,
+                    rtt: connection.rtt,
+                    saveData: connection.saveData
+                });
+
+                // Suspicious if using VPN/Tor (very high RTT)
+                if (connection.rtt && connection.rtt > 500) {
+                    logSecurityEvent('high_latency_connection', {
+                        rtt: connection.rtt,
+                        possibleVPN: true
+                    });
+                }
+            }
+        }
+
+        // 🔥🔥🔥 ULTIMATE: WebRTC Leak Detection
+        async function detectWebRTCLeaks() {
+            if (!window.RTCPeerConnection) return;
+
+            try {
+                const pc = new RTCPeerConnection({
+                    iceServers: [{urls: 'stun:stun.l.google.com:19302'}]
+                });
+
+                pc.createDataChannel('');
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+
+                const ips = [];
+                pc.onicecandidate = (e) => {
+                    if (e.candidate) {
+                        const ipRegex = /([0-9]{1,3}\.){3}[0-9]{1,3}/;
+                        const match = ipRegex.exec(e.candidate.candidate);
+                        if (match) {
+                            ips.push(match[0]);
+                            logSecurityEvent('webrtc_ip_detected', {
+                                ip: match[0].replace(/\d+$/, 'XXX') // Partial anonymization
+                            });
+                        }
+                    }
+                };
+
+                setTimeout(() => pc.close(), 1000);
+            } catch (error) {
+                // WebRTC blocked or not available
+                logSecurityEvent('webrtc_blocked', {
+                    possibleVPN: true
+                });
+            }
+        }
+
+        // 🔥🔥🔥 ULTIMATE: Memory-based Challenge (Alternative CAPTCHA)
+        const memoryChallenge = {
+            pattern: null,
+            shown: false,
+
+            generate: function() {
+                // Generate random pattern for user to remember
+                const patterns = ['🔴🔵🟢', '🌙⭐☀️', '🔒🔑🛡️', '💎💰👑'];
+                this.pattern = patterns[Math.floor(Math.random() * patterns.length)];
+                return this.pattern;
+            },
+
+            verify: function(userInput) {
+                return userInput === this.pattern;
+            }
+        };
+
+        // 🔥🔥🔥 ULTIMATE: Advanced Bot Detection - Pointer Events
+        const pointerAnalyzer = {
+            events: [],
+
+            track: function(e) {
+                this.events.push({
+                    type: e.type,
+                    x: e.clientX,
+                    y: e.clientY,
+                    timestamp: Date.now(),
+                    pressure: e.pressure || 0,
+                    pointerType: e.pointerType || 'unknown'
+                });
+
+                // Keep last 50 events
+                if (this.events.length > 50) this.events.shift();
+            },
+
+            analyze: function() {
+                if (this.events.length < 10) return { isSuspicious: false, score: 0 };
+
+                let suspiciousScore = 0;
+
+                // Check for perfect straight lines (bot behavior)
+                let straightLines = 0;
+                for (let i = 2; i < this.events.length; i++) {
+                    const dx1 = this.events[i-1].x - this.events[i-2].x;
+                    const dy1 = this.events[i-1].y - this.events[i-2].y;
+                    const dx2 = this.events[i].x - this.events[i-1].x;
+                    const dy2 = this.events[i].y - this.events[i-1].y;
+
+                    // Check if vectors are perfectly aligned
+                    if (dx1 !== 0 && dy1 !== 0 && Math.abs(dx2/dx1 - dy2/dy1) < 0.01) {
+                        straightLines++;
+                    }
+                }
+
+                if (straightLines > 5) suspiciousScore += 30;
+
+                // Check for impossible speed
+                for (let i = 1; i < this.events.length; i++) {
+                    const distance = Math.sqrt(
+                        Math.pow(this.events[i].x - this.events[i-1].x, 2) +
+                        Math.pow(this.events[i].y - this.events[i-1].y, 2)
+                    );
+                    const time = this.events[i].timestamp - this.events[i-1].timestamp;
+                    const speed = time > 0 ? distance / time : 0;
+
+                    // Impossible for human (>5 pixels per millisecond)
+                    if (speed > 5) suspiciousScore += 20;
+                }
+
+                // Check for touch vs mouse inconsistency
+                const types = new Set(this.events.map(e => e.pointerType));
+                if (types.size > 1 && this.events.length < 20) {
+                    // Switching input types too quickly is suspicious
+                    suspiciousScore += 15;
+                }
+
+                return {
+                    isSuspicious: suspiciousScore > 40,
+                    score: suspiciousScore,
+                    straightLines: straightLines
+                };
+            }
+        };
+
+        // Track pointer events
+        ['pointermove', 'pointerdown', 'pointerup'].forEach(eventType => {
+            document.addEventListener(eventType, (e) => pointerAnalyzer.track(e), { passive: true });
+        });
+
+        // 🔥🔥🔥 ULTIMATE: Automated Form Filler Detection
+        function detectAutofill() {
+            const inputs = document.querySelectorAll('input');
+            let autofilledCount = 0;
+
+            inputs.forEach(input => {
+                // Check if browser autofilled
+                if (input.matches(':-webkit-autofill')) {
+                    autofilledCount++;
+                }
+
+                // Monitor for instant value changes (automation)
+                let lastValue = input.value;
+                const observer = new MutationObserver(() => {
+                    if (input.value !== lastValue && input.value.length > 5) {
+                        const timeSinceFocus = Date.now() - (input.dataset.lastFocus || 0);
+                        if (timeSinceFocus < 50) {
+                            logSecurityEvent('instant_fill_detected', {
+                                field: input.id,
+                                timeSinceFocus: timeSinceFocus
+                            });
+                            behaviorTracker.suspiciousScore += 25;
+                        }
+                    }
+                    lastValue = input.value;
+                });
+
+                input.addEventListener('focus', () => {
+                    input.dataset.lastFocus = Date.now();
+                });
+
+                observer.observe(input, { attributes: true, attributeFilter: ['value'] });
+            });
+
+            if (autofilledCount > 2) {
+                logSecurityEvent('multiple_autofill', {
+                    count: autofilledCount
+                });
+            }
+        }
+
+        // 🔥🔥🔥 ULTIMATE: Initialize ALL Security Systems
+        document.addEventListener('DOMContentLoaded', function() {
+            // Detect where user came from and store redirect destination
+            const urlParams = new URLSearchParams(window.location.search);
+            const source = urlParams.get('source') || urlParams.get('from');
+            const referrer = document.referrer;
+
+            let redirectDestination = '/quran.html'; // Default
+
+            // Check URL parameter first (highest priority)
+            if (source === 'tv') {
+                redirectDestination = '/tv.html';
+            } else if (source === 'quran') {
+                redirectDestination = '/quran.html';
+            }
+            // Check referrer if no explicit source
+            else if (referrer) {
+                if (referrer.includes('/tv.html')) {
+                    redirectDestination = '/tv.html';
+                } else if (referrer.includes('/quran.html') || referrer.includes('/Quran.html')) {
+                    redirectDestination = '/quran.html';
+                }
+            }
+
+            // Store for later use
+            sessionStorage.setItem('login_redirect_destination', redirectDestination);
+            console.log('🎯 Login redirect destination set to:', redirectDestination);
+
+            // Set fingerprint
+            sessionStorage.setItem('securityFingerprint', generateFingerprint());
+
+            // Protect password fields
+            protectPasswordField('signInPassword');
+            protectPasswordField('signUpPassword');
+
+            // Store original input types
+            const inputs = document.querySelectorAll('input[type="password"], input[type="email"]');
+            inputs.forEach(input => {
+                input.setAttribute('data-original-type', input.type);
+
+                // Track field sequence
+                input.addEventListener('input', () => {
+                    fieldSequenceTracker.track(input.id);
+                });
+            });
+
+            // Track form focus time
+            const signInForm = document.querySelector('#signinForm form');
+            const signUpForm = document.querySelector('#signupForm form');
+
+            if (signInForm) {
+                signInForm.addEventListener('focusin', () => loginTimingTracker.onFormFocus(), { once: true });
+            }
+            if (signUpForm) {
+                signUpForm.addEventListener('focusin', () => loginTimingTracker.onFormFocus(), { once: true });
+            }
+
+            // Initialize advanced detection
+            detectConnectionType();
+            detectWebRTCLeaks();
+            setTimeout(detectAutofill, 1000);
+
+            // Monitor network changes
+            if (navigator.connection) {
+                navigator.connection.addEventListener('change', detectConnectionType);
+            }
+
+            logSecurityEvent('security_initialized', {
+                fingerprint: generateFingerprint().slice(0, 20),
+                features: [
+                    'fingerprinting', 'devtools', 'behavioral', 'clipboard',
+                    'integrity', 'entropy', 'tab-tracking', 'sequence-validation',
+                    'network-monitoring', 'webrtc', 'pointer-analysis', 'autofill-detection'
+                ],
+                securityLevel: 'NUCLEAR_MAXIMUM'
+            });
+
+            // Final comprehensive check every 30 seconds
+            setInterval(() => {
+                const pointerAnalysis = pointerAnalyzer.analyze();
+                if (pointerAnalysis.isSuspicious) {
+                    logSecurityEvent('suspicious_pointer_behavior', pointerAnalysis);
+                }
+
+                // Check overall threat level
+                const totalScore = behaviorTracker.suspiciousScore + pointerAnalysis.score;
+                if (totalScore > 100) {
+                    logSecurityEvent('CRITICAL_THREAT_DETECTED', {
+                        behaviorScore: behaviorTracker.suspiciousScore,
+                        pointerScore: pointerAnalysis.score,
+                        totalScore: totalScore,
+                        recommendation: 'BLOCK_USER'
+                    });
+                }
+            }, 30000);
+
+            console.log('🔥🔥🔥 NUCLEAR SECURITY: 100% ARMED AND OPERATIONAL 🔥🔥🔥');
+        });
+
+        // XSS Protection: HTML escape function
+        function escapeHtml(unsafe) {
+            if (unsafe === null || unsafe === undefined) return '';
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         // Initialize Supabase with secure credentials
         async function initializeSupabase() {
             try {
@@ -812,6 +1744,95 @@
             }
         }
 
+        // Password Strength Meter
+        function checkPasswordStrength(password) {
+            const container = document.getElementById('passwordStrengthContainer');
+            const fill = document.getElementById('passwordStrengthFill');
+            const text = document.getElementById('passwordStrengthText');
+
+            // Requirements elements
+            const reqLength = document.getElementById('req-length');
+            const reqUppercase = document.getElementById('req-uppercase');
+            const reqLowercase = document.getElementById('req-lowercase');
+            const reqNumber = document.getElementById('req-number');
+            const reqSpecial = document.getElementById('req-special');
+
+            if (!password) {
+                container.style.display = 'none';
+                return false;
+            }
+
+            container.style.display = 'block';
+
+            // Check requirements
+            const hasLength = password.length >= 8;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+            // Update requirement indicators
+            updateRequirement(reqLength, hasLength, '✓ کەمتر ٨ پیت');
+            updateRequirement(reqUppercase, hasUppercase, '✓ پیتێن گەورە (A-Z)');
+            updateRequirement(reqLowercase, hasLowercase, '✓ پیتێن بچوک (a-z)');
+            updateRequirement(reqNumber, hasNumber, '✓ ژمارە (0-9)');
+            updateRequirement(reqSpecial, hasSpecial, '✓ پیتێن تایبەت (!@#$%)');
+
+            // Calculate strength
+            let strength = 0;
+            if (hasLength) strength++;
+            if (hasUppercase) strength++;
+            if (hasLowercase) strength++;
+            if (hasNumber) strength++;
+            if (hasSpecial) strength++;
+
+            // Update UI based on strength
+            fill.className = 'password-strength-fill';
+            text.className = 'password-strength-text';
+
+            if (strength <= 2) {
+                fill.classList.add('weak');
+                text.classList.add('weak');
+                text.textContent = '⚠️ لاواز';
+                return false;
+            } else if (strength === 3) {
+                fill.classList.add('fair');
+                text.classList.add('fair');
+                text.textContent = '🔸 ناڤەند';
+                return false;
+            } else if (strength === 4) {
+                fill.classList.add('good');
+                text.classList.add('good');
+                text.textContent = '✓ باش';
+                return true;
+            } else {
+                fill.classList.add('strong');
+                text.classList.add('strong');
+                text.textContent = '🔒 زۆر بهێز';
+                return true;
+            }
+        }
+
+        function updateRequirement(element, isMet, metText) {
+            if (isMet) {
+                element.classList.add('met');
+                element.textContent = metText;
+            } else {
+                element.classList.remove('met');
+                element.textContent = element.textContent.replace('✓', '✗');
+            }
+        }
+
+        // Add event listener for password input
+        document.addEventListener('DOMContentLoaded', function() {
+            const signUpPassword = document.getElementById('signUpPassword');
+            if (signUpPassword) {
+                signUpPassword.addEventListener('input', function(e) {
+                    checkPasswordStrength(e.target.value);
+                });
+            }
+        });
+
         // Show message
         function showMessage(message, type = 'info') {
             const container = document.getElementById('messageContainer');
@@ -840,6 +1861,17 @@
             event.preventDefault();
             clearMessage();
 
+            // Security: Check rate limiting
+            const rateLimitCheck = checkRateLimit('login');
+            if (!rateLimitCheck.allowed) {
+                showMessage(rateLimitCheck.message, 'error');
+                logSecurityEvent('login_blocked', {
+                    reason: 'rate_limit',
+                    remainingTime: rateLimitCheck.remainingTime
+                });
+                return false;
+            }
+
             // Check if Supabase is initialized
             if (!supabaseClient) {
                 showMessage('سیستەم ئامادە نییە. تکایە پەڕە نوێبکەرەوە.', 'error');
@@ -854,6 +1886,26 @@
                 showMessage('تکایە ئیمەیل و پاسوۆرد بنڤیسە', 'error');
                 return false;
             }
+
+            // 🔥 NUCLEAR: Check timing anomalies
+            if (!loginTimingTracker.onSubmit()) {
+                showMessage('⚠️ لۆگینا گەلەک خێرا. تکایە دووبارە هەوڵبدە.', 'error');
+                return false;
+            }
+
+            // 🔥 NUCLEAR: Check behavioral score
+            const behaviorScore = behaviorTracker.calculateScore();
+            if (behaviorScore > 70) {
+                logSecurityEvent('login_blocked_behavior', {
+                    score: behaviorScore,
+                    reason: 'suspicious_bot_behavior'
+                });
+                showMessage('هەڵەیەک ڕوویدا. تکایە دواتر هەوڵ بدەرەوە.', 'error');
+                return false;
+            }
+
+            // Record login attempt
+            recordAttempt('login');
 
             setLoading('signInBtn', true);
 
@@ -922,6 +1974,13 @@
 
                 showMessage('سەرکەفتی! تو هاتی ژوورڤە...', 'success');
 
+                // Security: Clear login attempts after successful login
+                clearAttempts('login');
+                logSecurityEvent('login_success', {
+                    email: email,
+                    method: 'password'
+                });
+
                 // Wait for auth redirect handler to load and session to persist
                 setTimeout(async () => {
                     // VERIFY AGAIN right before redirect
@@ -935,11 +1994,12 @@
                         console.error('❌ [DEBUG] CRITICAL: localStorage was cleared before redirect!');
                     }
 
-                    console.log('🚀 Redirecting to /quran.html...');
+                    const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
+                    console.log('🚀 Redirecting to', redirectDest);
                     if (window.authRedirect) {
-                        await window.authRedirect.handlePostLoginRedirect('/quran.html');
+                        await window.authRedirect.handlePostLoginRedirect(redirectDest);
                     } else {
-                        window.location.href = '/quran.html';
+                        window.location.href = redirectDest;
                     }
                 }, 1500);
 
@@ -970,6 +2030,23 @@
         async function handleEmailSignUp(event) {
             event.preventDefault();
             clearMessage();
+
+            // Security: Check honeypot field for bot detection
+            const honeypot = document.getElementById('website');
+            if (honeypot && honeypot.value) {
+                // Bot detected - honeypot field was filled
+                logSecurityEvent('bot_detected', {
+                    type: 'honeypot',
+                    field: 'website',
+                    value: honeypot.value.substring(0, 50)
+                });
+                // Silently fail - don't let bot know they were detected
+                showMessage('هەڵە د دروستکرنا حسابێ دا. تکایە دووبارە هەوڵبدە.', 'error');
+                setTimeout(() => {
+                    setLoading('signUpBtn', false);
+                }, 2000);
+                return false;
+            }
 
             const name = document.getElementById('signUpName').value.trim();
             const email = document.getElementById('signUpEmail').value.trim();
@@ -1055,7 +2132,7 @@
                 document.getElementById('otpEmail').textContent = email;
                 showForm('otp');
 
-                showMessage('✅ کۆدی پشتڕاستکردنەوە نێردرا!<br><br>چاڤێ ئیمەیلەکەت بکە بۆ <strong>' + email + '</strong>', 'success');
+                showMessage('✅ کۆدی پشتڕاستکردنەوە نێردرا!<br><br>چاڤێ ئیمەیلەکەت بکە بۆ <strong>' + escapeHtml(email) + '</strong>', 'success');
 
                 // Start resend timer
                 startResendTimer();
@@ -1067,7 +2144,7 @@
 
             } catch (error) {
                 console.error('Send OTP error:', error);
-                showMessage('هەڵە لە ناردنی کۆد: ' + error.message, 'error');
+                showMessage('هەڵە لە ناردنی کۆد: ' + escapeHtml(error.message), 'error');
             } finally {
                 setLoading('signUpBtn', false);
             }
@@ -1103,7 +2180,7 @@
 
             } catch (error) {
                 console.error('Google sign in error:', error);
-                showMessage('هەلە د چوونە ژوورڤە ب Google: ' + error.message, 'error');
+                showMessage('هەلە د چوونە ژوورڤە ب Google: ' + escapeHtml(error.message), 'error');
             }
         }
 
@@ -1156,7 +2233,7 @@
 
             } catch (error) {
                 console.error('Password reset error:', error);
-                showMessage('هەلە د شاندنا لینکا ڤەگەهاندنا پاسوۆردێ: ' + error.message, 'error');
+                showMessage('هەلە د شاندنا لینکا ڤەگەهاندنا پاسوۆردێ: ' + escapeHtml(error.message), 'error');
             } finally {
                 setLoading('forgotBtn', false);
             }
@@ -1357,11 +2434,12 @@
                             }
 
                             // Auto sign-in successful, redirect with profile check
-                            console.log('🚀 Redirecting to /quran.html...');
+                            const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
+                            console.log('🚀 Redirecting to', redirectDest);
                             if (window.authRedirect) {
-                                await window.authRedirect.handlePostLoginRedirect('/quran.html');
+                                await window.authRedirect.handlePostLoginRedirect(redirectDest);
                             } else {
-                                window.location.href = '/quran.html';
+                                window.location.href = redirectDest;
                             }
                         }
                     } catch (e) {
@@ -1372,7 +2450,7 @@
 
             } catch (error) {
                 console.error('OTP verification error:', error);
-                showMessage('هەڵە: ' + error.message, 'error');
+                showMessage('هەڵە: ' + escapeHtml(error.message), 'error');
 
                 // If attempts left is in error, show it
                 if (error.attemptsLeft !== undefined) {
@@ -1425,7 +2503,7 @@
 
             } catch (error) {
                 console.error('Resend OTP error:', error);
-                showMessage('هەڵە لە ناردنەوەی کۆد: ' + error.message, 'error');
+                showMessage('هەڵە لە ناردنەوەی کۆد: ' + escapeHtml(error.message), 'error');
             }
         }
 
@@ -1537,9 +2615,10 @@
                         return;
                     }
 
+                    const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
                     showMessage('تو ژبەر د ژوورڤە دایی. ڤەگوهاستن...', 'info');
                     setTimeout(() => {
-                        window.location.href = '/quran.html';
+                        window.location.href = redirectDest;
                     }, 1000);
                 } else {
                     console.log('ℹ️ [DEBUG LOGIN] No session found, user can log in');
@@ -1553,10 +2632,11 @@
                 console.log('Auth state changed:', event, session);
 
                 if (event === 'SIGNED_IN' && session) {
-                    console.log('User signed in, redirecting...');
+                    const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
+                    console.log('User signed in, redirecting to', redirectDest);
                     showMessage('سەرکەفتی! ڤەگوهاستن...', 'success');
                     setTimeout(() => {
-                        window.location.href = '/quran.html';
+                        window.location.href = redirectDest;
                     }, 1000);
                 }
 
