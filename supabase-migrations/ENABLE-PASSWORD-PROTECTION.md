@@ -21,20 +21,31 @@ Enable leaked password protection in Supabase Auth settings.
 
 ## How to Enable (2 Steps)
 
-### Step 1: Go to Auth Settings
+### Step 1: Go to Auth Configuration
 
 1. Open your **Supabase Dashboard**
 2. Select your project
-3. Navigate to **Authentication** → **Policies** (or **Settings**)
+3. Click on **Authentication** in the left sidebar
+4. Click on **Configuration** (NOT Policies)
+5. Scroll down to find **"Auth Providers"** or **"Password settings"**
 
 ### Step 2: Enable Password Protection
 
-Look for the setting:
-- **"Check for leaked passwords"** or
-- **"Password strength and leaked password protection"** or
-- **"HaveIBeenPwned integration"**
+Look for one of these settings:
+- **"Password strength"** section
+- **"Leaked password protection"**
+- **"Check passwords against breached database"**
+- Or a toggle for **"HaveIBeenPwned"**
 
 **Turn it ON** ✅
+
+### If You Still Can't Find It
+
+The setting might be in:
+- **Project Settings** → **Authentication** → **Password Policies**
+- Or it might be automatically enabled and just not showing in the UI
+
+Try searching for "password" in the Supabase Dashboard settings.
 
 ### Alternative Method (If not in UI)
 
