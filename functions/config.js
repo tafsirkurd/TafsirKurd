@@ -27,10 +27,18 @@ export async function onRequest(context) {
 
     try {
         // Return public Supabase configuration (ONLY anon key, NEVER service_role!)
+        // Use environment variables ONLY - no fallbacks
         const config = {
-            supabaseUrl: env.SUPABASE_URL || 'https://nvwgepkhzobgwnzibpvq.supabase.co',
-            supabaseKey: env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d2dlcGtoemJiZ3duemljcHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMzMTY4MDEsImV4cCI6MjA0ODg5MjgwMX0.t6m69JNYhqJsEDjVNvpNwVIlPbxp3HHhx5QL3EqSlOU'
+            supabaseUrl: env.SUPABASE_URL,
+            supabaseKey: env.SUPABASE_ANON_KEY
         };
+
+        // Log what we're getting from env (for debugging)
+        console.log('Environment check:', {
+            hasUrl: !!env.SUPABASE_URL,
+            hasKey: !!env.SUPABASE_ANON_KEY,
+            keyPrefix: env.SUPABASE_ANON_KEY?.substring(0, 50) + '...'
+        });
 
         // Validate environment variables exist
         if (!config.supabaseUrl || !config.supabaseKey) {
