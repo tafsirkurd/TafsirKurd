@@ -122,7 +122,7 @@ self.addEventListener('fetch', event => {
         .catch(() => {
           // Offline - serve cached version
           return caches.match(event.request).then(cached => {
-            return cached || caches.match('/Quran.html');
+            return cached || caches.match('/quran.html');
           });
         })
     );
