@@ -4891,8 +4891,9 @@
                     const response = await fetch('/config');
                     if (!response.ok) throw new Error('Failed to fetch auth configuration');
                     const config = await response.json();
-                    if (!config.supabaseUrl || !config.supabaseAnonKey) throw new Error('Invalid auth configuration');
-                    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+                    if (!config.supabaseUrl || !config.supabaseKey) throw new Error('Invalid auth configuration');
+                    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                    window.supabaseClient = supabaseClient;
                     console.log('✅ Supabase initialized securely in Quran page');
                     return true;
                 } catch (error) {
@@ -4901,14 +4902,6 @@
                 }
             }
             return false;
-        }
-        let supabaseClient = null;
-
-        // Initialize Supabase client immediately if library is loaded
-        if (typeof window.supabase !== 'undefined' && !supabaseClient) {
-            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-            window.supabaseClient = supabaseClient;
-            console.log('✅ Supabase client initialized immediately');
         }
 
         // Wait for auth libraries to load
@@ -4919,9 +4912,7 @@
             for (let i = 0; i < maxRetries; i++) {
                 // Check if Supabase is loaded
                 if (typeof window.supabase !== 'undefined' && !supabaseClient) {
-                    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-                    window.supabaseClient = supabaseClient;
-                    console.log('✅ Supabase client initialized in wait loop');
+                    await initSupabase();
                 }
 
                 // Check if both are ready
@@ -4938,9 +4929,7 @@
 
             // Initialize Supabase if available but authRedirect isn't
             if (typeof window.supabase !== 'undefined' && !supabaseClient) {
-                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-                window.supabaseClient = supabaseClient;
-                console.log('✅ Supabase client initialized (timeout fallback)');
+                await initSupabase();
             }
 
             return false;
