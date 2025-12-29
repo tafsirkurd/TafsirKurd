@@ -4434,7 +4434,7 @@
                         <i class="fas fa-cog"></i>
                         <span>رێکخستن</span>
                     </a>
-                    <div id="authSection">
+                    <div id="authSection" style="opacity: 0; transition: opacity 0.3s;">
                         <button class="header-btn" onclick="goToLogin()">
                             <i class="fas fa-user"></i>
                             <span>چوونە ژوورڤە</span>
@@ -5619,6 +5619,12 @@
 
                 // If we reach here, no authentication found
                 console.log('ℹ️ No authentication found - user is guest');
+
+                // Show login button for guests
+                const authSection = document.getElementById('authSection');
+                if (authSection) {
+                    authSection.style.opacity = '1';
+                }
             } catch (error) {
                 console.error('❌ Error checking authentication:', error);
 
@@ -5631,6 +5637,12 @@
                     isUserAuthenticated = true;
                     console.log('✅ User authenticated via localStorage (error fallback)');
                     onSignInSuccess();
+                } else {
+                    // Show login button if not authenticated
+                    const authSection = document.getElementById('authSection');
+                    if (authSection) {
+                        authSection.style.opacity = '1';
+                    }
                 }
             }
         }
@@ -5656,6 +5668,7 @@
                         <i class="fas fa-chevron-down"></i>
                     </button>
                 `;
+                authSection.style.opacity = '1'; // Show after updating
                 console.log('✅ Auth section updated');
             } else {
                 console.error('❌ authSection element not found!');
