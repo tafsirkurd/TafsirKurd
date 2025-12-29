@@ -21,15 +21,28 @@ The view has been recreated with `security_invoker = true`, which ensures:
 
 ## How to Apply the Fix
 
+### ⚠️ IMPORTANT: Which File to Run
+
+**ONLY run this file:**
+- ✅ `fix-profiles-view-security.sql` - **This is the file you need**
+
+**DO NOT run:**
+- ❌ `create-profiles-table.sql` - This creates the entire table (already exists in your DB)
+
 ### Option 1: Run the Migration SQL (Recommended)
 
 1. Go to your Supabase Dashboard
 2. Navigate to **SQL Editor**
-3. Run the migration file:
+3. Open the file `supabase-migrations/fix-profiles-view-security.sql`
+4. **Copy ALL the contents** (entire file)
+5. **Paste into SQL Editor**
+6. Click **Run**
 
-```bash
-# Copy and paste the contents of:
-supabase-migrations/fix-profiles-view-security.sql
+**Expected output:**
+```
+✅ Fixed profiles_with_avatar view - now using SECURITY INVOKER
+✅ RLS policies on public.profiles will now be enforced for this view
+✅ Users can only see their own profile through this view
 ```
 
 ### Option 2: Manual Fix via SQL Editor
