@@ -1,8 +1,8 @@
-const CACHE_NAME = 'tafsir-kurd-v442-fix-console-errors';
+const CACHE_NAME = 'tafsir-kurd-v443-ultra-fast';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/Quran.html',
+  '/quran.html',
   '/bookmarks.html',
   '/profile.html',
   '/goals.html',
@@ -45,7 +45,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v442-fix-console-errors');
+  console.log('[ServiceWorker] Installing v443-ultra-fast');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
