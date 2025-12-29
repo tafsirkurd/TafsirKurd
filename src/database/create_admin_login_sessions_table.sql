@@ -12,8 +12,34 @@ CREATE TABLE IF NOT EXISTS public.admin_login_sessions (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Disable RLS to avoid policy errors
-ALTER TABLE public.admin_login_sessions DISABLE ROW LEVEL SECURITY;
+-- Enable RLS for security
+ALTER TABLE public.admin_login_sessions ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies: Admin-only access
+
+-- Service role can manage all admin sessions
+CREATE POLICY "Service role can manage admin sessions"
+ON public.admin_login_sessions
+FOR ALL
+TO service_role
+USING (true)
+WITH CHECK (true);
+
+-- Block authenticated users (admin-only data)
+CREATE POLICY "Regular users cannot access admin sessions"
+ON public.admin_login_sessions
+FOR ALL
+TO authenticated
+USING (false)
+WITH CHECK (false);
+
+-- Block public/anonymous access
+CREATE POLICY "Public cannot access admin sessions"
+ON public.admin_login_sessions
+FOR ALL
+TO anon
+USING (false)
+WITH CHECK (false);
 
 -- Create indexes for faster lookups
 CREATE INDEX IF NOT EXISTS idx_admin_sessions_email ON public.admin_login_sessions(email);
