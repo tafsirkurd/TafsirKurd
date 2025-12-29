@@ -2170,10 +2170,13 @@ Press Ctrl+Shift+C to copy this report
             showMessage('ڤەگوهاستنا تە بۆ Google...', 'info');
 
             try {
+                // Get redirect destination
+                const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
+
                 const { data, error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + '/quran.html',
+                        redirectTo: window.location.origin + redirectDest,
                         queryParams: {
                             access_type: 'offline',
                             prompt: 'consent'
