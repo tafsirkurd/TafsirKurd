@@ -41,9 +41,11 @@ export async function onRequest(context) {
 
     // Return credentials with CORS headers
     return new Response(JSON.stringify({
-            supabaseUrl,
-            supabaseAnonKey
-        , { status: 200, headers: {
+        supabaseUrl,
+        supabaseAnonKey
+    }), {
+        status: 200,
+        headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': origin || '*',
             'Access-Control-Allow-Methods': 'GET',
@@ -51,6 +53,6 @@ export async function onRequest(context) {
             'Cache-Control': 'private, no-cache, no-store, must-revalidate',
             'Pragma': 'no-cache',
             'Expires': '0'
-        } }))
-    };
-};
+        }
+    });
+}
