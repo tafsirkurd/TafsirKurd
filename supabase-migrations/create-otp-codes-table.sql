@@ -35,6 +35,7 @@ CREATE OR REPLACE FUNCTION public.cleanup_expired_otps()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = ''  -- Security: Prevent search_path manipulation
 AS $$
 BEGIN
     DELETE FROM public.otp_codes

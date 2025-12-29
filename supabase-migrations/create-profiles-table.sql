@@ -59,12 +59,16 @@ WITH CHECK (true);
 
 -- Function to handle updated_at timestamp
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''  -- Security: Prevent search_path manipulation
+AS $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- Trigger to update updated_at on profile changes
 DROP TRIGGER IF EXISTS on_profile_updated ON public.profiles;
@@ -75,7 +79,11 @@ CREATE TRIGGER on_profile_updated
 
 -- Function to create profile automatically when user signs up
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''  -- Security: Prevent search_path manipulation
+AS $$
 DECLARE
     user_email TEXT;
     user_name TEXT;
@@ -138,7 +146,7 @@ BEGIN
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- Trigger to auto-create profile when user signs up
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -149,12 +157,16 @@ CREATE TRIGGER on_auth_user_created
 
 -- Function to get default avatar based on name
 CREATE OR REPLACE FUNCTION public.get_default_avatar(user_name TEXT)
-RETURNS TEXT AS $$
+RETURNS TEXT
+LANGUAGE plpgsql
+IMMUTABLE
+SET search_path = ''  -- Security: Prevent search_path manipulation
+AS $$
 BEGIN
     -- Return a DiceBear avatar URL based on username
     RETURN 'https://api.dicebear.com/7.x/initials/svg?seed=' || COALESCE(user_name, 'User');
 END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+$$;
 
 -- View to get user profile with default avatar
 -- IMPORTANT: Using security_invoker to enforce RLS policies
