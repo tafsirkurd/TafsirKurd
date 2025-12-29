@@ -1678,12 +1678,12 @@ Press Ctrl+Shift+C to copy this report
 
                 const config = await response.json();
 
-                if (!config.supabaseUrl || !config.supabaseAnonKey) {
+                if (!config.supabaseUrl || !config.supabaseKey) {
                     throw new Error('Invalid auth configuration');
                 }
 
                 // Initialize Supabase client
-                supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+                supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
                 console.log('✅ Supabase initialized securely');
                 return true;
 

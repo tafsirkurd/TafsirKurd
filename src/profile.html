@@ -1352,12 +1352,12 @@
 
                     const config = await response.json();
 
-                    if (!config.supabaseUrl || !config.supabaseAnonKey) {
+                    if (!config.supabaseUrl || !config.supabaseKey) {
                         throw new Error('Invalid auth configuration');
                     }
 
                     // Initialize Supabase client with fetched credentials
-                    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+                    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
                     console.log('✅ Supabase initialized securely from server');
                     return true;
                 } catch (error) {
