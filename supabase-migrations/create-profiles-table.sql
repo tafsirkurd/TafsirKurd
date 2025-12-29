@@ -157,7 +157,10 @@ END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
 -- View to get user profile with default avatar
-CREATE OR REPLACE VIEW public.profiles_with_avatar AS
+-- IMPORTANT: Using security_invoker to enforce RLS policies
+-- This prevents SECURITY DEFINER issue (Supabase linter 0010)
+CREATE OR REPLACE VIEW public.profiles_with_avatar
+WITH (security_invoker = true) AS
 SELECT
     p.*,
     COALESCE(p.avatar_url, public.get_default_avatar(p.display_name)) as avatar
