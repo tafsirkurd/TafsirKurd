@@ -4403,7 +4403,7 @@
         <!-- Profile Section -->
         <div class="feather-section" id="profileSection" style="display: none;">
             <div class="profile-section" onclick="window.location.href='/profile'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href='/profile';}" role="button" tabindex="0" aria-label="چوونە پرۆفایل">
-                <img src="" alt="Profile" class="profile-avatar-large" id="profileAvatar">
+                <img src="" alt="وێنەیا بکارئینەری" class="profile-avatar-large" id="profileAvatar">
                 <div class="profile-info">
                     <div class="profile-name" id="profileName">ناڤ</div>
                     <div class="profile-email" id="profileEmail">email@gmail.com</div>
@@ -4484,7 +4484,7 @@
         <header class="professional-header">
             <div class="header-container">
                 <div class="header-logo-section" onclick="showHomePage()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showHomePage();}" role="button" tabindex="0" aria-label="گەڕانەوە بۆ پەڕەیا سەرەکی">
-                    <img src="/assets/images/logo.png" alt="Logo" class="header-logo-img logo-image">
+                    <img src="/assets/images/logo.png" alt="لۆگۆیا تەفسیر کورد" class="header-logo-img logo-image">
                     <div class="header-title">تەفسیر کورد</div>
                 </div>
                 <nav class="header-nav">
@@ -4517,6 +4517,7 @@
                         class="hero-search-input"
                         placeholder="لێگەریانا قورئانێ…"
                         id="heroSearchInput"
+                        aria-label="لێگەریانا قورئانێ"
                     >
                     <i class="fas fa-search hero-search-icon"></i>
                     <!-- Search Results Dropdown -->
@@ -7022,6 +7023,7 @@
                                 <button class="ayah-action-btn play-btn"
                                         onclick="toggleAyahPlayback(${surahNum}, ${verse.verse})"
                                         title="گوێگرتن"
+                                        aria-label="لیستانا ئایەتێ"
                                         data-surah="${surahNum}"
                                         data-ayah="${verse.verse}">
                                     <i class="fas fa-play"></i>
@@ -7032,7 +7034,8 @@
                                 <div class="ayah-menu-container">
                                     <button class="ayah-action-btn ayah-menu-btn"
                                             onclick="toggleAyahMenu(event, ${surahNum}, ${verse.verse})"
-                                            title="زێدەتر">
+                                            title="زێدەتر"
+                                            aria-label="مێنیویا ئایەتێ">
                                         <i class="fas fa-ellipsis-v"></i>
                                     </button>
                                     <div class="ayah-menu" id="ayahMenu-${surahNum}-${verse.verse}">
@@ -7279,6 +7282,7 @@
                                 <button class="ayah-action-btn play-btn"
                                         onclick="toggleAyahPlayback(${surahNum}, ${verse.verse})"
                                         title="گوێگرتن"
+                                        aria-label="لیستانا ئایەتێ"
                                         data-surah="${surahNum}"
                                         data-ayah="${verse.verse}">
                                     <i class="fas fa-play"></i>
@@ -7289,7 +7293,8 @@
                                 <div class="ayah-menu-container">
                                     <button class="ayah-action-btn ayah-menu-btn"
                                             onclick="toggleAyahMenu(event, ${surahNum}, ${verse.verse})"
-                                            title="زێدەتر">
+                                            title="زێدەتر"
+                                            aria-label="مێنیویا ئایەتێ">
                                         <i class="fas fa-ellipsis-v"></i>
                                     </button>
                                     <div class="ayah-menu" id="ayahMenu-${surahNum}-${verse.verse}">
