@@ -3116,17 +3116,25 @@
         document.getElementById('year').textContent = new Date().getFullYear();
 
         // ===== AUTHENTICATION SYSTEM =====
-        const supabaseUrl = 'https://gijupzejtbpifjzwadee.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanVwemVqdGJwaWZqendhZGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDAyOTcsImV4cCI6MjA3MTExNjI5N30.-d33o2dDpfD6ywubBcc51srvf1VUewAJwpnd0OOo51M';
         let supabaseClient = null;
         let currentUser = null;
 
-        // Initialize Supabase
+        // Initialize Supabase with config endpoint (secure!)
         async function initSupabase() {
             if (typeof window.supabase !== 'undefined') {
-                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-                console.log('✅ Supabase initialized on TV page');
-                return true;
+                try {
+                    const response = await fetch('/config');
+                    if (!response.ok) throw new Error('Failed to fetch config');
+                    const config = await response.json();
+                    if (!config.supabaseUrl || !config.supabaseKey) throw new Error('Invalid config');
+
+                    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                    console.log('✅ Supabase initialized securely on TV page');
+                    return true;
+                } catch (error) {
+                    console.error('Supabase init error:', error);
+                    return false;
+                }
             }
             return false;
         }
