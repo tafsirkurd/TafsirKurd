@@ -6,16 +6,26 @@ The "leaked password protection" warning might appear even if the setting is **n
 
 ## Where to Look:
 
-### Option 1: Authentication → Configuration
-1. **Supabase Dashboard** → Your Project
-2. **Authentication** (left sidebar)
-3. **Configuration** tab
-4. Scroll to **"Password Protection"** or **"Security"** section
+Based on the Supabase UI, check these sections under **Authentication → CONFIGURATION**:
 
-### Option 2: Project Settings
-1. **Settings** (gear icon, bottom left)
-2. **Authentication**
-3. Look for **"Password Policies"** or **"Security Settings"**
+### Most Likely Location #1: **Policies**
+1. Click **Authentication** (left sidebar)
+2. Under **CONFIGURATION**, click **Policies**
+3. Look for:
+   - "Password strength requirements"
+   - "Leaked password protection"
+   - "HaveIBeenPwned integration"
+
+### Most Likely Location #2: **Attack Protection**
+1. Click **Authentication** (left sidebar)
+2. Under **CONFIGURATION**, click **Attack Protection**
+3. Look for password-related security settings
+
+### Alternative: **Sign In / Providers**
+1. Click **Authentication** (left sidebar)
+2. Under **CONFIGURATION**, click **Sign In / Providers**
+3. Click on **Email** provider
+4. Check for password security options
 
 ### Option 3: It Might Not Exist Yet
 This feature is relatively new and might:
