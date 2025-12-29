@@ -9579,7 +9579,9 @@
         }
 
         function goToLogin() {
-            window.location.href = '/login';
+            // Pass current page so we can redirect back after login
+            const currentPage = window.location.pathname;
+            window.location.href = `/login.html?redirect=${encodeURIComponent(currentPage)}`;
         }
 
         // Feather Overlay Functions

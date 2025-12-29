@@ -1560,23 +1560,28 @@ Press Ctrl+Shift+C to copy this report
         document.addEventListener('DOMContentLoaded', function() {
             // Detect where user came from and store redirect destination
             const urlParams = new URLSearchParams(window.location.search);
-            const source = urlParams.get('source') || urlParams.get('from');
+            const redirect = urlParams.get('redirect') || urlParams.get('from');
             const referrer = document.referrer;
 
             let redirectDestination = '/quran.html'; // Default
 
             // Check URL parameter first (highest priority)
-            if (source === 'tv') {
-                redirectDestination = '/tv.html';
-            } else if (source === 'quran') {
-                redirectDestination = '/quran.html';
+            if (redirect) {
+                // Use the explicit redirect parameter
+                redirectDestination = redirect;
             }
-            // Check referrer if no explicit source
-            else if (referrer) {
-                if (referrer.includes('/tv.html')) {
-                    redirectDestination = '/tv.html';
-                } else if (referrer.includes('/quran.html') || referrer.includes('/quran.html')) {
-                    redirectDestination = '/quran.html';
+            // Check referrer if no explicit redirect parameter
+            else if (referrer && referrer.includes(window.location.hostname)) {
+                // Extract path from referrer (if it's from our domain)
+                try {
+                    const referrerUrl = new URL(referrer);
+                    const referrerPath = referrerUrl.pathname;
+                    // Don't redirect back to login or index
+                    if (referrerPath !== '/login.html' && referrerPath !== '/' && referrerPath !== '/index.html') {
+                        redirectDestination = referrerPath;
+                    }
+                } catch (e) {
+                    // Invalid referrer, use default
                 }
             }
 
