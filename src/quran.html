@@ -110,10 +110,12 @@
     <link rel="preload" href="/assets/fonts/hafs.woff2?v=16" as="font" type="font/woff2" crossorigin>
 
     <!-- Local Fonts - Zero external requests, instant loading -->
-    <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
+    <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="/assets/fonts/fonts.css?v=16"></noscript>
 
     <!-- Local Font Awesome - Zero external requests -->
-    <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
+    <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16"></noscript>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
@@ -4145,7 +4147,7 @@
             <div class="floating-shape square"></div>
         </div>
         <div class="preloader-content">
-            <img src="/assets/images/logo.png" alt="Tafsir Kurd" class="preloader-logo logo-image">
+            <img src="/assets/images/logo.png" alt="Tafsir Kurd" class="preloader-logo logo-image" width="120" height="120">
             <h1 class="preloader-title">تەفسیر کورد</h1>
             <p class="preloader-subtitle">چاڤەرێ بە...</p>
             <div class="preloader-dots">
@@ -4359,7 +4361,7 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-logo" onclick="showHomePage()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showHomePage();}" role="button" tabindex="0" aria-label="گەڕانەوە بۆ پەڕەیا سەرەکی">
-                <img src="/assets/images/logo.png" alt="Tafsir Kurd" class="logo-image">
+                <img src="/assets/images/logo.png" alt="Tafsir Kurd" class="logo-image" width="40" height="40">
                 <div class="sidebar-title">قورئان</div>
             </div>
             <button class="sidebar-close-btn" onclick="closeSidebar()" title="داخستن" aria-label="داخستنا مێنیو">
@@ -4403,7 +4405,7 @@
         <!-- Profile Section -->
         <div class="feather-section" id="profileSection" style="display: none;">
             <div class="profile-section" onclick="window.location.href='/profile'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href='/profile';}" role="button" tabindex="0" aria-label="چوونە پرۆفایل">
-                <img src="" alt="وێنەیا بکارئینەری" class="profile-avatar-large" id="profileAvatar">
+                <img src="" alt="وێنەیا بکارئینەری" class="profile-avatar-large" id="profileAvatar" width="80" height="80">
                 <div class="profile-info">
                     <div class="profile-name" id="profileName">ناڤ</div>
                     <div class="profile-email" id="profileEmail">email@gmail.com</div>
@@ -4484,7 +4486,7 @@
         <header class="professional-header">
             <div class="header-container">
                 <div class="header-logo-section" onclick="showHomePage()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showHomePage();}" role="button" tabindex="0" aria-label="گەڕانەوە بۆ پەڕەیا سەرەکی">
-                    <img src="/assets/images/logo.png" alt="لۆگۆیا تەفسیر کورد" class="header-logo-img logo-image">
+                    <img src="/assets/images/logo.png" alt="لۆگۆیا تەفسیر کورد" class="header-logo-img logo-image" width="40" height="40">
                     <div class="header-title">تەفسیر کورد</div>
                 </div>
                 <nav class="header-nav">
@@ -4510,7 +4512,7 @@
         <div class="home-page" id="homePage">
             <!-- Hero Section -->
             <section class="hero-section">
-                <img src="/assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-logo-static">
+                <img src="/assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-logo-static" width="300" height="300" loading="eager">
                 <div class="hero-search">
                     <input
                         type="text"
@@ -4840,7 +4842,7 @@
                     <!-- Brand Section -->
                     <div class="footer-brand">
                         <div class="footer-brand-header">
-                            <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image" loading="lazy">
+                            <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image" width="40" height="40" loading="lazy">
                             <h2 class="footer-brand-name">تەفسیر کورد</h2>
                         </div>
                         <p class="footer-brand-tagline">
@@ -5732,7 +5734,7 @@
             if (authSection) {
                 authSection.innerHTML = `
                     <button class="user-profile-btn" onclick="openFeatherOverlay()">
-                        <img src="${userAvatar}" alt="${userName}" class="user-avatar" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userName)}'">
+                        <img src="${userAvatar}" alt="${userName}" class="user-avatar" width="32" height="32" loading="lazy" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userName)}'">
                         <span class="user-name">${userName.split(' ')[0]}</span>
                         <i class="fas fa-chevron-down"></i>
                     </button>
