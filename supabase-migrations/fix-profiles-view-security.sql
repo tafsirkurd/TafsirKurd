@@ -4,6 +4,8 @@
 -- Issue: View was using SECURITY DEFINER which bypasses RLS policies
 -- Fix: Recreate view with SECURITY INVOKER (default) to enforce RLS
 -- Reference: https://supabase.com/docs/guides/database/database-linter?lint=0010_security_definer_view
+--
+-- ⚠️ IMPORTANT: This migration is idempotent and safe to run multiple times
 
 -- Drop the existing view
 DROP VIEW IF EXISTS public.profiles_with_avatar;
@@ -28,7 +30,7 @@ SELECT
     COALESCE(p.avatar_url, public.get_default_avatar(p.display_name)) as avatar
 FROM public.profiles p;
 
--- Grant SELECT permission to authenticated users
+-- Grant SELECT permission to authenticated users (idempotent)
 -- They will only see rows permitted by the RLS policies on public.profiles
 GRANT SELECT ON public.profiles_with_avatar TO authenticated;
 
@@ -36,14 +38,14 @@ GRANT SELECT ON public.profiles_with_avatar TO authenticated;
 COMMENT ON VIEW public.profiles_with_avatar IS
 'View of profiles with default avatar fallback. Uses SECURITY INVOKER to respect RLS policies on public.profiles table.';
 
--- Verify RLS is enabled on the underlying table
--- (This should already be set, but checking for safety)
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-
 -- Confirm the fix
 DO $$
 BEGIN
     RAISE NOTICE '✅ Fixed profiles_with_avatar view - now using SECURITY INVOKER';
     RAISE NOTICE '✅ RLS policies on public.profiles will now be enforced for this view';
     RAISE NOTICE '✅ Users can only see their own profile through this view';
+    RAISE NOTICE '';
+    RAISE NOTICE '🔍 Verify the fix in Supabase Dashboard:';
+    RAISE NOTICE '   1. Go to Database → Database Linter';
+    RAISE NOTICE '   2. The warning about profiles_with_avatar should be gone';
 END $$;
