@@ -26,10 +26,10 @@ export async function onRequest(context) {
     }
 
     try {
-        // Return public Supabase configuration
+        // Return public Supabase configuration (ONLY anon key, NEVER service_role!)
         const config = {
             supabaseUrl: env.SUPABASE_URL || 'https://nvwgepkhzobgwnzibpvq.supabase.co',
-            supabaseKey: env.SUPABASE_ANON_KEY || ''
+            supabaseKey: env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d2dlcGtoemJiZ3duemljcHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMzMTY4MDEsImV4cCI6MjA0ODg5MjgwMX0.t6m69JNYhqJsEDjVNvpNwVIlPbxp3HHhx5QL3EqSlOU'
         };
 
         // Validate environment variables exist
