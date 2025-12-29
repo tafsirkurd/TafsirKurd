@@ -2,6 +2,7 @@
 <html dir="rtl" lang="ku">
 <head>
     <script src="/utils/theme-loader.js"></script>
+    <script src="/utils/security.js"></script>
     <script src="/utils/scroll-position.js"></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -1215,6 +1216,16 @@
         const monthNames = ['کانوونا دوویێ', 'شوبات', 'ئازار', 'نیسان', 'ئایار', 'حوزەیران', 'تەممووز', 'ئاب', 'ئەیلول', 'تشرینا ئێکێ', 'تشرینا دوویێ', 'کانوونا ئێکێ'];
 
         window.addEventListener('load', () => {
+            // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
+            if (window.TafsirKurdSecurity) {
+                window.TafsirKurdSecurity.init({
+                    criticalElements: [],
+                    protectedFields: [],
+                    validateSession: true,
+                    securityLevel: 'nuclear'
+                });
+            }
+
             // Check if user is authenticated
             const user = localStorage.getItem('user');
             if (!user) {

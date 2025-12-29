@@ -113,7 +113,9 @@
       "Bash(timeout 3 powershell:*)",
       "Bash(ping:*)",
       "Bash(netlify dev)",
-      "Bash(timeout 10 ping:*)"
+      "Bash(timeout 10 ping:*)",
+      "Bash(timeout 2 ping:*)",
+      "Bash(nslookup:*)"
     ],
     "deny": [],
     "ask": []

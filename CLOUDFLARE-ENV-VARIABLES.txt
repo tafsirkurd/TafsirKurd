@@ -1,0 +1,114 @@
+========================================
+CLOUDFLARE PAGES ENVIRONMENT VARIABLES
+Copy and paste these into Cloudflare Pages
+========================================
+
+HOW TO ADD:
+1. Go to your Cloudflare Pages project
+2. Click "Settings" tab
+3. Click "Environment variables" in left menu
+4. Click "Add variable" for each one below
+5. Click "Save and deploy" after adding all
+
+========================================
+REQUIRED VARIABLES:
+========================================
+
+Variable name: SUPABASE_URL
+Value: https://nvwgepkhzobgwnzibpvq.supabase.co
+
+Variable name: SUPABASE_ANON_KEY
+Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52d2dlcGtoemJiZ3duemljcHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMzMTY4MDEsImV4cCI6MjA0ODg5MjgwMX0.t6m69JNYhqJsEDjVNvpNwVIlPbxp3HHhx5QL3EqSlOU
+
+Variable name: SUPABASE_SERVICE_ROLE_KEY
+Value: (Get from Supabase Dashboard → Settings → API → service_role key - KEEP SECRET!)
+
+Variable name: ADMIN_PASSWORD_HASH
+Value: (Your admin password hash - get from .env or Netlify)
+
+Variable name: CLOUDFLARE_TURNSTILE_SECRET
+Value: (Get from Cloudflare Turnstile dashboard)
+
+Variable name: CLOUDFLARE_TURNSTILE_SITE_KEY
+Value: (Get from Cloudflare Turnstile dashboard)
+
+========================================
+EMAIL & NOTIFICATIONS (Optional but recommended):
+========================================
+
+Variable name: BREVO_API_KEY
+Value: (Your Brevo API key)
+
+Variable name: DISCORD_WEBHOOK_URL
+Value: (Your Discord webhook URL)
+
+Variable name: DISCORD_WEBHOOK_STATS
+Value: (Your Discord stats webhook URL)
+
+Variable name: DISCORD_WEBHOOK_ZCEER
+Value: (Your Discord zceer webhook URL)
+
+========================================
+GEOLOCATION (Optional):
+========================================
+
+Variable name: IPGEOLOCATION_API_KEY
+Value: (Your IP geolocation API key if you have one)
+
+========================================
+GOOGLE SEARCH CONSOLE (Optional):
+========================================
+
+Variable name: GOOGLE_CLIENT_EMAIL
+Value: (From Google service account JSON)
+
+Variable name: GOOGLE_PRIVATE_KEY
+Value: (From Google service account JSON - keep the line breaks!)
+
+Variable name: GOOGLE_PROPERTY_URL
+Value: https://tafsirkurd.com/
+
+========================================
+AWS S3 (For video uploads - Optional):
+========================================
+
+Variable name: AWS_ACCESS_KEY_ID
+Value: (Your AWS access key)
+
+Variable name: AWS_SECRET_ACCESS_KEY
+Value: (Your AWS secret key)
+
+Variable name: AWS_REGION
+Value: eu-north-1
+
+Variable name: AWS_S3_BUCKET
+Value: tafsirkurd-videos
+
+========================================
+IMPORTANT NOTES:
+========================================
+
+1. For PRODUCTION environment, check "Production" when adding
+2. For PREVIEW environment, check "Preview"
+3. Most variables should be added to BOTH environments
+4. NEVER share SUPABASE_SERVICE_ROLE_KEY or AWS_SECRET_ACCESS_KEY
+5. After adding all variables, click "Save and Deploy"
+
+========================================
+WHERE TO FIND YOUR VALUES:
+========================================
+
+Supabase Keys:
+→ https://supabase.com/dashboard/project/nvwgepkhzobgwnzibpvq/settings/api
+
+Cloudflare Turnstile:
+→ https://dash.cloudflare.com/?to=/:account/turnstile
+
+Brevo API Key:
+→ https://app.brevo.com/settings/keys/api
+
+Discord Webhooks:
+→ Discord Server Settings → Integrations → Webhooks
+
+AWS Credentials:
+→ https://console.aws.amazon.com/iam/home#/security_credentials

@@ -2,6 +2,7 @@
 <html dir="rtl" lang="ku">
 <head>
     <script src="/utils/theme-loader.js"></script>
+    <script src="/utils/security.js"></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#000000">
@@ -1337,15 +1338,32 @@
 
     <script>
         // Initialize Supabase
-        const supabaseUrl = 'https://gijupzejtbpifjzwadee.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanVwemVqdGJwaWZqendhZGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDAyOTcsImV4cCI6MjA3MTExNjI5N30.-d33o2dDpfD6ywubBcc51srvf1VUewAJwpnd0OOo51M';
         let supabaseClient = null;
 
         async function initSupabase() {
             if (typeof window.supabase !== 'undefined') {
-                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-                console.log('✅ Supabase initialized');
-                return true;
+                try {
+                    // Fetch credentials from secure endpoint
+                    const response = await fetch('/.netlify/functions/auth-config');
+
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch auth configuration');
+                    }
+
+                    const config = await response.json();
+
+                    if (!config.supabaseUrl || !config.supabaseAnonKey) {
+                        throw new Error('Invalid auth configuration');
+                    }
+
+                    // Initialize Supabase client with fetched credentials
+                    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+                    console.log('✅ Supabase initialized securely from server');
+                    return true;
+                } catch (error) {
+                    console.error('Supabase initialization error:', error);
+                    return false;
+                }
             }
             return false;
         }
@@ -1856,6 +1874,16 @@
 
         // Load on page load
         window.addEventListener('load', () => {
+            // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
+            if (window.TafsirKurdSecurity) {
+                window.TafsirKurdSecurity.init({
+                    criticalElements: ['displayName', 'email', 'newPassword', 'confirmPassword'],
+                    protectedFields: ['newPassword', 'confirmPassword'],
+                    validateSession: true,
+                    securityLevel: 'nuclear'
+                });
+            }
+
             loadUserProfile();
             initializeSettings();
         });
