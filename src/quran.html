@@ -5284,16 +5284,22 @@
                     });
                 }
 
-                // Wait for Supabase and auth-redirect to load
-                await waitForAuthLibraries();
-
-                // Initialize authentication first (MUST await)
-                await checkAuthentication();
-
-                // Then initialize app
+                // Initialize app immediately - don't wait for auth!
                 initializeApp();
 
-                // Set a maximum timeout for loading (10 seconds)
+                // Check authentication in background (non-blocking)
+                waitForAuthLibraries().then(() => {
+                    return checkAuthentication();
+                }).catch(error => {
+                    console.error('Auth check error:', error);
+                    // Show login button on error
+                    const authSection = document.getElementById('authSection');
+                    if (authSection) {
+                        authSection.style.opacity = '1';
+                    }
+                });
+
+                // Set a maximum timeout for loading (3 seconds for ultra-fast experience)
                 loadTimeout = setTimeout(() => {
                     console.warn('⚠️ Loading timeout reached, showing page anyway');
                     if (preloaderHideCallback) {
@@ -5309,7 +5315,7 @@
                         mainContent.style.visibility = 'visible';
                     }
                     document.body.classList.remove('no-scroll');
-                }, 10000);
+                }, 2000); // Ultra-fast 2-second timeout
             } catch (initError) {
                 console.error('Critical error in initialization:', initError);
                 // Only show alert in development

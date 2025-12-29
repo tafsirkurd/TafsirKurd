@@ -2,7 +2,7 @@
   "name": "تەفسیر کورد - Tafsir Kurd",
   "short_name": "تەفسیر کورد",
   "description": "قورئانی پیرۆز بە تەفسیری کوردی - Read the Holy Quran with Kurdish Tafsir",
-  "start_url": "/Quran.html",
+  "start_url": "/quran.html",
   "display": "standalone",
   "background_color": "#fafafa",
   "theme_color": "#000000",
