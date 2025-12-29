@@ -1344,7 +1344,7 @@
             if (typeof window.supabase !== 'undefined') {
                 try {
                     // Fetch credentials from secure endpoint
-                    const response = await fetch('/.netlify/functions/auth-config');
+                    const response = await fetch('/config');
 
                     if (!response.ok) {
                         throw new Error('Failed to fetch auth configuration');

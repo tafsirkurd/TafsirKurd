@@ -1040,7 +1040,7 @@
         async function initSupabase() {
             if (typeof window.supabase !== 'undefined') {
                 try {
-                    const response = await fetch('/.netlify/functions/auth-config');
+                    const response = await fetch('/config');
                     if (!response.ok) throw new Error('Failed to fetch auth configuration');
                     const config = await response.json();
                     if (!config.supabaseUrl || !config.supabaseAnonKey) throw new Error('Invalid auth configuration');
