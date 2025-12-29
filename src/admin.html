@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <script src="/utils/theme-loader.js"></script>
+    <script src="/utils/security.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Admin Panel - Tafsir Kurd</title>
@@ -34,6 +35,9 @@
     <!-- External Libraries - Async loading for better performance -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+
+    <!-- AWS SDK for S3 Video Upload -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1519.0.min.js"></script>
 
     <!-- Cloudflare Turnstile - Bot Protection -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
@@ -1698,6 +1702,74 @@
                 max-width: 95% !important;
             }
         }
+
+        /* AWS S3 Video Management Styles */
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .video-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .video-card:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            transform: translateY(-5px);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .video-info {
+            padding: 15px;
+        }
+
+        .video-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1f2937;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-meta {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .video-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .video-btn:hover {
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -3321,6 +3393,173 @@
                     </div>
                 </div>
 
+                <!-- AWS S3 VIDEO MANAGEMENT -->
+                <!-- AWS S3 Configuration Section -->
+                <div class="table-container" style="margin-bottom: 30px;">
+                    <div class="table-header" style="background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%); border: 2px solid #fde047; border-radius: 12px; padding: 20px;">
+                        <h2 class="table-title" style="margin: 0 0 15px 0;">⚙️ AWS S3 Configuration</h2>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #666;">AWS Region</label>
+                                <input type="text" id="awsRegion" value="eu-north-1" placeholder="eu-north-1" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #666;">S3 Bucket Name</label>
+                                <input type="text" id="s3BucketName" value="tafsirkurd-videos" placeholder="tafsirkurd-videos" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #666;">AWS Access Key ID</label>
+                                <input type="text" id="awsAccessKeyId" placeholder="AKIA..." style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #666;">AWS Secret Access Key</label>
+                                <input type="password" id="awsSecretAccessKey" placeholder="Secret key" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button onclick="saveAWSConfig()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                                💾 Save Configuration
+                            </button>
+                            <button onclick="testAWSConnection()" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                                🔍 Test Connection
+                            </button>
+                        </div>
+                        <div id="awsConfigStatus" style="margin-top: 10px; padding: 10px; border-radius: 8px; display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Video Upload Section -->
+                <div class="table-container" style="margin-bottom: 30px;">
+                    <div class="table-header" style="background: linear-gradient(135deg, #fce7f3 0%, #ffffff 100%); border: 2px solid #f472b6; border-radius: 12px; padding: 20px;">
+                        <h2 class="table-title" style="margin: 0 0 15px 0;">📤 Upload Video to AWS S3</h2>
+
+                        <!-- Video File Upload -->
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #666;">
+                                🎬 Select Video File
+                            </label>
+                            <div style="border: 3px dashed #d1d5db; border-radius: 12px; padding: 40px; text-align: center; background: #f9fafb; cursor: pointer; transition: all 0.3s;" id="videoDropZone" ondrop="handleVideoDrop(event)" ondragover="handleVideoDragOver(event)" ondragleave="handleVideoDragLeave(event)" onclick="document.getElementById('videoFileInput').click()">
+                                <div style="font-size: 48px; margin-bottom: 10px;">🎥</div>
+                                <div style="font-size: 16px; font-weight: 600; color: #374151; margin-bottom: 5px;">
+                                    Drop video file here or click to browse
+                                </div>
+                                <div style="font-size: 14px; color: #6b7280;">
+                                    Supported formats: MP4, WebM, MOV (Max 5GB)
+                                </div>
+                                <input type="file" id="videoFileInput" accept="video/*" style="display: none;" onchange="handleVideoFileSelect(event)">
+                            </div>
+                            <div id="selectedVideoInfo" style="margin-top: 15px; display: none; padding: 15px; background: #f0fdf4; border: 2px solid #86efac; border-radius: 10px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-weight: 600; color: #15803d;" id="selectedVideoName"></div>
+                                        <div style="font-size: 13px; color: #4ade80; margin-top: 3px;" id="selectedVideoSize"></div>
+                                    </div>
+                                    <button onclick="clearSelectedVideo()" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px;">
+                                        ✕ Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Video Metadata Form -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #666;">Video Title *</label>
+                                <input type="text" id="videoTitle" placeholder="Enter video title" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #666;">Category</label>
+                                <select id="videoCategory" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                                    <option value="tafsir">📖 Tafsir</option>
+                                    <option value="lecture">🎓 Lecture</option>
+                                    <option value="series">📺 Series</option>
+                                    <option value="other">📁 Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #666;">Resolution</label>
+                                <select id="videoResolution" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                                    <option value="1080p">1080p (Full HD)</option>
+                                    <option value="720p">720p (HD)</option>
+                                    <option value="480p">480p (SD)</option>
+                                    <option value="360p">360p</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #666;">Description</label>
+                            <textarea id="videoDescription" rows="3" placeholder="Enter video description..." style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                            <div>
+                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                    <input type="checkbox" id="videoPublished" checked style="width: 18px; height: 18px; margin-right: 8px; cursor: pointer;">
+                                    <span style="font-weight: 600; color: #666;">✅ Publish Immediately</span>
+                                </label>
+                            </div>
+                            <div>
+                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                    <input type="checkbox" id="videoFeatured" style="width: 18px; height: 18px; margin-right: 8px; cursor: pointer;">
+                                    <span style="font-weight: 600; color: #666;">⭐ Featured Video</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Upload Progress -->
+                        <div id="uploadProgress" style="display: none; margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-weight: 600; color: #374151;">Uploading to AWS S3...</span>
+                                <span id="uploadPercent" style="font-weight: 700; color: #667eea;">0%</span>
+                            </div>
+                            <div style="width: 100%; height: 24px; background: #e5e7eb; border-radius: 12px; overflow: hidden; position: relative;">
+                                <div id="uploadProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); transition: width 0.3s;"></div>
+                            </div>
+                            <div id="uploadSpeed" style="margin-top: 5px; font-size: 13px; color: #6b7280;"></div>
+                        </div>
+
+                        <!-- Upload Button -->
+                        <div style="display: flex; gap: 10px;">
+                            <button id="uploadButton" onclick="uploadVideoToS3()" style="flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 15px 24px; border-radius: 10px; font-weight: 700; font-size: 16px; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); transition: all 0.3s;">
+                                🚀 Upload Video to AWS S3
+                            </button>
+                            <button onclick="resetUploadForm()" style="background: #6b7280; color: white; border: none; padding: 15px 24px; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                                🔄 Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Uploaded Videos List -->
+                <div class="table-container" style="margin-bottom: 30px;">
+                    <div class="table-header" style="background: linear-gradient(135deg, #dbeafe 0%, #ffffff 100%); border: 2px solid #60a5fa; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                            <div>
+                                <h2 class="table-title" style="margin: 0 0 8px 0;">🎬 Uploaded Videos (AWS S3)</h2>
+                                <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 13px; color: #666;">
+                                    <span id="s3VideosTotal" style="background: #f0f9ff; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📊 Total: 0</span>
+                                    <span id="s3VideosPublished" style="background: #f0fdf4; padding: 6px 12px; border-radius: 6px; font-weight: 600;">✅ Published: 0</span>
+                                    <span id="s3VideosDraft" style="background: #fef3c7; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📝 Draft: 0</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="videoSearchBox" placeholder="🔍 Search videos..." style="padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; width: 250px;" oninput="filterVideos()">
+                                <button onclick="refreshVideosList()" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                                    🔄 Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="s3VideosTable" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <div class="loading-text">Loading videos from AWS S3...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EXISTING YOUTUBE/INSTAGRAM VIDEOS SECTION -->
                 <div class="table-container">
                     <div class="table-header" style="background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%); border: 2px solid #fde047; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
@@ -4980,6 +5219,17 @@
         // Secure Configuration - Load from server
         let supabaseClient = null;
 
+        // XSS Protection: HTML escape function
+        function escapeHtml(unsafe) {
+            if (unsafe === null || unsafe === undefined) return '';
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         async function initSupabase() {
             try {
                 // Wait for Supabase library to load (it's deferred)
@@ -5269,6 +5519,29 @@
             const errorDiv = document.getElementById('loginError');
             const submitBtn = e.target.querySelector('button[type="submit"]');
 
+            // Input validation
+            if (!email || !password) {
+                errorDiv.textContent = 'Email and password are required';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Email format validation
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(email)) {
+                errorDiv.textContent = 'Please enter a valid email address';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Password length validation
+            if (password.length < 8) {
+                errorDiv.textContent = 'Password must be at least 8 characters';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            errorDiv.style.display = 'none';
             submitBtn.disabled = true;
             submitBtn.textContent = 'Authenticating...';
 
@@ -6671,7 +6944,7 @@
 
                 console.log('✅ Loaded', users.length, 'visitor locations');
 
-                // Display visitor locations
+                // Display visitor locations (XSS-safe)
                 tbody.innerHTML = users.map((user, index) => {
                     const lastSeen = user.updated_at ? new Date(user.updated_at) : null;
                     const userName = user.full_name || user.userName || user.email || user.userEmail || user.user_id?.split('|')[0] || 'Anonymous';
@@ -6684,11 +6957,11 @@
                         <tr style="border-bottom: 1px solid #f0f0f0;">
                             <td style="padding: 12px; font-weight: 600; color: #667eea;">${index + 1}</td>
                             <td style="padding: 12px;">
-                                <span style="color: #667eea; font-weight: 500;">${userName}</span>
+                                <span style="color: #667eea; font-weight: 500;">${escapeHtml(userName)}</span>
                             </td>
-                            <td style="padding: 12px;">${city}</td>
-                            <td style="padding: 12px;">${region}</td>
-                            <td style="padding: 12px; font-weight: 500;">${country}</td>
+                            <td style="padding: 12px;">${escapeHtml(city)}</td>
+                            <td style="padding: 12px;">${escapeHtml(region)}</td>
+                            <td style="padding: 12px; font-weight: 500;">${escapeHtml(country)}</td>
                             <td style="padding: 12px; color: #666; font-size: 13px;">${lastSeen ? formatRelativeTime(user.updated_at) : 'Unknown'}</td>
                         </tr>
                     `;
@@ -6795,16 +7068,16 @@
                                                              onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}'">
                                                         <div>
                                                             <div style="font-weight: 600; color: ${isDuhok ? '#d97706' : '#333'}; font-size: 14px;">
-                                                                ${user.full_name || 'Anonymous User'}
+                                                                ${escapeHtml(user.full_name || 'Anonymous User')}
                                                                 ${isDuhok ? ' 🌟' : ''}
                                                             </div>
-                                                            <div style="font-size: 11px; color: #999;">${user.email || 'No email'}</div>
+                                                            <div style="font-size: 11px; color: #999;">${escapeHtml(user.email || 'No email')}</div>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td style="padding: 12px;">
-                                                    <div style="font-size: 13px; color: #333; font-weight: 500;">${city}</div>
-                                                    <div style="font-size: 11px; color: #999;">${region}</div>
+                                                    <div style="font-size: 13px; color: #333; font-weight: 500;">${escapeHtml(city)}</div>
+                                                    <div style="font-size: 11px; color: #999;">${escapeHtml(region)}</div>
                                                 </td>
                                                 <td style="padding: 12px;">
                                                     <div style="font-size: 13px; color: #333; font-weight: 600;">${user.total_read || 0} ayahs</div>
@@ -7268,19 +7541,19 @@
                 <div class="table-card">
                     <div class="table-card-row">
                         <span class="table-card-label">Name:</span>
-                        <span class="table-card-value">${msg.name || '-'}</span>
+                        <span class="table-card-value">${escapeHtml(msg.name || '-')}</span>
                     </div>
                     <div class="table-card-row">
                         <span class="table-card-label">Email:</span>
-                        <span class="table-card-value">${msg.email || '-'}</span>
+                        <span class="table-card-value">${escapeHtml(msg.email || '-')}</span>
                     </div>
                     <div class="table-card-row">
                         <span class="table-card-label">Subject:</span>
-                        <span class="table-card-value">${msg.subject || '-'}</span>
+                        <span class="table-card-value">${escapeHtml(msg.subject || '-')}</span>
                     </div>
                     <div class="table-card-row">
                         <span class="table-card-label">Preview:</span>
-                        <span class="table-card-value">${(msg.message || '').substring(0, 40)}...</span>
+                        <span class="table-card-value">${escapeHtml((msg.message || '').substring(0, 40))}...</span>
                     </div>
                     <div class="table-card-row">
                         <span class="table-card-label">Status:</span>
@@ -7379,11 +7652,11 @@
                         </div>
                         <div class="table-card-row">
                             <span class="table-card-label">URL:</span>
-                            <span class="table-card-value">${(video.video_url || '').substring(0, 40)}...</span>
+                            <span class="table-card-value">${escapeHtml((video.video_url || '').substring(0, 40))}...</span>
                         </div>
                         <div class="table-card-actions">
-                            <button class="btn-icon info" onclick="window.open('${video.video_url}', '_blank')">🔗 Open</button>
-                            <button class="btn-icon warning" onclick="openEditVideoModal(${video.id}, '${video.video_url}', ${video.position || (index + 1)})">✏️ Edit</button>
+                            <button class="btn-icon info" onclick="window.open('${escapeHtml(video.video_url)}', '_blank')">🔗 Open</button>
+                            <button class="btn-icon warning" onclick="openEditVideoModal(${video.id}, '${escapeHtml(video.video_url)}', ${video.position || (index + 1)})">✏️ Edit</button>
                             <button class="btn-icon danger" onclick="deleteVideo(${video.id})">🗑️ Delete</button>
                         </div>
                     </div>
@@ -7941,17 +8214,17 @@
                         ${activityStatus}
                     </div>
 
-                    <!-- User header with picture -->
+                    <!-- User header with picture (XSS-safe) -->
                     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e8ebf7;">
-                        <img src="${profilePic}" alt="${user.name}"
+                        <img src="${profilePic}" alt="${escapeHtml(user.name)}"
                              style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid #667eea; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); object-fit: cover;"
                              onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=667eea&color=fff&size=128'" />
                         <div style="flex: 1; min-width: 0;">
                             <div style="font-weight: 700; font-size: 20px; color: #333; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis;">
-                                👤 ${user.name || 'Anonymous User'}
+                                👤 ${escapeHtml(user.name || 'Anonymous User')}
                             </div>
-                            <div style="font-size: 13px; color: #666; overflow: hidden; text-overflow: ellipsis;">📧 ${user.email || 'No email'}</div>
-                            ${user.city || user.region ? `<div style="font-size: 12px; color: #999; margin-top: 4px;">📍 ${locationDisplay}</div>` : ''}
+                            <div style="font-size: 13px; color: #666; overflow: hidden; text-overflow: ellipsis;">📧 ${escapeHtml(user.email || 'No email')}</div>
+                            ${user.city || user.region ? `<div style="font-size: 12px; color: #999; margin-top: 4px;">📍 ${escapeHtml(locationDisplay)}</div>` : ''}
                         </div>
                     </div>
 
@@ -8234,7 +8507,7 @@
                 return `
                     <div class="table-card">
                         <div class="table-card-row">
-                            <span class="table-card-label">#${index + 1} ${user.name || 'Anonymous'}</span>
+                            <span class="table-card-label">#${index + 1} ${escapeHtml(user.name || 'Anonymous')}</span>
                             <span class="badge ${progress >= 75 ? 'success' : progress >= 50 ? 'info' : 'warning'}">${progress}%</span>
                         </div>
                         <div class="table-card-row">
@@ -11344,6 +11617,16 @@
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('🚀 Admin Panel Loading - Performance Mode Enabled');
 
+            // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
+            if (window.TafsirKurdSecurity) {
+                window.TafsirKurdSecurity.init({
+                    criticalElements: ['loginEmail', 'loginPassword', 'emailSubject', 'emailMessage'],
+                    protectedFields: ['loginPassword'],
+                    validateSession: true,
+                    securityLevel: 'nuclear'
+                });
+            }
+
             // Priority 1: Critical initialization
             await initSupabase(); // Initialize Supabase securely first
 
@@ -11924,7 +12207,7 @@ ${htmlParagraphs}
                         console.log('✅ Countries rendered:', data.countries.length);
                     } catch(e) {
                         console.error('❌ Countries error:', e);
-                        countriesTableBody.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44336;"><div style="font-size: 16px; font-weight: 600;">Error loading countries</div><div style="font-size: 12px; margin-top: 8px;">' + e.message + '</div></div>';
+                        countriesTableBody.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44336;"><div style="font-size: 16px; font-weight: 600;">Error loading countries</div><div style="font-size: 12px; margin-top: 8px;">' + escapeHtml(e.message) + '</div></div>';
                     }
                 } else {
                     countriesTableBody.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;"><div style="font-size: 48px; margin-bottom: 10px;">🌍</div><div style="font-size: 14px;">No countries data yet</div></div>';
@@ -12042,7 +12325,7 @@ ${htmlParagraphs}
                             <td style="padding: 16px;">
                                 <div style="display: flex; align-items: center; gap: 10px;">
                                     <span style="font-size: 18px;">📄</span>
-                                    <a href="${page.page}" target="_blank" style="color: #667eea; text-decoration: none; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="${escapeHtml(page.page.replace('https://tafsirkurd.com', ''))}">${escapeHtml(displayUrl)}</a>
+                                    <a href="${escapeHtml(page.page)}" target="_blank" style="color: #667eea; text-decoration: none; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="${escapeHtml(page.page.replace('https://tafsirkurd.com', ''))}">${escapeHtml(displayUrl)}</a>
                                 </div>
                             </td>
                             <td style="padding: 16px; text-align: center; font-weight: 700; color: #667eea;">${page.clicks}</td>
@@ -12056,7 +12339,7 @@ ${htmlParagraphs}
                         console.log('✅ Pages rendered:', data.pages.length);
                     } catch(e) {
                         console.error('❌ Pages error:', e);
-                        pagesTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #f44336;"><div style="font-size: 16px; font-weight: 600;">Error loading pages</div><div style="font-size: 12px; margin-top: 8px;">' + e.message + '</div></td></tr>';
+                        pagesTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #f44336;"><div style="font-size: 16px; font-weight: 600;">Error loading pages</div><div style="font-size: 12px; margin-top: 8px;">' + escapeHtml(e.message) + '</div></td></tr>';
                     }
                 } else {
                     pagesTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><div style="color: #999; font-size: 48px; margin-bottom: 10px;">📄</div><div style="color: #999; font-size: 14px;">No pages data yet</div></td></tr>';
@@ -14257,7 +14540,7 @@ ${htmlParagraphs}
 
             } catch (error) {
                 console.error('Error loading categories:', error);
-                table.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error loading categories: ' + error.message + '</div>';
+                table.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error loading categories: ' + escapeHtml(error.message) + '</div>';
             }
         }
 
@@ -14499,7 +14782,7 @@ ${htmlParagraphs}
 
             } catch (error) {
                 console.error('Error loading series:', error);
-                table.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error loading series: ' + error.message + '</div>';
+                table.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error loading series: ' + escapeHtml(error.message) + '</div>';
             }
         }
 
@@ -14784,7 +15067,7 @@ ${htmlParagraphs}
 
             } catch (error) {
                 console.error('Error loading episodes:', error);
-                table.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error loading episodes: ' + error.message + '</div>';
+                table.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Error loading episodes: ' + escapeHtml(error.message) + '</div>';
             }
         }
 
@@ -15147,5 +15430,8 @@ ${htmlParagraphs}
         // ========================================
 
     </script>
+
+    <!-- AWS S3 Video Management Functions -->
+    <script src="/utils/admin-aws-video.js"></script>
 </body>
 </html>
