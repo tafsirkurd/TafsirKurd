@@ -3810,7 +3810,7 @@
 
                             <p style="margin: 0 0 15px 0;"><strong>Step 3:</strong> Add to Netlify Environment Variables</p>
                             <ol style="margin: 0 0 0 0; padding-left: 20px;">
-                                <li>Go to your <a href="https://app.netlify.com/sites/tafsirkurd/settings/deploys#environment" target="_blank" style="color: #5865F2; text-decoration: underline;">Netlify Dashboard → Site Settings → Environment Variables</a></li>
+                                <li>Go to your <a href="https://dash.cloudflare.com" target="_blank" style="color: #5865F2; text-decoration: underline;">Cloudflare Dashboard → Site Settings → Environment Variables</a></li>
                                 <li>Add variable: <code style="background: white; padding: 2px 8px; border-radius: 4px; font-weight: 600;">DISCORD_WEBHOOK_URL</code> = (your webhook URL)</li>
                                 <li>Redeploy your site for changes to take effect</li>
                                 <li>Come back here and click "Enable Notifications" button above</li>
@@ -3911,7 +3911,7 @@
                         <strong style="display: block; margin-bottom: 12px; font-size: 16px; color: #333;">📋 Steps to Re-authenticate:</strong>
                         <ol style="margin: 0; padding-left: 20px; line-height: 2; font-size: 15px; color: #444;">
                             <li><strong>Follow Step 3</strong> in the setup guide to generate a new refresh token</li>
-                            <li><strong>Update Netlify environment variable</strong>: Replace the old <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">GOOGLE_REFRESH_TOKEN</code> with the new one</li>
+                            <li><strong>Update Cloudflare environment variable</strong>: Replace the old <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">GOOGLE_REFRESH_TOKEN</code> with the new one</li>
                             <li><strong>Trigger a new deployment</strong> or wait for the next auto-deploy</li>
                             <li><strong>Return here</strong> and click "Refresh Data" below</li>
                         </ol>
@@ -3919,8 +3919,8 @@
                     <button onclick="window.open('https://github.com/tafsirkurd/TafsirKurd/blob/main/docs/GOOGLE_SEARCH_CONSOLE_SETUP.md#step-3-get-refresh-token', '_blank')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(102,126,234,0.3);">
                         📖 View Setup Guide (Step 3)
                     </button>
-                    <button onclick="window.open('https://app.netlify.com', '_blank')" style="background: #00AD9F; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; margin-left: 10px;">
-                        🚀 Open Netlify Dashboard
+                    <button onclick="window.open('https://dash.cloudflare.com', '_blank')" style="background: #00AD9F; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; margin-left: 10px;">
+                        🚀 Open Cloudflare Dashboard
                     </button>
                     <button onclick="loadSearchConsoleData()" style="background: white; color: #333; border: 2px solid #ddd; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; margin-left: 10px;">
                         🔄 Refresh Data
@@ -5297,7 +5297,7 @@
         // Verify session token with backend
         async function verifySession(token) {
             try {
-                const response = await fetch('/.netlify/functions/admin-auth', {
+                const response = await fetch('/admin-auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'verify', token })
@@ -5366,16 +5366,16 @@
         // Track admin login with IP and send Telegram notification
         async function trackAdminLogin(email) {
             try {
-                // Get IP address from our Netlify function (most reliable)
+                // Get IP address from our Cloudflare function (most reliable)
                 let ipAddress = 'Unknown';
                 try {
-                    const ipResponse = await fetch('/.netlify/functions/get-client-ip');
+                    const ipResponse = await fetch('/get-client-ip');
                     if (ipResponse.ok) {
                         const ipData = await ipResponse.json();
                         ipAddress = ipData.ip;
                     }
                 } catch (err) {
-                    console.error('Failed to get IP from Netlify function:', err);
+                    console.error('Failed to get IP from Cloudflare function:', err);
                 }
 
                 // Get location - try multiple services
@@ -5477,7 +5477,7 @@
                     `⏰ *Time:* ${new Date().toLocaleString()}\n\n` +
                     `🔗 [View Analytics](https://tafsirkurd.com/live.html)`;
 
-                fetch('/.netlify/functions/telegram-notification', {
+                fetch('/telegram-notification', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -5546,7 +5546,7 @@
             submitBtn.textContent = 'Authenticating...';
 
             try {
-                const response = await fetch('/.netlify/functions/admin-auth', {
+                const response = await fetch('/admin-auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -5613,7 +5613,7 @@
             }
 
             try {
-                await fetch('/.netlify/functions/admin-auth', {
+                await fetch('/admin-auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'logout', token })
@@ -6256,8 +6256,8 @@
                     data: notification.data || {}
                 };
 
-                // Send to Netlify function
-                const response = await fetch('/.netlify/functions/discord-notify', {
+                // Send to Cloudflare function
+                const response = await fetch('/discord-notify', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -6734,7 +6734,7 @@
         async function loadGeoAnalytics() {
             try {
                 console.log('🌍 Fetching geo analytics data...');
-                const response = await fetch('/.netlify/functions/geo-analytics');
+                const response = await fetch('/geo-analytics');
                 const result = await response.json();
                 console.log('📍 Geo analytics response:', result);
 
@@ -7807,7 +7807,7 @@
                 if (error) throw error;
 
                 // Send Discord notification (async, don't wait)
-                fetch('/.netlify/functions/discord-notify', {
+                fetch('/discord-notify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -8931,7 +8931,7 @@
             updateTelegramStatus();
 
             if (newStatus === 'true') {
-                alert('✅ Discord notifications enabled!\n\nMake sure you have configured the DISCORD_WEBHOOK_URL environment variable in Netlify.');
+                alert('✅ Discord notifications enabled!\n\nMake sure you have configured the DISCORD_WEBHOOK_URL environment variable in Cloudflare Pages.');
             } else {
                 alert('🔕 Discord notifications disabled.');
             }
@@ -8961,7 +8961,7 @@
                     return;
                 }
 
-                const response = await fetch('/.netlify/functions/discord-notify', {
+                const response = await fetch('/discord-notify', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -8981,7 +8981,7 @@
                     alert('✅ Test notification sent!\n\nCheck your Telegram to see if you received it.');
                 } else {
                     const error = await response.text();
-                    alert('❌ Failed to send test notification.\n\nPlease check:\n1. TELEGRAM_BOT_TOKEN is set in Netlify\n2. TELEGRAM_CHAT_ID is set in Netlify\n3. You have started a conversation with your bot\n\nError: ' + error);
+                    alert('❌ Failed to send test notification.\n\nPlease check:\n1. TELEGRAM_BOT_TOKEN is set in Cloudflare Pages\n2. TELEGRAM_CHAT_ID is set in Cloudflare Pages\n3. You have started a conversation with your bot\n\nError: ' + error);
                 }
             } catch (error) {
                 console.error('Error sending test notification:', error);
@@ -11715,7 +11715,7 @@
             document.getElementById('sendEmailBtn').disabled = true;
 
             try {
-                const response = await fetch('/.netlify/functions/send-bulk-email', {
+                const response = await fetch('/send-bulk-email', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -11795,7 +11795,7 @@
                 const bodyString = JSON.stringify(requestBody);
                 console.log('📧 Request body size:', bodyString.length, 'bytes');
 
-                const response = await fetch('/.netlify/functions/send-email-notification', {
+                const response = await fetch('/send-email-notification', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: bodyString
@@ -11876,7 +11876,7 @@ ${htmlParagraphs}
             document.getElementById('emailStatsContent').style.display = 'none';
 
             try {
-                const response = await fetch('/.netlify/functions/brevo-email-stats');
+                const response = await fetch('/brevo-email-stats');
                 const result = await response.json();
 
                 console.log('📊 Email stats response:', result);
@@ -12075,7 +12075,7 @@ ${htmlParagraphs}
             if (!confirmed) return;
 
             try {
-                const response = await fetch('/.netlify/functions/test-brevo-email', {
+                const response = await fetch('/test-brevo-email', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({})
@@ -12102,7 +12102,7 @@ ${htmlParagraphs}
             console.log('🔍 Loading Google Search Console data...');
 
             try {
-                const response = await fetch('/.netlify/functions/google-search-console');
+                const response = await fetch('/google-search-console');
                 const result = await response.json();
 
                 console.log('Search Console response:', result);

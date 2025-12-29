@@ -1061,7 +1061,7 @@
 
                 // Sync to cloud database
                 try {
-                    await fetch('/.netlify/functions/user-data', {
+                    await fetch('/user-data', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

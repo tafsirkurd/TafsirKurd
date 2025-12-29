@@ -84,7 +84,7 @@ self.addEventListener('fetch', event => {
       event.request.url.includes('accounts.google.com') ||
       event.request.url.includes('supabase.co') ||
       event.request.url.includes('unsplash.com') ||
-      event.request.url.includes('netlify/functions') ||
+      event.request.url.includes('functions') ||
       event.request.url.includes('cdnjs.cloudflare.com') ||
       event.request.url.includes('cdn.jsdelivr.net') ||
       event.request.url.includes('googletagmanager.com') ||

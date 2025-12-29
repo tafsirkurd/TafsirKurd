@@ -8866,7 +8866,7 @@
 
                 if (!saved) return;
 
-                const response = await fetch('/.netlify/functions/user-data', {
+                const response = await fetch('/user-data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -8891,7 +8891,7 @@
             if (!isUserAuthenticated || !currentUser) return null;
 
             try {
-                const response = await fetch('/.netlify/functions/user-data', {
+                const response = await fetch('/user-data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -9699,7 +9699,7 @@
 
                     console.log('📍 Geo tracking: Sending visit data...');
 
-                    const response = await fetch('/.netlify/functions/geo-analytics', {
+                    const response = await fetch('/geo-analytics', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

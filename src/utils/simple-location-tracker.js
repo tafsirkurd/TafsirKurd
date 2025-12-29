@@ -28,8 +28,8 @@
         console.log('✅ Found user ID:', userId);
         console.log('📍 Sending location tracking request...');
 
-        // Send to Netlify function - it does everything
-        const response = await fetch('/.netlify/functions/track-location', {
+        // Send to Cloudflare function - it does everything
+        const response = await fetch('/track-location', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

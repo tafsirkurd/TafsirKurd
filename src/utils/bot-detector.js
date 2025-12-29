@@ -181,7 +181,7 @@
         // Log bot to server
         async logBot(botInfo) {
             try {
-                const response = await fetch('/.netlify/functions/log-bot', {
+                const response = await fetch('/log-bot', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(botInfo)
@@ -254,7 +254,7 @@
         // Check if current IP is owner (server-side check)
         async isOwner() {
             try {
-                const response = await fetch('/.netlify/functions/check-owner');
+                const response = await fetch('/check-owner');
                 const data = await response.json();
                 return data.isOwner === true;
             } catch (error) {

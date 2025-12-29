@@ -680,7 +680,7 @@
                     // Mark onboarding as completed in database
                     userData.onboardingCompleted = true;
 
-                    await fetch('/.netlify/functions/user-data', {
+                    await fetch('/user-data', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

@@ -2113,7 +2113,7 @@ Press Ctrl+Shift+C to copy this report
                 console.log('Sending OTP to:', email);
 
                 // Send OTP
-                const response = await fetch('/.netlify/functions/send-otp', {
+                const response = await fetch('/send-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, name })
@@ -2314,7 +2314,7 @@ Press Ctrl+Shift+C to copy this report
                 console.log('Verifying OTP for:', signupData.email);
 
                 // Verify OTP and create account
-                const response = await fetch('/.netlify/functions/verify-otp', {
+                const response = await fetch('/verify-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -2477,7 +2477,7 @@ Press Ctrl+Shift+C to copy this report
             try {
                 console.log('Resending OTP to:', signupData.email);
 
-                const response = await fetch('/.netlify/functions/send-otp', {
+                const response = await fetch('/send-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
