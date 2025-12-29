@@ -3530,7 +3530,7 @@ function setupContactForm() {
             if (error) throw error;
 
             // Send Discord notification (don't await, send async)
-            fetch('/.netlify/functions/discord-notify', {
+            fetch('/discord-notify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -3759,7 +3759,7 @@ async function trackGeoVisit() {
         // Only track once per session to avoid duplicate tracking
         if (sessionStorage.getItem('geo_tracked')) return;
 
-        await fetch('/.netlify/functions/geo-analytics', {
+        await fetch('/geo-analytics', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

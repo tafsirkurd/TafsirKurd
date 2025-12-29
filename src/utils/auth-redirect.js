@@ -146,7 +146,7 @@
 
                 // Send Discord notification for new user
                 try {
-                    await fetch('/.netlify/functions/discord-notify', {
+                    await fetch('/discord-notify', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

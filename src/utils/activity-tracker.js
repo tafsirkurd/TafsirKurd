@@ -3,7 +3,7 @@
 
 class ActivityTracker {
     constructor() {
-        this.endpoint = '/.netlify/functions/activity-monitor';
+        this.endpoint = '/activity-monitor';
     }
 
     async track(type, data) {

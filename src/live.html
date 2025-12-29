@@ -568,7 +568,7 @@
 
             try {
                 // Check if owner using server-side function (IPs stored securely)
-                const ownerResponse = await fetch('/.netlify/functions/check-owner');
+                const ownerResponse = await fetch('/check-owner');
 
                 if (!ownerResponse.ok) {
                     throw new Error('Failed to verify access');
@@ -666,7 +666,7 @@
 
             // Get owner IPs
             try {
-                const ownerResponse = await fetch('/.netlify/functions/check-owner');
+                const ownerResponse = await fetch('/check-owner');
                 const ownerData = await ownerResponse.json();
                 ownerIPs = ownerData.ownerIPs || [];
             } catch (err) {

@@ -71,8 +71,8 @@
         console.log('✅ Location Tracker: User authenticated:', user.id);
         console.log('📍 Location Tracker: Fetching location data...');
 
-        // Fetch location data from our Netlify function (no CORS issues)
-        const response = await fetch('/.netlify/functions/get-location');
+        // Fetch location data from our Cloudflare function (no CORS issues)
+        const response = await fetch('/get-location');
 
         if (!response.ok) {
             console.error('❌ Location Tracker: API request failed:', response.status);

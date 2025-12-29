@@ -854,7 +854,7 @@
                             fridayReminder: true
                         };
 
-                        fetch('/.netlify/functions/user-data', {
+                        fetch('/user-data', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -865,7 +865,7 @@
                         }).catch(err => console.error('Failed to save notification settings:', err));
 
                         // Send confirmation notification to admin via Discord
-                        fetch('/.netlify/functions/discord-notify', {
+                        fetch('/discord-notify', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -902,7 +902,7 @@
                             emailReminders: false
                         };
 
-                        fetch('/.netlify/functions/user-data', {
+                        fetch('/user-data', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({

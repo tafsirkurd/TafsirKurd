@@ -115,7 +115,7 @@
 
         async function getIP() {
             try {
-                const response = await fetch('/.netlify/functions/get-client-ip');
+                const response = await fetch('/get-client-ip');
                 const data = await response.json();
                 currentIP = data.ip;
 
