@@ -1,6 +1,6 @@
 // Cloudflare Pages Function - Config Endpoint
 // Returns Supabase configuration for client-side use
-// Updated: 2025-12-29 - Correct Supabase project credentials
+// Updated: 2025-12-29 - Verified correct Supabase project credentials
 
 export async function onRequest(context) {
     const { request, env } = context;
