@@ -1,6 +1,6 @@
 // Cloudflare Pages Function - Config Endpoint
 // Returns Supabase configuration for client-side use
-// Updated: 2025-12-29
+// Updated: 2025-12-29 - Fixed environment variables
 
 export async function onRequest(context) {
     const { request, env } = context;
