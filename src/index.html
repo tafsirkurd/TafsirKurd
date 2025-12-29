@@ -3586,6 +3586,15 @@ function setupHomeNavigation() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Handle OAuth callback redirect
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+        console.log('📍 OAuth callback detected on index.html, redirecting...');
+        const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
+        // Keep the hash (access tokens) and redirect to intended page
+        window.location.href = redirectDest + window.location.hash;
+        return; // Stop processing this page
+    }
+
     initPreloader();
     initTabs();
 
