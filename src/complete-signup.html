@@ -2,6 +2,7 @@
 <html dir="rtl" lang="ku">
 <head>
     <script src="/utils/theme-loader.js"></script>
+    <script src="/utils/security.js"></script>
     <script src="/utils/scroll-position.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -683,14 +684,45 @@
     </div>
 
     <script>
-        // Initialize Supabase client
-        const supabaseUrl = 'https://gijupzejtbpifjzwadee.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanVwemVqdGJwaWZqendhZGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDAyOTcsImV4cCI6MjA3MTExNjI5N30.-d33o2dDpfD6ywubBcc51srvf1VUewAJwpnd0OOo51M';
-        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        window.supabaseClient = supabaseClient;
+        // Initialize Supabase client securely
+        let supabaseClient = null;
+
+        async function initSupabase() {
+            try {
+                const response = await fetch('/.netlify/functions/auth-config');
+                if (!response.ok) throw new Error('Failed to fetch auth configuration');
+                const config = await response.json();
+                if (!config.supabaseUrl || !config.supabaseAnonKey) throw new Error('Invalid auth configuration');
+                supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+                window.supabaseClient = supabaseClient;
+                console.log('✅ Supabase initialized securely');
+                return true;
+            } catch (error) {
+                console.error('Supabase initialization error:', error);
+                return false;
+            }
+        }
 
         // Load user data from Supabase
         window.addEventListener('load', async () => {
+            // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
+            if (window.TafsirKurdSecurity) {
+                window.TafsirKurdSecurity.init({
+                    criticalElements: ['firstName', 'lastName', 'displayName'],
+                    protectedFields: [],
+                    validateSession: true,
+                    securityLevel: 'nuclear'
+                });
+            }
+
+            // Initialize Supabase first
+            await initSupabase();
+            if (!supabaseClient) {
+                console.error('Failed to initialize Supabase');
+                window.location.href = '/login.html';
+                return;
+            }
+
             try {
                 // Check if auth-redirect is loaded
                 if (!window.authRedirect) {
@@ -708,13 +740,27 @@
                     return;
                 }
 
-                // Display user info with default avatar if needed
+                // Display user info with default avatar if needed (XSS-safe)
                 const userInfoDiv = document.getElementById('userInfo');
-                userInfoDiv.innerHTML = `
-                    <img src="${profile.avatar_url}" alt="${profile.display_name}" class="user-avatar">
-                    <div class="user-name" data-no-convert="true">${profile.display_name}</div>
-                    <div class="user-email" data-no-convert="true">${profile.email}</div>
-                `;
+                userInfoDiv.textContent = ''; // Clear existing content
+
+                const img = document.createElement('img');
+                img.src = profile.avatar_url || '/assets/default-avatar.png';
+                img.alt = profile.display_name || 'User';
+                img.className = 'user-avatar';
+                userInfoDiv.appendChild(img);
+
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'user-name';
+                nameDiv.setAttribute('data-no-convert', 'true');
+                nameDiv.textContent = profile.display_name || 'User';
+                userInfoDiv.appendChild(nameDiv);
+
+                const emailDiv = document.createElement('div');
+                emailDiv.className = 'user-email';
+                emailDiv.setAttribute('data-no-convert', 'true');
+                emailDiv.textContent = profile.email || '';
+                userInfoDiv.appendChild(emailDiv);
 
                 // Load saved preferences from Supabase profile
                 loadPreferences(profile);

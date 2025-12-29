@@ -2,6 +2,7 @@
 <html dir="rtl" lang="ku">
 <head>
     <script src="/utils/theme-loader.js"></script>
+    <script src="/utils/security.js"></script>
     <script src="/utils/scroll-position.js"></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -759,6 +760,17 @@
         let quranData = null;
         let tafsirData = {};
 
+        // XSS Protection: HTML escape function
+        function escapeHtml(unsafe) {
+            if (unsafe === null || unsafe === undefined) return '';
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         const surahNames = {
             1: { arabic: "الفاتحة", english: "Al-Fatihah" },
             2: { arabic: "البقرة", english: "Al-Baqarah" },
@@ -952,6 +964,16 @@
         }
 
         window.addEventListener('load', async () => {
+            // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
+            if (window.TafsirKurdSecurity) {
+                window.TafsirKurdSecurity.init({
+                    criticalElements: ['searchInput', 'sortSelect'],
+                    protectedFields: [],
+                    validateSession: true,
+                    securityLevel: 'nuclear'
+                });
+            }
+
             // Check authentication first
             const user = localStorage.getItem('user');
             if (!user) {
@@ -1148,11 +1170,11 @@
                                 <i class="fas fa-sticky-note"></i>
                                 تێبینی:
                             </div>
-                            <div class="note-text">${note}</div>
+                            <div class="note-text">${escapeHtml(note)}</div>
                         </div>
                     ` : ''}
                     <div id="note-editor-${key}" style="display: none;">
-                        <textarea class="note-input" id="note-input-${key}" placeholder="تێبینییا خۆ ل ڤێرێ بنڤیسە...">${note}</textarea>
+                        <textarea class="note-input" id="note-input-${key}" placeholder="تێبینییا خۆ ل ڤێرێ بنڤیسە...">${escapeHtml(note)}</textarea>
                         <button class="save-note-btn" onclick="saveNote('${key}')">
                             <i class="fas fa-save"></i> پاشکەفتکرن
                         </button>

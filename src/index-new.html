@@ -18,6 +18,9 @@
     <!-- Theme Color -->
     <meta name="theme-color" content="#000000">
 
+    <!-- Security Module -->
+    <script src="/utils/security.js"></script>
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicons/android-chrome-192x192.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicons/apple-touch-icon.png">
@@ -1194,6 +1197,16 @@
     <script>
         // Loader
         window.addEventListener('load', () => {
+            // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
+            if (window.TafsirKurdSecurity) {
+                window.TafsirKurdSecurity.init({
+                    criticalElements: ['name', 'email', 'message'],
+                    protectedFields: [],
+                    validateSession: false, // Public page, no session validation
+                    securityLevel: 'maximum' // Maximum but not nuclear for public page
+                });
+            }
+
             setTimeout(() => {
                 document.getElementById('loader').classList.add('hidden');
             }, 1000);
@@ -1320,11 +1333,39 @@
         contactForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const formData = {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                message: document.getElementById('message').value
-            };
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const message = document.getElementById('message').value.trim();
+
+            // Input validation
+            if (!name || name.length < 2) {
+                alert('تکایە ناڤەکا دروست بنڤیسە (کەمتر ٢ پیت)');
+                return;
+            }
+
+            if (!email) {
+                alert('تکایە ئیمەیلا خۆ بنڤیسە');
+                return;
+            }
+
+            // Email format validation
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(email)) {
+                alert('تکایە ئیمەیلەکا دروست بنڤیسە');
+                return;
+            }
+
+            if (!message || message.length < 10) {
+                alert('تکایە پەیامەکا کورتتر (کەمتر ١٠ پیت)');
+                return;
+            }
+
+            if (message.length > 1000) {
+                alert('پەیامەکا گەلەک درێژە (زیاتر ١٠٠٠ پیت)');
+                return;
+            }
+
+            const formData = { name, email, message };
 
             // You can integrate with Supabase or your backend here
             console.log('Form submitted:', formData);
@@ -1349,17 +1390,24 @@
         });
 
         // ===== AUTHENTICATION SYSTEM =====
-        const supabaseUrl = 'https://gijupzejtbpifjzwadee.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanVwemVqdGJwaWZqendhZGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDAyOTcsImV4cCI6MjA3MTExNjI5N30.-d33o2dDpfD6ywubBcc51srvf1VUewAJwpnd0OOo51M';
         let supabaseClient = null;
         let currentUser = null;
 
         // Initialize Supabase
         async function initSupabase() {
             if (typeof window.supabase !== 'undefined') {
-                supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-                console.log('✅ Supabase initialized on homepage');
-                return true;
+                try {
+                    const response = await fetch('/.netlify/functions/auth-config');
+                    if (!response.ok) throw new Error('Failed to fetch auth configuration');
+                    const config = await response.json();
+                    if (!config.supabaseUrl || !config.supabaseAnonKey) throw new Error('Invalid auth configuration');
+                    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+                    console.log('✅ Supabase initialized securely on homepage');
+                    return true;
+                } catch (error) {
+                    console.error('Supabase initialization error:', error);
+                    return false;
+                }
             }
             return false;
         }

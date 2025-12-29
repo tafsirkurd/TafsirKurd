@@ -2,6 +2,7 @@
 <html dir="rtl" lang="ku">
 <head>
     <script src="/utils/theme-loader.js"></script>
+    <script src="/utils/security.js"></script>
     <script src="/utils/scroll-position.js"></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -932,6 +933,16 @@
                 return;
             }
         })();
+
+        // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
+        if (window.TafsirKurdSecurity) {
+            window.TafsirKurdSecurity.init({
+                criticalElements: [],
+                protectedFields: [],
+                validateSession: true,
+                securityLevel: 'nuclear'
+            });
+        }
 
         let currentStep = 1;
         let selectedGoal = null;

@@ -2,6 +2,7 @@
 <html dir="rtl" lang="ku">
 <head>
     <script src="/utils/theme-loader.js"></script>
+    <script src="/utils/security.js"></script>
     <script src="/utils/scroll-position.js"></script>
     <script src="/utils/bot-detector.js" defer></script>
     <meta charset="utf-8" />
@@ -4882,8 +4883,25 @@
         })();
 
         // Initialize Supabase client for unified profiles
-        const supabaseUrl = 'https://gijupzejtbpifjzwadee.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanVwemVqdGJwaWZqendhZGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDAyOTcsImV4cCI6MjA3MTExNjI5N30.-d33o2dDpfD6ywubBcc51srvf1VUewAJwpnd0OOo51M';
+        let supabaseClient = null;
+
+        async function initSupabase() {
+            if (typeof window.supabase !== 'undefined') {
+                try {
+                    const response = await fetch('/.netlify/functions/auth-config');
+                    if (!response.ok) throw new Error('Failed to fetch auth configuration');
+                    const config = await response.json();
+                    if (!config.supabaseUrl || !config.supabaseAnonKey) throw new Error('Invalid auth configuration');
+                    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+                    console.log('✅ Supabase initialized securely in Quran page');
+                    return true;
+                } catch (error) {
+                    console.error('Supabase initialization error:', error);
+                    return false;
+                }
+            }
+            return false;
+        }
         let supabaseClient = null;
 
         // Initialize Supabase client immediately if library is loaded
@@ -5266,6 +5284,16 @@
             let loadTimeout = null; // Declare at function scope
             try {
                 initPreloader();
+
+                // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
+                if (window.TafsirKurdSecurity) {
+                    window.TafsirKurdSecurity.init({
+                        criticalElements: [],
+                        protectedFields: [],
+                        validateSession: true,
+                        securityLevel: 'nuclear'
+                    });
+                }
 
                 // Wait for Supabase and auth-redirect to load
                 await waitForAuthLibraries();
