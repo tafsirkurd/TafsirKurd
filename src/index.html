@@ -2437,7 +2437,7 @@ window.addEventListener('error', function(e) {
           throw new Error('Supabase library not available after loading');
         }
 
-        const response = await fetch('/.netlify/functions/config');
+        const response = await fetch('/config');
         if (!response.ok) throw new Error('Failed to fetch config');
         const config = await response.json();
         const client = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);

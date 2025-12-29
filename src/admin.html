@@ -5254,7 +5254,7 @@
                     throw new Error('Supabase library failed to load');
                 }
 
-                const response = await fetch('/.netlify/functions/config');
+                const response = await fetch('/config');
                 if (!response.ok) throw new Error('Failed to fetch config');
                 const config = await response.json();
 
