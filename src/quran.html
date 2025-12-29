@@ -4210,7 +4210,7 @@
         <div class="settings-content">
             <div class="settings-header">
                 <h2 class="settings-title">رێکخستن</h2>
-                <button class="settings-close" onclick="closeSettings()">
+                <button class="settings-close" onclick="closeSettings()" aria-label="داخستنا ڕێکخستنان">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -4223,7 +4223,7 @@
                 </h3>
                 <div class="setting-item">
                     <span class="setting-label">رەوشا تاریک</span>
-                    <div class="setting-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
+                    <div class="setting-toggle" id="darkModeToggle" onclick="toggleDarkMode()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDarkMode();}" role="button" tabindex="0" aria-label="گۆڕینا رەوشا تاریک">
                         <div class="setting-toggle-knob"></div>
                     </div>
                 </div>
@@ -4239,7 +4239,7 @@
                 <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <span class="setting-label">جۆرێ فۆنتا عەرەبی</span>
-                        <select class="setting-select" id="arabicFontSelect" onchange="changeArabicFont()">
+                        <select class="setting-select" id="arabicFontSelect" aria-label="هەلبژاردنا فۆنتا عەرەبی" onchange="changeArabicFont()">
                             <option value="KFGQPC Hafs">KFGQPC Hafs (حەفس)</option>
                             <option value="Scheherazade New">Scheherazade New</option>
                             <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
@@ -4254,7 +4254,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <span class="setting-label">قەبارەیا فۆنتا عەرەبی</span>
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <input type="range" class="setting-slider" id="arabicSizeSlider"
+                            <input type="range" class="setting-slider" id="arabicSizeSlider" aria-label="قەبارەیا فۆنتا عەرەبی"
                                    min="1.5" max="3.5" step="0.1" value="2.2"
                                    oninput="changeArabicSize(this.value)">
                             <span id="arabicSizeValue">2.2</span>
@@ -4265,7 +4265,7 @@
                 <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <span class="setting-label">جۆرێ فۆنتا تەفسیرێ</span>
-                        <select class="setting-select" id="tafsirFontSelect" onchange="changeTafsirFont()">
+                        <select class="setting-select" id="tafsirFontSelect" aria-label="هەلبژاردنا فۆنتا تەفسیرێ" onchange="changeTafsirFont()">
                             <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
                             <option value="Scheherazade New">Scheherazade New</option>
                             <option value="KFGQPC Hafs">KFGQPC Hafs (حەفس)</option>
@@ -4280,7 +4280,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <span class="setting-label">قەبارەیا فۆنتا تەفسیرێ</span>
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <input type="range" class="setting-slider" id="tafsirSizeSlider"
+                            <input type="range" class="setting-slider" id="tafsirSizeSlider" aria-label="قەبارەیا فۆنتا تەفسیرێ"
                                    min="0.9" max="1.8" step="0.05" value="1.1"
                                    oninput="changeTafsirSize(this.value)">
                             <span id="tafsirSizeValue">1.1</span>
@@ -4358,11 +4358,11 @@
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="sidebar-logo" onclick="showHomePage()">
+            <div class="sidebar-logo" onclick="showHomePage()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showHomePage();}" role="button" tabindex="0" aria-label="گەڕانەوە بۆ پەڕەیا سەرەکی">
                 <img src="/assets/images/logo.png" alt="Tafsir Kurd" class="logo-image">
                 <div class="sidebar-title">قورئان</div>
             </div>
-            <button class="sidebar-close-btn" onclick="closeSidebar()" title="داخستن">
+            <button class="sidebar-close-btn" onclick="closeSidebar()" title="داخستن" aria-label="داخستنا مێنیو">
                 <i class="fas fa-times"></i>
             </button>
 
@@ -4379,7 +4379,7 @@
             </div>
 
             <div class="search-container-sidebar">
-                <input type="text" class="search-input-sidebar" placeholder="لێگەریانا قورئانێ…" id="sidebarSearch">
+                <input type="text" class="search-input-sidebar" placeholder="لێگەریانا قورئانێ…" id="sidebarSearch" aria-label="لێگەریانا قورئانێ">
             </div>
         </div>
         <div class="surah-list-sidebar" id="surahListSidebar"></div>
@@ -4395,14 +4395,14 @@
     <div class="feather-overlay" id="featherOverlay">
         <div class="feather-overlay-header">
             <h2 class="feather-overlay-title">مێنیویا بکارئینەری</h2>
-            <button class="feather-close-btn" onclick="closeFeatherOverlay()">
+            <button class="feather-close-btn" onclick="closeFeatherOverlay()" aria-label="داخستنا مێنیویا بکارئینەری">
                 <i class="fas fa-times"></i>
             </button>
         </div>
 
         <!-- Profile Section -->
         <div class="feather-section" id="profileSection" style="display: none;">
-            <div class="profile-section" onclick="window.location.href='/profile'">
+            <div class="profile-section" onclick="window.location.href='/profile'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href='/profile';}" role="button" tabindex="0" aria-label="چوونە پرۆفایل">
                 <img src="" alt="Profile" class="profile-avatar-large" id="profileAvatar">
                 <div class="profile-info">
                     <div class="profile-name" id="profileName">ناڤ</div>
@@ -4430,7 +4430,7 @@
                     <i class="fas fa-cog"></i>
                     <span>رێکخستن</span>
                 </a>
-                <div class="nav-menu-item" onclick="signOut()">
+                <div class="nav-menu-item" onclick="signOut()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();signOut();}" role="button" tabindex="0">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>دەرکەفتن</span>
                 </div>
@@ -4483,7 +4483,7 @@
         <!-- Professional Header -->
         <header class="professional-header">
             <div class="header-container">
-                <div class="header-logo-section" onclick="showHomePage()">
+                <div class="header-logo-section" onclick="showHomePage()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showHomePage();}" role="button" tabindex="0" aria-label="گەڕانەوە بۆ پەڕەیا سەرەکی">
                     <img src="/assets/images/logo.png" alt="Logo" class="header-logo-img logo-image">
                     <div class="header-title">تەفسیر کورد</div>
                 </div>
@@ -4667,7 +4667,7 @@
                         </h3>
 
                         <!-- Streak Badge - Hidden by default until reading goal is set -->
-                        <div id="streakBadgeContainer" onclick="requireLogin('goals')" style="background: linear-gradient(135deg, #58cc02 0%, #46a302 100%); border-radius: 12px; padding: 16px 24px; margin-bottom: 25px; display: none; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(88, 204, 2, 0.3); cursor: pointer; transition: all 0.3s;">
+                        <div id="streakBadgeContainer" onclick="requireLogin('goals')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();requireLogin('goals');}" role="button" tabindex="0" aria-label="بینینا ئامانجێن وەرگرتنێ" style="background: linear-gradient(135deg, #58cc02 0%, #46a302 100%); border-radius: 12px; padding: 16px 24px; margin-bottom: 25px; display: none; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(88, 204, 2, 0.3); cursor: pointer; transition: all 0.3s;">
                             <div style="display: flex; align-items: center; gap: 16px;">
                                 <div id="streakEmoji" style="font-size: 2.5rem;">🌱</div>
                                 <div style="display: flex; flex-direction: column;">
@@ -4722,7 +4722,7 @@
                 </div>
 
                 <!-- Right Column - Continue Reading -->
-                <div id="continueReadingCard" style="background: var(--card-bg); border-radius: 20px; padding: 60px; box-shadow: var(--shadow-md); border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; min-height: 400px; cursor: pointer; transition: all var(--transition); position: relative; overflow: visible;" onclick="continueReading()">
+                <div id="continueReadingCard" onclick="continueReading()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();continueReading();}" role="button" tabindex="0" aria-label="بەردەوامبوونا خواندنێ" style="background: var(--card-bg); border-radius: 20px; padding: 60px; box-shadow: var(--shadow-md); border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; min-height: 400px; cursor: pointer; transition: all var(--transition); position: relative; overflow: visible;">
                     <div style="font-family: 'SurahName', 'Scheherazade New', serif; font-size: clamp(8rem, 15vw, 20rem); text-align: center; margin: auto 0; color: var(--primary); line-height: 1; max-width: 100%;" class="no-kurdish-convert" id="continueReadingSurahName">surah001</div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px;">
                         <div style="font-size: 1.2rem; font-weight: 600; color: var(--text-muted);" id="continueReadingInfo">١. الفاتحة</div>
@@ -4746,11 +4746,11 @@
                         </button>
                     </div>
                     <div class="sort-group">
-                        <label style="font-weight: 600; color: var(--text); margin-right: 10px;">
+                        <label for="sortOrder" style="font-weight: 600; color: var(--text); margin-right: 10px;">
                             <i class="fas fa-sort-amount-down" style="margin-left: 8px; color: var(--primary);"></i>
                             رێزکرن ب گۆرەی:
                         </label>
-                        <select class="sort-select" id="sortOrder" onchange="changeSortOrder()">
+                        <select class="sort-select" id="sortOrder" aria-label="رێزکرنا سوورەتان" onchange="changeSortOrder()">
                             <option value="asc">ژ کێمی بۆ زێدە (1→114)</option>
                             <option value="desc">ژ زێدەیی بۆ کێم (114→1)</option>
                         </select>
@@ -4903,7 +4903,7 @@
                     <p class="footer-copyright">
                         &copy; <span id="year"></span> تەفسیر کورد. هەمی ماف پاراستی نە. خودایێ مەزن بەرەکەتێ بێخیتە هەول و ماندبوونا مە.
                     </p>
-                    <p class="footer-brand-seo" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; opacity: 0.7;">
+                    <p class="footer-brand-seo" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
                         تەفسیر کورد – تەفسیرا قورئانا پیرۆز ب زمانی کوردی (بادینی)
                     </p>
                     <div class="footer-meta-links">
@@ -10841,15 +10841,15 @@
 
             <!-- Playback Controls -->
             <div class="audio-player-controls">
-                <button class="player-btn" onclick="playPreviousAyah()" title="ئایەتا پێشتر">
+                <button class="player-btn" onclick="playPreviousAyah()" title="ئایەتا پێشتر" aria-label="ئایەتا پێشتر">
                     <i class="fas fa-step-backward"></i>
                 </button>
 
-                <button class="player-btn player-btn-main" id="playPauseBtn" onclick="togglePlayPause()" title="لیستان/وەستان">
+                <button class="player-btn player-btn-main" id="playPauseBtn" onclick="togglePlayPause()" title="لیستان/وەستان" aria-label="لیستان/وەستان">
                     <i class="fas fa-play"></i>
                 </button>
 
-                <button class="player-btn" onclick="playNextAyah()" title="ئایەتا دواتر">
+                <button class="player-btn" onclick="playNextAyah()" title="ئایەتا دواتر" aria-label="ئایەتا دواتر">
                     <i class="fas fa-step-forward"></i>
                 </button>
             </div>
@@ -10867,21 +10867,22 @@
                                max="100"
                                value="100"
                                oninput="changeVolume(this.value)"
-                               title="دەنگ: کەم ← زۆر">
+                               title="دەنگ: کەم ← زۆر"
+                               aria-label="قەبارەیا دەنگی">
                         <i class="fas fa-volume-up" style="color: var(--text); opacity: 0.5; font-size: 0.75rem;"></i>
                     </div>
-                    <button class="player-btn" onclick="toggleVolumeSlider()" id="volumeBtn" title="دەنگ">
+                    <button class="player-btn" onclick="toggleVolumeSlider()" id="volumeBtn" title="دەنگ" aria-label="کۆنترۆڵا دەنگی">
                         <i class="fas fa-volume-up"></i>
                     </button>
                 </div>
 
                 <!-- Settings Menu Button -->
-                <button class="player-btn" onclick="togglePlayerMenu()" id="playerMenuBtn" title="ڕێکخستنان">
+                <button class="player-btn" onclick="togglePlayerMenu()" id="playerMenuBtn" title="ڕێکخستنان" aria-label="مێنیویا ڕێکخستنان">
                     <i class="fas fa-ellipsis-v"></i>
                 </button>
 
                 <!-- Close Button -->
-                <button class="player-btn" onclick="closeAudioPlayer()" title="دایخستن">
+                <button class="player-btn" onclick="closeAudioPlayer()" title="دایخستن" aria-label="داخستنا لیستنەری">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -10939,7 +10940,7 @@
         <div class="repeat-manager-content">
             <div class="repeat-manager-header">
                 <h3>بەڕێڤەبەرا دووبارەکرنێ</h3>
-                <button class="close-repeat-btn" onclick="closeRepeatManager()">
+                <button class="close-repeat-btn" onclick="closeRepeatManager()" aria-label="داخستنا بەڕێڤەبەرا دووبارەکرنێ">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -10960,28 +10961,28 @@
             <!-- Single Verse Mode -->
             <div class="repeat-mode-content" id="singleMode">
                 <div class="verse-input-group">
-                    <label>ئایەتا ئێکێ:</label>
-                    <input type="text" id="singleVerseInput" placeholder="1:1" value="" readonly>
+                    <label for="singleVerseInput">ئایەتا ئێکێ:</label>
+                    <input type="text" id="singleVerseInput" aria-label="ئایەتا یەکێ" placeholder="1:1" value="" readonly>
                 </div>
             </div>
 
             <!-- Range Mode -->
             <div class="repeat-mode-content hidden" id="rangeMode">
                 <div class="verse-input-group">
-                    <label>ژ ئایەتێ:</label>
-                    <input type="text" id="rangeStartInput" placeholder="1:1" value="">
+                    <label for="rangeStartInput">ژ ئایەتێ:</label>
+                    <input type="text" id="rangeStartInput" aria-label="دەستپێکا مەودایێ" placeholder="1:1" value="">
                 </div>
                 <div class="verse-input-group">
-                    <label>هەتا ئایەتێ:</label>
-                    <input type="text" id="rangeEndInput" placeholder="1:7" value="">
+                    <label for="rangeEndInput">هەتا ئایەتێ:</label>
+                    <input type="text" id="rangeEndInput" aria-label="کۆتایا مەودایێ" placeholder="1:7" value="">
                 </div>
             </div>
 
             <!-- Surah Mode -->
             <div class="repeat-mode-content hidden" id="surahMode">
                 <div class="verse-input-group">
-                    <label>سوورەت:</label>
-                    <select id="surahSelect" class="surah-select">
+                    <label for="surahSelect">سوورەت:</label>
+                    <select id="surahSelect" class="surah-select" aria-label="هەلبژاردنا سوورەتێ">
                         <!-- Populated dynamically -->
                     </select>
                 </div>
@@ -10993,9 +10994,9 @@
                 <div class="repeat-control-item">
                     <span>ژمارا لیستانێ</span>
                     <div class="counter-controls">
-                        <button onclick="decrementCounter('playRange')"><i class="fas fa-minus"></i></button>
+                        <button onclick="decrementCounter('playRange')" aria-label="کەمکرنا ژمارا دووبارەکرنێ"><i class="fas fa-minus"></i></button>
                         <span id="playRangeCount">2</span>
-                        <button onclick="incrementCounter('playRange')"><i class="fas fa-plus"></i></button>
+                        <button onclick="incrementCounter('playRange')" aria-label="زێدەکرنا ژمارا دووبارەکرنێ"><i class="fas fa-plus"></i></button>
                         <span class="times-label">جار</span>
                     </div>
                 </div>
@@ -11004,9 +11005,9 @@
                 <div class="repeat-control-item">
                     <span>دووبارەکرنا هەر ئایەتێ</span>
                     <div class="counter-controls">
-                        <button onclick="decrementCounter('repeatVerse')"><i class="fas fa-minus"></i></button>
+                        <button onclick="decrementCounter('repeatVerse')" aria-label="کەمکرنا دووبارەکرنا ئایەتێ"><i class="fas fa-minus"></i></button>
                         <span id="repeatVerseCount">1</span>
-                        <button onclick="incrementCounter('repeatVerse')"><i class="fas fa-plus"></i></button>
+                        <button onclick="incrementCounter('repeatVerse')" aria-label="زێدەکرنا دووبارەکرنا ئایەتێ"><i class="fas fa-plus"></i></button>
                         <span class="times-label">جار</span>
                     </div>
                 </div>
@@ -11015,9 +11016,9 @@
                 <div class="repeat-control-item">
                     <span>دیرەنگیا نێوان ئایەتان</span>
                     <div class="counter-controls">
-                        <button onclick="decrementCounter('delay')"><i class="fas fa-minus"></i></button>
+                        <button onclick="decrementCounter('delay')" aria-label="کەمکرنا دیرەنگیێ"><i class="fas fa-minus"></i></button>
                         <span id="delayCount">0</span>
-                        <button onclick="incrementCounter('delay')"><i class="fas fa-plus"></i></button>
+                        <button onclick="incrementCounter('delay')" aria-label="زێدەکرنا دیرەنگیێ"><i class="fas fa-plus"></i></button>
                         <span class="times-label">چرکە</span>
                     </div>
                 </div>
