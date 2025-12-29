@@ -3,7 +3,8 @@
 <head>
     <!-- 🚀 PRODUCTION MODE: Disable console in production for max performance -->
     <script src="/utils/production-mode.js" defer></script>
-    <script src="/utils/theme-loader.js" defer></script>
+    <!-- Theme loader MUST run immediately to prevent flash -->
+    <script src="/utils/theme-loader.js"></script>
     <script src="/utils/security.js" defer></script>
     <script src="/utils/scroll-position.js" defer></script>
     <script src="/utils/bot-detector.js" defer></script>
