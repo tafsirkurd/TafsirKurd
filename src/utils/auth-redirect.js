@@ -70,20 +70,9 @@
             }
 
             // Check if user needs to complete signup
+            // ALL new users (Google, Email, Quran, TV) must complete signup
             if (!profile.has_completed_signup) {
-                // Only show complete-signup for quran and email registrations
-                if (profile.registration_source === 'quran' || profile.registration_source === 'email') {
-                    return { needsCompletion: true, redirectUrl: '/complete-signup.html' };
-                } else {
-                    // TV and Google users skip complete-signup
-                    // Mark as completed automatically
-                    await supabase
-                        .from('profiles')
-                        .update({ has_completed_signup: true })
-                        .eq('id', userId);
-
-                    return { needsCompletion: false, redirectUrl: null };
-                }
+                return { needsCompletion: true, redirectUrl: '/complete-signup.html' };
             }
 
             return { needsCompletion: false, redirectUrl: null };

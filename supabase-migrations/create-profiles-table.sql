@@ -110,7 +110,8 @@ BEGIN
     ELSIF NEW.raw_user_meta_data->>'registration_source' IS NOT NULL THEN
         reg_source := NEW.raw_user_meta_data->>'registration_source';
     ELSE
-        reg_source := 'email';
+        -- Default to 'quran' for backward compatibility
+        reg_source := 'quran';
     END IF;
 
     -- Insert profile
@@ -130,11 +131,7 @@ BEGIN
         user_name,
         user_avatar,
         reg_source,
-        CASE
-            WHEN reg_source = 'google' THEN true  -- Google users have complete info
-            WHEN reg_source = 'tv' THEN true      -- TV users skip complete-signup
-            ELSE false                             -- Email/quran users need complete-signup
-        END,
+        false,  -- ALL users must complete signup (Google, TV, Email, Quran)
         NOW()
     )
     ON CONFLICT (id) DO UPDATE SET
