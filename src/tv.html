@@ -42,7 +42,7 @@
             --bg: #0a0a0a;
             --card-bg: #1a1a1a;
             --text: #ffffff;
-            --text-muted: #999999;
+            --text-muted: #b3b3b3;
             --border: #2a2a2a;
             --success: #2ecc71;
             --danger: #e74c3c;
@@ -64,7 +64,7 @@
             --bg: #fafafa;
             --card-bg: #ffffff;
             --text: #000000;
-            --text-muted: #666666;
+            --text-muted: #4d4d4d;
             --border: #e8e8e8;
             --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
             --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
@@ -154,12 +154,10 @@
             text-decoration: none;
             font-weight: 500;
             transition: color var(--transition-fast);
-            opacity: 0.8;
         }
 
         .nav-link:hover,
         .nav-link.active {
-            opacity: 1;
             color: #ffffff;
         }
 
@@ -179,7 +177,7 @@
         .search-icon {
             position: absolute;
             right: 12px;
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.7);
             font-size: 0.9rem;
             pointer-events: none;
         }
@@ -197,7 +195,7 @@
         }
 
         .nav-search-input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.7);
         }
 
         .nav-search-input:focus {
@@ -2524,7 +2522,7 @@
             <div class="nav-actions">
                 <div class="nav-search-container">
                     <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="nav-search-input" id="navSearchInput" placeholder="بگەڕێ بۆ بەش، زنجیرە، یان بابەت..." autocomplete="off">
+                    <input type="text" class="nav-search-input" id="navSearchInput" placeholder="بگەڕێ بۆ بەش، زنجیرە، یان بابەت..." autocomplete="off" aria-label="گەڕان">
                 </div>
                 <button class="icon-btn" id="notificationBtn" aria-label="Notifications" title="ئاگادارکرنەوە">
                     <i class="fas fa-bell"></i>
@@ -2579,10 +2577,10 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <button class="sidebar-toggle" id="sidebarToggle">
+                <button class="sidebar-toggle" id="sidebarToggle" aria-label="گۆڕینا لایکێشە">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h2 class="sidebar-title">دەنگێ ئیسلامێ</h2>
+                <h1 class="sidebar-title">دەنگێ ئیسلامێ</h1>
             </div>
 
             <nav class="sidebar-nav">
@@ -2613,7 +2611,7 @@
 
     <!-- Video Player Modal (Fullscreen Overlay) -->
     <div class="player-modal" id="playerModal">
-        <button class="close-player" id="closePlayerBtn">
+        <button class="close-player" id="closePlayerBtn" aria-label="داخستنا لێدەرێ">
             <i class="fas fa-times"></i>
         </button>
 
@@ -2646,14 +2644,14 @@
 
             <!-- Next Episode Countdown -->
             <div class="next-episode-overlay" id="nextEpisodeOverlay">
-                <h3>بەشا داهاتی دەستپێدکەت د</h3>
+                <h2>بەشا داهاتی دەستپێدکەت د</h2>
                 <div class="countdown" id="countdown">5</div>
                 <button class="action-btn" onclick="cancelAutoPlay()">بەتاڵکرن</button>
             </div>
 
             <div class="player-overlay" id="playerOverlay">
                 <div class="video-info">
-                    <h1 class="video-title" id="currentVideoTitle">تەفسیرا سورەتا الفاتحة</h1>
+                    <h2 class="video-title" id="currentVideoTitle">تەفسیرا سورەتا الفاتحة</h2>
                     <div class="video-meta">
                         <span>بەشا ١ - زنجیرەیا تەفسیر</span>
                         <span>•</span>
@@ -2701,15 +2699,15 @@
                 </div>
 
                 <div class="video-controls">
-                    <button class="control-btn" id="playPauseBtn">
+                    <button class="control-btn" id="playPauseBtn" aria-label="پێکردن/وەستان">
                         <i class="fas fa-play"></i>
                     </button>
 
-                    <button class="control-btn" id="rewindBtn" title="10 چرکە پاشڤە">
+                    <button class="control-btn" id="rewindBtn" title="10 چرکە پاشڤە" aria-label="10 چرکە پاشڤە">
                         <i class="fas fa-backward"></i>
                     </button>
 
-                    <button class="control-btn" id="forwardBtn" title="10 چرکە پێشڤە">
+                    <button class="control-btn" id="forwardBtn" title="10 چرکە پێشڤە" aria-label="10 چرکە پێشڤە">
                         <i class="fas fa-forward"></i>
                     </button>
 
@@ -2723,16 +2721,16 @@
                     <span class="time-display" id="timeDisplay">٠:٠٠ / ٠:٠٠</span>
 
                     <div class="volume-control">
-                        <button class="control-btn" id="muteBtn">
+                        <button class="control-btn" id="muteBtn" aria-label="بێدەنگکرن/دەنگکرن">
                             <i class="fas fa-volume-up"></i>
                         </button>
-                        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100">
+                        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100" aria-label="دەنگ">
                     </div>
 
                     <div class="advanced-controls">
                         <!-- Speed Control -->
                         <div class="speed-selector">
-                            <button class="control-btn" id="speedBtn" title="خێرایی">
+                            <button class="control-btn" id="speedBtn" title="خێرایی" aria-label="خێرایی">
                                 <span style="font-size: 0.8rem; font-weight: 700;">1x</span>
                             </button>
                             <div class="dropdown-menu" id="speedMenu">
@@ -2747,7 +2745,7 @@
 
                         <!-- Quality Control -->
                         <div class="quality-selector">
-                            <button class="control-btn" id="qualityBtn" title="کواڵتی">
+                            <button class="control-btn" id="qualityBtn" title="کواڵتی" aria-label="کواڵتی">
                                 <i class="fas fa-cog"></i>
                             </button>
                             <div class="dropdown-menu" id="qualityMenu">
@@ -2762,7 +2760,7 @@
 
                         <!-- Subtitle Control -->
                         <div class="subtitle-selector">
-                            <button class="control-btn" id="subtitleBtn" title="ژێرنڤیس">
+                            <button class="control-btn" id="subtitleBtn" title="ژێرنڤیس" aria-label="ژێرنڤیس">
                                 <i class="fas fa-closed-captioning"></i>
                             </button>
                             <div class="dropdown-menu" id="subtitleMenu">
@@ -2774,7 +2772,7 @@
                         </div>
                     </div>
 
-                    <button class="control-btn" id="fullscreenBtn">
+                    <button class="control-btn" id="fullscreenBtn" aria-label="پڕ شاشە">
                         <i class="fas fa-expand"></i>
                     </button>
                 </div>
@@ -2786,17 +2784,18 @@
 
     <!-- Floating Picture-in-Picture Player -->
     <div class="floating-player" id="floatingPlayer">
-        <button class="floating-close" onclick="closePiP()">
+        <button class="floating-close" onclick="closePiP()" aria-label="داخستن">
             <i class="fas fa-times"></i>
         </button>
     </div>
 
         <!-- Main Content Area -->
         <main class="main-content" id="mainContent">
+            <span id="categories"></span>
             <!-- Topics View (Default) -->
             <div class="view-container active" id="topicsView">
                 <div class="view-header">
-                    <h1>بابەت</h1>
+                    <h2>بابەت</h2>
                     <p>ھەڵبژێرە بابەتەکێ بۆ ببینینا ڤیدیۆیان</p>
                 </div>
 
@@ -2814,7 +2813,7 @@
                         ڤەگەڕە بۆ بابەت
                     </button>
                     <div>
-                        <h1 id="topicTitle">بابەتا ھەڵبژارتی</h1>
+                        <h2 id="topicTitle">بابەتا ھەڵبژارتی</h2>
                         <p id="topicDescription">ھەڵبژێرە بەشەکێ بۆ بینینێ</p>
                     </div>
                 </div>
@@ -2828,7 +2827,7 @@
             <!-- Bookmarks View -->
             <div class="view-container" id="bookmarksView">
                 <div class="view-header">
-                    <h1>خەزنکراو</h1>
+                    <h2>خەزنکراو</h2>
                     <p>ڤیدیۆیێن کو تو خەزنکرینە بۆ بینینا پاشێ</p>
                 </div>
 
@@ -2840,7 +2839,7 @@
             <!-- History View -->
             <div class="view-container" id="historyView">
                 <div class="view-header">
-                    <h1>مێژوو</h1>
+                    <h2>مێژوو</h2>
                     <p>ھەمی ڤیدیۆیێن کو تو دیتینە</p>
                 </div>
 
@@ -2852,7 +2851,7 @@
             <!-- Continue Watching View -->
             <div class="view-container" id="continueView">
                 <div class="view-header">
-                    <h1>بەردەوام ببە ل بینینێ</h1>
+                    <h2>بەردەوام ببە ل بینینێ</h2>
                     <p>ڤیدیۆیێن کو تو نیڤ تەواھیکرینە</p>
                 </div>
 
@@ -2872,6 +2871,7 @@
                 id="searchInput"
                 placeholder="بگەڕێ بۆ بەش، زنجیرە، یان بابەت..."
                 autocomplete="off"
+                aria-label="گەڕان"
             >
             <div class="search-results" id="searchResults"></div>
         </div>
@@ -2881,8 +2881,8 @@
     <div class="modal" id="shareModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">پارڤەبکە</h3>
-                <button class="close-btn" onclick="closeShareModal()">
+                <h2 class="modal-title">پارڤەبکە</h2>
+                <button class="close-btn" onclick="closeShareModal()" aria-label="داخستن">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -2920,8 +2920,8 @@
     <div class="modal" id="playlistModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">لیستا لێدانێ</h3>
-                <button class="close-btn" onclick="closePlaylistModal()">
+                <h2 class="modal-title">لیستا لێدانێ</h2>
+                <button class="close-btn" onclick="closePlaylistModal()" aria-label="داخستن">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -2936,7 +2936,7 @@
     <div class="auth-modal" id="authModal">
         <div class="auth-modal-overlay" onclick="closeAuthModal()"></div>
         <div class="auth-modal-container">
-            <button class="auth-close-btn" onclick="closeAuthModal()">
+            <button class="auth-close-btn" onclick="closeAuthModal()" aria-label="داخستن">
                 <i class="fas fa-times"></i>
             </button>
 
@@ -2964,7 +2964,7 @@
                     <!-- Email Form -->
                     <form class="auth-email-form" id="authEmailForm" onsubmit="signUpWithEmail(event)">
                         <div class="auth-input-group">
-                            <label>ئیمەیل</label>
+                            <label for="authEmail">ئیمەیل</label>
                             <input type="email" id="authEmail" placeholder="ئیمەیلێ خو بنڤیسە..." required>
                         </div>
 
@@ -3012,36 +3012,8 @@
                         <h2 class="footer-brand-name">تەفسیر کورد</h2>
                     </div>
                     <p class="footer-brand-tagline">
-        let supabaseClient = null;
-
-        // Initialize Supabase
-        async function initSupabase() {
-            if (typeof window.supabase !== 'undefined') {
-                try {
-                    // Fetch credentials from secure endpoint
-                    const response = await fetch('/config');
-
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch auth configuration');
-                    }
-
-                    const config = await response.json();
-
-                    if (!config.supabaseUrl || !config.supabaseKey) {
-                        throw new Error('Invalid auth configuration');
-                    }
-
-                    // Initialize Supabase client
-                    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
-                    console.log('✅ Supabase initialized securely on TV page');
-                    return true;
-                } catch (error) {
-                    console.error('Supabase initialization error:', error);
-                    return false;
-                }
-            }
-            return false;
-        }
+                        دەنگێ ئیسلامێ - ببینە زنجیرەیێن ڤیدیویی یێن ئیسلامی ب زمانێ کوردی. ناڤەرۆکا کواڵیتیا بەرز بۆ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
+                    </p>
                     <div class="footer-social-icons">
                         <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                             <i class="fab fa-instagram"></i>
