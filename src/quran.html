@@ -5733,27 +5733,43 @@
             console.log('🖼️ Avatar URL:', userAvatar);
             console.log('👤 User name:', userName);
 
-            // Update auth section with profile button
-            const authSection = document.getElementById('authSection');
-            console.log('🔍 authSection element:', authSection);
+            // CRITICAL: Use requestAnimationFrame to ensure DOM is ready
+            requestAnimationFrame(() => {
+                // Update auth section with profile button
+                const authSection = document.getElementById('authSection');
+                console.log('🔍 authSection element:', authSection);
+                console.log('🔍 authSection innerHTML before:', authSection?.innerHTML);
 
-            if (authSection) {
-                const profileHTML = `
-                    <button class="user-profile-btn" onclick="openFeatherOverlay()">
+                if (authSection) {
+                    // First, remove all existing content
+                    while (authSection.firstChild) {
+                        authSection.removeChild(authSection.firstChild);
+                    }
+
+                    // Create and append the new button
+                    const profileButton = document.createElement('button');
+                    profileButton.className = 'user-profile-btn';
+                    profileButton.onclick = openFeatherOverlay;
+
+                    profileButton.innerHTML = `
                         <img src="${userAvatar}" alt="${userName}" class="user-avatar" width="32" height="32" loading="lazy" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userName)}'">
                         <span class="user-name">${userName.split(' ')[0]}</span>
                         <i class="fas fa-chevron-down"></i>
-                    </button>
-                `;
-                authSection.innerHTML = profileHTML;
-                authSection.style.opacity = '1'; // Show after updating
-                authSection.style.display = 'block'; // Ensure it's visible
-                console.log('✅ Auth section updated with HTML:', profileHTML);
-                console.log('✅ Auth section opacity:', authSection.style.opacity);
-                console.log('✅ Auth section display:', authSection.style.display);
-            } else {
-                console.error('❌ authSection element not found!');
-            }
+                    `;
+
+                    authSection.appendChild(profileButton);
+                    authSection.style.opacity = '1';
+                    authSection.style.display = 'flex';
+
+                    console.log('✅ Auth section updated with DOM element');
+                    console.log('🔍 authSection innerHTML after:', authSection.innerHTML);
+                    console.log('✅ Auth section opacity:', authSection.style.opacity);
+                    console.log('✅ Auth section display:', authSection.style.display);
+                } else {
+                    console.error('❌ authSection element not found!');
+                    console.error('❌ Available elements:', document.querySelector('nav.header-nav'));
+                }
+            });
 
             // Update profile overlay
             const profileAvatar = document.getElementById('profileAvatar');
