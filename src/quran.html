@@ -5,6 +5,8 @@
     <script src="/utils/production-mode.js" defer></script>
     <!-- Theme loader MUST run immediately to prevent flash -->
     <script src="/utils/theme-loader.js"></script>
+    <!-- Secure Storage System - load early for auth check -->
+    <script src="/utils/secure-storage.js"></script>
     <script src="/utils/security.js" defer></script>
     <script src="/utils/scroll-position.js" defer></script>
     <script src="/utils/bot-detector.js" defer></script>
@@ -5352,32 +5354,23 @@
                     });
                 }
 
-                // 🚀 IMMEDIATE AUTH CHECK: Check localStorage FIRST (before any async operations)
+                // 🚀 IMMEDIATE AUTH CHECK: Check secure storage FIRST (before any async operations)
                 // This shows profile instantly for logged-in users without waiting
-                console.log('🔍 IMMEDIATE AUTH CHECK: Starting...');
-                console.log('🔍 All localStorage keys:', Object.keys(localStorage));
-                const immediateAuth = localStorage.getItem('isAuthenticated');
-                const immediateUser = localStorage.getItem('user');
-                console.log('🔍 isAuthenticated from localStorage:', immediateAuth);
-                console.log('🔍 user from localStorage:', immediateUser);
-
-                if (immediateAuth === 'true' && immediateUser) {
+                (async () => {
                     try {
-                        currentUser = JSON.parse(immediateUser);
-                        isUserAuthenticated = true;
-                        console.log('⚡ INSTANT AUTH: User found in localStorage:', currentUser.email);
-                        console.log('⚡ User data:', currentUser);
-                        // Show profile immediately
-                        onSignInSuccess();
+                        if (window.secureStorage) {
+                            const userData = await window.secureStorage.getUser();
+                            if (userData && userData.email) {
+                                currentUser = userData;
+                                isUserAuthenticated = true;
+                                // Show profile immediately
+                                onSignInSuccess();
+                            }
+                        }
                     } catch (e) {
-                        console.error('❌ Failed to parse immediate user:', e);
-                        console.error('❌ Raw user string:', immediateUser);
+                        console.error('Auth recovery error:', e);
                     }
-                } else {
-                    console.log('ℹ️ No immediate auth found');
-                    console.log('ℹ️ immediateAuth === "true":', immediateAuth === 'true');
-                    console.log('ℹ️ immediateUser exists:', !!immediateUser);
-                }
+                })();
 
                 // Initialize app immediately - don't wait for auth!
                 initializeApp();
@@ -5608,17 +5601,12 @@
             }
 
             try {
-                // PRIORITY 1: Check localStorage first (most reliable after login redirect)
-                console.log('📦 Checking localStorage first...');
-                const isAuth = localStorage.getItem('isAuthenticated');
-                const userFromStorage = localStorage.getItem('user');
-
-                if (isAuth === 'true' && userFromStorage) {
-                    try {
-                        currentUser = JSON.parse(userFromStorage);
+                // PRIORITY 1: Check secure storage first (most reliable after login redirect)
+                if (window.secureStorage) {
+                    const userData = await window.secureStorage.getUser();
+                    if (userData && userData.email) {
+                        currentUser = userData;
                         isUserAuthenticated = true;
-                        console.log('✅ User authenticated via localStorage:', currentUser.email);
-                        console.log('👤 Current user data:', currentUser);
                         onSignInSuccess();
 
                         // Still check Supabase in background to sync data
@@ -5627,27 +5615,16 @@
                         }
 
                         return;
-                    } catch (parseError) {
-                        console.error('❌ Failed to parse user from localStorage:', parseError);
                     }
                 }
 
                 // PRIORITY 2: Check Supabase session (for email/Google users)
-                console.log('📡 No localStorage auth, checking Supabase session...');
                 if (supabaseClient) {
-                    console.log('📡 Checking Supabase session...');
-
-                    // DEBUG: Log the full response from getSession
                     const sessionResponse = await supabaseClient.auth.getSession();
-                    console.log('🔍 [DEBUG] Full getSession response:', sessionResponse);
-                    console.log('🔍 [DEBUG] sessionResponse.data:', sessionResponse.data);
-                    console.log('🔍 [DEBUG] sessionResponse.data.session:', sessionResponse.data?.session);
-                    console.log('🔍 [DEBUG] sessionResponse.error:', sessionResponse.error);
-
                     const { data: { session }, error: sessionError } = sessionResponse;
 
                     if (sessionError) {
-                        console.warn('⚠️ Session error:', sessionError);
+                        console.warn('Session error:', sessionError);
                     }
 
                     console.log('🔍 [DEBUG] Extracted session:', session);
