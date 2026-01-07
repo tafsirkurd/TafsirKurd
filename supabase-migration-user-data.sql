@@ -1,13 +1,16 @@
 -- Supabase Migration: Create user_data table for cloud sync
 -- Run this in your Supabase SQL Editor
 
+-- Drop table if exists (for clean re-run)
+DROP TABLE IF EXISTS public.user_data CASCADE;
+
 -- Create user_data table
-CREATE TABLE IF NOT EXISTS public.user_data (
+CREATE TABLE public.user_data (
     -- Primary key
     id BIGSERIAL PRIMARY KEY,
 
-    -- User reference (from auth.users)
-    user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+    -- User reference (from auth.users) - THIS MUST BE UUID TYPE
+    user_id UUID NOT NULL UNIQUE,
 
     -- Reading progress
     current_surah INTEGER DEFAULT 1,
@@ -42,48 +45,18 @@ CREATE TABLE IF NOT EXISTS public.user_data (
 
     -- Timestamps
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+
+    -- Foreign key constraint
+    CONSTRAINT fk_user
+        FOREIGN KEY(user_id)
+        REFERENCES auth.users(id)
+        ON DELETE CASCADE
 );
 
--- Create index on user_id for faster lookups
-CREATE INDEX IF NOT EXISTS idx_user_data_user_id ON public.user_data(user_id);
-
--- Create index on updated_at for sync queries
-CREATE INDEX IF NOT EXISTS idx_user_data_updated_at ON public.user_data(updated_at);
-
--- Enable Row Level Security (RLS)
-ALTER TABLE public.user_data ENABLE ROW LEVEL SECURITY;
-
--- Drop existing policies if they exist (in case of re-run)
-DROP POLICY IF EXISTS "Users can view own data" ON public.user_data;
-DROP POLICY IF EXISTS "Users can insert own data" ON public.user_data;
-DROP POLICY IF EXISTS "Users can update own data" ON public.user_data;
-DROP POLICY IF EXISTS "Users can delete own data" ON public.user_data;
-
--- Create policy: Users can only view their own data
-CREATE POLICY "Users can view own data"
-    ON public.user_data
-    FOR SELECT
-    USING ((auth.uid())::uuid = user_id);
-
--- Create policy: Users can insert their own data
-CREATE POLICY "Users can insert own data"
-    ON public.user_data
-    FOR INSERT
-    WITH CHECK ((auth.uid())::uuid = user_id);
-
--- Create policy: Users can update their own data
-CREATE POLICY "Users can update own data"
-    ON public.user_data
-    FOR UPDATE
-    USING ((auth.uid())::uuid = user_id)
-    WITH CHECK ((auth.uid())::uuid = user_id);
-
--- Create policy: Users can delete their own data
-CREATE POLICY "Users can delete own data"
-    ON public.user_data
-    FOR DELETE
-    USING ((auth.uid())::uuid = user_id);
+-- Create indexes for faster lookups
+CREATE INDEX idx_user_data_user_id ON public.user_data(user_id);
+CREATE INDEX idx_user_data_updated_at ON public.user_data(updated_at);
 
 -- Create function to auto-update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -100,6 +73,42 @@ CREATE TRIGGER update_user_data_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Grant permissions
+-- Enable Row Level Security (RLS)
+ALTER TABLE public.user_data ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS policies using proper UUID comparison
+-- Policy 1: Users can view their own data
+CREATE POLICY "user_data_select_policy" ON public.user_data
+    FOR SELECT
+    TO authenticated
+    USING (user_id = auth.uid());
+
+-- Policy 2: Users can insert their own data
+CREATE POLICY "user_data_insert_policy" ON public.user_data
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (user_id = auth.uid());
+
+-- Policy 3: Users can update their own data
+CREATE POLICY "user_data_update_policy" ON public.user_data
+    FOR UPDATE
+    TO authenticated
+    USING (user_id = auth.uid())
+    WITH CHECK (user_id = auth.uid());
+
+-- Policy 4: Users can delete their own data
+CREATE POLICY "user_data_delete_policy" ON public.user_data
+    FOR DELETE
+    TO authenticated
+    USING (user_id = auth.uid());
+
+-- Grant necessary permissions to authenticated users
 GRANT ALL ON public.user_data TO authenticated;
-GRANT USAGE ON SEQUENCE user_data_id_seq TO authenticated;
+GRANT USAGE, SELECT ON SEQUENCE user_data_id_seq TO authenticated;
+
+-- Verify setup (this will show the table structure)
+SELECT
+    'Table created successfully!' as status,
+    count(*) as policy_count
+FROM pg_policies
+WHERE tablename = 'user_data';
