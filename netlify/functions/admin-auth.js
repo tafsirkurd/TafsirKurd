@@ -28,7 +28,16 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        const { password, turnstileToken } = JSON.parse(event.body);
+        const { action, email, password, turnstileToken } = JSON.parse(event.body);
+
+        // Handle logout
+        if (action === 'logout') {
+            return {
+                statusCode: 200,
+                headers: corsHeaders,
+                body: JSON.stringify({ success: true, message: 'Logged out successfully' })
+            };
+        }
 
         if (!password) {
             return {
@@ -123,7 +132,7 @@ exports.handler = async (event, context) => {
             headers: corsHeaders,
             body: JSON.stringify({
                 success: true,
-                sessionToken: sessionToken,
+                token: sessionToken,
                 expiresAt: expiresAt.toISOString()
             })
         };
