@@ -2839,8 +2839,8 @@
                             </p>
                         </div>
 
-                        <!-- YouTube Preview -->
-                        <div id="adminYoutubePreview" style="display: none; margin-bottom: 2rem;">
+                        <!-- YouTube Preview - DISABLED (using Cloudflare, no YouTube needed) -->
+                        <!-- <div id="adminYoutubePreview" style="display: none; margin-bottom: 2rem;">
                             <label style="display: block; margin-bottom: 0.75rem; font-weight: 700; font-size: 1.1rem;">
                                 <i class="fas fa-eye"></i>
                                 Preview:
@@ -2848,7 +2848,7 @@
                             <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; background: #000; box-shadow: 0 8px 24px rgba(0,0,0,0.3);">
                                 <iframe id="adminYoutubePreviewFrame" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                             </div>
-                        </div>
+                        </div> -->
 
                         <!-- Video Metadata Form -->
                         <div id="adminVideoMetadataForm" style="display: none;">
@@ -13780,10 +13780,10 @@ ${htmlParagraphs}
 
                 // Show preview and form if valid ID (YouTube IDs are 11 characters, alphanumeric with - and _)
                 if (cleanId && /^[a-zA-Z0-9_-]{11}$/.test(cleanId)) {
-                    // Show preview
-                    document.getElementById('adminYoutubePreview').style.display = 'block';
-                    document.getElementById('adminYoutubePreviewFrame').src =
-                        `https://www.youtube.com/embed/${cleanId}?controls=0&modestbranding=1&rel=0`;
+                    // Show preview - DISABLED (YouTube preview removed)
+                    // document.getElementById('adminYoutubePreview').style.display = 'block';
+                    // document.getElementById('adminYoutubePreviewFrame').src =
+                    //     `https://www.youtube.com/embed/${cleanId}?controls=0&modestbranding=1&rel=0`;
 
                     // Show metadata form
                     document.getElementById('adminVideoMetadataForm').style.display = 'block';
@@ -13800,7 +13800,7 @@ ${htmlParagraphs}
                     e.target.style.borderColor = '#28a745';
                 } else {
                     // Hide preview and form
-                    document.getElementById('adminYoutubePreview').style.display = 'none';
+                    // document.getElementById('adminYoutubePreview').style.display = 'none';
                     document.getElementById('adminVideoMetadataForm').style.display = 'none';
 
                     // Reset input border
@@ -13915,7 +13915,7 @@ ${htmlParagraphs}
             document.getElementById('adminYoutubeDifficulty').value = '';
             document.getElementById('adminYoutubeFeatured').checked = false;
             document.getElementById('adminYoutubeRecommended').checked = false;
-            document.getElementById('adminYoutubePreview').style.display = 'none';
+            // document.getElementById('adminYoutubePreview').style.display = 'none'; // YouTube preview removed
             document.getElementById('adminVideoMetadataForm').style.display = 'none';
         }
 
@@ -14205,10 +14205,10 @@ ${htmlParagraphs}
                 document.getElementById('adminYoutubeFeatured').checked = video.featured || false;
                 document.getElementById('adminYoutubeRecommended').checked = video.recommended || false;
 
-                // Show preview
-                document.getElementById('adminYoutubePreview').style.display = 'block';
-                document.getElementById('adminYoutubePreviewFrame').src =
-                    `https://www.youtube.com/embed/${video.videoId}?controls=0&modestbranding=1&rel=0`;
+                // Show preview - DISABLED (YouTube preview removed)
+                // document.getElementById('adminYoutubePreview').style.display = 'block';
+                // document.getElementById('adminYoutubePreviewFrame').src =
+                //     `https://www.youtube.com/embed/${video.videoId}?controls=0&modestbranding=1&rel=0`;
                 document.getElementById('adminVideoMetadataForm').style.display = 'block';
 
                 // Show edit mode UI
