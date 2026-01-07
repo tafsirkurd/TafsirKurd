@@ -5254,7 +5254,7 @@
                     throw new Error('Supabase library failed to load');
                 }
 
-                const response = await fetch('/api/config');
+                const response = await fetch('/config');
                 if (!response.ok) throw new Error('Failed to fetch config');
                 const config = await response.json();
 
@@ -5297,7 +5297,7 @@
         // Verify session token with backend
         async function verifySession(token) {
             try {
-                const response = await fetch('/api/admin-auth', {
+                const response = await fetch('/admin-auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'verify', token })
@@ -5546,7 +5546,7 @@
             submitBtn.textContent = 'Authenticating...';
 
             try {
-                const response = await fetch('/api/admin-auth', {
+                const response = await fetch('/admin-auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

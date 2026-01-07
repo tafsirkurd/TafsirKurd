@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v470-youtube-fixed';
+const CACHE_NAME = 'tafsir-kurd-v471-cloudflare';
 const urlsToCache = [
   '/',
   '/index.html',
