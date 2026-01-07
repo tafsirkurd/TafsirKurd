@@ -2176,7 +2176,7 @@ Press Ctrl+Shift+C to copy this report
                 const { data, error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + redirectDest,
+                        redirectTo: window.location.origin + '/login.html',
                         queryParams: {
                             access_type: 'offline',
                             prompt: 'consent'
