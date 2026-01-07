@@ -5352,18 +5352,38 @@
                     });
                 }
 
+                // 🚀 IMMEDIATE AUTH CHECK: Check localStorage FIRST (before any async operations)
+                // This shows profile instantly for logged-in users without waiting
+                const immediateAuth = localStorage.getItem('isAuthenticated');
+                const immediateUser = localStorage.getItem('user');
+
+                if (immediateAuth === 'true' && immediateUser) {
+                    try {
+                        currentUser = JSON.parse(immediateUser);
+                        isUserAuthenticated = true;
+                        console.log('⚡ INSTANT AUTH: User found in localStorage:', currentUser.email);
+                        // Show profile immediately
+                        onSignInSuccess();
+                    } catch (e) {
+                        console.error('Failed to parse immediate user:', e);
+                    }
+                }
+
                 // Initialize app immediately - don't wait for auth!
                 initializeApp();
 
                 // Check authentication in background (non-blocking)
+                // This will sync with Supabase and update if needed
                 waitForAuthLibraries().then(() => {
                     return checkAuthentication();
                 }).catch(error => {
                     console.error('Auth check error:', error);
-                    // Show login button on error
-                    const authSection = document.getElementById('authSection');
-                    if (authSection) {
-                        authSection.style.opacity = '1';
+                    // Only show login button if not already authenticated
+                    if (!isUserAuthenticated) {
+                        const authSection = document.getElementById('authSection');
+                        if (authSection) {
+                            authSection.style.opacity = '1';
+                        }
                     }
                 });
 
@@ -5567,6 +5587,15 @@
         // Check Authentication - Load from Supabase profiles
         async function checkAuthentication() {
             console.log('🔍 Checking authentication...');
+
+            // If user is already authenticated from immediate check, just sync in background
+            if (isUserAuthenticated && currentUser) {
+                console.log('✅ User already authenticated from immediate check, syncing in background...');
+                if (supabaseClient) {
+                    syncSupabaseProfile().catch(err => console.warn('Profile sync failed:', err));
+                }
+                return;
+            }
 
             try {
                 // PRIORITY 1: Check localStorage first (most reliable after login redirect)
