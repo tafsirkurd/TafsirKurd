@@ -54,30 +54,36 @@ CREATE INDEX IF NOT EXISTS idx_user_data_updated_at ON public.user_data(updated_
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.user_data ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist (in case of re-run)
+DROP POLICY IF EXISTS "Users can view own data" ON public.user_data;
+DROP POLICY IF EXISTS "Users can insert own data" ON public.user_data;
+DROP POLICY IF EXISTS "Users can update own data" ON public.user_data;
+DROP POLICY IF EXISTS "Users can delete own data" ON public.user_data;
+
 -- Create policy: Users can only view their own data
 CREATE POLICY "Users can view own data"
     ON public.user_data
     FOR SELECT
-    USING (auth.uid() = user_id);
+    USING ((auth.uid())::uuid = user_id);
 
 -- Create policy: Users can insert their own data
 CREATE POLICY "Users can insert own data"
     ON public.user_data
     FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK ((auth.uid())::uuid = user_id);
 
 -- Create policy: Users can update their own data
 CREATE POLICY "Users can update own data"
     ON public.user_data
     FOR UPDATE
-    USING (auth.uid() = user_id)
-    WITH CHECK (auth.uid() = user_id);
+    USING ((auth.uid())::uuid = user_id)
+    WITH CHECK ((auth.uid())::uuid = user_id);
 
 -- Create policy: Users can delete their own data
 CREATE POLICY "Users can delete own data"
     ON public.user_data
     FOR DELETE
-    USING (auth.uid() = user_id);
+    USING ((auth.uid())::uuid = user_id);
 
 -- Create function to auto-update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
