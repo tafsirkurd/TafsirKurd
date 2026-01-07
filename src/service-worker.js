@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v468-cloud-sync';
+const CACHE_NAME = 'tafsir-kurd-v469-no-youtube';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -80,21 +80,27 @@ self.addEventListener('install', event => {
 
 // Fetch event - NETWORK FIRST for HTML, CACHE FIRST for assets (instant updates!)
 self.addEventListener('fetch', event => {
+  const url = event.request.url;
+
   // Skip service worker for API requests and external resources
-  if (event.request.url.includes('googleapis.com') ||
-      event.request.url.includes('googleusercontent.com') ||
-      event.request.url.includes('accounts.google.com') ||
-      event.request.url.includes('supabase.co') ||
-      event.request.url.includes('unsplash.com') ||
-      event.request.url.includes('youtube.com') ||
-      event.request.url.includes('ytimg.com') ||
-      event.request.url.includes('functions') ||
-      event.request.url.includes('cdnjs.cloudflare.com') ||
-      event.request.url.includes('cdn.jsdelivr.net') ||
-      event.request.url.includes('googletagmanager.com') ||
-      event.request.url.includes('google-analytics.com') ||
-      event.request.url.includes('cloudflareinsights.com') ||
-      event.request.url.includes('instagram.com')) {
+  // CRITICAL: Skip YouTube completely - we don't use it
+  if (url.includes('googleapis.com') ||
+      url.includes('googleusercontent.com') ||
+      url.includes('accounts.google.com') ||
+      url.includes('supabase.co') ||
+      url.includes('unsplash.com') ||
+      url.includes('youtube.com') ||
+      url.includes('ytimg.com') ||
+      url.includes('youtu.be') ||
+      url.includes('iframe_api') ||
+      url.includes('functions') ||
+      url.includes('cdnjs.cloudflare.com') ||
+      url.includes('cdn.jsdelivr.net') ||
+      url.includes('googletagmanager.com') ||
+      url.includes('google-analytics.com') ||
+      url.includes('cloudflareinsights.com') ||
+      url.includes('instagram.com')) {
+    // Don't intercept - let browser handle directly
     return;
   }
 
