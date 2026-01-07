@@ -2637,34 +2637,71 @@ Press Ctrl+Shift+C to copy this report
 
             // Listen for auth state changes
             supabaseClient.auth.onAuthStateChange(async (event, session) => {
-                console.log('Auth state changed:', event, session);
+                console.log('🔔 Auth state changed:', event, session);
 
                 if (event === 'SIGNED_IN' && session) {
                     console.log('✅ User signed in:', session.user);
+                    console.log('📧 Email:', session.user.email);
+                    console.log('🆔 User ID:', session.user.id);
+                    console.log('📋 User metadata:', session.user.user_metadata);
 
                     // CRITICAL: Save user data to localStorage BEFORE redirecting
                     const userData = {
-                        name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+                        name: session.user.user_metadata?.full_name ||
+                              session.user.user_metadata?.name ||
+                              session.user.email?.split('@')[0] ||
+                              'User',
                         email: session.user.email,
-                        picture: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || '',
+                        picture: session.user.user_metadata?.avatar_url ||
+                                session.user.user_metadata?.picture ||
+                                `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(session.user.email)}`,
                         sub: session.user.id
                     };
 
-                    localStorage.setItem('user', JSON.stringify(userData));
-                    localStorage.setItem('isAuthenticated', 'true');
-                    console.log('✅ User data saved to localStorage:', userData);
+                    console.log('💾 Saving user data to localStorage:', userData);
+
+                    // FORCE localStorage write with multiple attempts
+                    try {
+                        // Clear first to ensure fresh save
+                        localStorage.removeItem('user');
+                        localStorage.removeItem('isAuthenticated');
+
+                        // Save with retry logic
+                        for (let i = 0; i < 3; i++) {
+                            localStorage.setItem('isAuthenticated', 'true');
+                            localStorage.setItem('user', JSON.stringify(userData));
+
+                            // Verify immediately
+                            const verify1 = localStorage.getItem('isAuthenticated');
+                            const verify2 = localStorage.getItem('user');
+
+                            if (verify1 === 'true' && verify2) {
+                                console.log('✅ localStorage save verified on attempt', i + 1);
+                                console.log('✅ isAuthenticated:', verify1);
+                                console.log('✅ user:', verify2);
+                                break;
+                            } else {
+                                console.warn('⚠️ localStorage verification failed, retrying...');
+                                await new Promise(resolve => setTimeout(resolve, 100));
+                            }
+                        }
+                    } catch (e) {
+                        console.error('❌ Failed to save to localStorage:', e);
+                    }
 
                     const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
-                    console.log('User signed in, redirecting to', redirectDest);
+                    console.log('🔄 Redirecting to:', redirectDest);
                     showMessage('سەرکەفتی! ڤەگوهاستن...', 'success');
 
+                    // Give extra time for localStorage to persist
                     setTimeout(() => {
+                        console.log('🚀 Now redirecting...');
                         window.location.href = redirectDest;
-                    }, 1000);
+                    }, 1500);
                 }
 
                 if (event === 'USER_UPDATED') {
-                    console.log('User data updated');
+                    console.log('🔄 User data updated');
                 }
             });
 

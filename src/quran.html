@@ -5354,19 +5354,29 @@
 
                 // 🚀 IMMEDIATE AUTH CHECK: Check localStorage FIRST (before any async operations)
                 // This shows profile instantly for logged-in users without waiting
+                console.log('🔍 IMMEDIATE AUTH CHECK: Starting...');
+                console.log('🔍 All localStorage keys:', Object.keys(localStorage));
                 const immediateAuth = localStorage.getItem('isAuthenticated');
                 const immediateUser = localStorage.getItem('user');
+                console.log('🔍 isAuthenticated from localStorage:', immediateAuth);
+                console.log('🔍 user from localStorage:', immediateUser);
 
                 if (immediateAuth === 'true' && immediateUser) {
                     try {
                         currentUser = JSON.parse(immediateUser);
                         isUserAuthenticated = true;
                         console.log('⚡ INSTANT AUTH: User found in localStorage:', currentUser.email);
+                        console.log('⚡ User data:', currentUser);
                         // Show profile immediately
                         onSignInSuccess();
                     } catch (e) {
-                        console.error('Failed to parse immediate user:', e);
+                        console.error('❌ Failed to parse immediate user:', e);
+                        console.error('❌ Raw user string:', immediateUser);
                     }
+                } else {
+                    console.log('ℹ️ No immediate auth found');
+                    console.log('ℹ️ immediateAuth === "true":', immediateAuth === 'true');
+                    console.log('ℹ️ immediateUser exists:', !!immediateUser);
                 }
 
                 // Initialize app immediately - don't wait for auth!
@@ -5753,6 +5763,10 @@
         function onSignInSuccess() {
             console.log('🎉 onSignInSuccess called');
             console.log('👤 Current user:', currentUser);
+            console.log('👤 currentUser.name:', currentUser?.name);
+            console.log('👤 currentUser.email:', currentUser?.email);
+            console.log('👤 currentUser.picture:', currentUser?.picture);
+            console.log('👤 currentUser.sub:', currentUser?.sub);
 
             // Use default avatar if no picture provided
             const userAvatar = currentUser.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(currentUser.name || 'User')}`;
@@ -5761,6 +5775,7 @@
 
             console.log('🖼️ Avatar URL:', userAvatar);
             console.log('👤 User name:', userName);
+            console.log('📧 User email:', userEmail);
 
             // CRITICAL: Use requestAnimationFrame to ensure DOM is ready
             requestAnimationFrame(() => {
