@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v465-clean-console';
+const CACHE_NAME = 'tafsir-kurd-v466-no-external-cache';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -134,6 +134,13 @@ self.addEventListener('fetch', event => {
   // CACHE FIRST for CSS, JS, fonts, images (maximum speed!)
   // Only cache GET requests
   if (event.request.method !== 'GET') {
+    return;
+  }
+
+  // Skip service worker completely for external domains
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin) {
+    // External resource - let browser handle it directly
     return;
   }
 
