@@ -2636,13 +2636,28 @@ Press Ctrl+Shift+C to copy this report
             }
 
             // Listen for auth state changes
-            supabaseClient.auth.onAuthStateChange((event, session) => {
+            supabaseClient.auth.onAuthStateChange(async (event, session) => {
                 console.log('Auth state changed:', event, session);
 
                 if (event === 'SIGNED_IN' && session) {
+                    console.log('✅ User signed in:', session.user);
+
+                    // CRITICAL: Save user data to localStorage BEFORE redirecting
+                    const userData = {
+                        name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+                        email: session.user.email,
+                        picture: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || '',
+                        sub: session.user.id
+                    };
+
+                    localStorage.setItem('user', JSON.stringify(userData));
+                    localStorage.setItem('isAuthenticated', 'true');
+                    console.log('✅ User data saved to localStorage:', userData);
+
                     const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
                     console.log('User signed in, redirecting to', redirectDest);
                     showMessage('سەرکەفتی! ڤەگوهاستن...', 'success');
+
                     setTimeout(() => {
                         window.location.href = redirectDest;
                     }, 1000);
