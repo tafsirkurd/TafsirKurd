@@ -34,6 +34,9 @@
     <!-- Secure Storage System -->
     <script src="/utils/secure-storage.js"></script>
 
+    <!-- Cloud Sync Manager -->
+    <script src="/utils/cloud-sync.js"></script>
+
     <!-- Auth Redirect Handler -->
     <script src="/utils/auth-redirect.js" defer></script>
 
@@ -1943,6 +1946,15 @@ Press Ctrl+Shift+C to copy this report
                     console.error('Storage error:', storageError);
                 }
 
+                // Initialize cloud sync - loads all user data from cloud
+                try {
+                    if (window.cloudSync && supabaseClient) {
+                        await window.cloudSync.initialize(supabaseClient, data.user.id);
+                    }
+                } catch (e) {
+                    console.error('Cloud sync init error:', e);
+                }
+
                 showMessage('سەرکەفتی! تو هاتی ژوورڤە...', 'success');
 
                 // Clear login attempts after successful login
@@ -1952,7 +1964,7 @@ Press Ctrl+Shift+C to copy this report
                     method: 'password'
                 });
 
-                // Wait for storage to persist
+                // Wait for storage to persist and cloud sync to complete
                 setTimeout(async () => {
                     const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
                     if (window.authRedirect) {
@@ -1960,7 +1972,7 @@ Press Ctrl+Shift+C to copy this report
                     } else {
                         window.location.href = redirectDest;
                     }
-                }, 800);
+                }, 1500);
 
             } catch (error) {
                 console.error('Sign in error:', error);
@@ -2346,8 +2358,17 @@ Press Ctrl+Shift+C to copy this report
                                 console.error('Storage error:', storageError);
                             }
 
-                            // Wait for storage to persist
-                            await new Promise(resolve => setTimeout(resolve, 500));
+                            // Initialize cloud sync - loads all user data from cloud
+                            try {
+                                if (window.cloudSync && supabaseClient) {
+                                    await window.cloudSync.initialize(supabaseClient, data.user.id);
+                                }
+                            } catch (e) {
+                                console.error('Cloud sync init error:', e);
+                            }
+
+                            // Wait for storage to persist and cloud sync to complete
+                            await new Promise(resolve => setTimeout(resolve, 1500));
 
                             // Redirect to destination
                             const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
@@ -2568,13 +2589,22 @@ Press Ctrl+Shift+C to copy this report
                         console.error('Storage error:', e);
                     }
 
+                    // Initialize cloud sync - loads all user data from cloud
+                    try {
+                        if (window.cloudSync && supabaseClient) {
+                            await window.cloudSync.initialize(supabaseClient, session.user.id);
+                        }
+                    } catch (e) {
+                        console.error('Cloud sync init error:', e);
+                    }
+
                     const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
                     showMessage('سەرکەفتی! ڤەگوهاستن...', 'success');
 
-                    // Wait for storage to persist
+                    // Wait for storage to persist and cloud sync to complete
                     setTimeout(() => {
                         window.location.href = redirectDest;
-                    }, 800);
+                    }, 1500);
                 }
             });
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v467-secure-storage';
+const CACHE_NAME = 'tafsir-kurd-v468-cloud-sync';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -27,6 +27,7 @@ const urlsToCache = [
   '/utils/bot-detector.js',
   '/utils/text-highlighter.js',
   '/utils/secure-storage.js',
+  '/utils/cloud-sync.js',
   '/assets/fonts/fonts.css',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2',
   // Skip weight-300 and 500 - not critical, load on demand
