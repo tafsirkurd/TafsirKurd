@@ -8458,11 +8458,11 @@
                 return;
             }
 
-            // Get today's date as string (YYYY-MM-DD) - using UTC so everyone worldwide gets same ayah
+            // Get today's date as string (YYYY-MM-DD) - changes at local midnight (12 AM)
             const today = new Date();
-            const year = today.getUTCFullYear();
-            const month = String(today.getUTCMonth() + 1).padStart(2, '0');
-            const day = String(today.getUTCDate()).padStart(2, '0');
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
             const dateStr = `${year}-${month}-${day}`;
 
             // Check if we have ayah for today in localStorage
@@ -8600,31 +8600,31 @@
         }
 
         function startRandomAyahTimer() {
-            let lastCheckedDate = ''; // Track the last checked UTC date
+            let lastCheckedDate = ''; // Track the last checked local date
 
-            // Get current UTC date as string
-            function getUTCDateString() {
+            // Get current local date as string
+            function getLocalDateString() {
                 const now = new Date();
-                return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
+                return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
             }
 
-            lastCheckedDate = getUTCDateString();
+            lastCheckedDate = getLocalDateString();
 
             function updateTimer() {
                 const now = new Date();
-                const currentDate = getUTCDateString();
+                const currentDate = getLocalDateString();
 
-                // Check if UTC date changed since last check
+                // Check if local date changed since last check (at midnight 12 AM)
                 if (currentDate !== lastCheckedDate) {
-                    console.log('[Daily Ayah] UTC date changed! Reloading ayah...');
+                    console.log('[Daily Ayah] Date changed to', currentDate, '! Reloading ayah at midnight...');
                     lastCheckedDate = currentDate;
                     dailyAyahLoaded = false; // Reset flag for new day
                     loadRandomAyah(); // Load new ayah immediately
                 }
 
-                // Calculate time until UTC midnight
+                // Calculate time until local midnight (12 AM)
                 const midnight = new Date();
-                midnight.setUTCHours(24, 0, 0, 0); // Next UTC midnight
+                midnight.setHours(24, 0, 0, 0); // Next local midnight
 
                 const diff = midnight - now;
                 const hours = Math.floor(diff / 1000 / 60 / 60);
