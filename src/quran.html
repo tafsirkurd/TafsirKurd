@@ -141,6 +141,14 @@
             font-family: 'KFGQPC Hafs', 'Scheherazade New', 'Traditional Arabic', serif !important;
         }
 
+        /* Prevent horizontal scroll when sidebar pushes content */
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
         :root {
             --primary: #000000;
             --primary-light: #333333;
@@ -448,13 +456,11 @@
         .main-content {
             opacity: 0;
             visibility: hidden;
-            margin-left: 0;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            will-change: margin-left, transform;
-            width: 100%;
-            max-width: 100vw;
-            overflow-x: hidden;
             position: relative;
+            left: 0;
+            width: 100%;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform, left;
         }
 
         .main-content.loaded {
@@ -463,8 +469,7 @@
         }
 
         .main-content.shifted {
-            margin-left: var(--sidebar-width) !important;
-            transform: translateX(0);
+            transform: translateX(var(--sidebar-width));
         }
 
 
@@ -2773,10 +2778,13 @@
 
         /* Shift audio player when sidebar is open */
         .audio-player.shifted {
-            left: var(--sidebar-width);
-            right: auto;
+            transform: translateX(var(--sidebar-width)) translateY(100%);
             width: calc(100% - var(--sidebar-width));
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .audio-player.active.shifted {
+            transform: translateX(var(--sidebar-width)) translateY(0);
         }
 
         /* Audio Player Content */
@@ -3527,12 +3535,16 @@
             }
 
             .main-content.shifted {
-                margin-left: var(--sidebar-width) !important;
+                transform: translateX(var(--sidebar-width));
             }
 
             .audio-player.shifted {
-                left: var(--sidebar-width);
+                transform: translateX(var(--sidebar-width)) translateY(100%);
                 width: calc(100% - var(--sidebar-width));
+            }
+
+            .audio-player.active.shifted {
+                transform: translateX(var(--sidebar-width)) translateY(0);
             }
 
             .sidebar-toggle {
