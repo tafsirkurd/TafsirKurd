@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v466-no-external-cache';
+const CACHE_NAME = 'tafsir-kurd-v467-secure-storage';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -26,6 +26,7 @@ const urlsToCache = [
   '/utils/footer-loader.js',
   '/utils/bot-detector.js',
   '/utils/text-highlighter.js',
+  '/utils/secure-storage.js',
   '/assets/fonts/fonts.css',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2',
   // Skip weight-300 and 500 - not critical, load on demand
