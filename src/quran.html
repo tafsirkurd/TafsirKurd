@@ -456,11 +456,10 @@
         .main-content {
             opacity: 0;
             visibility: hidden;
-            position: relative;
-            left: 0;
+            margin-left: 0;
             width: 100%;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            will-change: transform, left;
+            will-change: margin-left, width;
         }
 
         .main-content.loaded {
@@ -469,7 +468,8 @@
         }
 
         .main-content.shifted {
-            transform: translateX(var(--sidebar-width));
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
         }
 
 
@@ -2778,13 +2778,9 @@
 
         /* Shift audio player when sidebar is open */
         .audio-player.shifted {
-            transform: translateX(var(--sidebar-width)) translateY(100%);
+            left: var(--sidebar-width);
             width: calc(100% - var(--sidebar-width));
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .audio-player.active.shifted {
-            transform: translateX(var(--sidebar-width)) translateY(0);
         }
 
         /* Audio Player Content */
@@ -3535,16 +3531,13 @@
             }
 
             .main-content.shifted {
-                transform: translateX(var(--sidebar-width));
-            }
-
-            .audio-player.shifted {
-                transform: translateX(var(--sidebar-width)) translateY(100%);
+                margin-left: var(--sidebar-width);
                 width: calc(100% - var(--sidebar-width));
             }
 
-            .audio-player.active.shifted {
-                transform: translateX(var(--sidebar-width)) translateY(0);
+            .audio-player.shifted {
+                left: var(--sidebar-width);
+                width: calc(100% - var(--sidebar-width));
             }
 
             .sidebar-toggle {
