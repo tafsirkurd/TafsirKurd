@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v443-ultra-fast';
+const CACHE_NAME = 'tafsir-kurd-v465-clean-console';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -84,6 +84,8 @@ self.addEventListener('fetch', event => {
       event.request.url.includes('accounts.google.com') ||
       event.request.url.includes('supabase.co') ||
       event.request.url.includes('unsplash.com') ||
+      event.request.url.includes('youtube.com') ||
+      event.request.url.includes('ytimg.com') ||
       event.request.url.includes('functions') ||
       event.request.url.includes('cdnjs.cloudflare.com') ||
       event.request.url.includes('cdn.jsdelivr.net') ||
