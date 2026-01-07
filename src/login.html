@@ -2222,7 +2222,7 @@ Press Ctrl+Shift+C to copy this report
                 console.log('Sending password reset to:', email);
 
                 const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.origin + '/quran.html'
+                    redirectTo: window.location.origin + '/login.html'
                 });
 
                 if (error) throw error;
