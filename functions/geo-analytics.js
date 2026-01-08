@@ -24,12 +24,13 @@ export async function onRequest(context) {
 
     try {
         // TODO: Integrate with analytics database/API
-        // For now, return placeholder data
+        // For now, return placeholder data with correct structure
         return new Response(
             JSON.stringify({
                 success: true,
                 data: {
                     countries: [],
+                    regions: [],
                     cities: [],
                     totalVisits: 0
                 },
