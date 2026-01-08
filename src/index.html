@@ -2440,6 +2440,13 @@ window.addEventListener('error', function(e) {
         const response = await fetch('/config');
         if (!response.ok) throw new Error('Failed to fetch config');
         const config = await response.json();
+
+        // Validate config before creating client
+        if (!config.supabaseUrl || !config.supabaseKey) {
+          console.error('Invalid Supabase config:', config);
+          throw new Error('Invalid Supabase configuration from server');
+        }
+
         const client = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
 
         // Make it globally accessible
