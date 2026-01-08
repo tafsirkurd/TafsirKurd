@@ -5254,6 +5254,13 @@
                     throw new Error('Supabase library failed to load');
                 }
 
+                // Clear old Supabase auth data to prevent fetch errors
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('sb-') || key.includes('supabase')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+
                 const response = await fetch('/config');
                 if (!response.ok) throw new Error('Failed to fetch config');
                 const config = await response.json();
