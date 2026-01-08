@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v481-admin-functions';
+const CACHE_NAME = 'tafsir-kurd-v482-supabase-stable';
 const urlsToCache = [
   '/',
   '/index.html',
