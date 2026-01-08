@@ -2588,52 +2588,91 @@
             <!-- TV Management Section -->
             <section id="tv-managementSection" class="section">
                 <!-- Modern Hero Header -->
-                <div class="card card-elevated" style="padding: var(--spacing-12) var(--spacing-10); margin-bottom: var(--spacing-10); text-align: center;">
-                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 100px; height: 100px; background: var(--black); border-radius: var(--radius-2xl); margin-bottom: var(--spacing-6);">
-                        <span style="font-size: 3.5rem;">📺</span>
-                    </div>
-                    <h1 style="margin: 0 0 var(--spacing-3) 0; font-size: var(--font-size-5xl); font-weight: var(--font-weight-extrabold); letter-spacing: -1px; color: var(--black);">
-                        TV Management
-                    </h1>
-                    <p style="margin: 0 0 var(--spacing-6) 0; font-size: var(--font-size-xl); color: var(--text-secondary);">
-                        Create, organize, and manage your video content
-                    </p>
-                    <div style="display: inline-flex; gap: var(--spacing-3); flex-wrap: wrap; justify-content: center;">
-                        <div style="background: var(--gray-100); padding: var(--spacing-3) var(--spacing-6); border-radius: var(--radius-lg); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--black);">
-                            <i class="fab fa-youtube" style="margin-right: 8px;"></i>YouTube Integration
+                <div style="
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    padding: 60px 40px;
+                    border-radius: 24px;
+                    margin-bottom: 40px;
+                    box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4);
+                    position: relative;
+                    overflow: hidden;
+                ">
+                    <!-- Decorative elements -->
+                    <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%; filter: blur(40px);"></div>
+                    <div style="position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%; filter: blur(30px);"></div>
+
+                    <div style="position: relative; text-align: center; color: white;">
+                        <div style="display: inline-flex; align-items: center; justify-content: center; width: 100px; height: 100px; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 24px; margin-bottom: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.1);">
+                            <span style="font-size: 3.5rem;">📺</span>
                         </div>
-                        <div style="background: var(--gray-100); padding: var(--spacing-3) var(--spacing-6); border-radius: var(--radius-lg); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--black);">
-                            <i class="fas fa-infinity" style="margin-right: 8px;"></i>Unlimited Storage
-                        </div>
-                        <div style="background: var(--gray-100); padding: var(--spacing-3) var(--spacing-6); border-radius: var(--radius-lg); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--black);">
-                            <i class="fas fa-palette" style="margin-right: 8px;"></i>Custom Controls
+                        <h1 style="margin: 0 0 12px 0; font-size: 3rem; font-weight: 800; letter-spacing: -1px; text-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            TV Management
+                        </h1>
+                        <p style="margin: 0 0 24px 0; font-size: 1.2rem; opacity: 0.95; font-weight: 300;">
+                            Create, organize, and manage your video content
+                        </p>
+                        <div style="display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+                            <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 12px 24px; border-radius: 12px; font-size: 0.9rem; font-weight: 600;">
+                                <i class="fab fa-youtube" style="margin-right: 8px;"></i>YouTube Integration
+                            </div>
+                            <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 12px 24px; border-radius: 12px; font-size: 0.9rem; font-weight: 600;">
+                                <i class="fas fa-infinity" style="margin-right: 8px;"></i>Unlimited Storage
+                            </div>
+                            <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 12px 24px; border-radius: 12px; font-size: 0.9rem; font-weight: 600;">
+                                <i class="fas fa-palette" style="margin-right: 8px;"></i>Custom Controls
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Main Section Navigation -->
-                <div style="background: white; border-radius: var(--radius-2xl); padding: var(--spacing-2); margin-bottom: var(--spacing-8); box-shadow: var(--shadow-md); display: inline-flex; gap: var(--spacing-2);">
-                    <button class="main-tv-section-tab btn-primary active" onclick="switchMainTVSection('organize')" style="
-                        padding: var(--spacing-4) var(--spacing-8);
+                <div style="background: white; border-radius: 16px; padding: 8px; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); display: inline-flex; gap: 8px;">
+                    <button class="main-tv-section-tab active" onclick="switchMainTVSection('organize')" style="
+                        padding: 16px 32px;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        border: none;
+                        border-radius: 12px;
+                        font-weight: 700;
+                        font-size: 1.05rem;
+                        cursor: pointer;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
                         display: flex;
                         align-items: center;
-                        gap: var(--spacing-3);
+                        gap: 10px;
                     ">
                         <i class="fas fa-folder-tree"></i> Organize
                     </button>
-                    <button class="main-tv-section-tab btn-secondary" onclick="switchMainTVSection('upload')" style="
-                        padding: var(--spacing-4) var(--spacing-8);
+                    <button class="main-tv-section-tab" onclick="switchMainTVSection('upload')" style="
+                        padding: 16px 32px;
+                        background: #f5f5f5;
+                        color: #666;
+                        border: none;
+                        border-radius: 12px;
+                        font-weight: 700;
+                        font-size: 1.05rem;
+                        cursor: pointer;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                         display: flex;
                         align-items: center;
-                        gap: var(--spacing-3);
+                        gap: 10px;
                     ">
                         <i class="fas fa-cloud-upload-alt"></i> Upload New
                     </button>
-                    <button class="main-tv-section-tab btn-secondary" onclick="switchMainTVSection('manage')" style="
-                        padding: var(--spacing-4) var(--spacing-8);
+                    <button class="main-tv-section-tab" onclick="switchMainTVSection('manage')" style="
+                        padding: 16px 32px;
+                        background: #f5f5f5;
+                        color: #666;
+                        border: none;
+                        border-radius: 12px;
+                        font-weight: 700;
+                        font-size: 1.05rem;
+                        cursor: pointer;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                         display: flex;
                         align-items: center;
-                        gap: var(--spacing-3);
+                        gap: 10px;
                     ">
                         <i class="fas fa-tasks"></i> Manage Videos
                     </button>
@@ -2642,16 +2681,16 @@
                 <!-- SECTION 1: Organize (Categories, Series, Episodes) -->
                 <div id="tvOrganizeSection" class="main-tv-section">
                     <!-- Sub-tabs for Categories/Series/Episodes -->
-                    <div class="card" style="padding: var(--spacing-5); margin-bottom: var(--spacing-8);">
-                        <div style="display: flex; gap: var(--spacing-4); border-bottom: 1px solid var(--border-light); padding-bottom: var(--spacing-4);">
-                            <button class="tv-tab btn-primary active" onclick="switchTVTab('categories')" style="padding: var(--spacing-3) var(--spacing-6);">
+                    <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <div style="display: flex; gap: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px;">
+                            <button class="tv-tab active" onclick="switchTVTab('categories')" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
                                 📁 Categories
                             </button>
-                            <button class="tv-tab btn-secondary" onclick="switchTVTab('series')" style="padding: var(--spacing-3) var(--spacing-6);">
+                            <button class="tv-tab" onclick="switchTVTab('series')" style="padding: 12px 24px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
                                 📚 Series
                             </button>
                             <!-- Episodes tab hidden - use "Manage Videos" section instead -->
-                            <!-- <button class="tv-tab btn-secondary" onclick="switchTVTab('episodes')" style="padding: var(--spacing-3) var(--spacing-6);">
+                            <!-- <button class="tv-tab" onclick="switchTVTab('episodes')" style="padding: 12px 24px; background: #f5f5f5; color: #666; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
                                 🎬 Episodes
                             </button> -->
                         </div>
@@ -2660,13 +2699,13 @@
                     <!-- Categories Tab -->
                 <div id="tvCategoriesTab" class="tv-tab-content">
                     <div class="table-container">
-                        <div class="card card-elevated" style="padding: var(--spacing-5); margin-bottom: var(--spacing-4);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-4);">
+                        <div class="table-header" style="background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%); border: 2px solid #fde047; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                                 <div>
-                                    <h2 style="margin: 0 0 var(--spacing-2) 0; color: var(--black); font-size: var(--font-size-2xl);">📁 TV Categories</h2>
-                                    <p style="margin: 0; color: var(--text-secondary); font-size: var(--font-size-sm);">Organize your TV content into categories</p>
+                                    <h2 class="table-title" style="margin: 0 0 8px 0;">📁 TV Categories</h2>
+                                    <p style="margin: 0; color: #666; font-size: 14px;">Organize your TV content into categories</p>
                                 </div>
-                                <button class="btn-primary" onclick="openAddCategoryModal()">+ Add Category</button>
+                                <button class="btn-add" onclick="openAddCategoryModal()">+ Add Category</button>
                             </div>
                         </div>
                         <div id="tvCategoriesTable">
@@ -2681,13 +2720,13 @@
                 <!-- Series Tab -->
                 <div id="tvSeriesTab" class="tv-tab-content" style="display: none;">
                     <div class="table-container">
-                        <div class="card card-elevated" style="padding: var(--spacing-5); margin-bottom: var(--spacing-4);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-4);">
+                        <div class="table-header" style="background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%); border: 2px solid #38bdf8; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                                 <div>
-                                    <h2 style="margin: 0 0 var(--spacing-2) 0; color: var(--black); font-size: var(--font-size-2xl);">📚 TV Series</h2>
-                                    <p style="margin: 0; color: var(--text-secondary); font-size: var(--font-size-sm);">Manage series within categories</p>
+                                    <h2 class="table-title" style="margin: 0 0 8px 0;">📚 TV Series</h2>
+                                    <p style="margin: 0; color: #666; font-size: 14px;">Manage series within categories</p>
                                 </div>
-                                <button class="btn-primary" onclick="openAddSeriesModal()">+ Add Series</button>
+                                <button class="btn-add" onclick="openAddSeriesModal()">+ Add Series</button>
                             </div>
                         </div>
                         <div id="tvSeriesTable">
@@ -2702,13 +2741,13 @@
                 <!-- Episodes Tab -->
                 <div id="tvEpisodesTab" class="tv-tab-content" style="display: none;">
                     <div class="table-container">
-                        <div class="card card-elevated" style="padding: var(--spacing-5); margin-bottom: var(--spacing-4);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-4);">
+                        <div class="table-header" style="background: linear-gradient(135deg, #fce7f3 0%, #ffffff 100%); border: 2px solid #f472b6; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                                 <div>
-                                    <h2 style="margin: 0 0 var(--spacing-2) 0; color: var(--black); font-size: var(--font-size-2xl);">🎬 TV Episodes</h2>
-                                    <p style="margin: 0; color: var(--text-secondary); font-size: var(--font-size-sm);">Add and manage video episodes</p>
+                                    <h2 class="table-title" style="margin: 0 0 8px 0;">🎬 TV Episodes</h2>
+                                    <p style="margin: 0; color: #666; font-size: 14px;">Add and manage video episodes</p>
                                 </div>
-                                <button class="btn-primary" onclick="openAddEpisodeModal()">+ Add Episode</button>
+                                <button class="btn-add" onclick="openAddEpisodeModal()">+ Add Episode</button>
                             </div>
                         </div>
                         <div id="tvEpisodesTable">
@@ -2725,58 +2764,76 @@
                 <!-- SECTION 2: Upload New Video -->
                 <div id="tvUploadSection" class="main-tv-section" style="display: none;">
                 <!-- TV Upload Section -->
-                <div class="card card-elevated" style="margin-top: var(--spacing-10); padding: 0; overflow: hidden;">
+                <div style="
+                    margin-top: 40px;
+                    padding: 0;
+                    background: white;
+                    border-radius: 20px;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+                    border: 1px solid #f0f0f0;
+                    overflow: hidden;
+                ">
                     <!-- Header -->
-                    <div style="padding: var(--spacing-10) var(--spacing-8); text-align: center;">
-                        <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; background: var(--black); border-radius: var(--radius-2xl); margin-bottom: var(--spacing-5);">
-                            <i class="fab fa-youtube" style="color: white; font-size: 2.5rem;"></i>
+                    <div style="
+                        background: linear-gradient(135deg, #FF0000 0%, #CC0000 100%);
+                        padding: 40px 30px;
+                        text-align: center;
+                        position: relative;
+                        overflow: hidden;
+                    ">
+                        <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; filter: blur(20px);"></div>
+                        <div style="position: absolute; bottom: -20px; left: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%; filter: blur(20px);"></div>
+
+                        <div style="position: relative;">
+                            <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border-radius: 20px; margin-bottom: 20px;">
+                                <i class="fab fa-youtube" style="color: white; font-size: 2.5rem;"></i>
+                            </div>
+                            <h2 style="margin: 0 0 8px 0; font-size: 2rem; color: white; font-weight: 800; letter-spacing: -0.5px;">
+                                Add YouTube Video
+                            </h2>
+                            <p style="margin: 0; color: rgba(255,255,255,0.95); font-size: 1.05rem; font-weight: 300;">
+                                Upload unlimited videos with custom TafsirKurd controls
+                            </p>
                         </div>
-                        <h2 style="margin: 0 0 var(--spacing-2) 0; font-size: var(--font-size-4xl); color: var(--black); font-weight: 800;">
-                            Add YouTube Video
-                        </h2>
-                        <p style="margin: 0; color: var(--text-secondary); font-size: var(--font-size-lg);">
-                            Upload unlimited videos with custom TafsirKurd controls
-                        </p>
                     </div>
 
                     <!-- Form Content -->
-                    <div style="padding: var(--spacing-10); max-width: 800px; margin: 0 auto;">
+                    <div style="padding: 40px; max-width: 800px; margin: 0 auto;">
                         <!-- Instructions -->
-                        <div style="background: var(--gray-100); padding: var(--spacing-6); border-radius: var(--radius-xl); margin-bottom: var(--spacing-8); border: 1px solid var(--border-light);">
-                            <h3 style="margin-bottom: var(--spacing-4); font-size: var(--font-size-lg); display: flex; align-items: center; gap: var(--spacing-2); color: var(--black);">
+                        <div style="background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%); padding: 24px; border-radius: 16px; margin-bottom: 32px; border: 2px solid #ffebee; box-shadow: 0 4px 12px rgba(255,0,0,0.05);">
+                            <h3 style="margin-bottom: 1rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
                                 <i class="fas fa-info-circle"></i>
                                 How to Add a Video:
                             </h3>
-                            <ol style="line-height: 2.2; color: var(--text-secondary); padding-left: var(--spacing-6);">
+                            <ol style="line-height: 2.2; color: #666; padding-left: 1.5rem;">
                                 <li>Upload your video to <strong>YouTube.com</strong></li>
                                 <li>Set privacy to <strong>"Public"</strong> or <strong>"Unlisted"</strong></li>
                                 <li>Copy the <strong>Video ID</strong> from the URL</li>
-                                <li>Example: <code style="background: var(--gray-300); padding: 0.2rem 0.5rem; border-radius: var(--radius-sm);">youtube.com/watch?v=<strong style="color: var(--black);">dQw4w9WgXcQ</strong></code></li>
+                                <li>Example: <code style="background: rgba(0,0,0,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">youtube.com/watch?v=<strong style="color: #FF0000;">dQw4w9WgXcQ</strong></code></li>
                                 <li>Paste the ID below and fill in the details</li>
                             </ol>
-                            <div style="margin-top: var(--spacing-4); padding: var(--spacing-3); background: var(--gray-300); border-radius: var(--radius-md); border-left: 3px solid var(--black);">
-                                <p style="margin: 0; font-size: var(--font-size-sm); color: var(--text-secondary);">
-                                    <i class="fas fa-star" style="color: var(--black);"></i>
+                            <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255, 215, 0, 0.1); border-radius: 8px; border-left: 3px solid #FFD700;">
+                                <p style="margin: 0; font-size: 0.9rem; color: #666;">
+                                    <i class="fas fa-star" style="color: #FFD700;"></i>
                                     <strong>Your videos will play with TafsirKurd custom controls - NO YouTube branding!</strong>
                                 </p>
                             </div>
                         </div>
 
                         <!-- YouTube Video ID Input -->
-                        <div style="margin-bottom: var(--spacing-6);">
-                            <label style="display: block; margin-bottom: var(--spacing-3); font-weight: 700; font-size: var(--font-size-lg); color: var(--black);">
-                                <i class="fab fa-youtube"></i>
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.75rem; font-weight: 700; font-size: 1.1rem;">
+                                <i class="fab fa-youtube" style="color: #FF0000;"></i>
                                 YouTube Video ID *
                             </label>
                             <input
                                 type="text"
                                 id="adminYoutubeVideoId"
-                                class="form-input"
-                                style="font-family: 'Courier New', monospace; font-size: var(--font-size-lg); text-align: center;"
+                                style="width: 100%; padding: 1rem; background: #fff; border: 2px solid #ddd; border-radius: 12px; color: #000; font-family: 'Courier New', monospace; font-size: 1.1rem; text-align: center; transition: border-color 0.3s;"
                                 placeholder="Paste YouTube Video ID here..."
                                 required
                             >
-                            <p style="margin-top: var(--spacing-2); font-size: var(--font-size-sm); color: var(--text-secondary); text-align: center;">
+                            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666; text-align: center;">
                                 <i class="fas fa-lightbulb"></i>
                                 You can paste the full URL or just the ID
                             </p>
@@ -2795,71 +2852,71 @@
 
                         <!-- Video Metadata Form -->
                         <div id="adminVideoMetadataForm" style="display: none;">
-                            <div style="margin-bottom: var(--spacing-6);">
-                                <label style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black);">Title (Kurdish) *</label>
-                                <input type="text" id="adminYoutubeTitle" class="form-input" placeholder="e.g., تەفسیرا سورەتا الفاتحة" required>
+                            <div style="margin-bottom: 1.5rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Title (Kurdish) *</label>
+                                <input type="text" id="adminYoutubeTitle" style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit; font-size: 1rem;" placeholder="e.g., تەفسیرا سورەتا الفاتحة" required>
                             </div>
 
-                            <div style="margin-bottom: var(--spacing-6);">
-                                <label style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black);">Description</label>
-                                <textarea id="adminYoutubeDesc" rows="4" class="form-input" style="resize: vertical;" placeholder="Short description..."></textarea>
+                            <div style="margin-bottom: 1.5rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Description</label>
+                                <textarea id="adminYoutubeDesc" rows="4" style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit; resize: vertical; font-size: 0.95rem;" placeholder="Short description..."></textarea>
                             </div>
 
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-4); margin-bottom: var(--spacing-6);">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                                 <div>
-                                    <label style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black);">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
                                         Series *
-                                        <span style="font-size: var(--font-size-sm); color: var(--text-secondary); font-weight: 400;">(Type anything)</span>
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Type anything)</span>
                                     </label>
                                     <input
                                         type="text"
                                         id="adminYoutubeSeries"
                                         list="seriesSuggestions"
-                                        class="form-input"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
                                         placeholder="e.g., Tafsir Series, Ramadan..."
                                         required
                                     >
                                     <datalist id="seriesSuggestions">
                                         <!-- Will be populated from localStorage -->
                                     </datalist>
-                                    <p style="margin-top: var(--spacing-1); font-size: var(--font-size-xs); color: var(--text-secondary);">
+                                    <p style="margin-top: 0.25rem; font-size: 0.8rem; color: #999;">
                                         <i class="fas fa-info-circle"></i> Auto-saves for next time
                                     </p>
                                 </div>
                                 <div>
-                                    <label style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black);">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
                                         Category *
-                                        <span style="font-size: var(--font-size-sm); color: var(--text-secondary); font-weight: 400;">(Type anything)</span>
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Type anything)</span>
                                     </label>
                                     <input
                                         type="text"
                                         id="adminYoutubeCategory"
                                         list="categorySuggestions"
-                                        class="form-input"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
                                         placeholder="e.g., Tafsir, Hadith, Fiqh..."
                                         required
                                     >
                                     <datalist id="categorySuggestions">
                                         <!-- Will be populated from localStorage -->
                                     </datalist>
-                                    <p style="margin-top: var(--spacing-1); font-size: var(--font-size-xs); color: var(--text-secondary);">
+                                    <p style="margin-top: 0.25rem; font-size: 0.8rem; color: #999;">
                                         <i class="fas fa-info-circle"></i> Auto-saves for next time
                                     </p>
                                 </div>
                             </div>
 
                             <!-- Section & Episode Number -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-4); margin-bottom: var(--spacing-6);">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                                 <div>
-                                    <label style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black);">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
                                         Section
-                                        <span style="font-size: var(--font-size-sm); color: var(--text-secondary); font-weight: 400;">(Optional)</span>
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Optional)</span>
                                     </label>
                                     <input
                                         type="text"
                                         id="adminYoutubeSection"
                                         list="sectionSuggestions"
-                                        class="form-input"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
                                         placeholder="e.g., Latest, Featured, Trending..."
                                     >
                                     <datalist id="sectionSuggestions">
@@ -2870,44 +2927,44 @@
                                     </datalist>
                                 </div>
                                 <div>
-                                    <label style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black);">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
                                         Episode Number
-                                        <span style="font-size: var(--font-size-sm); color: var(--text-secondary); font-weight: 400;">(Optional)</span>
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Optional)</span>
                                     </label>
                                     <input
                                         type="number"
                                         id="adminYoutubeEpisodeNum"
                                         min="1"
-                                        class="form-input"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
                                         placeholder="e.g., 1, 2, 3..."
                                     >
                                 </div>
                             </div>
 
                             <!-- Speaker & Language -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-4); margin-bottom: var(--spacing-6);">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                                 <div>
-                                    <label style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black);">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
                                         Speaker/Teacher
-                                        <span style="font-size: var(--font-size-sm); color: var(--text-secondary); font-weight: 400;">(Optional)</span>
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Optional)</span>
                                     </label>
                                     <input
                                         type="text"
                                         id="adminYoutubeSpeaker"
                                         list="speakerSuggestions"
-                                        class="form-input"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
                                         placeholder="e.g., Sheikh name..."
                                     >
                                     <datalist id="speakerSuggestions"></datalist>
                                 </div>
                                 <div>
-                                    <label style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black);">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
                                         Language
-                                        <span style="font-size: var(--font-size-sm); color: var(--text-secondary); font-weight: 400;">(Optional)</span>
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Optional)</span>
                                     </label>
                                     <select
                                         id="adminYoutubeLanguage"
-                                        class="form-input"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
                                     >
                                         <option value="Kurdish">کوردی (Kurdish)</option>
                                         <option value="Arabic">عربی (Arabic)</option>
@@ -2918,45 +2975,45 @@
                             </div>
 
                             <!-- Tags -->
-                            <div style="margin-bottom: var(--spacing-6);">
-                                <label style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black);">
+                            <div style="margin-bottom: 1.5rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
                                     Tags
-                                    <span style="font-size: var(--font-size-sm); color: var(--text-secondary); font-weight: 400;">(Comma-separated)</span>
+                                    <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Comma-separated)</span>
                                 </label>
                                 <input
                                     type="text"
                                     id="adminYoutubeTags"
-                                    class="form-input"
+                                    style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
                                     placeholder="e.g., quran, tafsir, ramadan, seerah..."
                                 >
-                                <p style="margin-top: var(--spacing-1); font-size: var(--font-size-xs); color: var(--text-secondary);">
+                                <p style="margin-top: 0.25rem; font-size: 0.8rem; color: #999;">
                                     <i class="fas fa-tags"></i> Separate tags with commas
                                 </p>
                             </div>
 
                             <!-- Duration & Difficulty -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-4); margin-bottom: var(--spacing-6);">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                                 <div>
-                                    <label style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black);">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
                                         Duration (minutes)
-                                        <span style="font-size: var(--font-size-sm); color: var(--text-secondary); font-weight: 400;">(Optional)</span>
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Optional)</span>
                                     </label>
                                     <input
                                         type="number"
                                         id="adminYoutubeDuration"
                                         min="1"
-                                        class="form-input"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
                                         placeholder="e.g., 25"
                                     >
                                 </div>
                                 <div>
-                                    <label style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black);">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">
                                         Difficulty Level
-                                        <span style="font-size: var(--font-size-sm); color: var(--text-secondary); font-weight: 400;">(Optional)</span>
+                                        <span style="font-size: 0.85rem; color: #666; font-weight: 400;">(Optional)</span>
                                     </label>
                                     <select
                                         id="adminYoutubeDifficulty"
-                                        class="form-input"
+                                        style="width: 100%; padding: 0.75rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; color: #000; font-family: inherit;"
                                     >
                                         <option value="">Not specified</option>
                                         <option value="Beginner">Beginner / دەستپێکی</option>
@@ -2967,32 +3024,32 @@
                             </div>
 
                             <!-- Featured & Recommended -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-4); margin-bottom: var(--spacing-6);">
-                                <div style="display: flex; align-items: center; gap: var(--spacing-3); padding: var(--spacing-3); background: var(--gray-100); border-radius: var(--radius-md);">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: #f8f9fa; border-radius: 8px;">
                                     <input
                                         type="checkbox"
                                         id="adminYoutubeFeatured"
                                         style="width: 20px; height: 20px; cursor: pointer;"
                                     >
-                                    <label for="adminYoutubeFeatured" style="font-weight: 600; cursor: pointer; user-select: none; color: var(--black);">
-                                        <i class="fas fa-star"></i>
+                                    <label for="adminYoutubeFeatured" style="font-weight: 600; cursor: pointer; user-select: none;">
+                                        <i class="fas fa-star" style="color: #ffc107;"></i>
                                         Featured Video
                                     </label>
                                 </div>
-                                <div style="display: flex; align-items: center; gap: var(--spacing-3); padding: var(--spacing-3); background: var(--gray-100); border-radius: var(--radius-md);">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: #f8f9fa; border-radius: 8px;">
                                     <input
                                         type="checkbox"
                                         id="adminYoutubeRecommended"
                                         style="width: 20px; height: 20px; cursor: pointer;"
                                     >
-                                    <label for="adminYoutubeRecommended" style="font-weight: 600; cursor: pointer; user-select: none; color: var(--black);">
-                                        <i class="fas fa-thumbs-up"></i>
+                                    <label for="adminYoutubeRecommended" style="font-weight: 600; cursor: pointer; user-select: none;">
+                                        <i class="fas fa-thumbs-up" style="color: #28a745;"></i>
                                         Recommended
                                     </label>
                                 </div>
                             </div>
 
-                            <button onclick="saveAdminYoutubeVideo()" class="btn-primary" style="width: 100%; padding: var(--spacing-5); font-size: var(--font-size-lg);">
+                            <button onclick="saveAdminYoutubeVideo()" style="width: 100%; padding: 1.25rem; font-size: 1.1rem; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
                                 <i class="fas fa-save"></i>
                                 Save Video to TV Page
                             </button>
@@ -3005,23 +3062,42 @@
                 <!-- SECTION 3: Manage Videos -->
                 <div id="tvManageSection" class="main-tv-section" style="display: none;">
                 <!-- Manage Existing Videos Section -->
-                <div class="card card-elevated" style="margin-top: var(--spacing-12); padding: 0; overflow: hidden;">
+                <div style="
+                    margin-top: 48px;
+                    padding: 0;
+                    background: white;
+                    border-radius: 20px;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+                    border: 1px solid #f0f0f0;
+                    overflow: hidden;
+                ">
                     <!-- Header -->
-                    <div style="padding: var(--spacing-10) var(--spacing-8); text-align: center;">
-                        <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; background: var(--black); border-radius: var(--radius-2xl); margin-bottom: var(--spacing-5);">
-                            <i class="fas fa-video" style="color: white; font-size: 2rem;"></i>
+                    <div style="
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        padding: 40px 30px;
+                        text-align: center;
+                        position: relative;
+                        overflow: hidden;
+                    ">
+                        <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; filter: blur(20px);"></div>
+                        <div style="position: absolute; bottom: -20px; left: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%; filter: blur(20px);"></div>
+
+                        <div style="position: relative;">
+                            <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border-radius: 20px; margin-bottom: 20px;">
+                                <i class="fas fa-video" style="color: white; font-size: 2rem;"></i>
+                            </div>
+                            <h2 style="margin: 0 0 8px 0; font-size: 2rem; color: white; font-weight: 800; letter-spacing: -0.5px;">
+                                Manage Your Videos
+                            </h2>
+                            <p style="margin: 0; color: rgba(255,255,255,0.95); font-size: 1.05rem; font-weight: 300;">
+                                Edit, delete, and organize your video library
+                            </p>
                         </div>
-                        <h2 style="margin: 0 0 var(--spacing-2) 0; font-size: var(--font-size-4xl); color: var(--black); font-weight: 800;">
-                            Manage Your Videos
-                        </h2>
-                        <p style="margin: 0; color: var(--text-secondary); font-size: var(--font-size-lg);">
-                            Edit, delete, and organize your video library
-                        </p>
                     </div>
 
                     <!-- Video List Container -->
-                    <div id="adminVideosList" style="padding: var(--spacing-10); max-width: 1100px; margin: 0 auto;">
-                        <div style="text-align: center; padding: var(--spacing-10); color: var(--text-secondary);">
+                    <div id="adminVideosList" style="padding: 40px; max-width: 1100px; margin: 0 auto;">
+                        <div style="text-align: center; padding: 40px; color: #999;">
                             Loading videos...
                         </div>
                     </div>
@@ -3032,103 +3108,164 @@
 
             <!-- Social Stats Section -->
             <section id="socialSection" class="section">
-                <div class="card card-elevated" style="padding: var(--spacing-10) var(--spacing-8); text-align: center; margin-bottom: var(--spacing-8);">
-                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 100px; height: 100px; background: var(--black); border-radius: var(--radius-2xl); margin-bottom: var(--spacing-5);">
-                        <div style="font-size: 3.5rem;">📱</div>
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);">
+                    <div style="text-align: center; color: white;">
+                        <div style="font-size: 64px; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">📱</div>
+                        <h2 style="font-size: 32px; font-weight: 700; margin: 0 0 10px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Social Media Statistics</h2>
+                        <p style="font-size: 18px; opacity: 0.95; margin: 0; font-weight: 300;">گوهەرینا ژمارێن سۆشیال میدیا ژ مۆبایلێ خۆ</p>
                     </div>
-                    <h2 style="font-size: var(--font-size-5xl); font-weight: 700; margin: 0 0 var(--spacing-2) 0; color: var(--black);">Social Media Statistics</h2>
-                    <p style="font-size: var(--font-size-lg); color: var(--text-secondary); margin: 0;">گوهەرینا ژمارێن سۆشیال میدیا ژ مۆبایلێ خۆ</p>
                 </div>
 
                 <!-- Social Stats Editor -->
-                <div id="socialStatsEditor" style="margin-bottom: var(--spacing-8);"></div>
+                <div id="socialStatsEditor" style="margin-bottom: 30px;"></div>
 
                 <!-- Save Button -->
-                <div style="text-align: center; margin: var(--spacing-8) 0;">
+                <div style="text-align: center; margin: 30px 0;">
                     <button
-                        class="btn-primary"
+                        class="primary-btn"
                         onclick="saveSocialStats()"
-                        style="padding: var(--spacing-5) var(--spacing-12); font-size: var(--font-size-xl);"
+                        style="
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            border: none;
+                            padding: 18px 50px;
+                            font-size: 20px;
+                            font-weight: 600;
+                            border-radius: 50px;
+                            cursor: pointer;
+                            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+                            transition: all 0.3s ease;
+                            position: relative;
+                            overflow: hidden;
+                        "
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 40px rgba(102, 126, 234, 0.5)';"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(102, 126, 234, 0.4)';"
                     >
-                        <span>💾 تۆمارکرنا گوهەرتنا</span>
+                        <span style="position: relative; z-index: 1;">💾 تۆمارکرنا گوهەرتنا</span>
                     </button>
                 </div>
 
                 <!-- Success/Error Messages -->
-                <div id="socialStatsMessage" style="margin-top: var(--spacing-5); text-align: center; display: none;"></div>
+                <div id="socialStatsMessage" style="margin-top: 20px; text-align: center; display: none;"></div>
             </section>
 
             <!-- Features Section -->
             <section id="featuresSection" class="section">
-                <div class="card card-elevated" style="padding: var(--spacing-10) var(--spacing-8); text-align: center; margin-bottom: var(--spacing-8);">
-                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 100px; height: 100px; background: var(--black); border-radius: var(--radius-2xl); margin-bottom: var(--spacing-5);">
-                        <div style="font-size: 3.5rem;">⭐</div>
+                <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 40px 30px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 20px 60px rgba(240, 147, 251, 0.3);">
+                    <div style="text-align: center; color: white;">
+                        <div style="font-size: 64px; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">⭐</div>
+                        <h2 style="font-size: 32px; font-weight: 700; margin: 0 0 10px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Features Manager</h2>
+                        <p style="font-size: 18px; opacity: 0.95; margin: 0; font-weight: 300;">گوهەرینا تایبەتمەندییێن ماڵپەرێ</p>
                     </div>
-                    <h2 style="font-size: var(--font-size-5xl); font-weight: 700; margin: 0 0 var(--spacing-2) 0; color: var(--black);">Features Manager</h2>
-                    <p style="font-size: var(--font-size-lg); color: var(--text-secondary); margin: 0;">گوهەرینا تایبەتمەندییێن ماڵپەرێ</p>
                 </div>
 
                 <div id="featuresEditor"></div>
 
-                <div style="text-align: center; margin: var(--spacing-8) 0; display: flex; gap: var(--spacing-4); justify-content: center;">
-                    <button onclick="addNewFeature()" class="btn-secondary" style="padding: var(--spacing-4) var(--spacing-10); font-size: var(--font-size-lg);">
+                <div style="text-align: center; margin: 30px 0;">
+                    <button onclick="addNewFeature()" style="
+                        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                        color: white;
+                        border: none;
+                        padding: 15px 40px;
+                        font-size: 18px;
+                        font-weight: 600;
+                        border-radius: 50px;
+                        cursor: pointer;
+                        box-shadow: 0 10px 30px rgba(240, 147, 251, 0.4);
+                        transition: all 0.3s ease;
+                        margin-right: 15px;
+                    ">
                         ➕ زێدەکرنا تایبەتمەندیا نوی
                     </button>
-                    <button onclick="saveFeatures()" class="btn-primary" style="padding: var(--spacing-4) var(--spacing-10); font-size: var(--font-size-lg);">
+                    <button onclick="saveFeatures()" style="
+                        background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+                        color: white;
+                        border: none;
+                        padding: 15px 40px;
+                        font-size: 18px;
+                        font-weight: 600;
+                        border-radius: 50px;
+                        cursor: pointer;
+                        box-shadow: 0 10px 30px rgba(86, 171, 47, 0.4);
+                        transition: all 0.3s ease;
+                    ">
                         💾 تۆمارکرنا هەمی گوهەرتنان
                     </button>
                 </div>
 
-                <div id="featuresMessage" style="margin-top: var(--spacing-5); text-align: center; display: none;"></div>
+                <div id="featuresMessage" style="margin-top: 20px; text-align: center; display: none;"></div>
             </section>
 
             <!-- Schedule Section -->
             <section id="scheduleSection" class="section">
-                <div class="card card-elevated" style="padding: var(--spacing-10) var(--spacing-8); text-align: center; margin-bottom: var(--spacing-8);">
-                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 100px; height: 100px; background: var(--black); border-radius: var(--radius-2xl); margin-bottom: var(--spacing-5);">
-                        <div style="font-size: 3.5rem;">📅</div>
+                <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 40px 30px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 20px 60px rgba(250, 112, 154, 0.3);">
+                    <div style="text-align: center; color: white;">
+                        <div style="font-size: 64px; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">📅</div>
+                        <h2 style="font-size: 32px; font-weight: 700; margin: 0 0 10px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Schedule Manager</h2>
+                        <p style="font-size: 18px; opacity: 0.95; margin: 0; font-weight: 300;">گوهەرینا خشتەیا ڕۆژانە</p>
                     </div>
-                    <h2 style="font-size: var(--font-size-5xl); font-weight: 700; margin: 0 0 var(--spacing-2) 0; color: var(--black);">Schedule Manager</h2>
-                    <p style="font-size: var(--font-size-lg); color: var(--text-secondary); margin: 0;">گوهەرینا خشتەیا ڕۆژانە</p>
                 </div>
 
                 <div id="scheduleEditor"></div>
 
-                <div style="text-align: center; margin: var(--spacing-8) 0; display: flex; gap: var(--spacing-4); justify-content: center;">
-                    <button onclick="addNewSchedule()" class="btn-secondary" style="padding: var(--spacing-4) var(--spacing-10); font-size: var(--font-size-lg);">
+                <div style="text-align: center; margin: 30px 0;">
+                    <button onclick="addNewSchedule()" style="
+                        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+                        color: white;
+                        border: none;
+                        padding: 15px 40px;
+                        font-size: 18px;
+                        font-weight: 600;
+                        border-radius: 50px;
+                        cursor: pointer;
+                        box-shadow: 0 10px 30px rgba(250, 112, 154, 0.4);
+                        transition: all 0.3s ease;
+                        margin-right: 15px;
+                    ">
                         ➕ زێدەکرنا خشتەیەکا نوی
                     </button>
-                    <button onclick="saveSchedule()" class="btn-primary" style="padding: var(--spacing-4) var(--spacing-10); font-size: var(--font-size-lg);">
+                    <button onclick="saveSchedule()" style="
+                        background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+                        color: white;
+                        border: none;
+                        padding: 15px 40px;
+                        font-size: 18px;
+                        font-weight: 600;
+                        border-radius: 50px;
+                        cursor: pointer;
+                        box-shadow: 0 10px 30px rgba(86, 171, 47, 0.4);
+                        transition: all 0.3s ease;
+                    ">
                         💾 تۆمارکرنا هەمی گوهەرتنان
                     </button>
                 </div>
 
-                <div id="scheduleMessage" style="margin-top: var(--spacing-5); text-align: center; display: none;"></div>
+                <div id="scheduleMessage" style="margin-top: 20px; text-align: center; display: none;"></div>
             </section>
 
             <!-- Translations Section -->
             <section id="translationsSection" class="section">
-                <div class="card card-elevated" style="padding: var(--spacing-10) var(--spacing-8); text-align: center; margin-bottom: var(--spacing-8);">
-                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 100px; height: 100px; background: var(--black); border-radius: var(--radius-2xl); margin-bottom: var(--spacing-5);">
-                        <div style="font-size: 3.5rem;">🌐</div>
+                <div style="background: #1a1a1a; padding: 40px 30px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+                    <div style="text-align: center; color: white;">
+                        <div style="font-size: 64px; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));">🌐</div>
+                        <h2 style="font-size: 32px; font-weight: 700; margin: 0 0 10px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Kurdish Translations Manager</h2>
+                        <p style="font-size: 18px; opacity: 0.95; margin: 0; font-weight: 300; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text">گوهەرینا هەمی تێکستێن کوردی ل ماڵپەرێ</p>
                     </div>
-                    <h2 style="font-size: var(--font-size-5xl); font-weight: 700; margin: 0 0 var(--spacing-2) 0; color: var(--black);">Kurdish Translations Manager</h2>
-                    <p style="font-size: var(--font-size-lg); color: var(--text-secondary); margin: 0; font-family: 'IBM Plex Sans Arabic', sans-serif;" class="kurdish-text">گوهەرینا هەمی تێکستێن کوردی ل ماڵپەرێ</p>
                 </div>
 
                 <!-- Filter and Search -->
-                <div class="card" style="padding: var(--spacing-6); margin-bottom: var(--spacing-6);">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-4); margin-bottom: var(--spacing-4);">
+                <div style="background: white; padding: 25px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
                         <div>
-                            <label for="translationsSearch" style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black); font-size: var(--font-size-sm);">🔍 Search Text</label>
+                            <label for="translationsSearch" style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">🔍 Search Text</label>
                             <input type="text" id="translationsSearch" placeholder="Search Kurdish text or key..."
                                 oninput="filterTranslations()"
-                                class="form-input">
+                                style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 15px;">
                         </div>
                         <div>
-                            <label for="translationsCategory" style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black); font-size: var(--font-size-sm);">📁 Category</label>
+                            <label for="translationsCategory" style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">📁 Category</label>
                             <select id="translationsCategory" onchange="filterTranslations()"
-                                class="form-input">
+                                style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 15px; cursor: pointer;">
                                 <option value="all">All Categories</option>
                                 <option value="navigation">Navigation</option>
                                 <option value="authentication">Authentication</option>
@@ -3143,9 +3280,9 @@
                             </select>
                         </div>
                         <div>
-                            <label for="translationsPage" style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black); font-size: var(--font-size-sm);">📄 Page</label>
+                            <label for="translationsPage" style="display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 14px;">📄 Page</label>
                             <select id="translationsPage" onchange="filterTranslations()"
-                                class="form-input">
+                                style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 15px; cursor: pointer;">
                                 <option value="all">All Pages</option>
                                 <option value="index.html">Homepage</option>
                                 <option value="login.html">Login</option>
@@ -3157,14 +3294,14 @@
                             </select>
                         </div>
                     </div>
-                    <div style="display: flex; gap: var(--spacing-3); justify-content: flex-end; flex-wrap: wrap;">
-                        <button onclick="loadTranslations()" class="btn-secondary">
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+                        <button onclick="loadTranslations()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">
                             🔄 Refresh
                         </button>
-                        <button id="addSpeedLabelsBtn" onclick="addAutoScrollSpeedLabels()" class="btn-secondary" style="display: none;" title="Add all 10 auto scroll speed labels to database">
+                        <button id="addSpeedLabelsBtn" onclick="addAutoScrollSpeedLabels()" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; display: none;" title="Add all 10 auto scroll speed labels to database">
                             ⚡ Add Speed Labels
                         </button>
-                        <button onclick="addNewTranslation()" class="btn-primary">
+                        <button onclick="addNewTranslation()" style="background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">
                             ➕ Add New Text
                         </button>
                     </div>
@@ -3174,24 +3311,35 @@
                 <div id="translationsEditor"></div>
 
                 <!-- Save Button -->
-                <div style="text-align: center; margin: var(--spacing-8) 0;">
-                    <button onclick="saveAllTranslations()" class="btn-primary" style="padding: var(--spacing-5) var(--spacing-12); font-size: var(--font-size-xl);">
+                <div style="text-align: center; margin: 30px 0;">
+                    <button onclick="saveAllTranslations()" style="
+                        background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+                        color: white;
+                        border: none;
+                        padding: 18px 50px;
+                        font-size: 20px;
+                        font-weight: 700;
+                        border-radius: 50px;
+                        cursor: pointer;
+                        box-shadow: 0 10px 30px rgba(86, 171, 47, 0.4);
+                        transition: all 0.3s ease;
+                    ">
                         💾 Save All Changes
                     </button>
                 </div>
 
-                <div id="translationsMessage" style="margin-top: var(--spacing-5); text-align: center; display: none;"></div>
+                <div id="translationsMessage" style="margin-top: 20px; text-align: center; display: none;"></div>
 
                 <!-- Preview Modal -->
-                <div id="translationPreviewModal" class="modal-overlay" style="display: none;" onclick="closeTranslationPreview()">
-                    <div class="modal-content" onclick="event.stopPropagation()">
-                        <div class="modal-header">
+                <div id="translationPreviewModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; backdrop-filter: blur(5px);" onclick="closeTranslationPreview()">
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 20px; padding: 0; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 20px 20px 0 0; color: white;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <h3 style="margin: 0; font-size: var(--font-size-2xl); font-weight: 700;">👁️ Text Preview</h3>
-                                <button onclick="closeTranslationPreview()" class="modal-close">×</button>
+                                <h3 style="margin: 0; font-size: 24px; font-weight: 700;">👁️ Text Preview</h3>
+                                <button onclick="closeTranslationPreview()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 20px; font-weight: 700;">×</button>
                             </div>
                         </div>
-                        <div id="translationPreviewContent" style="padding: var(--spacing-8);">
+                        <div id="translationPreviewContent" style="padding: 30px;">
                             <!-- Content will be inserted here -->
                         </div>
                     </div>
@@ -3209,20 +3357,20 @@
                 </div>
 
                 <div class="table-container">
-                    <div class="card card-elevated" style="padding: var(--spacing-5); margin-bottom: var(--spacing-4);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-4);">
+                    <div class="table-header" style="background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%); border: 2px solid #e8ebf7; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                             <div>
-                                <h2 class="table-title" style="margin: 0 0 var(--spacing-2) 0; color: var(--black); font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold);">📧 Contact Messages</h2>
-                                <div style="display: flex; gap: var(--spacing-3); flex-wrap: wrap; font-size: var(--font-size-sm);">
-                                    <span id="messagesHeaderTotal" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: var(--font-weight-semibold); color: var(--black);">📊 Total: 0</span>
-                                    <span id="messagesHeaderUnread" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: var(--font-weight-semibold); color: var(--black);">⚠️ Unread: 0</span>
-                                    <span id="messagesHeaderToday" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: var(--font-weight-semibold); color: var(--black);">🆕 Today: 0</span>
+                                <h2 class="table-title" style="margin: 0 0 8px 0;">📧 Contact Messages - Detailed View</h2>
+                                <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 13px; color: #666;">
+                                    <span id="messagesHeaderTotal" style="background: #f0f9ff; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📊 Total: 0</span>
+                                    <span id="messagesHeaderUnread" style="background: #fef3c7; padding: 6px 12px; border-radius: 6px; font-weight: 600;">⚠️ Unread: 0</span>
+                                    <span id="messagesHeaderToday" style="background: #f0fdf4; padding: 6px 12px; border-radius: 6px; font-weight: 600;">🆕 Today: 0</span>
                                 </div>
                             </div>
-                            <div class="table-actions" style="display: flex; gap: var(--spacing-2); flex-wrap: wrap;">
-                                <input type="text" id="messageSearch" class="form-input" placeholder="Search messages..." style="max-width: 250px;">
-                                <button class="btn-secondary" onclick="filterMessages('all')" style="padding: var(--spacing-2) var(--spacing-4);">All</button>
-                                <button class="btn-secondary" onclick="filterMessages('unread')" style="padding: var(--spacing-2) var(--spacing-4);">Unread</button>
+                            <div class="table-actions">
+                                <input type="text" id="messageSearch" class="search-box" placeholder="Search messages...">
+                                <button class="btn-filter" onclick="filterMessages('all')">All</button>
+                                <button class="btn-filter" onclick="filterMessages('unread')">Unread</button>
                             </div>
                         </div>
                     </div>
@@ -3247,43 +3395,43 @@
 
                 <!-- AWS S3 VIDEO MANAGEMENT -->
                 <!-- AWS S3 Configuration Section -->
-                <div class="table-container" style="margin-bottom: var(--spacing-8);">
-                    <div class="card card-elevated" style="padding: var(--spacing-5);">
-                        <h2 style="margin: 0 0 var(--spacing-4) 0; color: var(--black); font-size: var(--font-size-xl);">⚙️ AWS S3 Configuration</h2>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-4);">
+                <div class="table-container" style="margin-bottom: 30px;">
+                    <div class="table-header" style="background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%); border: 2px solid #fde047; border-radius: 12px; padding: 20px;">
+                        <h2 class="table-title" style="margin: 0 0 15px 0;">⚙️ AWS S3 Configuration</h2>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
                             <div>
-                                <label style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black);">AWS Region</label>
-                                <input type="text" id="awsRegion" value="eu-north-1" placeholder="eu-north-1" class="form-input">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #666;">AWS Region</label>
+                                <input type="text" id="awsRegion" value="eu-north-1" placeholder="eu-north-1" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
                             </div>
                             <div>
-                                <label style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black);">S3 Bucket Name</label>
-                                <input type="text" id="s3BucketName" value="tafsirkurd-videos" placeholder="tafsirkurd-videos" class="form-input">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #666;">S3 Bucket Name</label>
+                                <input type="text" id="s3BucketName" value="tafsirkurd-videos" placeholder="tafsirkurd-videos" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
                             </div>
                             <div>
-                                <label style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black);">AWS Access Key ID</label>
-                                <input type="text" id="awsAccessKeyId" placeholder="AKIA..." class="form-input">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #666;">AWS Access Key ID</label>
+                                <input type="text" id="awsAccessKeyId" placeholder="AKIA..." style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
                             </div>
                             <div>
-                                <label style="display: block; margin-bottom: var(--spacing-2); font-weight: 600; color: var(--black);">AWS Secret Access Key</label>
-                                <input type="password" id="awsSecretAccessKey" placeholder="Secret key" class="form-input">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #666;">AWS Secret Access Key</label>
+                                <input type="password" id="awsSecretAccessKey" placeholder="Secret key" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
                             </div>
                         </div>
-                        <div style="margin-top: var(--spacing-4); display: flex; gap: var(--spacing-3);">
-                            <button onclick="saveAWSConfig()" class="btn-primary">
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button onclick="saveAWSConfig()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer;">
                                 💾 Save Configuration
                             </button>
-                            <button onclick="testAWSConnection()" class="btn-secondary">
+                            <button onclick="testAWSConnection()" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer;">
                                 🔍 Test Connection
                             </button>
                         </div>
-                        <div id="awsConfigStatus" style="margin-top: var(--spacing-3); padding: var(--spacing-3); border-radius: var(--radius-md); display: none;"></div>
+                        <div id="awsConfigStatus" style="margin-top: 10px; padding: 10px; border-radius: 8px; display: none;"></div>
                     </div>
                 </div>
 
                 <!-- Video Upload Section -->
-                <div class="table-container" style="margin-bottom: var(--spacing-8);">
-                    <div class="card card-elevated" style="padding: var(--spacing-5);">
-                        <h2 style="margin: 0 0 var(--spacing-4) 0; color: var(--black); font-size: var(--font-size-xl);">📤 Upload Video to AWS S3</h2>
+                <div class="table-container" style="margin-bottom: 30px;">
+                    <div class="table-header" style="background: linear-gradient(135deg, #fce7f3 0%, #ffffff 100%); border: 2px solid #f472b6; border-radius: 12px; padding: 20px;">
+                        <h2 class="table-title" style="margin: 0 0 15px 0;">📤 Upload Video to AWS S3</h2>
 
                         <!-- Video File Upload -->
                         <div style="margin-bottom: 20px;">
@@ -3372,11 +3520,11 @@
                         </div>
 
                         <!-- Upload Button -->
-                        <div style="display: flex; gap: var(--spacing-3);">
-                            <button id="uploadButton" onclick="uploadVideoToS3()" class="btn-primary" style="flex: 1; padding: var(--spacing-4) var(--spacing-6); font-size: var(--font-size-lg);">
+                        <div style="display: flex; gap: 10px;">
+                            <button id="uploadButton" onclick="uploadVideoToS3()" style="flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 15px 24px; border-radius: 10px; font-weight: 700; font-size: 16px; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); transition: all 0.3s;">
                                 🚀 Upload Video to AWS S3
                             </button>
-                            <button onclick="resetUploadForm()" class="btn-secondary" style="padding: var(--spacing-4) var(--spacing-6);">
+                            <button onclick="resetUploadForm()" style="background: #6b7280; color: white; border: none; padding: 15px 24px; border-radius: 10px; font-weight: 600; cursor: pointer;">
                                 🔄 Reset
                             </button>
                         </div>
@@ -3384,20 +3532,20 @@
                 </div>
 
                 <!-- Uploaded Videos List -->
-                <div class="table-container" style="margin-bottom: var(--spacing-8);">
-                    <div class="card card-elevated" style="padding: var(--spacing-5); margin-bottom: var(--spacing-4);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-4);">
+                <div class="table-container" style="margin-bottom: 30px;">
+                    <div class="table-header" style="background: linear-gradient(135deg, #dbeafe 0%, #ffffff 100%); border: 2px solid #60a5fa; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                             <div>
-                                <h2 style="margin: 0 0 var(--spacing-2) 0; color: var(--black); font-size: var(--font-size-xl);">🎬 Uploaded Videos (AWS S3)</h2>
-                                <div style="display: flex; gap: var(--spacing-3); flex-wrap: wrap; font-size: var(--font-size-sm);">
-                                    <span id="s3VideosTotal" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: 600; color: var(--black);">📊 Total: 0</span>
-                                    <span id="s3VideosPublished" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: 600; color: var(--black);">✅ Published: 0</span>
-                                    <span id="s3VideosDraft" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: 600; color: var(--black);">📝 Draft: 0</span>
+                                <h2 class="table-title" style="margin: 0 0 8px 0;">🎬 Uploaded Videos (AWS S3)</h2>
+                                <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 13px; color: #666;">
+                                    <span id="s3VideosTotal" style="background: #f0f9ff; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📊 Total: 0</span>
+                                    <span id="s3VideosPublished" style="background: #f0fdf4; padding: 6px 12px; border-radius: 6px; font-weight: 600;">✅ Published: 0</span>
+                                    <span id="s3VideosDraft" style="background: #fef3c7; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📝 Draft: 0</span>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: var(--spacing-3);">
-                                <input type="text" id="videoSearchBox" placeholder="🔍 Search videos..." class="form-input" style="max-width: 250px;" oninput="filterVideos()">
-                                <button onclick="refreshVideosList()" class="btn-secondary">
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="videoSearchBox" placeholder="🔍 Search videos..." style="padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; width: 250px;" oninput="filterVideos()">
+                                <button onclick="refreshVideosList()" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">
                                     🔄 Refresh
                                 </button>
                             </div>
@@ -3413,17 +3561,17 @@
 
                 <!-- EXISTING YOUTUBE/INSTAGRAM VIDEOS SECTION -->
                 <div class="table-container">
-                    <div class="card card-elevated" style="padding: var(--spacing-5); margin-bottom: var(--spacing-4);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-4);">
+                    <div class="table-header" style="background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%); border: 2px solid #fde047; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                             <div>
-                                <h2 style="margin: 0 0 var(--spacing-2) 0; color: var(--black); font-size: var(--font-size-xl);">🎥 Featured Videos - Detailed Management</h2>
-                                <div style="display: flex; gap: var(--spacing-3); flex-wrap: wrap; font-size: var(--font-size-sm);">
-                                    <span id="videosHeaderTotal" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: 600; color: var(--black);">📊 Total: 0</span>
-                                    <span id="videosHeaderInstagram" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: 600; color: var(--black);">📸 Instagram: 0</span>
-                                    <span id="videosHeaderYouTube" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: 600; color: var(--black);">▶️ YouTube: 0</span>
+                                <h2 class="table-title" style="margin: 0 0 8px 0;">🎥 Featured Videos - Detailed Management</h2>
+                                <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 13px; color: #666;">
+                                    <span id="videosHeaderTotal" style="background: #f0f9ff; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📊 Total: 0</span>
+                                    <span id="videosHeaderInstagram" style="background: #fce7f3; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📸 Instagram: 0</span>
+                                    <span id="videosHeaderYouTube" style="background: #fee2e2; padding: 6px 12px; border-radius: 6px; font-weight: 600;">▶️ YouTube: 0</span>
                                 </div>
                             </div>
-                            <button class="btn-primary" onclick="openAddVideoModal()">+ Add Video</button>
+                            <button class="btn-add" onclick="openAddVideoModal()">+ Add Video</button>
                         </div>
                     </div>
                     <div id="videosTable" class="mobile-table">
@@ -3438,17 +3586,17 @@
             <!-- Users Section -->
             <section id="usersSection" class="section">
                 <div class="table-container">
-                    <div class="card card-elevated" style="padding: var(--spacing-5); margin-bottom: var(--spacing-4);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-4);">
+                    <div class="table-header" style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #86efac; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                             <div>
-                                <h2 class="table-title" style="margin: 0 0 var(--spacing-2) 0; color: var(--black); font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold);">👥 All Registered Users</h2>
-                                <div style="display: flex; gap: var(--spacing-3); flex-wrap: wrap; font-size: var(--font-size-sm);">
-                                    <span id="usersHeaderTotal" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: var(--font-weight-semibold); color: var(--black);">📊 Total: 0</span>
-                                    <span id="usersHeaderActive" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: var(--font-weight-semibold); color: var(--black);">✅ Active: 0</span>
-                                    <span id="usersHeaderReading" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: var(--font-weight-semibold); color: var(--black);">📖 Reading: 0</span>
+                                <h2 class="table-title" style="margin: 0 0 8px 0;">👥 All Registered Users - Detailed Information</h2>
+                                <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 13px; color: #666;">
+                                    <span id="usersHeaderTotal" style="background: #f0f9ff; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📊 Total: 0</span>
+                                    <span id="usersHeaderActive" style="background: #f0fdf4; padding: 6px 12px; border-radius: 6px; font-weight: 600;">✅ Active: 0</span>
+                                    <span id="usersHeaderReading" style="background: #fef3c7; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📖 Reading: 0</span>
                                 </div>
                             </div>
-                            <input type="text" id="userSearch" class="form-input" placeholder="Search users..." style="max-width: 300px;">
+                            <input type="text" id="userSearch" class="search-box" placeholder="Search users...">
                         </div>
                     </div>
                     <div id="usersTable" class="mobile-table">
@@ -3491,13 +3639,13 @@
                 </div>
 
                 <div class="table-container">
-                    <div class="card card-elevated" style="padding: var(--spacing-5); margin-bottom: var(--spacing-4);">
+                    <div class="table-header" style="background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%); border: 2px solid #fde047; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
                         <div>
-                            <h2 style="margin: 0 0 var(--spacing-2) 0; color: var(--black); font-size: var(--font-size-xl);">🏆 Top Readers Leaderboard</h2>
-                            <div style="display: flex; gap: var(--spacing-3); flex-wrap: wrap; font-size: var(--font-size-sm);">
-                                <span id="readersHeaderTotal" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: 600; color: var(--black);">📊 Total Readers: 0</span>
-                                <span id="readersHeaderCompleted" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: 600; color: var(--black);">🏆 Completed: 0</span>
-                                <span id="readersHeaderAvgAyahs" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: 600; color: var(--black);">📖 Avg: 0 ayahs</span>
+                            <h2 class="table-title" style="margin: 0 0 8px 0;">🏆 Top Readers Leaderboard</h2>
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap; font-size: 13px; color: #666;">
+                                <span id="readersHeaderTotal" style="background: #f0f9ff; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📊 Total Readers: 0</span>
+                                <span id="readersHeaderCompleted" style="background: #f0fdf4; padding: 6px 12px; border-radius: 6px; font-weight: 600;">🏆 Completed: 0</span>
+                                <span id="readersHeaderAvgAyahs" style="background: #fce7f3; padding: 6px 12px; border-radius: 6px; font-weight: 600;">📖 Avg: 0 ayahs</span>
                             </div>
                         </div>
                     </div>
@@ -3528,12 +3676,12 @@
 
             <!-- Database Section -->
             <section id="databaseSection" class="section">
-                <div class="card card-elevated" style="padding: var(--spacing-6); margin-bottom: var(--spacing-6);">
-                    <h2 style="margin: 0 0 var(--spacing-3) 0; color: var(--black); font-size: var(--font-size-2xl); font-weight: 700;">💾 Database Management & Backup Center</h2>
-                    <p style="color: var(--text-secondary); margin: 0; font-size: var(--font-size-base);">
+                <div class="info-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                    <div class="info-box-title" style="color: white; font-size: 22px; font-weight: 700;">💾 Database Management & Backup Center</div>
+                    <div class="info-box-text" style="color: rgba(255,255,255,0.95);">
                         Backup your Supabase data regularly. All backups are downloaded as JSON files
                         that can be restored if needed. Keep these files in a safe location.
-                    </p>
+                    </div>
                 </div>
 
                 <!-- Database Statistics -->
@@ -3545,29 +3693,29 @@
                 </div>
 
                 <div class="stats-grid">
-                    <div class="stat-card">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid #bfdbfe;">
                         <div class="stat-icon">👥</div>
                         <div class="stat-value" id="dbUsersCount">0</div>
                         <div class="stat-label">Users Table</div>
-                        <button class="btn-primary" style="margin-top: var(--spacing-3); width: 100%;" onclick="backupTable('user_data')">📥 Backup Users</button>
+                        <button class="btn-add" style="margin-top: 12px; width: 100%;" onclick="backupTable('user_data')">📥 Backup Users</button>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%); border: 2px solid #fde047;">
                         <div class="stat-icon">🎥</div>
                         <div class="stat-value" id="dbVideosCount">0</div>
                         <div class="stat-label">Videos Table</div>
-                        <button class="btn-primary" style="margin-top: var(--spacing-3); width: 100%;" onclick="backupTable('featured_videos')">📥 Backup Videos</button>
+                        <button class="btn-add" style="margin-top: 12px; width: 100%;" onclick="backupTable('featured_videos')">📥 Backup Videos</button>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); border: 2px solid #86efac;">
                         <div class="stat-icon">📧</div>
                         <div class="stat-value" id="dbMessagesCount">0</div>
                         <div class="stat-label">Messages Table</div>
-                        <button class="btn-primary" style="margin-top: var(--spacing-3); width: 100%;" onclick="backupTable('contact_messages')">📥 Backup Messages</button>
+                        <button class="btn-add" style="margin-top: 12px; width: 100%;" onclick="backupTable('contact_messages')">📥 Backup Messages</button>
                     </div>
-                    <div class="stat-card" style="background: var(--black); border: none; color: white;">
-                        <div class="stat-icon">💾</div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white;">
+                        <div class="stat-icon" style="filter: brightness(0) invert(1);">💾</div>
                         <div class="stat-value" style="color: white;">All</div>
                         <div class="stat-label" style="color: rgba(255,255,255,0.9);">Full Backup</div>
-                        <button class="btn-secondary" style="margin-top: var(--spacing-3); width: 100%; background: white; color: var(--black); border: 2px solid white;" onclick="backupAllTables()">🚀 Backup All</button>
+                        <button class="btn-add" style="margin-top: 12px; width: 100%; background: white; color: #667eea;" onclick="backupAllTables()">🚀 Backup All</button>
                     </div>
                 </div>
 
@@ -3616,12 +3764,12 @@
 
             <!-- Telegram Notifications Section -->
             <section id="telegramSection" class="section">
-                <div class="card card-elevated" style="padding: var(--spacing-6); margin-bottom: var(--spacing-6);">
-                    <h2 style="margin: 0 0 var(--spacing-3) 0; color: var(--black); font-size: var(--font-size-2xl); font-weight: 700;">📱 Telegram Notifications</h2>
-                    <p style="color: var(--text-secondary); margin: 0; font-size: var(--font-size-base);">
+                <div class="info-box" style="background: linear-gradient(135deg, #0088cc 0%, #0066cc 100%); color: white; border: none;">
+                    <div class="info-box-title" style="color: white; font-size: 22px; font-weight: 700;">📱 Telegram Notifications</div>
+                    <div class="info-box-text" style="color: rgba(255,255,255,0.95);">
                         Receive instant notifications on your phone via Telegram when important events happen.
                         Get alerted about new users, messages, Duhok readers, and more!
-                    </p>
+                    </div>
                 </div>
 
                 <!-- Status Card -->
@@ -3963,12 +4111,12 @@
 
             <!-- Email Templates Section -->
             <section id="emailTemplatesSection" class="section">
-                <div class="card card-elevated" style="padding: var(--spacing-6); margin-bottom: var(--spacing-6);">
-                    <h2 style="margin: 0 0 var(--spacing-3) 0; color: var(--black); font-size: var(--font-size-2xl); font-weight: 700;">📧 Email Templates for Users</h2>
-                    <p style="color: var(--text-secondary); margin: 0; font-size: var(--font-size-base);">
+                <div class="info-box" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); border: none;">
+                    <div class="info-box-title" style="font-size: 22px; font-weight: 700;">📧 Email Templates for Users</div>
+                    <div class="info-box-text" style="color: #333;">
                         Gentle, respectful, and motivational email templates for TafsirKurd users.
                         <strong>Never pushy, never guilt-based, always value-focused.</strong>
-                    </p>
+                    </div>
                 </div>
 
                 <!-- Guidelines Box -->
@@ -4355,23 +4503,23 @@
 
             <!-- Background Images Section -->
             <section id="backgroundsSection" class="section">
-                <div class="card card-elevated" style="padding: var(--spacing-8);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-8);">
+                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                         <div>
-                            <h2 style="margin: 0 0 var(--spacing-2) 0; font-size: var(--font-size-3xl); color: var(--black);">🖼️ Background Images</h2>
-                            <p style="margin: 0; color: var(--text-secondary);">Manage background images for Homepage (8 images) and Quran page</p>
+                            <h2 style="margin: 0 0 10px 0; font-size: 28px; color: #333;">🖼️ Background Images</h2>
+                            <p style="margin: 0; color: #666;">Manage background images for Homepage (8 images) and Quran page</p>
                         </div>
-                        <button onclick="showAddBackgroundModal()" class="btn-primary">
+                        <button onclick="showAddBackgroundModal()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px 28px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
                             ➕ Add Image
                         </button>
                     </div>
 
                     <!-- Page Tabs -->
-                    <div style="display: flex; gap: var(--spacing-3); margin-bottom: var(--spacing-6);">
-                        <button id="indexBgTab" onclick="switchBackgroundTab('index')" class="btn-primary">
+                    <div style="display: flex; gap: 10px; margin-bottom: 25px;">
+                        <button id="indexBgTab" onclick="switchBackgroundTab('index')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600;">
                             🏠 Homepage (8 images)
                         </button>
-                        <button id="quranBgTab" onclick="switchBackgroundTab('quran')" class="btn-secondary">
+                        <button id="quranBgTab" onclick="switchBackgroundTab('quran')" style="background: #e0e0e0; color: #666; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600;">
                             📖 Quran Page
                         </button>
                     </div>
@@ -4389,25 +4537,30 @@
                     ← Back to Dashboard
                 </button>
 
-                <!-- Section Header -->
-                <div class="card card-elevated" style="padding: var(--spacing-10) var(--spacing-8); text-align: center; margin-bottom: var(--spacing-8);">
-                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 100px; height: 100px; background: var(--black); border-radius: var(--radius-2xl); margin-bottom: var(--spacing-5);">
-                        <div style="font-size: 3.5rem;">🔔</div>
+                <!-- Section Header - ULTIMATE PREMIUM -->
+                <div style="position: relative; background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); border-radius: 24px; padding: 40px 30px; margin-bottom: 30px; box-shadow: 0 20px 60px rgba(102,126,234,0.4), 0 0 0 1px rgba(255,255,255,0.1) inset; overflow: hidden;">
+                    <!-- Animated Background Particles -->
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; opacity: 0.1; pointer-events: none;">
+                        <div style="position: absolute; width: 300px; height: 300px; border-radius: 50%; background: white; top: -100px; left: -100px; animation: float 6s ease-in-out infinite;"></div>
+                        <div style="position: absolute; width: 200px; height: 200px; border-radius: 50%; background: white; bottom: -50px; right: -50px; animation: float 8s ease-in-out infinite reverse;"></div>
                     </div>
-                    <h2 style="margin: 0 0 var(--spacing-2) 0; font-size: var(--font-size-5xl); font-weight: 900; color: var(--black);">Activity Feed</h2>
-                    <p style="margin: 0 0 var(--spacing-5) 0; color: var(--text-secondary); font-size: var(--font-size-lg);">Real-time platform monitoring</p>
 
-                    <!-- Live Stats Bar -->
-                    <div style="display: inline-flex; gap: var(--spacing-4); background: var(--gray-100); padding: var(--spacing-3) var(--spacing-6); border-radius: var(--radius-full); flex-wrap: wrap; justify-content: center;">
-                        <div style="text-align: center; min-width: 60px;">
-                            <div style="font-size: var(--font-size-2xl); font-weight: 800; color: var(--black);" id="headerTotalActivities">0</div>
-                            <div style="font-size: var(--font-size-xs); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Total</div>
-                        </div>
-                        <div style="width: 1px; background: var(--border-light); align-self: stretch;"></div>
-                        <div style="text-align: center; min-width: 60px;">
-                            <div style="font-size: var(--font-size-2xl); font-weight: 800; color: var(--black);" id="headerUnreadActivities">0</div>
-                            <div style="font-size: var(--font-size-xs); color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Unread</div>
-                        </div>
+                    <div style="position: relative; z-index: 1; text-align: center;">
+                        <div style="font-size: 64px; margin-bottom: 15px; animation: bellRing 3s ease-in-out infinite; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));">🔔</div>
+                        <h2 style="margin: 0 0 10px 0; font-size: 32px; font-weight: 900; color: white; text-shadow: 0 4px 20px rgba(0,0,0,0.2); letter-spacing: -1px;">Activity Feed</h2>
+                        <p style="margin: 0 0 20px 0; color: rgba(255,255,255,0.95); font-size: 16px; font-weight: 500;">Real-time platform monitoring</p>
+
+                        <!-- Live Stats Bar -->
+                        <div style="display: inline-flex; gap: 15px; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 12px 25px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.1); flex-wrap: wrap; justify-content: center;">
+                            <div style="text-align: center; min-width: 60px;">
+                                <div style="font-size: 22px; font-weight: 800; color: white;" id="headerTotalActivities">0</div>
+                                <div style="font-size: 10px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Total</div>
+                            </div>
+                            <div style="width: 1px; background: rgba(255,255,255,0.3); align-self: stretch;"></div>
+                            <div style="text-align: center; min-width: 60px;">
+                                <div style="font-size: 22px; font-weight: 800; color: #fbbf24;" id="headerUnreadActivities">0</div>
+                                <div style="font-size: 10px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Unread</div>
+                            </div>
                             <div style="width: 1px; background: rgba(255,255,255,0.3); align-self: stretch;"></div>
                             <div style="text-align: center; min-width: 60px;">
                                 <div style="font-size: 22px; font-weight: 800; color: #10b981;">●</div>
