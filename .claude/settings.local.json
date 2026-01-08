@@ -115,7 +115,8 @@
       "Bash(netlify dev)",
       "Bash(timeout 10 ping:*)",
       "Bash(timeout 2 ping:*)",
-      "Bash(nslookup:*)"
+      "Bash(nslookup:*)",
+      "Bash(xcopy \"D:\\\\WEBSITE\\\\functions\\\\*.js\" \"D:\\\\WEBSITE\\\\netlify\\\\functions\"\" /Y /I)"
     ],
     "deny": [],
     "ask": []
