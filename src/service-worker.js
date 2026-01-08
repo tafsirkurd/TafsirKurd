@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v474-password-updated';
+const CACHE_NAME = 'tafsir-kurd-v475-no-supabase-sdk';
 const urlsToCache = [
   '/',
   '/index.html',
