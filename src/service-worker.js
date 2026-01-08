@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v476-validated-config';
+const CACHE_NAME = 'tafsir-kurd-v477-tokens-cleared';
 const urlsToCache = [
   '/',
   '/index.html',
