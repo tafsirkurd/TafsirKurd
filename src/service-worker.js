@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v479-geoip-allowed';
+const CACHE_NAME = 'tafsir-kurd-v480-supabase-fixed';
 const urlsToCache = [
   '/',
   '/index.html',
