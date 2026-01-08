@@ -301,6 +301,93 @@
             transform: scale(0.98);
         }
 
+        /* 2026 B&W Button System */
+        .btn-primary {
+            background: var(--black);
+            color: var(--white);
+            border: 2px solid var(--black);
+            padding: var(--spacing-3) var(--spacing-6);
+            border-radius: var(--radius-lg);
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-semibold);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out-expo);
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--black);
+            border: 2px solid var(--border-medium);
+            padding: var(--spacing-3) var(--spacing-6);
+            border-radius: var(--radius-lg);
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-semibold);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out-expo);
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-2);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--black);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-secondary:active {
+            transform: translateY(0);
+        }
+
+        /* Card System */
+        .card {
+            background: var(--white);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-xl);
+            transition: all var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .card-elevated {
+            box-shadow: var(--shadow-md);
+            position: relative;
+        }
+
+        .card-elevated::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--black);
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            transform: scaleX(0);
+            transition: transform var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .card-elevated:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-elevated:hover::before {
+            transform: scaleX(1);
+        }
+
         .error-message {
             background: rgba(231, 76, 60, 0.1);
             border: 2px solid var(--danger);
