@@ -97,25 +97,12 @@ export async function onRequest(context) {
 
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-        // Store session in Supabase if available
-        if (env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY) {
-            const { createClient } = await import('@supabase/supabase-js');
-            const supabase = createClient(
-                env.SUPABASE_URL,
-                env.SUPABASE_SERVICE_ROLE_KEY
-            );
-
-            const clientIP = request.headers.get('CF-Connecting-IP') ||
-                           request.headers.get('X-Forwarded-For') ||
-                           'unknown';
-
-            await supabase.from('admin_login_sessions').insert({
-                session_token: sessionToken,
-                ip_address: clientIP,
-                user_agent: request.headers.get('User-Agent') || '',
-                expires_at: expiresAt.toISOString()
-            });
-        }
+        // Note: Session storage removed to avoid Supabase SDK dependency in Cloudflare Pages
+        // Sessions are managed client-side with sessionStorage
+        console.log('Admin login successful:', {
+            timestamp: new Date().toISOString(),
+            ip: request.headers.get('CF-Connecting-IP') || 'unknown'
+        });
 
         return new Response(
             JSON.stringify({
