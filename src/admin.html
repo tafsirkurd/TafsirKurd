@@ -1238,6 +1238,100 @@
             font-family: inherit;
         }
 
+        /* Modern 2026 Welcome Header */
+        .welcome-header {
+            background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+            padding: 80px 32px;
+            border-radius: 24px;
+            margin-bottom: 32px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                0 20px 60px rgba(0,0,0,0.25),
+                0 8px 24px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .welcome-gradient {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg,
+                rgba(255,255,255,0.03) 0%,
+                transparent 50%,
+                rgba(255,255,255,0.03) 100%);
+            animation: shimmer 8s ease-in-out infinite;
+        }
+
+        .welcome-pattern {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: 0.5;
+        }
+
+        .welcome-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .welcome-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.08);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow:
+                0 8px 24px rgba(0,0,0,0.2),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            animation: iconFloat 4s ease-in-out infinite;
+        }
+
+        .welcome-icon svg {
+            width: 40px;
+            height: 40px;
+            stroke: white;
+        }
+
+        @keyframes iconFloat {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        .welcome-title {
+            margin: 0 0 12px 0;
+            color: white;
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+        }
+
+        .welcome-subtitle {
+            margin: 0;
+            color: rgba(255,255,255,0.75);
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .welcome-subtitle.kurdish-text {
+            margin-top: 8px;
+            font-size: 16px;
+            color: rgba(255,255,255,0.65);
+        }
+
         /* Mobile Navigation Tabs */
         .mobile-nav {
             background: var(--card-bg);
@@ -3037,17 +3131,27 @@
         <div class="admin-content">
             <!-- Dashboard Section -->
             <section id="dashboardSection" class="section active">
-                <!-- Modern Clean Welcome Header -->
-                <div style="background: var(--black); padding: var(--spacing-16) var(--spacing-8); border-radius: var(--radius-2xl); margin-bottom: var(--spacing-8); text-align: center; position: relative; overflow: hidden;">
-                    <!-- Subtle B&W Pattern -->
-                    <div style="position: absolute; inset: 0; background-image: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255, 255, 255, 0.02) 20px, rgba(255, 255, 255, 0.02) 21px); pointer-events: none;"></div>
+                <!-- Modern 2026 Welcome Header -->
+                <div class="welcome-header">
+                    <!-- Animated gradient background -->
+                    <div class="welcome-gradient"></div>
+
+                    <!-- Grid pattern overlay -->
+                    <div class="welcome-pattern"></div>
 
                     <!-- Content -->
-                    <div style="position: relative; z-index: 1;">
-                        <div style="font-size: 4rem; margin-bottom: var(--spacing-4); filter: drop-shadow(0 4px 12px rgba(255, 255, 255, 0.1));">🎛️</div>
-                        <h1 style="margin: 0; color: var(--white); font-size: var(--font-size-5xl); font-weight: var(--font-weight-extrabold); letter-spacing: -0.02em;">Admin Dashboard</h1>
-                        <p style="margin: var(--spacing-3) 0 0 0; color: rgba(255,255,255,0.85); font-size: var(--font-size-xl); font-weight: var(--font-weight-normal);">Choose a section to manage</p>
-                        <p class="kurdish-text" style="margin: var(--spacing-2) 0 0 0; color: rgba(255,255,255,0.75); font-size: var(--font-size-lg);">بەشەکێ هەلبژێرە بۆ بەڕێوەبردن</p>
+                    <div class="welcome-content">
+                        <div class="welcome-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="7"/>
+                                <rect x="14" y="3" width="7" height="7"/>
+                                <rect x="14" y="14" width="7" height="7"/>
+                                <rect x="3" y="14" width="7" height="7"/>
+                            </svg>
+                        </div>
+                        <h1 class="welcome-title">Admin Dashboard</h1>
+                        <p class="welcome-subtitle">Choose a section to manage</p>
+                        <p class="welcome-subtitle kurdish-text">بەشەکێ هەلبژێرە بۆ بەڕێوەبردن</p>
                     </div>
                 </div>
 
