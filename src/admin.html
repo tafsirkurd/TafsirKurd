@@ -1195,6 +1195,23 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            padding: 10px 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .admin-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #pageNavigationSelector {
+            padding: 6px 36px 6px 12px;
+            min-width: 160px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
         }
 
         .admin-logo {
@@ -3065,7 +3082,7 @@
 
         <!-- Header -->
         <header class="admin-header">
-            <div class="admin-header-content" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 24px; max-width: 1400px; margin: 0 auto;">
+            <div class="admin-header-content">
                 <div class="admin-logo" onclick="switchSection('dashboard')">
                     <div class="logo-icon-container">
                         <img src="/assets/images/logo.png" alt="Logo" class="logo-icon">
@@ -3076,7 +3093,7 @@
                     </div>
                 </div>
 
-                <div class="admin-user" style="display: flex; align-items: center; gap: 12px;">
+                <div class="admin-user">
                     <!-- Admin Info -->
                     <div style="text-align: right; display: none;" id="adminInfoContainer">
                         <div style="color: #333; font-size: 14px; font-weight: 600; margin-bottom: 2px;" id="adminEmail"></div>
@@ -3134,7 +3151,7 @@
                             }
                         }
                     </style>
-                    <select id="pageNavigationSelector" onchange="if(this.value) { window.open(this.value, '_blank'); this.value=''; }" class="btn-secondary" style="padding: 6px 36px 6px 12px; min-width: 160px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                    <select id="pageNavigationSelector" onchange="if(this.value) { window.open(this.value, '_blank'); this.value=''; }" class="btn-secondary">
                         <option value="">⚡ Navigate...</option>
                         <option value="/">▸ Homepage</option>
                         <option value="/quran.html">▸ Quran Reader</option>
