@@ -300,10 +300,22 @@ async function saveVideoMetadata(s3Key, bucketName, s3Url) {
 // Load and display videos list
 async function refreshVideosList() {
     const container = document.getElementById('s3VideosTable');
+    if (!container) return;
+
     container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading videos...</div></div>';
 
     try {
-        const { data: videos, error } = await supabaseClient
+        // Check if supabaseClient is initialized
+        if (!window.supabaseClient) {
+            console.warn('⚠️ Supabase client not initialized yet');
+            if (window.initSupabase) {
+                await window.initSupabase();
+            } else {
+                throw new Error('Supabase initialization function not available');
+            }
+        }
+
+        const { data: videos, error } = await window.supabaseClient
             .from('tv_videos')
             .select('*')
             .order('created_at', { ascending: false });
