@@ -600,6 +600,68 @@
             transform: translateY(0);
         }
 
+        /* Premium Form Validation Styles */
+        .form-group input.valid,
+        .form-group textarea.valid,
+        .form-group select.valid {
+            border-color: #2ecc71;
+            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+        }
+
+        .form-group input.invalid,
+        .form-group textarea.invalid,
+        .form-group select.invalid {
+            border-color: #e74c3c;
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+        }
+
+        .field-error {
+            margin-top: var(--spacing-2);
+            color: #e74c3c;
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+            animation: slideDown 200ms ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .password-strength {
+            margin-top: var(--spacing-3);
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: var(--gray-300);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: var(--spacing-2);
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
+            background: #e74c3c;
+        }
+
+        .strength-text {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+        }
+
+        .strength-text span {
+            font-weight: 600;
+        }
+
         /* Card System */
         .card {
             background: var(--white);
@@ -6261,6 +6323,119 @@
 
         // Initialize button enhancer on page load
         document.addEventListener('DOMContentLoaded', () => ButtonEnhancer.init());
+
+        // ========================================
+        // PREMIUM FORM VALIDATION SYSTEM
+        // ========================================
+        class FormValidator {
+            constructor() {
+                this.rules = {
+                    email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    url: /^https?:\/\/.+/,
+                    password: /.{8,}/
+                };
+            }
+
+            init() {
+                // Add validation to all inputs and textareas
+                document.querySelectorAll('input, textarea, select').forEach(input => {
+                    input.addEventListener('blur', () => this.validateField(input));
+                    input.addEventListener('input', () => {
+                        if (input.classList.contains('invalid')) {
+                            this.validateField(input);
+                        }
+                    });
+
+                    // Add password strength indicator for password fields
+                    if (input.type === 'password' && !input.classList.contains('no-strength')) {
+                        this.addPasswordStrengthIndicator(input);
+                    }
+                });
+            }
+
+            validateField(input) {
+                const value = input.value.trim();
+                const required = input.hasAttribute('required');
+                const type = input.getAttribute('data-validate') || input.type;
+
+                let isValid = true;
+                let message = '';
+
+                if (required && !value) {
+                    isValid = false;
+                    message = 'This field is required';
+                } else if (value && this.rules[type]) {
+                    isValid = this.rules[type].test(value);
+                    message = isValid ? '' : `Invalid ${type} format`;
+                }
+
+                input.classList.toggle('valid', isValid && value);
+                input.classList.toggle('invalid', !isValid);
+
+                this.updateErrorMessage(input, message);
+                return isValid;
+            }
+
+            updateErrorMessage(input, message) {
+                let errorEl = input.parentElement.querySelector('.field-error');
+
+                if (message) {
+                    if (!errorEl) {
+                        errorEl = document.createElement('div');
+                        errorEl.className = 'field-error';
+                        input.parentElement.appendChild(errorEl);
+                    }
+                    errorEl.textContent = message;
+                } else if (errorEl) {
+                    errorEl.remove();
+                }
+            }
+
+            addPasswordStrengthIndicator(input) {
+                const container = document.createElement('div');
+                container.className = 'password-strength';
+                container.innerHTML = `
+                    <div class="strength-bar"><div class="strength-fill"></div></div>
+                    <div class="strength-text">Password strength: <span>-</span></div>
+                `;
+                input.parentElement.appendChild(container);
+
+                input.addEventListener('input', () => {
+                    const strength = this.calculatePasswordStrength(input.value);
+                    this.updateStrengthIndicator(container, strength);
+                });
+            }
+
+            calculatePasswordStrength(password) {
+                let score = 0;
+                if (password.length >= 8) score++;
+                if (password.length >= 12) score++;
+                if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+                if (/\d/.test(password)) score++;
+                if (/[^a-zA-Z\d]/.test(password)) score++;
+
+                const labels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
+                return {
+                    score: Math.max(0, Math.min(score, 5)),
+                    label: password.length > 0 ? labels[score] : '-'
+                };
+            }
+
+            updateStrengthIndicator(container, strength) {
+                const fill = container.querySelector('.strength-fill');
+                const text = container.querySelector('.strength-text span');
+
+                const colors = ['#e74c3c', '#e67e22', '#f39c12', '#f1c40f', '#2ecc71', '#27ae60'];
+                const widths = ['0%', '20%', '40%', '60%', '80%', '100%'];
+
+                fill.style.width = widths[strength.score];
+                fill.style.background = colors[strength.score];
+                text.textContent = strength.label;
+            }
+        }
+
+        const formValidator = new FormValidator();
+        document.addEventListener('DOMContentLoaded', () => formValidator.init());
 
         // Hide caps lock warning when input loses focus
         passwordInput.addEventListener('blur', function() {
