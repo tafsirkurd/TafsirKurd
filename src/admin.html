@@ -1168,6 +1168,20 @@
             padding: 20px 15px;
             box-shadow: var(--shadow-sm);
             text-align: center;
+            transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: default;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow:
+                0 12px 32px rgba(0, 0, 0, 0.12),
+                0 4px 12px rgba(0, 0, 0, 0.08);
+            border-color: rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card:active {
+            transform: translateY(-2px) scale(0.995);
         }
 
         .stat-icon {
@@ -1210,6 +1224,15 @@
             padding: 20px;
             margin-bottom: 20px;
             box-shadow: var(--shadow-sm);
+            transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .chart-container:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 8px 24px rgba(0, 0, 0, 0.1),
+                0 2px 8px rgba(0, 0, 0, 0.06);
+            border-color: rgba(0, 0, 0, 0.12);
         }
 
         .chart-header {
@@ -6436,6 +6459,78 @@
 
         const formValidator = new FormValidator();
         document.addEventListener('DOMContentLoaded', () => formValidator.init());
+
+        // ========================================
+        // PREMIUM STAT COUNTER ANIMATION SYSTEM
+        // ========================================
+        class StatCounter {
+            static animateValue(element, start, end, duration = 1500) {
+                const startTime = performance.now();
+                const initialText = element.textContent;
+                const isPercentage = initialText.includes('%');
+                const suffix = isPercentage ? '%' : '';
+
+                function update(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    // Ease out cubic for smooth deceleration
+                    const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+                    const current = start + (end - start) * easeProgress;
+                    const displayValue = Math.floor(current);
+
+                    element.textContent = displayValue + suffix;
+
+                    if (progress < 1) {
+                        requestAnimationFrame(update);
+                    } else {
+                        element.textContent = end + suffix;
+                    }
+                }
+
+                requestAnimationFrame(update);
+            }
+
+            static init() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const valueEl = entry.target.querySelector('.stat-value');
+                            if (valueEl && !valueEl.classList.contains('animated')) {
+                                valueEl.classList.add('animated');
+
+                                const text = valueEl.textContent;
+                                const isPercentage = text.includes('%');
+                                const numericValue = parseFloat(text.replace(/[^0-9.]/g, ''));
+
+                                if (!isNaN(numericValue)) {
+                                    this.animateValue(valueEl, 0, numericValue);
+                                }
+                            }
+                        }
+                    });
+                }, { threshold: 0.3 });
+
+                // Observe all stat cards
+                document.querySelectorAll('.stat-card').forEach(card => {
+                    observer.observe(card);
+                });
+            }
+
+            static resetAndRecount() {
+                // Reset all counters
+                document.querySelectorAll('.stat-value').forEach(el => {
+                    el.classList.remove('animated');
+                });
+
+                // Re-initialize observer
+                this.init();
+            }
+        }
+
+        // Initialize stat counter on page load
+        document.addEventListener('DOMContentLoaded', () => StatCounter.init());
 
         // Hide caps lock warning when input loses focus
         passwordInput.addEventListener('blur', function() {
