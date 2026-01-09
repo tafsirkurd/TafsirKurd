@@ -246,51 +246,69 @@
             66% { transform: translate(-60px, 50px) scale(0.95); }
         }
 
-        /* Premium Glassmorphism Login Box */
+        /* Professional 2026 Premium Login Box */
         .login-box {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px) saturate(180%);
-            -webkit-backdrop-filter: blur(10px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            border-radius: var(--radius-2xl);
-            padding: var(--spacing-12) var(--spacing-10);
-            max-width: 440px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 20px;
+            padding: 48px 40px;
+            max-width: 420px;
             width: 100%;
             box-shadow:
-                0 8px 32px rgba(0, 0, 0, 0.08),
+                0 20px 60px rgba(0, 0, 0, 0.12),
+                0 8px 24px rgba(0, 0, 0, 0.08),
                 0 2px 8px rgba(0, 0, 0, 0.04),
-                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+                inset 0 1px 0 rgba(255, 255, 255, 1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.02);
             position: relative;
             z-index: 1;
-            animation: glassSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: professionalEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
             overflow: visible;
         }
 
-        /* Glowing border animation - Premium touch */
+        /* Subtle grid pattern overlay */
+        .login-box::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background-image:
+                linear-gradient(rgba(0,0,0,0.01) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.01) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* Animated border shimmer */
         .login-box::before {
             content: '';
             position: absolute;
-            inset: -2px;
+            inset: -1px;
             border-radius: inherit;
-            padding: 2px;
+            padding: 1px;
             background: linear-gradient(135deg,
-                rgba(0,0,0,0.15) 0%,
-                rgba(0,0,0,0.05) 50%,
-                rgba(0,0,0,0.15) 100%);
+                rgba(0,0,0,0.2) 0%,
+                rgba(0,0,0,0.02) 25%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.02) 75%,
+                rgba(0,0,0,0.2) 100%);
+            background-size: 200% 200%;
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
-            opacity: 0;
-            animation: borderGlow 3s ease-in-out infinite;
+            animation: borderShimmer 4s ease-in-out infinite;
             pointer-events: none;
         }
 
-        @keyframes glassSlideIn {
+        @keyframes professionalEntrance {
             from {
                 opacity: 0;
-                transform: translateY(40px) scale(0.95);
-                filter: blur(10px);
+                transform: translateY(30px) scale(0.96);
+                filter: blur(8px);
             }
             to {
                 opacity: 1;
@@ -299,9 +317,19 @@
             }
         }
 
-        @keyframes borderGlow {
-            0%, 100% { opacity: 0; }
-            50% { opacity: 1; }
+        @keyframes borderShimmer {
+            0% {
+                background-position: 0% 50%;
+                opacity: 0.4;
+            }
+            50% {
+                background-position: 100% 50%;
+                opacity: 1;
+            }
+            100% {
+                background-position: 0% 50%;
+                opacity: 0.4;
+            }
         }
 
         /* Fallback for browsers without backdrop-filter */
@@ -1083,12 +1111,84 @@
                 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
-        .admin-logo img {
+        /* Professional Header Logo */
+        .admin-logo {
+            display: inline-grid;
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
             transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .admin-logo:hover img {
+        .admin-logo:hover {
+            transform: translateY(-1px);
+        }
+
+        .logo-icon-container {
+            background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+            padding: 8px;
+            border-radius: 10px;
+            box-shadow:
+                0 4px 16px rgba(0,0,0,0.2),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-icon-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 100%);
+            opacity: 0;
+            transition: opacity 400ms ease;
+        }
+
+        .admin-logo:hover .logo-icon-container {
+            box-shadow:
+                0 6px 20px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.15);
+        }
+
+        .admin-logo:hover .logo-icon-container::before {
+            opacity: 1;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            display: block;
+            filter: brightness(0) invert(1);
+            position: relative;
+            z-index: 1;
+            transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .admin-logo:hover .logo-icon {
             transform: rotate(-5deg) scale(1.05);
+        }
+
+        .logo-text {
+            line-height: 1;
+        }
+
+        .logo-title {
+            margin: 0;
+            color: var(--black);
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.2;
+        }
+
+        .logo-subtitle {
+            margin: 0;
+            color: rgba(0,0,0,0.5);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
         }
 
         .admin-header-content {
@@ -2806,7 +2906,11 @@
                     </div>
                 </div>
                 <button class="btn-logout-sidebar" onclick="logout()" title="Logout">
-                    <span>🚪</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
                 </button>
             </div>
         </aside>
@@ -2819,14 +2923,13 @@
         <!-- Header -->
         <header class="admin-header">
             <div class="admin-header-content" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 24px; max-width: 1400px; margin: 0 auto;">
-                <div class="admin-logo" style="display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 300ms ease;" onclick="switchSection('dashboard')" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                    <div style="background: linear-gradient(135deg, #000 0%, #1a1a1a 100%); padding: 8px; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1); transition: all 400ms ease; position: relative; overflow: hidden;">
-                        <div style="position: absolute; inset: 0; background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.05) 100%); opacity: 0; transition: opacity 400ms ease;"></div>
-                        <img src="/assets/images/logo.png" alt="Logo" style="width: 32px; height: 32px; display: block; filter: brightness(0) invert(1); position: relative; z-index: 1;">
+                <div class="admin-logo" onclick="switchSection('dashboard')">
+                    <div class="logo-icon-container">
+                        <img src="/assets/images/logo.png" alt="Logo" class="logo-icon">
                     </div>
-                    <div>
-                        <h1 style="margin: 0; color: var(--black); font-size: 18px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.2;">TafsirKurd</h1>
-                        <p style="margin: 0; color: rgba(0,0,0,0.5); font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;">Admin Portal</p>
+                    <div class="logo-text">
+                        <h1 class="logo-title">TafsirKurd</h1>
+                        <p class="logo-subtitle">ADMIN PORTAL</p>
                     </div>
                 </div>
 
