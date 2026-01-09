@@ -56,34 +56,22 @@
 
     <style>
         :root {
-            /* Black & White Color System */
+            /* 2026 B&W Color System */
             --black: #000000;
             --white: #FFFFFF;
-            --gray-100: rgba(255, 255, 255, 0.08);
-            --gray-300: rgba(255, 255, 255, 0.15);
-            --gray-500: rgba(255, 255, 255, 0.40);
-            --gray-700: rgba(255, 255, 255, 0.70);
+            --gray-100: rgba(0, 0, 0, 0.04);
+            --gray-300: rgba(0, 0, 0, 0.12);
+            --gray-500: rgba(0, 0, 0, 0.40);
+            --gray-700: rgba(0, 0, 0, 0.75);
 
-            /* Base Colors - Dark Mode */
-            --bg-primary: #000000;
-            --bg-secondary: #0a0a0a;
-            --bg-elevated: #141414;
+            /* Text Colors */
+            --text-primary: #000000;
+            --text-secondary: rgba(0, 0, 0, 0.60);
+            --text-tertiary: rgba(0, 0, 0, 0.40);
 
-            /* Accent Colors - Black & White only */
-            --accent-primary: #ffffff;
-            --accent-secondary: rgba(255, 255, 255, 0.9);
-
-            /* Text Colors - High Contrast */
-            --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.70);
-            --text-tertiary: rgba(255, 255, 255, 0.50);
-            --text-muted: rgba(255, 255, 255, 0.40);
-
-            /* Border Colors - Glass */
-            --border-light: rgba(255, 255, 255, 0.10);
-            --border-medium: rgba(255, 255, 255, 0.20);
-            --border-glass: rgba(255, 255, 255, 0.15);
-            --border-glow: rgba(255, 255, 255, 0.3);
+            /* Border Colors */
+            --border-light: rgba(0, 0, 0, 0.08);
+            --border-medium: rgba(0, 0, 0, 0.12);
 
             /* Spacing Scale */
             --spacing-1: 0.25rem;
@@ -137,29 +125,21 @@
             --duration-normal: 300ms;
             --duration-slow: 500ms;
 
-            /* Legacy Compatibility - Black & White */
-            --primary: #ffffff;
+            /* Legacy Compatibility */
+            --primary: #000000;
             --accent: #ffffff;
-            --bg: #000000;
-            --card-bg: rgba(255, 255, 255, 0.08);
-            --text: #ffffff;
-            --text-muted: rgba(255, 255, 255, 0.70);
-            --text-light: rgba(255, 255, 255, 0.50);
-            --border: rgba(255, 255, 255, 0.15);
-            --success: #ffffff;
-            --warning: #ffffff;
-            --danger: #ffffff;
-            --info: #ffffff;
-            --purple: #ffffff;
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #000000;
+            --text-muted: #666666;
+            --text-light: #999999;
+            --border: #e8e8e8;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --info: #3498db;
+            --purple: #9b59b6;
             --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-            /* Typography Scale - Extended */
-            --font-display: 3.5rem;
-            --font-2xl: 2rem;
-            --font-xl: 1.5rem;
-            --font-lg: 1.125rem;
-            --font-base: 1rem;
-            --font-sm: 0.875rem;
         }
 
         * {
@@ -185,155 +165,10 @@
             }
         }
 
-        /* ============================================
-           MICRO-INTERACTION ANIMATIONS - 2026
-           ============================================ */
-
-        /* Icon Pulse Animation */
-        @keyframes iconPulse {
-            0%, 100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1.05);
-                opacity: 0.9;
-            }
-        }
-
-        /* Shimmer Loading Effect */
-        @keyframes shimmer {
-            0% {
-                background-position: -1000px 0;
-            }
-            100% {
-                background-position: 1000px 0;
-            }
-        }
-
-        /* Glow Border Animation */
-        @keyframes glowBorder {
-            0%, 100% {
-                box-shadow: 0 0 5px rgba(255, 255, 255, 0.3), 0 0 10px rgba(255, 255, 255, 0.2);
-            }
-            50% {
-                box-shadow: 0 0 15px rgba(255, 255, 255, 0.5), 0 0 25px rgba(255, 255, 255, 0.3);
-            }
-        }
-
-        /* Card Lift on Hover */
-        @keyframes cardLift {
-            to {
-                transform: translateY(-8px);
-            }
-        }
-
-        /* Button Ripple (Material Design) */
-        @keyframes buttonRipple {
-            0% {
-                transform: scale(0);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(4);
-                opacity: 0;
-            }
-        }
-
-        /* Skeleton Loading Pulse */
-        @keyframes skeletonPulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.5;
-            }
-        }
-
-        /* Fade In Up */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Spin Animation */
-        @keyframes spinLoader {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Pulse Dot (Live Indicator) */
-        @keyframes pulseDot {
-            0%, 100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.6;
-                transform: scale(1.1);
-            }
-        }
-
-        /* Helper Classes for Animations */
-        .animate-pulse {
-            animation: iconPulse 2s ease-in-out infinite;
-        }
-
-        .animate-shimmer {
-            background: linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 100%);
-            background-size: 1000px 100%;
-            animation: shimmer 2s infinite linear;
-        }
-
-        .animate-glow {
-            animation: glowBorder 2s ease-in-out infinite;
-        }
-
-        .animate-fade-in {
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        .live-indicator {
-            animation: pulseDot 1.5s ease-in-out infinite;
-        }
-
-        /* Loading Skeleton */
-        .skeleton {
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            animation: skeletonPulse 1.5s ease-in-out infinite;
-        }
-
-        .skeleton-text {
-            height: 16px;
-            margin-bottom: 8px;
-            border-radius: 4px;
-        }
-
-        .skeleton-title {
-            height: 24px;
-            width: 60%;
-            margin-bottom: 12px;
-            border-radius: 6px;
-        }
-
-        .skeleton-circle {
-            border-radius: 50%;
-            width: 48px;
-            height: 48px;
-        }
-
         body {
             font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #000000;
-            color: #ffffff;
+            background: var(--bg);
+            color: var(--text);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
@@ -347,143 +182,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            opacity: 0.015;
+            opacity: 0.03;
             z-index: -1;
             background-image:
-                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.1) 35px, rgba(255, 255, 255, 0.1) 36px),
-                repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255, 255, 255, 0.1) 35px, rgba(255, 255, 255, 0.1) 36px);
+                repeating-linear-gradient(45deg, transparent, transparent 35px, var(--primary) 35px, var(--primary) 36px),
+                repeating-linear-gradient(-45deg, transparent, transparent 35px, var(--primary) 35px, var(--primary) 36px);
             background-size: 50px 50px;
             pointer-events: none;
-        }
-
-        /* ============================================
-           GLASSMORPHISM COMPONENTS - 2026 Design System
-           ============================================ */
-
-        /* Glass Card - Main Component */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            padding: var(--spacing-6);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Glass Section - Larger containers */
-        .glass-section {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(30px) saturate(200%);
-            -webkit-backdrop-filter: blur(30px) saturate(200%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
-            padding: var(--spacing-8);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Glass Stat Card - Premium with hover effect */
-        .glass-stat-card {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 20px;
-            padding: var(--spacing-6);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .glass-stat-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
-            border-color: rgba(255, 255, 255, 0.3);
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
-        }
-
-        .glass-stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.5s;
-        }
-
-        .glass-stat-card:hover::before {
-            left: 100%;
-        }
-
-        /* Glass Button */
-        .glass-button {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: var(--spacing-3) var(--spacing-6);
-            color: var(--text-primary);
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .glass-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.4);
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .glass-button:active {
-            transform: translateY(0);
-        }
-
-        /* Glass Input */
-        .glass-input {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: var(--spacing-3) var(--spacing-4);
-            color: var(--text-primary);
-            font-family: inherit;
-            font-size: var(--font-base);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            outline: none;
-        }
-
-        .glass-input:focus {
-            border-color: rgba(255, 255, 255, 0.4);
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .glass-input::placeholder {
-            color: var(--text-tertiary);
-        }
-
-        /* Glass Modal */
-        .glass-modal {
-            background: rgba(10, 10, 15, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-
-        .glass-modal-content {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
 
         /* Login Screen */
@@ -987,20 +692,15 @@
 
         /* Card System */
         .card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius-2xl);
-            transition: all var(--duration-normal) cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            background: var(--white);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-xl);
+            transition: all var(--duration-normal) var(--ease-out-expo);
         }
 
         .card-elevated {
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            box-shadow: var(--shadow-md);
             position: relative;
-            overflow: hidden;
         }
 
         .card-elevated::before {
@@ -1009,20 +709,16 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.8));
-            opacity: 0;
-            transition: opacity var(--duration-normal) ease;
+            height: 4px;
+            background: var(--black);
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            transform: scaleX(0);
+            transition: transform var(--duration-normal) var(--ease-out-expo);
         }
 
         .card-elevated:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .card-elevated:hover::before {
-            opacity: 1;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
         }
 
         .card-elevated:hover::before {
@@ -1754,7 +1450,6 @@
 
         .section.active {
             display: block;
-            animation: fadeInUp 0.5s ease-out;
         }
 
         /* Stats Cards */
