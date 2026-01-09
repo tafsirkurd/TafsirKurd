@@ -518,6 +518,36 @@
             transform: none !important;
         }
 
+        /* Premium Button Loading State */
+        .btn.loading {
+            pointer-events: none;
+            color: transparent !important;
+            position: relative;
+        }
+
+        .btn.loading::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: inherit;
+            z-index: 1;
+        }
+
+        .btn .spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 600ms linear infinite;
+            z-index: 2;
+        }
+
         /* 2026 B&W Button System */
         .btn-primary {
             background: var(--black);
@@ -6195,6 +6225,42 @@
         }
 
         const pageTransition = new PageTransitionManager();
+
+        // ========================================
+        // PREMIUM BUTTON ENHANCER SYSTEM
+        // ========================================
+        class ButtonEnhancer {
+            static init() {
+                // Add ripple effect to all button clicks
+                document.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.btn, button[type="submit"], .btn-primary, .btn-secondary');
+                    if (btn && !btn.disabled && !btn.classList.contains('loading')) {
+                        btn.classList.add('ripple');
+                        setTimeout(() => btn.classList.remove('ripple'), 600);
+                    }
+                });
+            }
+
+            static showLoading(button) {
+                if (!button) return;
+                button.classList.add('loading');
+                button.disabled = true;
+
+                const spinner = document.createElement('div');
+                spinner.className = 'spinner';
+                button.appendChild(spinner);
+            }
+
+            static hideLoading(button) {
+                if (!button) return;
+                button.classList.remove('loading');
+                button.disabled = false;
+                button.querySelector('.spinner')?.remove();
+            }
+        }
+
+        // Initialize button enhancer on page load
+        document.addEventListener('DOMContentLoaded', () => ButtonEnhancer.init());
 
         // Hide caps lock warning when input loses focus
         passwordInput.addEventListener('blur', function() {
