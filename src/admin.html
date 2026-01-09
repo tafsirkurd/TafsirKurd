@@ -5654,12 +5654,19 @@
                     }
                 });
                 console.log('✅ Supabase initialized securely');
+
+                // Expose to window for external scripts
+                window.supabaseClient = supabaseClient;
+
                 return true;
             } catch (error) {
                 console.error('❌ Supabase init failed:', error);
                 return false;
             }
         }
+
+        // Expose initSupabase to window for external scripts
+        window.initSupabase = initSupabase;
 
         // Helper function to ensure Supabase is initialized
         async function ensureSupabase() {
@@ -14589,7 +14596,7 @@ ${htmlParagraphs}
 
             // Find and scroll to upload section
             setTimeout(() => {
-                const uploadSections = document.querySelectorAll('[style*="background: var(--black);
+                const uploadSections = document.querySelectorAll('[style*="background: var(--black)"]');
                 const uploadSection = uploadSections[uploadSections.length - 1]?.closest('div[style*="border-radius: 20px"]');
                 if (uploadSection) {
                     uploadSection.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
