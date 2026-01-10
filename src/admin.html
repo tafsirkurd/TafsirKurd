@@ -334,39 +334,47 @@
 
         /* Password Input Wrapper */
         .password-input-wrapper {
-            position: relative;
-            width: 100%;
+            position: relative !important;
+            width: 100% !important;
+            display: block !important;
         }
 
         .password-input-wrapper input {
             padding-right: 48px !important;
+            width: 100% !important;
+            display: block !important;
         }
 
         .password-toggle-btn {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #6b7280;
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: color 0.2s ease;
-            border-radius: 4px;
-            z-index: 10;
+            position: absolute !important;
+            right: 10px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            background: none !important;
+            border: none !important;
+            cursor: pointer !important;
+            color: #6b7280 !important;
+            padding: 6px !important;
+            width: 32px !important;
+            height: 32px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: color 0.2s ease !important;
+            border-radius: 4px !important;
+            z-index: 10 !important;
+            margin: 0 !important;
+            line-height: 1 !important;
         }
 
         .password-toggle-btn:hover {
-            color: #374151;
+            color: #374151 !important;
         }
 
         .password-toggle-btn svg {
-            display: block;
-            pointer-events: none;
+            display: block !important;
+            pointer-events: none !important;
+            flex-shrink: 0 !important;
         }
 
         .form-group input,
@@ -2841,9 +2849,19 @@
             }
 
             /* Better touch targets - minimum 44px */
-            button, a, .nav-item, .table-card-actions button {
+            button:not(.password-toggle-btn), a, .nav-item, .table-card-actions button {
                 min-height: 44px !important;
                 min-width: 44px !important;
+            }
+
+            /* Password toggle button - keep it aligned */
+            .password-toggle-btn {
+                min-height: unset !important;
+                min-width: unset !important;
+                width: 32px !important;
+                height: 32px !important;
+                padding: 6px !important;
+                right: 10px !important;
             }
 
             /* Tables */
