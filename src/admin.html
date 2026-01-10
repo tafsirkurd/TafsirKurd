@@ -332,6 +332,43 @@
             letter-spacing: 0.01em;
         }
 
+        /* Password Input Wrapper */
+        .password-input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-input-wrapper input {
+            padding-right: 48px !important;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease;
+            border-radius: 4px;
+            z-index: 10;
+        }
+
+        .password-toggle-btn:hover {
+            color: #374151;
+        }
+
+        .password-toggle-btn svg {
+            display: block;
+            pointer-events: none;
+        }
+
         .form-group input,
         .form-group select,
         .form-group textarea {
@@ -2842,10 +2879,10 @@
                 </div>
                 <div class="form-group">
                     <label for="loginPassword">Password</label>
-                    <div style="position: relative; display: block;">
-                        <input type="password" id="loginPassword" required autocomplete="current-password" style="padding-right: 50px; display: block; width: 100%;">
-                        <button type="button" id="togglePassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #757575; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; transition: color 0.2s ease; border-radius: 4px;" title="Show password">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                    <div class="password-input-wrapper">
+                        <input type="password" id="loginPassword" required autocomplete="current-password">
+                        <button type="button" id="togglePassword" class="password-toggle-btn" title="Show password">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
                             </svg>
