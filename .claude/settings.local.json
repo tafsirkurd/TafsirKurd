@@ -116,7 +116,13 @@
       "Bash(timeout 10 ping:*)",
       "Bash(timeout 2 ping:*)",
       "Bash(nslookup:*)",
-      "Bash(xcopy \"D:\\\\WEBSITE\\\\functions\\\\*.js\" \"D:\\\\WEBSITE\\\\netlify\\\\functions\"\" /Y /I)"
+      "Bash(xcopy \"D:\\\\WEBSITE\\\\functions\\\\*.js\" \"D:\\\\WEBSITE\\\\netlify\\\\functions\"\" /Y /I)",
+      "Bash(findstr:*)",
+      "Bash(npx wrangler pages deploy:*)",
+      "Bash(export CLOUDFLARE_API_TOKEN=I0pnu9SRTG3s_Xe-Q42imuAD0m5gTmyKp-nD7-E7)",
+      "Bash(export CLOUDFLARE_EMAIL=tefsirkurd@gmail.com)",
+      "Bash(export CLOUDFLARE_API_KEY:*)",
+      "Bash(npx wrangler pages project list:*)"
     ],
     "deny": [],
     "ask": []

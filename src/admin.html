@@ -8130,47 +8130,179 @@
 
         // Load Analytics
         async function loadAnalytics() {
-            console.log('📈 Loading new analytics dashboard...');
+            console.log('📈 Loading analytics from Google Analytics API...');
 
-            // Sample page analytics data
-            const pageData = [
-                { page: '🏠 Homepage', path: '/index.html', views: 15847, unique: 12234, avgTime: '3m 45s', icon: '🏠' },
-                { page: '📖 Quran Reader', path: '/Quran.html', views: 23156, unique: 8934, avgTime: '8m 12s', icon: '📖' },
-                { page: '👤 User Profile', path: '/profile.html', views: 8923, unique: 4567, avgTime: '2m 34s', icon: '👤' },
-                { page: '🎯 Goals', path: '/goals.html', views: 6234, unique: 3456, avgTime: '1m 56s', icon: '🎯' },
-                { page: '📚 Reading Goal', path: '/reading-goal.html', views: 5678, unique: 3234, avgTime: '2m 15s', icon: '📚' },
-                { page: '🔖 Bookmarks', path: '/bookmarks.html', views: 4532, unique: 2897, avgTime: '1m 42s', icon: '🔖' },
-                { page: '⚙️ Settings', path: '/settings.html', views: 3421, unique: 2156, avgTime: '1m 28s', icon: '⚙️' },
-                { page: '🔐 Login', path: '/login.html', views: 2987, unique: 2745, avgTime: '0m 45s', icon: '🔐' },
-                { page: '✍️ Complete Signup', path: '/complete-signup.html', views: 1856, unique: 1723, avgTime: '1m 12s', icon: '✍️' },
-                { page: '📺 TV', path: '/tv.html', views: 1234, unique: 987, avgTime: '5m 34s', icon: '📺' }
-            ];
+            try {
+                // Fetch real data from Google Analytics API
+                const response = await fetch('/google-analytics');
 
-            // Calculate totals
-            const totalViews = pageData.reduce((sum, p) => sum + p.views, 0);
-            const totalUnique = pageData.reduce((sum, p) => sum + p.unique, 0);
-            const avgSessionTime = '4m 23s';
-            const bounceRate = '32%';
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
 
-            // Update overview stats
-            document.getElementById('totalPageViews').textContent = totalViews.toLocaleString();
-            document.getElementById('uniqueVisitors').textContent = totalUnique.toLocaleString();
-            document.getElementById('avgSession').textContent = avgSessionTime;
-            document.getElementById('bounceRate').textContent = bounceRate;
+                const data = await response.json();
 
-            // Populate page analytics table
-            loadPageAnalyticsTable(pageData, totalViews);
+                if (data.error) {
+                    console.error('❌ Google Analytics error:', data.message);
+                    showAnalyticsError(data.message);
+                    return;
+                }
 
-            // Device breakdown
-            document.getElementById('mobilePercent').textContent = '76%';
-            document.getElementById('desktopPercent').textContent = '21%';
-            document.getElementById('tabletPercent').textContent = '3%';
+                console.log('✅ Real analytics data loaded:', data);
 
-            // Top countries
-            loadTopCountries();
+                // Update overview stats with real data
+                const overview = data.overview;
+                document.getElementById('totalPageViews').textContent = overview.totalViews.toLocaleString();
+                document.getElementById('uniqueVisitors').textContent = overview.uniqueVisitors.toLocaleString();
 
-            // Load geographic analytics
-            await loadGeoAnalytics();
+                // Format session duration (convert seconds to minutes)
+                const avgMinutes = Math.floor(overview.avgSessionDuration / 60);
+                const avgSeconds = Math.floor(overview.avgSessionDuration % 60);
+                document.getElementById('avgSession').textContent = `${avgMinutes}m ${avgSeconds}s`;
+
+                // Format bounce rate as percentage
+                document.getElementById('bounceRate').textContent = `${overview.bounceRate.toFixed(1)}%`;
+
+                // Process page data and add icons
+                const pageData = data.pages.map(page => {
+                    const icon = getPageIcon(page.path);
+                    const pageName = getPageName(page.path);
+                    const avgMin = Math.floor(page.avgTime / 60);
+                    const avgSec = Math.floor(page.avgTime % 60);
+
+                    return {
+                        page: `${icon} ${pageName}`,
+                        path: page.path,
+                        views: page.views,
+                        unique: page.unique,
+                        avgTime: `${avgMin}m ${avgSec}s`,
+                        icon: icon
+                    };
+                });
+
+                // Calculate total views for percentages
+                const totalViews = pageData.reduce((sum, p) => sum + p.views, 0);
+
+                // Populate page analytics table
+                loadPageAnalyticsTable(pageData, totalViews);
+
+                // Update device breakdown with real data
+                const devices = data.devices;
+                document.getElementById('mobilePercent').textContent = `${devices.mobile}%`;
+                document.getElementById('desktopPercent').textContent = `${devices.desktop}%`;
+                document.getElementById('tabletPercent').textContent = `${devices.tablet}%`;
+
+                // Update top countries with real data
+                loadTopCountriesFromData(data.countries);
+
+                // Load geographic analytics
+                await loadGeoAnalytics();
+
+            } catch (error) {
+                console.error('❌ Error loading analytics:', error);
+                showAnalyticsError('Failed to load analytics data. Please check console for details.');
+            }
+        }
+
+        // Helper function to get icon for page path
+        function getPageIcon(path) {
+            const iconMap = {
+                '/index.html': '🏠',
+                '/': '🏠',
+                '/Quran.html': '📖',
+                '/profile.html': '👤',
+                '/goals.html': '🎯',
+                '/reading-goal.html': '📚',
+                '/bookmarks.html': '🔖',
+                '/settings.html': '⚙️',
+                '/login.html': '🔐',
+                '/complete-signup.html': '✍️',
+                '/tv.html': '📺'
+            };
+            return iconMap[path] || '📄';
+        }
+
+        // Helper function to get readable page name
+        function getPageName(path) {
+            const nameMap = {
+                '/index.html': 'Homepage',
+                '/': 'Homepage',
+                '/Quran.html': 'Quran Reader',
+                '/profile.html': 'User Profile',
+                '/goals.html': 'Goals',
+                '/reading-goal.html': 'Reading Goal',
+                '/bookmarks.html': 'Bookmarks',
+                '/settings.html': 'Settings',
+                '/login.html': 'Login',
+                '/complete-signup.html': 'Complete Signup',
+                '/tv.html': 'TV'
+            };
+            return nameMap[path] || path.replace(/^\//, '').replace('.html', '');
+        }
+
+        // Show error message in analytics section
+        function showAnalyticsError(message) {
+            const tbody = document.getElementById('pageAnalyticsTableBody');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="padding: 80px; text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+                            <div style="font-size: 15px; font-weight: 600; color: #d32f2f;">${message}</div>
+                            <div style="font-size: 13px; margin-top: 8px; color: #999;">Check GOOGLE_ANALYTICS_SETUP.md for configuration steps</div>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            // Show placeholder values
+            document.getElementById('totalPageViews').textContent = '--';
+            document.getElementById('uniqueVisitors').textContent = '--';
+            document.getElementById('avgSession').textContent = '--';
+            document.getElementById('bounceRate').textContent = '--';
+            document.getElementById('mobilePercent').textContent = '--';
+            document.getElementById('desktopPercent').textContent = '--';
+            document.getElementById('tabletPercent').textContent = '--';
+        }
+
+        // Load top countries from API data
+        function loadTopCountriesFromData(countries) {
+            const container = document.getElementById('topCountriesList');
+            if (!container) return;
+
+            // Country flag emojis
+            const flagMap = {
+                'Iraq': '🇮🇶',
+                'Syria': '🇸🇾',
+                'Turkey': '🇹🇷',
+                'United States': '🇺🇸',
+                'Germany': '🇩🇪',
+                'United Kingdom': '🇬🇧',
+                'France': '🇫🇷',
+                'Canada': '🇨🇦',
+                'Sweden': '🇸🇪',
+                'Netherlands': '🇳🇱'
+            };
+
+            if (!countries || countries.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: #999;">
+                        <div style="font-size: 36px; margin-bottom: 8px;">🌍</div>
+                        <div style="font-size: 14px;">No country data available</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = countries.slice(0, 5).map((country, index) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: ${index < 4 ? '1px solid #e0e0e0' : 'none'};">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="font-size: 28px;">${flagMap[country.name] || '🏳️'}</div>
+                        <div style="font-weight: 600;">${country.name}</div>
+                    </div>
+                    <div style="font-size: 20px; font-weight: 900;">${country.users.toLocaleString()}</div>
+                </div>
+            `).join('');
         }
 
         function loadPageAnalyticsTable(pageData, totalViews) {
@@ -8202,28 +8334,6 @@
             }).join('');
         }
 
-        function loadTopCountries() {
-            const countries = [
-                { name: 'Iraq', code: 'IQ', visits: 2847, flag: '🇮🇶' },
-                { name: 'Syria', code: 'SY', visits: 1956, flag: '🇸🇾' },
-                { name: 'Turkey', code: 'TR', visits: 1734, flag: '🇹🇷' },
-                { name: 'United States', code: 'US', visits: 967, flag: '🇺🇸' },
-                { name: 'Germany', code: 'DE', visits: 823, flag: '🇩🇪' }
-            ];
-
-            const container = document.getElementById('topCountriesList');
-            if (!container) return;
-
-            container.innerHTML = countries.map((country, index) => `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: ${index < countries.length - 1 ? '1px solid #e0e0e0' : 'none'};">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="font-size: 28px;">${country.flag}</div>
-                        <div style="font-weight: 600;">${country.name}</div>
-                    </div>
-                    <div style="font-size: 20px; font-weight: 900;">${country.visits.toLocaleString()}</div>
-                </div>
-            `).join('');
-        }
 
         // Add this function for the refresh button
         function loadPageAnalytics() {
