@@ -8160,15 +8160,35 @@
                 const avgSeconds = Math.floor(overview.avgSessionDuration % 60);
                 document.getElementById('avgSession').textContent = `${avgMinutes}m ${avgSeconds}s`;
 
-                // Format bounce rate as percentage
-                document.getElementById('bounceRate').textContent = `${overview.bounceRate.toFixed(1)}%`;
+                // Format bounce rate as percentage (API returns decimal: 0.41 = 41%)
+                const bounceRatePercent = (overview.bounceRate * 100).toFixed(1);
+                document.getElementById('bounceRate').textContent = `${bounceRatePercent}%`;
 
-                // Process page data and add icons
-                const pageData = data.pages.map(page => {
+                // Group pages by path (merge duplicates) and add icons
+                const pagesByPath = {};
+                data.pages.forEach(page => {
+                    if (!pagesByPath[page.path]) {
+                        pagesByPath[page.path] = {
+                            path: page.path,
+                            views: 0,
+                            unique: 0,
+                            totalTime: 0,
+                            count: 0
+                        };
+                    }
+                    pagesByPath[page.path].views += page.views;
+                    pagesByPath[page.path].unique += page.unique;
+                    pagesByPath[page.path].totalTime += page.avgTime * page.views; // Weighted average
+                    pagesByPath[page.path].count += page.views;
+                });
+
+                // Convert to array and format
+                const pageData = Object.values(pagesByPath).map(page => {
                     const icon = getPageIcon(page.path);
                     const pageName = getPageName(page.path);
-                    const avgMin = Math.floor(page.avgTime / 60);
-                    const avgSec = Math.floor(page.avgTime % 60);
+                    const avgTime = page.totalTime / page.count; // Weighted average
+                    const avgMin = Math.floor(avgTime / 60);
+                    const avgSec = Math.floor(avgTime % 60);
 
                     return {
                         page: `${icon} ${pageName}`,
@@ -8178,7 +8198,7 @@
                         avgTime: `${avgMin}m ${avgSec}s`,
                         icon: icon
                     };
-                });
+                }).sort((a, b) => b.views - a.views); // Sort by views descending
 
                 // Calculate total views for percentages
                 const totalViews = pageData.reduce((sum, p) => sum + p.views, 0);
