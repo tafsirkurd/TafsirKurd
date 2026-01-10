@@ -246,154 +246,76 @@
             66% { transform: translate(-60px, 50px) scale(0.95); }
         }
 
-        /* Professional 2026 Premium Login Box */
+        /* Clean & Simple Login Box */
         .login-box {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            border-radius: 20px;
-            padding: 48px 40px;
-            max-width: 420px;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 40px 36px;
+            max-width: 440px;
             width: 100%;
             box-shadow:
-                0 20px 60px rgba(0, 0, 0, 0.12),
-                0 8px 24px rgba(0, 0, 0, 0.08),
-                0 2px 8px rgba(0, 0, 0, 0.04),
-                inset 0 1px 0 rgba(255, 255, 255, 1),
-                inset 0 -1px 0 rgba(0, 0, 0, 0.02);
+                0 4px 6px rgba(0, 0, 0, 0.07),
+                0 10px 20px rgba(0, 0, 0, 0.1);
             position: relative;
             z-index: 1;
-            animation: professionalEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-            overflow: visible;
+            animation: fadeInUp 0.6s ease-out;
+            border: 1px solid rgba(0, 0, 0, 0.06);
         }
 
-        /* Subtle grid pattern overlay */
-        .login-box::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            background-image:
-                linear-gradient(rgba(0,0,0,0.01) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,0,0,0.01) 1px, transparent 1px);
-            background-size: 20px 20px;
-            pointer-events: none;
-            opacity: 0.3;
-        }
-
-        /* Animated border shimmer */
-        .login-box::before {
-            content: '';
-            position: absolute;
-            inset: -1px;
-            border-radius: inherit;
-            padding: 1px;
-            background: linear-gradient(135deg,
-                rgba(0,0,0,0.2) 0%,
-                rgba(0,0,0,0.02) 25%,
-                rgba(0,0,0,0.2) 50%,
-                rgba(0,0,0,0.02) 75%,
-                rgba(0,0,0,0.2) 100%);
-            background-size: 200% 200%;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            animation: borderShimmer 4s ease-in-out infinite;
-            pointer-events: none;
-        }
-
-        @keyframes professionalEntrance {
+        @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(30px) scale(0.96);
-                filter: blur(8px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
-                transform: translateY(0) scale(1);
-                filter: blur(0);
+                transform: translateY(0);
             }
         }
 
-        @keyframes borderShimmer {
-            0% {
-                background-position: 0% 50%;
-                opacity: 0.4;
-            }
-            50% {
-                background-position: 100% 50%;
-                opacity: 1;
-            }
-            100% {
-                background-position: 0% 50%;
-                opacity: 0.4;
-            }
-        }
-
-        /* Fallback for browsers without backdrop-filter */
-        @supports not (backdrop-filter: blur(10px)) {
-            .login-box {
-                background: rgba(255, 255, 255, 0.95);
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-            }
-        }
-
-        /* Modern Login Logo Section */
+        /* Clean Login Logo Section */
         .login-logo {
             text-align: center;
-            margin-bottom: var(--spacing-10);
+            margin-bottom: 32px;
         }
 
         .login-logo img {
-            width: 72px;
-            height: 72px;
-            margin-bottom: var(--spacing-5);
-            padding: var(--spacing-4);
-            background: var(--black);
-            border-radius: var(--radius-2xl);
-            box-shadow: var(--shadow-md);
-            animation: logoFloat 3s ease-in-out infinite;
-        }
-
-        @keyframes logoFloat {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-        }
-
-        /* Responsive logo sizing for mobile */
-        @media (max-width: 768px) {
-            .login-logo img {
-                width: 64px;
-                height: 64px;
-                padding: var(--spacing-3);
-            }
-        }
-
-        @media (max-width: 480px) {
-            .login-logo img {
-                width: 56px;
-                height: 56px;
-            }
-
-            .login-box {
-                padding: var(--spacing-8) var(--spacing-6);
-            }
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            display: block;
+            object-fit: contain;
         }
 
         .login-logo h1 {
-            font-size: var(--font-size-3xl);
-            font-weight: var(--font-weight-extrabold);
-            color: var(--text-primary);
-            margin-bottom: var(--spacing-2);
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin: 0 0 6px 0;
             letter-spacing: -0.02em;
         }
 
         .login-logo p {
-            font-size: var(--font-size-base);
-            color: var(--text-secondary);
-            font-weight: var(--font-weight-medium);
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .login-box {
+                padding: 32px 24px;
+            }
+
+            .login-logo img {
+                width: 64px;
+                height: 64px;
+            }
+
+            .login-logo h1 {
+                font-size: 20px;
+            }
         }
 
         /* Modern Form Group */
@@ -2908,7 +2830,7 @@
     <div id="loginContainer" class="login-container">
         <div class="login-box">
             <div class="login-logo">
-                <img src="/assets/images/logo.png" alt="Logo">
+                <img src="/assets/images/TafsirKurd.png" alt="Tafsir Kurd Logo">
                 <h1>Admin Panel</h1>
                 <p>Tafsir Kurd</p>
             </div>
