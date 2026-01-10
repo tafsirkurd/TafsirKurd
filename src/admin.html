@@ -3693,73 +3693,74 @@
 
             <!-- Analytics Section -->
             <section id="analyticsSection" class="section">
-                <!-- Analytics Header -->
-                <div style="background: #ffffff; border: 2px solid #000000; border-radius: 0; padding: 40px; margin-bottom: 30px;">
-                    <h2 style="margin: 0 0 12px 0; font-size: 36px; font-weight: 900; color: #000000; text-transform: uppercase; letter-spacing: -1px;">
-                        ⚡ Analytics Dashboard
+                <!-- Modern Analytics Header -->
+                <div style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 24px; padding: 48px; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                    <h2 style="margin: 0 0 8px 0; font-size: 32px; font-weight: 800; color: #000000;">
+                        📊 Analytics Dashboard
                     </h2>
-                    <p style="margin: 0; font-size: 16px; color: #666;">Real-time website analytics and visitor insights</p>
+                    <p style="margin: 0; font-size: 15px; color: #666; font-weight: 500;">Real-time insights from Google Analytics</p>
                 </div>
 
-                <!-- Overview Stats Grid -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <!-- Overview Stats Grid - Soft Modern Cards -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; margin-bottom: 32px;">
                     <!-- Total Page Views -->
-                    <div style="background: #ffffff; border: 2px solid #000000; padding: 24px;">
-                        <div style="font-size: 14px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Total Views</div>
-                        <div style="font-size: 48px; font-weight: 900; color: #000000; line-height: 1;" id="totalPageViews">-</div>
-                        <div style="font-size: 12px; color: #999; margin-top: 8px;">All pages combined</div>
+                    <div style="background: #ffffff; border-radius: 20px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 12px rgba(0,0,0,0.06)'">
+                        <div style="font-size: 13px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px;">Total Views</div>
+                        <div style="font-size: 42px; font-weight: 900; color: #000000; line-height: 1; margin-bottom: 8px;" id="totalPageViews">Loading...</div>
+                        <div style="font-size: 13px; color: #999;">All pages combined</div>
                     </div>
 
                     <!-- Unique Visitors -->
-                    <div style="background: #ffffff; border: 2px solid #000000; padding: 24px;">
-                        <div style="font-size: 14px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Unique Visitors</div>
-                        <div style="font-size: 48px; font-weight: 900; color: #000000; line-height: 1;" id="uniqueVisitors">-</div>
-                        <div style="font-size: 12px; color: #999; margin-top: 8px;">Individual users</div>
+                    <div style="background: #ffffff; border-radius: 20px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 12px rgba(0,0,0,0.06)'">
+                        <div style="font-size: 13px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px;">Unique Visitors</div>
+                        <div style="font-size: 42px; font-weight: 900; color: #000000; line-height: 1; margin-bottom: 8px;" id="uniqueVisitors">Loading...</div>
+                        <div style="font-size: 13px; color: #999;">Individual users</div>
                     </div>
 
                     <!-- Avg Session Time -->
-                    <div style="background: #ffffff; border: 2px solid #000000; padding: 24px;">
-                        <div style="font-size: 14px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Avg Session</div>
-                        <div style="font-size: 48px; font-weight: 900; color: #000000; line-height: 1;" id="avgSession">-</div>
-                        <div style="font-size: 12px; color: #999; margin-top: 8px;">Time spent</div>
+                    <div style="background: #ffffff; border-radius: 20px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 12px rgba(0,0,0,0.06)'">
+                        <div style="font-size: 13px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px;">Avg Session</div>
+                        <div style="font-size: 42px; font-weight: 900; color: #000000; line-height: 1; margin-bottom: 8px;" id="avgSession">Loading...</div>
+                        <div style="font-size: 13px; color: #999;">Time on site</div>
                     </div>
 
                     <!-- Bounce Rate -->
-                    <div style="background: #ffffff; border: 2px solid #000000; padding: 24px;">
-                        <div style="font-size: 14px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Bounce Rate</div>
-                        <div style="font-size: 48px; font-weight: 900; color: #000000; line-height: 1;" id="bounceRate">-</div>
-                        <div style="font-size: 12px; color: #999; margin-top: 8px;">Single page visits</div>
+                    <div style="background: #ffffff; border-radius: 20px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 12px rgba(0,0,0,0.06)'">
+                        <div style="font-size: 13px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px;">Bounce Rate</div>
+                        <div style="font-size: 42px; font-weight: 900; color: #000000; line-height: 1; margin-bottom: 8px;" id="bounceRate">Loading...</div>
+                        <div style="font-size: 13px; color: #999;">Single page visits</div>
                     </div>
                 </div>
 
-                <!-- Page Analytics Table -->
-                <div style="background: #ffffff; border: 2px solid #000000; margin-bottom: 30px;">
-                    <div style="background: #000000; color: #ffffff; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <!-- Page Performance Table - Modern Card -->
+                <div style="background: #ffffff; border-radius: 24px; margin-bottom: 32px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); overflow: hidden;">
+                    <div style="background: linear-gradient(135deg, #000000 0%, #2d2d2d 100%); color: #ffffff; padding: 28px 32px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
                         <div>
-                            <h3 style="margin: 0; font-size: 20px; font-weight: 900; text-transform: uppercase;">Page Performance</h3>
-                            <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.8;">Views by page</p>
+                            <h3 style="margin: 0; font-size: 22px; font-weight: 800;">Page Performance</h3>
+                            <p style="margin: 4px 0 0 0; font-size: 14px; opacity: 0.8;">Views and engagement by page</p>
                         </div>
-                        <button onclick="loadPageAnalytics()" style="background: #ffffff; color: #000000; border: none; padding: 10px 20px; font-size: 13px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Refresh
+                        <button onclick="loadPageAnalytics()" style="background: #ffffff; color: #000000; border: none; padding: 12px 24px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                            🔄 Refresh Data
                         </button>
                     </div>
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse;">
                             <thead>
-                                <tr style="background: #f5f5f5; border-bottom: 2px solid #000000;">
-                                    <th style="padding: 16px; text-align: left; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">#</th>
-                                    <th style="padding: 16px; text-align: left; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Page</th>
-                                    <th style="padding: 16px; text-align: right; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Views</th>
-                                    <th style="padding: 16px; text-align: right; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Unique</th>
-                                    <th style="padding: 16px; text-align: right; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Avg Time</th>
-                                    <th style="padding: 16px; text-align: right; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Share</th>
+                                <tr style="background: #f8f9fa; border-bottom: 2px solid #e9ecef;">
+                                    <th style="padding: 18px 20px; text-align: left; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #666;">#</th>
+                                    <th style="padding: 18px 20px; text-align: left; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #666;">Page</th>
+                                    <th style="padding: 18px 20px; text-align: right; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #666;">Views</th>
+                                    <th style="padding: 18px 20px; text-align: right; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #666;">Unique</th>
+                                    <th style="padding: 18px 20px; text-align: right; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #666;">Avg Time</th>
+                                    <th style="padding: 18px 20px; text-align: right; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #666;">Share</th>
                                 </tr>
                             </thead>
                             <tbody id="pageAnalyticsTableBody">
                                 <tr>
-                                    <td colspan="6" style="padding: 60px; text-align: center; color: #999;">
+                                    <td colspan="6" style="padding: 80px; text-align: center; color: #999;">
                                         <div style="font-size: 48px; margin-bottom: 12px;">📊</div>
-                                        <div style="font-size: 14px;">Loading analytics...</div>
+                                        <div style="font-size: 15px; font-weight: 600;">Loading Google Analytics data...</div>
+                                        <div style="font-size: 13px; margin-top: 8px; color: #bbb;">This may take a few moments</div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -3767,92 +3768,89 @@
                     </div>
                 </div>
 
-                <!-- Device & Traffic Sources -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <!-- Device & Traffic Sources - Modern Cards -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; margin-bottom: 32px;">
                     <!-- Device Breakdown -->
-                    <div style="background: #ffffff; border: 2px solid #000000;">
-                        <div style="background: #000000; color: #ffffff; padding: 20px;">
-                            <h3 style="margin: 0; font-size: 18px; font-weight: 900; text-transform: uppercase;">Device Types</h3>
+                    <div style="background: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.08);">
+                        <div style="background: linear-gradient(135deg, #000000 0%, #2d2d2d 100%); color: #ffffff; padding: 24px 28px;">
+                            <h3 style="margin: 0; font-size: 18px; font-weight: 800;">Device Types</h3>
                         </div>
-                        <div style="padding: 24px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #e0e0e0;">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <div style="font-size: 28px;">📱</div>
-                                    <div style="font-size: 15px; font-weight: 600;">Mobile</div>
+                        <div style="padding: 28px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid #f0f0f0;">
+                                <div style="display: flex; align-items: center; gap: 14px;">
+                                    <div style="font-size: 32px;">📱</div>
+                                    <div style="font-size: 16px; font-weight: 600; color: #000;">Mobile</div>
                                 </div>
-                                <div>
-                                    <div style="font-size: 24px; font-weight: 900;" id="mobilePercent">-</div>
-                                </div>
+                                <div style="font-size: 28px; font-weight: 900; color: #000;" id="mobilePercent">--</div>
                             </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #e0e0e0;">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <div style="font-size: 28px;">💻</div>
-                                    <div style="font-size: 15px; font-weight: 600;">Desktop</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid #f0f0f0;">
+                                <div style="display: flex; align-items: center; gap: 14px;">
+                                    <div style="font-size: 32px;">💻</div>
+                                    <div style="font-size: 16px; font-weight: 600; color: #000;">Desktop</div>
                                 </div>
-                                <div>
-                                    <div style="font-size: 24px; font-weight: 900;" id="desktopPercent">-</div>
-                                </div>
+                                <div style="font-size: 28px; font-weight: 900; color: #000;" id="desktopPercent">--</div>
                             </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0;">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <div style="font-size: 28px;">⌨️</div>
-                                    <div style="font-size: 15px; font-weight: 600;">Tablet</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 18px 0;">
+                                <div style="display: flex; align-items: center; gap: 14px;">
+                                    <div style="font-size: 32px;">⌨️</div>
+                                    <div style="font-size: 16px; font-weight: 600; color: #000;">Tablet</div>
                                 </div>
-                                <div>
-                                    <div style="font-size: 24px; font-weight: 900;" id="tabletPercent">-</div>
-                                </div>
+                                <div style="font-size: 28px; font-weight: 900; color: #000;" id="tabletPercent">--</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Top Countries -->
-                    <div style="background: #ffffff; border: 2px solid #000000;">
-                        <div style="background: #000000; color: #ffffff; padding: 20px;">
-                            <h3 style="margin: 0; font-size: 18px; font-weight: 900; text-transform: uppercase;">Top Countries</h3>
+                    <div style="background: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.08);">
+                        <div style="background: linear-gradient(135deg, #000000 0%, #2d2d2d 100%); color: #ffffff; padding: 24px 28px;">
+                            <h3 style="margin: 0; font-size: 18px; font-weight: 800;">Top Countries</h3>
                         </div>
-                        <div style="padding: 24px;">
+                        <div style="padding: 28px;">
                             <div id="topCountriesList">
-                                <div style="text-align: center; padding: 40px; color: #999;">Loading...</div>
+                                <div style="text-align: center; padding: 40px 20px; color: #999;">
+                                    <div style="font-size: 36px; margin-bottom: 8px;">🌍</div>
+                                    <div style="font-size: 14px;">Loading country data...</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Geographic Analytics -->
-                <div style="background: #ffffff; border: 2px solid #000000;">
-                    <div style="background: #000000; color: #ffffff; padding: 20px;">
-                        <h3 style="margin: 0; font-size: 20px; font-weight: 900; text-transform: uppercase;">🌍 Geographic Analytics</h3>
-                        <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.8;">Visitor locations worldwide</p>
+                <!-- Geographic Analytics - Modern Card -->
+                <div style="background: #ffffff; border-radius: 24px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); overflow: hidden;">
+                    <div style="background: linear-gradient(135deg, #000000 0%, #2d2d2d 100%); color: #ffffff; padding: 28px 32px;">
+                        <h3 style="margin: 0 0 4px 0; font-size: 22px; font-weight: 800;">🌍 Geographic Analytics</h3>
+                        <p style="margin: 0; font-size: 14px; opacity: 0.8;">Visitor locations worldwide</p>
                     </div>
-                    <div style="padding: 24px;">
+                    <div style="padding: 32px;">
                         <!-- Geo Stats -->
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
-                            <div style="background: #f5f5f5; border: 2px solid #000000; padding: 20px; text-align: center;">
-                                <div style="font-size: 36px; font-weight: 900; color: #000000;" id="totalCountries">-</div>
-                                <div style="font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; margin-top: 4px;">Countries</div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 32px;">
+                            <div style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                                <div style="font-size: 40px; font-weight: 900; color: #000000; margin-bottom: 8px;" id="totalCountries">--</div>
+                                <div style="font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Countries</div>
                             </div>
-                            <div style="background: #f5f5f5; border: 2px solid #000000; padding: 20px; text-align: center;">
-                                <div style="font-size: 36px; font-weight: 900; color: #000000;" id="totalRegions">-</div>
-                                <div style="font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; margin-top: 4px;">Regions</div>
+                            <div style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                                <div style="font-size: 40px; font-weight: 900; color: #000000; margin-bottom: 8px;" id="totalRegions">--</div>
+                                <div style="font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Regions</div>
                             </div>
-                            <div style="background: #f5f5f5; border: 2px solid #000000; padding: 20px; text-align: center;">
-                                <div style="font-size: 36px; font-weight: 900; color: #000000;" id="totalCities">-</div>
-                                <div style="font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; margin-top: 4px;">Cities</div>
+                            <div style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                                <div style="font-size: 40px; font-weight: 900; color: #000000; margin-bottom: 8px;" id="totalCities">--</div>
+                                <div style="font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Cities</div>
                             </div>
-                            <div style="background: #f5f5f5; border: 2px solid #000000; padding: 20px; text-align: center;">
-                                <div style="font-size: 36px; font-weight: 900; color: #000000;" id="totalGeoVisits">-</div>
-                                <div style="font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; margin-top: 4px;">Global Visits</div>
+                            <div style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                                <div style="font-size: 40px; font-weight: 900; color: #000000; margin-bottom: 8px;" id="totalGeoVisits">--</div>
+                                <div style="font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Global Visits</div>
                             </div>
                         </div>
 
                         <!-- Geo Tables -->
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
                             <!-- Countries Table -->
-                            <div style="border: 1px solid #e0e0e0;">
-                                <div style="background: #f5f5f5; padding: 12px 16px; border-bottom: 2px solid #000000;">
-                                    <div style="font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">Top Countries</div>
+                            <div style="border-radius: 16px; overflow: hidden; border: 1px solid #e9ecef;">
+                                <div style="background: #f8f9fa; padding: 16px 20px; border-bottom: 1px solid #e9ecef;">
+                                    <div style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #666;">Top Countries</div>
                                 </div>
-                                <div style="max-height: 300px; overflow-y: auto;">
+                                <div style="max-height: 320px; overflow-y: auto;">
                                     <table style="width: 100%; border-collapse: collapse;">
                                         <tbody id="geoAnalyticsCountriesBody">
                                             <tr>
@@ -3864,11 +3862,11 @@
                             </div>
 
                             <!-- Regions Table -->
-                            <div style="border: 1px solid #e0e0e0;">
-                                <div style="background: #f5f5f5; padding: 12px 16px; border-bottom: 2px solid #000000;">
-                                    <div style="font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">Top Regions</div>
+                            <div style="border-radius: 16px; overflow: hidden; border: 1px solid #e9ecef;">
+                                <div style="background: #f8f9fa; padding: 16px 20px; border-bottom: 1px solid #e9ecef;">
+                                    <div style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #666;">Top Regions</div>
                                 </div>
-                                <div style="max-height: 300px; overflow-y: auto;">
+                                <div style="max-height: 320px; overflow-y: auto;">
                                     <table style="width: 100%; border-collapse: collapse;">
                                         <tbody id="regionsTableBody">
                                             <tr>
@@ -3880,11 +3878,11 @@
                             </div>
 
                             <!-- Cities Table -->
-                            <div style="border: 1px solid #e0e0e0;">
-                                <div style="background: #f5f5f5; padding: 12px 16px; border-bottom: 2px solid #000000;">
-                                    <div style="font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">Top Cities</div>
+                            <div style="border-radius: 16px; overflow: hidden; border: 1px solid #e9ecef;">
+                                <div style="background: #f8f9fa; padding: 16px 20px; border-bottom: 1px solid #e9ecef;">
+                                    <div style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #666;">Top Cities</div>
                                 </div>
-                                <div style="max-height: 300px; overflow-y: auto;">
+                                <div style="max-height: 320px; overflow-y: auto;">
                                     <table style="width: 100%; border-collapse: collapse;">
                                         <tbody id="citiesTableBody">
                                             <tr>
