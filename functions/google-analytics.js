@@ -33,15 +33,23 @@ export async function onRequest(context) {
             }), { status: 500, headers: corsHeaders });
         }
 
+        // Get date range from query parameters (default: 30 days)
+        const url = new URL(context.request.url);
+        const days = parseInt(url.searchParams.get('days')) || 30;
+        const startDate = `${days}daysAgo`;
+
         // Get access token using Service Account
         const accessToken = await getAccessToken(serviceAccountEmail, privateKey);
 
         // Fetch analytics data
-        const [overviewData, pageData, deviceData, countryData] = await Promise.all([
-            fetchOverviewMetrics(propertyId, accessToken),
-            fetchPageMetrics(propertyId, accessToken),
-            fetchDeviceMetrics(propertyId, accessToken),
-            fetchCountryMetrics(propertyId, accessToken)
+        const [overviewData, pageData, deviceData, countryData, trafficData, sourceData, browserData] = await Promise.all([
+            fetchOverviewMetrics(propertyId, accessToken, startDate),
+            fetchPageMetrics(propertyId, accessToken, startDate),
+            fetchDeviceMetrics(propertyId, accessToken, startDate),
+            fetchCountryMetrics(propertyId, accessToken, startDate),
+            fetchTrafficOverTime(propertyId, accessToken, startDate),
+            fetchTrafficSources(propertyId, accessToken, startDate),
+            fetchBrowserMetrics(propertyId, accessToken, startDate)
         ]);
 
         // Return combined data
@@ -51,6 +59,10 @@ export async function onRequest(context) {
             pages: pageData,
             devices: deviceData,
             countries: countryData,
+            trafficChart: trafficData,
+            sources: sourceData,
+            browsers: browserData,
+            dateRange: { days, startDate, endDate: 'today' },
             timestamp: new Date().toISOString()
         }), { headers: corsHeaders });
 
@@ -160,7 +172,7 @@ async function createJWT(header, claim, privateKey) {
 /**
  * Fetch overview metrics (total views, users, session duration, bounce rate)
  */
-async function fetchOverviewMetrics(propertyId, accessToken) {
+async function fetchOverviewMetrics(propertyId, accessToken, startDate = '30daysAgo') {
     const response = await fetch(
         `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
         {
@@ -170,7 +182,7 @@ async function fetchOverviewMetrics(propertyId, accessToken) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+                dateRanges: [{ startDate, endDate: 'today' }],
                 metrics: [
                     { name: 'screenPageViews' },
                     { name: 'activeUsers' },
@@ -199,7 +211,7 @@ async function fetchOverviewMetrics(propertyId, accessToken) {
 /**
  * Fetch page-level metrics
  */
-async function fetchPageMetrics(propertyId, accessToken) {
+async function fetchPageMetrics(propertyId, accessToken, startDate = '30daysAgo') {
     const response = await fetch(
         `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
         {
@@ -209,7 +221,7 @@ async function fetchPageMetrics(propertyId, accessToken) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+                dateRanges: [{ startDate, endDate: 'today' }],
                 dimensions: [{ name: 'pagePath' }, { name: 'pageTitle' }],
                 metrics: [
                     { name: 'screenPageViews' },
@@ -239,7 +251,7 @@ async function fetchPageMetrics(propertyId, accessToken) {
 /**
  * Fetch device breakdown
  */
-async function fetchDeviceMetrics(propertyId, accessToken) {
+async function fetchDeviceMetrics(propertyId, accessToken, startDate = '30daysAgo') {
     const response = await fetch(
         `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
         {
@@ -249,7 +261,7 @@ async function fetchDeviceMetrics(propertyId, accessToken) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+                dateRanges: [{ startDate, endDate: 'today' }],
                 dimensions: [{ name: 'deviceCategory' }],
                 metrics: [{ name: 'activeUsers' }]
             })
@@ -281,7 +293,7 @@ async function fetchDeviceMetrics(propertyId, accessToken) {
 /**
  * Fetch top countries
  */
-async function fetchCountryMetrics(propertyId, accessToken) {
+async function fetchCountryMetrics(propertyId, accessToken, startDate = '30daysAgo') {
     const response = await fetch(
         `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
         {
@@ -291,7 +303,7 @@ async function fetchCountryMetrics(propertyId, accessToken) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+                dateRanges: [{ startDate, endDate: 'today' }],
                 dimensions: [{ name: 'country' }],
                 metrics: [{ name: 'activeUsers' }],
                 orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
@@ -308,5 +320,117 @@ async function fetchCountryMetrics(propertyId, accessToken) {
     return (data.rows || []).map(row => ({
         name: row.dimensionValues[0].value,
         users: parseInt(row.metricValues[0].value)
+    }));
+}
+
+/**
+ * Fetch traffic over time (day by day for chart)
+ */
+async function fetchTrafficOverTime(propertyId, accessToken, startDate = '30daysAgo') {
+    const response = await fetch(
+        `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
+        {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                dateRanges: [{ startDate, endDate: 'today' }],
+                dimensions: [{ name: 'date' }],
+                metrics: [{ name: 'screenPageViews' }, { name: 'activeUsers' }],
+                orderBys: [{ dimension: { dimensionName: 'date' }, desc: false }]
+            })
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(`GA API error: ${await response.text()}`);
+    }
+
+    const data = await response.json();
+    return (data.rows || []).map(row => ({
+        date: row.dimensionValues[0].value,
+        views: parseInt(row.metricValues[0].value),
+        users: parseInt(row.metricValues[1].value)
+    }));
+}
+
+/**
+ * Fetch traffic sources (referral, direct, organic, etc.)
+ */
+async function fetchTrafficSources(propertyId, accessToken, startDate = '30daysAgo') {
+    const response = await fetch(
+        `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
+        {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                dateRanges: [{ startDate, endDate: 'today' }],
+                dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+                metrics: [{ name: 'sessions' }],
+                orderBys: [{ metric: { metricName: 'sessions' }, desc: true }]
+            })
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(`GA API error: ${await response.text()}`);
+    }
+
+    const data = await response.json();
+    const sources = (data.rows || []).map(row => ({
+        source: row.dimensionValues[0].value,
+        sessions: parseInt(row.metricValues[0].value)
+    }));
+
+    // Calculate percentages
+    const total = sources.reduce((sum, s) => sum + s.sessions, 0);
+    return sources.map(s => ({
+        ...s,
+        percentage: total > 0 ? ((s.sessions / total) * 100).toFixed(1) : '0'
+    }));
+}
+
+/**
+ * Fetch browser breakdown
+ */
+async function fetchBrowserMetrics(propertyId, accessToken, startDate = '30daysAgo') {
+    const response = await fetch(
+        `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
+        {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                dateRanges: [{ startDate, endDate: 'today' }],
+                dimensions: [{ name: 'browser' }],
+                metrics: [{ name: 'activeUsers' }],
+                orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+                limit: 10
+            })
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(`GA API error: ${await response.text()}`);
+    }
+
+    const data = await response.json();
+    const browsers = (data.rows || []).map(row => ({
+        browser: row.dimensionValues[0].value,
+        users: parseInt(row.metricValues[0].value)
+    }));
+
+    // Calculate percentages
+    const total = browsers.reduce((sum, b) => sum + b.users, 0);
+    return browsers.map(b => ({
+        ...b,
+        percentage: total > 0 ? ((b.users / total) * 100).toFixed(1) : '0'
     }));
 }
