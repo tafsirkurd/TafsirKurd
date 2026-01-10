@@ -119,8 +119,13 @@ async function createJWT(header, claim, privateKey) {
     const claimEncoded = base64UrlEncode(claim);
     const message = `${headerEncoded}.${claimEncoded}`;
 
-    // Import private key
-    const keyData = privateKey.replace(/\\n/g, '\n');
+    // Import private key - handle both escaped \n and actual newlines
+    let keyData = privateKey;
+    // If the key has escaped newlines, convert them
+    if (keyData.includes('\\n')) {
+        keyData = keyData.replace(/\\n/g, '\n');
+    }
+
     const pemHeader = '-----BEGIN PRIVATE KEY-----';
     const pemFooter = '-----END PRIVATE KEY-----';
     const pemContents = keyData.substring(
