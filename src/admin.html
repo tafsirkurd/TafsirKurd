@@ -4836,16 +4836,21 @@
                     </div>
                 </div>
 
-                <!-- EXISTING YOUTUBE/INSTAGRAM VIDEOS SECTION -->
-                <div class="table-container">
-                    <div class="card card-elevated" style="padding: var(--spacing-5); margin-bottom: var(--spacing-4);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-4);">
-                            <div>
-                                <h2 style="margin: 0 0 var(--spacing-2) 0; color: var(--black); font-size: var(--font-size-xl);">🎥 Featured Videos - Detailed Management</h2>
-                                <div style="display: flex; gap: var(--spacing-3); flex-wrap: wrap; font-size: var(--font-size-sm);">
-                                    <span id="videosHeaderTotal" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: 600; color: var(--black);">📊 Total: 0</span>
-                                    <span id="videosHeaderInstagram" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: 600; color: var(--black);">📸 Instagram: 0</span>
-                                    <span id="videosHeaderYouTube" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: 600; color: var(--black);">▶️ YouTube: 0</span>
+                <!-- FEATURED VIDEOS SECTION -->
+                <div class="table-container-2026">
+                    <div class="table-header-2026">
+                        <div>
+                            <h3 class="table-title-2026">
+                                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                                </svg>
+                                Featured Videos
+                            </h3>
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px;">
+                                <span id="videosHeaderTotal" style="background: #f3f4f6; padding: 6px 12px; border-radius: 6px; font-weight: 600; color: #374151; font-size: 13px;">Total: 0</span>
+                                <span id="videosHeaderInstagram" style="background: #fce7f3; padding: 6px 12px; border-radius: 6px; font-weight: 600; color: #9f1239; font-size: 13px;">Instagram: 0</span>
+                                <span id="videosHeaderYouTube" style="background: #fee2e2; padding: 6px 12px; border-radius: 6px; font-weight: 600; color: #991b1b; font-size: 13px;">YouTube: 0</span>
                                 </div>
                             </div>
                             <button class="btn-primary" onclick="openAddVideoModal()">+ Add Video</button>
@@ -4862,18 +4867,44 @@
 
             <!-- Users Section -->
             <section id="usersSection" class="section">
-                <div class="table-container">
-                    <div class="card card-elevated" style="padding: var(--spacing-5); margin-bottom: var(--spacing-4);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-4);">
-                            <div>
-                                <h2 class="table-title" style="margin: 0 0 var(--spacing-2) 0; color: var(--black); font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold);">👥 All Registered Users</h2>
-                                <div style="display: flex; gap: var(--spacing-3); flex-wrap: wrap; font-size: var(--font-size-sm);">
-                                    <span id="usersHeaderTotal" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: var(--font-weight-semibold); color: var(--black);">📊 Total: 0</span>
-                                    <span id="usersHeaderActive" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: var(--font-weight-semibold); color: var(--black);">✅ Active: 0</span>
-                                    <span id="usersHeaderReading" style="background: var(--gray-100); padding: var(--spacing-1) var(--spacing-3); border-radius: var(--radius-md); font-weight: var(--font-weight-semibold); color: var(--black);">📖 Reading: 0</span>
-                                </div>
+                <!-- Modern Section Header -->
+                <div class="section-header-2026">
+                    <h2 class="section-title-2026">
+                        <div class="section-icon-2026">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                        Registered Users
+                    </h2>
+                    <p class="section-description-2026">
+                        Manage and monitor all registered users, their activity, and reading progress.
+                    </p>
+                </div>
+
+                <div class="table-container-2026">
+                    <div class="table-header-2026">
+                        <div>
+                            <h3 class="table-title-2026">
+                                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                All Users
+                            </h3>
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px;">
+                                <span id="usersHeaderTotal" style="background: #f3f4f6; padding: 6px 12px; border-radius: 6px; font-weight: 600; color: #374151; font-size: 13px;">Total: 0</span>
+                                <span id="usersHeaderActive" style="background: #dcfce7; padding: 6px 12px; border-radius: 6px; font-weight: 600; color: #166534; font-size: 13px;">Active: 0</span>
+                                <span id="usersHeaderReading" style="background: #dbeafe; padding: 6px 12px; border-radius: 6px; font-weight: 600; color: #1e40af; font-size: 13px;">Reading: 0</span>
                             </div>
-                            <input type="text" id="userSearch" class="form-input" placeholder="Search users..." style="max-width: 300px;">
+                        </div>
+                        <div class="table-actions-2026">
+                            <input type="text" id="userSearch" class="form-input" placeholder="Search users..." style="max-width: 300px; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 16px;">
                         </div>
                     </div>
                     <div id="usersTable" class="mobile-table">
