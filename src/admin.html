@@ -6575,7 +6575,7 @@
             try {
                 // Wait for Supabase library to load (it's deferred)
                 if (!window.supabase) {
-                    console.log('⏳ Waiting for Supabase library to load...');
+                    console.log(' Waiting for Supabase library to load...');
                     await new Promise((resolve) => {
                         const checkInterval = setInterval(() => {
                             if (window.supabase) {
@@ -6610,18 +6610,21 @@
                     throw new Error('Invalid config received from server');
                 }
 
-                // Create Supabase client with explicit options to prevent header issues
+                // Create Supabase client with safe configuration
                 supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey, {
                     auth: {
                         persistSession: true,
                         autoRefreshToken: true,
-                        detectSessionInUrl: false
+                        detectSessionInUrl: false,
+                        storageKey: 'tafsirkurd-admin-auth'
                     },
                     global: {
-                        headers: {}
+                        headers: {
+                            'x-client-info': 'tafsirkurd-admin'
+                        }
                     }
                 });
-                console.log('✅ Supabase initialized securely');
+                console.log(' Supabase initialized securely');
 
                 // Expose to window for external scripts
                 window.supabaseClient = supabaseClient;
@@ -6690,7 +6693,7 @@
 
         function onAdminTurnstileSuccess(token) {
             adminTurnstileToken = token;
-            console.log('✅ Admin Turnstile verification successful (invisible mode)');
+            console.log(' Admin Turnstile verification successful (invisible mode)');
         }
 
         // Password visibility toggle
@@ -7119,7 +7122,7 @@
 
                         if (locationData.city && locationData.country) {
                             location = `${locationData.city}, ${locationData.country}`;
-                            console.log('✅ Location found from GeoJS:', location);
+                            console.log(' Location found from GeoJS:', location);
                         }
                     }
                 } catch (err) {
@@ -7141,7 +7144,7 @@
 
                             if (locationData.city && locationData.country_name) {
                                 location = `${locationData.city}, ${locationData.country_name}`;
-                                console.log('✅ Location found from ipapi.co:', location);
+                                console.log(' Location found from ipapi.co:', location);
                             } else if (locationData.error) {
                                 console.warn('⚠️ ipapi.co error:', locationData.reason || locationData.error);
                             }
@@ -7164,7 +7167,7 @@
 
                             if (locationData.city && locationData.country_name) {
                                 location = `${locationData.city}, ${locationData.country_name}`;
-                                console.log('✅ Location found from freegeoip.app:', location);
+                                console.log(' Location found from freegeoip.app:', location);
                             }
                         }
                     } catch (err) {
@@ -7563,7 +7566,7 @@
                 // Load top pages analytics
                 loadTopPagesAnalytics();
 
-                console.log('✅ Dashboard loaded successfully');
+                console.log(' Dashboard loaded successfully');
             } catch (error) {
                 console.error('❌ Error loading dashboard:', error);
             }
@@ -8546,11 +8549,11 @@
                     data.regions = Object.values(regionMap).sort((a, b) => b.visits - a.visits);
                     data.cities = Object.values(cityMap).sort((a, b) => b.visits - a.visits);
 
-                    // Update summary stats
-                    document.getElementById('totalCountries').textContent = data.countries.length;
-                    document.getElementById('totalRegions').textContent = data.regions.length;
-                    document.getElementById('totalCities').textContent = data.cities.length;
-                    document.getElementById('totalGeoVisits').textContent = data.total_visits.toLocaleString();
+                    // Update summary stats (with safe fallbacks)
+                    document.getElementById('totalCountries').textContent = (data.countries?.length || 0);
+                    document.getElementById('totalRegions').textContent = (data.regions?.length || 0);
+                    document.getElementById('totalCities').textContent = (data.cities?.length || 0);
+                    document.getElementById('totalGeoVisits').textContent = (data.total_visits || 0).toLocaleString();
 
                     // Populate countries table (filter out Unknown)
                     const countriesBody = document.getElementById('geoAnalyticsCountriesBody');
@@ -8692,7 +8695,7 @@
                     return;
                 }
 
-                console.log('✅ Loaded', users.length, 'visitor locations');
+                console.log(' Loaded', users.length, 'visitor locations');
 
                 // Display visitor locations (XSS-safe)
                 tbody.innerHTML = users.map((user, index) => {
@@ -10987,7 +10990,7 @@
                 // Reload stats
                 await loadSocialStats();
 
-                console.log('✅ Social stats saved successfully');
+                console.log(' Social stats saved successfully');
 
             } catch (error) {
                 console.error('❌ Error saving social stats:', error);
@@ -11502,7 +11505,7 @@
         let deletedFeatureIds = [];
 
         async function loadFeatures() {
-            console.log('⭐ Loading features...');
+            console.log(' Loading features...');
             if (!supabaseClient) await initSupabase();
 
             try {
@@ -12294,7 +12297,7 @@
                     console.log(`⚠️ Missing ${missingLabels.length} speed labels:`, missingLabels);
                 } else {
                     button.style.display = 'none';
-                    console.log('✅ All speed labels already exist');
+                    console.log(' All speed labels already exist');
                 }
             }
         }
@@ -12924,7 +12927,7 @@
                     }
                 });
 
-                console.log('✅ Card order restored:', order);
+                console.log(' Card order restored:', order);
             } catch (error) {
                 console.error('❌ Failed to load card order:', error);
             }
@@ -13364,7 +13367,7 @@
 
         // Initialize on page load with progressive loading
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log('🚀 Admin Panel Loading - Performance Mode Enabled');
+            console.log('Admin Panel Loading - Performance Mode Enabled');
 
             // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
             if (window.TafsirKurdSecurity) {
@@ -13389,7 +13392,7 @@
             // Priority 3: Background tasks
             setTimeout(() => {
                 startAnalyticsAutoRefresh();
-                console.log('✅ Admin Panel Fully Loaded');
+                console.log(' Admin Panel Fully Loaded');
             }, 100);
         });
 
@@ -13708,7 +13711,7 @@ ${htmlParagraphs}
                     // Update email history table
                     renderEmailHistory(events);
 
-                    console.log('✅ Email stats loaded successfully');
+                    console.log(' Email stats loaded successfully');
                 } else {
                     alert(`❌ Failed to load email stats: ${result.error}`);
                 }
@@ -13872,7 +13875,7 @@ ${htmlParagraphs}
                 if (result.needsReauth) {
                     // Show re-authentication notice
                     document.getElementById('searchConsoleReauthNotice').style.display = 'block';
-                    console.log('⚠️ Google authentication expired. User needs to regenerate refresh token.');
+                    console.log(' Google authentication expired. User needs to regenerate refresh token.');
                     return;
                 }
 
@@ -13896,16 +13899,16 @@ ${htmlParagraphs}
 
                 const data = result.data;
 
-                // Update summary stats
-                document.getElementById('gscTotalClicks').textContent = data.summary.totalClicks.toLocaleString();
-                document.getElementById('gscTotalImpressions').textContent = data.summary.totalImpressions.toLocaleString();
-                document.getElementById('gscAvgCTR').textContent = data.summary.avgCTR + '%';
-                document.getElementById('gscAvgPosition').textContent = data.summary.avgPosition;
+                // Update summary stats (with safe fallbacks)
+                document.getElementById('gscTotalClicks').textContent = (data.summary?.totalClicks || 0).toLocaleString();
+                document.getElementById('gscTotalImpressions').textContent = (data.summary?.totalImpressions || 0).toLocaleString();
+                document.getElementById('gscAvgCTR').textContent = (data.summary?.avgCTR || 0) + '%';
+                document.getElementById('gscAvgPosition').textContent = (data.summary?.avgPosition || 0);
 
                 // Render Performance Chart
                 try {
                     renderPerformanceChart(data.timeSeries || []);
-                    console.log('✅ Chart rendered');
+                    console.log(' Chart rendered');
                 } catch(e) {
                     console.error('❌ Chart error:', e);
                 }
@@ -13953,14 +13956,14 @@ ${htmlParagraphs}
                             <div style="text-align: right; margin-top: 6px; font-size: 11px; color: #888; font-weight: 600;">${percentage}% of top performer</div>
                         </div>
                     `}).join('');
-                        console.log('✅ Countries rendered:', data.countries.length);
+                        console.log(' Countries rendered:', data.countries.length);
                     } catch(e) {
                         console.error('❌ Countries error:', e);
                         countriesTableBody.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44336;"><div style="font-size: 16px; font-weight: 600;">Error loading countries</div><div style="font-size: 12px; margin-top: 8px;">' + escapeHtml(e.message) + '</div></div>';
                     }
                 } else {
                     countriesTableBody.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;"><div style="font-size: 48px; margin-bottom: 10px;">🌍</div><div style="font-size: 14px;">No countries data yet</div></div>';
-                    console.log('⚠️ No countries data');
+                    console.log(' No countries data');
                 }
 
                 // Update devices table with visual cards
@@ -14085,17 +14088,17 @@ ${htmlParagraphs}
                             </td>
                         </tr>
                     `}).join('');
-                        console.log('✅ Pages rendered:', data.pages.length);
+                        console.log(' Pages rendered:', data.pages.length);
                     } catch(e) {
                         console.error('❌ Pages error:', e);
                         pagesTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #f44336;"><div style="font-size: 16px; font-weight: 600;">Error loading pages</div><div style="font-size: 12px; margin-top: 8px;">' + escapeHtml(e.message) + '</div></td></tr>';
                     }
                 } else {
                     pagesTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;"><div style="color: #999; font-size: 48px; margin-bottom: 10px;">📄</div><div style="color: #999; font-size: 14px;">No pages data yet</div></td></tr>';
-                    console.log('⚠️ No pages data');
+                    console.log(' No pages data');
                 }
 
-                console.log('✅ Search Console data loaded successfully');
+                console.log(' Search Console data loaded successfully');
 
             } catch (error) {
                 console.error('❌ Error loading Search Console data:', error);
@@ -15626,7 +15629,7 @@ ${htmlParagraphs}
                 savedVideos.unshift(videoData); // Add to beginning
                 localStorage.setItem('tvEpisodes', JSON.stringify(savedVideos));
 
-                console.log('✅ Video saved to localStorage:', videoData);
+                console.log(' Video saved to localStorage:', videoData);
 
                 // Save series, category, and speaker for autocomplete suggestions
                 saveVideoSuggestion('series', series);

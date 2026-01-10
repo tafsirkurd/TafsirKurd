@@ -45,7 +45,7 @@ function logSecurityEvent(eventType, details = {}) {
     localStorage.setItem('securityEvents', JSON.stringify(events));
 
     // Log to console in development
-    console.log('🔒 Security Event:', event);
+    // Security Event logged
 }
 
 // ============================================================================
@@ -739,7 +739,7 @@ function initNuclearSecurity(options = {}) {
         features: getEnabledFeatures(securityLevel)
     });
 
-    console.log(`🔥 NUCLEAR SECURITY: ${securityLevel.toUpperCase()} LEVEL ACTIVATED 🔥`);
+    console.log(`NUCLEAR SECURITY: ${securityLevel.toUpperCase()} LEVEL ACTIVATED`);
 }
 
 function getEnabledFeatures(level) {
@@ -793,4 +793,4 @@ window.TafsirKurdSecurity = {
     getTabAwayCount: () => tabAwayCount
 };
 
-console.log('🔥 Nuclear Security Module Loaded 🔥');
+console.log('Nuclear Security Module Loaded');
