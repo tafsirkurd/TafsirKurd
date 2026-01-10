@@ -2690,16 +2690,42 @@
                 display: none !important;
             }
 
-            /* Single column for stats */
-            #dashboardSection > div:nth-of-type(2) > div:nth-of-type(3) {
+            /* Single column for stats on very small screens */
+            body > div > div:nth-child(2) > section.section.active > div:first-child {
                 grid-template-columns: 1fr !important;
+                gap: 12px !important;
             }
 
-            #dashboardSection > div:nth-of-type(2) > div:nth-of-type(4) {
+            .overview-section > div:first-child {
                 grid-template-columns: 1fr !important;
+                gap: 10px !important;
             }
 
-            /* Smaller text on very small screens */
+            /* Smaller stat cards on small screens */
+            .stat-card-2026 {
+                padding: 16px !important;
+            }
+
+            .stat-value-2026 {
+                font-size: 24px !important;
+            }
+
+            .stat-label-2026 {
+                font-size: 13px !important;
+            }
+
+            .stat-icon-2026 {
+                width: 40px !important;
+                height: 40px !important;
+                margin-bottom: 12px !important;
+            }
+
+            .stat-icon-2026 svg {
+                width: 20px !important;
+                height: 20px !important;
+            }
+
+            /* Smaller dashboard header on very small screens */
             #dashboardSection > div:first-child h1 {
                 font-size: 24px !important;
             }
@@ -2708,8 +2734,10 @@
                 font-size: 14px !important;
             }
 
-            #dashboardSection > div:first-child > div:first-child > div:first-child {
-                font-size: 48px !important;
+            /* Larger touch targets */
+            .mobile-menu-toggle {
+                width: 48px !important;
+                height: 48px !important;
             }
 
             /* Translations section mobile fixes */
@@ -2750,6 +2778,42 @@
 
         /* Additional mobile responsiveness for all sections */
         @media (max-width: 768px) {
+            /* Hide sidebar on mobile, show hamburger */
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .mobile-menu-toggle {
+                display: flex !important;
+            }
+
+            /* Remove left margin on mobile */
+            .admin-content {
+                margin-left: 0 !important;
+                padding: 80px 16px 20px 16px !important;
+            }
+
+            /* Modern 2026 stat cards - responsive grid */
+            .stat-card-2026 {
+                padding: 20px !important;
+            }
+
+            /* Main stats grid - 2 columns on tablet, 1 on small mobile */
+            body > div > div:nth-child(2) > section.section.active > div:first-child {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 16px !important;
+            }
+
+            /* Quick stats - 2 columns */
+            .overview-section > div:first-child {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 12px !important;
+            }
+
             .section {
                 margin-bottom: 20px !important;
             }
@@ -2774,6 +2838,12 @@
             textarea {
                 font-size: 16px !important; /* Prevent zoom on iOS */
                 padding: 12px !important;
+            }
+
+            /* Better touch targets - minimum 44px */
+            button, a, .nav-item, .table-card-actions button {
+                min-height: 44px !important;
+                min-width: 44px !important;
             }
 
             /* Tables */
