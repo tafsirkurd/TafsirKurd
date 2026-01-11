@@ -6549,75 +6549,88 @@
                 .replace(/'/g, "&#039;");
         }
 
-        async function initSupabase() {
-            try {
-                // Guard: Return early if already initialized
-                if (supabaseClient && window.supabaseClient) {
-                    console.log('Supabase already initialized');
-                    return true;
-                }
+        // Promise to prevent concurrent initialization
+        let initSupabasePromise = null;
 
-                // Wait for Supabase library to load (it's deferred)
-                if (!window.supabase) {
-                    console.log('Waiting for Supabase library to load...');
-                    await new Promise((resolve) => {
-                        const checkInterval = setInterval(() => {
-                            if (window.supabase) {
+        async function initSupabase() {
+            // If already initialized, return early
+            if (supabaseClient && window.supabaseClient) {
+                console.log('Supabase already initialized');
+                return true;
+            }
+
+            // If initialization is in progress, wait for it
+            if (initSupabasePromise) {
+                console.log('Supabase initialization in progress, waiting...');
+                return initSupabasePromise;
+            }
+
+            // Start initialization and store the promise
+            initSupabasePromise = (async () => {
+                try {
+                    // Wait for Supabase library to load (it's deferred)
+                    if (!window.supabase) {
+                        console.log('Waiting for Supabase library to load...');
+                        await new Promise((resolve) => {
+                            const checkInterval = setInterval(() => {
+                                if (window.supabase) {
+                                    clearInterval(checkInterval);
+                                    resolve();
+                                }
+                            }, 100);
+                            // Timeout after 10 seconds
+                            setTimeout(() => {
                                 clearInterval(checkInterval);
                                 resolve();
+                            }, 10000);
+                        });
+                    }
+
+                    if (!window.supabase) {
+                        throw new Error('Supabase library failed to load');
+                    }
+
+                    // DON'T clear localStorage - it's causing the Headers error
+                    // The existing auth data is needed for proper initialization
+
+                    const response = await fetch('/config');
+                    if (!response.ok) throw new Error('Failed to fetch config');
+                    const config = await response.json();
+
+                    if (!config.supabaseUrl || !config.supabaseKey) {
+                        throw new Error('Invalid config received from server');
+                    }
+
+                    // Create Supabase client with safe configuration
+                    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey, {
+                        auth: {
+                            persistSession: true,
+                            autoRefreshToken: true,
+                            detectSessionInUrl: false,
+                            storageKey: 'tafsirkurd-admin-auth'
+                        },
+                        global: {
+                            headers: {
+                                'x-client-info': 'tafsirkurd-admin'
                             }
-                        }, 100);
-                        // Timeout after 10 seconds
-                        setTimeout(() => {
-                            clearInterval(checkInterval);
-                            resolve();
-                        }, 10000);
-                    });
-                }
-
-                if (!window.supabase) {
-                    throw new Error('Supabase library failed to load');
-                }
-
-                // Clear ONLY old/stale Supabase auth data (not our current key)
-                Object.keys(localStorage).forEach(key => {
-                    if ((key.startsWith('sb-') || key.includes('supabase')) && !key.includes('tafsirkurd-admin-auth')) {
-                        localStorage.removeItem(key);
-                    }
-                });
-
-                const response = await fetch('/config');
-                if (!response.ok) throw new Error('Failed to fetch config');
-                const config = await response.json();
-
-                if (!config.supabaseUrl || !config.supabaseKey) {
-                    throw new Error('Invalid config received from server');
-                }
-
-                // Create Supabase client with safe configuration
-                supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey, {
-                    auth: {
-                        persistSession: true,
-                        autoRefreshToken: true,
-                        detectSessionInUrl: false,
-                        storageKey: 'tafsirkurd-admin-auth'
-                    },
-                    global: {
-                        headers: {
-                            'x-client-info': 'tafsirkurd-admin'
                         }
-                    }
-                });
-                console.log('Supabase initialized securely');
+                    });
+                    console.log('Supabase initialized securely');
 
-                // Expose to window for external scripts
-                window.supabaseClient = supabaseClient;
+                    // Expose to window for external scripts
+                    window.supabaseClient = supabaseClient;
 
-                return true;
-            } catch (error) {
-                console.error('Supabase init failed:', error);
-                return false;
-            }
+                    return true;
+                } catch (error) {
+                    console.error('Supabase init failed:', error);
+                    initSupabasePromise = null; // Reset so it can be retried
+                    return false;
+                } finally {
+                    // Don't reset the promise here - keep it for subsequent checks
+                }
+            })();
+
+            return initSupabasePromise;
         }
 
         // Expose initSupabase to window for external scripts
