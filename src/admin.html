@@ -6606,21 +6606,19 @@
                         auth: {
                             persistSession: false,    // Disable auth session persistence
                             autoRefreshToken: false,  // Disable auto token refresh
-                            detectSessionInUrl: false,
-                            storageKey: 'tafsirkurd-admin-auth'
+                            detectSessionInUrl: false
+                        },
+                        db: {
+                            schema: 'public'
                         },
                         global: {
                             headers: {
-                                'x-client-info': 'tafsirkurd-admin',
-                                'apikey': config.supabaseKey  // Use anon key directly in header
+                                'x-client-info': 'tafsirkurd-admin'
                             }
                         }
                     });
 
-                    // Sign out any existing auth session to prevent header corruption
-                    await supabaseClient.auth.signOut();
-
-                    console.log('Supabase initialized securely');
+                    console.log('Supabase initialized securely (auth disabled)');
 
                     // Expose to window for external scripts
                     window.supabaseClient = supabaseClient;
