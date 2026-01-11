@@ -23,16 +23,21 @@ export async function onRequest(context) {
     }
 
     try {
+        // Clean environment variables - remove any newlines/whitespace that break HTTP headers
+        const cleanUrl = env.SUPABASE_URL?.replace(/[\n\r\s]/g, '');
+        const cleanKey = env.SUPABASE_ANON_KEY?.replace(/[\n\r\s]/g, '');
+
         // Return public Supabase configuration (ONLY anon key, NEVER service_role!)
         const config = {
-            supabaseUrl: env.SUPABASE_URL,
-            supabaseKey: env.SUPABASE_ANON_KEY
+            supabaseUrl: cleanUrl,
+            supabaseKey: cleanKey
         };
 
         console.log('Environment check:', {
-            hasUrl: !!env.SUPABASE_URL,
-            hasKey: !!env.SUPABASE_ANON_KEY,
-            keyPrefix: env.SUPABASE_ANON_KEY?.substring(0, 50) + '...'
+            hasUrl: !!cleanUrl,
+            hasKey: !!cleanKey,
+            keyPrefix: cleanKey?.substring(0, 50) + '...',
+            hadNewlines: env.SUPABASE_ANON_KEY?.includes('\n')
         });
 
         if (!config.supabaseUrl || !config.supabaseKey) {
