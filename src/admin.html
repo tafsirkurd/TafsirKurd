@@ -6601,20 +6601,25 @@
                         throw new Error('Invalid config received from server');
                     }
 
-                    // Create Supabase client with safe configuration
+                    // Create Supabase client with auth DISABLED (admin uses custom auth)
                     supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey, {
                         auth: {
-                            persistSession: true,
-                            autoRefreshToken: true,
+                            persistSession: false,    // Disable auth session persistence
+                            autoRefreshToken: false,  // Disable auto token refresh
                             detectSessionInUrl: false,
                             storageKey: 'tafsirkurd-admin-auth'
                         },
                         global: {
                             headers: {
-                                'x-client-info': 'tafsirkurd-admin'
+                                'x-client-info': 'tafsirkurd-admin',
+                                'apikey': config.supabaseKey  // Use anon key directly in header
                             }
                         }
                     });
+
+                    // Sign out any existing auth session to prevent header corruption
+                    await supabaseClient.auth.signOut();
+
                     console.log('Supabase initialized securely');
 
                     // Expose to window for external scripts
