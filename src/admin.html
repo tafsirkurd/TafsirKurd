@@ -8191,7 +8191,7 @@ function changeDateRange(days) {
 
 // Load Analytics with all new features
 async function loadAnalytics() {
-    console.log(`📈 Loading analytics for last ${currentDateRange} days...`);
+    console.log(`Loading analytics for last ${currentDateRange} days...`);
 
     try {
         // Fetch real data from Google Analytics API with date range
@@ -10627,7 +10627,7 @@ function renderBrowsers(browsers) {
 
         // Load Reading Statistics
         async function loadReadingStats() {
-            console.log('📖 Loading reading statistics...');
+            console.log('Loading reading statistics...');
 
             const activeReaders = allUsers.filter(u => u.current_surah || u.current_ayah).length;
             const completedUsers = allUsers.filter(u => u.current_surah >= 114).length;
@@ -14533,7 +14533,7 @@ ${htmlParagraphs}
 
                 // Update top pages table
                 const pagesTable = document.getElementById('topPagesTable');
-                console.log('📄 Pages data:', data.pages);
+                console.log('Pages data:', data.pages);
                 console.log('Pages element:', pagesTable);
 
                 if (data.pages && data.pages.length > 0) {
