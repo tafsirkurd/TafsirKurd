@@ -3583,6 +3583,172 @@
                 transparent 100%);
             animation: shimmer-slide 2s infinite;
         }
+
+        /* ===================================
+           DARK THEME OVERRIDES & FIXES
+           =================================== */
+
+        /* Ensure all text in glass containers is white */
+        .glass-card-premium,
+        .glass-stat-premium,
+        .glass-header,
+        .glass-list {
+            color: #ffffff;
+        }
+
+        .glass-card-premium h1,
+        .glass-card-premium h2,
+        .glass-card-premium h3,
+        .glass-stat-premium h1,
+        .glass-stat-premium h2,
+        .glass-stat-premium h3,
+        .glass-header h1,
+        .glass-header h2,
+        .glass-header h3 {
+            color: #ffffff !important;
+        }
+
+        .glass-card-premium p,
+        .glass-stat-premium p,
+        .glass-header p {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        /* Fix any legacy white backgrounds in content area */
+        .admin-content .overview-section {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Fix stat cards that might have white backgrounds */
+        .admin-content .stat-card-2026 {
+            background: linear-gradient(135deg,
+                rgba(255, 255, 255, 0.1) 0%,
+                rgba(255, 255, 255, 0.05) 100%) !important;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            color: #ffffff;
+        }
+
+        .admin-content .stat-card-2026:hover {
+            border-color: rgba(255, 255, 255, 0.3) !important;
+            background: linear-gradient(135deg,
+                rgba(255, 255, 255, 0.15) 0%,
+                rgba(255, 255, 255, 0.08) 100%) !important;
+        }
+
+        .stat-value-2026 {
+            color: #ffffff !important;
+        }
+
+        .stat-label-2026 {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        /* Fix table containers */
+        .admin-content .table-container-2026 {
+            background: linear-gradient(135deg,
+                rgba(255, 255, 255, 0.08) 0%,
+                rgba(255, 255, 255, 0.04) 100%) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .admin-content .table-header-2026 {
+            background: rgba(0, 0, 0, 0.3) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* Fix button styles */
+        .admin-content .btn-2026 {
+            background: linear-gradient(135deg,
+                rgba(255, 255, 255, 0.15) 0%,
+                rgba(255, 255, 255, 0.08) 100%) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        }
+
+        .admin-content .btn-2026:hover {
+            background: linear-gradient(135deg,
+                rgba(255, 255, 255, 0.25) 0%,
+                rgba(255, 255, 255, 0.15) 100%) !important;
+            border-color: rgba(255, 255, 255, 0.4) !important;
+        }
+
+        /* Fix info boxes */
+        .admin-content .info-box-2026 {
+            background: linear-gradient(135deg,
+                rgba(99, 102, 241, 0.15) 0%,
+                rgba(139, 92, 246, 0.1) 100%) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(99, 102, 241, 0.3) !important;
+            color: #ffffff !important;
+        }
+
+        /* Fix badges */
+        .admin-content .badge-2026 {
+            background: rgba(255, 255, 255, 0.15) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        }
+
+        /* Fix any remaining black text */
+        .admin-content .section-title-2026,
+        .admin-content .section-description-2026,
+        .admin-content .table-title-2026 {
+            color: #ffffff !important;
+        }
+
+        /* Fix loading states */
+        .admin-content .loading,
+        .admin-content .empty-state {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        /* Fix input fields in dark theme */
+        .admin-content input[type="text"],
+        .admin-content input[type="email"],
+        .admin-content input[type="number"],
+        .admin-content input[type="search"],
+        .admin-content select,
+        .admin-content textarea {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            color: #ffffff !important;
+        }
+
+        .admin-content input::placeholder,
+        .admin-content textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
+
+        .admin-content input:focus,
+        .admin-content select:focus,
+        .admin-content textarea:focus {
+            background: rgba(255, 255, 255, 0.12) !important;
+            border-color: rgba(255, 255, 255, 0.4) !important;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Fix chart containers */
+        .admin-content .chart-container {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        }
+
+        /* Responsive fixes for dark theme */
+        @media (max-width: 768px) {
+            .admin-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
