@@ -128,7 +128,7 @@
             /* Legacy Compatibility */
             --primary: #000000;
             --accent: #ffffff;
-            --bg: #fafafa;
+            --bg: #0f0f1a;
             --card-bg: #ffffff;
             --text: #000000;
             --text-muted: #666666;
@@ -140,6 +140,9 @@
             --info: #3498db;
             --purple: #9b59b6;
             --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Glassmorphism Dark Background */
+            --glass-bg-dark: linear-gradient(135deg, #0a0a14 0%, #1a1a2e 50%, #16162a 100%);
         }
 
         * {
@@ -167,12 +170,15 @@
 
         body {
             font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--bg);
+            background: linear-gradient(135deg, #0a0a14 0%, #1a1a2e 50%, #16162a 100%);
+            background-attachment: fixed;
             color: var(--text);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             text-rendering: optimizeLegibility;
+            position: relative;
+            min-height: 100vh;
         }
 
         body::before {
@@ -182,13 +188,33 @@
             left: 0;
             width: 100%;
             height: 100%;
-            opacity: 0.03;
-            z-index: -1;
+            opacity: 0.05;
+            z-index: 0;
             background-image:
-                repeating-linear-gradient(45deg, transparent, transparent 35px, var(--primary) 35px, var(--primary) 36px),
-                repeating-linear-gradient(-45deg, transparent, transparent 35px, var(--primary) 35px, var(--primary) 36px);
+                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,0.02) 35px, rgba(255,255,255,0.02) 36px),
+                repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255,255,255,0.02) 35px, rgba(255,255,255,0.02) 36px);
             background-size: 50px 50px;
             pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -30%;
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+            filter: blur(100px);
+            z-index: 0;
+            pointer-events: none;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(5deg); }
+            66% { transform: translate(-20px, 20px) rotate(-5deg); }
         }
 
         /* Login Screen */
@@ -199,9 +225,9 @@
             align-items: center;
             justify-content: center;
             padding: var(--spacing-8);
-            background: #f5f5f5;
             position: relative;
             overflow: hidden;
+            z-index: 1;
         }
 
         /* Animated blur circle 1 - Premium depth effect */
@@ -1030,6 +1056,8 @@
         /* Admin Dashboard */
         .admin-container {
             display: none;
+            position: relative;
+            z-index: 1;
         }
 
         .admin-container.active {
@@ -1408,7 +1436,11 @@
 
         /* Content */
         .admin-content {
-            padding: 20px;
+            margin-left: 240px;
+            padding: 32px;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
         }
 
         .section {
