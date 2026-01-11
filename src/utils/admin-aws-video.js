@@ -307,7 +307,7 @@ async function refreshVideosList() {
     try {
         // Check if supabaseClient is initialized
         if (!window.supabaseClient) {
-            console.warn('⚠️ Supabase client not initialized yet');
+            console.log('Supabase client not initialized yet');
             if (window.initSupabase) {
                 await window.initSupabase();
             } else {

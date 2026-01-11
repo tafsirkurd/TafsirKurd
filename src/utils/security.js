@@ -629,7 +629,7 @@ ${events.slice(-10).reverse().map(e => `
 
     if (navigator.clipboard) {
         navigator.clipboard.writeText(dashboard).then(() => {
-            console.log('✅ Dashboard copied to clipboard!');
+            console.log('Dashboard copied to clipboard');
         });
     }
 }
@@ -739,7 +739,7 @@ function initNuclearSecurity(options = {}) {
         features: getEnabledFeatures(securityLevel)
     });
 
-    console.log(`NUCLEAR SECURITY: ${securityLevel.toUpperCase()} LEVEL ACTIVATED`);
+    console.log(`Nuclear Security: ${securityLevel.toUpperCase()} level activated`);
 }
 
 function getEnabledFeatures(level) {

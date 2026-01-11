@@ -6551,9 +6551,15 @@
 
         async function initSupabase() {
             try {
+                // Guard: Return early if already initialized
+                if (supabaseClient && window.supabaseClient) {
+                    console.log('Supabase already initialized');
+                    return true;
+                }
+
                 // Wait for Supabase library to load (it's deferred)
                 if (!window.supabase) {
-                    console.log(' Waiting for Supabase library to load...');
+                    console.log('Waiting for Supabase library to load...');
                     await new Promise((resolve) => {
                         const checkInterval = setInterval(() => {
                             if (window.supabase) {
@@ -6573,9 +6579,9 @@
                     throw new Error('Supabase library failed to load');
                 }
 
-                // Clear old Supabase auth data to prevent fetch errors
+                // Clear ONLY old/stale Supabase auth data (not our current key)
                 Object.keys(localStorage).forEach(key => {
-                    if (key.startsWith('sb-') || key.includes('supabase')) {
+                    if ((key.startsWith('sb-') || key.includes('supabase')) && !key.includes('tafsirkurd-admin-auth')) {
                         localStorage.removeItem(key);
                     }
                 });
@@ -6602,14 +6608,14 @@
                         }
                     }
                 });
-                console.log(' Supabase initialized securely');
+                console.log('Supabase initialized securely');
 
                 // Expose to window for external scripts
                 window.supabaseClient = supabaseClient;
 
                 return true;
             } catch (error) {
-                console.error('❌ Supabase init failed:', error);
+                console.error('Supabase init failed:', error);
                 return false;
             }
         }
@@ -6620,7 +6626,7 @@
         // Helper function to ensure Supabase is initialized
         async function ensureSupabase() {
             if (!supabaseClient) {
-                console.warn('⚠️ Supabase not initialized, initializing now...');
+                console.log('Supabase not initialized, initializing now...');
                 await initSupabase();
             }
             if (!supabaseClient) {
@@ -7087,16 +7093,16 @@
                 // Get location - try multiple services
                 let location = 'Unknown';
 
-                console.log('🔍 Looking up location for IP:', ipAddress);
+                console.log('Looking up location for IP:', ipAddress);
 
                 // Try GeoJS first (reliable, HTTPS, no rate limits)
                 try {
                     const locationResponse = await fetch(`https://get.geojs.io/v1/ip/geo/${ipAddress}.json`);
-                    console.log('📍 GeoJS response status:', locationResponse.status);
+                    console.log('GeoJS response status:', locationResponse.status);
 
                     if (locationResponse.ok) {
                         const locationData = await locationResponse.json();
-                        console.log('📍 GeoJS data:', locationData);
+                        console.log('GeoJS data:', locationData);
 
                         if (locationData.city && locationData.country) {
                             location = `${locationData.city}, ${locationData.country}`;
@@ -7104,7 +7110,7 @@
                         }
                     }
                 } catch (err) {
-                    console.error('❌ GeoJS lookup failed:', err);
+                    console.error('GeoJS lookup failed:', err);
                 }
 
                 // Fallback: Try ipapi.co
@@ -7114,21 +7120,21 @@
                         const locationResponse = await fetch(`https://ipapi.co/${ipAddress}/json/`, {
                             headers: { 'Accept': 'application/json' }
                         });
-                        console.log('📍 ipapi.co response status:', locationResponse.status);
+                        console.log('ipapi.co response status:', locationResponse.status);
 
                         if (locationResponse.ok) {
                             const locationData = await locationResponse.json();
-                            console.log('📍 ipapi.co data:', locationData);
+                            console.log('ipapi.co data:', locationData);
 
                             if (locationData.city && locationData.country_name) {
                                 location = `${locationData.city}, ${locationData.country_name}`;
                                 console.log(' Location found from ipapi.co:', location);
                             } else if (locationData.error) {
-                                console.warn('⚠️ ipapi.co error:', locationData.reason || locationData.error);
+                                console.warn('ipapi.co error:', locationData.reason || locationData.error);
                             }
                         }
                     } catch (err) {
-                        console.error('❌ ipapi.co lookup failed:', err);
+                        console.error('ipapi.co lookup failed:', err);
                     }
                 }
 
@@ -7137,11 +7143,11 @@
                     console.log('🔄 Trying last fallback: freegeoip.app');
                     try {
                         const locationResponse = await fetch(`https://freegeoip.app/json/${ipAddress}`);
-                        console.log('📍 freegeoip.app response status:', locationResponse.status);
+                        console.log('freegeoip.app response status:', locationResponse.status);
 
                         if (locationResponse.ok) {
                             const locationData = await locationResponse.json();
-                            console.log('📍 freegeoip.app data:', locationData);
+                            console.log('freegeoip.app data:', locationData);
 
                             if (locationData.city && locationData.country_name) {
                                 location = `${locationData.city}, ${locationData.country_name}`;
@@ -7149,12 +7155,12 @@
                             }
                         }
                     } catch (err) {
-                        console.error('❌ freegeoip.app lookup failed:', err);
+                        console.error('freegeoip.app lookup failed:', err);
                     }
                 }
 
                 if (location === 'Unknown') {
-                    console.warn('⚠️ All location services failed, using Unknown');
+                    console.warn('All location services failed, using Unknown');
                 }
 
                 // Save session to database
@@ -7448,22 +7454,22 @@
         // Load Dashboard Data
         async function loadDashboardData() {
             try {
-                console.log('📊 Loading dashboard data...');
+                console.log('Loading dashboard data...');
 
                 // Ensure Supabase is initialized
                 if (!supabaseClient) {
-                    console.warn('⚠️ Supabase not initialized, waiting...');
+                    console.warn('Supabase not initialized, waiting...');
                     await initSupabase();
                 }
 
                 if (!supabaseClient) {
-                    console.error('❌ Failed to initialize Supabase');
+                    console.error('Failed to initialize Supabase');
                     return;
                 }
 
                 // Check if we have cached data for quick overview
                 if (isCacheValid('users') && isCacheValid('messages') && isCacheValid('videos')) {
-                    console.log('⚡ Using cached dashboard data');
+                    console.log('Using cached dashboard data');
                     allUsers = getCachedData('users');
                     allMessages = getCachedData('messages');
                     allVideos = getCachedData('videos');
@@ -7480,14 +7486,14 @@
 
                 // Check for errors
                 if (usersResult.error) {
-                    console.error('❌ Error loading users:', usersResult.error);
+                    console.error('Error loading users:', usersResult.error);
                     throw new Error('Failed to load users');
                 }
                 if (messagesResult.error) {
-                    console.error('❌ Error loading messages:', messagesResult.error);
+                    console.error('Error loading messages:', messagesResult.error);
                 }
                 if (videosResult.error) {
-                    console.error('❌ Error loading videos:', videosResult.error);
+                    console.error('Error loading videos:', videosResult.error);
                 }
 
                 console.log(`📊 Loaded ${usersResult.data?.length || 0} users, ${messagesResult.data?.length || 0} messages, ${videosResult.data?.length || 0} videos`);
@@ -7530,7 +7536,7 @@
                 setCacheData('users', allUsers);
                 setCacheData('messages', allMessages);
                 setCacheData('videos', allVideos);
-                console.log('💾 Dashboard data cached');
+                console.log('Dashboard data cached');
 
                 // Update stats display
                 updateDashboardStats();
@@ -7546,7 +7552,7 @@
 
                 console.log(' Dashboard loaded successfully');
             } catch (error) {
-                console.error('❌ Error loading dashboard:', error);
+                console.error('Error loading dashboard:', error);
             }
         }
 
@@ -8198,12 +8204,12 @@ async function loadAnalytics() {
         const data = await response.json();
 
         if (data.error) {
-            console.error('❌ Google Analytics error:', data.message);
+            console.error('Google Analytics error:', data.message);
             showAnalyticsError(data.message);
             return;
         }
 
-        console.log('✅ Real analytics data loaded:', data);
+        console.log('Real analytics data loaded:', data);
 
         // Update overview stats
         const overview = data.overview;
@@ -8279,7 +8285,7 @@ async function loadAnalytics() {
         populateGeoAnalytics(data.countries);
 
     } catch (error) {
-        console.error('❌ Error loading analytics:', error);
+        console.error('Error loading analytics:', error);
         showAnalyticsError('Failed to load analytics data. Please check console for details.');
     }
 }
@@ -8649,7 +8655,7 @@ function renderBrowsers(browsers) {
 
         // Load Bot Protection Dashboard
         async function loadBotProtection() {
-            console.log('🤖 Loading bot protection data...');
+            console.log('Loading bot protection data...');
 
             try {
                 await ensureSupabase();
@@ -8660,7 +8666,7 @@ function renderBrowsers(browsers) {
                     .order('created_at', { ascending: false });
 
                 if (error) {
-                    console.error('❌ Error loading bot logs:', error);
+                    console.error('Error loading bot logs:', error);
                     throw error;
                 }
 
@@ -8690,7 +8696,7 @@ function renderBrowsers(browsers) {
                 displayAllBots(botLogs);
 
             } catch (error) {
-                console.error('❌ Error loading bot protection data:', error);
+                console.error('Error loading bot protection data:', error);
             }
         }
 
@@ -8873,7 +8879,7 @@ function renderBrowsers(browsers) {
                 console.log('🌍 Fetching geo analytics data...');
                 const response = await fetch('/geo-analytics');
                 const result = await response.json();
-                console.log('📍 Geo analytics response:', result);
+                console.log('Geo analytics response:', result);
 
                 if (result.success) {
                     let { data } = result;
@@ -9628,7 +9634,7 @@ function renderBrowsers(browsers) {
             try {
                 // Check cache first
                 if (isCacheValid('messages')) {
-                    console.log('⚡ Using cached messages data');
+                    console.log('Using cached messages data');
                     allMessages = getCachedData('messages');
                     loadMessagesStats(allMessages);
                     displayMessages(allMessages);
@@ -9645,7 +9651,7 @@ function renderBrowsers(browsers) {
 
                 allMessages = data || [];
                 setCacheData('messages', allMessages);
-                console.log('💾 Messages data cached');
+                console.log('Messages data cached');
                 loadMessagesStats(allMessages);
                 displayMessages(allMessages);
             } catch (error) {
@@ -10173,7 +10179,7 @@ function renderBrowsers(browsers) {
             try {
                 // Check cache first
                 if (isCacheValid('users')) {
-                    console.log('⚡ Using cached user data');
+                    console.log('Using cached user data');
                     const cachedData = getCachedData('users');
                     if (cachedData && Array.isArray(cachedData)) {
                         allUsers = cachedData;
@@ -10181,7 +10187,7 @@ function renderBrowsers(browsers) {
                         updateUsersStats(allUsers);
                         return;
                     } else {
-                        console.warn('⚠️ Cached data is invalid, fetching fresh data');
+                        console.warn('Cached data is invalid, fetching fresh data');
                     }
                 }
 
@@ -10314,7 +10320,7 @@ function renderBrowsers(browsers) {
 
                 // Cache the processed data
                 setCacheData('users', allUsers);
-                console.log('💾 Users data cached');
+                console.log('Users data cached');
 
                 // Update stats and display
                 updateUsersStats(allUsers);
@@ -11222,7 +11228,7 @@ function renderBrowsers(browsers) {
         let socialStatsData = [];
 
         async function loadSocialStats() {
-            console.log('📱 Loading social stats...');
+            console.log('Loading social stats...');
 
             if (!supabaseClient) {
                 await initSupabase();
@@ -11241,7 +11247,7 @@ function renderBrowsers(browsers) {
 
                 displaySocialStatsEditor();
             } catch (error) {
-                console.error('❌ Error loading social stats:', error);
+                console.error('Error loading social stats:', error);
                 document.getElementById('socialStatsEditor').innerHTML = `
                     <div style="background: #ffebee; color: #c62828; padding: 20px; border-radius: 8px; text-align: center;">
                         <strong>❌ هەڵە:</strong> نەشیا ژمارە بخەونین
@@ -11426,7 +11432,7 @@ function renderBrowsers(browsers) {
                     };
                 });
 
-                console.log('💾 Saving social stats:', updates);
+                console.log('Saving social stats:', updates);
 
                 // Update each stat
                 for (const update of updates) {
@@ -11466,7 +11472,7 @@ function renderBrowsers(browsers) {
                 console.log(' Social stats saved successfully');
 
             } catch (error) {
-                console.error('❌ Error saving social stats:', error);
+                console.error('Error saving social stats:', error);
                 messageDiv.innerHTML = `
                     <div style="
                         background: var(--black);
@@ -11993,7 +11999,7 @@ function renderBrowsers(browsers) {
                 console.log(`⭐ Loaded ${featuresData.length} features`);
                 displayFeaturesEditor();
             } catch (error) {
-                console.error('❌ Error loading features:', error);
+                console.error('Error loading features:', error);
                 document.getElementById('featuresEditor').innerHTML = `
                     <div style="background: #ffebee; color: #c62828; padding: 20px; border-radius: 12px; text-align: center;">
                         <strong>❌ هەڵە:</strong> نەشیا تایبەتمەندیان بخەونین
@@ -12116,7 +12122,7 @@ function renderBrowsers(browsers) {
                     is_active: document.getElementById(`feature_active_${index}`).checked
                 }));
 
-                console.log('💾 Saving features:', updates);
+                console.log('Saving features:', updates);
 
                 // Delete removed features first
                 for (const id of deletedFeatureIds) {
@@ -12162,7 +12168,7 @@ function renderBrowsers(browsers) {
                 setTimeout(() => { messageDiv.style.display = 'none'; }, 5000);
 
             } catch (error) {
-                console.error('❌ Error saving features:', error);
+                console.error('Error saving features:', error);
                 messageDiv.innerHTML = `
                     <div style="background: var(--black); color: white; padding: 25px; border-radius: 20px;">
                         <div style="font-size: 48px;">❌</div>
@@ -12182,7 +12188,7 @@ function renderBrowsers(browsers) {
         let deletedScheduleIds = [];
 
         async function loadSchedule() {
-            console.log('📅 Loading schedule...');
+            console.log('Loading schedule...');
             if (!supabaseClient) await initSupabase();
 
             try {
@@ -12197,7 +12203,7 @@ function renderBrowsers(browsers) {
                 console.log(`📅 Loaded ${scheduleData.length} schedule items`);
                 displayScheduleEditor();
             } catch (error) {
-                console.error('❌ Error loading schedule:', error);
+                console.error('Error loading schedule:', error);
                 document.getElementById('scheduleEditor').innerHTML = `
                     <div style="background: #ffebee; color: #c62828; padding: 20px; border-radius: 12px; text-align: center;">
                         <strong>❌ هەڵە:</strong> نەشیا خشتەیێ بخەونین
@@ -12342,7 +12348,7 @@ function renderBrowsers(browsers) {
                     is_active: document.getElementById(`schedule_active_${index}`).checked
                 }));
 
-                console.log('💾 Saving schedule:', updates);
+                console.log('Saving schedule:', updates);
 
                 // Delete removed schedule items first
                 for (const id of deletedScheduleIds) {
@@ -12388,7 +12394,7 @@ function renderBrowsers(browsers) {
                 setTimeout(() => { messageDiv.style.display = 'none'; }, 5000);
 
             } catch (error) {
-                console.error('❌ Error saving schedule:', error);
+                console.error('Error saving schedule:', error);
                 messageDiv.innerHTML = `
                     <div style="background: var(--black); color: white; padding: 25px; border-radius: 20px;">
                         <div style="font-size: 48px;">❌</div>
@@ -12430,7 +12436,7 @@ function renderBrowsers(browsers) {
 
                 displayTranslationsEditor();
             } catch (error) {
-                console.error('❌ Error loading translations:', error);
+                console.error('Error loading translations:', error);
                 document.getElementById('translationsEditor').innerHTML = `
                     <div style="background: #ffebee; color: #c62828; padding: 20px; border-radius: 12px; text-align: center;">
                         <strong>❌ Error:</strong> Failed to load translations
@@ -12636,7 +12642,7 @@ function renderBrowsers(browsers) {
                     is_active: document.getElementById(`trans_active_${index}`).checked
                 };
 
-                console.log('💾 Saving translation:', updatedTranslation);
+                console.log('Saving translation:', updatedTranslation);
 
                 if (updatedTranslation.id) {
                     // Update existing
@@ -12667,7 +12673,7 @@ function renderBrowsers(browsers) {
                 }, 2000);
 
             } catch (error) {
-                console.error('❌ Error saving translation:', error);
+                console.error('Error saving translation:', error);
                 saveBtn.innerHTML = '❌ Error';
                 saveBtn.style.background = 'var(--black)';
                 setTimeout(() => {
@@ -12694,7 +12700,7 @@ function renderBrowsers(browsers) {
                     is_active: document.getElementById(`trans_active_${index}`).checked
                 }));
 
-                console.log('💾 Saving translations:', updates);
+                console.log('Saving translations:', updates);
 
                 // Delete removed translations
                 for (const id of deletedTranslationIds) {
@@ -12741,7 +12747,7 @@ function renderBrowsers(browsers) {
                 setTimeout(() => { messageDiv.style.display = 'none'; }, 5000);
 
             } catch (error) {
-                console.error('❌ Error saving translations:', error);
+                console.error('Error saving translations:', error);
                 messageDiv.innerHTML = `
                     <div style="background: var(--black); color: white; padding: 25px; border-radius: 20px;">
                         <div style="font-size: 48px;">❌</div>
@@ -12838,7 +12844,7 @@ function renderBrowsers(browsers) {
                 await loadTranslations();
 
             } catch (error) {
-                console.error('❌ Error adding labels:', error);
+                console.error('Error adding labels:', error);
                 alert('❌ Error: ' + error.message);
             }
         }
@@ -13372,7 +13378,7 @@ function renderBrowsers(browsers) {
             const cards = [...grid.children].filter(card => !card.classList.contains('drag-placeholder'));
             const order = cards.map(card => card.getAttribute('data-card-id'));
             localStorage.setItem(CARD_ORDER_KEY, JSON.stringify(order));
-            console.log('💾 Card order auto-saved:', order);
+            console.log('Card order auto-saved:', order);
         }
 
         // Load and apply saved card order
@@ -13402,7 +13408,7 @@ function renderBrowsers(browsers) {
 
                 console.log(' Card order restored:', order);
             } catch (error) {
-                console.error('❌ Failed to load card order:', error);
+                console.error('Failed to load card order:', error);
             }
         }
 
@@ -14034,7 +14040,7 @@ function renderBrowsers(browsers) {
                 try {
                     result = JSON.parse(responseText);
                 } catch (e) {
-                    console.error('❌ Failed to parse response:', e);
+                    console.error('Failed to parse response:', e);
                     alert(`❌ Server error: ${responseText.substring(0, 200)}`);
                     return;
                 }
@@ -14042,12 +14048,12 @@ function renderBrowsers(browsers) {
                 if (result.success) {
                     alert(`✅ Test email sent to ${adminEmail}!\n\nMessage ID: ${result.messageId || 'N/A'}\n\nCheck your inbox and spam folder.`);
                 } else {
-                    console.error('❌ Error from server:', result);
+                    console.error('Error from server:', result);
                     alert(`❌ Failed to send test email:\n\n${result.error}\n\nDetails: ${result.details || 'None'}\n\nCheck browser console (F12) for more info.`);
                 }
 
             } catch (error) {
-                console.error('❌ Error sending test email:', error);
+                console.error('Error sending test email:', error);
                 alert(`❌ Error: ${error.message}\n\nCheck browser console (F12) for details.`);
             }
         }
@@ -14095,7 +14101,7 @@ ${htmlParagraphs}
 
         // Load email statistics from Brevo
         async function loadEmailStats() {
-            console.log('📊 Loading email statistics...');
+            console.log('Loading email statistics...');
 
             document.getElementById('emailStatsLoading').style.display = 'block';
             document.getElementById('emailStatsContent').style.display = 'none';
@@ -14104,7 +14110,7 @@ ${htmlParagraphs}
                 const response = await fetch('/brevo-email-stats');
                 const result = await response.json();
 
-                console.log('📊 Email stats response:', result);
+                console.log('Email stats response:', result);
 
                 document.getElementById('emailStatsLoading').style.display = 'none';
 
@@ -14191,7 +14197,7 @@ ${htmlParagraphs}
 
             } catch (error) {
                 document.getElementById('emailStatsLoading').style.display = 'none';
-                console.error('❌ Error loading email stats:', error);
+                console.error('Error loading email stats:', error);
                 alert(`❌ Error: ${error.message}`);
             }
         }
@@ -14324,7 +14330,7 @@ ${htmlParagraphs}
 
         // Load Search Console Data
         async function loadSearchConsoleData() {
-            console.log('🔍 Loading Google Search Console data...');
+            console.log('Loading Google Search Console data...');
 
             try {
                 const response = await fetch('/google-search-console');
@@ -14383,13 +14389,13 @@ ${htmlParagraphs}
                     renderPerformanceChart(data.timeSeries || []);
                     console.log(' Chart rendered');
                 } catch(e) {
-                    console.error('❌ Chart error:', e);
+                    console.error('Chart error:', e);
                 }
 
                 // Update countries table with modern card design
                 const countriesTableBody = document.getElementById('countriesTableBody');
-                console.log('📊 Countries data:', data.countries);
-                console.log('📍 Countries element:', countriesTableBody);
+                console.log('Countries data:', data.countries);
+                console.log('Countries element:', countriesTableBody);
 
                 if (data.countries && data.countries.length > 0) {
                     try {
@@ -14431,7 +14437,7 @@ ${htmlParagraphs}
                     `}).join('');
                         console.log(' Countries rendered:', data.countries.length);
                     } catch(e) {
-                        console.error('❌ Countries error:', e);
+                        console.error('Countries error:', e);
                         countriesTableBody.innerHTML = '<div style="text-align: center; padding: 40px; color: #f44336;"><div style="font-size: 16px; font-weight: 600;">Error loading countries</div><div style="font-size: 12px; margin-top: 8px;">' + escapeHtml(e.message) + '</div></div>';
                     }
                 } else {
@@ -14528,7 +14534,7 @@ ${htmlParagraphs}
                 // Update top pages table
                 const pagesTable = document.getElementById('topPagesTable');
                 console.log('📄 Pages data:', data.pages);
-                console.log('📍 Pages element:', pagesTable);
+                console.log('Pages element:', pagesTable);
 
                 if (data.pages && data.pages.length > 0) {
                     try {
@@ -14563,7 +14569,7 @@ ${htmlParagraphs}
                     `}).join('');
                         console.log(' Pages rendered:', data.pages.length);
                     } catch(e) {
-                        console.error('❌ Pages error:', e);
+                        console.error('Pages error:', e);
                         pagesTable.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #f44336;"><div style="font-size: 16px; font-weight: 600;">Error loading pages</div><div style="font-size: 12px; margin-top: 8px;">' + escapeHtml(e.message) + '</div></td></tr>';
                     }
                 } else {
@@ -14574,7 +14580,7 @@ ${htmlParagraphs}
                 console.log(' Search Console data loaded successfully');
 
             } catch (error) {
-                console.error('❌ Error loading Search Console data:', error);
+                console.error('Error loading Search Console data:', error);
                 alert('Failed to load Search Console data. Check console for details.');
             }
         }
@@ -15157,7 +15163,7 @@ ${htmlParagraphs}
         // Load Activity Feed
         async function loadActivityFeed() {
             try {
-                console.log('📡 Loading activity feed...');
+                console.log('Loading activity feed...');
 
                 await ensureSupabase();
                 const { data, error, count } = await supabaseClient
@@ -15167,7 +15173,7 @@ ${htmlParagraphs}
                     .limit(ACTIVITY_PAGE_SIZE);
 
                 if (error) {
-                    console.error('❌ Error loading activities:', error);
+                    console.error('Error loading activities:', error);
                     showActivityError('Failed to load activities');
                     return;
                 }
@@ -15185,7 +15191,7 @@ ${htmlParagraphs}
                 subscribeToActivityFeed();
 
             } catch (error) {
-                console.error('❌ Activity feed error:', error);
+                console.error('Activity feed error:', error);
                 showActivityError('Unexpected error loading activities');
             }
         }
@@ -15683,7 +15689,7 @@ ${htmlParagraphs}
                 activitySubscription.unsubscribe();
             }
 
-            console.log('📡 Subscribing to real-time activity feed...');
+            console.log('Subscribing to real-time activity feed...');
 
             activitySubscription = supabaseClient
                 .channel('admin_activity_feed_changes')
