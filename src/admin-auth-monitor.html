@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Monitor - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        .monitor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .monitor-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px; }
+        .monitor-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .monitor-card-title { font-size: 14px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .monitor-card-value { font-size: 36px; font-weight: 700; color: var(--primary); line-height: 1; }
+        .monitor-card-label { font-size: 12px; color: var(--text-tertiary); margin-top: 8px; }
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .status-active { background: rgba(34, 197, 94, 0.1); color: rgb(34, 197, 94); }
+        .status-locked { background: rgba(239, 68, 68, 0.1); color: rgb(239, 68, 68); }
+        .status-inactive { background: rgba(156, 163, 175, 0.1); color: rgb(156, 163, 175); }
+        .sessions-list { display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; }
+        .session-item { background: var(--bg-elevated); border: 1px solid var(--border-light); border-radius: 8px; padding: 12px; }
+        .session-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .session-user { font-weight: 600; color: var(--text-primary); font-size: 14px; }
+        .session-time { font-size: 12px; color: var(--text-tertiary); }
+        .session-details { display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary); }
+        .session-detail { display: flex; align-items: center; gap: 4px; }
+        .session-detail i { width: 14px; height: 14px; }
+        .audit-list { display: flex; flex-direction: column; gap: 8px; max-height: 500px; overflow-y: auto; }
+        .audit-item { background: var(--bg-elevated); border-left: 3px solid var(--border-light); padding: 12px; border-radius: 4px; }
+        .audit-item.success { border-left-color: rgb(34, 197, 94); }
+        .audit-item.failed { border-left-color: rgb(239, 68, 68); }
+        .audit-item.warning { border-left-color: rgb(251, 191, 36); }
+        .audit-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .audit-action { font-weight: 600; font-size: 13px; color: var(--text-primary); }
+        .audit-time { font-size: 11px; color: var(--text-tertiary); }
+        .audit-details { font-size: 12px; color: var(--text-secondary); }
+        .accounts-table { width: 100%; }
+        .accounts-table th { text-align: left; padding: 12px; background: var(--bg-elevated); font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .accounts-table td { padding: 12px; border-bottom: 1px solid var(--border-light); font-size: 13px; }
+        .role-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .role-super_admin { background: rgba(99, 102, 241, 0.1); color: rgb(99, 102, 241); }
+        .role-editor { background: rgba(34, 197, 94, 0.1); color: rgb(34, 197, 94); }
+        .role-analyst { background: rgba(59, 130, 246, 0.1); color: rgb(59, 130, 246); }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span></a>
+                    <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span></a>
+                    <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                    <a href="/admin-tv-management.html" class="nav-item"><i data-lucide="tv"></i><span class="nav-item-label">TV Management</span></a>
+                    <a href="/admin-backgrounds.html" class="nav-item"><i data-lucide="image"></i><span class="nav-item-label">Backgrounds</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                    <a href="/admin-reading-stats.html" class="nav-item"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                    <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                    <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+                    <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                    <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                    <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                    <a href="/admin-auth-monitor.html" class="nav-item active"><i data-lucide="activity"></i><span class="nav-item-label">Auth Monitor</span></a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name" id="profileName">Admin</div>
+                        <div class="sidebar-profile-email" id="profileEmail">admin@tafsirkurd.com</div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; display: flex; align-items: center; transition: color 0.2s;" title="Logout"><i data-lucide="log-out"></i></button>
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+                <div class="topbar-title">Authentication Monitor</div>
+                <div class="topbar-actions">
+                    <button class="topbar-btn" onclick="loadAllData()"><i data-lucide="refresh-cw"></i></button>
+                    <button class="topbar-btn"><i data-lucide="bell"></i></button>
+                    <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
+                </div>
+            </header>
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">Authentication System Monitor</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" onclick="loadAllData()"><i data-lucide="refresh-cw"></i>Refresh</button>
+                    </div>
+                </div>
+
+                <div class="monitor-grid">
+                    <div class="monitor-card">
+                        <div class="monitor-card-header">
+                            <div class="monitor-card-title">Total Admins</div>
+                            <i data-lucide="users" style="width: 20px; height: 20px; color: var(--primary);"></i>
+                        </div>
+                        <div class="monitor-card-value" id="totalAdmins">0</div>
+                        <div class="monitor-card-label">Registered accounts</div>
+                    </div>
+                    <div class="monitor-card">
+                        <div class="monitor-card-header">
+                            <div class="monitor-card-title">Active Sessions</div>
+                            <i data-lucide="activity" style="width: 20px; height: 20px; color: rgb(34, 197, 94);"></i>
+                        </div>
+                        <div class="monitor-card-value" id="activeSessions">0</div>
+                        <div class="monitor-card-label">Currently logged in</div>
+                    </div>
+                    <div class="monitor-card">
+                        <div class="monitor-card-header">
+                            <div class="monitor-card-title">Failed Attempts (24h)</div>
+                            <i data-lucide="alert-triangle" style="width: 20px; height: 20px; color: rgb(239, 68, 68);"></i>
+                        </div>
+                        <div class="monitor-card-value" id="failedAttempts">0</div>
+                        <div class="monitor-card-label">Login failures</div>
+                    </div>
+                    <div class="monitor-card">
+                        <div class="monitor-card-header">
+                            <div class="monitor-card-title">Locked Accounts</div>
+                            <i data-lucide="lock" style="width: 20px; height: 20px; color: rgb(251, 191, 36);"></i>
+                        </div>
+                        <div class="monitor-card-value" id="lockedAccounts">0</div>
+                        <div class="monitor-card-label">Currently locked</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Active Sessions</h3>
+                        </div>
+                        <div class="sessions-list" id="sessionsList">
+                            <div style="text-align: center; padding: 40px; color: var(--text-tertiary);">No active sessions</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Recent Audit Logs</h3>
+                        </div>
+                        <div class="audit-list" id="auditList">
+                            <div style="text-align: center; padding: 40px; color: var(--text-tertiary);">No audit logs</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Admin Accounts Status</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="accounts-table">
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Full Name</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Last Login</th>
+                                    <th>Failed Attempts</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accountsTableBody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-tertiary);">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="/utils/admin-auth.js"></script>
+    <script>
+        lucide.createIcons();
+
+        (async () => {
+            const auth = await window.adminAuth.checkAuth();
+            if (auth) {
+                document.getElementById('profileName').textContent = auth.fullName || 'Admin';
+                document.getElementById('profileEmail').textContent = auth.email || '';
+                loadAllData();
+            }
+        })();
+
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        });
+
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const savedTheme = localStorage.getItem('adminTheme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeIcon.setAttribute('data-lucide', 'sun');
+            lucide.createIcons();
+        }
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+            localStorage.setItem('adminTheme', isDark ? 'dark' : 'light');
+        });
+
+        async function loadAllData() {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+
+            await Promise.all([
+                loadMetrics(supabase),
+                loadActiveSessions(supabase),
+                loadAuditLogs(supabase),
+                loadAccounts(supabase)
+            ]);
+
+            lucide.createIcons();
+        }
+
+        async function loadMetrics(supabase) {
+            try {
+                const { count: totalCount } = await supabase
+                    .from('admin_users')
+                    .select('*', { count: 'exact', head: true });
+                document.getElementById('totalAdmins').textContent = totalCount || 0;
+
+                const { count: sessionsCount } = await supabase
+                    .from('admin_sessions')
+                    .select('*', { count: 'exact', head: true })
+                    .gt('expires_at', new Date().toISOString());
+                document.getElementById('activeSessions').textContent = sessionsCount || 0;
+
+                const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                const { count: failedCount } = await supabase
+                    .from('admin_login_attempts')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('success', false)
+                    .gte('created_at', oneDayAgo);
+                document.getElementById('failedAttempts').textContent = failedCount || 0;
+
+                const { count: lockedCount } = await supabase
+                    .from('admin_users')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('is_locked', true)
+                    .gt('locked_until', new Date().toISOString());
+                document.getElementById('lockedAccounts').textContent = lockedCount || 0;
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+            }
+        }
+
+        async function loadActiveSessions(supabase) {
+            try {
+                const { data: sessions, error } = await supabase
+                    .from('admin_sessions')
+                    .select('*, admin_users(email, full_name, role)')
+                    .gt('expires_at', new Date().toISOString())
+                    .order('last_activity', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                const container = document.getElementById('sessionsList');
+                container.innerHTML = '';
+
+                if (!sessions || sessions.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.style.cssText = 'text-align: center; padding: 40px; color: var(--text-tertiary);';
+                    empty.textContent = 'No active sessions';
+                    container.appendChild(empty);
+                    return;
+                }
+
+                sessions.forEach(session => {
+                    const item = document.createElement('div');
+                    item.className = 'session-item';
+
+                    const header = document.createElement('div');
+                    header.className = 'session-header';
+
+                    const user = document.createElement('div');
+                    user.className = 'session-user';
+                    user.textContent = session.admin_users?.full_name || session.admin_users?.email || 'Unknown';
+                    header.appendChild(user);
+
+                    const time = document.createElement('div');
+                    time.className = 'session-time';
+                    time.textContent = formatRelativeTime(session.last_activity);
+                    header.appendChild(time);
+
+                    item.appendChild(header);
+
+                    const details = document.createElement('div');
+                    details.className = 'session-details';
+
+                    const ip = document.createElement('div');
+                    ip.className = 'session-detail';
+                    const ipIcon = document.createElement('i');
+                    ipIcon.setAttribute('data-lucide', 'globe');
+                    const ipText = document.createElement('span');
+                    ipText.textContent = session.ip_address || 'Unknown';
+                    ip.appendChild(ipIcon);
+                    ip.appendChild(ipText);
+                    details.appendChild(ip);
+
+                    const role = document.createElement('div');
+                    role.className = 'session-detail';
+                    const roleIcon = document.createElement('i');
+                    roleIcon.setAttribute('data-lucide', 'shield');
+                    const roleText = document.createElement('span');
+                    roleText.textContent = session.admin_users?.role || 'Unknown';
+                    role.appendChild(roleIcon);
+                    role.appendChild(roleText);
+                    details.appendChild(role);
+
+                    item.appendChild(details);
+                    container.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Error loading sessions:', error);
+            }
+        }
+
+        async function loadAuditLogs(supabase) {
+            try {
+                const { data: logs, error } = await supabase
+                    .from('admin_audit_logs')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+
+                if (error) throw error;
+
+                const container = document.getElementById('auditList');
+                container.innerHTML = '';
+
+                if (!logs || logs.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.style.cssText = 'text-align: center; padding: 40px; color: var(--text-tertiary);';
+                    empty.textContent = 'No audit logs';
+                    container.appendChild(empty);
+                    return;
+                }
+
+                logs.forEach(log => {
+                    const item = document.createElement('div');
+                    item.className = 'audit-item';
+
+                    if (log.action.includes('success')) item.classList.add('success');
+                    else if (log.action.includes('failed')) item.classList.add('failed');
+                    else if (log.action.includes('locked')) item.classList.add('warning');
+
+                    const header = document.createElement('div');
+                    header.className = 'audit-header';
+
+                    const action = document.createElement('div');
+                    action.className = 'audit-action';
+                    action.textContent = formatAction(log.action);
+                    header.appendChild(action);
+
+                    const time = document.createElement('div');
+                    time.className = 'audit-time';
+                    time.textContent = formatRelativeTime(log.created_at);
+                    header.appendChild(time);
+
+                    item.appendChild(header);
+
+                    const details = document.createElement('div');
+                    details.className = 'audit-details';
+                    details.textContent = log.email + ' from ' + (log.ip_address || 'Unknown IP');
+                    item.appendChild(details);
+
+                    container.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Error loading audit logs:', error);
+            }
+        }
+
+        async function loadAccounts(supabase) {
+            try {
+                const { data: accounts, error } = await supabase
+                    .from('admin_users')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                const tbody = document.getElementById('accountsTableBody');
+                tbody.innerHTML = '';
+
+                if (!accounts || accounts.length === 0) {
+                    const tr = document.createElement('tr');
+                    const td = document.createElement('td');
+                    td.colSpan = 6;
+                    td.style.cssText = 'text-align: center; padding: 40px; color: var(--text-tertiary);';
+                    td.textContent = 'No admin accounts found';
+                    tr.appendChild(td);
+                    tbody.appendChild(tr);
+                    return;
+                }
+
+                accounts.forEach(account => {
+                    const tr = document.createElement('tr');
+
+                    const emailTd = document.createElement('td');
+                    emailTd.textContent = account.email;
+                    tr.appendChild(emailTd);
+
+                    const nameTd = document.createElement('td');
+                    nameTd.textContent = account.full_name || '—';
+                    tr.appendChild(nameTd);
+
+                    const roleTd = document.createElement('td');
+                    const roleBadge = document.createElement('span');
+                    roleBadge.className = 'role-badge role-' + account.role;
+                    roleBadge.textContent = account.role.replace('_', ' ');
+                    roleTd.appendChild(roleBadge);
+                    tr.appendChild(roleTd);
+
+                    const statusTd = document.createElement('td');
+                    const statusBadge = document.createElement('span');
+                    statusBadge.className = 'status-badge';
+                    if (account.is_locked) {
+                        statusBadge.classList.add('status-locked');
+                        statusBadge.textContent = 'Locked';
+                    } else if (account.is_active) {
+                        statusBadge.classList.add('status-active');
+                        statusBadge.textContent = 'Active';
+                    } else {
+                        statusBadge.classList.add('status-inactive');
+                        statusBadge.textContent = 'Inactive';
+                    }
+                    statusTd.appendChild(statusBadge);
+                    tr.appendChild(statusTd);
+
+                    const lastLoginTd = document.createElement('td');
+                    lastLoginTd.textContent = account.last_login ? formatRelativeTime(account.last_login) : 'Never';
+                    tr.appendChild(lastLoginTd);
+
+                    const attemptsTd = document.createElement('td');
+                    attemptsTd.textContent = account.failed_attempts || 0;
+                    attemptsTd.style.color = account.failed_attempts >= 2 ? 'rgb(239, 68, 68)' : 'var(--text-secondary)';
+                    tr.appendChild(attemptsTd);
+
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading accounts:', error);
+            }
+        }
+
+        function formatRelativeTime(timestamp) {
+            const now = new Date();
+            const date = new Date(timestamp);
+            const diff = now - date;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (seconds < 60) return 'Just now';
+            if (minutes < 60) return minutes + 'm ago';
+            if (hours < 24) return hours + 'h ago';
+            if (days < 7) return days + 'd ago';
+            return date.toLocaleDateString();
+        }
+
+        function formatAction(action) {
+            return action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        setInterval(loadAllData, 30000);
+    </script>
+</body>
+</html>
