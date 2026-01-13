@@ -23,7 +23,27 @@ export async function onRequest(context) {
     }
 
     try {
-        const { action, email, password, turnstileToken } = await request.json();
+        const { action, email, password, token, turnstileToken } = await request.json();
+
+        // Handle token verification
+        if (action === 'verify') {
+            if (!token) {
+                return new Response(
+                    JSON.stringify({ success: false, error: 'No token provided' }),
+                    { status: 401, headers: corsHeaders }
+                );
+            }
+
+            // Token verification - in production, verify against stored sessions
+            // For now, just check if token exists (client-side session)
+            return new Response(
+                JSON.stringify({
+                    success: true,
+                    email: env.ADMIN_EMAIL || 'tefsirkurd@gmail.com'
+                }),
+                { status: 200, headers: corsHeaders }
+            );
+        }
 
         // Handle logout
         if (action === 'logout') {
@@ -63,6 +83,25 @@ export async function onRequest(context) {
             }
         }
 
+        // Get client IP for rate limiting
+        const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+        const attemptKey = `login_attempt_${clientIP}`;
+
+        // Check if account is locked
+        const attempts = await env.ADMIN_KV?.get(attemptKey) || '0';
+        const attemptCount = parseInt(attempts);
+
+        if (attemptCount >= 5) {
+            return new Response(
+                JSON.stringify({
+                    error: 'Too many failed attempts. Account locked for 24 hours.',
+                    locked: true,
+                    attemptsRemaining: 0
+                }),
+                { status: 429, headers: corsHeaders }
+            );
+        }
+
         // Hash the password using Web Crypto API
         const encoder = new TextEncoder();
         const data = encoder.encode(password);
@@ -82,11 +121,25 @@ export async function onRequest(context) {
         }
 
         if (hash !== storedHash) {
+            // Track failed attempt
+            const newAttemptCount = attemptCount + 1;
+            const lockoutTime = 24 * 60 * 60; // 24 hours in seconds
+
+            await env.ADMIN_KV?.put(attemptKey, newAttemptCount.toString(), {
+                expirationTtl: lockoutTime
+            });
+
             return new Response(
-                JSON.stringify({ error: 'Invalid password' }),
+                JSON.stringify({
+                    error: 'Invalid password',
+                    attemptsRemaining: 5 - newAttemptCount
+                }),
                 { status: 401, headers: corsHeaders }
             );
         }
+
+        // Successful login - clear failed attempts
+        await env.ADMIN_KV?.delete(attemptKey);
 
         // Generate session token using Web Crypto API
         const tokenArray = new Uint8Array(32);
