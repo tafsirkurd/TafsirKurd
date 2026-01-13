@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Browser - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; margin-bottom: 32px; }
+        .table-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+        .table-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .table-card-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
+        .table-card-count { font-size: 24px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+        .table-card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span></a>
+                    <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span></a>
+                    <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                    <a href="/admin-tv-management.html" class="nav-item"><i data-lucide="tv"></i><span class="nav-item-label">TV Management</span></a>
+                    <a href="/admin-backgrounds.html" class="nav-item"><i data-lucide="image"></i><span class="nav-item-label">Backgrounds</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                    <a href="/admin-reading-stats.html" class="nav-item"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                    <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                    <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+                    <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                    <a href="/admin-database.html" class="nav-item active"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name">Admin</div>
+                        <div class="sidebar-profile-email">admin@tafsirkurd.com</div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; display: flex; align-items: center; transition: color 0.2s;" title="Logout"><i data-lucide="log-out"></i></button>
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+                <div class="topbar-search"><i data-lucide="search"></i><input type="text" placeholder="Search tables..." id="search-input" onkeyup="filterTables()"></div>
+                <div class="topbar-actions">
+                    <button class="topbar-btn"><i data-lucide="bell"></i></button>
+                    <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
+                </div>
+            </header>
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">Database Browser</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" onclick="loadTables()"><i data-lucide="refresh-cw"></i>Refresh</button>
+                    </div>
+                </div>
+                <div class="table-grid" id="tableGrid"></div>
+                <div id="tableView" style="display:none;">
+                    <div style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+                        <button class="btn btn-secondary" onclick="showTables()"><i data-lucide="arrow-left"></i>Back to Tables</button>
+                        <h2 id="tableName" style="font-size:18px;font-weight:600;"></h2>
+                    </div>
+                    <div class="card">
+                        <div class="table-container">
+                            <table>
+                                <thead id="tableHead"></thead>
+                                <tbody id="tableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="/utils/admin-auth.js"></script>
+    <script>
+        lucide.createIcons();
+        const tables = ['user_data', 'profiles', 'contact_messages', 'featured_videos', 'social_stats', 'features', 'schedule', 'kurdish_translations', 'background_images', 'tv_categories', 'tv_series', 'tv_episodes', 'admin_activity_feed', 'location_tracking'];
+        let tableCounts = {};
+        (async () => { const auth = await window.adminAuth.checkAuth(); if (auth) loadTables(); })();
+        document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
+        const themeToggle = document.getElementById('theme-toggle'), themeIcon = document.getElementById('theme-icon');
+        const savedTheme = localStorage.getItem('adminTheme') || 'light';
+        if (savedTheme === 'dark') { document.body.classList.add('dark-mode'); themeIcon.setAttribute('data-lucide', 'sun'); lucide.createIcons(); }
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+            localStorage.setItem('adminTheme', isDark ? 'dark' : 'light');
+        });
+        async function loadTables() {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+            const grid = document.getElementById('tableGrid');
+            grid.innerHTML = '';
+            for (const table of tables) {
+                const { count, error } = await supabase.from(table).select('*', { count: 'exact', head: true });
+                if (!error) tableCounts[table] = count || 0;
+                const card = document.createElement('div');
+                card.className = 'table-card';
+                card.onclick = () => viewTable(table);
+                const name = document.createElement('div');
+                name.className = 'table-card-name';
+                name.textContent = table;
+                card.appendChild(name);
+                const countDiv = document.createElement('div');
+                countDiv.className = 'table-card-count';
+                countDiv.textContent = error ? 'Error' : (count || 0).toLocaleString();
+                card.appendChild(countDiv);
+                const label = document.createElement('div');
+                label.className = 'table-card-label';
+                label.textContent = 'rows';
+                card.appendChild(label);
+                grid.appendChild(card);
+            }
+            lucide.createIcons();
+        }
+        async function viewTable(table) {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+            const { data, error } = await supabase.from(table).select('*').limit(50);
+            if (error) { console.error(error); alert('Error loading table'); return; }
+            document.getElementById('tableName').textContent = table + ' (first 50 rows)';
+            document.getElementById('tableGrid').style.display = 'none';
+            document.getElementById('tableView').style.display = 'block';
+            const thead = document.getElementById('tableHead');
+            const tbody = document.getElementById('tableBody');
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+            if (!data || data.length === 0) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.textContent = 'No data';
+                td.style.padding = '40px';
+                td.style.textAlign = 'center';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+                return;
+            }
+            const columns = Object.keys(data[0]);
+            const tr = document.createElement('tr');
+            columns.forEach(col => {
+                const th = document.createElement('th');
+                th.textContent = col;
+                tr.appendChild(th);
+            });
+            thead.appendChild(tr);
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                columns.forEach(col => {
+                    const td = document.createElement('td');
+                    let val = row[col];
+                    if (typeof val === 'object' && val !== null) val = JSON.stringify(val).substring(0, 100);
+                    if (typeof val === 'string' && val.length > 100) val = val.substring(0, 100) + '...';
+                    td.textContent = val === null ? '—' : val;
+                    td.style.maxWidth = '200px';
+                    td.style.overflow = 'hidden';
+                    td.style.textOverflow = 'ellipsis';
+                    td.style.whiteSpace = 'nowrap';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+        function showTables() {
+            document.getElementById('tableGrid').style.display = 'grid';
+            document.getElementById('tableView').style.display = 'none';
+        }
+        function filterTables() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const cards = document.querySelectorAll('.table-card');
+            cards.forEach(card => {
+                const name = card.querySelector('.table-card-name').textContent.toLowerCase();
+                card.style.display = name.includes(query) ? 'block' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>
