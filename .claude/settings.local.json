@@ -122,7 +122,15 @@
       "Bash(export CLOUDFLARE_API_TOKEN=I0pnu9SRTG3s_Xe-Q42imuAD0m5gTmyKp-nD7-E7)",
       "Bash(export CLOUDFLARE_EMAIL=tefsirkurd@gmail.com)",
       "Bash(export CLOUDFLARE_API_KEY:*)",
-      "Bash(npx wrangler pages project list:*)"
+      "Bash(npx wrangler pages project list:*)",
+      "Bash(git rm:*)",
+      "Bash(claude mcp --help:*)",
+      "Bash(claude plugin list:*)",
+      "Bash(claude plugin --help:*)",
+      "Bash(claude plugin marketplace list:*)",
+      "Bash(claude --version)",
+      "Bash(cmd /c \"dir /s /b %APPDATA% 2>nul | findstr /i claude | findstr /i plugin\")",
+      "Bash(claude doctor)"
     ],
     "deny": [],
     "ask": []
