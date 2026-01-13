@@ -130,7 +130,8 @@
       "Bash(claude plugin marketplace list:*)",
       "Bash(claude --version)",
       "Bash(cmd /c \"dir /s /b %APPDATA% 2>nul | findstr /i claude | findstr /i plugin\")",
-      "Bash(claude doctor)"
+      "Bash(claude doctor)",
+      "mcp__plugin_supabase_supabase__list_projects"
     ],
     "deny": [],
     "ask": []
