@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Protection - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        .status-header {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .status-subtext {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-left: auto;
+        }
+
+        .integration-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .integration-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .integration-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .integration-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .integration-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .integration-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .integration-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .integration-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-active);
+            border: 1px solid var(--border-medium);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text-tertiary);
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+            background-color: var(--bg-app);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            border: 1px solid var(--border-medium);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .alert-warning {
+            background: var(--bg-surface);
+            border-color: var(--border-medium);
+        }
+
+        .alert-icon {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .alert-message {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .code-block {
+            background: var(--bg-app);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            overflow-x: auto;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item">
+                        <i data-lucide="bar-chart-2"></i>
+                        <span class="nav-item-label">Dashboard</span>
+                    </a>
+                    <a href="/admin-analytics.html" class="nav-item">
+                        <i data-lucide="trending-up"></i>
+                        <span class="nav-item-label">Analytics</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item">
+                        <i data-lucide="message-square"></i>
+                        <span class="nav-item-label">Messages</span>
+                        <span class="nav-item-badge">13</span>
+                    </a>
+                    <a href="/admin-videos.html" class="nav-item">
+                        <i data-lucide="video"></i>
+                        <span class="nav-item-label">Videos</span>
+                    </a>
+                    <a href="/admin-tv-management.html" class="nav-item">
+                        <i data-lucide="tv"></i>
+                        <span class="nav-item-label">TV Management</span>
+                    </a>
+                    <a href="/admin-backgrounds.html" class="nav-item">
+                        <i data-lucide="image"></i>
+                        <span class="nav-item-label">Backgrounds</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item">
+                        <i data-lucide="users"></i>
+                        <span class="nav-item-label">Users</span>
+                    </a>
+                    <a href="/admin-reading-stats.html" class="nav-item">
+                        <i data-lucide="book-open"></i>
+                        <span class="nav-item-label">Reading Stats</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-features.html" class="nav-item">
+                        <i data-lucide="layers"></i>
+                        <span class="nav-item-label">Features</span>
+                    </a>
+                    <a href="/admin-schedule.html" class="nav-item">
+                        <i data-lucide="calendar"></i>
+                        <span class="nav-item-label">Schedule</span>
+                    </a>
+                    <a href="/admin-social-stats.html" class="nav-item">
+                        <i data-lucide="share-2"></i>
+                        <span class="nav-item-label">Social Stats</span>
+                    </a>
+                    <a href="/admin-bot-protection.html" class="nav-item active">
+                        <i data-lucide="shield"></i>
+                        <span class="nav-item-label">Bot Protection</span>
+                    </a>
+                    <a href="/admin-database.html" class="nav-item">
+                        <i data-lucide="database"></i>
+                        <span class="nav-item-label">Database</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar">
+                        <i data-lucide="user"></i>
+                    </div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name">Admin</div>
+                        <div class="sidebar-profile-email">admin@tafsirkurd.com</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="topbar-search">
+                    <i data-lucide="search"></i>
+                    <input type="text" placeholder="Search...">
+                </div>
+                <div class="topbar-actions">
+                    <button class="topbar-btn">
+                        <i data-lucide="bell"></i>
+                    </button>
+                    <button class="topbar-btn">
+                        <i data-lucide="moon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">Bot Protection & Security</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary">
+                            <i data-lucide="download"></i>
+                            Export Logs
+                        </button>
+                        <button class="btn btn-primary">
+                            <i data-lucide="settings"></i>
+                            Configure
+                        </button>
+                    </div>
+                </div>
+
+                <!-- LIVE STATUS -->
+                <div class="status-header">
+                    <div class="status-dot"></div>
+                    <div class="status-text">Bot Protection Active</div>
+                    <div class="status-subtext">All systems operational</div>
+                </div>
+
+                <!-- METRICS -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">2,458</div>
+                        <div class="metric-label">Total Requests (24h)</div>
+                        <div class="metric-change positive">
+                            <i data-lucide="activity"></i>
+                            <span>Normal traffic pattern</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-value">45</div>
+                        <div class="metric-label">Bots Blocked (24h)</div>
+                        <div class="metric-change positive">
+                            <i data-lucide="shield"></i>
+                            <span>99.2% legitimate traffic</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-value">98.5%</div>
+                        <div class="metric-label">Detection Accuracy</div>
+                        <div class="metric-change positive">
+                            <i data-lucide="check-circle"></i>
+                            <span>High confidence</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-value">12</div>
+                        <div class="metric-label">Spam Attempts</div>
+                        <div class="metric-change">
+                            <i data-lucide="alert-circle"></i>
+                            <span>Contact form protection</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RECENT DETECTIONS -->
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Bot Detections</h3>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>IP Address</th>
+                                    <th>User Agent</th>
+                                    <th>Bot Type</th>
+                                    <th>Score</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>185.220.101.45</td>
+                                    <td>python-requests/2.28.0</td>
+                                    <td>Scraper</td>
+                                    <td>95%</td>
+                                    <td><span class="badge badge-danger">Blocked</span></td>
+                                    <td>12 min ago</td>
+                                </tr>
+                                <tr>
+                                    <td>192.168.1.100</td>
+                                    <td>Mozilla/5.0 (compatible; Googlebot/2.1)</td>
+                                    <td>Search Engine</td>
+                                    <td>5%</td>
+                                    <td><span class="badge badge-success">Allowed</span></td>
+                                    <td>45 min ago</td>
+                                </tr>
+                                <tr>
+                                    <td>103.21.244.0</td>
+                                    <td>curl/7.68.0</td>
+                                    <td>Tool</td>
+                                    <td>88%</td>
+                                    <td><span class="badge badge-danger">Blocked</span></td>
+                                    <td>1 hour ago</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- CLOUDFLARE INTEGRATION -->
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <h3 class="integration-title">Cloudflare WAF Integration</h3>
+                        <span class="badge badge-success">Connected</span>
+                    </div>
+                    <div class="integration-content">
+                        <div class="integration-row">
+                            <span class="integration-label">Rate Limiting</span>
+                            <label class="toggle">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="integration-row">
+                            <span class="integration-label">Bot Fight Mode</span>
+                            <label class="toggle">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="integration-row">
+                            <span class="integration-label">Turnstile (CAPTCHA)</span>
+                            <label class="toggle">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="integration-row">
+                            <span class="integration-label">Custom WAF Rules</span>
+                            <span class="integration-value">6 active</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUPABASE RLS -->
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <h3 class="integration-title">Supabase Row Level Security</h3>
+                        <span class="badge badge-success">Secured</span>
+                    </div>
+                    <div class="integration-content">
+                        <div class="integration-row">
+                            <span class="integration-label">Contact Form</span>
+                            <span class="integration-value">INSERT-only with validation</span>
+                        </div>
+                        <div class="integration-row">
+                            <span class="integration-label">TV Content</span>
+                            <span class="integration-value">Read-only (Public)</span>
+                        </div>
+                        <div class="integration-row">
+                            <span class="integration-label">Admin Tables</span>
+                            <span class="integration-value">Backend-only access</span>
+                        </div>
+                        <div class="integration-row">
+                            <span class="integration-label">Function Security</span>
+                            <span class="integration-value">Immutable search_path ✓</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ALERTS -->
+                <div class="alert alert-warning">
+                    <div class="alert-icon">
+                        <i data-lucide="alert-triangle" style="width: 18px; height: 18px; color: var(--text-primary);"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">Manual Action Required</div>
+                        <div class="alert-message">
+                            Enable "Leaked Password Protection" in Supabase Dashboard → Authentication → Policies
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <div class="alert-icon">
+                        <i data-lucide="info" style="width: 18px; height: 18px; color: var(--text-secondary);"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">Cloudflare WAF Rules Status</div>
+                        <div class="alert-message">
+                            WAF rules configured. Test in "Log" mode for 24 hours before enabling "Block" mode.
+                        </div>
+                        <div class="code-block">
+                            Rate Limit Contact Form: 5 req/60s<br>
+                            Block Writes to Read-Only Tables: Active<br>
+                            Analytics Rate Limit: 30 req/min
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const menuToggle = document.getElementById('menu-toggle');
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
+
+        mobileMenuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('mobile-open');
+        });
+    </script>
+</body>
+</html>

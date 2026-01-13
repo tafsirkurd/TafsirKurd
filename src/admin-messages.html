@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        .filters-bar {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-tertiary);
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            background: var(--bg-app);
+            border: 1px solid var(--border-medium);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: var(--font-family);
+            cursor: pointer;
+        }
+
+        .message-row.unread td {
+            font-weight: 500;
+        }
+
+        .message-preview {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .bulk-actions {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+        }
+
+        .bulk-actions.active {
+            display: flex;
+        }
+
+        .bulk-actions-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item">
+                        <i data-lucide="bar-chart-2"></i>
+                        <span class="nav-item-label">Dashboard</span>
+                    </a>
+                    <a href="/admin-analytics.html" class="nav-item">
+                        <i data-lucide="trending-up"></i>
+                        <span class="nav-item-label">Analytics</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item active">
+                        <i data-lucide="message-square"></i>
+                        <span class="nav-item-label">Messages</span>
+                        <span class="nav-item-badge">13</span>
+                    </a>
+                    <a href="/admin-videos.html" class="nav-item">
+                        <i data-lucide="video"></i>
+                        <span class="nav-item-label">Videos</span>
+                    </a>
+                    <a href="/admin-tv-management.html" class="nav-item">
+                        <i data-lucide="tv"></i>
+                        <span class="nav-item-label">TV Management</span>
+                    </a>
+                    <a href="/admin-backgrounds.html" class="nav-item">
+                        <i data-lucide="image"></i>
+                        <span class="nav-item-label">Backgrounds</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item">
+                        <i data-lucide="users"></i>
+                        <span class="nav-item-label">Users</span>
+                    </a>
+                    <a href="/admin-reading-stats.html" class="nav-item">
+                        <i data-lucide="book-open"></i>
+                        <span class="nav-item-label">Reading Stats</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-features.html" class="nav-item">
+                        <i data-lucide="layers"></i>
+                        <span class="nav-item-label">Features</span>
+                    </a>
+                    <a href="/admin-schedule.html" class="nav-item">
+                        <i data-lucide="calendar"></i>
+                        <span class="nav-item-label">Schedule</span>
+                    </a>
+                    <a href="/admin-social-stats.html" class="nav-item">
+                        <i data-lucide="share-2"></i>
+                        <span class="nav-item-label">Social Stats</span>
+                    </a>
+                    <a href="/admin-bot-protection.html" class="nav-item">
+                        <i data-lucide="shield"></i>
+                        <span class="nav-item-label">Bot Protection</span>
+                    </a>
+                    <a href="/admin-database.html" class="nav-item">
+                        <i data-lucide="database"></i>
+                        <span class="nav-item-label">Database</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar">
+                        <i data-lucide="user"></i>
+                    </div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name">Admin</div>
+                        <div class="sidebar-profile-email">admin@tafsirkurd.com</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="topbar-search">
+                    <i data-lucide="search"></i>
+                    <input type="text" placeholder="Search messages...">
+                </div>
+                <div class="topbar-actions">
+                    <button class="topbar-btn">
+                        <i data-lucide="bell"></i>
+                    </button>
+                    <button class="topbar-btn">
+                        <i data-lucide="moon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">Contact Messages</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary">
+                            <i data-lucide="download"></i>
+                            Export CSV
+                        </button>
+                        <button class="btn btn-primary">
+                            <i data-lucide="filter"></i>
+                            Filters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- FILTERS -->
+                <div class="filters-bar">
+                    <div class="filter-group">
+                        <label class="filter-label">Status</label>
+                        <select class="filter-select">
+                            <option>All Messages</option>
+                            <option>Unread</option>
+                            <option>Read</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Date Range</label>
+                        <select class="filter-select">
+                            <option>Last 7 days</option>
+                            <option>Last 30 days</option>
+                            <option>Last 90 days</option>
+                            <option>All time</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Sort By</label>
+                        <select class="filter-select">
+                            <option>Newest first</option>
+                            <option>Oldest first</option>
+                            <option>Name A-Z</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- BULK ACTIONS -->
+                <div class="bulk-actions" id="bulk-actions">
+                    <input type="checkbox" id="select-all">
+                    <span class="bulk-actions-label"><span id="selected-count">0</span> selected</span>
+                    <button class="btn btn-secondary">
+                        <i data-lucide="check"></i>
+                        Mark as Read
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i data-lucide="trash-2"></i>
+                        Delete
+                    </button>
+                </div>
+
+                <!-- MESSAGES TABLE -->
+                <div class="card">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">
+                                        <input type="checkbox" id="header-checkbox">
+                                    </th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Subject</th>
+                                    <th>Message</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th style="width: 100px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="message-row unread">
+                                    <td><input type="checkbox" class="row-checkbox"></td>
+                                    <td>Ahmad Khalil</td>
+                                    <td>ahmad.k@email.com</td>
+                                    <td>Question about Surah</td>
+                                    <td class="message-preview">I have a question regarding the interpretation of...</td>
+                                    <td><span class="badge badge-neutral">Unread</span></td>
+                                    <td>2 hours ago</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="table-btn" title="View">
+                                                <i data-lucide="eye"></i>
+                                            </button>
+                                            <button class="table-btn" title="Reply">
+                                                <i data-lucide="reply"></i>
+                                            </button>
+                                            <button class="table-btn" title="Delete">
+                                                <i data-lucide="trash-2"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="message-row">
+                                    <td><input type="checkbox" class="row-checkbox"></td>
+                                    <td>Sara Mohammed</td>
+                                    <td>sara.m@email.com</td>
+                                    <td>Thank you!</td>
+                                    <td class="message-preview">Thank you for creating this amazing resource...</td>
+                                    <td><span class="badge badge-success">Read</span></td>
+                                    <td>5 hours ago</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="table-btn">
+                                                <i data-lucide="eye"></i>
+                                            </button>
+                                            <button class="table-btn">
+                                                <i data-lucide="reply"></i>
+                                            </button>
+                                            <button class="table-btn">
+                                                <i data-lucide="trash-2"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="message-row unread">
+                                    <td><input type="checkbox" class="row-checkbox"></td>
+                                    <td>Omar Rahman</td>
+                                    <td>omar.r@email.com</td>
+                                    <td>Feature request</td>
+                                    <td class="message-preview">Would it be possible to add Kurdish subtitles to...</td>
+                                    <td><span class="badge badge-neutral">Unread</span></td>
+                                    <td>1 day ago</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="table-btn">
+                                                <i data-lucide="eye"></i>
+                                            </button>
+                                            <button class="table-btn">
+                                                <i data-lucide="reply"></i>
+                                            </button>
+                                            <button class="table-btn">
+                                                <i data-lucide="trash-2"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="message-row">
+                                    <td><input type="checkbox" class="row-checkbox"></td>
+                                    <td>Layla Hassan</td>
+                                    <td>layla.h@email.com</td>
+                                    <td>Technical issue</td>
+                                    <td class="message-preview">I'm experiencing problems loading videos on mobile...</td>
+                                    <td><span class="badge badge-success">Read</span></td>
+                                    <td>2 days ago</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="table-btn">
+                                                <i data-lucide="eye"></i>
+                                            </button>
+                                            <button class="table-btn">
+                                                <i data-lucide="reply"></i>
+                                            </button>
+                                            <button class="table-btn">
+                                                <i data-lucide="trash-2"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="message-row">
+                                    <td><input type="checkbox" class="row-checkbox"></td>
+                                    <td>Yusuf Ali</td>
+                                    <td>yusuf.a@email.com</td>
+                                    <td>Content suggestion</td>
+                                    <td class="message-preview">I would love to see more content about...</td>
+                                    <td><span class="badge badge-success">Read</span></td>
+                                    <td>3 days ago</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="table-btn">
+                                                <i data-lucide="eye"></i>
+                                            </button>
+                                            <button class="table-btn">
+                                                <i data-lucide="reply"></i>
+                                            </button>
+                                            <button class="table-btn">
+                                                <i data-lucide="trash-2"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- PAGINATION -->
+                    <div style="padding: 16px; border-top: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center;">
+                        <div style="font-size: 13px; color: var(--text-secondary);">
+                            Showing 1-5 of 13 messages
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary" disabled>
+                                <i data-lucide="chevron-left"></i>
+                                Previous
+                            </button>
+                            <button class="btn btn-secondary">
+                                Next
+                                <i data-lucide="chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Sidebar toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
+
+        mobileMenuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('mobile-open');
+        });
+
+        // Checkbox selection
+        const headerCheckbox = document.getElementById('header-checkbox');
+        const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+        const bulkActions = document.getElementById('bulk-actions');
+        const selectedCount = document.getElementById('selected-count');
+
+        function updateBulkActions() {
+            const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+            selectedCount.textContent = checkedCount;
+
+            if (checkedCount > 0) {
+                bulkActions.classList.add('active');
+            } else {
+                bulkActions.classList.remove('active');
+            }
+        }
+
+        headerCheckbox.addEventListener('change', (e) => {
+            rowCheckboxes.forEach(cb => {
+                cb.checked = e.target.checked;
+            });
+            updateBulkActions();
+        });
+
+        rowCheckboxes.forEach(cb => {
+            cb.addEventListener('change', updateBulkActions);
+        });
+    </script>
+</body>
+</html>

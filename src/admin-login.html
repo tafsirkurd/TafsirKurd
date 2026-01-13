@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - TafsirKurd</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000000;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-logo {
+            width: 48px;
+            height: 48px;
+            background: #FFFFFF;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .login-logo svg {
+            width: 28px;
+            height: 28px;
+            color: #000000;
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: #CCCCCC;
+        }
+
+        .login-card {
+            background: #111111;
+            border: 1px solid #222222;
+            border-radius: 12px;
+            padding: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #FFFFFF;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: #000000;
+            border: 1px solid #444444;
+            border-radius: 8px;
+            color: #FFFFFF;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #FFFFFF;
+        }
+
+        .form-input::placeholder {
+            color: #888888;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: #FFFFFF;
+            color: #000000;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-login:hover {
+            background: #CCCCCC;
+        }
+
+        .btn-login:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 16px;
+            font-size: 13px;
+            color: #FFFFFF;
+            display: none;
+        }
+
+        .error-message.active {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #000000;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 12px;
+            color: #888888;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-logo">
+                <i data-lucide="shield-check"></i>
+            </div>
+            <h1 class="login-title">Admin Login</h1>
+            <p class="login-subtitle">TafsirKurd Dashboard</p>
+        </div>
+
+        <div class="login-card">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input
+                        type="email"
+                        class="form-input"
+                        id="email"
+                        placeholder="admin@tafsirkurd.com"
+                        value="tefsirkurd@gmail.com"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input
+                        type="password"
+                        class="form-input"
+                        id="password"
+                        placeholder="Enter your password"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <i data-lucide="log-in"></i>
+                    <span>Sign In</span>
+                </button>
+
+                <div class="error-message" id="errorMessage">
+                    <i data-lucide="alert-circle" style="width: 16px; height: 16px;"></i>
+                    <span id="errorText"></span>
+                </div>
+            </form>
+        </div>
+
+        <div class="login-footer">
+            Secure admin access • TafsirKurd © 2026
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Check if already logged in
+        const adminToken = sessionStorage.getItem('adminToken');
+        if (adminToken) {
+            window.location.href = '/admin-dashboard.html';
+        }
+
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Show loading state
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<div class="spinner"></div><span>Signing in...</span>';
+            errorMessage.classList.remove('active');
+
+            try {
+                const response = await fetch('/admin-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'login',
+                        email,
+                        password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    sessionStorage.setItem('adminToken', data.token);
+                    window.location.href = '/admin-dashboard.html';
+                } else {
+                    // Show error with attempts remaining
+                    let errorMsg = data.error || 'Invalid credentials';
+                    if (data.attemptsRemaining !== undefined && data.attemptsRemaining > 0) {
+                        errorMsg += ` (${data.attemptsRemaining} attempt${data.attemptsRemaining !== 1 ? 's' : ''} remaining)`;
+                    }
+                    errorText.textContent = errorMsg;
+                    errorMessage.classList.add('active');
+                    lucide.createIcons();
+
+                    // Reset button
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i data-lucide="log-in"></i><span>Sign In</span>';
+                    lucide.createIcons();
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errorText.textContent = 'Connection error. Please try again.';
+                errorMessage.classList.add('active');
+                lucide.createIcons();
+
+                // Reset button
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i data-lucide="log-in"></i><span>Sign In</span>';
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>
