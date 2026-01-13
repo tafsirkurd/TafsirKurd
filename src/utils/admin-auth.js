@@ -8,10 +8,19 @@ async function initSupabase() {
     if (supabaseClient) return true;
 
     try {
-        const SUPABASE_URL = 'https://gijupzejtbpifjzwadee.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpanVwemVqdGJwaWZqendh ZGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY5NjczNjUsImV4cCI6MjA2MjU0MzM2NX0.OWHdA-wTf2aQLlQnMxU6cJaGH2ow8vRQlaCW8q8Q1vU';
+        // Fetch Supabase config from server endpoint (uses environment variables)
+        const configResponse = await fetch('/config');
+        if (!configResponse.ok) {
+            throw new Error('Failed to fetch Supabase configuration');
+        }
 
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        const { supabaseUrl, supabaseKey } = await configResponse.json();
+
+        if (!supabaseUrl || !supabaseKey) {
+            throw new Error('Invalid Supabase configuration received');
+        }
+
+        supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey, {
             auth: {
                 persistSession: false,
                 autoRefreshToken: false,
