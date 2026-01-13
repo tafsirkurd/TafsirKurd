@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Statistics - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span></a>
+                    <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span></a>
+                    <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                    <a href="/admin-tv-management.html" class="nav-item"><i data-lucide="tv"></i><span class="nav-item-label">TV Management</span></a>
+                    <a href="/admin-backgrounds.html" class="nav-item"><i data-lucide="image"></i><span class="nav-item-label">Backgrounds</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                    <a href="/admin-reading-stats.html" class="nav-item active"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                    <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                    <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+                    <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                    <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name">Admin</div>
+                        <div class="sidebar-profile-email">admin@tafsirkurd.com</div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; display: flex; align-items: center; transition: color 0.2s;" title="Logout"><i data-lucide="log-out"></i></button>
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+                <div class="topbar-search"><i data-lucide="search"></i><input type="text" placeholder="Search..." id="search-input"></div>
+                <div class="topbar-actions">
+                    <button class="topbar-btn"><i data-lucide="bell"></i></button>
+                    <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
+                </div>
+            </header>
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">Reading Statistics</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" onclick="loadStats()"><i data-lucide="refresh-cw"></i>Refresh</button>
+                    </div>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric-card"><div class="metric-value" id="totalReaders">0</div><div class="metric-label">Total Readers</div></div>
+                    <div class="metric-card"><div class="metric-value" id="avgProgress">0%</div><div class="metric-label">Avg Progress</div></div>
+                    <div class="metric-card"><div class="metric-value" id="completedReaders">0</div><div class="metric-label">Completed</div></div>
+                    <div class="metric-card"><div class="metric-value" id="activeReaders">0</div><div class="metric-label">Active (7d)</div></div>
+                </div>
+                <div class="card" style="margin-bottom: 24px;">
+                    <div style="padding: 20px;">
+                        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Reading Progress Distribution</h3>
+                        <canvas id="chart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>User ID</th><th>Progress</th><th>Ayahs Read</th><th>Last Activity</th></tr></thead>
+                            <tbody id="table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="/utils/admin-auth.js"></script>
+    <script>
+        lucide.createIcons();
+        let chart = null;
+        (async () => { const auth = await window.adminAuth.checkAuth(); if (auth) loadStats(); })();
+        document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
+        const themeToggle = document.getElementById('theme-toggle'), themeIcon = document.getElementById('theme-icon');
+        const savedTheme = localStorage.getItem('adminTheme') || 'light';
+        if (savedTheme === 'dark') { document.body.classList.add('dark-mode'); themeIcon.setAttribute('data-lucide', 'sun'); lucide.createIcons(); }
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+            localStorage.setItem('adminTheme', isDark ? 'dark' : 'light');
+        });
+        async function loadStats() {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+            const { data, error } = await supabase.from('user_data').select('*');
+            if (error) { console.error(error); return; }
+            const users = (data || []).map(u => {
+                const d = u.data || {};
+                return {
+                    id: u.id,
+                    ayahsRead: parseInt(d.ayahsRead) || 0,
+                    lastActive: u.updated_at || u.created_at,
+                    created: u.created_at
+                };
+            });
+            const totalAyahsInQuran = 6236;
+            const totalReaders = users.length;
+            const totalAyahsRead = users.reduce((sum, u) => sum + u.ayahsRead, 0);
+            const avgProgress = totalReaders > 0 ? (totalAyahsRead / (totalReaders * totalAyahsInQuran) * 100).toFixed(1) : 0;
+            const completedReaders = users.filter(u => u.ayahsRead >= totalAyahsInQuran).length;
+            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+            const activeReaders = users.filter(u => new Date(u.lastActive) > sevenDaysAgo).length;
+            document.getElementById('totalReaders').textContent = totalReaders;
+            document.getElementById('avgProgress').textContent = avgProgress + '%';
+            document.getElementById('completedReaders').textContent = completedReaders;
+            document.getElementById('activeReaders').textContent = activeReaders;
+            const ranges = [0, 10, 25, 50, 75, 90, 100];
+            const rangeCounts = ranges.map((r, i) => {
+                if (i === ranges.length - 1) return 0;
+                const nextRange = ranges[i + 1];
+                return users.filter(u => {
+                    const progress = (u.ayahsRead / totalAyahsInQuran) * 100;
+                    return progress >= r && progress < nextRange;
+                }).length;
+            });
+            const ctx = document.getElementById('chart').getContext('2d');
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['0-10%', '10-25%', '25-50%', '50-75%', '75-90%', '90-100%'],
+                    datasets: [{
+                        label: 'Readers',
+                        data: rangeCounts.slice(0, 6),
+                        backgroundColor: 'rgba(99, 102, 241, 0.5)',
+                        borderColor: 'rgb(99, 102, 241)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+            const tbody = document.getElementById('table');
+            tbody.innerHTML = '';
+            const sortedUsers = [...users].sort((a, b) => b.ayahsRead - a.ayahsRead).slice(0, 20);
+            if (sortedUsers.length === 0) {
+                const tr = document.createElement('tr'), td = document.createElement('td');
+                td.colSpan = 4; td.style.textAlign = 'center'; td.style.padding = '40px';
+                td.textContent = 'No reading data found';
+                tr.appendChild(td); tbody.appendChild(tr);
+                return;
+            }
+            sortedUsers.forEach(u => {
+                const tr = document.createElement('tr');
+                const tdId = document.createElement('td');
+                const code = document.createElement('code');
+                code.textContent = u.id.toString().substring(0, 8) + '...';
+                code.style.fontSize = '12px';
+                tdId.appendChild(code);
+                tr.appendChild(tdId);
+                const progress = ((u.ayahsRead / totalAyahsInQuran) * 100).toFixed(1);
+                const tdProgress = document.createElement('td');
+                const progressBar = document.createElement('div');
+                progressBar.style.cssText = 'width:100px;height:6px;background:var(--bg-active);border-radius:3px;overflow:hidden;';
+                const progressFill = document.createElement('div');
+                progressFill.style.cssText = `width:${progress}%;height:100%;background:var(--primary);`;
+                progressBar.appendChild(progressFill);
+                tdProgress.appendChild(progressBar);
+                const progressText = document.createElement('span');
+                progressText.style.cssText = 'font-size:12px;margin-left:8px;';
+                progressText.textContent = progress + '%';
+                tdProgress.appendChild(progressText);
+                tr.appendChild(tdProgress);
+                const tdAyahs = document.createElement('td');
+                tdAyahs.textContent = u.ayahsRead.toLocaleString();
+                tdAyahs.style.fontWeight = '600';
+                tr.appendChild(tdAyahs);
+                const tdLast = document.createElement('td');
+                tdLast.textContent = new Date(u.lastActive).toLocaleDateString();
+                tdLast.style.fontSize = '13px';
+                tr.appendChild(tdLast);
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
