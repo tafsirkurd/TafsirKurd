@@ -241,6 +241,12 @@ body {
 
 .sidebar-profile-info {
     flex: 1;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.sidebar-profile-info.loaded {
+    opacity: 1;
 }
 
 .sidebar.collapsed .sidebar-profile-info {

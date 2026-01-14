@@ -88,6 +88,12 @@ async function checkAuth() {
                 if (el) el.textContent = data.fullName || 'Admin';
             });
 
+            // Show profile info after data is loaded (prevent flash of placeholder content)
+            const profileInfoElements = document.querySelectorAll('.sidebar-profile-info');
+            profileInfoElements.forEach(el => {
+                if (el) el.classList.add('loaded');
+            });
+
             // Initialize Supabase and heartbeat
             await initSupabase();
 
