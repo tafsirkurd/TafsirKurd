@@ -1,5 +1,6 @@
 // Cloudflare Pages Function - Enhanced Admin Authentication
 // Device locking, heartbeat tracking, permission checks
+// v1.1 - Auto-unlock on logout
 
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
