@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geographic Analytics - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        .geo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .geo-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .geo-value {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .geo-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+
+        .location-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .location-item:last-child {
+            border-bottom: none;
+        }
+
+        .location-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .location-flag {
+            font-size: 24px;
+        }
+
+        .location-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .location-details {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .location-visits {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--text-primary);
+        }
+
+        .map-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+            background: var(--bg-app);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span></a>
+                    <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                    <a href="/admin-geographic-analytics.html" class="nav-item active"><i data-lucide="globe"></i><span class="nav-item-label">Geographic</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span></a>
+                    <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                    <a href="/admin-tv-management.html" class="nav-item"><i data-lucide="tv"></i><span class="nav-item-label">TV Management</span></a>
+                    <a href="/admin-backgrounds.html" class="nav-item"><i data-lucide="image"></i><span class="nav-item-label">Backgrounds</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                    <a href="/admin-reading-stats.html" class="nav-item"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                    <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                    <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+                    <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                    <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name">Admin</div>
+                        <div class="sidebar-profile-email">admin@tafsirkurd.com</div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; display: flex; align-items: center; transition: color 0.2s;" title="Logout"><i data-lucide="log-out"></i></button>
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+                <div class="topbar-search"><i data-lucide="search"></i><input type="text" placeholder="Search locations..."></div>
+                <div class="topbar-actions">
+                    <button class="topbar-btn"><i data-lucide="bell"></i></button>
+                    <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
+                </div>
+            </header>
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">Geographic Analytics</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" onclick="loadGeoData()"><i data-lucide="refresh-cw"></i>Refresh</button>
+                    </div>
+                </div>
+
+                <div class="geo-grid">
+                    <div class="geo-card">
+                        <div class="geo-value" id="totalVisits">--</div>
+                        <div class="geo-label">Total Visits</div>
+                    </div>
+                    <div class="geo-card">
+                        <div class="geo-value" id="totalCountries">--</div>
+                        <div class="geo-label">Countries</div>
+                    </div>
+                    <div class="geo-card">
+                        <div class="geo-value" id="totalCities">--</div>
+                        <div class="geo-label">Cities</div>
+                    </div>
+                    <div class="geo-card">
+                        <div class="geo-value" id="totalRegions">--</div>
+                        <div class="geo-label">Regions</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="card-header">
+                        <h2 class="card-title">Visitor Distribution Map</h2>
+                    </div>
+                    <div class="map-container" id="mapContainer">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Top Countries</h2>
+                        </div>
+                        <div id="countriesList">
+                            <div style="text-align: center; padding: 40px;">
+                                <div class="loading-spinner" style="margin: 0 auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Top Cities</h2>
+                        </div>
+                        <div id="citiesList">
+                            <div style="text-align: center; padding: 40px;">
+                                <div class="loading-spinner" style="margin: 0 auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Top Regions</h2>
+                        </div>
+                        <div id="regionsList">
+                            <div style="text-align: center; padding: 40px;">
+                                <div class="loading-spinner" style="margin: 0 auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="/utils/admin-auth.js"></script>
+    <script>
+        lucide.createIcons();
+
+        (async () => {
+            const auth = await window.adminAuth.checkAuth();
+            if (auth) loadGeoData();
+        })();
+
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        });
+
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const savedTheme = localStorage.getItem('adminTheme') || 'light';
+
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeIcon.setAttribute('data-lucide', 'sun');
+            lucide.createIcons();
+        }
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+            localStorage.setItem('adminTheme', isDark ? 'dark' : 'light');
+        });
+
+        async function loadGeoData() {
+            try {
+                const response = await fetch('/functions/geo-analytics');
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to load geographic data');
+                }
+
+                const { countries, regions, cities, totalVisits } = result.data;
+
+                // Update metrics
+                const totalVisitsEl = document.getElementById('totalVisits');
+                if (totalVisitsEl) {
+                    totalVisitsEl.textContent = totalVisits.toLocaleString();
+                }
+
+                const totalCountriesEl = document.getElementById('totalCountries');
+                if (totalCountriesEl) {
+                    totalCountriesEl.textContent = countries.length.toLocaleString();
+                }
+
+                const totalCitiesEl = document.getElementById('totalCities');
+                if (totalCitiesEl) {
+                    totalCitiesEl.textContent = cities.length.toLocaleString();
+                }
+
+                const totalRegionsEl = document.getElementById('totalRegions');
+                if (totalRegionsEl) {
+                    totalRegionsEl.textContent = regions.length.toLocaleString();
+                }
+
+                // Render countries list
+                renderLocationList('countriesList', countries, 'country');
+
+                // Render cities list
+                renderLocationList('citiesList', cities, 'city');
+
+                // Render regions list
+                renderLocationList('regionsList', regions, 'region');
+
+                // Update map
+                updateMap(cities);
+
+            } catch (error) {
+                console.error('Error loading geo data:', error);
+
+                const totalVisitsEl = document.getElementById('totalVisits');
+                if (totalVisitsEl) totalVisitsEl.textContent = 'Error';
+
+                const totalCountriesEl = document.getElementById('totalCountries');
+                if (totalCountriesEl) totalCountriesEl.textContent = 'Error';
+
+                const totalCitiesEl = document.getElementById('totalCities');
+                if (totalCitiesEl) totalCitiesEl.textContent = 'Error';
+
+                const totalRegionsEl = document.getElementById('totalRegions');
+                if (totalRegionsEl) totalRegionsEl.textContent = 'Error';
+            }
+        }
+
+        function renderLocationList(containerId, locations, type) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            // Clear loading spinner
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+
+            if (!locations || locations.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'empty-state';
+
+                const icon = document.createElement('i');
+                icon.setAttribute('data-lucide', 'map-pin');
+                empty.appendChild(icon);
+
+                const text = document.createElement('p');
+                text.textContent = 'No data available';
+                empty.appendChild(text);
+
+                container.appendChild(empty);
+                lucide.createIcons();
+                return;
+            }
+
+            // Show top 10
+            const topLocations = locations.slice(0, 10);
+
+            topLocations.forEach(location => {
+                const item = document.createElement('div');
+                item.className = 'location-item';
+
+                const info = document.createElement('div');
+                info.className = 'location-info';
+
+                const flag = document.createElement('div');
+                flag.className = 'location-flag';
+                flag.textContent = getLocationIcon(type);
+                info.appendChild(flag);
+
+                const details = document.createElement('div');
+                const name = document.createElement('div');
+                name.className = 'location-name';
+                name.textContent = location.name || 'Unknown';
+                details.appendChild(name);
+
+                if (type === 'city' && location.country) {
+                    const countryDetail = document.createElement('div');
+                    countryDetail.className = 'location-details';
+                    countryDetail.textContent = location.country;
+                    details.appendChild(countryDetail);
+                }
+
+                if (type === 'region' && location.country) {
+                    const countryDetail = document.createElement('div');
+                    countryDetail.className = 'location-details';
+                    countryDetail.textContent = location.country;
+                    details.appendChild(countryDetail);
+                }
+
+                info.appendChild(details);
+                item.appendChild(info);
+
+                const visits = document.createElement('div');
+                visits.className = 'location-visits';
+                visits.textContent = (location.visits || 0).toLocaleString();
+                item.appendChild(visits);
+
+                container.appendChild(item);
+            });
+
+            lucide.createIcons();
+        }
+
+        function getLocationIcon(type) {
+            switch (type) {
+                case 'country': return '🌍';
+                case 'city': return '🏙️';
+                case 'region': return '📍';
+                default: return '📌';
+            }
+        }
+
+        function updateMap(cities) {
+            const mapContainer = document.getElementById('mapContainer');
+            if (!mapContainer) return;
+
+            while (mapContainer.firstChild) {
+                mapContainer.removeChild(mapContainer.firstChild);
+            }
+
+            if (!cities || cities.length === 0) {
+                const placeholder = document.createElement('div');
+                placeholder.textContent = 'Map visualization - No location data available';
+                placeholder.style.cssText = 'text-align: center; color: var(--text-secondary);';
+                mapContainer.appendChild(placeholder);
+                return;
+            }
+
+            const citiesWithCoords = cities.filter(city => city.latitude && city.longitude);
+
+            if (citiesWithCoords.length === 0) {
+                const placeholder = document.createElement('div');
+                placeholder.textContent = 'Map visualization - Coordinate data not available';
+                placeholder.style.cssText = 'text-align: center; color: var(--text-secondary);';
+                mapContainer.appendChild(placeholder);
+                return;
+            }
+
+            const mapInfo = document.createElement('div');
+            mapInfo.style.cssText = 'text-align: center; padding: 20px;';
+
+            const title = document.createElement('div');
+            title.textContent = 'World Map Visualization';
+            title.style.cssText = 'font-size: 18px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);';
+            mapInfo.appendChild(title);
+
+            const subtitle = document.createElement('div');
+            subtitle.textContent = citiesWithCoords.length + ' cities with geographic coordinates';
+            subtitle.style.cssText = 'font-size: 14px; color: var(--text-secondary);';
+            mapInfo.appendChild(subtitle);
+
+            const note = document.createElement('div');
+            note.textContent = 'Interactive map requires additional mapping library (Leaflet, Mapbox, etc.)';
+            note.style.cssText = 'font-size: 12px; color: var(--text-tertiary); margin-top: 8px;';
+            mapInfo.appendChild(note);
+
+            mapContainer.appendChild(mapInfo);
+        }
+    </script>
+</body>
+</html>

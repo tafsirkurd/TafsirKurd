@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Library - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .video-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .video-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+
+        .video-thumbnail {
+            position: relative;
+            width: 100%;
+            height: 160px;
+            background: var(--bg-app);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-duration {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .video-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: var(--primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .video-badge.featured {
+            background: #f59e0b;
+        }
+
+        .video-badge.unpublished {
+            background: #6b7280;
+        }
+
+        .video-info {
+            padding: 16px;
+        }
+
+        .video-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .video-meta {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .video-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 8px;
+            border-top: 1px solid var(--border-light);
+            padding-top: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-surface);
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            margin: 20px;
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            background: var(--bg-app);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .file-upload {
+            border: 2px dashed var(--border-light);
+            border-radius: 8px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary);
+            background: var(--bg-hover);
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 10px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-icon {
+            flex: 1;
+            padding: 8px;
+            background: transparent;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-hover);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-icon.delete:hover {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span></a>
+                    <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                    <a href="/admin-geographic-analytics.html" class="nav-item"><i data-lucide="globe"></i><span class="nav-item-label">Geographic</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span></a>
+                    <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                    <a href="/admin-video-library.html" class="nav-item active"><i data-lucide="film"></i><span class="nav-item-label">Video Library</span></a>
+                    <a href="/admin-tv-management.html" class="nav-item"><i data-lucide="tv"></i><span class="nav-item-label">TV Management</span></a>
+                    <a href="/admin-backgrounds.html" class="nav-item"><i data-lucide="image"></i><span class="nav-item-label">Backgrounds</span></a>
+                    <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                    <a href="/admin-reading-stats.html" class="nav-item"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                    <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                    <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+                    <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                    <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name">Admin</div>
+                        <div class="sidebar-profile-email">admin@tafsirkurd.com</div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; display: flex; align-items: center; transition: color 0.2s;" title="Logout"><i data-lucide="log-out"></i></button>
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+                <div class="topbar-search"><i data-lucide="search"></i><input type="text" placeholder="Search videos..." id="searchInput" onkeyup="filterVideos()"></div>
+                <div class="topbar-actions">
+                    <button class="topbar-btn"><i data-lucide="bell"></i></button>
+                    <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
+                </div>
+            </header>
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">Video Library (AWS S3)</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" onclick="loadVideos()"><i data-lucide="refresh-cw"></i>Refresh</button>
+                        <button class="btn btn-primary" onclick="openUploadModal()"><i data-lucide="upload"></i>Upload Video</button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalVideos">--</div>
+                        <div class="stat-label">Total Videos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="publishedVideos">--</div>
+                        <div class="stat-label">Published</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalViews">--</div>
+                        <div class="stat-label">Total Views</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalStorage">--</div>
+                        <div class="stat-label">Storage Used</div>
+                    </div>
+                </div>
+
+                <div class="filter-bar">
+                    <select class="filter-select" id="categoryFilter" onchange="filterVideos()">
+                        <option value="">All Categories</option>
+                        <option value="tafsir">Tafsir</option>
+                        <option value="lecture">Lecture</option>
+                        <option value="series">Series</option>
+                    </select>
+                    <select class="filter-select" id="statusFilter" onchange="filterVideos()">
+                        <option value="">All Status</option>
+                        <option value="published">Published</option>
+                        <option value="unpublished">Unpublished</option>
+                        <option value="featured">Featured</option>
+                    </select>
+                </div>
+
+                <div id="videosContainer">
+                    <div class="video-grid" id="videosGrid">
+                        <div style="grid-column: 1/-1; text-align: center; padding: 60px;">
+                            <div style="width: 40px; height: 40px; border: 3px solid var(--border-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Upload Video to AWS S3</h2>
+            </div>
+            <form id="uploadForm" onsubmit="uploadVideo(event)">
+                <div class="form-group">
+                    <label class="form-label">Title *</label>
+                    <input type="text" class="form-input" id="videoTitle" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" id="videoDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">S3 Key (Path) *</label>
+                    <input type="text" class="form-input" id="s3Key" placeholder="videos/2024/my-video.mp4" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">S3 Bucket *</label>
+                    <input type="text" class="form-input" id="s3Bucket" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thumbnail URL</label>
+                    <input type="text" class="form-input" id="thumbnailUrl" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">CloudFront URL (Optional)</label>
+                    <input type="text" class="form-input" id="cloudfrontUrl" placeholder="https://d123.cloudfront.net/...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" id="videoCategory">
+                        <option value="tafsir">Tafsir</option>
+                        <option value="lecture">Lecture</option>
+                        <option value="series">Series</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Duration (seconds)</label>
+                    <input type="number" class="form-input" id="videoDuration">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">File Size (bytes)</label>
+                    <input type="number" class="form-input" id="fileSize">
+                </div>
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="isPublished">
+                        <span>Publish immediately</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="isFeatured">
+                        <span>Mark as featured</span>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Video</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Edit Video</h2>
+            </div>
+            <form id="editForm" onsubmit="updateVideo(event)">
+                <input type="hidden" id="editVideoId">
+                <div class="form-group">
+                    <label class="form-label">Title *</label>
+                    <input type="text" class="form-input" id="editTitle" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" id="editDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thumbnail URL</label>
+                    <input type="text" class="form-input" id="editThumbnail">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" id="editCategory">
+                        <option value="tafsir">Tafsir</option>
+                        <option value="lecture">Lecture</option>
+                        <option value="series">Series</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="editIsPublished">
+                        <span>Published</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="editIsFeatured">
+                        <span>Featured</span>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/utils/admin-auth.js"></script>
+    <script>
+        lucide.createIcons();
+
+        let allVideos = [];
+        let supabase = null;
+
+        (async () => {
+            const auth = await window.adminAuth.checkAuth();
+            if (auth) {
+                supabase = window.adminAuth.getSupabase();
+                loadVideos();
+            }
+        })();
+
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        });
+
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const savedTheme = localStorage.getItem('adminTheme') || 'light';
+
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeIcon.setAttribute('data-lucide', 'sun');
+            lucide.createIcons();
+        }
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+            localStorage.setItem('adminTheme', isDark ? 'dark' : 'light');
+        });
+
+        async function loadVideos() {
+            try {
+                const { data, error } = await supabase
+                    .from('tv_videos')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allVideos = data || [];
+                updateStats();
+                renderVideos(allVideos);
+            } catch (error) {
+                console.error('Error loading videos:', error);
+                const grid = document.getElementById('videosGrid');
+                grid.textContent = 'Error loading videos: ' + error.message;
+            }
+        }
+
+        function updateStats() {
+            const totalEl = document.getElementById('totalVideos');
+            if (totalEl) totalEl.textContent = allVideos.length;
+
+            const published = allVideos.filter(v => v.is_published).length;
+            const publishedEl = document.getElementById('publishedVideos');
+            if (publishedEl) publishedEl.textContent = published;
+
+            const views = allVideos.reduce((sum, v) => sum + (v.view_count || 0), 0);
+            const viewsEl = document.getElementById('totalViews');
+            if (viewsEl) viewsEl.textContent = views.toLocaleString();
+
+            const storage = allVideos.reduce((sum, v) => sum + (v.file_size || 0), 0);
+            const storageEl = document.getElementById('totalStorage');
+            if (storageEl) {
+                const gb = (storage / (1024 * 1024 * 1024)).toFixed(2);
+                storageEl.textContent = gb + ' GB';
+            }
+        }
+
+        function filterVideos() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            const status = document.getElementById('statusFilter').value;
+
+            const filtered = allVideos.filter(v => {
+                const matchesSearch = !searchTerm ||
+                    v.title.toLowerCase().includes(searchTerm) ||
+                    (v.description && v.description.toLowerCase().includes(searchTerm));
+
+                const matchesCategory = !category || v.category === category;
+
+                let matchesStatus = true;
+                if (status === 'published') matchesStatus = v.is_published === true;
+                else if (status === 'unpublished') matchesStatus = v.is_published === false;
+                else if (status === 'featured') matchesStatus = v.is_featured === true;
+
+                return matchesSearch && matchesCategory && matchesStatus;
+            });
+
+            renderVideos(filtered);
+        }
+
+        function renderVideos(videos) {
+            const grid = document.getElementById('videosGrid');
+
+            while (grid.firstChild) {
+                grid.removeChild(grid.firstChild);
+            }
+
+            if (videos.length === 0) {
+                const empty = document.createElement('div');
+                empty.style.cssText = 'grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text-secondary);';
+                empty.textContent = 'No videos found';
+                grid.appendChild(empty);
+                return;
+            }
+
+            videos.forEach(video => {
+                const card = document.createElement('div');
+                card.className = 'video-card';
+
+                const thumbnail = document.createElement('div');
+                thumbnail.className = 'video-thumbnail';
+
+                if (video.thumbnail_url) {
+                    const img = document.createElement('img');
+                    img.src = video.thumbnail_url;
+                    img.alt = video.title;
+                    thumbnail.appendChild(img);
+                } else {
+                    const icon = document.createElement('i');
+                    icon.setAttribute('data-lucide', 'film');
+                    icon.style.cssText = 'width: 48px; height: 48px; color: var(--text-tertiary);';
+                    thumbnail.appendChild(icon);
+                }
+
+                if (video.duration) {
+                    const duration = document.createElement('div');
+                    duration.className = 'video-duration';
+                    const minutes = Math.floor(video.duration / 60);
+                    const seconds = video.duration % 60;
+                    duration.textContent = minutes + ':' + seconds.toString().padStart(2, '0');
+                    thumbnail.appendChild(duration);
+                }
+
+                if (!video.is_published) {
+                    const badge = document.createElement('div');
+                    badge.className = 'video-badge unpublished';
+                    badge.textContent = 'Draft';
+                    thumbnail.appendChild(badge);
+                } else if (video.is_featured) {
+                    const badge = document.createElement('div');
+                    badge.className = 'video-badge featured';
+                    badge.textContent = 'Featured';
+                    thumbnail.appendChild(badge);
+                }
+
+                card.appendChild(thumbnail);
+
+                const info = document.createElement('div');
+                info.className = 'video-info';
+
+                const title = document.createElement('div');
+                title.className = 'video-title';
+                title.textContent = video.title;
+                info.appendChild(title);
+
+                const meta = document.createElement('div');
+                meta.className = 'video-meta';
+
+                const viewsItem = document.createElement('div');
+                viewsItem.className = 'video-meta-item';
+                const viewsIcon = document.createElement('i');
+                viewsIcon.setAttribute('data-lucide', 'eye');
+                viewsIcon.style.cssText = 'width: 14px; height: 14px;';
+                viewsItem.appendChild(viewsIcon);
+                const viewsText = document.createElement('span');
+                viewsText.textContent = (video.view_count || 0).toLocaleString();
+                viewsItem.appendChild(viewsText);
+                meta.appendChild(viewsItem);
+
+                const sizeItem = document.createElement('div');
+                sizeItem.className = 'video-meta-item';
+                const sizeIcon = document.createElement('i');
+                sizeIcon.setAttribute('data-lucide', 'hard-drive');
+                sizeIcon.style.cssText = 'width: 14px; height: 14px;';
+                sizeItem.appendChild(sizeIcon);
+                const sizeText = document.createElement('span');
+                sizeText.textContent = formatFileSize(video.file_size);
+                sizeItem.appendChild(sizeText);
+                meta.appendChild(sizeItem);
+
+                info.appendChild(meta);
+
+                const actions = document.createElement('div');
+                actions.className = 'video-actions';
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'btn-icon';
+                editBtn.onclick = () => openEditModal(video);
+                const editIcon = document.createElement('i');
+                editIcon.setAttribute('data-lucide', 'edit-2');
+                editIcon.style.cssText = 'width: 14px; height: 14px;';
+                editBtn.appendChild(editIcon);
+                actions.appendChild(editBtn);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-icon delete';
+                deleteBtn.onclick = () => deleteVideo(video.id);
+                const deleteIcon = document.createElement('i');
+                deleteIcon.setAttribute('data-lucide', 'trash-2');
+                deleteIcon.style.cssText = 'width: 14px; height: 14px;';
+                deleteBtn.appendChild(deleteIcon);
+                actions.appendChild(deleteBtn);
+
+                info.appendChild(actions);
+                card.appendChild(info);
+                grid.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        function formatFileSize(bytes) {
+            if (!bytes) return 'N/A';
+            const mb = bytes / (1024 * 1024);
+            if (mb < 1024) return mb.toFixed(1) + ' MB';
+            const gb = mb / 1024;
+            return gb.toFixed(2) + ' GB';
+        }
+
+        function openUploadModal() {
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+            document.getElementById('uploadForm').reset();
+        }
+
+        function openEditModal(video) {
+            document.getElementById('editVideoId').value = video.id;
+            document.getElementById('editTitle').value = video.title;
+            document.getElementById('editDescription').value = video.description || '';
+            document.getElementById('editThumbnail').value = video.thumbnail_url || '';
+            document.getElementById('editCategory').value = video.category || 'tafsir';
+            document.getElementById('editIsPublished').checked = video.is_published || false;
+            document.getElementById('editIsFeatured').checked = video.is_featured || false;
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        async function uploadVideo(event) {
+            event.preventDefault();
+
+            const videoData = {
+                title: document.getElementById('videoTitle').value.trim(),
+                description: document.getElementById('videoDescription').value.trim() || null,
+                s3_key: document.getElementById('s3Key').value.trim(),
+                s3_bucket: document.getElementById('s3Bucket').value.trim(),
+                thumbnail_url: document.getElementById('thumbnailUrl').value.trim() || null,
+                cloudfront_url: document.getElementById('cloudfrontUrl').value.trim() || null,
+                category: document.getElementById('videoCategory').value,
+                duration: parseInt(document.getElementById('videoDuration').value) || null,
+                file_size: parseInt(document.getElementById('fileSize').value) || null,
+                is_published: document.getElementById('isPublished').checked,
+                is_featured: document.getElementById('isFeatured').checked,
+                uploaded_by: 'admin@tafsirkurd.com',
+                upload_date: new Date().toISOString()
+            };
+
+            try {
+                const { error } = await supabase
+                    .from('tv_videos')
+                    .insert([videoData]);
+
+                if (error) throw error;
+
+                closeUploadModal();
+                loadVideos();
+            } catch (error) {
+                console.error('Error uploading video:', error);
+                alert('Failed to save video: ' + error.message);
+            }
+        }
+
+        async function updateVideo(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('editVideoId').value;
+            const updates = {
+                title: document.getElementById('editTitle').value.trim(),
+                description: document.getElementById('editDescription').value.trim() || null,
+                thumbnail_url: document.getElementById('editThumbnail').value.trim() || null,
+                category: document.getElementById('editCategory').value,
+                is_published: document.getElementById('editIsPublished').checked,
+                is_featured: document.getElementById('editIsFeatured').checked
+            };
+
+            try {
+                const { error } = await supabase
+                    .from('tv_videos')
+                    .update(updates)
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                closeEditModal();
+                loadVideos();
+            } catch (error) {
+                console.error('Error updating video:', error);
+                alert('Failed to update video: ' + error.message);
+            }
+        }
+
+        async function deleteVideo(id) {
+            if (!confirm('Are you sure you want to delete this video? This action cannot be undone.')) return;
+
+            try {
+                const { error } = await supabase
+                    .from('tv_videos')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                loadVideos();
+            } catch (error) {
+                console.error('Error deleting video:', error);
+                alert('Failed to delete video: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
