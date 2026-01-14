@@ -3,7 +3,7 @@ compatibility_date = "2024-01-01"
 pages_build_output_dir = "src"
 
 # Node.js compatibility for npm packages
-node_compat = true
+compatibility_flags = ["nodejs_compat"]
 
 [[kv_namespaces]]
 binding = "ADMIN_KV"
@@ -11,7 +11,7 @@ id = "398995d1041042b498189d180b883513"
 
 [env.production]
 name = "tafsir-kurd"
-node_compat = true
+compatibility_flags = ["nodejs_compat"]
 
 [[env.production.kv_namespaces]]
 binding = "ADMIN_KV"
