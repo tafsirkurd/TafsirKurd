@@ -8,6 +8,18 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
     <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -165,40 +177,40 @@
                 </div>
 
                 <!-- METRICS -->
-                <div class="metrics-grid">
+                <div class="metrics-grid" id="metricsGrid">
                     <div class="metric-card">
-                        <div class="metric-value">1,247</div>
+                        <div class="metric-value" id="metricUsers">--</div>
                         <div class="metric-label">Total Users</div>
-                        <div class="metric-change positive">
+                        <div class="metric-change" id="metricUsersChange" style="opacity: 0;">
                             <i data-lucide="trending-up"></i>
-                            <span>12% from last month</span>
+                            <span></span>
                         </div>
                     </div>
 
                     <div class="metric-card">
-                        <div class="metric-value">342</div>
+                        <div class="metric-value" id="metricVideos">--</div>
                         <div class="metric-label">Total Videos</div>
-                        <div class="metric-change positive">
+                        <div class="metric-change" id="metricVideosChange" style="opacity: 0;">
                             <i data-lucide="trending-up"></i>
-                            <span>23 new this week</span>
+                            <span></span>
                         </div>
                     </div>
 
                     <div class="metric-card">
-                        <div class="metric-value">89%</div>
-                        <div class="metric-label">System Uptime</div>
-                        <div class="metric-change positive">
-                            <i data-lucide="check-circle"></i>
-                            <span>All systems operational</span>
+                        <div class="metric-value" id="metricMessages">--</div>
+                        <div class="metric-label">Unread Messages</div>
+                        <div class="metric-change" id="metricMessagesChange" style="opacity: 0;">
+                            <i data-lucide="message-square"></i>
+                            <span></span>
                         </div>
                     </div>
 
                     <div class="metric-card">
-                        <div class="metric-value">12</div>
-                        <div class="metric-label">Security Alerts</div>
-                        <div class="metric-change negative">
-                            <i data-lucide="alert-circle"></i>
-                            <span>3 require attention</span>
+                        <div class="metric-value" id="metricActive">--</div>
+                        <div class="metric-label">Active Today</div>
+                        <div class="metric-change" id="metricActiveChange" style="opacity: 0;">
+                            <i data-lucide="user-check"></i>
+                            <span></span>
                         </div>
                     </div>
                 </div>
@@ -225,19 +237,11 @@
                         <div class="card-header">
                             <h3 class="card-title">System Health</h3>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body" id="systemHealthBody">
                             <div style="display: flex; flex-direction: column; gap: 16px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="font-size: 14px; color: var(--text-secondary);">API Response</span>
-                                    <span style="font-size: 14px; font-weight: 600;">45ms</span>
-                                </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <span style="font-size: 14px; color: var(--text-secondary);">Database</span>
                                     <span class="badge badge-success">Healthy</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="font-size: 14px; color: var(--text-secondary);">Storage</span>
-                                    <span style="font-size: 14px; font-weight: 600;">67% used</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <span style="font-size: 14px; color: var(--text-secondary);">CDN</span>
@@ -270,56 +274,10 @@
                                     <th></th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="messagesTableBody">
                                 <tr>
-                                    <td>Ahmad Khalil</td>
-                                    <td>ahmad.k@email.com</td>
-                                    <td>Question about Surah</td>
-                                    <td><span class="badge badge-neutral">Unread</span></td>
-                                    <td>2 hours ago</td>
-                                    <td>
-                                        <div class="table-actions">
-                                            <button class="table-btn" title="View">
-                                                <i data-lucide="eye"></i>
-                                            </button>
-                                            <button class="table-btn" title="Reply">
-                                                <i data-lucide="reply"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Sara Mohammed</td>
-                                    <td>sara.m@email.com</td>
-                                    <td>Thank you!</td>
-                                    <td><span class="badge badge-success">Read</span></td>
-                                    <td>5 hours ago</td>
-                                    <td>
-                                        <div class="table-actions">
-                                            <button class="table-btn" title="View">
-                                                <i data-lucide="eye"></i>
-                                            </button>
-                                            <button class="table-btn" title="Reply">
-                                                <i data-lucide="reply"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Omar Rahman</td>
-                                    <td>omar.r@email.com</td>
-                                    <td>Feature request</td>
-                                    <td><span class="badge badge-neutral">Unread</span></td>
-                                    <td>1 day ago</td>
-                                    <td>
-                                        <div class="table-actions">
-                                            <button class="table-btn" title="View">
-                                                <i data-lucide="eye"></i>
-                                            </button>
-                                            <button class="table-btn" title="Reply">
-                                                <i data-lucide="reply"></i>
-                                            </button>
-                                        </div>
+                                    <td colspan="6" style="text-align: center; padding: 40px;">
+                                        <div style="width: 40px; height: 40px; border: 3px solid var(--border-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -334,6 +292,7 @@
 
     <script src="/utils/device-fingerprint.js"></script>
     <script src="/utils/admin-heartbeat.js"></script>
+    <script src="/utils/admin-loading.js"></script>
     <script src="/utils/admin-auth.js"></script>
     <script>
         // Initialize Lucide icons
@@ -395,8 +354,10 @@
                     .from('user_data')
                     .select('*', { count: 'exact', head: true });
 
-                if (userCount !== null) {
-                    document.querySelectorAll('.metric-value')[0].textContent = userCount.toLocaleString();
+                const metricUsers = document.getElementById('metricUsers');
+                if (userCount !== null && metricUsers) {
+                    metricUsers.textContent = userCount.toLocaleString();
+                    metricUsers.closest('.metric-card').classList.add('fade-in');
                 }
 
                 // Load video count
@@ -404,8 +365,41 @@
                     .from('tv_videos')
                     .select('*', { count: 'exact', head: true });
 
-                if (videoCount !== null) {
-                    document.querySelectorAll('.metric-value')[1].textContent = videoCount.toLocaleString();
+                const metricVideos = document.getElementById('metricVideos');
+                if (videoCount !== null && metricVideos) {
+                    metricVideos.textContent = videoCount.toLocaleString();
+                    metricVideos.closest('.metric-card').classList.add('fade-in');
+                }
+
+                // Load unread message count
+                const { count: unreadCount } = await supabase
+                    .from('contact_messages')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'unread');
+
+                const metricMessages = document.getElementById('metricMessages');
+                if (unreadCount !== null && metricMessages) {
+                    metricMessages.textContent = unreadCount.toLocaleString();
+                    metricMessages.closest('.metric-card').classList.add('fade-in');
+
+                    // Update sidebar badge
+                    document.querySelectorAll('.nav-item-badge').forEach(badge => {
+                        badge.textContent = unreadCount;
+                    });
+                }
+
+                // Calculate active users today
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const { data: userData } = await supabase
+                    .from('user_data')
+                    .select('lastActive')
+                    .gte('lastActive', today.toISOString());
+
+                const metricActive = document.getElementById('metricActive');
+                if (userData && metricActive) {
+                    metricActive.textContent = userData.length.toLocaleString();
+                    metricActive.closest('.metric-card').classList.add('fade-in');
                 }
 
                 // Load recent messages
@@ -415,40 +409,78 @@
                     .order('created_at', { ascending: false })
                     .limit(3);
 
-                if (messages && messages.length > 0) {
-                    const tbody = document.querySelector('tbody');
-                    tbody.innerHTML = messages.map(msg => `
-                        <tr>
-                            <td>${msg.name || 'N/A'}</td>
-                            <td>${msg.email || 'N/A'}</td>
-                            <td>${msg.subject || 'No subject'}</td>
-                            <td><span class="badge badge-${msg.status === 'read' ? 'success' : 'neutral'}">${msg.status || 'Unread'}</span></td>
-                            <td>${new Date(msg.created_at).toLocaleString()}</td>
-                            <td>
-                                <div class="table-actions">
-                                    <button class="table-btn" title="View" onclick="window.location.href='/admin-messages.html'">
-                                        <i data-lucide="eye"></i>
-                                    </button>
-                                    <button class="table-btn" title="Reply">
-                                        <i data-lucide="reply"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `).join('');
-                    lucide.createIcons();
-                }
+                const tbody = document.getElementById('messagesTableBody');
+                if (messages && messages.length > 0 && tbody) {
+                    while (tbody.firstChild) {
+                        tbody.removeChild(tbody.firstChild);
+                    }
 
-                // Load unread message count for badge
-                const { count: unreadCount } = await supabase
-                    .from('contact_messages')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('status', 'unread');
+                    messages.forEach(msg => {
+                        const tr = document.createElement('tr');
 
-                if (unreadCount !== null) {
-                    document.querySelectorAll('.nav-item-badge').forEach(badge => {
-                        badge.textContent = unreadCount;
+                        const td1 = document.createElement('td');
+                        td1.textContent = msg.name || 'N/A';
+                        tr.appendChild(td1);
+
+                        const td2 = document.createElement('td');
+                        td2.textContent = msg.email || 'N/A';
+                        tr.appendChild(td2);
+
+                        const td3 = document.createElement('td');
+                        td3.textContent = msg.subject || 'No subject';
+                        tr.appendChild(td3);
+
+                        const td4 = document.createElement('td');
+                        const badge = document.createElement('span');
+                        badge.className = msg.status === 'read' ? 'badge badge-success' : 'badge badge-neutral';
+                        badge.textContent = msg.status || 'Unread';
+                        td4.appendChild(badge);
+                        tr.appendChild(td4);
+
+                        const td5 = document.createElement('td');
+                        td5.textContent = new Date(msg.created_at).toLocaleString();
+                        tr.appendChild(td5);
+
+                        const td6 = document.createElement('td');
+                        const actions = document.createElement('div');
+                        actions.className = 'table-actions';
+
+                        const viewBtn = document.createElement('button');
+                        viewBtn.className = 'table-btn';
+                        viewBtn.title = 'View';
+                        viewBtn.onclick = () => window.location.href = '/admin-messages.html';
+                        const viewIcon = document.createElement('i');
+                        viewIcon.setAttribute('data-lucide', 'eye');
+                        viewBtn.appendChild(viewIcon);
+                        actions.appendChild(viewBtn);
+
+                        const replyBtn = document.createElement('button');
+                        replyBtn.className = 'table-btn';
+                        replyBtn.title = 'Reply';
+                        const replyIcon = document.createElement('i');
+                        replyIcon.setAttribute('data-lucide', 'reply');
+                        replyBtn.appendChild(replyIcon);
+                        actions.appendChild(replyBtn);
+
+                        td6.appendChild(actions);
+                        tr.appendChild(td6);
+
+                        tbody.appendChild(tr);
                     });
+
+                    lucide.createIcons();
+                    tbody.classList.add('fade-in');
+                } else if (tbody) {
+                    while (tbody.firstChild) {
+                        tbody.removeChild(tbody.firstChild);
+                    }
+                    const tr = document.createElement('tr');
+                    const td = document.createElement('td');
+                    td.setAttribute('colspan', '6');
+                    td.style.cssText = 'text-align: center; padding: 40px; color: var(--text-tertiary);';
+                    td.textContent = 'No messages yet';
+                    tr.appendChild(td);
+                    tbody.appendChild(tr);
                 }
 
             } catch (error) {
