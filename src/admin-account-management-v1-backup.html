@@ -122,10 +122,10 @@
                                     <th>Email</th>
                                     <th>Full Name</th>
                                     <th>Role</th>
-                                    <th>Live Status</th>
-                                    <th>Device Status</th>
+                                    <th>Status</th>
                                     <th>Last Login</th>
-                                    <th>Actions</th>
+                                    <th>Created</th>
+                                    <th style="width:150px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="accountsTable"></tbody>
@@ -251,44 +251,25 @@
                 roleBadge.textContent = account.role.replace('_', ' ');
                 tdRole.appendChild(roleBadge);
                 tr.appendChild(tdRole);
-                const tdLiveStatus = document.createElement('td');
-                const liveStatus = account.status || 'offline';
-                const liveStatusBadge = document.createElement('span');
-                liveStatusBadge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:12px;font-size:11px;font-weight:600;';
-                if (liveStatus === 'online') {
-                    liveStatusBadge.style.background = 'rgba(34,197,94,0.1)';
-                    liveStatusBadge.style.color = 'rgb(34,197,94)';
-                    liveStatusBadge.textContent = '🟢 Online';
-                } else if (liveStatus === 'idle') {
-                    liveStatusBadge.style.background = 'rgba(234,179,8,0.1)';
-                    liveStatusBadge.style.color = 'rgb(234,179,8)';
-                    liveStatusBadge.textContent = '🟡 Idle';
-                } else {
-                    liveStatusBadge.style.background = 'rgba(156,163,175,0.1)';
-                    liveStatusBadge.style.color = 'rgb(156,163,175)';
-                    liveStatusBadge.textContent = '⚫ Offline';
-                }
-                tdLiveStatus.appendChild(liveStatusBadge);
-                tr.appendChild(tdLiveStatus);
-                const tdDevice = document.createElement('td');
-                if (account.device_fingerprint) {
-                    const deviceBadge = document.createElement('span');
-                    deviceBadge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;font-size:11px;';
-                    deviceBadge.textContent = '🔒 Locked';
-                    deviceBadge.title = 'Device: ' + (account.device_user_agent || 'Unknown');
-                    tdDevice.appendChild(deviceBadge);
-                } else {
-                    const unlockedSpan = document.createElement('span');
-                    unlockedSpan.style.color = 'var(--text-tertiary)';
-                    unlockedSpan.style.fontSize = '11px';
-                    unlockedSpan.textContent = '🔓 Unlocked';
-                    tdDevice.appendChild(unlockedSpan);
-                }
-                tr.appendChild(tdDevice);
+                const tdStatus = document.createElement('td');
+                let statusText, statusClass;
+                if (account.is_locked) { statusText = 'Locked'; statusClass = 'status-locked'; }
+                else if (account.is_active) { statusText = 'Active'; statusClass = 'status-active'; }
+                else { statusText = 'Inactive'; statusClass = 'status-inactive'; }
+                const statusSpan = document.createElement('span');
+                statusSpan.textContent = statusText;
+                statusSpan.className = statusClass;
+                statusSpan.style.fontWeight = '600';
+                tdStatus.appendChild(statusSpan);
+                tr.appendChild(tdStatus);
                 const tdLogin = document.createElement('td');
                 tdLogin.textContent = account.last_login ? new Date(account.last_login).toLocaleDateString() : 'Never';
                 tdLogin.style.fontSize = '13px';
                 tr.appendChild(tdLogin);
+                const tdCreated = document.createElement('td');
+                tdCreated.textContent = new Date(account.created_at).toLocaleDateString();
+                tdCreated.style.fontSize = '13px';
+                tr.appendChild(tdCreated);
                 const tdActions = document.createElement('td');
                 const actionsDiv = document.createElement('div');
                 actionsDiv.className = 'table-actions';
@@ -300,32 +281,10 @@
                 editIcon.setAttribute('data-lucide', 'edit-2');
                 editBtn.appendChild(editIcon);
                 actionsDiv.appendChild(editBtn);
-                if (account.device_fingerprint) {
-                    const resetDeviceBtn = document.createElement('button');
-                    resetDeviceBtn.className = 'table-btn';
-                    resetDeviceBtn.title = 'Reset Device Lock';
-                    resetDeviceBtn.style.color = 'rgb(234,179,8)';
-                    resetDeviceBtn.onclick = () => resetDevice(account.id, account.email);
-                    const resetIcon = document.createElement('i');
-                    resetIcon.setAttribute('data-lucide', 'smartphone');
-                    resetDeviceBtn.appendChild(resetIcon);
-                    actionsDiv.appendChild(resetDeviceBtn);
-                }
-                if (account.status === 'online' || account.status === 'idle') {
-                    const logoutBtn = document.createElement('button');
-                    logoutBtn.className = 'table-btn';
-                    logoutBtn.title = 'Force Logout';
-                    logoutBtn.style.color = 'rgb(239,68,68)';
-                    logoutBtn.onclick = () => forceLogout(account.id, account.email);
-                    const logoutIcon = document.createElement('i');
-                    logoutIcon.setAttribute('data-lucide', 'log-out');
-                    logoutBtn.appendChild(logoutIcon);
-                    actionsDiv.appendChild(logoutBtn);
-                }
                 if (account.is_locked) {
                     const unlockBtn = document.createElement('button');
                     unlockBtn.className = 'table-btn';
-                    unlockBtn.title = 'Unlock Account';
+                    unlockBtn.title = 'Unlock';
                     unlockBtn.onclick = () => unlockAccount(account.id);
                     const unlockIcon = document.createElement('i');
                     unlockIcon.setAttribute('data-lucide', 'unlock');
@@ -388,56 +347,6 @@
             else await supabase.from('admin_users').insert(data);
             closeModal();
             loadAccounts();
-        }
-        async function forceLogout(id, email) {
-            if (!confirm('Force logout "' + email + '"? They will be logged out immediately.')) return;
-            const token = sessionStorage.getItem('adminToken');
-            try {
-                const response = await fetch('/admin-management', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'force_logout',
-                        token,
-                        targetUserId: id
-                    })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    alert('✅ ' + data.message);
-                    loadAccounts();
-                } else {
-                    alert('❌ Error: ' + data.error);
-                }
-            } catch (error) {
-                console.error('Force logout error:', error);
-                alert('❌ Connection error');
-            }
-        }
-        async function resetDevice(id, email) {
-            if (!confirm('Reset device lock for "' + email + '"? They can login from any device again.')) return;
-            const token = sessionStorage.getItem('adminToken');
-            try {
-                const response = await fetch('/admin-management', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'reset_device',
-                        token,
-                        targetUserId: id
-                    })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    alert('✅ ' + data.message);
-                    loadAccounts();
-                } else {
-                    alert('❌ Error: ' + data.error);
-                }
-            } catch (error) {
-                console.error('Reset device error:', error);
-                alert('❌ Connection error');
-            }
         }
         async function unlockAccount(id) {
             if (!confirm('Unlock this account?')) return;
