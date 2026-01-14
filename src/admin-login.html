@@ -219,6 +219,7 @@
         </div>
     </div>
 
+    <script src="/utils/device-fingerprint.js"></script>
     <script>
         lucide.createIcons();
 
@@ -239,6 +240,9 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
+            // Get device fingerprint
+            const deviceFingerprint = window.deviceFingerprint ? window.deviceFingerprint.get() : null;
+
             // Show loading state
             loginBtn.disabled = true;
             loginBtn.innerHTML = '<div class="spinner"></div><span>Signing in...</span>';
@@ -249,9 +253,9 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        action: 'login',
                         email,
-                        password
+                        password,
+                        deviceFingerprint
                     })
                 });
 
@@ -259,13 +263,19 @@
 
                 if (data.success) {
                     sessionStorage.setItem('adminToken', data.token);
+                    console.log('✅ Login successful' + (data.deviceLocked ? ' (Device locked)' : ''));
                     window.location.href = '/admin-dashboard.html';
                 } else {
                     // Show error with attempts remaining
                     let errorMsg = data.error || 'Invalid credentials';
-                    if (data.attemptsRemaining !== undefined && data.attemptsRemaining > 0) {
+
+                    // Handle device blocked
+                    if (data.deviceBlocked) {
+                        errorMsg = '🔒 ' + errorMsg;
+                    } else if (data.attemptsRemaining !== undefined && data.attemptsRemaining > 0) {
                         errorMsg += ` (${data.attemptsRemaining} attempt${data.attemptsRemaining !== 1 ? 's' : ''} remaining)`;
                     }
+
                     errorText.textContent = errorMsg;
                     errorMessage.classList.add('active');
                     lucide.createIcons();
