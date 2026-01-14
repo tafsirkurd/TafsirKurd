@@ -156,10 +156,17 @@ export async function onRequest(context) {
                 if (session) {
                     await supabase
                         .from('admin_users')
-                        .update({ status: 'offline', last_heartbeat: null })
+                        .update({
+                            status: 'offline',
+                            last_heartbeat: null,
+                            device_fingerprint: null,
+                            device_user_agent: null,
+                            device_ip: null,
+                            device_locked_at: null
+                        })
                         .eq('id', session.user_id);
 
-                    await logAudit(supabase, session.user_id, session.admin_users?.email, 'logout', {}, clientIP, userAgent);
+                    await logAudit(supabase, session.user_id, session.admin_users?.email, 'logout', { device_unlocked: true }, clientIP, userAgent);
                 }
             }
 
