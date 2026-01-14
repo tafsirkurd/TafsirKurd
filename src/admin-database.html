@@ -102,7 +102,7 @@
     <script src="/utils/admin-auth.js"></script>
     <script>
         lucide.createIcons();
-        const tables = ['user_data', 'profiles', 'contact_messages', 'featured_videos', 'social_stats', 'features', 'schedule', 'kurdish_translations', 'background_images', 'tv_categories', 'tv_series', 'tv_episodes', 'admin_activity_feed', 'location_tracking', 'admin_users', 'admin_sessions', 'admin_audit_logs', 'admin_login_attempts'];
+        const tables = ['user_data', 'profiles', 'contact_messages', 'featured_videos', 'social_stats', 'features', 'schedule', 'kurdish_translations', 'background_images', 'tv_categories', 'tv_series', 'tv_episodes', 'tv_videos', 'admin_activity_feed', 'location_tracking', 'admin_users', 'admin_sessions', 'admin_audit_logs', 'admin_login_attempts'];
         let tableCounts = {};
         (async () => { const auth = await window.adminAuth.checkAuth(); if (auth) loadTables(); })();
         document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
