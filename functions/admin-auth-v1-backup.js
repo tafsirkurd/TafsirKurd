@@ -1,5 +1,5 @@
-// Cloudflare Pages Function - Enhanced Admin Authentication
-// Device locking, heartbeat tracking, permission checks
+// Cloudflare Pages Function - Secure Admin Authentication with Database
+// Implements bcrypt hashing, 3-attempt lockout, session management, audit logging
 
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
@@ -25,6 +25,7 @@ export async function onRequest(context) {
         );
     }
 
+    // Initialize Supabase client with service role key (backend only)
     const supabase = createClient(
         env.SUPABASE_URL,
         env.SUPABASE_SERVICE_ROLE_KEY,
@@ -37,51 +38,17 @@ export async function onRequest(context) {
     );
 
     try {
-        const { action, email, password, token, deviceFingerprint } = await request.json();
+        const { action, email, password, token } = await request.json();
         const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
         const userAgent = request.headers.get('User-Agent') || 'unknown';
 
-        // ===== HEARTBEAT =====
-        if (action === 'heartbeat') {
-            if (!token) {
-                return jsonResponse({ success: false }, 401, corsHeaders);
-            }
-
-            const { data: session } = await supabase
-                .from('admin_sessions')
-                .select('user_id')
-                .eq('token', token)
-                .gt('expires_at', new Date().toISOString())
-                .single();
-
-            if (!session) {
-                return jsonResponse({ success: false }, 401, corsHeaders);
-            }
-
-            // Update heartbeat
-            await supabase
-                .from('admin_users')
-                .update({
-                    last_heartbeat: new Date().toISOString(),
-                    status: 'online'
-                })
-                .eq('id', session.user_id);
-
-            // Update session last activity
-            await supabase
-                .from('admin_sessions')
-                .update({ last_activity: new Date().toISOString() })
-                .eq('token', token);
-
-            return jsonResponse({ success: true }, 200, corsHeaders);
-        }
-
-        // ===== VERIFY SESSION =====
+        // ===== VERIFY SESSION TOKEN =====
         if (action === 'verify') {
             if (!token) {
                 return jsonResponse({ success: false, error: 'No token provided' }, 401, corsHeaders);
             }
 
+            // Check if session exists and is valid
             const { data: session } = await supabase
                 .from('admin_sessions')
                 .select('*, admin_users(*)')
@@ -93,72 +60,38 @@ export async function onRequest(context) {
                 return jsonResponse({ success: false, error: 'Invalid or expired session' }, 401, corsHeaders);
             }
 
-            // Check device lock
-            if (deviceFingerprint && session.admin_users.device_fingerprint) {
-                if (session.admin_users.device_fingerprint !== deviceFingerprint) {
-                    await logAudit(supabase, session.user_id, session.admin_users.email, 'device_mismatch', {
-                        expected: session.admin_users.device_fingerprint,
-                        received: deviceFingerprint
-                    }, clientIP, userAgent, null, null, null, 'warning');
-
-                    return jsonResponse({
-                        success: false,
-                        error: 'Device not authorized. Contact Super Admin to reset your device.'
-                    }, 403, corsHeaders);
-                }
-            }
-
-            // Update heartbeat
-            await supabase
-                .from('admin_users')
-                .update({
-                    last_heartbeat: new Date().toISOString(),
-                    status: 'online'
-                })
-                .eq('id', session.user_id);
-
-            // Update session activity
+            // Update last activity
             await supabase
                 .from('admin_sessions')
                 .update({ last_activity: new Date().toISOString() })
                 .eq('id', session.id);
 
-            // Get permissions
-            const { data: permissions } = await supabase
-                .from('admin_permissions')
-                .select('page_slug, can_view, can_edit, can_delete')
-                .eq('user_id', session.user_id);
-
             return jsonResponse({
                 success: true,
                 email: session.admin_users.email,
                 role: session.admin_users.role,
-                fullName: session.admin_users.full_name,
-                permissions: permissions || [],
-                deviceLocked: !!session.admin_users.device_fingerprint
+                fullName: session.admin_users.full_name
             }, 200, corsHeaders);
         }
 
         // ===== LOGOUT =====
         if (action === 'logout') {
             if (token) {
+                // Get user info before deleting session
                 const { data: session } = await supabase
                     .from('admin_sessions')
                     .select('user_id, admin_users(email)')
                     .eq('token', token)
                     .single();
 
+                // Delete session
                 await supabase
                     .from('admin_sessions')
                     .delete()
                     .eq('token', token);
 
+                // Log logout
                 if (session) {
-                    await supabase
-                        .from('admin_users')
-                        .update({ status: 'offline', last_heartbeat: null })
-                        .eq('id', session.user_id);
-
                     await logAudit(supabase, session.user_id, session.admin_users?.email, 'logout', {}, clientIP, userAgent);
                 }
             }
@@ -166,54 +99,12 @@ export async function onRequest(context) {
             return jsonResponse({ success: true, message: 'Logged out successfully' }, 200, corsHeaders);
         }
 
-        // ===== CHECK PERMISSION =====
-        if (action === 'check_permission') {
-            const { page_slug, permission_type } = await request.json();
-
-            if (!token) {
-                return jsonResponse({ success: false }, 401, corsHeaders);
-            }
-
-            const { data: session } = await supabase
-                .from('admin_sessions')
-                .select('user_id, admin_users(role)')
-                .eq('token', token)
-                .gt('expires_at', new Date().toISOString())
-                .single();
-
-            if (!session) {
-                return jsonResponse({ success: false }, 401, corsHeaders);
-            }
-
-            // Super admin has all permissions
-            if (session.admin_users.role === 'super_admin') {
-                return jsonResponse({ success: true, allowed: true }, 200, corsHeaders);
-            }
-
-            // Check permission in database
-            const { data: perm } = await supabase
-                .from('admin_permissions')
-                .select('*')
-                .eq('user_id', session.user_id)
-                .eq('page_slug', page_slug)
-                .single();
-
-            let allowed = false;
-            if (perm) {
-                if (permission_type === 'view') allowed = perm.can_view;
-                else if (permission_type === 'edit') allowed = perm.can_edit;
-                else if (permission_type === 'delete') allowed = perm.can_delete;
-            }
-
-            return jsonResponse({ success: true, allowed }, 200, corsHeaders);
-        }
-
         // ===== LOGIN =====
         if (!email || !password) {
             return jsonResponse({ error: 'Email and password are required' }, 400, corsHeaders);
         }
 
-        // 1. Get user
+        // 1. Check if user exists
         const { data: user } = await supabase
             .from('admin_users')
             .select('*')
@@ -221,6 +112,7 @@ export async function onRequest(context) {
             .single();
 
         if (!user) {
+            // Log failed attempt (no user found)
             await logLoginAttempt(supabase, email, clientIP, false);
             await logAudit(supabase, null, email, 'login_failed', { reason: 'User not found' }, clientIP, userAgent);
             return jsonResponse({ error: 'Invalid credentials' }, 401, corsHeaders);
@@ -229,7 +121,7 @@ export async function onRequest(context) {
         // 2. Check if account is active
         if (!user.is_active) {
             await logLoginAttempt(supabase, email, clientIP, false);
-            await logAudit(supabase, user.id, email, 'login_failed', { reason: 'Account disabled' }, clientIP, userAgent, null, null, deviceFingerprint, 'warning');
+            await logAudit(supabase, user.id, email, 'login_failed', { reason: 'Account disabled' }, clientIP, userAgent);
             return jsonResponse({ error: 'Account is disabled' }, 403, corsHeaders);
         }
 
@@ -243,7 +135,7 @@ export async function onRequest(context) {
             }, 429, corsHeaders);
         }
 
-        // 4. Clear lock if expired
+        // 4. If lock expired, clear it
         if (user.is_locked && user.locked_until && new Date(user.locked_until) <= new Date()) {
             await supabase
                 .from('admin_users')
@@ -257,31 +149,17 @@ export async function onRequest(context) {
             user.failed_attempts = 0;
         }
 
-        // 5. Check device lock
-        if (user.device_fingerprint && deviceFingerprint) {
-            if (user.device_fingerprint !== deviceFingerprint) {
-                await logAudit(supabase, user.id, email, 'device_blocked', {
-                    reason: 'Login attempted from unauthorized device',
-                    expected: user.device_fingerprint,
-                    received: deviceFingerprint
-                }, clientIP, userAgent, null, null, deviceFingerprint, 'critical');
-
-                return jsonResponse({
-                    error: 'This account is locked to a different device. Contact Super Admin to reset.',
-                    deviceBlocked: true
-                }, 403, corsHeaders);
-            }
-        }
-
-        // 6. Verify password
+        // 5. Verify password with bcrypt
         const passwordMatch = await bcrypt.compare(password, user.password_hash);
 
         if (!passwordMatch) {
+            // Increment failed attempts
             const newFailedAttempts = (user.failed_attempts || 0) + 1;
             const attemptsRemaining = 3 - newFailedAttempts;
 
+            // Lock account after 3 failed attempts
             if (newFailedAttempts >= 3) {
-                const lockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                const lockedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
                 await supabase
                     .from('admin_users')
                     .update({
@@ -295,7 +173,7 @@ export async function onRequest(context) {
                 await logAudit(supabase, user.id, email, 'account_locked', {
                     reason: '3 failed login attempts',
                     locked_until: lockedUntil.toISOString()
-                }, clientIP, userAgent, null, null, deviceFingerprint, 'critical');
+                }, clientIP, userAgent);
 
                 return jsonResponse({
                     error: 'Account locked due to multiple failed attempts. Try again in 24 hours.',
@@ -304,6 +182,7 @@ export async function onRequest(context) {
                 }, 429, corsHeaders);
             }
 
+            // Update failed attempts count
             await supabase
                 .from('admin_users')
                 .update({ failed_attempts: newFailedAttempts })
@@ -313,7 +192,7 @@ export async function onRequest(context) {
             await logAudit(supabase, user.id, email, 'login_failed', {
                 reason: 'Invalid password',
                 attempts_remaining: attemptsRemaining
-            }, clientIP, userAgent, null, null, deviceFingerprint, 'warning');
+            }, clientIP, userAgent);
 
             return jsonResponse({
                 error: 'Invalid credentials',
@@ -321,66 +200,38 @@ export async function onRequest(context) {
             }, 401, corsHeaders);
         }
 
-        // 7. Successful login - lock device if not already locked
-        if (!user.device_fingerprint && deviceFingerprint) {
-            await supabase
-                .from('admin_users')
-                .update({
-                    device_fingerprint: deviceFingerprint,
-                    device_user_agent: userAgent,
-                    device_ip: clientIP,
-                    device_locked_at: new Date().toISOString()
-                })
-                .eq('id', user.id);
-
-            await logAudit(supabase, user.id, email, 'device_locked', {
-                fingerprint: deviceFingerprint,
-                user_agent: userAgent,
-                ip: clientIP
-            }, clientIP, userAgent, null, null, deviceFingerprint, 'info');
-        }
-
-        // 8. Clear failed attempts and update status
+        // 6. Successful login - clear failed attempts
         await supabase
             .from('admin_users')
             .update({
                 failed_attempts: 0,
-                last_login: new Date().toISOString(),
-                last_heartbeat: new Date().toISOString(),
-                status: 'online'
+                last_login: new Date().toISOString()
             })
             .eq('id', user.id);
 
-        // 9. Generate session token
+        // 7. Generate secure session token
         const sessionToken = generateSecureToken();
-        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-        // 10. Create session
-        await supabase
+        // 8. Create session in database
+        const { data: session } = await supabase
             .from('admin_sessions')
             .insert({
                 user_id: user.id,
                 token: sessionToken,
                 ip_address: clientIP,
                 user_agent: userAgent,
-                device_fingerprint: deviceFingerprint,
                 expires_at: expiresAt.toISOString()
-            });
+            })
+            .select()
+            .single();
 
-        // 11. Log successful login
+        // 9. Log successful login
         await logLoginAttempt(supabase, email, clientIP, true);
-        await logAudit(supabase, user.id, email, 'login_success', {
-            device_fingerprint: deviceFingerprint
-        }, clientIP, userAgent, null, null, deviceFingerprint, 'info');
+        await logAudit(supabase, user.id, email, 'login_success', {}, clientIP, userAgent);
 
-        // 12. Clean up old sessions
+        // 10. Clean up old sessions for this user (keep last 5)
         await cleanupOldSessions(supabase, user.id);
-
-        // 13. Get permissions
-        const { data: permissions } = await supabase
-            .from('admin_permissions')
-            .select('page_slug, can_view, can_edit, can_delete')
-            .eq('user_id', user.id);
 
         return jsonResponse({
             success: true,
@@ -390,9 +241,7 @@ export async function onRequest(context) {
                 email: user.email,
                 fullName: user.full_name,
                 role: user.role
-            },
-            permissions: permissions || [],
-            deviceLocked: !!user.device_fingerprint
+            }
         }, 200, corsHeaders);
 
     } catch (error) {
@@ -401,7 +250,8 @@ export async function onRequest(context) {
     }
 }
 
-// Helper functions
+// ===== HELPER FUNCTIONS =====
+
 function jsonResponse(data, status, headers) {
     return new Response(JSON.stringify(data), { status, headers });
 }
@@ -414,7 +264,7 @@ function generateSecureToken() {
         .join('');
 }
 
-async function logAudit(supabase, userId, email, action, details, ipAddress, userAgent, pageSlug = null, resourceType = null, deviceFingerprint = null, severity = 'info') {
+async function logAudit(supabase, userId, email, action, details, ipAddress, userAgent) {
     try {
         await supabase
             .from('admin_audit_logs')
@@ -424,11 +274,7 @@ async function logAudit(supabase, userId, email, action, details, ipAddress, use
                 action,
                 details: details || {},
                 ip_address: ipAddress,
-                user_agent: userAgent,
-                page_slug: pageSlug,
-                resource_type: resourceType,
-                device_fingerprint: deviceFingerprint,
-                severity
+                user_agent: userAgent
             });
     } catch (error) {
         console.error('Audit log error:', error);
@@ -451,6 +297,7 @@ async function logLoginAttempt(supabase, email, ipAddress, success) {
 
 async function cleanupOldSessions(supabase, userId) {
     try {
+        // Get all sessions for this user, sorted by last_activity
         const { data: sessions } = await supabase
             .from('admin_sessions')
             .select('id')
@@ -458,6 +305,7 @@ async function cleanupOldSessions(supabase, userId) {
             .order('last_activity', { ascending: false });
 
         if (sessions && sessions.length > 5) {
+            // Delete all but the 5 most recent
             const sessionIdsToDelete = sessions.slice(5).map(s => s.id);
             await supabase
                 .from('admin_sessions')
