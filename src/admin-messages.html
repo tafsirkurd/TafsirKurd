@@ -6,8 +6,19 @@
     <title>Messages - TafsirKurd Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
     <link rel="stylesheet" href="/css/admin-styles.css">
     <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
         .filters-bar {
             background: var(--bg-surface);
             border: 1px solid var(--border-light);
@@ -272,115 +283,10 @@
                                     <th style="width: 100px;"></th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr class="message-row unread">
-                                    <td><input type="checkbox" class="row-checkbox"></td>
-                                    <td>Ahmad Khalil</td>
-                                    <td>ahmad.k@email.com</td>
-                                    <td>Question about Surah</td>
-                                    <td class="message-preview">I have a question regarding the interpretation of...</td>
-                                    <td><span class="badge badge-neutral">Unread</span></td>
-                                    <td>2 hours ago</td>
-                                    <td>
-                                        <div class="table-actions">
-                                            <button class="table-btn" title="View">
-                                                <i data-lucide="eye"></i>
-                                            </button>
-                                            <button class="table-btn" title="Reply">
-                                                <i data-lucide="reply"></i>
-                                            </button>
-                                            <button class="table-btn" title="Delete">
-                                                <i data-lucide="trash-2"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="message-row">
-                                    <td><input type="checkbox" class="row-checkbox"></td>
-                                    <td>Sara Mohammed</td>
-                                    <td>sara.m@email.com</td>
-                                    <td>Thank you!</td>
-                                    <td class="message-preview">Thank you for creating this amazing resource...</td>
-                                    <td><span class="badge badge-success">Read</span></td>
-                                    <td>5 hours ago</td>
-                                    <td>
-                                        <div class="table-actions">
-                                            <button class="table-btn">
-                                                <i data-lucide="eye"></i>
-                                            </button>
-                                            <button class="table-btn">
-                                                <i data-lucide="reply"></i>
-                                            </button>
-                                            <button class="table-btn">
-                                                <i data-lucide="trash-2"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="message-row unread">
-                                    <td><input type="checkbox" class="row-checkbox"></td>
-                                    <td>Omar Rahman</td>
-                                    <td>omar.r@email.com</td>
-                                    <td>Feature request</td>
-                                    <td class="message-preview">Would it be possible to add Kurdish subtitles to...</td>
-                                    <td><span class="badge badge-neutral">Unread</span></td>
-                                    <td>1 day ago</td>
-                                    <td>
-                                        <div class="table-actions">
-                                            <button class="table-btn">
-                                                <i data-lucide="eye"></i>
-                                            </button>
-                                            <button class="table-btn">
-                                                <i data-lucide="reply"></i>
-                                            </button>
-                                            <button class="table-btn">
-                                                <i data-lucide="trash-2"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="message-row">
-                                    <td><input type="checkbox" class="row-checkbox"></td>
-                                    <td>Layla Hassan</td>
-                                    <td>layla.h@email.com</td>
-                                    <td>Technical issue</td>
-                                    <td class="message-preview">I'm experiencing problems loading videos on mobile...</td>
-                                    <td><span class="badge badge-success">Read</span></td>
-                                    <td>2 days ago</td>
-                                    <td>
-                                        <div class="table-actions">
-                                            <button class="table-btn">
-                                                <i data-lucide="eye"></i>
-                                            </button>
-                                            <button class="table-btn">
-                                                <i data-lucide="reply"></i>
-                                            </button>
-                                            <button class="table-btn">
-                                                <i data-lucide="trash-2"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="message-row">
-                                    <td><input type="checkbox" class="row-checkbox"></td>
-                                    <td>Yusuf Ali</td>
-                                    <td>yusuf.a@email.com</td>
-                                    <td>Content suggestion</td>
-                                    <td class="message-preview">I would love to see more content about...</td>
-                                    <td><span class="badge badge-success">Read</span></td>
-                                    <td>3 days ago</td>
-                                    <td>
-                                        <div class="table-actions">
-                                            <button class="table-btn">
-                                                <i data-lucide="eye"></i>
-                                            </button>
-                                            <button class="table-btn">
-                                                <i data-lucide="reply"></i>
-                                            </button>
-                                            <button class="table-btn">
-                                                <i data-lucide="trash-2"></i>
-                                            </button>
-                                        </div>
+                            <tbody id="messagesTableBody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 40px;">
+                                        <div style="width: 40px; height: 40px; border: 3px solid var(--border-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -408,8 +314,20 @@
         </main>
     </div>
 
+    <script src="/utils/device-fingerprint.js"></script>
+    <script src="/utils/admin-heartbeat.js"></script>
+    <script src="/utils/admin-loading.js"></script>
+    <script src="/utils/admin-auth.js"></script>
     <script>
         lucide.createIcons();
+
+        // Check authentication
+        (async () => {
+            const isAuth = await window.adminAuth.checkAuth();
+            if (isAuth) {
+                await loadMessages();
+            }
+        })();
 
         // Sidebar toggle
         const menuToggle = document.getElementById('menu-toggle');
@@ -424,33 +342,221 @@
             sidebar.classList.toggle('mobile-open');
         });
 
-        // Checkbox selection
-        const headerCheckbox = document.getElementById('header-checkbox');
-        const rowCheckboxes = document.querySelectorAll('.row-checkbox');
-        const bulkActions = document.getElementById('bulk-actions');
-        const selectedCount = document.getElementById('selected-count');
+        // Load messages from Supabase
+        async function loadMessages() {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
 
-        function updateBulkActions() {
-            const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
-            selectedCount.textContent = checkedCount;
+            try {
+                const { data: messages, error } = await supabase
+                    .from('contact_messages')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
-            if (checkedCount > 0) {
-                bulkActions.classList.add('active');
-            } else {
-                bulkActions.classList.remove('active');
+                if (error) {
+                    console.error('Error loading messages:', error);
+                    showEmptyState('Failed to load messages');
+                    return;
+                }
+
+                const tbody = document.getElementById('messagesTableBody');
+                if (!tbody) return;
+
+                if (!messages || messages.length === 0) {
+                    showEmptyState('No messages yet');
+                    return;
+                }
+
+                // Clear loading spinner
+                while (tbody.firstChild) {
+                    tbody.removeChild(tbody.firstChild);
+                }
+
+                // Render messages with safe DOM methods
+                messages.forEach(msg => {
+                    const tr = document.createElement('tr');
+                    tr.className = msg.status === 'unread' ? 'message-row unread' : 'message-row';
+
+                    // Checkbox
+                    const td0 = document.createElement('td');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'row-checkbox';
+                    td0.appendChild(checkbox);
+                    tr.appendChild(td0);
+
+                    // Name
+                    const td1 = document.createElement('td');
+                    td1.textContent = msg.name || 'N/A';
+                    tr.appendChild(td1);
+
+                    // Email
+                    const td2 = document.createElement('td');
+                    td2.textContent = msg.email || 'N/A';
+                    tr.appendChild(td2);
+
+                    // Subject
+                    const td3 = document.createElement('td');
+                    td3.textContent = msg.subject || 'No subject';
+                    tr.appendChild(td3);
+
+                    // Message preview
+                    const td4 = document.createElement('td');
+                    td4.className = 'message-preview';
+                    td4.textContent = msg.message ? msg.message.substring(0, 60) + '...' : 'No content';
+                    tr.appendChild(td4);
+
+                    // Status
+                    const td5 = document.createElement('td');
+                    const badge = document.createElement('span');
+                    badge.className = msg.status === 'read' ? 'badge badge-success' : 'badge badge-neutral';
+                    badge.textContent = msg.status || 'Unread';
+                    td5.appendChild(badge);
+                    tr.appendChild(td5);
+
+                    // Date
+                    const td6 = document.createElement('td');
+                    td6.textContent = formatRelativeTime(msg.created_at);
+                    tr.appendChild(td6);
+
+                    // Actions
+                    const td7 = document.createElement('td');
+                    const actions = document.createElement('div');
+                    actions.className = 'table-actions';
+
+                    const viewBtn = document.createElement('button');
+                    viewBtn.className = 'table-btn';
+                    viewBtn.title = 'View';
+                    const viewIcon = document.createElement('i');
+                    viewIcon.setAttribute('data-lucide', 'eye');
+                    viewBtn.appendChild(viewIcon);
+                    actions.appendChild(viewBtn);
+
+                    const replyBtn = document.createElement('button');
+                    replyBtn.className = 'table-btn';
+                    replyBtn.title = 'Reply';
+                    const replyIcon = document.createElement('i');
+                    replyIcon.setAttribute('data-lucide', 'reply');
+                    replyBtn.appendChild(replyIcon);
+                    actions.appendChild(replyBtn);
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'table-btn';
+                    deleteBtn.title = 'Delete';
+                    const deleteIcon = document.createElement('i');
+                    deleteIcon.setAttribute('data-lucide', 'trash-2');
+                    deleteBtn.appendChild(deleteIcon);
+                    actions.appendChild(deleteBtn);
+
+                    td7.appendChild(actions);
+                    tr.appendChild(td7);
+
+                    tbody.appendChild(tr);
+                });
+
+                // Reinitialize icons and checkboxes
+                lucide.createIcons();
+                setupCheckboxes();
+
+                // Fade in
+                tbody.classList.add('fade-in');
+
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                showEmptyState('An error occurred');
             }
         }
 
-        headerCheckbox.addEventListener('change', (e) => {
-            rowCheckboxes.forEach(cb => {
-                cb.checked = e.target.checked;
-            });
-            updateBulkActions();
-        });
+        // Show empty state
+        function showEmptyState(message) {
+            const tbody = document.getElementById('messagesTableBody');
+            if (!tbody) return;
 
-        rowCheckboxes.forEach(cb => {
-            cb.addEventListener('change', updateBulkActions);
-        });
+            while (tbody.firstChild) {
+                tbody.removeChild(tbody.firstChild);
+            }
+
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.setAttribute('colspan', '8');
+            td.style.cssText = 'text-align: center; padding: 60px; color: var(--text-tertiary);';
+
+            const icon = document.createElement('div');
+            icon.style.cssText = 'font-size: 48px; margin-bottom: 16px;';
+            icon.textContent = '📭';
+
+            const title = document.createElement('div');
+            title.style.cssText = 'font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);';
+            title.textContent = 'No Messages';
+
+            const desc = document.createElement('div');
+            desc.style.cssText = 'font-size: 14px;';
+            desc.textContent = message;
+
+            td.appendChild(icon);
+            td.appendChild(title);
+            td.appendChild(desc);
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+        }
+
+        // Format relative time
+        function formatRelativeTime(dateString) {
+            if (!dateString) return 'Never';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (days > 7) {
+                return date.toLocaleDateString();
+            } else if (days > 0) {
+                return days + ' day' + (days > 1 ? 's' : '') + ' ago';
+            } else if (hours > 0) {
+                return hours + ' hour' + (hours > 1 ? 's' : '') + ' ago';
+            } else if (minutes > 0) {
+                return minutes + ' min' + (minutes > 1 ? 's' : '') + ' ago';
+            } else {
+                return 'Just now';
+            }
+        }
+
+        // Setup checkbox functionality
+        function setupCheckboxes() {
+            const headerCheckbox = document.getElementById('header-checkbox');
+            const bulkActions = document.getElementById('bulk-actions');
+            const selectedCount = document.getElementById('selected-count');
+
+            function updateBulkActions() {
+                const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+                const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+                if (selectedCount) selectedCount.textContent = checkedCount;
+
+                if (checkedCount > 0 && bulkActions) {
+                    bulkActions.classList.add('active');
+                } else if (bulkActions) {
+                    bulkActions.classList.remove('active');
+                }
+            }
+
+            if (headerCheckbox) {
+                headerCheckbox.addEventListener('change', (e) => {
+                    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+                    rowCheckboxes.forEach(cb => {
+                        cb.checked = e.target.checked;
+                    });
+                    updateBulkActions();
+                });
+            }
+
+            const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+            rowCheckboxes.forEach(cb => {
+                cb.addEventListener('change', updateBulkActions);
+            });
+        }
     </script>
 </body>
 </html>
