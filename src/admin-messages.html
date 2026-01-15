@@ -587,6 +587,7 @@
         if (savedTheme === 'dark') {
             document.body.classList.add('dark-mode');
             themeIcon.setAttribute('data-lucide', 'sun');
+            lucide.createIcons();
         }
 
         themeToggle.addEventListener('click', () => {
