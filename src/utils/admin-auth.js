@@ -152,7 +152,8 @@ async function checkAuth() {
             }
 
             // Hide sidebar items based on role
-            applySidebarPermissions();
+            console.log('Auth success - applying sidebar permissions for role:', data.role);
+            applySidebarPermissions(data.role);
 
             return data;
         } else {
@@ -276,14 +277,25 @@ function getRolePages() {
 }
 
 // Hide sidebar items based on role
-function applySidebarPermissions() {
-    const role = sessionStorage.getItem('adminRole');
+function applySidebarPermissions(overrideRole) {
+    const role = overrideRole || sessionStorage.getItem('adminRole');
     console.log('applySidebarPermissions - Role:', role);
 
-    if (!role) return;
+    if (!role) {
+        console.log('No role found, skipping sidebar permissions');
+        return;
+    }
+
+    // Set data-role on body for CSS fallback
+    if (document.body) {
+        document.body.setAttribute('data-role', role);
+    }
 
     const roleConfig = ROLE_PERMISSIONS[role];
-    if (!roleConfig) return;
+    if (!roleConfig) {
+        console.log('No config for role:', role);
+        return;
+    }
 
     // Super admin sees everything
     if (roleConfig.pages === '*') {
@@ -298,6 +310,12 @@ function applySidebarPermissions() {
     const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
     console.log('Found nav items:', navItems.length);
 
+    if (navItems.length === 0) {
+        console.log('No nav items found - sidebar may not be loaded yet');
+        return;
+    }
+
+    let hiddenCount = 0;
     navItems.forEach(item => {
         const href = item.getAttribute('href');
         if (!href) return;
@@ -311,16 +329,20 @@ function applySidebarPermissions() {
         // Hide if not in allowed pages
         if (!allowedPages.includes(pageSlug)) {
             console.log('Hiding:', pageSlug);
-            item.style.setProperty('display', 'none', 'important');
+            item.style.display = 'none';
+            item.setAttribute('data-hidden-by-role', 'true');
+            hiddenCount++;
         }
     });
+
+    console.log('Hidden', hiddenCount, 'nav items');
 
     // Hide nav sections that have no visible items
     const navSections = document.querySelectorAll('.sidebar-nav .nav-section');
     navSections.forEach(section => {
-        const visibleItems = section.querySelectorAll('.nav-item:not([style*="display: none"])');
+        const visibleItems = section.querySelectorAll('.nav-item:not([data-hidden-by-role])');
         if (visibleItems.length === 0) {
-            section.style.setProperty('display', 'none', 'important');
+            section.style.display = 'none';
         }
     });
 }
@@ -408,18 +430,35 @@ window.addEventListener('admin:session-expired', function() {
 // This prevents the flash of all sidebar items for returning users
 (function() {
     const storedRole = sessionStorage.getItem('adminRole');
+    console.log('Admin-auth init - stored role:', storedRole);
+
     if (storedRole) {
-        console.log('Early sidebar permissions - stored role:', storedRole);
         // Set data-role on body immediately for CSS-based hiding
-        document.body.setAttribute('data-role', storedRole);
+        if (document.body) {
+            document.body.setAttribute('data-role', storedRole);
+            console.log('Set data-role on body:', storedRole);
+        }
 
         if (storedRole !== 'super_admin') {
-            // Wait for DOM to be ready
+            // Apply immediately if DOM is ready, otherwise wait
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', applySidebarPermissions);
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('DOMContentLoaded - applying sidebar permissions');
+                    applySidebarPermissions(storedRole);
+                });
             } else {
-                applySidebarPermissions();
+                console.log('DOM ready - applying sidebar permissions immediately');
+                applySidebarPermissions(storedRole);
             }
         }
     }
+
+    // Also apply on window load as fallback
+    window.addEventListener('load', function() {
+        const role = sessionStorage.getItem('adminRole');
+        if (role && role !== 'super_admin') {
+            console.log('Window load - reapplying sidebar permissions');
+            applySidebarPermissions(role);
+        }
+    });
 })();
