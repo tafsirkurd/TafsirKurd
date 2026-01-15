@@ -222,6 +222,10 @@
     <script>
         lucide.createIcons();
 
+        // Force light mode on login page - remove any dark mode setting
+        document.body.classList.remove('dark-mode');
+        localStorage.removeItem('admin-theme');
+
         // Check if already logged in
         const adminToken = sessionStorage.getItem('adminToken');
         if (adminToken) {

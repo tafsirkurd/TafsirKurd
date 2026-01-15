@@ -74,7 +74,9 @@
                 <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
                 <div class="topbar-search"><i data-lucide="search"></i><input type="text" placeholder="Search tables..." id="search-input" onkeyup="filterTables()"></div>
                 <div class="topbar-actions">
-                    <button class="topbar-btn"><i data-lucide="bell"></i></button>
+                    <button class="topbar-btn" style="position: relative;">
+                        <i data-lucide="bell"></i>
+                        <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span></button>
                     <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
                 </div>
             </header>
@@ -104,6 +106,7 @@
         </main>
     </div>
     <script src="/utils/admin-auth.js"></script>
+    <script src="/utils/admin-notifications.js"></script>
     <script>
         lucide.createIcons();
         const tables = ['user_data', 'profiles', 'contact_messages', 'featured_videos', 'social_stats', 'features', 'schedule', 'kurdish_translations', 'background_images', 'tv_categories', 'tv_series', 'tv_episodes', 'tv_videos', 'admin_activity_feed', 'location_tracking', 'admin_users', 'admin_sessions', 'admin_audit_logs', 'admin_login_attempts'];
