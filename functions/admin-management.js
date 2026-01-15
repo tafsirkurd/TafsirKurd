@@ -34,7 +34,8 @@ export async function onRequest(context) {
     );
 
     try {
-        const { action, token, targetUserId } = await request.json();
+        const body = await request.json();
+        const { action, token, targetUserId } = body;
         const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
         const userAgent = request.headers.get('User-Agent') || 'unknown';
 
@@ -55,6 +56,147 @@ export async function onRequest(context) {
         }
 
         const adminEmail = session.admin_users.email;
+
+        // ===== CREATE ACCOUNT =====
+        if (action === 'create_account') {
+            const { email, password, full_name, role } = body;
+
+            if (!email || !password) {
+                return jsonResponse({ error: 'Email and password are required' }, 400, corsHeaders);
+            }
+
+            // Check if email already exists
+            const { data: existingUser } = await supabase
+                .from('admin_users')
+                .select('id')
+                .eq('email', email.toLowerCase())
+                .single();
+
+            if (existingUser) {
+                return jsonResponse({ error: 'Email already exists' }, 400, corsHeaders);
+            }
+
+            // Hash password using native crypto (secure server-side hashing)
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const password_hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+            // Create new admin user
+            const { data: newUser, error: insertError } = await supabase
+                .from('admin_users')
+                .insert({
+                    email: email.toLowerCase(),
+                    password_hash,
+                    full_name: full_name || null,
+                    role: role || 'editor',
+                    is_active: true
+                })
+                .select()
+                .single();
+
+            if (insertError) {
+                return jsonResponse({ error: 'Failed to create account: ' + insertError.message }, 500, corsHeaders);
+            }
+
+            // Log action
+            await supabase
+                .from('admin_audit_logs')
+                .insert({
+                    user_id: session.user_id,
+                    email: adminEmail,
+                    action: 'create_admin_account',
+                    details: {
+                        new_user_id: newUser.id,
+                        new_user_email: email.toLowerCase(),
+                        new_user_role: role || 'editor'
+                    },
+                    ip_address: clientIP,
+                    user_agent: userAgent,
+                    severity: 'info'
+                });
+
+            return jsonResponse({
+                success: true,
+                message: `Admin account created for ${email}`,
+                user: {
+                    id: newUser.id,
+                    email: newUser.email,
+                    full_name: newUser.full_name,
+                    role: newUser.role
+                }
+            }, 200, corsHeaders);
+        }
+
+        // ===== UPDATE ACCOUNT =====
+        if (action === 'update_account') {
+            const { email, password, full_name, role, is_active } = body;
+
+            if (!targetUserId) {
+                return jsonResponse({ error: 'Target user ID required' }, 400, corsHeaders);
+            }
+
+            if (!email) {
+                return jsonResponse({ error: 'Email is required' }, 400, corsHeaders);
+            }
+
+            // Get target user info
+            const { data: targetUser } = await supabase
+                .from('admin_users')
+                .select('email')
+                .eq('id', targetUserId)
+                .single();
+
+            const updateData = {
+                email: email.toLowerCase(),
+                full_name: full_name || null,
+                role: role || 'editor',
+                is_active: is_active !== undefined ? is_active : true
+            };
+
+            // If password is provided, hash it
+            if (password) {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(password);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                updateData.password_hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+
+            // Update admin user
+            const { error: updateError } = await supabase
+                .from('admin_users')
+                .update(updateData)
+                .eq('id', targetUserId);
+
+            if (updateError) {
+                return jsonResponse({ error: 'Failed to update account: ' + updateError.message }, 500, corsHeaders);
+            }
+
+            // Log action
+            await supabase
+                .from('admin_audit_logs')
+                .insert({
+                    user_id: session.user_id,
+                    email: adminEmail,
+                    action: 'update_admin_account',
+                    details: {
+                        target_user_id: targetUserId,
+                        target_email: targetUser?.email,
+                        new_email: email.toLowerCase(),
+                        password_changed: !!password
+                    },
+                    ip_address: clientIP,
+                    user_agent: userAgent,
+                    severity: 'info'
+                });
+
+            return jsonResponse({
+                success: true,
+                message: `Admin account updated for ${email}`
+            }, 200, corsHeaders);
+        }
 
         // ===== FORCE LOGOUT =====
         if (action === 'force_logout') {

@@ -386,15 +386,52 @@
             const password = document.getElementById('accountPassword').value;
             const role = document.getElementById('accountRole').value;
             const isActive = document.getElementById('accountActive').checked;
+
             if (!email) { alert('Email is required'); return; }
             if (!id && !password) { alert('Password is required for new accounts'); return; }
-            const supabase = window.adminAuth.getSupabase();
-            const data = { email: email.toLowerCase(), full_name: fullName || null, role, is_active: isActive };
-            if (password) { alert('Password hashing must be done server-side'); return; }
-            if (id) await supabase.from('admin_users').update(data).eq('id', id);
-            else await supabase.from('admin_users').insert(data);
-            closeModal();
-            loadAccounts();
+
+            const token = sessionStorage.getItem('adminToken');
+
+            try {
+                const action = id ? 'update_account' : 'create_account';
+                const body = {
+                    action,
+                    token,
+                    email: email.toLowerCase(),
+                    full_name: fullName || null,
+                    role,
+                    is_active: isActive
+                };
+
+                // Add password only if provided
+                if (password) {
+                    body.password = password;
+                }
+
+                // Add targetUserId for updates
+                if (id) {
+                    body.targetUserId = id;
+                }
+
+                const response = await fetch('/admin-management', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    closeModal();
+                    loadAccounts();
+                } else {
+                    alert('❌ Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Save account error:', error);
+                alert('❌ Connection error');
+            }
         }
         async function forceLogout(id, email) {
             if (!confirm('Force logout "' + email + '"? They will be logged out immediately.')) return;
