@@ -221,10 +221,11 @@
 
         const themeToggle = document.getElementById('theme-toggle');
         const themeIcon = document.getElementById('theme-icon');
-        const savedTheme = localStorage.getItem('adminTheme') || 'light';
+        const savedTheme = localStorage.getItem('admin-theme') || 'light';
         if (savedTheme === 'dark') {
             document.body.classList.add('dark-mode');
             themeIcon.setAttribute('data-lucide', 'sun');
+            lucide.createIcons();
             lucide.createIcons();
         }
         themeToggle.addEventListener('click', () => {
@@ -232,7 +233,7 @@
             const isDark = document.body.classList.contains('dark-mode');
             themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
             lucide.createIcons();
-            localStorage.setItem('adminTheme', isDark ? 'dark' : 'light');
+            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
         });
 
         async function loadAllData() {

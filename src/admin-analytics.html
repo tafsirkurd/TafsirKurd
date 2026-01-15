@@ -497,10 +497,11 @@
         const themeIcon = document.getElementById('theme-icon');
 
         // Check saved theme preference (default to light mode)
-        const savedTheme = localStorage.getItem('adminTheme') || 'light';
+        const savedTheme = localStorage.getItem('admin-theme') || 'light';
         if (savedTheme === 'dark') {
             document.body.classList.add('dark-mode');
             themeIcon.setAttribute('data-lucide', 'sun');
+            lucide.createIcons();
             lucide.createIcons();
         }
 
@@ -513,7 +514,7 @@
             lucide.createIcons();
 
             // Save preference
-            localStorage.setItem('adminTheme', isDark ? 'dark' : 'light');
+            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
 
             // Recreate chart with new theme
             if (trafficChartInstance) {
