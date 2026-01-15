@@ -1,5 +1,6 @@
 // Admin Management API - Force Logout, Device Reset, Permissions
 import { createClient } from '@supabase/supabase-js';
+import bcrypt from 'bcryptjs';
 
 export async function onRequest(context) {
     const { request, env } = context;
@@ -76,12 +77,8 @@ export async function onRequest(context) {
                 return jsonResponse({ error: 'Email already exists' }, 400, corsHeaders);
             }
 
-            // Hash password using native crypto (secure server-side hashing)
-            const encoder = new TextEncoder();
-            const data = encoder.encode(password);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const password_hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            // Hash password using bcrypt (same as admin-auth.js)
+            const password_hash = await bcrypt.hash(password, 10);
 
             // Create new admin user
             const { data: newUser, error: insertError } = await supabase
@@ -155,13 +152,9 @@ export async function onRequest(context) {
                 is_active: is_active !== undefined ? is_active : true
             };
 
-            // If password is provided, hash it
+            // If password is provided, hash it with bcrypt
             if (password) {
-                const encoder = new TextEncoder();
-                const data = encoder.encode(password);
-                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-                const hashArray = Array.from(new Uint8Array(hashBuffer));
-                updateData.password_hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                updateData.password_hash = await bcrypt.hash(password, 10);
             }
 
             // Update admin user

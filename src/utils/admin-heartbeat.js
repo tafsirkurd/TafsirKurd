@@ -16,7 +16,7 @@ window.adminHeartbeat = (function() {
             return;
         }
 
-        const deviceFingerprint = window.deviceFingerprint ? window.deviceFingerprint.get() : null;
+        const deviceFingerprint = window.deviceFingerprint ? await window.deviceFingerprint.get() : null;
 
         try {
             const response = await fetch('/admin-auth', {
