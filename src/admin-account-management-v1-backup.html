@@ -92,7 +92,9 @@
                 <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
                 <div class="topbar-search"><i data-lucide="search"></i><input type="text" placeholder="Search admins..." id="search-input" onkeyup="filterAdmins()"></div>
                 <div class="topbar-actions">
-                    <button class="topbar-btn"><i data-lucide="bell"></i></button>
+                    <button class="topbar-btn" style="position: relative;">
+                        <i data-lucide="bell"></i>
+                        <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span></button>
                     <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
                 </div>
             </header>
@@ -178,6 +180,7 @@
         </div>
     </div>
     <script src="/utils/admin-auth.js"></script>
+    <script src="/utils/admin-notifications.js"></script>
     <script>
         lucide.createIcons();
         let accounts = [];
@@ -186,14 +189,15 @@
         document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
         document.getElementById('mobile-menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
         const themeToggle = document.getElementById('theme-toggle'), themeIcon = document.getElementById('theme-icon');
-        const savedTheme = localStorage.getItem('adminTheme') || 'light';
-        if (savedTheme === 'dark') { document.body.classList.add('dark-mode'); themeIcon.setAttribute('data-lucide', 'sun'); lucide.createIcons(); }
+        const savedTheme = localStorage.getItem('admin-theme') || 'light';
+        if (savedTheme === 'dark') { document.body.classList.add('dark-mode'); themeIcon.setAttribute('data-lucide', 'sun');
+            lucide.createIcons(); }
         themeToggle.addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
             themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
             lucide.createIcons();
-            localStorage.setItem('adminTheme', isDark ? 'dark' : 'light');
+            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
         });
         async function loadAccounts() {
             const supabase = window.adminAuth.getSupabase();
