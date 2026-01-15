@@ -239,8 +239,8 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            // Get device fingerprint
-            const deviceFingerprint = window.deviceFingerprint ? window.deviceFingerprint.get() : null;
+            // Get device fingerprint (now async - generated server-side for security)
+            const deviceFingerprint = window.deviceFingerprint ? await window.deviceFingerprint.get() : null;
 
             // Show loading state
             loginBtn.disabled = true;
