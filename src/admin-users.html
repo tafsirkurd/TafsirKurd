@@ -442,8 +442,9 @@
                     <input type="text" placeholder="Search users..." id="topbar-search">
                 </div>
                 <div class="topbar-actions">
-                    <button class="topbar-btn">
+                    <button class="topbar-btn" style="position: relative;">
                         <i data-lucide="bell"></i>
+                        <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span>
                     </button>
                     <button class="topbar-btn" id="theme-toggle" title="Toggle Dark Mode">
                         <i data-lucide="moon" id="theme-icon"></i>
@@ -644,6 +645,7 @@
     </div>
 
     <script src="/utils/admin-auth.js"></script>
+    <script src="/utils/admin-notifications.js"></script>
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
