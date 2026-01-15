@@ -264,6 +264,20 @@ body {
     color: var(--text-tertiary);
 }
 
+/* Auth Loading State - Hide content until authenticated */
+body.auth-loading .main-content,
+body.auth-loading .sidebar {
+    opacity: 0;
+    pointer-events: none;
+}
+
+body.auth-ready .main-content,
+body.auth-ready .sidebar {
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.2s ease;
+}
+
 /* Main Content */
 .main-content {
     flex: 1;
