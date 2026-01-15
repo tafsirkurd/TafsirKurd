@@ -1,5 +1,7 @@
 // Enhanced Admin Authentication Utilities with Device Locking
 // Includes device fingerprinting and permission checks
+// Version 2.0 - RBAC sidebar permissions
+console.log('🔐 Admin-auth.js v2.0 loaded');
 
 let supabaseClient = null;
 let adminPermissions = [];
