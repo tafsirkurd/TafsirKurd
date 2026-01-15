@@ -495,8 +495,6 @@
             }
         }
     </script>
-</body>
-</html>
     <script>
         // Add demo notifications on first visit
         if (!localStorage.getItem('demo_notifications_added')) {
@@ -509,20 +507,20 @@
                         'success',
                         '/admin-dashboard.html'
                     );
-                    
+
                     window.adminNotifications.add(
                         'Theme Toggle Available',
                         'Switch between light and dark mode using the toggle button',
                         'info'
                     );
-                    
+
                     window.adminNotifications.add(
                         'Activity Feed Active',
                         'All admin actions are now being logged in the Activity Feed',
                         'info',
                         '/admin-activity-feed.html'
                     );
-                    
+
                     localStorage.setItem('demo_notifications_added', 'true');
                 }
             }, 1000);
@@ -538,3 +536,5 @@
             }
         };
     </script>
+</body>
+</html>

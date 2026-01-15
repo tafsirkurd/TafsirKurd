@@ -116,6 +116,9 @@ async function checkAuth() {
             sessionStorage.setItem('adminFullName', data.fullName);
             sessionStorage.setItem('adminPermissions', JSON.stringify(adminPermissions));
 
+            // Set data-role on body for CSS-based permissions
+            document.body.setAttribute('data-role', data.role);
+
             // Update UI with admin info
             const emailElements = document.querySelectorAll('.admin-email, .sidebar-profile-email');
             emailElements.forEach(el => {
@@ -400,3 +403,23 @@ window.addEventListener('admin:session-expired', function() {
     console.log('Session expired, logging out');
     logout();
 });
+
+// Apply sidebar permissions immediately on script load if role is already stored
+// This prevents the flash of all sidebar items for returning users
+(function() {
+    const storedRole = sessionStorage.getItem('adminRole');
+    if (storedRole) {
+        console.log('Early sidebar permissions - stored role:', storedRole);
+        // Set data-role on body immediately for CSS-based hiding
+        document.body.setAttribute('data-role', storedRole);
+
+        if (storedRole !== 'super_admin') {
+            // Wait for DOM to be ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', applySidebarPermissions);
+            } else {
+                applySidebarPermissions();
+            }
+        }
+    }
+})();
