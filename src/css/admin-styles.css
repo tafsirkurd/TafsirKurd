@@ -598,6 +598,36 @@ tbody tr:hover {
     margin-bottom: 32px;
 }
 
+/* Role-based sidebar visibility - hide restricted items early */
+body[data-role="analyst"] .nav-item[href*="messages"],
+body[data-role="analyst"] .nav-item[href*="videos"],
+body[data-role="analyst"] .nav-item[href*="tv-management"],
+body[data-role="analyst"] .nav-item[href*="backgrounds"],
+body[data-role="analyst"] .nav-item[href*="account-management"],
+body[data-role="analyst"] .nav-item[href*="features"],
+body[data-role="analyst"] .nav-item[href*="schedule"],
+body[data-role="analyst"] .nav-item[href*="bot-protection"],
+body[data-role="analyst"] .nav-item[href*="database"],
+body[data-role="analyst"] .nav-item[href*="search-console"],
+body[data-role="analyst"] .nav-item[href*="email-templates"],
+body[data-role="analyst"] .nav-item[href*="activity-feed"] {
+    display: none !important;
+}
+
+body[data-role="editor"] .nav-item[href*="analytics"],
+body[data-role="editor"] .nav-item[href*="users"],
+body[data-role="editor"] .nav-item[href*="reading-stats"],
+body[data-role="editor"] .nav-item[href*="social-stats"],
+body[data-role="editor"] .nav-item[href*="account-management"],
+body[data-role="editor"] .nav-item[href*="features"],
+body[data-role="editor"] .nav-item[href*="bot-protection"],
+body[data-role="editor"] .nav-item[href*="database"],
+body[data-role="editor"] .nav-item[href*="search-console"],
+body[data-role="editor"] .nav-item[href*="email-templates"],
+body[data-role="editor"] .nav-item[href*="activity-feed"] {
+    display: none !important;
+}
+
 /* Responsive */
 @media (max-width: 1280px) {
     .content-grid {
