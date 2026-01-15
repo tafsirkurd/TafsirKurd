@@ -151,16 +151,6 @@ async function checkAuth() {
             // Hide sidebar items based on role
             applySidebarPermissions();
 
-            // Show content (remove loading state)
-            document.body.classList.remove('auth-loading');
-            document.body.classList.add('auth-ready');
-
-            // Remove inline hiding style (added in HTML head for instant hiding)
-            const loadingStyle = document.getElementById('auth-loading-style');
-            if (loadingStyle) {
-                loadingStyle.remove();
-            }
-
             return data;
         } else {
             if (data.error && data.error.includes('Device not authorized')) {
@@ -331,12 +321,6 @@ function getCurrentPageSlug() {
 }
 
 function showAccessDenied() {
-    // Remove inline hiding style first
-    const loadingStyle = document.getElementById('auth-loading-style');
-    if (loadingStyle) {
-        loadingStyle.remove();
-    }
-
     // Clear body safely
     while (document.body.firstChild) {
         document.body.removeChild(document.body.firstChild);
@@ -381,12 +365,6 @@ function showDeviceBlockedMessage() {
 }
 
 function redirectToLogin() {
-    // Remove inline hiding style before redirect
-    const loadingStyle = document.getElementById('auth-loading-style');
-    if (loadingStyle) {
-        loadingStyle.remove();
-    }
-
     if (!window.location.pathname.includes('admin-login')) {
         window.location.href = '/admin-login.html';
     }
