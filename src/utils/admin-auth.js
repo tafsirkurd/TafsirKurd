@@ -155,6 +155,12 @@ async function checkAuth() {
             document.body.classList.remove('auth-loading');
             document.body.classList.add('auth-ready');
 
+            // Remove inline hiding style (added in HTML head for instant hiding)
+            const loadingStyle = document.getElementById('auth-loading-style');
+            if (loadingStyle) {
+                loadingStyle.remove();
+            }
+
             return data;
         } else {
             if (data.error && data.error.includes('Device not authorized')) {
