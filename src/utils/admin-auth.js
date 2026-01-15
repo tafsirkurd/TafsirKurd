@@ -275,18 +275,25 @@ function getRolePages() {
 // Hide sidebar items based on role
 function applySidebarPermissions() {
     const role = sessionStorage.getItem('adminRole');
+    console.log('applySidebarPermissions - Role:', role);
+
     if (!role) return;
 
     const roleConfig = ROLE_PERMISSIONS[role];
     if (!roleConfig) return;
 
     // Super admin sees everything
-    if (roleConfig.pages === '*') return;
+    if (roleConfig.pages === '*') {
+        console.log('Super admin - showing all');
+        return;
+    }
 
     const allowedPages = roleConfig.pages;
+    console.log('Allowed pages:', allowedPages);
 
     // Find all sidebar nav items
     const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+    console.log('Found nav items:', navItems.length);
 
     navItems.forEach(item => {
         const href = item.getAttribute('href');
@@ -300,7 +307,8 @@ function applySidebarPermissions() {
 
         // Hide if not in allowed pages
         if (!allowedPages.includes(pageSlug)) {
-            item.style.display = 'none';
+            console.log('Hiding:', pageSlug);
+            item.style.setProperty('display', 'none', 'important');
         }
     });
 
@@ -309,7 +317,7 @@ function applySidebarPermissions() {
     navSections.forEach(section => {
         const visibleItems = section.querySelectorAll('.nav-item:not([style*="display: none"])');
         if (visibleItems.length === 0) {
-            section.style.display = 'none';
+            section.style.setProperty('display', 'none', 'important');
         }
     });
 }
