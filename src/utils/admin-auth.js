@@ -4,6 +4,45 @@
 let supabaseClient = null;
 let adminPermissions = [];
 
+// Role-based page access configuration
+// Defines which pages each role can access by default
+const ROLE_PERMISSIONS = {
+    super_admin: {
+        // Super admin can access everything
+        pages: '*',
+        canEdit: true,
+        canDelete: true
+    },
+    editor: {
+        // Editor can manage content
+        pages: [
+            'dashboard',
+            'messages',
+            'videos',
+            'video-library',
+            'tv-management',
+            'backgrounds',
+            'translations',
+            'schedule'
+        ],
+        canEdit: true,
+        canDelete: false
+    },
+    analyst: {
+        // Analyst can only view analytics (read-only)
+        pages: [
+            'dashboard',
+            'analytics',
+            'reading-stats',
+            'geographic-analytics',
+            'social-stats',
+            'users'
+        ],
+        canEdit: false,
+        canDelete: false
+    }
+};
+
 async function initSupabase() {
     if (supabaseClient) return true;
 
@@ -102,12 +141,19 @@ async function checkAuth() {
                 window.adminHeartbeat.start();
             }
 
-            // Check page permission
+            // Check page permission FIRST before showing anything
             const currentPage = getCurrentPageSlug();
-            if (currentPage && !hasPagePermission(currentPage, 'view')) {
+            if (currentPage && currentPage !== 'dashboard' && !hasPagePermission(currentPage, 'view')) {
                 showAccessDenied();
                 return false;
             }
+
+            // Hide sidebar items based on role
+            applySidebarPermissions();
+
+            // Show content (remove loading state)
+            document.body.classList.remove('auth-loading');
+            document.body.classList.add('auth-ready');
 
             return data;
         } else {
@@ -195,20 +241,81 @@ async function logout() {
 function hasPagePermission(pageSlug, permissionType = 'view') {
     const role = sessionStorage.getItem('adminRole');
 
-    // Super admin has all permissions
-    if (role === 'super_admin') {
+    if (!role) return false;
+
+    // Get role configuration
+    const roleConfig = ROLE_PERMISSIONS[role];
+    if (!roleConfig) return false;
+
+    // Super admin has all permissions (pages = '*')
+    if (roleConfig.pages === '*') {
         return true;
     }
 
-    // Check in stored permissions
-    const perms = adminPermissions.find(p => p.page_slug === pageSlug);
-    if (!perms) return false;
+    // Check if page is in role's allowed pages
+    const canAccessPage = roleConfig.pages.includes(pageSlug);
+    if (!canAccessPage) return false;
 
-    if (permissionType === 'view') return perms.can_view;
-    if (permissionType === 'edit') return perms.can_edit;
-    if (permissionType === 'delete') return perms.can_delete;
+    // Check permission type
+    if (permissionType === 'view') return true; // Can view if page is in list
+    if (permissionType === 'edit') return roleConfig.canEdit;
+    if (permissionType === 'delete') return roleConfig.canDelete;
 
     return false;
+}
+
+// Get all pages accessible by current role
+function getRolePages() {
+    const role = sessionStorage.getItem('adminRole');
+    if (!role) return [];
+
+    const roleConfig = ROLE_PERMISSIONS[role];
+    if (!roleConfig) return [];
+
+    if (roleConfig.pages === '*') return '*';
+    return roleConfig.pages;
+}
+
+// Hide sidebar items based on role
+function applySidebarPermissions() {
+    const role = sessionStorage.getItem('adminRole');
+    if (!role) return;
+
+    const roleConfig = ROLE_PERMISSIONS[role];
+    if (!roleConfig) return;
+
+    // Super admin sees everything
+    if (roleConfig.pages === '*') return;
+
+    const allowedPages = roleConfig.pages;
+
+    // Find all sidebar nav items
+    const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+
+    navItems.forEach(item => {
+        const href = item.getAttribute('href');
+        if (!href) return;
+
+        // Extract page slug from href (e.g., /admin-analytics.html -> analytics)
+        const match = href.match(/\/admin-([^.]+)\.html/);
+        if (!match) return;
+
+        const pageSlug = match[1];
+
+        // Hide if not in allowed pages
+        if (!allowedPages.includes(pageSlug)) {
+            item.style.display = 'none';
+        }
+    });
+
+    // Hide nav sections that have no visible items
+    const navSections = document.querySelectorAll('.sidebar-nav .nav-section');
+    navSections.forEach(section => {
+        const visibleItems = section.querySelectorAll('.nav-item:not([style*="display: none"])');
+        if (visibleItems.length === 0) {
+            section.style.display = 'none';
+        }
+    });
 }
 
 function getCurrentPageSlug() {
@@ -278,7 +385,10 @@ window.adminAuth = {
     getRole: () => sessionStorage.getItem('adminRole'),
     getEmail: () => sessionStorage.getItem('adminEmail'),
     getFullName: () => sessionStorage.getItem('adminFullName'),
-    getPermissions: () => adminPermissions
+    getPermissions: () => adminPermissions,
+    getRolePages,
+    applySidebarPermissions,
+    ROLE_PERMISSIONS
 };
 
 // Handle session expired event
