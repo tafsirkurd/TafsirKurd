@@ -147,57 +147,42 @@
             localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
         });
         async function loadStats() {
-            const supabase = window.adminAuth.getSupabase();
-            if (!supabase) return;
+            console.log('Loading reading stats via API...');
 
-            // Fetch profiles (all users)
-            const { data: profiles, error: profileError } = await supabase
-                .from('profiles')
-                .select('*');
-            if (profileError) { console.error('Profiles error:', profileError); }
+            const adminToken = sessionStorage.getItem('adminToken');
+            if (!adminToken) {
+                console.error('No admin token');
+                return;
+            }
 
-            // Fetch user_data (reading progress)
-            const { data: userData, error: userError } = await supabase
-                .from('user_data')
-                .select('*');
-            if (userError) { console.error('User data error:', userError); }
-
-            // Merge profiles with reading data
-            const users = (profiles || []).map(profile => {
-                const reading = (userData || []).find(u => u.user_id === profile.id) || {};
-                return {
-                    id: profile.id,
-                    name: profile.full_name || profile.display_name || profile.email?.split('@')[0] || 'Unknown',
-                    email: profile.email || '',
-                    avatar: profile.avatar_url,
-                    ayahsRead: parseInt(reading.total_ayahs_read) || 0,
-                    currentSurah: reading.current_surah || 0,
-                    currentAyah: reading.current_ayah || 0,
-                    readingStreak: reading.reading_streak || 0,
-                    lastActive: reading.lastActive || reading.updated_at || profile.last_sign_in_at || profile.created_at,
-                    created: profile.created_at
-                };
+            // Fetch stats via server-side API (bypasses RLS)
+            const response = await fetch('/admin-users-data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'get_reading_stats',
+                    token: adminToken
+                })
             });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                console.error('Error fetching stats:', data.error);
+                return;
+            }
+
+            const { stats, users } = data;
             const totalAyahsInQuran = 6236;
-            const totalReaders = users.length;
-            const totalAyahsRead = users.reduce((sum, u) => sum + u.ayahsRead, 0);
-            const avgProgress = totalReaders > 0 ? (totalAyahsRead / (totalReaders * totalAyahsInQuran) * 100).toFixed(1) : 0;
-            const completedReaders = users.filter(u => u.ayahsRead >= totalAyahsInQuran).length;
-            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-            const activeReaders = users.filter(u => new Date(u.lastActive) > sevenDaysAgo).length;
-            document.getElementById('totalReaders').textContent = totalReaders;
-            document.getElementById('avgProgress').textContent = avgProgress + '%';
-            document.getElementById('completedReaders').textContent = completedReaders;
-            document.getElementById('activeReaders').textContent = activeReaders;
-            const ranges = [0, 10, 25, 50, 75, 90, 100];
-            const rangeCounts = ranges.map((r, i) => {
-                if (i === ranges.length - 1) return 0;
-                const nextRange = ranges[i + 1];
-                return users.filter(u => {
-                    const progress = (u.ayahsRead / totalAyahsInQuran) * 100;
-                    return progress >= r && progress < nextRange;
-                }).length;
-            });
+
+            // Update metrics
+            document.getElementById('totalReaders').textContent = stats.totalReaders;
+            document.getElementById('avgProgress').textContent = stats.avgProgress + '%';
+            document.getElementById('completedReaders').textContent = stats.completedReaders;
+            document.getElementById('activeReaders').textContent = stats.activeReaders;
+
+            // Use pre-calculated distribution from API
+            const rangeCounts = stats.distribution;
             const ctx = document.getElementById('chart').getContext('2d');
             if (chart) chart.destroy();
             chart = new Chart(ctx, {

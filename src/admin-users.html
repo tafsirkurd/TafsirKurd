@@ -757,57 +757,50 @@
         // Load users from Supabase
         async function loadUsers() {
             try {
-                const supabase = window.adminAuth.getSupabase();
-                if (!supabase) {
-                    console.error('Supabase not initialized');
+                console.log('Loading users via API...');
+
+                const adminToken = sessionStorage.getItem('adminToken');
+                if (!adminToken) {
+                    console.error('No admin token');
+                    showError('Authentication required');
                     return;
                 }
 
-                console.log('Loading users...');
-
-                // Fetch profiles as primary source (all registered users)
-                const { data: profiles, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
-                if (profileError) {
-                    console.error('Error fetching profiles:', profileError);
-                    showError('Failed to load user profiles');
-                    return;
-                }
-
-                // Fetch user_data for reading progress (optional data)
-                const { data: userData, error: userError } = await supabase
-                    .from('user_data')
-                    .select('*');
-
-                if (userError) {
-                    console.error('Error fetching user_data:', userError);
-                    // Continue without user_data - it's optional
-                }
-
-                // Merge profiles with user_data (profiles is primary)
-                allUsers = (profiles || []).map(profile => {
-                    const readingData = userData?.find(u => u.user_id === profile.id) || {};
-                    return {
-                        user_id: profile.id,
-                        profile_name: profile.full_name || profile.display_name || profile.name || 'Unknown User',
-                        profile_email: profile.email || 'No email',
-                        profile_picture: profile.avatar_url || null,
-                        registration_source: profile.registration_source || 'unknown',
-                        created_at: profile.created_at || new Date().toISOString(),
-                        lastActive: readingData.lastActive || profile.last_sign_in_at || profile.created_at,
-                        // Reading progress data (from user_data)
-                        current_surah: readingData.current_surah || 0,
-                        current_ayah: readingData.current_ayah || 0,
-                        total_ayahs_read: readingData.total_ayahs_read || 0,
-                        reading_streak: readingData.reading_streak || 0,
-                        bookmarks: readingData.bookmarks || [],
-                        daily_goal: readingData.daily_goal || 0,
-                        monthly_goal: readingData.monthly_goal || 0
-                    };
+                // Fetch users via server-side API (bypasses RLS)
+                const response = await fetch('/admin-users-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'get_users',
+                        token: adminToken
+                    })
                 });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    console.error('Error fetching users:', data.error);
+                    showError(data.error || 'Failed to load users');
+                    return;
+                }
+
+                // Map API response to expected format
+                allUsers = (data.users || []).map(user => ({
+                    user_id: user.id,
+                    profile_name: user.name,
+                    profile_email: user.email,
+                    profile_picture: user.avatar,
+                    registration_source: user.registration_source,
+                    created_at: user.created_at,
+                    lastActive: user.last_active,
+                    current_surah: user.current_surah,
+                    current_ayah: user.current_ayah,
+                    total_ayahs_read: user.total_ayahs_read,
+                    reading_streak: user.reading_streak,
+                    bookmarks: user.bookmarks,
+                    daily_goal: user.daily_goal,
+                    monthly_goal: user.monthly_goal
+                }));
 
                 console.log(`Loaded ${allUsers.length} users`);
 
