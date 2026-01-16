@@ -26,6 +26,24 @@
         .empty-state i { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.5; }
     </style>
 
+    <script>
+        // Early role-based sidebar hiding - runs before body renders
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            if (role && role !== 'super_admin') {
+                var style = document.createElement('style');
+                style.id = 'early-sidebar-hide';
+                var css = '';
+                if (role === 'analyst') {
+                    css = '.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="tv-management"],.nav-item[href*="backgrounds"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                } else if (role === 'editor') {
+                    css = '.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                }
+                style.textContent = css;
+                document.head.appendChild(style);
+            }
+        })();
+    </script>
 </head>
 <body>
     <div class="dashboard-container">
