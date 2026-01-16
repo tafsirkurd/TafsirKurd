@@ -94,13 +94,13 @@ export async function onRequest(context) {
                     avatar: profile.avatar_url || null,
                     registration_source: profile.registration_source || 'unknown',
                     created_at: profile.created_at,
-                    last_sign_in: profile.last_sign_in_at,
+                    last_sign_in: profile.updated_at || profile.created_at,
                     // Reading progress
                     current_surah: readingData.current_surah || 0,
                     current_ayah: readingData.current_ayah || 0,
                     total_ayahs_read: parseInt(readingData.total_ayahs_read) || 0,
                     reading_streak: readingData.reading_streak || 0,
-                    last_active: readingData.updated_at || readingData.lastActive || profile.last_sign_in_at || profile.created_at,
+                    last_active: readingData.updated_at || readingData.lastActive || profile.updated_at || profile.created_at,
                     bookmarks: readingData.bookmarks || [],
                     daily_goal: readingData.daily_goal || 0,
                     monthly_goal: readingData.monthly_goal || 0
@@ -119,7 +119,7 @@ export async function onRequest(context) {
             // Fetch profiles
             const { data: profiles, error: profileError } = await supabase
                 .from('profiles')
-                .select('id, full_name, display_name, email, avatar_url, last_sign_in_at, created_at');
+                .select('id, full_name, display_name, email, avatar_url, created_at');
 
             if (profileError) {
                 console.error('Error fetching profiles:', profileError);
@@ -148,7 +148,7 @@ export async function onRequest(context) {
                     currentSurah: reading.current_surah || 0,
                     currentAyah: reading.current_ayah || 0,
                     readingStreak: reading.reading_streak || 0,
-                    lastActive: reading.updated_at || reading.lastActive || profile.last_sign_in_at || profile.created_at,
+                    lastActive: reading.updated_at || reading.lastActive || profile.updated_at || profile.created_at,
                     created: profile.created_at
                 };
             });
