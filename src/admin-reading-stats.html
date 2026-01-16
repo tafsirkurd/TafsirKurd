@@ -155,34 +155,40 @@
                 return;
             }
 
-            // Fetch stats via server-side API (bypasses RLS)
-            const response = await fetch('/admin-users-data', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'get_reading_stats',
-                    token: adminToken
-                })
-            });
+            try {
+                // Fetch stats via server-side API (bypasses RLS)
+                const response = await fetch('/admin-users-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'get_reading_stats',
+                        token: adminToken
+                    })
+                });
 
-            const data = await response.json();
+                const data = await response.json();
+                console.log('API Response:', data);
 
-            if (!data.success) {
-                console.error('Error fetching stats:', data.error);
-                return;
-            }
+                if (!data.success) {
+                    console.error('Error fetching stats:', data.error);
+                    document.getElementById('totalReaders').textContent = 'Error';
+                    return;
+                }
 
-            const { stats, users } = data;
-            const totalAyahsInQuran = 6236;
+                const { stats, users } = data;
+                console.log('Stats:', stats);
+                console.log('Users count:', users?.length);
 
-            // Update metrics
-            document.getElementById('totalReaders').textContent = stats.totalReaders;
-            document.getElementById('avgProgress').textContent = stats.avgProgress + '%';
-            document.getElementById('completedReaders').textContent = stats.completedReaders;
-            document.getElementById('activeReaders').textContent = stats.activeReaders;
+                const totalAyahsInQuran = 6236;
 
-            // Use pre-calculated distribution from API
-            const rangeCounts = stats.distribution;
+                // Update metrics
+                document.getElementById('totalReaders').textContent = stats.totalReaders || 0;
+                document.getElementById('avgProgress').textContent = (stats.avgProgress || 0) + '%';
+                document.getElementById('completedReaders').textContent = stats.completedReaders || 0;
+                document.getElementById('activeReaders').textContent = stats.activeReaders || 0;
+
+                // Use pre-calculated distribution from API
+                const rangeCounts = stats.distribution || [0, 0, 0, 0, 0, 0];
             const ctx = document.getElementById('chart').getContext('2d');
             if (chart) chart.destroy();
             chart = new Chart(ctx, {
@@ -255,6 +261,10 @@
                 tbody.appendChild(tr);
             });
             lucide.createIcons();
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('totalReaders').textContent = 'Error';
+            }
         }
     </script>
 </body>
