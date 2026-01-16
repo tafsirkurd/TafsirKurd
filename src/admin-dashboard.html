@@ -467,8 +467,9 @@
 
                         const td4 = document.createElement('td');
                         const badge = document.createElement('span');
-                        badge.className = msg.status === 'read' ? 'badge badge-success' : 'badge badge-neutral';
-                        badge.textContent = msg.status || 'Unread';
+                        const isRead = msg.status === 'read';
+                        badge.className = isRead ? 'badge badge-success' : 'badge badge-neutral';
+                        badge.textContent = isRead ? 'Read' : 'Unread';
                         td4.appendChild(badge);
                         tr.appendChild(td4);
 
@@ -492,6 +493,7 @@
                         const replyBtn = document.createElement('button');
                         replyBtn.className = 'table-btn';
                         replyBtn.title = 'Reply';
+                        replyBtn.onclick = () => window.location.href = 'mailto:' + msg.email + '?subject=Re: ' + encodeURIComponent(msg.subject || 'Your message');
                         const replyIcon = document.createElement('i');
                         replyIcon.setAttribute('data-lucide', 'reply');
                         replyBtn.appendChild(replyIcon);
