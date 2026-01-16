@@ -5352,10 +5352,11 @@
             renderSurahGrid();
         }
 
-        // Initialize on Load
-        document.addEventListener('DOMContentLoaded', async () => {
+        // Initialize on Load - Handle both fresh load and cached load
+        async function initializeOnLoad() {
             let loadTimeout = null; // Declare at function scope
             try {
+                console.log('🚀 initializeOnLoad called');
                 initPreloader();
 
                 // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
@@ -5561,7 +5562,17 @@
                 }
                 document.body.classList.remove('no-scroll');
             }
-        });
+        }
+
+        // Run initialization - handle both fresh load and service worker cached load
+        if (document.readyState === 'loading') {
+            // Document still loading, wait for DOMContentLoaded
+            document.addEventListener('DOMContentLoaded', initializeOnLoad);
+        } else {
+            // DOM already ready (e.g., loaded from cache), run immediately
+            console.log('📦 DOM already ready, running initializeOnLoad immediately');
+            initializeOnLoad();
+        }
 
         // Handle URL parameters for direct ayah navigation
         function handleUrlParameters() {
