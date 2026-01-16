@@ -21,8 +21,9 @@
         }
     </style>
     <style id="early-sidebar-hide">
-        /* Hide sidebar nav by default until role is confirmed */
+        /* Hide sidebar nav and restricted content by default until role is confirmed */
         .sidebar-nav { visibility: hidden; }
+        #recent-messages-card { display: none; }
     </style>
     <script>
         // Early role-based sidebar hiding - runs before body renders
@@ -33,11 +34,11 @@
 
             if (role === 'super_admin') {
                 // Super admin sees everything
-                css = '.sidebar-nav{visibility:visible}';
+                css = '.sidebar-nav{visibility:visible}#recent-messages-card{display:block}';
             } else if (role === 'analyst') {
-                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="tv-management"],.nav-item[href*="backgrounds"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="tv-management"],.nav-item[href*="backgrounds"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"],#recent-messages-card{display:none!important}';
             } else if (role === 'editor') {
-                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                css = '.sidebar-nav{visibility:visible}#recent-messages-card{display:block}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
             }
             // If no role yet, sidebar stays hidden until auth check completes
             if (role) {
@@ -287,7 +288,7 @@
                 </div>
 
                 <!-- Recent Messages -->
-                <div class="card">
+                <div class="card" id="recent-messages-card">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <h3 class="card-title">Recent Messages</h3>
                         <a href="/admin-messages.html" style="font-size: 13px; color: var(--text-secondary); text-decoration: none;">View all →</a>
