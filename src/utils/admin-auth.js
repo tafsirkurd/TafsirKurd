@@ -303,7 +303,7 @@ function applySidebarPermissions(overrideRole) {
     if (roleConfig.pages === '*') {
         console.log('Super admin - showing all');
         // Reveal sidebar for super admin
-        revealSidebar();
+        revealSidebar(role);
         return;
     }
 
@@ -351,11 +351,11 @@ function applySidebarPermissions(overrideRole) {
     });
 
     // Reveal sidebar after permissions applied
-    revealSidebar();
+    revealSidebar(role);
 }
 
 // Reveal sidebar after role-based hiding is applied
-function revealSidebar() {
+function revealSidebar(role) {
     const sidebarNav = document.querySelector('.sidebar-nav');
     if (sidebarNav) {
         sidebarNav.style.visibility = 'visible';
@@ -363,7 +363,20 @@ function revealSidebar() {
     // Also update the early-hide style if it exists
     const earlyStyle = document.getElementById('early-sidebar-hide');
     if (earlyStyle) {
-        earlyStyle.textContent = '.sidebar-nav{visibility:visible}';
+        // Keep messages card hidden for analyst role
+        if (role === 'analyst') {
+            earlyStyle.textContent = '.sidebar-nav{visibility:visible}#recent-messages-card{display:none!important}';
+        } else {
+            earlyStyle.textContent = '.sidebar-nav{visibility:visible}#recent-messages-card{display:block}';
+        }
+    }
+
+    // Also directly hide the messages card for analyst
+    if (role === 'analyst') {
+        const messagesCard = document.getElementById('recent-messages-card');
+        if (messagesCard) {
+            messagesCard.style.display = 'none';
+        }
     }
 }
 
