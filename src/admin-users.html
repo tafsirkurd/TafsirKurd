@@ -765,35 +765,47 @@
 
                 console.log('Loading users...');
 
-                // Fetch user_data and profiles
-                const { data: userData, error: userError } = await supabase
-                    .from('user_data')
+                // Fetch profiles as primary source (all registered users)
+                const { data: profiles, error: profileError } = await supabase
+                    .from('profiles')
                     .select('*')
                     .order('created_at', { ascending: false });
 
-                if (userError) {
-                    console.error('Error fetching user_data:', userError);
-                    showError('Failed to load user data');
+                if (profileError) {
+                    console.error('Error fetching profiles:', profileError);
+                    showError('Failed to load user profiles');
                     return;
                 }
 
-                const { data: profiles, error: profileError } = await supabase
-                    .from('profiles')
+                // Fetch user_data for reading progress (optional data)
+                const { data: userData, error: userError } = await supabase
+                    .from('user_data')
                     .select('*');
 
-                if (profileError) {
-                    console.error('Error fetching profiles:', profileError);
+                if (userError) {
+                    console.error('Error fetching user_data:', userError);
+                    // Continue without user_data - it's optional
                 }
 
-                // Merge user_data with profiles
-                allUsers = userData.map(user => {
-                    const profile = profiles?.find(p => p.id === user.user_id) || {};
+                // Merge profiles with user_data (profiles is primary)
+                allUsers = (profiles || []).map(profile => {
+                    const readingData = userData?.find(u => u.user_id === profile.id) || {};
                     return {
-                        ...user,
-                        profile_name: profile.full_name || profile.name || 'Unknown User',
-                        profile_email: profile.email || user.email || 'No email',
-                        profile_picture: profile.avatar_url || profile.picture || null,
-                        created_at: user.created_at || profile.created_at || new Date().toISOString()
+                        user_id: profile.id,
+                        profile_name: profile.full_name || profile.display_name || profile.name || 'Unknown User',
+                        profile_email: profile.email || 'No email',
+                        profile_picture: profile.avatar_url || null,
+                        registration_source: profile.registration_source || 'unknown',
+                        created_at: profile.created_at || new Date().toISOString(),
+                        lastActive: readingData.lastActive || profile.last_sign_in_at || profile.created_at,
+                        // Reading progress data (from user_data)
+                        current_surah: readingData.current_surah || 0,
+                        current_ayah: readingData.current_ayah || 0,
+                        total_ayahs_read: readingData.total_ayahs_read || 0,
+                        reading_streak: readingData.reading_streak || 0,
+                        bookmarks: readingData.bookmarks || [],
+                        daily_goal: readingData.daily_goal || 0,
+                        monthly_goal: readingData.monthly_goal || 0
                     };
                 });
 
