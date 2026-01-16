@@ -26,9 +26,10 @@
         #recent-messages-card { display: none; }
     </style>
     <script>
-        // Early role-based sidebar hiding - runs before body renders
+        // Early role-based sidebar hiding - runs before body renders - v3
         (function() {
             var role = sessionStorage.getItem('adminRole');
+            console.log('Early hide script v3 - Role:', role);
             var style = document.getElementById('early-sidebar-hide');
             var css = '.sidebar-nav{visibility:visible}';
 
