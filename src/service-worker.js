@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v502';
+const CACHE_NAME = 'tafsir-kurd-v503';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -47,7 +47,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v502');
+  console.log('[ServiceWorker] Installing v503');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
