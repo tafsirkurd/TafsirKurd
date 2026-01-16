@@ -302,6 +302,8 @@ function applySidebarPermissions(overrideRole) {
     // Super admin sees everything
     if (roleConfig.pages === '*') {
         console.log('Super admin - showing all');
+        // Reveal sidebar for super admin
+        revealSidebar();
         return;
     }
 
@@ -347,6 +349,22 @@ function applySidebarPermissions(overrideRole) {
             section.style.display = 'none';
         }
     });
+
+    // Reveal sidebar after permissions applied
+    revealSidebar();
+}
+
+// Reveal sidebar after role-based hiding is applied
+function revealSidebar() {
+    const sidebarNav = document.querySelector('.sidebar-nav');
+    if (sidebarNav) {
+        sidebarNav.style.visibility = 'visible';
+    }
+    // Also update the early-hide style if it exists
+    const earlyStyle = document.getElementById('early-sidebar-hide');
+    if (earlyStyle) {
+        earlyStyle.textContent = '.sidebar-nav{visibility:visible}';
+    }
 }
 
 function getCurrentPageSlug() {
