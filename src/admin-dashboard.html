@@ -83,7 +83,7 @@
                     <a href="/admin-messages.html" class="nav-item">
                         <i data-lucide="message-square"></i>
                         <span class="nav-item-label">Messages</span>
-                        <span class="nav-item-badge">13</span>
+                        <span class="nav-item-badge" id="messages-badge"></span>
                     </a>
                     <a href="/admin-videos.html" class="nav-item">
                         <i data-lucide="video"></i>
@@ -415,10 +415,12 @@
                     metricMessages.textContent = unreadCount.toLocaleString();
                     metricMessages.closest('.metric-card').classList.add('fade-in');
 
-                    // Update sidebar badge
-                    document.querySelectorAll('.nav-item-badge').forEach(badge => {
-                        badge.textContent = unreadCount;
-                    });
+                    // Update sidebar messages badge
+                    const messagesBadge = document.getElementById('messages-badge');
+                    if (messagesBadge) {
+                        messagesBadge.textContent = unreadCount > 0 ? unreadCount : '';
+                        messagesBadge.style.display = unreadCount > 0 ? '' : 'none';
+                    }
                 }
 
                 // Calculate active users today
