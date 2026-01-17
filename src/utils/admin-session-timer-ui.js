@@ -10,52 +10,37 @@
         const timerText = document.getElementById('sessionTimerText');
 
         if (!timerElement || !timerText) {
-            console.warn('Session timer elements not found');
+            console.warn('❌ Session timer elements not found in DOM');
             return;
         }
 
-        // Get session status from heartbeat
-        if (!window.adminHeartbeat) {
+        // Calculate remaining time from session start
+        const sessionStart = sessionStorage.getItem('adminSessionStart');
+
+        if (!sessionStart) {
+            console.warn('⚠️ No session start time found');
             timerText.textContent = '20:00';
             return;
         }
 
-        const status = window.adminHeartbeat.getStatus();
+        // Calculate elapsed and remaining time
+        const SESSION_TIMEOUT = 20 * 60 * 1000; // 20 minutes
+        const startTime = new Date(sessionStart).getTime();
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, SESSION_TIMEOUT - elapsed);
 
-        if (!status) {
-            timerText.textContent = '20:00';
-            return;
-        }
-
-        // If heartbeat not running, check if we have session start time
-        if (!status.running) {
-            const sessionStart = sessionStorage.getItem('adminSessionStart');
-            if (sessionStart) {
-                // Calculate remaining time manually
-                const elapsed = Date.now() - new Date(sessionStart).getTime();
-                const sessionTimeout = window.adminHeartbeat.getSessionTimeout();
-                const remaining = Math.max(0, sessionTimeout - elapsed);
-                const mins = Math.floor(remaining / 60000);
-                const secs = Math.floor((remaining % 60000) / 1000);
-                timerText.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-            } else {
-                timerText.textContent = '20:00';
-            }
-            return;
-        }
-
-        const remainingMs = status.remainingTime;
-        const remainingMinutes = status.remainingMinutes;
-        const remainingSeconds = status.remainingSeconds;
+        const remainingMinutes = Math.floor(remaining / 60000);
+        const remainingSeconds = Math.floor((remaining % 60000) / 1000);
+        const formattedTime = `${remainingMinutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 
         // Update timer text
-        timerText.textContent = status.remainingTimeFormatted;
+        timerText.textContent = formattedTime;
+
+        const remainingMs = remaining;
 
         // Update tooltip with full info
-        const timeoutDate = status.sessionTimeoutAt;
-        if (timeoutDate) {
-            timerElement.title = `Session expires at ${timeoutDate.toLocaleTimeString()}\n(${remainingMinutes} min ${remainingSeconds} sec remaining)`;
-        }
+        const timeoutDate = new Date(startTime + SESSION_TIMEOUT);
+        timerElement.title = `Session expires at ${timeoutDate.toLocaleTimeString()}\n(${remainingMinutes} min ${remainingSeconds} sec remaining)`;
 
         // Remove all state classes first
         timerElement.classList.remove('warning', 'critical');
@@ -87,7 +72,15 @@
     }
 
     function startTimerDisplay() {
+        // Check if session start time exists
+        const sessionStart = sessionStorage.getItem('adminSessionStart');
+        if (!sessionStart) {
+            console.warn('⚠️ Cannot start timer - no session start time');
+            return;
+        }
+
         console.log('🕐 Starting session timer display...');
+        console.log('📅 Session started at:', new Date(sessionStart).toLocaleTimeString());
 
         // Update immediately
         updateSessionTimerDisplay();
@@ -121,42 +114,52 @@
     }
 
     // Auto-start when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initTimer);
-    } else {
-        initTimer();
-    }
-
     function initTimer() {
         const token = sessionStorage.getItem('adminToken');
-        console.log('🕐 Timer init - Token exists:', !!token);
+        const sessionStart = sessionStorage.getItem('adminSessionStart');
 
-        if (token) {
-            // Start timer display immediately
+        console.log('🕐 Timer init check - Token:', !!token, 'SessionStart:', !!sessionStart);
+
+        if (token && sessionStart) {
+            // Both token and session start exist - start timer
             startTimerDisplay();
-
-            // Also start when heartbeat confirms it's running
-            setTimeout(() => {
-                if (window.adminHeartbeat && window.adminHeartbeat.getStatus().running) {
-                    console.log('✅ Heartbeat confirmed running');
+        } else if (token && !sessionStart) {
+            // Have token but no session start - wait for it
+            console.log('⏳ Waiting for session start time...');
+            let attempts = 0;
+            const checkInterval = setInterval(() => {
+                attempts++;
+                const sessionStart = sessionStorage.getItem('adminSessionStart');
+                if (sessionStart) {
+                    console.log('✅ Session start time found, starting timer');
+                    clearInterval(checkInterval);
+                    startTimerDisplay();
+                } else if (attempts >= 20) {
+                    console.warn('⚠️ Session start time not found after 10 seconds');
+                    clearInterval(checkInterval);
                 }
-            }, 1000);
+            }, 500);
         }
     }
+
+    // Start init after a short delay to let other scripts load
+    setTimeout(initTimer, 100);
 
     // Also start on window load as backup
     window.addEventListener('load', function() {
         const token = sessionStorage.getItem('adminToken');
         if (token && !timerUpdateInterval) {
-            console.log('🕐 Starting timer on window load (backup)');
-            startTimerDisplay();
+            console.log('🕐 Attempting timer start on window load');
+            initTimer();
         }
     });
 
     // Also listen for heartbeat start event
     window.addEventListener('admin:heartbeat-started', function() {
-        console.log('Heartbeat started event received, starting timer display');
-        startTimerDisplay();
+        if (!timerUpdateInterval) {
+            console.log('💓 Heartbeat started event received, starting timer display');
+            startTimerDisplay();
+        }
     });
 
     // Listen for session events
