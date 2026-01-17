@@ -265,8 +265,8 @@ export async function onRequest(context) {
             user.failed_attempts = 0;
         }
 
-        // 5. Check device lock
-        if (user.device_fingerprint && deviceFingerprint) {
+        // 5. Check device lock (skip if user has disabled it)
+        if (!user.disable_device_lock && user.device_fingerprint && deviceFingerprint) {
             if (user.device_fingerprint !== deviceFingerprint) {
                 await logAudit(supabase, user.id, email, 'device_blocked', {
                     reason: 'Login attempted from unauthorized device',
@@ -329,8 +329,8 @@ export async function onRequest(context) {
             }, 401, corsHeaders);
         }
 
-        // 7. Successful login - lock device if not already locked
-        if (!user.device_fingerprint && deviceFingerprint) {
+        // 7. Successful login - lock device if not already locked and device lock not disabled
+        if (!user.disable_device_lock && !user.device_fingerprint && deviceFingerprint) {
             await supabase
                 .from('admin_users')
                 .update({
@@ -343,6 +343,12 @@ export async function onRequest(context) {
 
             await logAudit(supabase, user.id, email, 'device_locked', {
                 fingerprint: deviceFingerprint,
+                user_agent: userAgent,
+                ip: clientIP
+            }, clientIP, userAgent, null, null, deviceFingerprint, 'info');
+        } else if (user.disable_device_lock) {
+            await logAudit(supabase, user.id, email, 'login_device_lock_disabled', {
+                note: 'Device locking disabled for this user',
                 user_agent: userAgent,
                 ip: clientIP
             }, clientIP, userAgent, null, null, deviceFingerprint, 'info');
