@@ -16,14 +16,31 @@
 
         // Get session status from heartbeat
         if (!window.adminHeartbeat) {
-            timerText.textContent = '--:--';
+            timerText.textContent = '20:00';
             return;
         }
 
         const status = window.adminHeartbeat.getStatus();
 
-        if (!status || !status.running) {
-            timerText.textContent = '--:--';
+        if (!status) {
+            timerText.textContent = '20:00';
+            return;
+        }
+
+        // If heartbeat not running, check if we have session start time
+        if (!status.running) {
+            const sessionStart = sessionStorage.getItem('adminSessionStart');
+            if (sessionStart) {
+                // Calculate remaining time manually
+                const elapsed = Date.now() - new Date(sessionStart).getTime();
+                const sessionTimeout = window.adminHeartbeat.getSessionTimeout();
+                const remaining = Math.max(0, sessionTimeout - elapsed);
+                const mins = Math.floor(remaining / 60000);
+                const secs = Math.floor((remaining % 60000) / 1000);
+                timerText.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            } else {
+                timerText.textContent = '20:00';
+            }
             return;
         }
 
@@ -70,13 +87,17 @@
     }
 
     function startTimerDisplay() {
+        console.log('🕐 Starting session timer display...');
+
         // Update immediately
         updateSessionTimerDisplay();
 
         // Update every second
         if (!timerUpdateInterval) {
             timerUpdateInterval = setInterval(updateSessionTimerDisplay, 1000);
-            console.log('✅ Session timer display started');
+            console.log('✅ Session timer display started - updating every second');
+        } else {
+            console.log('⚠️ Timer interval already running');
         }
     }
 
@@ -99,17 +120,43 @@
         }
     }
 
-    // Auto-start when admin is authenticated
-    window.addEventListener('load', function() {
+    // Auto-start when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTimer);
+    } else {
+        initTimer();
+    }
+
+    function initTimer() {
         const token = sessionStorage.getItem('adminToken');
+        console.log('🕐 Timer init - Token exists:', !!token);
+
         if (token) {
-            // Wait for heartbeat to be initialized
+            // Start timer display immediately
+            startTimerDisplay();
+
+            // Also start when heartbeat confirms it's running
             setTimeout(() => {
                 if (window.adminHeartbeat && window.adminHeartbeat.getStatus().running) {
-                    startTimerDisplay();
+                    console.log('✅ Heartbeat confirmed running');
                 }
-            }, 500);
+            }, 1000);
         }
+    }
+
+    // Also start on window load as backup
+    window.addEventListener('load', function() {
+        const token = sessionStorage.getItem('adminToken');
+        if (token && !timerUpdateInterval) {
+            console.log('🕐 Starting timer on window load (backup)');
+            startTimerDisplay();
+        }
+    });
+
+    // Also listen for heartbeat start event
+    window.addEventListener('admin:heartbeat-started', function() {
+        console.log('Heartbeat started event received, starting timer display');
+        startTimerDisplay();
     });
 
     // Listen for session events
@@ -120,6 +167,20 @@
     window.adminSessionTimerUI = {
         start: startTimerDisplay,
         stop: stopTimerDisplay,
-        update: updateSessionTimerDisplay
+        update: updateSessionTimerDisplay,
+        forceStart: function() {
+            console.log('🔧 Force starting timer display...');
+            stopTimerDisplay();
+            startTimerDisplay();
+        },
+        getStatus: function() {
+            return {
+                running: !!timerUpdateInterval,
+                element: document.getElementById('sessionTimer'),
+                textElement: document.getElementById('sessionTimerText')
+            };
+        }
     };
+
+    console.log('✅ Admin session timer UI script loaded');
 })();
