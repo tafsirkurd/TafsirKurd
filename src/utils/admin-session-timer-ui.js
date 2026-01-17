@@ -18,8 +18,9 @@
         const sessionStart = sessionStorage.getItem('adminSessionStart');
 
         if (!sessionStart) {
-            console.warn('⚠️ No session start time found');
-            timerText.textContent = '20:00';
+            console.warn('⚠️ No session start time found - stopping timer');
+            timerText.textContent = '--:--';
+            stopTimerDisplay();
             return;
         }
 
@@ -122,28 +123,32 @@
 
         if (token && sessionStart) {
             // Both token and session start exist - start timer
+            console.log('✅ Both token and session start found - starting timer');
             startTimerDisplay();
         } else if (token && !sessionStart) {
-            // Have token but no session start - wait for it
-            console.log('⏳ Waiting for session start time...');
+            // Have token but no session start - wait for heartbeat to set it
+            console.log('⏳ Waiting for heartbeat to set session start time...');
             let attempts = 0;
             const checkInterval = setInterval(() => {
                 attempts++;
                 const sessionStart = sessionStorage.getItem('adminSessionStart');
                 if (sessionStart) {
-                    console.log('✅ Session start time found, starting timer');
+                    console.log('✅ Session start time found after', attempts * 500, 'ms - starting timer');
                     clearInterval(checkInterval);
                     startTimerDisplay();
-                } else if (attempts >= 20) {
-                    console.warn('⚠️ Session start time not found after 10 seconds');
+                } else if (attempts >= 30) {
+                    console.error('❌ Session start time not found after 15 seconds - heartbeat may not be running');
+                    console.error('Manual fix: Run sessionStorage.setItem("adminSessionStart", new Date().toISOString())');
                     clearInterval(checkInterval);
                 }
             }, 500);
+        } else {
+            console.log('⚠️ No admin token found - not starting timer');
         }
     }
 
-    // Start init after a short delay to let other scripts load
-    setTimeout(initTimer, 100);
+    // Start init after a delay to let heartbeat initialize first
+    setTimeout(initTimer, 500);
 
     // Also start on window load as backup
     window.addEventListener('load', function() {
