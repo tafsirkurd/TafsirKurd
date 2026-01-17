@@ -280,6 +280,8 @@
 
                 if (data.success) {
                     sessionStorage.setItem('adminToken', data.token);
+                    // Set session start time for 20-minute timeout
+                    sessionStorage.setItem('adminSessionStart', new Date().toISOString());
                     console.log('✅ Login successful' + (data.deviceLocked ? ' (Device locked)' : ''));
                     window.location.href = '/admin-dashboard.html';
                 } else {
