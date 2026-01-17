@@ -175,6 +175,11 @@ window.adminHeartbeat = (function() {
                 sendHeartbeat();
             }
         });
+
+        // Notify UI that heartbeat has started
+        window.dispatchEvent(new CustomEvent('admin:heartbeat-started', {
+            detail: { timestamp: new Date() }
+        }));
     }
 
     function stop() {
