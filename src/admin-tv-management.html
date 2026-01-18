@@ -480,9 +480,9 @@
                 <div class="page-header">
                     <h1 class="page-title">TV Management</h1>
                     <div class="page-actions">
-                        <button class="btn btn-primary" id="add-btn">
+                        <button class="btn btn-primary" id="add-btn" onclick="openSeriesModal()">
                             <i data-lucide="plus"></i>
-                            <span id="add-btn-text">Add Category</span>
+                            <span id="add-btn-text">Add Series</span>
                         </button>
                     </div>
                 </div>
@@ -497,11 +497,7 @@
 
                 <!-- VIEW TABS -->
                 <div class="view-tabs">
-                    <button class="tab-btn active" data-view="categories">
-                        <i data-lucide="folder"></i>
-                        Categories
-                    </button>
-                    <button class="tab-btn" data-view="all-series">
+                    <button class="tab-btn active" data-view="all-series">
                         <i data-lucide="list"></i>
                         All Series
                     </button>
@@ -511,15 +507,8 @@
                     </button>
                 </div>
 
-                <!-- CATEGORIES VIEW -->
-                <div class="view-panel active" id="categories-view">
-                    <div class="category-grid" id="categories-grid">
-                        <!-- Categories will be loaded here -->
-                    </div>
-                </div>
-
                 <!-- ALL SERIES VIEW -->
-                <div class="view-panel" id="all-series-view">
+                <div class="view-panel active" id="all-series-view">
                     <div class="series-list" id="all-series-list">
                         <!-- All series will be loaded here -->
                     </div>
@@ -622,13 +611,6 @@
             <div class="modal-body">
                 <form id="series-form">
                     <input type="hidden" id="series-id">
-                    <input type="hidden" id="series-category-id">
-                    <div class="form-group">
-                        <label class="form-label">Category</label>
-                        <select class="form-input" id="series-category-select" required>
-                            <option value="">Select category...</option>
-                        </select>
-                    </div>
                     <div class="form-group">
                         <label class="form-label">Title</label>
                         <input type="text" class="form-input" id="series-title" required>
@@ -678,16 +660,26 @@
                         <input type="text" class="form-input" id="episode-title" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Video URL</label>
-                        <input type="url" class="form-input" id="episode-video-url" required>
+                        <label class="form-label">Audio URL (Required)</label>
+                        <input type="url" class="form-input" id="episode-audio-url" placeholder="S3 audio file URL" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Video URL (Optional - Native HTML5)</label>
+                        <input type="url" class="form-input" id="episode-video-url-native" placeholder="S3 video file URL (not YouTube)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Audio Duration (seconds)</label>
+                        <input type="number" class="form-input" id="episode-audio-duration" min="0" placeholder="Audio length in seconds">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Thumbnail URL</label>
                         <input type="url" class="form-input" id="episode-thumbnail">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Duration (seconds)</label>
-                        <input type="number" class="form-input" id="episode-duration" min="0">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="episode-audio-only" style="width: auto;">
+                            <span class="form-label" style="margin: 0;">Audio-only episode (no video available)</span>
+                        </label>
                     </div>
                 </form>
             </div>
@@ -701,15 +693,13 @@
     <script src="/utils/admin-auth.js?v=3"></script>
     <script src="/utils/admin-notifications.js"></script>
     <script>
-        let currentView = 'categories';
-        let currentCategory = null;
+        let currentView = 'all-series';
         let currentSeries = null;
 
         // Initialize
         (async () => {
             const isAuth = await window.adminAuth.checkAuth();
             if (isAuth) {
-                loadCategories();
                 loadAllSeries();
                 loadAllEpisodes();
             }
@@ -774,12 +764,7 @@
             const addBtn = document.getElementById('add-btn');
             const addBtnText = document.getElementById('add-btn-text');
 
-            if (view === 'categories') {
-                document.getElementById('categories-view').classList.add('active');
-                addBtnText.textContent = 'Add Category';
-                addBtn.onclick = openCategoryModal;
-                document.getElementById('breadcrumb').style.display = 'none';
-            } else if (view === 'all-series') {
+            if (view === 'all-series') {
                 document.getElementById('all-series-view').classList.add('active');
                 addBtnText.textContent = 'Add Series';
                 addBtn.onclick = openSeriesModal;
@@ -789,11 +774,6 @@
                 addBtnText.textContent = 'Add Episode';
                 addBtn.onclick = openEpisodeModal;
                 document.getElementById('breadcrumb').style.display = 'none';
-            } else if (view === 'category-series') {
-                document.getElementById('category-series-view').classList.add('active');
-                addBtnText.textContent = 'Add Series';
-                addBtn.onclick = () => openSeriesModal(currentCategory.id);
-                updateBreadcrumb();
             } else if (view === 'series-episodes') {
                 document.getElementById('series-episodes-view').classList.add('active');
                 addBtnText.textContent = 'Add Episode';
@@ -1247,25 +1227,15 @@
         }
 
         // Series CRUD
-        async function openSeriesModal(categoryId = null, seriesId = null) {
+        async function openSeriesModal(seriesId = null) {
             const modal = document.getElementById('series-modal');
             const title = document.getElementById('series-modal-title');
             const form = document.getElementById('series-form');
-            const categorySelect = document.getElementById('series-category-select');
 
             form.reset();
             document.getElementById('series-id').value = '';
-            document.getElementById('series-category-id').value = categoryId || '';
 
-            // Load categories for dropdown
             const supabase = window.adminAuth.getSupabase();
-            const { data: categories } = await supabase
-                .from('tv_categories')
-                .select('*')
-                .order('name');
-
-            categorySelect.innerHTML = '<option value="">Select category...</option>' +
-                categories.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('');
 
             if (seriesId) {
                 title.textContent = 'Edit Series';
@@ -1280,13 +1250,9 @@
                     document.getElementById('series-title').value = data.title;
                     document.getElementById('series-description').value = data.description || '';
                     document.getElementById('series-thumbnail').value = data.thumbnail_url || '';
-                    categorySelect.value = data.category_id;
                 }
             } else {
                 title.textContent = 'Add Series';
-                if (categoryId) {
-                    categorySelect.value = categoryId;
-                }
             }
 
             modal.classList.add('active');
@@ -1299,35 +1265,35 @@
 
         async function saveSeriesForm() {
             const id = document.getElementById('series-id').value;
-            const categoryId = document.getElementById('series-category-select').value;
             const title = document.getElementById('series-title').value;
             const description = document.getElementById('series-description').value;
             const thumbnailUrl = document.getElementById('series-thumbnail').value;
 
-            if (!categoryId) {
-                alert('Please select a category');
-                return;
-            }
-
             const supabase = window.adminAuth.getSupabase();
 
             try {
+                const seriesData = {
+                    title,
+                    description,
+                    thumbnail_url: thumbnailUrl,
+                    has_audio: true,
+                    has_video: true,
+                    default_playback_mode: 'audio'
+                };
+
                 if (id) {
                     await supabase
                         .from('tv_series')
-                        .update({ category_id: categoryId, title, description, thumbnail_url: thumbnailUrl })
+                        .update(seriesData)
                         .eq('id', id);
                 } else {
                     await supabase
                         .from('tv_series')
-                        .insert({ category_id: categoryId, title, description, thumbnail_url: thumbnailUrl });
+                        .insert(seriesData);
                 }
 
                 closeSeriesModal();
                 loadAllSeries();
-                if (currentView === 'category-series' && currentCategory) {
-                    viewCategorySeries(currentCategory.id, currentCategory.name);
-                }
             } catch (error) {
                 console.error('Error saving series:', error);
                 alert('Error saving series');
@@ -1387,9 +1353,11 @@
                     document.getElementById('episode-id').value = data.id;
                     document.getElementById('episode-number').value = data.episode_number || '';
                     document.getElementById('episode-title').value = data.title;
-                    document.getElementById('episode-video-url').value = data.video_url;
+                    document.getElementById('episode-audio-url').value = data.audio_url || '';
+                    document.getElementById('episode-video-url-native').value = data.video_url_native || '';
+                    document.getElementById('episode-audio-duration').value = data.audio_duration || '';
                     document.getElementById('episode-thumbnail').value = data.thumbnail || '';
-                    document.getElementById('episode-duration').value = data.duration || '';
+                    document.getElementById('episode-audio-only').checked = data.is_audio_only || false;
                     seriesSelect.value = data.series_id;
                 }
             } else {
@@ -1412,12 +1380,19 @@
             const seriesId = document.getElementById('episode-series-select').value;
             const episodeNumber = document.getElementById('episode-number').value;
             const title = document.getElementById('episode-title').value;
-            const videoUrl = document.getElementById('episode-video-url').value;
+            const audioUrl = document.getElementById('episode-audio-url').value;
+            const videoUrlNative = document.getElementById('episode-video-url-native').value;
+            const audioDuration = document.getElementById('episode-audio-duration').value;
             const thumbnail = document.getElementById('episode-thumbnail').value;
-            const duration = document.getElementById('episode-duration').value;
+            const isAudioOnly = document.getElementById('episode-audio-only').checked;
 
             if (!seriesId) {
                 alert('Please select a series');
+                return;
+            }
+
+            if (!audioUrl) {
+                alert('Audio URL is required');
                 return;
             }
 
@@ -1428,9 +1403,11 @@
                     series_id: seriesId,
                     episode_number: episodeNumber ? parseInt(episodeNumber) : null,
                     title,
-                    video_url: videoUrl,
-                    thumbnail,
-                    duration: duration ? parseInt(duration) : null
+                    audio_url: audioUrl,
+                    video_url_native: videoUrlNative || null,
+                    audio_duration: audioDuration ? parseInt(audioDuration) : null,
+                    is_audio_only: isAudioOnly,
+                    thumbnail
                 };
 
                 if (id) {
@@ -1447,11 +1424,11 @@
                 closeEpisodeModal();
                 loadAllEpisodes();
                 if (currentView === 'series-episodes' && currentSeries) {
-                    viewSeriesEpisodes(currentSeries.id, currentSeries.title, currentCategory?.id);
+                    viewSeriesEpisodes(currentSeries.id, currentSeries.title);
                 }
             } catch (error) {
                 console.error('Error saving episode:', error);
-                alert('Error saving episode');
+                alert('Error saving episode: ' + error.message);
             }
         }
 
