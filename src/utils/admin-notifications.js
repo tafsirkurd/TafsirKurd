@@ -3,7 +3,7 @@
 
 window.adminNotifications = {
     storageKey: 'admin_notifications',
-    maxNotifications: 50,
+    maxNotifications: 100,  // Store up to 100 notifications
 
     // Initialize notification system
     init() {
@@ -50,6 +50,7 @@ window.adminNotifications = {
 
         notifications.unshift(notification);
         this.saveNotifications(notifications);
+        console.log(`✅ Notification added: "${title}" (Total: ${notifications.length})`);
         this.updateBadge();
         this.refreshPanel();
     },
@@ -152,13 +153,31 @@ window.adminNotifications = {
             align-items: center;
         `;
 
+        const notifications = this.getNotifications();
+        const unreadCount = notifications.filter(n => !n.read).length;
+
         const headerTitle = document.createElement('div');
         headerTitle.style.cssText = `
             font-size: 15px;
             font-weight: 600;
             color: var(--text-primary);
         `;
-        headerTitle.textContent = 'Notifications';
+        headerTitle.textContent = `Notifications (${notifications.length})`;
+
+        if (unreadCount > 0) {
+            const unreadBadge = document.createElement('span');
+            unreadBadge.style.cssText = `
+                margin-left: 8px;
+                background: #ef4444;
+                color: white;
+                font-size: 11px;
+                font-weight: 600;
+                padding: 2px 6px;
+                border-radius: 10px;
+            `;
+            unreadBadge.textContent = `${unreadCount} new`;
+            headerTitle.appendChild(unreadBadge);
+        }
 
         const headerActions = document.createElement('div');
         headerActions.style.cssText = 'display: flex; gap: 8px;';
@@ -202,9 +221,8 @@ window.adminNotifications = {
         container.style.cssText = `
             max-height: 420px;
             overflow-y: auto;
+            overflow-x: hidden;
         `;
-
-        const notifications = this.getNotifications();
 
         if (notifications.length === 0) {
             const empty = document.createElement('div');
@@ -234,6 +252,20 @@ window.adminNotifications = {
                 const item = this.createNotificationItem(notification);
                 container.appendChild(item);
             });
+
+            // Add footer showing notification count
+            const footer = document.createElement('div');
+            footer.style.cssText = `
+                padding: 12px 20px;
+                border-top: 1px solid var(--border-light);
+                text-align: center;
+                font-size: 12px;
+                color: var(--text-tertiary);
+                background: var(--bg-app);
+            `;
+            const readCount = notifications.filter(n => n.read).length;
+            footer.textContent = `Showing all ${notifications.length} notification${notifications.length !== 1 ? 's' : ''} (${readCount} read, ${notifications.length - readCount} unread)`;
+            container.appendChild(footer);
         }
 
         panel.appendChild(container);
