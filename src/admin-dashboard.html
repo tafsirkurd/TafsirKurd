@@ -327,7 +327,7 @@
     <script src="/utils/admin-session-timer-ui.js?v=4"></script>
     <script src="/utils/admin-loading.js"></script>
     <script src="/utils/admin-auth.js?v=3"></script>
-    <script src="/utils/admin-notifications.js"></script>
+    <script src="/utils/admin-notifications.js?v=2"></script>
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
@@ -690,6 +690,8 @@
             // Wait for notification system to initialize
             setTimeout(() => {
                 if (window.adminNotifications) {
+                    console.log('✅ Notification system loaded');
+
                     window.adminNotifications.add(
                         'Welcome to Admin Dashboard',
                         'You can now see all system updates and changes here',
@@ -711,9 +713,21 @@
                     );
 
                     localStorage.setItem('demo_notifications_added', 'true');
+                    console.log('✅ Demo notifications added');
+                } else {
+                    console.error('❌ Notification system not loaded');
                 }
             }, 1000);
         }
+
+        // Debug: Check notification system after page load
+        setTimeout(() => {
+            const bellBtn = document.querySelector('.topbar-btn [data-lucide="bell"]')?.closest('.topbar-btn');
+            const panel = document.getElementById('notification-panel');
+            console.log('🔔 Bell button:', bellBtn);
+            console.log('📋 Notification panel:', panel);
+            console.log('📊 Notifications:', window.adminNotifications?.getNotifications());
+        }, 2000);
 
         // Helper function for testing notifications from console
         window.testNotification = (title, description, type = 'info') => {
