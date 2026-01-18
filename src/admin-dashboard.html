@@ -255,39 +255,33 @@
 
                 <!-- CONTENT GRID -->
                 <div class="content-grid">
-                    <!-- Traffic Overview -->
+                    <!-- Recent Videos -->
                     <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Traffic Overview</h3>
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 class="card-title">Recent Videos</h3>
+                            <a href="/admin-tv.html" style="font-size: 13px; color: var(--text-secondary); text-decoration: none;">View all →</a>
                         </div>
-                        <div class="card-body">
-                            <div style="height: 240px; display: flex; align-items: center; justify-content: center; color: var(--text-tertiary);">
-                                <div style="text-align: center;">
-                                    <i data-lucide="trending-up" style="width: 48px; height: 48px; margin-bottom: 12px;"></i>
-                                    <p>Chart placeholder - integrate with Chart.js or Recharts</p>
+                        <div class="card-body" id="recentVideosBody">
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div style="text-align: center; padding: 40px; color: var(--text-tertiary);">
+                                    <i data-lucide="video" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
+                                    <p style="font-size: 14px;">Loading videos...</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- System Health -->
+                    <!-- Recent Users -->
                     <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">System Health</h3>
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 class="card-title">Recent Users</h3>
+                            <span style="font-size: 13px; color: var(--text-secondary);">Last 5 registered</span>
                         </div>
-                        <div class="card-body" id="systemHealthBody">
-                            <div style="display: flex; flex-direction: column; gap: 16px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="font-size: 14px; color: var(--text-secondary);">Database</span>
-                                    <span class="badge badge-success">Healthy</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="font-size: 14px; color: var(--text-secondary);">CDN</span>
-                                    <span class="badge badge-success">Active</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="font-size: 14px; color: var(--text-secondary);">Bot Protection</span>
-                                    <span class="badge badge-success">Enabled</span>
+                        <div class="card-body" id="recentUsersBody">
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div style="text-align: center; padding: 40px; color: var(--text-tertiary);">
+                                    <i data-lucide="users" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
+                                    <p style="font-size: 14px;">Loading users...</p>
                                 </div>
                             </div>
                         </div>
@@ -523,9 +517,169 @@
                     tbody.appendChild(tr);
                 }
 
+                // Load recent videos
+                const { data: recentVideos } = await supabase
+                    .from('tv_videos')
+                    .select('id, title, thumbnail_url, view_count, created_at')
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                const videosBody = document.getElementById('recentVideosBody');
+                if (recentVideos && recentVideos.length > 0 && videosBody) {
+                    while (videosBody.firstChild) {
+                        videosBody.removeChild(videosBody.firstChild);
+                    }
+
+                    const container = document.createElement('div');
+                    container.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+
+                    recentVideos.forEach(video => {
+                        const item = document.createElement('div');
+                        item.style.cssText = 'display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px; transition: background 0.2s; cursor: pointer;';
+                        item.onmouseenter = () => item.style.background = 'var(--bg-secondary)';
+                        item.onmouseleave = () => item.style.background = 'transparent';
+                        item.onclick = () => window.location.href = '/admin-tv.html';
+
+                        const thumb = document.createElement('img');
+                        thumb.src = video.thumbnail_url || '/assets/images/placeholder-video.jpg';
+                        thumb.alt = video.title;
+                        thumb.style.cssText = 'width: 60px; height: 40px; border-radius: 6px; object-fit: cover; background: var(--bg-secondary); flex-shrink: 0;';
+                        thumb.onerror = () => thumb.style.display = 'none';
+                        item.appendChild(thumb);
+
+                        const info = document.createElement('div');
+                        info.style.cssText = 'flex: 1; min-width: 0;';
+
+                        const title = document.createElement('div');
+                        title.textContent = video.title;
+                        title.style.cssText = 'font-size: 14px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+                        info.appendChild(title);
+
+                        const meta = document.createElement('div');
+                        meta.style.cssText = 'font-size: 12px; color: var(--text-tertiary); margin-top: 4px;';
+                        const timeAgo = getTimeAgo(new Date(video.created_at));
+                        meta.textContent = `${video.view_count || 0} views • ${timeAgo}`;
+                        info.appendChild(meta);
+
+                        item.appendChild(info);
+                        container.appendChild(item);
+                    });
+
+                    videosBody.appendChild(container);
+                } else if (videosBody) {
+                    while (videosBody.firstChild) {
+                        videosBody.removeChild(videosBody.firstChild);
+                    }
+                    const emptyState = document.createElement('div');
+                    emptyState.style.cssText = 'text-align: center; padding: 40px; color: var(--text-tertiary);';
+                    const icon = document.createElement('i');
+                    icon.setAttribute('data-lucide', 'video');
+                    icon.style.cssText = 'width: 32px; height: 32px; margin-bottom: 8px;';
+                    const text = document.createElement('p');
+                    text.style.fontSize = '14px';
+                    text.textContent = 'No videos yet';
+                    emptyState.appendChild(icon);
+                    emptyState.appendChild(text);
+                    videosBody.appendChild(emptyState);
+                    lucide.createIcons();
+                }
+
+                // Load recent users
+                const { data: recentUsers, error: usersError } = await supabase.rpc('get_recent_users', { limit_count: 5 });
+
+                const usersBody = document.getElementById('recentUsersBody');
+                if (!usersError && recentUsers && recentUsers.length > 0 && usersBody) {
+                    while (usersBody.firstChild) {
+                        usersBody.removeChild(usersBody.firstChild);
+                    }
+
+                    const container = document.createElement('div');
+                    container.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+
+                    recentUsers.forEach(user => {
+                        const item = document.createElement('div');
+                        item.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 8px; transition: background 0.2s;';
+                        item.onmouseenter = () => item.style.background = 'var(--bg-secondary)';
+                        item.onmouseleave = () => item.style.background = 'transparent';
+
+                        const leftSide = document.createElement('div');
+                        leftSide.style.cssText = 'display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;';
+
+                        const avatar = document.createElement('div');
+                        avatar.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px; flex-shrink: 0;';
+                        avatar.textContent = (user.email || 'U').charAt(0).toUpperCase();
+                        leftSide.appendChild(avatar);
+
+                        const info = document.createElement('div');
+                        info.style.cssText = 'min-width: 0; flex: 1;';
+
+                        const email = document.createElement('div');
+                        email.textContent = user.email || 'No email';
+                        email.style.cssText = 'font-size: 14px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+                        info.appendChild(email);
+
+                        const meta = document.createElement('div');
+                        meta.style.cssText = 'font-size: 12px; color: var(--text-tertiary); margin-top: 2px;';
+                        const timeAgo = getTimeAgo(new Date(user.created_at));
+                        meta.textContent = `Joined ${timeAgo}`;
+                        info.appendChild(meta);
+
+                        leftSide.appendChild(info);
+                        item.appendChild(leftSide);
+
+                        const badge = document.createElement('span');
+                        badge.className = user.email_confirmed_at ? 'badge badge-success' : 'badge badge-neutral';
+                        badge.textContent = user.email_confirmed_at ? 'Verified' : 'Pending';
+                        badge.style.cssText = 'flex-shrink: 0;';
+                        item.appendChild(badge);
+
+                        container.appendChild(item);
+                    });
+
+                    usersBody.appendChild(container);
+                } else if (usersBody) {
+                    while (usersBody.firstChild) {
+                        usersBody.removeChild(usersBody.firstChild);
+                    }
+                    const emptyState = document.createElement('div');
+                    emptyState.style.cssText = 'text-align: center; padding: 40px; color: var(--text-tertiary);';
+                    const icon = document.createElement('i');
+                    icon.setAttribute('data-lucide', 'users');
+                    icon.style.cssText = 'width: 32px; height: 32px; margin-bottom: 8px;';
+                    const text = document.createElement('p');
+                    text.style.fontSize = '14px';
+                    text.textContent = usersError ? 'Error loading users' : 'No users yet';
+                    emptyState.appendChild(icon);
+                    emptyState.appendChild(text);
+                    usersBody.appendChild(emptyState);
+                    lucide.createIcons();
+                }
+
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
             }
+        }
+
+        // Helper function to get time ago
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+
+            const intervals = {
+                year: 31536000,
+                month: 2592000,
+                week: 604800,
+                day: 86400,
+                hour: 3600,
+                minute: 60
+            };
+
+            for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+                const interval = Math.floor(seconds / secondsInUnit);
+                if (interval >= 1) {
+                    return interval === 1 ? `1 ${unit} ago` : `${interval} ${unit}s ago`;
+                }
+            }
+            return 'Just now';
         }
     </script>
     <script>
