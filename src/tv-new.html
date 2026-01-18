@@ -66,7 +66,8 @@
                 <nav>
                     <a href="#" onclick="window.tvRouter?.navigate('home'); return false;">الصفحة الرئيسية</a>
                     <span id="user-email" style="color: var(--gray-400); font-size: 0.9rem;"></span>
-                    <button onclick="handleLogout()" id="logout-btn">تسجيل الخروج</button>
+                    <button onclick="handleLogin()" id="login-btn" class="hidden">تسجيل الدخول</button>
+                    <button onclick="handleLogout()" id="logout-btn" class="hidden">تسجيل الخروج</button>
                 </nav>
             </div>
         </header>
@@ -174,6 +175,18 @@
 
     </div>
 
+    <!-- Login Required Overlay -->
+    <div id="login-overlay" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.85); z-index: 10000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+        <div style="background: var(--white); padding: var(--spacing-xl); border-radius: var(--border-radius); max-width: 400px; text-align: center; border: var(--border-width) solid var(--gray-200);">
+            <div style="font-size: 3rem; margin-bottom: var(--spacing-md);">🔒</div>
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: var(--spacing-sm); color: var(--black);">تسجيل الدخول مطلوب</h2>
+            <p style="font-size: 1rem; color: var(--gray-600); margin-bottom: var(--spacing-lg); line-height: 1.6;">للوصول إلى محتوى دین میدیا الصوتي والمرئي، يرجى تسجيل الدخول إلى حسابك.</p>
+            <button onclick="handleLogin()" style="width: 100%; background: var(--black); color: var(--white); border: none; padding: 0.75rem 2rem; border-radius: var(--border-radius); font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                تسجيل الدخول
+            </button>
+        </div>
+    </div>
+
     <!-- Supabase Configuration -->
     <script src="/js/supabase-config.js"></script>
 
@@ -200,13 +213,29 @@
         // Authentication check and initialization
         (async function initializePage() {
             try {
-                // Check authentication (CRITICAL - NO guest access)
-                const isAuthenticated = await window.tvAuth.checkAuth();
+                // Initialize auth
+                await window.tvAuth.init();
 
-                if (!isAuthenticated) {
-                    // User will be redirected to login
+                // Check authentication manually (don't redirect)
+                const { data: { session } } = await window.supabase.auth.getSession();
+
+                // Always show the page
+                document.getElementById('page-loader').classList.add('hidden');
+                document.getElementById('tv-wrapper').classList.remove('hidden');
+
+                if (!session) {
+                    // Not logged in - show login overlay and login button
+                    document.getElementById('login-overlay').classList.remove('hidden');
+                    document.getElementById('login-btn').classList.remove('hidden');
+                    document.getElementById('logout-btn').classList.add('hidden');
+                    console.log('🔒 User not authenticated - showing login prompt');
                     return;
                 }
+
+                // User is logged in - hide login overlay, show logout
+                document.getElementById('login-overlay').classList.add('hidden');
+                document.getElementById('login-btn').classList.add('hidden');
+                document.getElementById('logout-btn').classList.remove('hidden');
 
                 // Get user profile and preferences
                 const userProfile = await window.tvAuth.getUserProfile();
@@ -224,18 +253,23 @@
                     isAudioMode = userProfile.preferences?.audioOnlyMode !== false;
                 }
 
-                // Hide loader, show content
-                document.getElementById('page-loader').classList.add('hidden');
-                document.getElementById('tv-wrapper').classList.remove('hidden');
-
                 console.log('✅ TV page initialized, user:', currentUser?.email);
 
             } catch (error) {
                 console.error('❌ Page initialization error:', error);
-                // On error, redirect to login
-                window.tvAuth.redirectToLogin();
+                // Show page anyway with login prompt
+                document.getElementById('page-loader').classList.add('hidden');
+                document.getElementById('tv-wrapper').classList.remove('hidden');
+                document.getElementById('login-overlay').classList.remove('hidden');
+                document.getElementById('login-btn').classList.remove('hidden');
             }
         })();
+
+        // Login handler
+        function handleLogin() {
+            const currentPath = window.location.pathname + window.location.hash;
+            window.location.href = `/login.html?redirect=${encodeURIComponent(currentPath)}`;
+        }
 
         // Logout handler
         async function handleLogout() {
