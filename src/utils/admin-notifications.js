@@ -356,19 +356,27 @@ window.adminNotifications = {
         const bellBtn = findBellButton();
 
         if (bellBtn) {
+            console.log('✅ Bell button found, attaching click handler');
             bellBtn.onclick = (e) => {
                 e.stopPropagation();
+                console.log('🔔 Bell button clicked!');
                 const panel = document.getElementById('notification-panel');
+                console.log('📋 Panel element:', panel);
                 if (panel) {
                     const isVisible = panel.style.display === 'flex';
                     panel.style.display = isVisible ? 'none' : 'flex';
+                    console.log('📋 Panel display:', panel.style.display);
 
                     // If opening panel, refresh it
                     if (panel.style.display === 'flex') {
                         this.refreshPanel();
                     }
+                } else {
+                    console.error('❌ Notification panel not found!');
                 }
             };
+        } else {
+            console.error('❌ Bell button not found!');
         }
 
         // Close panel when clicking outside
@@ -388,8 +396,12 @@ window.adminNotifications = {
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
+        console.log('🔔 Initializing notification system...');
         window.adminNotifications.init();
+        console.log('✅ Notification system initialized');
     });
 } else {
+    console.log('🔔 Initializing notification system...');
     window.adminNotifications.init();
+    console.log('✅ Notification system initialized');
 }
