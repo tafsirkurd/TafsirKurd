@@ -598,9 +598,11 @@
 
                     recentUsers.forEach(user => {
                         const item = document.createElement('div');
-                        item.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 8px; transition: background 0.2s;';
+                        item.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 8px; transition: background 0.2s; cursor: pointer;';
                         item.onmouseenter = () => item.style.background = 'var(--bg-secondary)';
                         item.onmouseleave = () => item.style.background = 'transparent';
+                        item.onclick = () => window.location.href = `/admin-users.html?userId=${user.id}`;
+                        item.title = `View ${user.email}'s profile`;
 
                         const leftSide = document.createElement('div');
                         leftSide.style.cssText = 'display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;';
