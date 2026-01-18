@@ -97,7 +97,7 @@ window.adminNotifications = {
         if (badge) {
             if (count > 0) {
                 badge.textContent = count > 99 ? '99+' : count;
-                badge.style.display = 'flex';
+                badge.style.display = 'block';
             } else {
                 badge.style.display = 'none';
             }
@@ -137,8 +137,10 @@ window.adminNotifications = {
         const panel = document.getElementById('notification-panel');
         if (!panel) return;
 
-        // Clear existing content
-        panel.innerHTML = '';
+        // Clear existing content safely
+        while (panel.firstChild) {
+            panel.removeChild(panel.firstChild);
+        }
 
         // Create header
         const header = document.createElement('div');
@@ -336,9 +338,22 @@ window.adminNotifications = {
 
     // Attach event listeners
     attachEventListeners() {
-        // Toggle notification panel
-        const bellBtn = document.querySelector('.topbar-btn[onclick*="notification"]') ||
-                       document.querySelector('.topbar-btn:first-child');
+        // Find the bell button by looking for the notification badge or bell icon
+        const findBellButton = () => {
+            const badge = document.getElementById('notification-badge');
+            if (badge && badge.closest('.topbar-btn')) {
+                return badge.closest('.topbar-btn');
+            }
+            // Fallback: find button with bell icon
+            const buttons = document.querySelectorAll('.topbar-btn');
+            for (const btn of buttons) {
+                const bellIcon = btn.querySelector('[data-lucide="bell"]');
+                if (bellIcon) return btn;
+            }
+            return null;
+        };
+
+        const bellBtn = findBellButton();
 
         if (bellBtn) {
             bellBtn.onclick = (e) => {
@@ -347,6 +362,11 @@ window.adminNotifications = {
                 if (panel) {
                     const isVisible = panel.style.display === 'flex';
                     panel.style.display = isVisible ? 'none' : 'flex';
+
+                    // If opening panel, refresh it
+                    if (panel.style.display === 'flex') {
+                        this.refreshPanel();
+                    }
                 }
             };
         }
@@ -354,8 +374,7 @@ window.adminNotifications = {
         // Close panel when clicking outside
         document.addEventListener('click', (e) => {
             const panel = document.getElementById('notification-panel');
-            const bellBtn = document.querySelector('.topbar-btn[onclick*="notification"]') ||
-                           document.querySelector('.topbar-btn:first-child');
+            const bellBtn = findBellButton();
 
             if (panel && bellBtn &&
                 !panel.contains(e.target) &&
