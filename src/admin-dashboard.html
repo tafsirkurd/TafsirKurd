@@ -389,15 +389,17 @@
             if (!supabase) return;
 
             try {
-                // Load user count
-                const { count: userCount } = await supabase
-                    .from('user_data')
-                    .select('*', { count: 'exact', head: true });
+                // Load user count from auth.users via SQL function
+                const { data: userCountData, error: userCountError } = await supabase
+                    .rpc('get_total_users');
 
                 const metricUsers = document.getElementById('metricUsers');
-                if (userCount !== null && metricUsers) {
-                    metricUsers.textContent = userCount.toLocaleString();
+                if (!userCountError && userCountData !== null && metricUsers) {
+                    metricUsers.textContent = userCountData.toLocaleString();
                     metricUsers.closest('.metric-card').classList.add('fade-in');
+                } else if (userCountError) {
+                    console.error('Error loading user count:', userCountError);
+                    if (metricUsers) metricUsers.textContent = '0';
                 }
 
                 // Load video count
@@ -430,17 +432,11 @@
                     }
                 }
 
-                // Calculate active users today
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const { data: userData } = await supabase
-                    .from('user_data')
-                    .select('lastActive')
-                    .gte('lastActive', today.toISOString());
-
+                // Active users today - auth.users doesn't track last_active
+                // This would require a custom tracking solution
                 const metricActive = document.getElementById('metricActive');
-                if (userData && metricActive) {
-                    metricActive.textContent = userData.length.toLocaleString();
+                if (metricActive) {
+                    metricActive.textContent = '0';
                     metricActive.closest('.metric-card').classList.add('fade-in');
                 }
 
