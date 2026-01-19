@@ -97,8 +97,8 @@
     <!-- Load google-config deferred for better performance -->
     <script src="/config/google-config.js" defer></script>
 
-    <!-- Supabase for unified profiles - Deferred for performance -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <!-- Supabase for unified profiles - Load early (no defer) to prevent auth-redirect timeout -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <!-- Auth Redirect Handler for profile management -->
     <script src="/utils/auth-redirect.js" defer></script>
@@ -4992,15 +4992,16 @@
 
         // Wait for auth libraries to load
         async function waitForAuthLibraries() {
+            // Initialize Supabase IMMEDIATELY if loaded (don't wait for auth-redirect)
+            if (typeof window.supabase !== 'undefined' && !supabaseClient) {
+                await initSupabase();
+                console.log('✅ Supabase initialized early');
+            }
+
             const maxRetries = 50; // 5 seconds max wait
             const retryDelay = 100; // 100ms between retries
 
             for (let i = 0; i < maxRetries; i++) {
-                // Check if Supabase is loaded
-                if (typeof window.supabase !== 'undefined' && !supabaseClient) {
-                    await initSupabase();
-                }
-
                 // Check if both are ready
                 if (supabaseClient && typeof window.authRedirect !== 'undefined') {
                     console.log('✅ All auth libraries loaded');
@@ -5011,14 +5012,8 @@
                 await new Promise(resolve => setTimeout(resolve, retryDelay));
             }
 
-            console.warn('⚠️ Auth libraries timeout - proceeding anyway');
-
-            // Initialize Supabase if available but authRedirect isn't
-            if (typeof window.supabase !== 'undefined' && !supabaseClient) {
-                await initSupabase();
-            }
-
-            return false;
+            console.warn('⚠️ Auth redirect timeout - proceeding with Supabase only');
+            return false; // Supabase is ready even if auth-redirect timed out
         }
 
         // Global State
