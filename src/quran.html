@@ -9,6 +9,8 @@
     <script src="/utils/secure-storage.js"></script>
     <!-- Cloud Sync Manager - syncs all data to Supabase -->
     <script src="/utils/cloud-sync.js"></script>
+    <!-- Quran Page Restoration - 20-minute window -->
+    <script src="/utils/quran-page-restoration.js"></script>
     <script src="/utils/security.js" defer></script>
     <script src="/utils/scroll-position.js" defer></script>
     <script src="/utils/bot-detector.js" defer></script>
@@ -5580,6 +5582,15 @@
             const surahParam = urlParams.get('surah');
             const ayahParam = urlParams.get('ayah');
 
+            // If no URL parameters, check if we should restore last position (20-minute window)
+            if (!surahParam && window.quranRestoration) {
+                const restored = window.quranRestoration.shouldRestorePosition();
+                if (restored) {
+                    console.log('✅ Restored last Quran reading position');
+                    return; // Position restored, don't continue
+                }
+            }
+
             if (surahParam) {
                 const surahNum = parseInt(surahParam);
                 const ayahNum = ayahParam ? parseInt(ayahParam) : null;
@@ -7246,6 +7257,11 @@
             localStorage.setItem('lastViewedSurah', surahNum);
             localStorage.setItem('lastViewType', 'surah');
 
+            // Save position for 20-minute restoration window
+            if (window.quranRestoration) {
+                window.quranRestoration.savePosition(surahNum, 1);
+            }
+
             // Initialize activity tracking for this surah
             if (isUserAuthenticated) {
                 initializeActivityTracking();
@@ -7281,6 +7297,11 @@
             const surahInfo = surahNames[surahNum];
             const title = `${surahInfo.english} (${surahInfo.arabic}) - ئایەت ${KurdishNumbers.toKurdish(ayahNum)} - تەفسیر کورد`;
             history.pushState({ page: 'surah', surah: surahNum, ayah: ayahNum }, title, `?surah=${surahNum}&ayah=${ayahNum}`);
+
+            // Save position for 20-minute restoration window
+            if (window.quranRestoration) {
+                window.quranRestoration.savePosition(surahNum, ayahNum);
+            }
 
             // Initialize activity tracking for this surah
             if (isUserAuthenticated) {

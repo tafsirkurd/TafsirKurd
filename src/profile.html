@@ -779,6 +779,25 @@
             border-color: var(--text-muted);
         }
 
+        .modal-btn-upload {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 14px rgba(102, 126, 234, 0.3);
+        }
+
+        .modal-btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .modal-btn-upload:active {
+            transform: translateY(0);
+        }
+
         /* Modal Responsive */
         @media (max-width: 576px) {
             .modal-container {
@@ -1042,6 +1061,18 @@
             </div>
 
             <div class="modal-body">
+                <!-- Profile Picture Upload -->
+                <div class="modal-form-group">
+                    <label class="modal-label">وێنا پرۆفایلێ</label>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <input type="file" id="avatarUpload" accept="image/*" style="display: none;" onchange="handleAvatarUpload(event)">
+                        <button type="button" class="modal-btn modal-btn-upload" onclick="document.getElementById('avatarUpload').click()">
+                            <i class="fas fa-camera"></i> گۆڕینا وێنێ
+                        </button>
+                        <span id="uploadStatus" style="font-size: 0.85rem; color: var(--text-muted);"></span>
+                    </div>
+                </div>
+
                 <div class="modal-form-group">
                     <label class="modal-label">ناڤێ یەکەم</label>
                     <input type="text" class="modal-input" id="modalFirstName" placeholder="ناڤێ یەکەم">
@@ -1539,6 +1570,86 @@
 
             } catch (error) {
                 alert('هەلە: ' + error.message);
+            }
+        }
+
+        // Handle avatar upload
+        async function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('تکایە وێنەیەک هەلبژێرە');
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('وێنە گەورە زەدەیە! کەمتر ٥ مێگابایت بیت');
+                return;
+            }
+
+            const statusEl = document.getElementById('uploadStatus');
+            statusEl.textContent = 'بارکرن...';
+            statusEl.style.color = 'var(--info)';
+
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) throw new Error('No session');
+
+                // Create unique file name
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${session.user.id}-${Date.now()}.${fileExt}`;
+                const filePath = `avatars/${fileName}`;
+
+                // Upload to Supabase Storage
+                const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                    .from('user-avatars')
+                    .upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+
+                if (uploadError) throw uploadError;
+
+                // Get public URL
+                const { data: urlData } = supabaseClient.storage
+                    .from('user-avatars')
+                    .getPublicUrl(filePath);
+
+                const avatarUrl = urlData.publicUrl;
+
+                // Update profile in database
+                const { error: updateError } = await supabaseClient
+                    .from('profiles')
+                    .update({
+                        avatar_url: avatarUrl,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', session.user.id);
+
+                if (updateError) throw updateError;
+
+                // Update UI
+                document.getElementById('modalAvatar').src = avatarUrl;
+                document.getElementById('headerAvatar').src = avatarUrl;
+                document.getElementById('headerDropdownAvatar').src = avatarUrl;
+
+                // Update localStorage
+                currentUser.picture = avatarUrl;
+                localStorage.setItem('user', JSON.stringify(currentUser));
+
+                statusEl.textContent = '✓ وێنە نوێکرا';
+                statusEl.style.color = 'var(--success)';
+                setTimeout(() => {
+                    statusEl.textContent = '';
+                }, 3000);
+
+            } catch (error) {
+                console.error('Avatar upload error:', error);
+                statusEl.textContent = '✗ هەلە: ' + error.message;
+                statusEl.style.color = 'var(--danger)';
             }
         }
 

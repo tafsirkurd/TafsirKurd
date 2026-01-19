@@ -837,7 +837,7 @@
 
             // Total ayahs read
             const totalAyahs = allUsers.reduce((sum, user) => {
-                const ayahs = parseInt(user.ayahsRead) || 0;
+                const ayahs = parseInt(user.total_ayahs_read) || 0;
                 return sum + ayahs;
             }, 0);
             document.getElementById('totalAyahs').textContent = totalAyahs.toLocaleString();
@@ -1035,7 +1035,7 @@
         // Calculate reading progress percentage
         function calculateProgress(user) {
             const totalAyahs = 6236;
-            const ayahsRead = parseInt(user.ayahsRead) || 0;
+            const ayahsRead = parseInt(user.total_ayahs_read) || 0;
             return (ayahsRead / totalAyahs * 100);
         }
 
@@ -1089,7 +1089,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td style="font-weight: 600;">${(parseInt(user.ayahsRead) || 0).toLocaleString()}</td>
+                        <td style="font-weight: 600;">${(parseInt(user.total_ayahs_read) || 0).toLocaleString()}</td>
                         <td>${formatDate(user.lastActive)}</td>
                         <td>${formatDate(user.created_at)}</td>
                         <td>
@@ -1178,7 +1178,7 @@
 
                 <div class="detail-row">
                     <div class="detail-label">Ayahs Read</div>
-                    <div class="detail-value" style="font-weight: 600;">${(parseInt(user.ayahsRead) || 0).toLocaleString()} / 6,236</div>
+                    <div class="detail-value" style="font-weight: 600;">${(parseInt(user.total_ayahs_read) || 0).toLocaleString()} / 6,236</div>
                 </div>
 
                 <div class="detail-row">
@@ -1298,7 +1298,7 @@
                     user.profile_name,
                     user.profile_email,
                     user.user_id,
-                    parseInt(user.ayahsRead) || 0,
+                    parseInt(user.total_ayahs_read) || 0,
                     progress.toFixed(2) + '%',
                     user.currentPosition || 'Not started',
                     formatDateFull(user.lastActive),
