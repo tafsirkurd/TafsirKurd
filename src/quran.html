@@ -5563,12 +5563,16 @@
         }
 
         // Run initialization - handle both fresh load and service worker cached load
+        console.log('🔍 DEBUG: About to check document.readyState:', document.readyState);
+        console.log('🔍 DEBUG: initializeOnLoad function exists?', typeof initializeOnLoad);
+
         if (document.readyState === 'loading') {
             // Document still loading, wait for DOMContentLoaded
+            console.log('⏳ Document loading, will wait for DOMContentLoaded');
             document.addEventListener('DOMContentLoaded', initializeOnLoad);
         } else {
             // DOM already ready (e.g., loaded from cache), run immediately
-            console.log('📦 DOM already ready, running initializeOnLoad immediately');
+            console.log('📦 DOM already ready (state: ' + document.readyState + '), running initializeOnLoad immediately');
             initializeOnLoad();
         }
 
