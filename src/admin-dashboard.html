@@ -607,9 +607,25 @@
                         const leftSide = document.createElement('div');
                         leftSide.style.cssText = 'display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;';
 
-                        const avatar = document.createElement('div');
-                        avatar.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px; flex-shrink: 0;';
-                        avatar.textContent = (user.email || 'U').charAt(0).toUpperCase();
+                        // Create avatar - use profile picture if available, otherwise letter
+                        let avatar;
+                        if (user.avatar_url) {
+                            avatar = document.createElement('img');
+                            avatar.src = user.avatar_url;
+                            avatar.alt = user.email || 'User';
+                            avatar.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0;';
+                            avatar.onerror = function() {
+                                // If image fails to load, replace with letter avatar
+                                const letterAvatar = document.createElement('div');
+                                letterAvatar.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px; flex-shrink: 0;';
+                                letterAvatar.textContent = (user.email || 'U').charAt(0).toUpperCase();
+                                this.parentNode.replaceChild(letterAvatar, this);
+                            };
+                        } else {
+                            avatar = document.createElement('div');
+                            avatar.style.cssText = 'width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 14px; flex-shrink: 0;';
+                            avatar.textContent = (user.email || 'U').charAt(0).toUpperCase();
+                        }
                         leftSide.appendChild(avatar);
 
                         const info = document.createElement('div');

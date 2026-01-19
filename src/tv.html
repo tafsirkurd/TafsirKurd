@@ -1823,7 +1823,7 @@
 
         /* ===== USER PROFILE DROPDOWN ===== */
         .user-profile-btn {
-            position: relative;
+            position: relative; /* Important for dropdown positioning */
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -1833,6 +1833,7 @@
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s;
+            z-index: 100; /* Ensure dropdown appears above other elements */
         }
 
         .user-profile-btn:hover {
@@ -1867,7 +1868,7 @@
             min-width: 220px;
             box-shadow: var(--shadow-lg);
             display: none;
-            z-index: 1000;
+            z-index: 10000; /* Very high to ensure it appears on top */
             overflow: hidden;
         }
 
@@ -2538,7 +2539,7 @@
                 </a>
 
                 <!-- User Profile (shown when authenticated) -->
-                <div class="user-profile-btn" id="userProfileBtn" style="display: none;" onclick="toggleProfileDropdown()">
+                <div class="user-profile-btn" id="userProfileBtn" style="display: none;" onclick="toggleProfileDropdown(event)">
                     <img id="userAvatar" class="user-avatar" src="" alt="User">
                     <span id="userName" class="user-name"></span>
                     <i class="fas fa-chevron-down" style="color: rgba(255,255,255,0.7); font-size: 0.8rem;"></i>
@@ -2562,7 +2563,7 @@
                             نیشانەکراو
                         </a>
                         <div class="profile-dropdown-divider"></div>
-                        <div class="profile-dropdown-item logout" onclick="logoutUser()">
+                        <div class="profile-dropdown-item logout" onclick="event.stopPropagation(); logoutUser()">
                             <i class="fas fa-sign-out-alt"></i>
                             دەرچوون
                         </div>
@@ -3165,10 +3166,14 @@
         }
 
         // Toggle profile dropdown
-        function toggleProfileDropdown() {
-            event.stopPropagation();
+        function toggleProfileDropdown(event) {
+            if (event) {
+                event.stopPropagation();
+            }
             const dropdown = document.getElementById('profileDropdown');
-            dropdown.classList.toggle('show');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+            }
         }
 
         // Close dropdown when clicking outside
