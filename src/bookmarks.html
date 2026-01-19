@@ -1520,7 +1520,7 @@
                     }));
 
                     // Register new service worker
-                    const registration = await navigator.serviceWorker.register('/service-worker.js');
+                    const registration = await navigator.serviceWorker.register('/service-worker.js?v=504');
                     console.log('✅ Service Worker registered successfully:', registration.scope);
                 } catch (error) {
                     console.log('❌ Service Worker error:', error);
