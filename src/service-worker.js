@@ -1,19 +1,7 @@
-const CACHE_NAME = 'tafsir-kurd-v505';
+const CACHE_NAME = 'tafsir-kurd-v506';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/quran.html',
-  '/bookmarks.html',
-  '/profile.html',
-  '/goals.html',
-  '/reading-goal.html',
-  '/settings.html',
-  '/login.html',
-  '/onboarding.html',
-  '/complete-signup.html',
-  '/privacy-policy.html',
-  '/terms-and-conditions.html',
-  // Skip admin.html - too large (614KB), rarely needed offline
+  // HTML files removed - they use NETWORK FIRST strategy and cache naturally
+  // This prevents caching stale HTML during service worker installation
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
   '/styles/mobile-optimize.css',
@@ -47,7 +35,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v505');
+  console.log('[ServiceWorker] Installing v506 - HTML files no longer pre-cached');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
