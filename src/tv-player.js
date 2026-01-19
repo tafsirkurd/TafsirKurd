@@ -1273,7 +1273,6 @@
                 const { data, error } = await supabase
                     .from('tv_episodes')
                     .select('*')
-                    .eq('video_type', 'youtube')
                     .order('created_at', { ascending: false });
 
                 if (!error && data && data.length > 0) {
@@ -1392,7 +1391,7 @@
             : 0;
 
         return `
-            <div class="episode-card" onclick="playYouTubeVideo('${video.videoId}', '${video.title}', ${video.id})">
+            <div class="episode-card" onclick="playVideo('${video.videoId}', '${video.title}', ${video.id})">
                 <div class="episode-thumbnail">
                     <img src="${video.thumbnail}" alt="${video.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22225%22%3E%3Crect fill=%22%231a1a1a%22 width=%22400%22 height=%22225%22/%3E%3Ctext fill=%22%23999%22 font-family=%22Arial%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3E%D9%88%DB%8E%D9%86%DB%95 %DA%A4%DB%8C%D8%AF%DB%8C%DB%86%3C/text%3E%3C/svg%3E'">
                     ${showProgress ? `<div class="episode-progress" style="width: ${progress}%;"></div>` : ''}
@@ -1427,9 +1426,9 @@
         `;
     }
 
-    // Play YouTube video in the player
-    window.playYouTubeVideo = function(videoId, title, episodeId) {
-        console.log('🎬 Play video requested:', videoId, title, episodeId);
+    // Play S3 video in the native HTML5 player
+    window.playVideo = function(videoUrl, title, episodeId) {
+        console.log('🎬 Play S3 video requested:', videoUrl, title, episodeId);
 
         // Check if user is authenticated
         if (!isAuthenticated()) {
@@ -1444,45 +1443,42 @@
         // Update current episode
         state.currentEpisode = episodeId;
 
-        // Find or create YouTube iframe
-        let iframe = document.getElementById('youtubePlayer');
+        // Use native HTML5 video player for S3 URLs
+        const videoElement = document.getElementById('videoPlayer');
         const playerSection = document.getElementById('playerSection');
 
-        if (!iframe) {
-            // Create iframe if it doesn't exist
-            const playerContainer = playerSection.querySelector('.player-container');
-
-            // Hide the regular video element
-            const videoElement = document.getElementById('videoPlayer');
-            if (videoElement) {
-                videoElement.style.display = 'none';
-            }
-
-            // Hide the player overlay (controls for regular video)
-            const playerOverlay = playerContainer.querySelector('.player-overlay');
-            if (playerOverlay) {
-                playerOverlay.style.display = 'none';
-            }
-
-            // Create YouTube player div
-            const playerHTML = `
-                <div id="youtubePlayer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;"></div>
-            `;
-            playerContainer.insertAdjacentHTML('beforeend', playerHTML);
-
-            console.log('✅ Created YouTube player container');
+        if (!videoElement) {
+            console.error('❌ Video player element not found');
+            return;
         }
 
-        // Initialize YouTube Player with IFrame API
-        // Store video ID for when API is ready
-        pendingVideoId = videoId;
-
-        if (typeof YT !== 'undefined' && YT.Player) {
-            initializeYouTubePlayer(videoId);
-        } else {
-            // Set global callback for when YouTube API loads
-            console.log('⏳ Waiting for YouTube API to load...');
+        // Remove any old YouTube player if exists
+        const oldYTPlayer = document.getElementById('youtubePlayer');
+        if (oldYTPlayer) {
+            oldYTPlayer.remove();
         }
+
+        // Show native video element
+        videoElement.style.display = 'block';
+
+        // Set video source
+        videoElement.src = videoUrl;
+
+        // Auto-play video
+        videoElement.play().catch(err => {
+            console.warn('Auto-play prevented:', err);
+            showNotification('پێکن بکە بۆ پێشاندانا ڤیدیۆیێ');
+        });
+
+        // Setup event listeners
+        videoElement.addEventListener('ended', () => {
+            console.log('✅ Video ended');
+            if (state.autoPlayNext) {
+                setTimeout(() => playNextEpisode(), 2000);
+            }
+        });
+
+        console.log('✅ Native S3 video player initialized')
 
         // Update video title in the existing overlay
         const videoTitle = playerSection.querySelector('.video-title');
@@ -1935,7 +1931,7 @@
         // Call playYouTubeVideo with the video data
         if (episode.videoId) {
             console.log('▶️ Playing YouTube video:', episode.videoId);
-            window.playYouTubeVideo(episode.videoId, episode.title, episode.id);
+            window.playVideo(episode.videoId, episode.title, episode.id);
         } else {
             console.error('❌ No videoId found for episode:', episode);
             showNotification('⚠️ ڤیدیۆ ID نینە!');
