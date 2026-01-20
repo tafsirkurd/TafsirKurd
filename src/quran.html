@@ -5562,54 +5562,61 @@
             }
         }
 
-        // Run initialization - handle both fresh load and service worker cached load
-        // CRITICAL FIX: Use multiple strategies to ensure initializeOnLoad runs WITH all dependencies
+        // Run initialization - ALWAYS execute immediately with proper dependency waiting
         (function() {
+            console.log('🔍 [INIT] Initialization script started, readyState:', document.readyState);
+
             let hasInitialized = false;
+            let retryCount = 0;
+            const MAX_RETRIES = 200; // 10 seconds max (50ms * 200)
 
             function checkDependencies() {
-                // Check if required deferred scripts are loaded
-                return typeof window.KurdishNumbers !== 'undefined';
+                const hasKurdishNumbers = typeof window.KurdishNumbers !== 'undefined';
+                console.log('🔍 [DEPS] KurdishNumbers loaded:', hasKurdishNumbers);
+                return hasKurdishNumbers;
             }
 
             function runInitOnce() {
+                console.log('🔍 [RUN] runInitOnce called, hasInitialized:', hasInitialized, 'retryCount:', retryCount);
+
                 if (hasInitialized) {
-                    console.log('⚠️ initializeOnLoad already ran, skipping');
+                    console.log('⚠️ [SKIP] initializeOnLoad already ran');
                     return;
                 }
 
                 // Wait for dependencies before initializing
                 if (!checkDependencies()) {
-                    console.log('⏳ Waiting for KurdishNumbers to load...');
-                    setTimeout(runInitOnce, 50); // Retry in 50ms
+                    retryCount++;
+                    if (retryCount > MAX_RETRIES) {
+                        console.error('❌ [TIMEOUT] KurdishNumbers never loaded after 10 seconds');
+                        return;
+                    }
+                    console.log('⏳ [RETRY] Waiting for KurdishNumbers... attempt', retryCount);
+                    setTimeout(runInitOnce, 50);
                     return;
                 }
 
                 hasInitialized = true;
-                console.log('🚀 All dependencies loaded, starting initializeOnLoad NOW');
-                initializeOnLoad();
+                console.log('🚀 [START] All dependencies loaded, calling initializeOnLoad NOW');
+                try {
+                    initializeOnLoad();
+                } catch(err) {
+                    console.error('❌ [ERROR] initializeOnLoad crashed:', err);
+                }
             }
 
-            console.log('🔍 DEBUG: document.readyState:', document.readyState);
-
-            // Strategy 1: If DOM is ready, run immediately (with dependency check)
-            if (document.readyState === 'interactive' || document.readyState === 'complete') {
-                console.log('✅ DOM ready, checking dependencies...');
+            // ALWAYS try to initialize, regardless of readyState
+            console.log('🚀 [EXEC] Starting initialization in 100ms...');
+            setTimeout(function() {
+                console.log('🔥 [TIMEOUT] 100ms timeout fired, calling runInitOnce');
                 runInitOnce();
-            } else {
-                // Strategy 2: Wait for DOMContentLoaded
-                console.log('⏳ Waiting for DOMContentLoaded');
-                document.addEventListener('DOMContentLoaded', runInitOnce);
+            }, 100);
 
-                // Strategy 3: CRITICAL FALLBACK - if DOMContentLoaded doesn't fire within 100ms, run anyway
-                // This handles the race condition where the event already fired
-                setTimeout(function() {
-                    if (!hasInitialized) {
-                        console.warn('⚠️ DOMContentLoaded timeout - running initializeOnLoad via fallback');
-                        runInitOnce();
-                    }
-                }, 100);
-            }
+            // Also listen for DOMContentLoaded as backup
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('📢 [EVENT] DOMContentLoaded fired');
+                runInitOnce();
+            });
         })();
 
         // Handle URL parameters for direct ayah navigation
