@@ -22,9 +22,9 @@ BEGIN
     RETURN QUERY
     SELECT
         u.id,
-        u.email,
-        p.full_name,
-        p.avatar_url,
+        u.email::TEXT,
+        p.full_name::TEXT,
+        p.avatar_url::TEXT,
         u.created_at,
         u.email_confirmed_at
     FROM auth.users u
