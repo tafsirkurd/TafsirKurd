@@ -5563,25 +5563,38 @@
         }
 
         // Run initialization - handle both fresh load and service worker cached load
-        // CRITICAL FIX: Use multiple strategies to ensure initializeOnLoad runs
+        // CRITICAL FIX: Use multiple strategies to ensure initializeOnLoad runs WITH all dependencies
         (function() {
             let hasInitialized = false;
+
+            function checkDependencies() {
+                // Check if required deferred scripts are loaded
+                return typeof window.KurdishNumbers !== 'undefined';
+            }
 
             function runInitOnce() {
                 if (hasInitialized) {
                     console.log('⚠️ initializeOnLoad already ran, skipping');
                     return;
                 }
+
+                // Wait for dependencies before initializing
+                if (!checkDependencies()) {
+                    console.log('⏳ Waiting for KurdishNumbers to load...');
+                    setTimeout(runInitOnce, 50); // Retry in 50ms
+                    return;
+                }
+
                 hasInitialized = true;
-                console.log('🚀 Starting initializeOnLoad NOW');
+                console.log('🚀 All dependencies loaded, starting initializeOnLoad NOW');
                 initializeOnLoad();
             }
 
             console.log('🔍 DEBUG: document.readyState:', document.readyState);
 
-            // Strategy 1: If DOM is ready, run immediately
+            // Strategy 1: If DOM is ready, run immediately (with dependency check)
             if (document.readyState === 'interactive' || document.readyState === 'complete') {
-                console.log('✅ DOM ready, running immediately');
+                console.log('✅ DOM ready, checking dependencies...');
                 runInitOnce();
             } else {
                 // Strategy 2: Wait for DOMContentLoaded
