@@ -5563,18 +5563,41 @@
         }
 
         // Run initialization - handle both fresh load and service worker cached load
-        console.log('🔍 DEBUG: About to check document.readyState:', document.readyState);
-        console.log('🔍 DEBUG: initializeOnLoad function exists?', typeof initializeOnLoad);
+        // CRITICAL FIX: Use multiple strategies to ensure initializeOnLoad runs
+        (function() {
+            let hasInitialized = false;
 
-        if (document.readyState === 'loading') {
-            // Document still loading, wait for DOMContentLoaded
-            console.log('⏳ Document loading, will wait for DOMContentLoaded');
-            document.addEventListener('DOMContentLoaded', initializeOnLoad);
-        } else {
-            // DOM already ready (e.g., loaded from cache), run immediately
-            console.log('📦 DOM already ready (state: ' + document.readyState + '), running initializeOnLoad immediately');
-            initializeOnLoad();
-        }
+            function runInitOnce() {
+                if (hasInitialized) {
+                    console.log('⚠️ initializeOnLoad already ran, skipping');
+                    return;
+                }
+                hasInitialized = true;
+                console.log('🚀 Starting initializeOnLoad NOW');
+                initializeOnLoad();
+            }
+
+            console.log('🔍 DEBUG: document.readyState:', document.readyState);
+
+            // Strategy 1: If DOM is ready, run immediately
+            if (document.readyState === 'interactive' || document.readyState === 'complete') {
+                console.log('✅ DOM ready, running immediately');
+                runInitOnce();
+            } else {
+                // Strategy 2: Wait for DOMContentLoaded
+                console.log('⏳ Waiting for DOMContentLoaded');
+                document.addEventListener('DOMContentLoaded', runInitOnce);
+
+                // Strategy 3: CRITICAL FALLBACK - if DOMContentLoaded doesn't fire within 100ms, run anyway
+                // This handles the race condition where the event already fired
+                setTimeout(function() {
+                    if (!hasInitialized) {
+                        console.warn('⚠️ DOMContentLoaded timeout - running initializeOnLoad via fallback');
+                        runInitOnce();
+                    }
+                }, 100);
+            }
+        })();
 
         // Handle URL parameters for direct ayah navigation
         function handleUrlParameters() {
