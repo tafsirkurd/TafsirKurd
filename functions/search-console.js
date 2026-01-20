@@ -26,7 +26,22 @@ export async function onRequest(context) {
         const { action, dateRange } = await request.json();
 
         // Get Google credentials from environment
-        const credentials = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT || '{}');
+        let credentials;
+        try {
+            const credentialsStr = env.GOOGLE_SERVICE_ACCOUNT || '{}';
+            credentials = JSON.parse(credentialsStr);
+        } catch (parseError) {
+            // Try base64 decoding if direct parse fails
+            try {
+                const decoded = atob(env.GOOGLE_SERVICE_ACCOUNT);
+                credentials = JSON.parse(decoded);
+            } catch (e) {
+                return new Response(
+                    JSON.stringify({ error: 'Invalid GOOGLE_SERVICE_ACCOUNT format: ' + parseError.message }),
+                    { status: 500, headers: corsHeaders }
+                );
+            }
+        }
 
         if (!credentials.client_email || !credentials.private_key) {
             return new Response(
