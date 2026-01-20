@@ -830,8 +830,8 @@
             if (currentCategory) {
                 breadcrumb.innerHTML += `
                     <span class="breadcrumb-separator">›</span>
-                    <span class="breadcrumb-item ${!currentSeries ? 'active' : ''}" onclick="viewCategorySeries(${currentCategory.id}, '${currentCategory.name}')">
-                        ${currentCategory.name}
+                    <span class="breadcrumb-item ${!currentSeries ? 'active' : ''}" onclick="viewCategorySeries('${currentCategory.id}', '${currentCategory.name_ku}')">
+                        ${currentCategory.name_ku}
                     </span>
                 `;
             }
@@ -840,7 +840,7 @@
                 breadcrumb.innerHTML += `
                     <span class="breadcrumb-separator">›</span>
                     <span class="breadcrumb-item active">
-                        ${currentSeries.title}
+                        ${currentSeries.name_ku}
                     </span>
                 `;
             }
@@ -893,11 +893,11 @@
                 );
 
                 grid.innerHTML = categoriesWithCounts.map(cat => `
-                    <div class="category-card" onclick="viewCategorySeries(${cat.id}, '${cat.name}')">
+                    <div class="category-card" onclick="viewCategorySeries(${cat.id}, '${cat.name_ku}')">
                         <div class="category-card-header">
-                            <div class="category-card-title">${cat.name}</div>
+                            <div class="category-card-title">${cat.name_ku}</div>
                         </div>
-                        <div class="category-card-desc">${cat.description || 'No description'}</div>
+                        <div class="category-card-desc">${cat.slug || ''}</div>
                         <div class="category-card-footer">
                             <div class="category-card-count">${cat.seriesCount} series</div>
                             <div class="category-card-actions">
@@ -926,7 +926,7 @@
             try {
                 const { data: series, error } = await supabase
                     .from('tv_series')
-                    .select('*, tv_categories(name)')
+                    .select('*, tv_categories(name_ku)')
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
@@ -952,14 +952,14 @@
                 }
 
                 list.innerHTML = series.map(s => `
-                    <div class="series-card" onclick="viewSeriesEpisodes(${s.id}, '${s.title}', ${s.category_id})">
+                    <div class="series-card" onclick="viewSeriesEpisodes('${s.id}', '${s.name_ku}', '${s.category_id}')">
                         <div class="series-thumbnail">
-                            ${s.thumbnail_url ? `<img src="${s.thumbnail_url}" alt="${s.title}">` : '<i data-lucide="image"></i>'}
+                            ${s.thumbnail_url ? `<img src="${s.thumbnail_url}" alt="${s.name_ku}">` : '<i data-lucide="image"></i>'}
                         </div>
                         <div class="series-card-body">
-                            <div class="series-card-title">${s.title}</div>
+                            <div class="series-card-title">${s.name_ku}</div>
                             <div class="series-card-meta">
-                                <span>${s.tv_categories?.name || 'Unknown'}</span>
+                                <span>${s.tv_categories?.name_ku || 'Unknown'}</span>
                                 <div>
                                     <button class="table-btn" onclick="event.stopPropagation(); editSeries(${s.id})" title="Edit">
                                         <i data-lucide="edit-2"></i>
@@ -987,7 +987,7 @@
             try {
                 const { data: episodes, error } = await supabase
                     .from('tv_episodes')
-                    .select('*, tv_series(title)')
+                    .select('*, tv_series(name_ku)')
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
@@ -1015,7 +1015,7 @@
                 tbody.innerHTML = episodes.map(ep => `
                     <tr>
                         <td>${ep.title}</td>
-                        <td>${ep.tv_series?.title || 'Unknown'}</td>
+                        <td>${ep.tv_series?.name_ku || 'Unknown'}</td>
                         <td>${ep.episode_number || 'N/A'}</td>
                         <td>${ep.duration ? formatDuration(ep.duration) : 'N/A'}</td>
                         <td>${new Date(ep.created_at).toLocaleDateString()}</td>
@@ -1040,7 +1040,7 @@
 
         // View category series
         async function viewCategorySeries(categoryId, categoryName) {
-            currentCategory = { id: categoryId, name: categoryName };
+            currentCategory = { id: categoryId, name_ku: categoryName };
             currentSeries = null;
 
             const supabase = window.adminAuth.getSupabase();
@@ -1065,7 +1065,7 @@
                             </div>
                             <div class="empty-state-title">No Series</div>
                             <div class="empty-state-text">This category doesn't have any series yet</div>
-                            <button class="btn btn-primary" onclick="openSeriesModal(${categoryId})">
+                            <button class="btn btn-primary" onclick="openSeriesModal('${categoryId}')">
                                 <i data-lucide="plus"></i>
                                 Add Series
                             </button>
@@ -1073,12 +1073,12 @@
                     `;
                 } else {
                     list.innerHTML = series.map(s => `
-                        <div class="series-card" onclick="viewSeriesEpisodes(${s.id}, '${s.title}', ${categoryId})">
+                        <div class="series-card" onclick="viewSeriesEpisodes('${s.id}', '${s.name_ku}', '${categoryId}')">
                             <div class="series-thumbnail">
-                                ${s.thumbnail_url ? `<img src="${s.thumbnail_url}" alt="${s.title}">` : '<i data-lucide="image"></i>'}
+                                ${s.thumbnail_url ? `<img src="${s.thumbnail_url}" alt="${s.name_ku}">` : '<i data-lucide="image"></i>'}
                             </div>
                             <div class="series-card-body">
-                                <div class="series-card-title">${s.title}</div>
+                                <div class="series-card-title">${s.name_ku}</div>
                                 <div class="series-card-meta">
                                     <span>${categoryName}</span>
                                     <div>
@@ -1104,13 +1104,13 @@
 
         // View series episodes
         async function viewSeriesEpisodes(seriesId, seriesTitle, categoryId) {
-            currentSeries = { id: seriesId, title: seriesTitle };
+            currentSeries = { id: seriesId, name_ku: seriesTitle };
 
             if (!currentCategory && categoryId) {
                 const supabase = window.adminAuth.getSupabase();
                 const { data } = await supabase
                     .from('tv_categories')
-                    .select('id, name')
+                    .select('id, name_ku')
                     .eq('id', categoryId)
                     .single();
 
@@ -1200,8 +1200,8 @@
 
                 if (data) {
                     document.getElementById('category-id').value = data.id;
-                    document.getElementById('category-name').value = data.name;
-                    document.getElementById('category-description').value = data.description || '';
+                    document.getElementById('category-name').value = data.name_ku;
+                    document.getElementById('category-description').value = data.slug || '';
                 }
             } else {
                 title.textContent = 'Add Category';
@@ -1226,12 +1226,12 @@
                 if (id) {
                     await supabase
                         .from('tv_categories')
-                        .update({ name, description })
+                        .update({ name_ku: name, slug: description })
                         .eq('id', id);
                 } else {
                     await supabase
                         .from('tv_categories')
-                        .insert({ name, description });
+                        .insert({ name_ku: name, slug: description });
                 }
 
                 closeCategoryModal();
@@ -1275,10 +1275,12 @@
             const { data: categories } = await supabase
                 .from('tv_categories')
                 .select('*')
-                .order('name');
+                .order('name_ku');
 
-            categorySelect.innerHTML = '<option value="">Select category...</option>' +
-                categories.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('');
+            if (categories) {
+                categorySelect.innerHTML = '<option value="">Select category...</option>' +
+                    categories.map(cat => `<option value="${cat.id}">${cat.name_ku}</option>`).join('');
+            }
 
             if (seriesId) {
                 title.textContent = 'Edit Series';
@@ -1290,8 +1292,8 @@
 
                 if (data) {
                     document.getElementById('series-id').value = data.id;
-                    document.getElementById('series-title').value = data.title;
-                    document.getElementById('series-description').value = data.description || '';
+                    document.getElementById('series-title').value = data.name_ku;
+                    document.getElementById('series-description').value = data.description_ku || '';
                     document.getElementById('series-thumbnail').value = data.thumbnail_url || '';
                     categorySelect.value = data.category_id;
                 }
@@ -1328,18 +1330,18 @@
                 if (id) {
                     await supabase
                         .from('tv_series')
-                        .update({ category_id: categoryId, title, description, thumbnail_url: thumbnailUrl })
+                        .update({ category_id: categoryId, name_ku: title, description_ku: description, thumbnail_url: thumbnailUrl })
                         .eq('id', id);
                 } else {
                     await supabase
                         .from('tv_series')
-                        .insert({ category_id: categoryId, title, description, thumbnail_url: thumbnailUrl });
+                        .insert({ category_id: categoryId, name_ku: title, description_ku: description, thumbnail_url: thumbnailUrl });
                 }
 
                 closeSeriesModal();
                 loadAllSeries();
                 if (currentView === 'category-series' && currentCategory) {
-                    viewCategorySeries(currentCategory.id, currentCategory.name);
+                    viewCategorySeries(currentCategory.id, currentCategory.name_ku);
                 }
             } catch (error) {
                 console.error('Error saving series:', error);
@@ -1359,7 +1361,7 @@
                 await supabase.from('tv_series').delete().eq('id', id);
                 loadAllSeries();
                 if (currentView === 'category-series' && currentCategory) {
-                    viewCategorySeries(currentCategory.id, currentCategory.name);
+                    viewCategorySeries(currentCategory.id, currentCategory.name_ku);
                 }
             } catch (error) {
                 console.error('Error deleting series:', error);
@@ -1383,10 +1385,12 @@
             const { data: series } = await supabase
                 .from('tv_series')
                 .select('*')
-                .order('title');
+                .order('name_ku');
 
-            seriesSelect.innerHTML = '<option value="">Select series...</option>' +
-                series.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+            if (series) {
+                seriesSelect.innerHTML = '<option value="">Select series...</option>' +
+                    series.map(s => `<option value="${s.id}">${s.name_ku}</option>`).join('');
+            }
 
             if (episodeId) {
                 title.textContent = 'Edit Episode';
@@ -1469,7 +1473,7 @@
                 closeEpisodeModal();
                 loadAllEpisodes();
                 if (currentView === 'series-episodes' && currentSeries) {
-                    viewSeriesEpisodes(currentSeries.id, currentSeries.title, currentCategory?.id);
+                    viewSeriesEpisodes(currentSeries.id, currentSeries.name_ku, currentCategory?.id);
                 }
             } catch (error) {
                 console.error('Error saving episode:', error);
@@ -1489,7 +1493,7 @@
                 await supabase.from('tv_episodes').delete().eq('id', id);
                 loadAllEpisodes();
                 if (currentView === 'series-episodes' && currentSeries) {
-                    viewSeriesEpisodes(currentSeries.id, currentSeries.title, currentCategory?.id);
+                    viewSeriesEpisodes(currentSeries.id, currentSeries.name_ku, currentCategory?.id);
                 }
             } catch (error) {
                 console.error('Error deleting episode:', error);
