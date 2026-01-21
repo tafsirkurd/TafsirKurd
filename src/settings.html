@@ -220,6 +220,7 @@
             right: 3px;
             transition: transform var(--transition);
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            pointer-events: none; /* Allow clicks to pass through to parent */
         }
 
         .setting-toggle.active .setting-toggle-knob {
@@ -632,7 +633,7 @@
                         </div>
                         <div class="setting-description">گوهۆڕین بۆ رەوشا تاریک بۆ خواندنا ئاسانتر</div>
                     </div>
-                    <div class="setting-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
+                    <div class="setting-toggle" id="darkModeToggle">
                         <div class="setting-toggle-knob"></div>
                     </div>
                 </div>
@@ -745,7 +746,7 @@
                         </div>
                         <div class="setting-description">نیشاندان یان ڤەشارتنا تەفسیرێ کوردی</div>
                     </div>
-                    <div class="setting-toggle active" id="tafsirToggle" onclick="toggleTafsir()">
+                    <div class="setting-toggle active" id="tafsirToggle">
                         <div class="setting-toggle-knob"></div>
                     </div>
                 </div>
@@ -758,7 +759,7 @@
                         </div>
                         <div class="setting-description">زڤراندنا خۆکارا پەڕەیێ د دەما خواندنێدا</div>
                     </div>
-                    <div class="setting-toggle" id="autoScrollToggle" onclick="toggleAutoScroll()">
+                    <div class="setting-toggle" id="autoScrollToggle">
                         <div class="setting-toggle-knob"></div>
                     </div>
                 </div>
@@ -795,7 +796,7 @@
                         </div>
                         <div class="setting-description">وەرگرتنا بیرهاتنێن رۆژانە ب رێیا ئیمەیلێ</div>
                     </div>
-                    <div class="setting-toggle active" id="emailNotificationsToggle" onclick="toggleEmailNotifications()">
+                    <div class="setting-toggle active" id="emailNotificationsToggle">
                         <div class="setting-toggle-knob"></div>
                     </div>
                 </div>
@@ -808,7 +809,7 @@
                         </div>
                         <div class="setting-description">وەرگرتنا بیرهاتنێن گەڕۆکێ</div>
                     </div>
-                    <div class="setting-toggle active" id="browserNotificationsToggle" onclick="toggleBrowserNotifications()">
+                    <div class="setting-toggle active" id="browserNotificationsToggle">
                         <div class="setting-toggle-knob"></div>
                     </div>
                 </div>
@@ -876,7 +877,36 @@
             if (isAuthenticated) {
                 loadNotificationSettings();
             }
+
+            // Initialize toggle click handlers
+            initToggleHandlers();
         });
+
+        // Initialize all toggle click handlers
+        function initToggleHandlers() {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const tafsirToggle = document.getElementById('tafsirToggle');
+            const autoScrollToggle = document.getElementById('autoScrollToggle');
+            const emailNotificationsToggle = document.getElementById('emailNotificationsToggle');
+            const browserNotificationsToggle = document.getElementById('browserNotificationsToggle');
+
+            if (darkModeToggle) {
+                darkModeToggle.addEventListener('click', toggleDarkMode);
+                console.log('Dark mode toggle initialized');
+            }
+            if (tafsirToggle) {
+                tafsirToggle.addEventListener('click', toggleTafsir);
+            }
+            if (autoScrollToggle) {
+                autoScrollToggle.addEventListener('click', toggleAutoScroll);
+            }
+            if (emailNotificationsToggle) {
+                emailNotificationsToggle.addEventListener('click', toggleEmailNotifications);
+            }
+            if (browserNotificationsToggle) {
+                browserNotificationsToggle.addEventListener('click', toggleBrowserNotifications);
+            }
+        }
 
         function loadSettings() {
             const savedTheme = localStorage.getItem('theme') || 'light';
