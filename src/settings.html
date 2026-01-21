@@ -854,8 +854,20 @@
         }
 
         // Initialize settings from localStorage
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize toggle handlers immediately when DOM is ready
+            initToggleHandlers();
+            loadSettings();
+            console.log('Settings page initialized');
+        });
+
         window.addEventListener('load', async () => {
-            await initSupabase(); // Initialize Supabase securely first
+            try {
+                await initSupabase(); // Initialize Supabase securely first
+            } catch (e) {
+                console.error('Supabase init error:', e);
+            }
+
             // Check authentication
             const user = localStorage.getItem('user');
             const isAuthenticated = !!user;
@@ -871,19 +883,20 @@
             // Show the page
             document.body.classList.add('ready');
 
-            loadSettings();
-
             // Only load notification settings if authenticated
             if (isAuthenticated) {
-                loadNotificationSettings();
+                try {
+                    loadNotificationSettings();
+                } catch (e) {
+                    console.error('Notification settings error:', e);
+                }
             }
-
-            // Initialize toggle click handlers
-            initToggleHandlers();
         });
 
         // Initialize all toggle click handlers
         function initToggleHandlers() {
+            console.log('Initializing toggle handlers...');
+
             const darkModeToggle = document.getElementById('darkModeToggle');
             const tafsirToggle = document.getElementById('tafsirToggle');
             const autoScrollToggle = document.getElementById('autoScrollToggle');
@@ -891,21 +904,49 @@
             const browserNotificationsToggle = document.getElementById('browserNotificationsToggle');
 
             if (darkModeToggle) {
-                darkModeToggle.addEventListener('click', toggleDarkMode);
+                darkModeToggle.style.cursor = 'pointer';
+                darkModeToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Dark mode clicked');
+                    toggleDarkMode();
+                });
                 console.log('Dark mode toggle initialized');
             }
             if (tafsirToggle) {
-                tafsirToggle.addEventListener('click', toggleTafsir);
+                tafsirToggle.style.cursor = 'pointer';
+                tafsirToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleTafsir();
+                });
             }
             if (autoScrollToggle) {
-                autoScrollToggle.addEventListener('click', toggleAutoScroll);
+                autoScrollToggle.style.cursor = 'pointer';
+                autoScrollToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleAutoScroll();
+                });
             }
             if (emailNotificationsToggle) {
-                emailNotificationsToggle.addEventListener('click', toggleEmailNotifications);
+                emailNotificationsToggle.style.cursor = 'pointer';
+                emailNotificationsToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleEmailNotifications();
+                });
             }
             if (browserNotificationsToggle) {
-                browserNotificationsToggle.addEventListener('click', toggleBrowserNotifications);
+                browserNotificationsToggle.style.cursor = 'pointer';
+                browserNotificationsToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleBrowserNotifications();
+                });
             }
+
+            console.log('All toggle handlers initialized');
         }
 
         function loadSettings() {
@@ -972,10 +1013,12 @@
         }
 
         function toggleDarkMode() {
+            console.log('toggleDarkMode function called');
             const toggle = document.getElementById('darkModeToggle');
             const current = document.documentElement.getAttribute('data-theme') || 'light';
             const newTheme = current === 'light' ? 'dark' : 'light';
 
+            console.log('Switching theme from', current, 'to', newTheme);
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             toggle.classList.toggle('active');
