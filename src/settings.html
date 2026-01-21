@@ -952,8 +952,11 @@
         function loadSettings() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
+            const darkModeToggle = document.getElementById('darkModeToggle');
             if (savedTheme === 'dark') {
-                document.getElementById('darkModeToggle').classList.add('active');
+                darkModeToggle.classList.add('active');
+            } else {
+                darkModeToggle.classList.remove('active');
             }
 
             const savedArabicFont = localStorage.getItem('arabicFont') || 'KFGQPC Hafs';
@@ -1021,7 +1024,13 @@
             console.log('Switching theme from', current, 'to', newTheme);
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
-            toggle.classList.toggle('active');
+
+            // Explicitly set active class based on new theme
+            if (newTheme === 'dark') {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
 
             showNotification(newTheme === 'dark' ? 'رەوشا تاری هاتە چالاککرن' : 'رەوشا ڕووناهیێ هاتە چالاککرن');
         }
