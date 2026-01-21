@@ -70,8 +70,28 @@ export async function onRequest(context) {
             );
         }
 
+        // Debug: log what credentials we have (without exposing the full key)
+        console.log('Using client_email:', credentials.client_email);
+        console.log('Private key starts with:', credentials.private_key?.substring(0, 30));
+        console.log('Private key length:', credentials.private_key?.length);
+
         // Get access token
-        const accessToken = await getGoogleAccessToken(credentials);
+        let accessToken;
+        try {
+            accessToken = await getGoogleAccessToken(credentials);
+        } catch (tokenError) {
+            return new Response(
+                JSON.stringify({
+                    error: tokenError.message,
+                    debug: {
+                        client_email: credentials.client_email,
+                        key_length: credentials.private_key?.length,
+                        key_preview: credentials.private_key?.substring(0, 50) + '...'
+                    }
+                }),
+                { status: 500, headers: corsHeaders }
+            );
+        }
 
         const siteUrl = 'https://tafsirkurd.com/';
 
