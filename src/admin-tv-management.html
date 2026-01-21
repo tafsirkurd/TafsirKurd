@@ -1251,11 +1251,19 @@
 
             const supabase = window.adminAuth.getSupabase();
             try {
-                await supabase.from('tv_categories').delete().eq('id', id);
+                const { error } = await supabase.from('tv_categories').delete().eq('id', id);
+
+                if (error) {
+                    console.error('Supabase delete error:', error);
+                    alert('Error deleting category: ' + error.message);
+                    return;
+                }
+
+                alert('Category deleted successfully');
                 loadCategories();
             } catch (error) {
                 console.error('Error deleting category:', error);
-                alert('Error deleting category');
+                alert('Error deleting category: ' + error.message);
             }
         }
 
@@ -1358,14 +1366,22 @@
 
             const supabase = window.adminAuth.getSupabase();
             try {
-                await supabase.from('tv_series').delete().eq('id', id);
+                const { error } = await supabase.from('tv_series').delete().eq('id', id);
+
+                if (error) {
+                    console.error('Supabase delete error:', error);
+                    alert('Error deleting series: ' + error.message);
+                    return;
+                }
+
+                alert('Series deleted successfully');
                 loadAllSeries();
                 if (currentView === 'category-series' && currentCategory) {
                     viewCategorySeries(currentCategory.id, currentCategory.name_ku);
                 }
             } catch (error) {
                 console.error('Error deleting series:', error);
-                alert('Error deleting series');
+                alert('Error deleting series: ' + error.message);
             }
         }
 
@@ -1490,14 +1506,22 @@
 
             const supabase = window.adminAuth.getSupabase();
             try {
-                await supabase.from('tv_episodes').delete().eq('id', id);
+                const { error } = await supabase.from('tv_episodes').delete().eq('id', id);
+
+                if (error) {
+                    console.error('Supabase delete error:', error);
+                    alert('Error deleting episode: ' + error.message);
+                    return;
+                }
+
+                alert('Episode deleted successfully');
                 loadAllEpisodes();
                 if (currentView === 'series-episodes' && currentSeries) {
                     viewSeriesEpisodes(currentSeries.id, currentSeries.name_ku, currentCategory?.id);
                 }
             } catch (error) {
                 console.error('Error deleting episode:', error);
-                alert('Error deleting episode');
+                alert('Error deleting episode: ' + error.message);
             }
         }
 
