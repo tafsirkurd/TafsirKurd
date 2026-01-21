@@ -71,6 +71,34 @@
             --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
 
+        /* Light mode sidebar button styles */
+        [data-theme="light"] .sidebar-btn {
+            color: #374151;
+        }
+
+        [data-theme="light"] .sidebar-btn:hover {
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        [data-theme="light"] .sidebar-btn.active {
+            background: #3b82f6;
+            color: #ffffff;
+        }
+
+        [data-theme="light"] .sidebar-btn.active::before {
+            background: #1d4ed8;
+        }
+
+        [data-theme="light"] .sidebar {
+            background: #ffffff;
+            border-left-color: #e5e7eb;
+        }
+
+        [data-theme="light"] .sidebar-title {
+            color: #111827;
+        }
+
         /* ===== RESET ===== */
         * {
             margin: 0;
@@ -3605,6 +3633,32 @@
         function showSignIn() {
             // Could toggle between sign up and sign in forms
             console.log('Show sign in form');
+        }
+
+        // ===== THEME TOGGLE =====
+        const themeToggle = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+
+        // Apply saved theme on load
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon(newTheme);
+            });
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = themeToggle?.querySelector('i');
+            if (icon) {
+                icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
         }
 
 // Mobile Menu Toggle        const mobileMenuToggle = document.getElementById('mobileMenuToggle');        const navMenu = document.querySelector('.nav-menu');        if (mobileMenuToggle && navMenu) {            mobileMenuToggle.addEventListener('click', function() {                this.classList.toggle('active');                navMenu.classList.toggle('active');            });            // Close menu when clicking on a link            navMenu.querySelectorAll('.nav-link').forEach(link => {                link.addEventListener('click', () => {                    mobileMenuToggle.classList.remove('active');                    navMenu.classList.remove('active');                });            });            // Close menu when clicking outside            document.addEventListener('click', function(event) {                if (!mobileMenuToggle.contains(event.target) && !navMenu.contains(event.target)) {                    mobileMenuToggle.classList.remove('active');                    navMenu.classList.remove('active');                }            });        }
