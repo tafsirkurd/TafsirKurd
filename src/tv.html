@@ -3694,11 +3694,14 @@
 
         // ===== THEME TOGGLE =====
         // Theme is already set by theme-loader.js in head
-        (function() {
+        function initThemeToggle() {
             const themeToggle = document.getElementById('themeToggle');
+            if (!themeToggle) {
+                console.error('Theme toggle button not found');
+                return;
+            }
 
             function updateThemeIcon(theme) {
-                if (!themeToggle) return;
                 const icon = themeToggle.querySelector('i');
                 if (icon) {
                     // Moon icon in light mode (to switch to dark)
@@ -3711,25 +3714,29 @@
             const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
             updateThemeIcon(currentTheme);
 
-            if (themeToggle) {
-                themeToggle.onclick = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
+            // Use addEventListener instead of onclick for better reliability
+            themeToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
 
-                    const current = document.documentElement.getAttribute('data-theme') || 'light';
-                    const newTheme = current === 'dark' ? 'light' : 'dark';
+                const current = document.documentElement.getAttribute('data-theme') || 'light';
+                const newTheme = current === 'dark' ? 'light' : 'dark';
 
-                    document.documentElement.setAttribute('data-theme', newTheme);
-                    localStorage.setItem('theme', newTheme);
-                    updateThemeIcon(newTheme);
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon(newTheme);
 
-                    console.log('Theme switched to:', newTheme);
-                };
-                console.log('Theme toggle initialized, current theme:', currentTheme);
-            } else {
-                console.error('Theme toggle button not found');
-            }
-        })();
+                console.log('Theme switched to:', newTheme);
+            });
+            console.log('Theme toggle initialized, current theme:', currentTheme);
+        }
+
+        // Initialize theme toggle when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initThemeToggle);
+        } else {
+            initThemeToggle();
+        }
 
 // Mobile Menu Toggle        const mobileMenuToggle = document.getElementById('mobileMenuToggle');        const navMenu = document.querySelector('.nav-menu');        if (mobileMenuToggle && navMenu) {            mobileMenuToggle.addEventListener('click', function() {                this.classList.toggle('active');                navMenu.classList.toggle('active');            });            // Close menu when clicking on a link            navMenu.querySelectorAll('.nav-link').forEach(link => {                link.addEventListener('click', () => {                    mobileMenuToggle.classList.remove('active');                    navMenu.classList.remove('active');                });            });            // Close menu when clicking outside            document.addEventListener('click', function(event) {                if (!mobileMenuToggle.contains(event.target) && !navMenu.contains(event.target)) {                    mobileMenuToggle.classList.remove('active');                    navMenu.classList.remove('active');                }            });        }
         // Initialize auth on page load
