@@ -25,34 +25,40 @@ export async function onRequest(context) {
     try {
         const { action, dateRange } = await request.json();
 
-        // Get Google credentials from environment
+        // Get Google credentials from environment variables
+        // Option 1: Individual env vars (preferred)
+        // Option 2: Base64 encoded JSON
+        // Option 3: Raw JSON
         let credentials;
-        const rawCreds = env.GOOGLE_SERVICE_ACCOUNT || '';
 
-        if (!rawCreds) {
-            return new Response(
-                JSON.stringify({ error: 'GOOGLE_SERVICE_ACCOUNT not configured' }),
-                { status: 500, headers: corsHeaders }
-            );
-        }
-
-        try {
-            // Try base64 decoding first (preferred method)
-            let decoded;
+        if (env.GOOGLE_CLIENT_EMAIL && env.GOOGLE_PRIVATE_KEY) {
+            // Use individual environment variables
+            credentials = {
+                client_email: env.GOOGLE_CLIENT_EMAIL,
+                private_key: env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
+            };
+        } else if (env.GOOGLE_SERVICE_ACCOUNT) {
+            const rawCreds = env.GOOGLE_SERVICE_ACCOUNT;
             try {
-                decoded = atob(rawCreds);
-            } catch (e) {
-                // Not base64, use as-is
-                decoded = rawCreds;
+                // Try base64 decoding first
+                let decoded;
+                try {
+                    decoded = atob(rawCreds);
+                } catch (e) {
+                    decoded = rawCreds;
+                }
+                // Fix newlines for JSON parsing
+                decoded = decoded.replace(/\r\n/g, '\\n').replace(/\n/g, '\\n').replace(/\r/g, '\\n');
+                credentials = JSON.parse(decoded);
+            } catch (parseError) {
+                return new Response(
+                    JSON.stringify({ error: 'Invalid credentials format: ' + parseError.message }),
+                    { status: 500, headers: corsHeaders }
+                );
             }
-
-            // Replace actual newlines with escape sequences for JSON parsing
-            decoded = decoded.replace(/\r\n/g, '\\n').replace(/\n/g, '\\n').replace(/\r/g, '\\n');
-
-            credentials = JSON.parse(decoded);
-        } catch (parseError) {
+        } else {
             return new Response(
-                JSON.stringify({ error: 'Invalid GOOGLE_SERVICE_ACCOUNT format: ' + parseError.message }),
+                JSON.stringify({ error: 'Google credentials not configured. Set GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY environment variables.' }),
                 { status: 500, headers: corsHeaders }
             );
         }
