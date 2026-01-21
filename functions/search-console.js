@@ -27,20 +27,34 @@ export async function onRequest(context) {
 
         // Get Google credentials from environment
         let credentials;
+        const rawCreds = env.GOOGLE_SERVICE_ACCOUNT || '';
+
+        if (!rawCreds) {
+            return new Response(
+                JSON.stringify({ error: 'GOOGLE_SERVICE_ACCOUNT not configured' }),
+                { status: 500, headers: corsHeaders }
+            );
+        }
+
         try {
-            const credentialsStr = env.GOOGLE_SERVICE_ACCOUNT || '{}';
-            credentials = JSON.parse(credentialsStr);
-        } catch (parseError) {
-            // Try base64 decoding if direct parse fails
+            // Try base64 decoding first (preferred method)
+            let decoded;
             try {
-                const decoded = atob(env.GOOGLE_SERVICE_ACCOUNT);
-                credentials = JSON.parse(decoded);
+                decoded = atob(rawCreds);
             } catch (e) {
-                return new Response(
-                    JSON.stringify({ error: 'Invalid GOOGLE_SERVICE_ACCOUNT format: ' + parseError.message }),
-                    { status: 500, headers: corsHeaders }
-                );
+                // Not base64, use as-is
+                decoded = rawCreds;
             }
+
+            // Replace actual newlines with escape sequences for JSON parsing
+            decoded = decoded.replace(/\r\n/g, '\\n').replace(/\n/g, '\\n').replace(/\r/g, '\\n');
+
+            credentials = JSON.parse(decoded);
+        } catch (parseError) {
+            return new Response(
+                JSON.stringify({ error: 'Invalid GOOGLE_SERVICE_ACCOUNT format: ' + parseError.message }),
+                { status: 500, headers: corsHeaders }
+            );
         }
 
         if (!credentials.client_email || !credentials.private_key) {
