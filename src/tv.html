@@ -247,6 +247,149 @@
             font-weight: 700;
         }
 
+        .notification-badge:empty,
+        .notification-badge[data-count="0"] {
+            display: none;
+        }
+
+        /* Notification Dropdown */
+        .notification-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 0;
+            width: 320px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            z-index: 1001;
+            display: none;
+            overflow: hidden;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .notification-dropdown-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .mark-all-read {
+            background: none;
+            border: none;
+            color: var(--info);
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .mark-all-read:hover {
+            text-decoration: underline;
+        }
+
+        .notification-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+            background: var(--bg);
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item.unread {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .notification-icon.new-episode {
+            background: rgba(46, 204, 113, 0.2);
+            color: var(--success);
+        }
+
+        .notification-icon.new-series {
+            background: rgba(52, 152, 219, 0.2);
+            color: var(--info);
+        }
+
+        .notification-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .notification-dropdown-footer {
+            padding: 0.75rem 1rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .notification-dropdown-footer a {
+            color: var(--info);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .notification-dropdown-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .notification-empty {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .notification-empty i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.5;
+        }
+
         /* ===== VIDEO PLAYER ===== */
         .player-section {
             position: relative;
@@ -2530,10 +2673,24 @@
                     <i class="fas fa-search search-icon"></i>
                     <input type="text" class="nav-search-input" id="navSearchInput" placeholder="بگەڕێ بۆ بەش، زنجیرە، یان بابەت..." autocomplete="off" aria-label="گەڕان">
                 </div>
-                <button class="icon-btn" id="notificationBtn" aria-label="Notifications" title="ئاگادارکرنەوە">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge">3</span>
-                </button>
+                <div class="notification-container" style="position: relative;">
+                    <button class="icon-btn" id="notificationBtn" aria-label="Notifications" title="ئاگادارکرنەوە" onclick="toggleNotificationDropdown(event)">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notificationBadge">0</span>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-dropdown-header">
+                            <span>ئاگادارکرنەوەکان</span>
+                            <button class="mark-all-read" onclick="markAllNotificationsRead(event)">هەموو بخوێنەوە</button>
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <!-- Notifications will be loaded here -->
+                        </div>
+                        <div class="notification-dropdown-footer">
+                            <a href="/notifications.html">هەموو ببینە</a>
+                        </div>
+                    </div>
+                </div>
                 <button class="icon-btn" id="themeToggle" aria-label="Toggle theme" title="گۆڕینی ڕووناکی">
                     <i class="fas fa-sun"></i>
                 </button>
@@ -3169,6 +3326,163 @@
             document.getElementById('loginBtn').style.display = 'flex';
             document.getElementById('userProfileBtn').style.display = 'none';
         }
+
+        // ===== NOTIFICATION FUNCTIONS =====
+        function toggleNotificationDropdown(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            const dropdown = document.getElementById('notificationDropdown');
+            const profileDropdown = document.getElementById('profileDropdown');
+
+            // Close profile dropdown if open
+            if (profileDropdown) {
+                profileDropdown.classList.remove('show');
+            }
+
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+                if (dropdown.classList.contains('show')) {
+                    loadNotifications();
+                }
+            }
+        }
+
+        async function loadNotifications() {
+            const notificationList = document.getElementById('notificationList');
+            const badge = document.getElementById('notificationBadge');
+
+            if (!supabaseClient) {
+                notificationList.textContent = '';
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'notification-empty';
+                emptyDiv.innerHTML = '<i class="fas fa-bell-slash"></i><p>چوونەژوورەوە بکە بۆ دیتنی ئاگادارکرنەوەکان</p>';
+                notificationList.appendChild(emptyDiv);
+                badge.textContent = '0';
+                badge.style.display = 'none';
+                return;
+            }
+
+            try {
+                // Fetch recent episodes as notifications
+                const { data: episodes, error } = await supabaseClient
+                    .from('tv_episodes')
+                    .select('id, title, created_at, tv_series(name_ku)')
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                if (error) throw error;
+
+                notificationList.textContent = '';
+
+                if (!episodes || episodes.length === 0) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'notification-empty';
+                    emptyDiv.innerHTML = '<i class="fas fa-bell-slash"></i><p>هیچ ئاگادارکرنەوەیەک نییە</p>';
+                    notificationList.appendChild(emptyDiv);
+                    badge.textContent = '0';
+                    badge.style.display = 'none';
+                    return;
+                }
+
+                // Check which ones are new (within last 7 days)
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+                let unreadCount = 0;
+                episodes.forEach(ep => {
+                    const isNew = new Date(ep.created_at) > sevenDaysAgo;
+                    if (isNew) unreadCount++;
+
+                    const item = document.createElement('div');
+                    item.className = 'notification-item' + (isNew ? ' unread' : '');
+                    item.onclick = () => playEpisodeFromNotification(ep.id);
+
+                    const iconDiv = document.createElement('div');
+                    iconDiv.className = 'notification-icon new-episode';
+                    iconDiv.innerHTML = '<i class="fas fa-play-circle"></i>';
+
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'notification-content';
+
+                    const titleDiv = document.createElement('div');
+                    titleDiv.className = 'notification-title';
+                    titleDiv.textContent = ep.title;
+
+                    const timeDiv = document.createElement('div');
+                    timeDiv.className = 'notification-time';
+                    timeDiv.textContent = (ep.tv_series?.name_ku || '') + ' • ' + formatTimeAgo(ep.created_at);
+
+                    contentDiv.appendChild(titleDiv);
+                    contentDiv.appendChild(timeDiv);
+                    item.appendChild(iconDiv);
+                    item.appendChild(contentDiv);
+                    notificationList.appendChild(item);
+                });
+
+                badge.textContent = unreadCount > 0 ? unreadCount : '0';
+                badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                notificationList.textContent = '';
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'notification-empty';
+                emptyDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i><p>هەڵەیەک ڕوویدا</p>';
+                notificationList.appendChild(emptyDiv);
+            }
+        }
+
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'ئێستا';
+            if (diffMins < 60) return diffMins + ' خولەک پێش';
+            if (diffHours < 24) return diffHours + ' کاتژمێر پێش';
+            if (diffDays < 7) return diffDays + ' ڕۆژ پێش';
+            return date.toLocaleDateString('ku');
+        }
+
+        function playEpisodeFromNotification(episodeId) {
+            // Close the dropdown
+            document.getElementById('notificationDropdown').classList.remove('show');
+            // Play the episode (use existing function if available)
+            if (typeof playEpisode === 'function') {
+                playEpisode(episodeId);
+            }
+        }
+
+        function markAllNotificationsRead(event) {
+            if (event) event.stopPropagation();
+            // Remove unread class from all items
+            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                item.classList.remove('unread');
+            });
+            // Hide badge
+            const badge = document.getElementById('notificationBadge');
+            badge.textContent = '0';
+            badge.style.display = 'none';
+        }
+
+        // Close notification dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const notificationDropdown = document.getElementById('notificationDropdown');
+            const notificationContainer = document.querySelector('.notification-container');
+
+            if (notificationDropdown && notificationContainer && !notificationContainer.contains(event.target)) {
+                notificationDropdown.classList.remove('show');
+            }
+        });
+
+        // Load notifications on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(loadNotifications, 1000);
+        });
 
         // Toggle profile dropdown
         function toggleProfileDropdown(event) {
