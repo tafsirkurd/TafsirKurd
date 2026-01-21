@@ -2173,6 +2173,52 @@
             }
         }
 
+        /* ===== LIGHT MODE PROFILE/NOTIFICATION FIXES ===== */
+        /* Light mode: user profile button needs dark styling for contrast */
+        [data-theme="light"] .user-profile-btn,
+        :root:not([data-theme="dark"]) .user-profile-btn {
+            background: rgba(0, 0, 0, 0.08);
+            border-color: rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="light"] .user-profile-btn:hover,
+        :root:not([data-theme="dark"]) .user-profile-btn:hover {
+            background: rgba(0, 0, 0, 0.12);
+        }
+
+        [data-theme="light"] .user-name,
+        :root:not([data-theme="dark"]) .user-name {
+            color: #111827;
+        }
+
+        [data-theme="light"] .user-avatar,
+        :root:not([data-theme="dark"]) .user-avatar {
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+
+        [data-theme="light"] .user-profile-btn .fa-chevron-down,
+        :root:not([data-theme="dark"]) .user-profile-btn .fa-chevron-down {
+            color: rgba(0, 0, 0, 0.5) !important;
+        }
+
+        /* Notification dropdown position fix - prevent overflow in RTL */
+        .notification-dropdown {
+            right: auto;
+            left: -50px;
+        }
+
+        @media (max-width: 600px) {
+            .notification-dropdown {
+                position: fixed;
+                top: 70px;
+                left: 1rem;
+                right: 1rem;
+                width: auto;
+                max-width: 320px;
+                margin: 0 auto;
+            }
+        }
+
         /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar {
             width: 10px;
@@ -2777,8 +2823,8 @@
                         </div>
                     </div>
                 </div>
-                <button class="icon-btn" id="themeToggle" aria-label="Toggle theme" title="گۆڕینی ڕووناکی" onclick="window.toggleTVTheme && window.toggleTVTheme()">
-                    <i class="fas fa-sun"></i>
+                <button class="icon-btn" id="themeToggle" aria-label="Toggle theme" title="گۆڕینی ڕووناکی">
+                    <i class="fas fa-moon"></i>
                 </button>
 
                 <!-- Login Button (shown when not authenticated) -->

@@ -560,7 +560,7 @@
     // ===== LOAD SAVED DATA =====
     function loadSavedData() {
         // Load from localStorage
-        const savedTheme = localStorage.getItem('theme') || 'dark';
+        const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
         updateThemeIcon(savedTheme);
 
