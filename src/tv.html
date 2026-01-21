@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ku" dir="rtl">
 <head>
+    <!-- Theme loader must be first to prevent flash -->
+    <script src="/utils/theme-loader.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>دەنگێ ئیسلامێ - کەناڵا ڤیدیویی یا ئیسلامی</title>
@@ -35,7 +37,34 @@
 
     <style>
         /* ===== CSS VARIABLES ===== */
+        /* Light mode (default) */
         :root {
+            --primary: #ffffff;
+            --primary-light: #f3f4f6;
+            --accent: #000000;
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #3498db;
+            --purple: #9b59b6;
+            --pink: #e91e63;
+
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+
+            --transition-fast: 0.2s;
+            --transition-medium: 0.4s;
+            --cubic: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Dark mode */
+        [data-theme="dark"] {
             --primary: #000000;
             --primary-light: #333333;
             --accent: #ffffff;
@@ -44,110 +73,89 @@
             --text: #ffffff;
             --text-muted: #b3b3b3;
             --border: #2a2a2a;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-            --warning: #f39c12;
-            --info: #3498db;
-            --purple: #9b59b6;
-            --pink: #e91e63;
-
             --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
             --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.4);
             --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
-
-            --transition-fast: 0.2s;
-            --transition-medium: 0.4s;
-            --cubic: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        [data-theme="light"] {
-            --bg: #fafafa;
-            --card-bg: #ffffff;
-            --text: #000000;
-            --text-muted: #4d4d4d;
-            --border: #e8e8e8;
-            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
-            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+        /* Dark mode nav styles */
+        [data-theme="dark"] .nav {
+            background: rgba(0, 0, 0, 0.85);
+            border-bottom-color: rgba(255, 255, 255, 0.08);
         }
 
-        /* Light mode sidebar button styles */
-        [data-theme="light"] .sidebar-btn {
-            color: #374151;
+        [data-theme="dark"] .nav.scrolled {
+            background: rgba(0, 0, 0, 0.95);
         }
 
-        [data-theme="light"] .sidebar-btn:hover {
-            background: #f3f4f6;
-            color: #111827;
+        [data-theme="dark"] .nav-logo {
+            color: #ffffff;
         }
 
-        [data-theme="light"] .sidebar-btn.active {
+        [data-theme="dark"] .nav-logo img {
+            filter: brightness(0) invert(1);
+        }
+
+        [data-theme="dark"] .nav-link {
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .icon-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="dark"] .nav-search-input {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .nav-search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        [data-theme="dark"] .search-icon {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Dark mode sidebar styles */
+        [data-theme="dark"] .sidebar {
+            background: #1a1a1a;
+            border-left-color: #2a2a2a;
+        }
+
+        [data-theme="dark"] .sidebar-btn {
+            color: #b3b3b3;
+        }
+
+        [data-theme="dark"] .sidebar-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .sidebar-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .sidebar-btn.active::before {
+            background: #3b82f6;
+        }
+
+        /* Light mode sidebar (default) */
+        .sidebar-btn.active {
             background: #3b82f6;
             color: #ffffff;
         }
 
-        [data-theme="light"] .sidebar-btn.active::before {
+        .sidebar-btn.active::before {
             background: #1d4ed8;
-        }
-
-        [data-theme="light"] .sidebar {
-            background: #ffffff;
-            border-left-color: #e5e7eb;
-        }
-
-        [data-theme="light"] .sidebar-title {
-            color: #111827;
-        }
-
-        /* Light mode nav styles */
-        [data-theme="light"] .nav {
-            background: rgba(255, 255, 255, 0.95);
-            border-bottom-color: #e5e7eb;
-        }
-
-        [data-theme="light"] .nav.scrolled {
-            background: rgba(255, 255, 255, 0.98);
-        }
-
-        [data-theme="light"] .nav-logo {
-            color: #111827;
-        }
-
-        [data-theme="light"] .nav-logo img {
-            filter: none;
-        }
-
-        [data-theme="light"] .nav-link {
-            color: #374151;
-        }
-
-        [data-theme="light"] .nav-link:hover,
-        [data-theme="light"] .nav-link.active {
-            color: #111827;
-        }
-
-        [data-theme="light"] .icon-btn {
-            background: rgba(0, 0, 0, 0.05);
-            border-color: rgba(0, 0, 0, 0.1);
-            color: #374151;
-        }
-
-        [data-theme="light"] .icon-btn:hover {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        [data-theme="light"] .nav-search-input {
-            background: rgba(0, 0, 0, 0.05);
-            border-color: rgba(0, 0, 0, 0.1);
-            color: #111827;
-        }
-
-        [data-theme="light"] .nav-search-input::placeholder {
-            color: #6b7280;
-        }
-
-        [data-theme="light"] .search-icon {
-            color: #6b7280;
         }
 
         /* ===== RESET ===== */
@@ -180,10 +188,10 @@
             top: 0;
             left: 0;
             right: 0;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid #e5e7eb;
             z-index: 1000;
             transition: background var(--transition-medium), border-color var(--transition-medium);
             width: 100%;
@@ -193,10 +201,9 @@
         }
 
         .nav.scrolled {
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-bottom-color: rgba(255, 255, 255, 0.1);
         }
 
         .nav-container {
@@ -216,7 +223,7 @@
             gap: 12px;
             font-size: 1.5rem;
             font-weight: 700;
-            color: #ffffff;
+            color: #111827;
             text-decoration: none;
             white-space: nowrap;
             flex-shrink: 0;
@@ -224,7 +231,6 @@
 
         .nav-logo img {
             height: 40px;
-            filter: brightness(0) invert(1);
         }
 
         .nav-menu {
@@ -234,7 +240,7 @@
         }
 
         .nav-link {
-            color: #ffffff;
+            color: #374151;
             text-decoration: none;
             font-weight: 500;
             transition: color var(--transition-fast);
@@ -242,7 +248,7 @@
 
         .nav-link:hover,
         .nav-link.active {
-            color: #ffffff;
+            color: #111827;
         }
 
         .nav-actions {
@@ -261,7 +267,7 @@
         .search-icon {
             position: absolute;
             right: 12px;
-            color: rgba(255, 255, 255, 0.7);
+            color: #6b7280;
             font-size: 0.9rem;
             pointer-events: none;
         }
@@ -269,31 +275,31 @@
         .nav-search-input {
             width: 280px;
             padding: 10px 35px 10px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 25px;
-            color: #ffffff;
+            color: #111827;
             font-size: 0.9rem;
             font-family: inherit;
             transition: all var(--transition-medium);
         }
 
         .nav-search-input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
+            color: #6b7280;
         }
 
         .nav-search-input:focus {
             outline: none;
             width: 350px;
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.4);
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+            background: #ffffff;
+            border-color: #3b82f6;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
         }
 
         .icon-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #ffffff;
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #374151;
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -306,7 +312,7 @@
         }
 
         .icon-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.1);
             transform: scale(1.1);
         }
 
@@ -3687,29 +3693,31 @@
         }
 
         // ===== THEME TOGGLE =====
+        // Theme is already set by theme-loader.js in head
         (function() {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-
             const themeToggle = document.getElementById('themeToggle');
 
             function updateThemeIcon(theme) {
                 if (!themeToggle) return;
                 const icon = themeToggle.querySelector('i');
                 if (icon) {
+                    // Moon icon in light mode (to switch to dark)
+                    // Sun icon in dark mode (to switch to light)
                     icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
                 }
             }
 
-            updateThemeIcon(savedTheme);
+            // Get current theme from document
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            updateThemeIcon(currentTheme);
 
             if (themeToggle) {
                 themeToggle.onclick = function(e) {
                     e.preventDefault();
                     e.stopPropagation();
 
-                    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    const current = document.documentElement.getAttribute('data-theme') || 'light';
+                    const newTheme = current === 'dark' ? 'light' : 'dark';
 
                     document.documentElement.setAttribute('data-theme', newTheme);
                     localStorage.setItem('theme', newTheme);
@@ -3717,7 +3725,7 @@
 
                     console.log('Theme switched to:', newTheme);
                 };
-                console.log('Theme toggle initialized');
+                console.log('Theme toggle initialized, current theme:', currentTheme);
             } else {
                 console.error('Theme toggle button not found');
             }
