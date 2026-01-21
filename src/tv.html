@@ -99,6 +99,57 @@
             color: #111827;
         }
 
+        /* Light mode nav styles */
+        [data-theme="light"] .nav {
+            background: rgba(255, 255, 255, 0.95);
+            border-bottom-color: #e5e7eb;
+        }
+
+        [data-theme="light"] .nav.scrolled {
+            background: rgba(255, 255, 255, 0.98);
+        }
+
+        [data-theme="light"] .nav-logo {
+            color: #111827;
+        }
+
+        [data-theme="light"] .nav-logo img {
+            filter: none;
+        }
+
+        [data-theme="light"] .nav-link {
+            color: #374151;
+        }
+
+        [data-theme="light"] .nav-link:hover,
+        [data-theme="light"] .nav-link.active {
+            color: #111827;
+        }
+
+        [data-theme="light"] .icon-btn {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.1);
+            color: #374151;
+        }
+
+        [data-theme="light"] .icon-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="light"] .nav-search-input {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.1);
+            color: #111827;
+        }
+
+        [data-theme="light"] .nav-search-input::placeholder {
+            color: #6b7280;
+        }
+
+        [data-theme="light"] .search-icon {
+            color: #6b7280;
+        }
+
         /* ===== RESET ===== */
         * {
             margin: 0;
@@ -3636,30 +3687,39 @@
         }
 
         // ===== THEME TOGGLE =====
-        const themeToggle = document.getElementById('themeToggle');
-        const savedTheme = localStorage.getItem('theme') || 'dark';
+        (function initTheme() {
+            // Apply saved theme immediately (before DOM ready for faster render)
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
 
-        // Apply saved theme on load
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        updateThemeIcon(savedTheme);
+            // Set up toggle after DOM is ready
+            document.addEventListener('DOMContentLoaded', function() {
+                const themeToggle = document.getElementById('themeToggle');
 
-        if (themeToggle) {
-            themeToggle.addEventListener('click', function() {
-                const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                function updateThemeIcon(theme) {
+                    const icon = themeToggle?.querySelector('i');
+                    if (icon) {
+                        icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+                    }
+                }
 
-                document.documentElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-                updateThemeIcon(newTheme);
+                // Update icon to match current theme
+                updateThemeIcon(savedTheme);
+
+                if (themeToggle) {
+                    themeToggle.addEventListener('click', function() {
+                        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+                        document.documentElement.setAttribute('data-theme', newTheme);
+                        localStorage.setItem('theme', newTheme);
+                        updateThemeIcon(newTheme);
+
+                        console.log('Theme switched to:', newTheme);
+                    });
+                }
             });
-        }
-
-        function updateThemeIcon(theme) {
-            const icon = themeToggle?.querySelector('i');
-            if (icon) {
-                icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-            }
-        }
+        })();
 
 // Mobile Menu Toggle        const mobileMenuToggle = document.getElementById('mobileMenuToggle');        const navMenu = document.querySelector('.nav-menu');        if (mobileMenuToggle && navMenu) {            mobileMenuToggle.addEventListener('click', function() {                this.classList.toggle('active');                navMenu.classList.toggle('active');            });            // Close menu when clicking on a link            navMenu.querySelectorAll('.nav-link').forEach(link => {                link.addEventListener('click', () => {                    mobileMenuToggle.classList.remove('active');                    navMenu.classList.remove('active');                });            });            // Close menu when clicking outside            document.addEventListener('click', function(event) {                if (!mobileMenuToggle.contains(event.target) && !navMenu.contains(event.target)) {                    mobileMenuToggle.classList.remove('active');                    navMenu.classList.remove('active');                }            });        }
         // Initialize auth on page load
