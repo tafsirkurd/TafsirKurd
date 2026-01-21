@@ -1251,12 +1251,30 @@
             if (!confirm('Are you sure you want to delete this category? All series and episodes in this category will be affected.')) return;
 
             const supabase = window.adminAuth.getSupabase();
+            if (!supabase) {
+                alert('Error: Not connected to database');
+                return;
+            }
+
             try {
-                const { error } = await supabase.from('tv_categories').delete().eq('id', id);
+                console.log('Deleting category:', id);
+
+                const { data, error } = await supabase
+                    .from('tv_categories')
+                    .delete()
+                    .eq('id', id)
+                    .select();
+
+                console.log('Delete result:', { data, error });
 
                 if (error) {
                     console.error('Supabase delete error:', error);
                     alert('Error deleting category: ' + error.message);
+                    return;
+                }
+
+                if (!data || data.length === 0) {
+                    alert('Delete failed - no rows affected. You may not have permission.');
                     return;
                 }
 
@@ -1366,12 +1384,30 @@
             if (!confirm('Are you sure you want to delete this series? All episodes in this series will be affected.')) return;
 
             const supabase = window.adminAuth.getSupabase();
+            if (!supabase) {
+                alert('Error: Not connected to database');
+                return;
+            }
+
             try {
-                const { error } = await supabase.from('tv_series').delete().eq('id', id);
+                console.log('Deleting series:', id);
+
+                const { data, error } = await supabase
+                    .from('tv_series')
+                    .delete()
+                    .eq('id', id)
+                    .select();
+
+                console.log('Delete result:', { data, error });
 
                 if (error) {
                     console.error('Supabase delete error:', error);
                     alert('Error deleting series: ' + error.message);
+                    return;
+                }
+
+                if (!data || data.length === 0) {
+                    alert('Delete failed - no rows affected. You may not have permission.');
                     return;
                 }
 
@@ -1506,12 +1542,46 @@
             if (!confirm('Are you sure you want to delete this episode?')) return;
 
             const supabase = window.adminAuth.getSupabase();
+            if (!supabase) {
+                alert('Error: Not connected to database');
+                return;
+            }
+
             try {
-                const { error } = await supabase.from('tv_episodes').delete().eq('id', id);
+                console.log('Deleting episode:', id);
+
+                // First verify the episode exists
+                const { data: existing, error: checkError } = await supabase
+                    .from('tv_episodes')
+                    .select('id')
+                    .eq('id', id)
+                    .single();
+
+                if (checkError || !existing) {
+                    console.error('Episode not found or check error:', checkError);
+                    alert('Episode not found or already deleted');
+                    loadAllEpisodes();
+                    return;
+                }
+
+                // Now delete it
+                const { data, error, count } = await supabase
+                    .from('tv_episodes')
+                    .delete()
+                    .eq('id', id)
+                    .select();
+
+                console.log('Delete result:', { data, error, count });
 
                 if (error) {
                     console.error('Supabase delete error:', error);
                     alert('Error deleting episode: ' + error.message);
+                    return;
+                }
+
+                // Check if anything was actually deleted
+                if (!data || data.length === 0) {
+                    alert('Delete failed - no rows affected. You may not have permission to delete this episode.');
                     return;
                 }
 
