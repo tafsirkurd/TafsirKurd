@@ -893,7 +893,7 @@
                 );
 
                 grid.innerHTML = categoriesWithCounts.map(cat => `
-                    <div class="category-card" onclick="viewCategorySeries(${cat.id}, '${cat.name_ku}')">
+                    <div class="category-card" onclick="viewCategorySeries('${cat.id}', '${cat.name_ku}')">
                         <div class="category-card-header">
                             <div class="category-card-title">${cat.name_ku}</div>
                         </div>
@@ -901,10 +901,10 @@
                         <div class="category-card-footer">
                             <div class="category-card-count">${cat.seriesCount} series</div>
                             <div class="category-card-actions">
-                                <button class="table-btn" onclick="event.stopPropagation(); editCategory(${cat.id})" title="Edit">
+                                <button class="table-btn" onclick="event.stopPropagation(); editCategory('${cat.id}')" title="Edit">
                                     <i data-lucide="edit-2"></i>
                                 </button>
-                                <button class="table-btn" onclick="event.stopPropagation(); deleteCategory(${cat.id})" title="Delete">
+                                <button class="table-btn" onclick="event.stopPropagation(); deleteCategory('${cat.id}')" title="Delete">
                                     <i data-lucide="trash-2"></i>
                                 </button>
                             </div>
@@ -961,10 +961,10 @@
                             <div class="series-card-meta">
                                 <span>${s.tv_categories?.name_ku || 'Unknown'}</span>
                                 <div>
-                                    <button class="table-btn" onclick="event.stopPropagation(); editSeries(${s.id})" title="Edit">
+                                    <button class="table-btn" onclick="event.stopPropagation(); editSeries('${s.id}')" title="Edit">
                                         <i data-lucide="edit-2"></i>
                                     </button>
-                                    <button class="table-btn" onclick="event.stopPropagation(); deleteSeries(${s.id})" title="Delete">
+                                    <button class="table-btn" onclick="event.stopPropagation(); deleteSeries('${s.id}')" title="Delete">
                                         <i data-lucide="trash-2"></i>
                                     </button>
                                 </div>
@@ -1021,10 +1021,10 @@
                         <td>${new Date(ep.created_at).toLocaleDateString()}</td>
                         <td>
                             <div class="table-actions">
-                                <button class="table-btn" onclick="editEpisode(${ep.id})" title="Edit">
+                                <button class="table-btn" onclick="editEpisode('${ep.id}')" title="Edit">
                                     <i data-lucide="edit-2"></i>
                                 </button>
-                                <button class="table-btn" onclick="deleteEpisode(${ep.id})" title="Delete">
+                                <button class="table-btn" onclick="deleteEpisode('${ep.id}')" title="Delete">
                                     <i data-lucide="trash-2"></i>
                                 </button>
                             </div>
@@ -1082,10 +1082,10 @@
                                 <div class="series-card-meta">
                                     <span>${categoryName}</span>
                                     <div>
-                                        <button class="table-btn" onclick="event.stopPropagation(); editSeries(${s.id})" title="Edit">
+                                        <button class="table-btn" onclick="event.stopPropagation(); editSeries('${s.id}')" title="Edit">
                                             <i data-lucide="edit-2"></i>
                                         </button>
-                                        <button class="table-btn" onclick="event.stopPropagation(); deleteSeries(${s.id})" title="Delete">
+                                        <button class="table-btn" onclick="event.stopPropagation(); deleteSeries('${s.id}')" title="Delete">
                                             <i data-lucide="trash-2"></i>
                                         </button>
                                     </div>
@@ -1161,10 +1161,10 @@
                             <td>${new Date(ep.created_at).toLocaleDateString()}</td>
                             <td>
                                 <div class="table-actions">
-                                    <button class="table-btn" onclick="editEpisode(${ep.id})" title="Edit">
+                                    <button class="table-btn" onclick="editEpisode('${ep.id}')" title="Edit">
                                         <i data-lucide="edit-2"></i>
                                     </button>
-                                    <button class="table-btn" onclick="deleteEpisode(${ep.id})" title="Delete">
+                                    <button class="table-btn" onclick="deleteEpisode('${ep.id}')" title="Delete">
                                         <i data-lucide="trash-2"></i>
                                     </button>
                                 </div>
