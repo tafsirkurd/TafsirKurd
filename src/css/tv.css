@@ -157,7 +157,7 @@
 
 .sidebar-btn.active {
     background: rgba(255, 255, 255, 0.1);
-    color: var(--accent);
+    color: #ffffff;
     font-weight: 600;
 }
 
@@ -169,8 +169,22 @@
     transform: translateY(-50%);
     width: 4px;
     height: 70%;
-    background: var(--accent);
+    background: #3b82f6;
     border-radius: 2px 0 0 2px;
+}
+
+/* Light mode sidebar button styles */
+[data-theme="light"] .sidebar-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .sidebar-btn.active {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+[data-theme="light"] .sidebar-btn.active::before {
+    background: #1d4ed8;
 }
 
 .sidebar-footer {
