@@ -10,10 +10,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/css/admin-styles.css">
     <style>
-        .date-range-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
-        .date-tab { padding: 8px 16px; border: 1px solid var(--border-light); border-radius: 8px; background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
-        .date-tab:hover { background: var(--bg-hover); }
-        .date-tab.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+        .date-range-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+        .date-tab { padding: 8px 16px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb; color: #6b7280; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .date-tab:hover { background: #f3f4f6; }
+        .date-tab.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+        .dark-mode .date-tab { background: #374151; border-color: #4b5563; color: #d1d5db; }
+        .dark-mode .date-tab:hover { background: #4b5563; }
+        .dark-mode .date-tab.active { background: #3b82f6; color: white; border-color: #3b82f6; }
         .last-update { font-size: 13px; color: var(--text-tertiary); margin-bottom: 16px; }
         .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .metric-card { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 20px; }
