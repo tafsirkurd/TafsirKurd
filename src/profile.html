@@ -1533,6 +1533,23 @@
             const sourceText = regSource === 'google' ? '🔐 Google' : '📧 ئیمەیل';
             document.getElementById('registrationSource').value = sourceText;
 
+            // Load avatar from Supabase profile (synced across devices)
+            const avatar = userProfile?.avatar_url || currentUser.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${currentUser.name}`;
+            document.getElementById('headerAvatar').src = avatar;
+            document.getElementById('headerDropdownAvatar').src = avatar;
+
+            // Update localStorage with Supabase data for consistency
+            if (userProfile?.avatar_url) {
+                currentUser.picture = userProfile.avatar_url;
+            }
+            if (userProfile?.display_name) {
+                currentUser.name = userProfile.display_name;
+                document.getElementById('headerName').textContent = userProfile.display_name;
+                document.getElementById('headerDropdownName').textContent = userProfile.display_name;
+                document.getElementById('dropdownHeaderName').textContent = userProfile.display_name;
+            }
+            localStorage.setItem('user', JSON.stringify(currentUser));
+
             // Hide password change for Google users
             if (regSource === 'google') {
                 document.getElementById('passwordCard').style.display = 'none';
