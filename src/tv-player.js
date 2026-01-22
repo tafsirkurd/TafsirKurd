@@ -1765,7 +1765,31 @@
 
     // Check if user is authenticated
     function isAuthenticated() {
-        // Check localStorage for session
+        // Check Supabase session via window.tvSupabase
+        if (window.tvSupabase) {
+            // Supabase stores session in localStorage with key like 'sb-*-auth-token'
+            const keys = Object.keys(localStorage);
+            const supabaseKey = keys.find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+            if (supabaseKey) {
+                const session = localStorage.getItem(supabaseKey);
+                if (session) {
+                    try {
+                        const parsed = JSON.parse(session);
+                        if (parsed && parsed.access_token) {
+                            return true;
+                        }
+                    } catch (e) {}
+                }
+            }
+        }
+
+        // Also check legacy localStorage keys
+        const isAuth = localStorage.getItem('isAuthenticated');
+        if (isAuth === 'true') {
+            return true;
+        }
+
+        // Check userSession (fallback)
         const session = localStorage.getItem('userSession');
         if (session) {
             try {
