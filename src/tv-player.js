@@ -1492,12 +1492,15 @@
             nextEpOverlay.style.display = 'none';
         }
 
-        // Show native video element - force visibility
+        // Show native video element - force visibility with explicit dimensions
         videoElement.style.display = 'block';
-        videoElement.style.zIndex = '100';
-        videoElement.style.position = 'relative';
+        videoElement.style.width = '100%';
+        videoElement.style.height = '100%';
+        videoElement.style.minHeight = '400px';
+        videoElement.style.zIndex = '10';
         videoElement.style.opacity = '1';
         videoElement.style.visibility = 'visible';
+        videoElement.style.objectFit = 'contain';
         videoElement.controls = true; // Ensure controls are visible
 
         // Set video source
@@ -1547,11 +1550,19 @@
             }
         }
 
-        // Show player section if hidden
+        // Show player section if hidden - ensure it has proper dimensions
         if (playerSection) {
             playerSection.style.display = 'block';
+            playerSection.style.minHeight = '500px';
+            playerSection.style.height = 'auto';
             // Scroll to player
             playerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Also ensure player container has dimensions
+        const playerContainer = playerSection?.querySelector('.player-container');
+        if (playerContainer) {
+            playerContainer.style.minHeight = '500px';
         }
 
         // Track view
