@@ -1467,54 +1467,70 @@
         // Update current episode
         state.currentEpisode = episodeId;
 
-        // Use native HTML5 video player for S3 URLs
-        const videoElement = document.getElementById('videoPlayer');
-        const playerSection = document.getElementById('playerSection');
-        const playerModal = document.getElementById('playerModal');
+        // Create or get inline video player
+        let inlinePlayer = document.getElementById('inlineVideoPlayer');
 
-        // Show the player modal (it contains the video player)
-        if (playerModal) {
-            playerModal.style.cssText = 'display:flex !important; position:fixed !important; top:0 !important; left:0 !important; right:0 !important; bottom:0 !important; width:100vw !important; height:100vh !important; background:rgba(0,0,0,0.95) !important; z-index:9999 !important; align-items:center !important; justify-content:center !important;';
+        if (!inlinePlayer) {
+            // Create inline player container using safe DOM methods
+            inlinePlayer = document.createElement('div');
+            inlinePlayer.id = 'inlineVideoPlayer';
 
-            // Setup close button
-            const closeBtn = document.getElementById('closePlayerBtn');
-            if (closeBtn) {
-                closeBtn.style.cssText = 'position:absolute !important; top:20px !important; right:20px !important; z-index:10000 !important; background:rgba(255,255,255,0.1) !important; border:none !important; color:white !important; font-size:24px !important; width:50px !important; height:50px !important; border-radius:50% !important; cursor:pointer !important;';
-                closeBtn.onclick = function() {
-                    playerModal.style.display = 'none';
-                    videoElement.pause();
-                };
-            }
+            // Create header
+            const header = document.createElement('div');
+            header.className = 'inline-player-header';
+
+            const titleEl = document.createElement('h3');
+            titleEl.className = 'inline-player-title';
+
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'inline-player-close';
+            closeBtn.onclick = function() { closeInlinePlayer(); };
+            const closeIcon = document.createElement('i');
+            closeIcon.className = 'fas fa-times';
+            closeBtn.appendChild(closeIcon);
+
+            header.appendChild(titleEl);
+            header.appendChild(closeBtn);
+
+            // Create video element
+            const video = document.createElement('video');
+            video.id = 'inlineVideo';
+            video.controls = true;
+            video.playsInline = true;
+
+            inlinePlayer.appendChild(header);
+            inlinePlayer.appendChild(video);
+
+            // Insert at top of main content area
+            const mainContent = document.querySelector('.main-content') || document.querySelector('.content-area') || document.body;
+            mainContent.insertBefore(inlinePlayer, mainContent.firstChild);
         }
+
+        // Style the inline player
+        inlinePlayer.style.cssText = 'display:block; width:100%; max-width:900px; margin:20px auto; background:#000; border-radius:12px; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,0.3);';
+
+        const playerHeader = inlinePlayer.querySelector('.inline-player-header');
+        playerHeader.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color:white;';
+
+        const playerTitle = inlinePlayer.querySelector('.inline-player-title');
+        playerTitle.style.cssText = 'margin:0; font-size:1.1rem; font-weight:600;';
+        playerTitle.textContent = title;
+
+        const closeBtnEl = inlinePlayer.querySelector('.inline-player-close');
+        closeBtnEl.style.cssText = 'background:rgba(255,255,255,0.1); border:none; color:white; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s;';
+
+        const videoElement = document.getElementById('inlineVideo');
+        videoElement.style.cssText = 'width:100%; max-height:500px; background:#000;';
 
         if (!videoElement) {
             console.error('❌ Video player element not found');
             return;
         }
 
-        // Remove any old YouTube player if exists
-        const oldYTPlayer = document.getElementById('youtubePlayer');
-        if (oldYTPlayer) {
-            oldYTPlayer.remove();
-        }
-
-        // Hide any overlays that might block the video
-        const audioOverlay = document.getElementById('audioOnlyOverlay');
-        if (audioOverlay) {
-            audioOverlay.style.display = 'none';
-        }
-        const nextEpOverlay = document.getElementById('nextEpisodeOverlay');
-        if (nextEpOverlay) {
-            nextEpOverlay.style.display = 'none';
-        }
-
-        // Show native video element
-        videoElement.controls = true; // Ensure controls are visible
-
         // Set video source
         console.log('🎥 Setting video source:', videoUrl);
         videoElement.src = videoUrl;
-        videoElement.load(); // Force load
+        videoElement.load();
 
         // Add error handler
         videoElement.onerror = function(e) {
@@ -1533,52 +1549,40 @@
             showNotification('پێکن بکە بۆ پێشاندانا ڤیدیۆیێ');
         });
 
-        // Setup event listeners
-        videoElement.addEventListener('ended', () => {
+        // Setup ended listener
+        videoElement.onended = function() {
             console.log('✅ Video ended');
             if (state.autoPlayNext) {
                 setTimeout(() => playNextEpisode(), 2000);
             }
-        });
+        };
 
-        console.log('✅ Native S3 video player initialized')
+        console.log('✅ Native S3 video player initialized');
 
-        // Update video title in the existing overlay
-        const videoTitle = playerSection.querySelector('.video-title');
-        if (videoTitle) {
-            videoTitle.textContent = title;
-        }
-
-        // Update video description
-        const video = state.playlist.find(v => v.id === episodeId);
-        if (video && video.description) {
-            const videoDesc = playerSection.querySelector('.video-description');
-            if (videoDesc) {
-                videoDesc.textContent = video.description;
-            }
-        }
-
-        // Show player section if hidden - force dimensions with !important
-        if (playerSection) {
-            playerSection.style.cssText = 'display:block !important; width:100% !important; height:70vh !important; min-height:500px !important; position:relative !important; background:#000 !important;';
-
-            // Also ensure player container has dimensions
-            const playerContainer = playerSection.querySelector('.player-container');
-            if (playerContainer) {
-                playerContainer.style.cssText = 'display:block !important; width:100% !important; height:100% !important; min-height:500px !important; position:relative !important;';
-            }
-
-            // Force video dimensions
-            videoElement.style.cssText = 'display:block !important; width:100% !important; height:100% !important; min-height:400px !important; object-fit:contain !important; z-index:10 !important;';
-
-            // Scroll to player
-            playerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        // Scroll to player
+        inlinePlayer.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         // Track view
         trackVideoView(episodeId);
 
         showNotification('▶️ دەستپێکرنا ڤیدیۆ...');
+    };
+
+    // Close inline player
+    window.closeInlinePlayer = function() {
+        const inlinePlayer = document.getElementById('inlineVideoPlayer');
+        const videoElement = document.getElementById('inlineVideo');
+
+        if (videoElement) {
+            videoElement.pause();
+            videoElement.src = '';
+        }
+
+        if (inlinePlayer) {
+            inlinePlayer.style.display = 'none';
+        }
+
+        console.log('✅ Inline player closed');
     };
 
     // Track video view
