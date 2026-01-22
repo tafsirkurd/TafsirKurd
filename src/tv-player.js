@@ -1482,8 +1482,22 @@
             oldYTPlayer.remove();
         }
 
-        // Show native video element
+        // Hide any overlays that might block the video
+        const audioOverlay = document.getElementById('audioOnlyOverlay');
+        if (audioOverlay) {
+            audioOverlay.style.display = 'none';
+        }
+        const nextEpOverlay = document.getElementById('nextEpisodeOverlay');
+        if (nextEpOverlay) {
+            nextEpOverlay.style.display = 'none';
+        }
+
+        // Show native video element - force visibility
         videoElement.style.display = 'block';
+        videoElement.style.zIndex = '100';
+        videoElement.style.position = 'relative';
+        videoElement.style.opacity = '1';
+        videoElement.style.visibility = 'visible';
         videoElement.controls = true; // Ensure controls are visible
 
         // Set video source
