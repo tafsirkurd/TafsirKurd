@@ -1470,6 +1470,22 @@
         // Use native HTML5 video player for S3 URLs
         const videoElement = document.getElementById('videoPlayer');
         const playerSection = document.getElementById('playerSection');
+        const playerModal = document.getElementById('playerModal');
+
+        // Show the player modal (it contains the video player)
+        if (playerModal) {
+            playerModal.style.cssText = 'display:flex !important; position:fixed !important; top:0 !important; left:0 !important; right:0 !important; bottom:0 !important; width:100vw !important; height:100vh !important; background:rgba(0,0,0,0.95) !important; z-index:9999 !important; align-items:center !important; justify-content:center !important;';
+
+            // Setup close button
+            const closeBtn = document.getElementById('closePlayerBtn');
+            if (closeBtn) {
+                closeBtn.style.cssText = 'position:absolute !important; top:20px !important; right:20px !important; z-index:10000 !important; background:rgba(255,255,255,0.1) !important; border:none !important; color:white !important; font-size:24px !important; width:50px !important; height:50px !important; border-radius:50% !important; cursor:pointer !important;';
+                closeBtn.onclick = function() {
+                    playerModal.style.display = 'none';
+                    videoElement.pause();
+                };
+            }
+        }
 
         if (!videoElement) {
             console.error('❌ Video player element not found');
