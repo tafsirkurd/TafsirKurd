@@ -132,7 +132,12 @@
       "Bash(cmd /c \"dir /s /b %APPDATA% 2>nul | findstr /i claude | findstr /i plugin\")",
       "Bash(claude doctor)",
       "mcp__plugin_supabase_supabase__list_projects",
-      "Bash(xargs -I {} sh -c 'echo \"\"=== {} ===\"\" && grep -c \"\"supabase-js\"\" {} 2>/dev/null || echo \"\"Missing supabase\"\"')"
+      "Bash(xargs -I {} sh -c 'echo \"\"=== {} ===\"\" && grep -c \"\"supabase-js\"\" {} 2>/dev/null || echo \"\"Missing supabase\"\"')",
+      "Bash(for:*)",
+      "Bash(do echo \"Attempt $i:\")",
+      "mcp__plugin_supabase_supabase__list_tables",
+      "mcp__plugin_supabase_supabase__apply_migration",
+      "mcp__plugin_supabase_supabase__execute_sql"
     ],
     "deny": [],
     "ask": []
