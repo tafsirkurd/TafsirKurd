@@ -1492,15 +1492,7 @@
             nextEpOverlay.style.display = 'none';
         }
 
-        // Show native video element - force visibility with explicit dimensions
-        videoElement.style.display = 'block';
-        videoElement.style.width = '100%';
-        videoElement.style.height = '100%';
-        videoElement.style.minHeight = '400px';
-        videoElement.style.zIndex = '10';
-        videoElement.style.opacity = '1';
-        videoElement.style.visibility = 'visible';
-        videoElement.style.objectFit = 'contain';
+        // Show native video element
         videoElement.controls = true; // Ensure controls are visible
 
         // Set video source
@@ -1550,19 +1542,21 @@
             }
         }
 
-        // Show player section if hidden - ensure it has proper dimensions
+        // Show player section if hidden - force dimensions with !important
         if (playerSection) {
-            playerSection.style.display = 'block';
-            playerSection.style.minHeight = '500px';
-            playerSection.style.height = 'auto';
+            playerSection.style.cssText = 'display:block !important; width:100% !important; height:70vh !important; min-height:500px !important; position:relative !important; background:#000 !important;';
+
+            // Also ensure player container has dimensions
+            const playerContainer = playerSection.querySelector('.player-container');
+            if (playerContainer) {
+                playerContainer.style.cssText = 'display:block !important; width:100% !important; height:100% !important; min-height:500px !important; position:relative !important;';
+            }
+
+            // Force video dimensions
+            videoElement.style.cssText = 'display:block !important; width:100% !important; height:100% !important; min-height:400px !important; object-fit:contain !important; z-index:10 !important;';
+
             // Scroll to player
             playerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
-        // Also ensure player container has dimensions
-        const playerContainer = playerSection?.querySelector('.player-container');
-        if (playerContainer) {
-            playerContainer.style.minHeight = '500px';
         }
 
         // Track view
