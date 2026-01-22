@@ -225,7 +225,7 @@
             const isCompleted = progress && progress.percent >= 95;
 
             return `
-                <div class="episode-item ${isCompleted ? 'completed' : ''}" onclick="window.tvApp.playEpisode(${episode.id})">
+                <div class="episode-item ${isCompleted ? 'completed' : ''}" onclick="window.tvApp.playEpisode('${episode.id}')">
                     <div class="episode-number">${String(index + 1).padStart(2, '0')}</div>
 
                     <div class="episode-thumbnail">
@@ -255,7 +255,7 @@
 
                     <div class="episode-actions" onclick="event.stopPropagation()">
                         <button class="episode-action-btn ${isBookmarked ? 'active' : ''}"
-                                onclick="window.tvApp.toggleBookmark(${episode.id})"
+                                onclick="window.tvApp.toggleBookmark('${episode.id}')"
                                 title="${isBookmarked ? 'حەزفکرن ژ خەزنکراوان' : 'خەزنکرن'}">
                             <i class="fas fa-bookmark"></i>
                         </button>
@@ -323,9 +323,13 @@
 
     // Play episode (wrapper for existing playVideo function)
     function playEpisode(episodeId) {
+        console.log('🎬 playEpisode called with:', episodeId);
         const episode = state.playlist.find(ep => ep.id === episodeId);
+        console.log('📺 Found episode:', episode);
         if (episode) {
-            playVideo(episode);
+            playVideo(episode.videoId, episode.title, episode.id);
+        } else {
+            console.error('❌ Episode not found in playlist');
         }
     }
 
@@ -1398,7 +1402,7 @@
             : 0;
 
         return `
-            <div class="episode-card" onclick="playVideo('${video.videoId}', '${video.title}', ${video.id})">
+            <div class="episode-card" onclick="playVideo('${video.videoId}', '${video.title}', '${video.id}')">
                 <div class="episode-thumbnail">
                     <img src="${video.thumbnail}" alt="${video.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22225%22%3E%3Crect fill=%22%231a1a1a%22 width=%22400%22 height=%22225%22/%3E%3Ctext fill=%22%23999%22 font-family=%22Arial%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3E%D9%88%DB%8E%D9%86%DB%95 %DA%A4%DB%8C%D8%AF%DB%8C%DB%86%3C/text%3E%3C/svg%3E'">
                     ${showProgress ? `<div class="episode-progress" style="width: ${progress}%;"></div>` : ''}
@@ -1406,10 +1410,10 @@
                         <i class="fas fa-play"></i>
                     </div>
                     <div class="quick-actions">
-                        <button class="quick-btn" onclick="event.stopPropagation(); addToWatchlist(${video.id})" title="زێدەبکە لیستێ">
+                        <button class="quick-btn" onclick="event.stopPropagation(); addToWatchlist('${video.id}')" title="زێدەبکە لیستێ">
                             <i class="fas fa-plus"></i>
                         </button>
-                        <button class="quick-btn" onclick="event.stopPropagation(); shareEpisode(${video.id})" title="پارڤەبکە">
+                        <button class="quick-btn" onclick="event.stopPropagation(); shareEpisode('${video.id}')" title="پارڤەبکە">
                             <i class="fas fa-share-alt"></i>
                         </button>
                     </div>
