@@ -24,30 +24,32 @@
         :root {
             --primary: #000000;
             --accent: #ffffff;
-            --bg: #0a0a0a;
-            --card-bg: #1a1a1a;
-            --sidebar-bg: #161616;
-            --text: #ffffff;
-            --text-muted: #999999;
-            --border: #2a2a2a;
-            --success: #2ecc71;
-            --warning: #f39c12;
-            --danger: #e74c3c;
-            --info: #3498db;
-            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.4);
-            --sidebar-width: 260px;
-        }
-
-        [data-theme="light"] {
             --bg: #fafafa;
             --card-bg: #ffffff;
             --sidebar-bg: #f5f5f5;
             --text: #000000;
             --text-muted: #666666;
             --border: #e8e8e8;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --info: #3498db;
             --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
             --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
+            --sidebar-width: 260px;
+        }
+
+        [data-theme="dark"] {
+            --primary: #ffffff;
+            --accent: #000000;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --sidebar-bg: #161616;
+            --text: #ffffff;
+            --text-muted: #999999;
+            --border: #2a2a2a;
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.4);
         }
 
         * {
@@ -57,7 +59,7 @@
         }
 
         body {
-            font-family: 'IBM Plex Arabic', 'Segoe UI', Arial, sans-serif;
+            font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif;
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
@@ -717,7 +719,7 @@
             border-radius: 10px;
             color: var(--text);
             font-size: 0.95rem;
-            font-family: 'IBM Plex Arabic', 'Segoe UI', Arial, sans-serif;
+            font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif;
             transition: all 0.3s;
         }
 
@@ -749,7 +751,7 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
-            font-family: 'IBM Plex Arabic', 'Segoe UI', Arial, sans-serif;
+            font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif;
         }
 
         .modal-btn-save {
@@ -1700,11 +1702,18 @@
         // Toggle theme
         function toggleTheme() {
             const toggle = document.getElementById('themeToggle');
-            toggle.classList.toggle('active');
+            const current = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = current === 'light' ? 'dark' : 'light';
 
-            const isDark = toggle.classList.contains('active');
-            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // Explicitly set active class based on new theme
+            if (newTheme === 'dark') {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
         }
 
         // Logout
@@ -1831,11 +1840,14 @@
                 document.getElementById('notificationToggle').classList.add('active');
             }
 
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            if (savedTheme === 'dark') {
-                document.getElementById('themeToggle').classList.add('active');
-            }
+            const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
+            const themeToggle = document.getElementById('themeToggle');
+            if (savedTheme === 'dark') {
+                themeToggle.classList.add('active');
+            } else {
+                themeToggle.classList.remove('active');
+            }
 
             // Set device info
             const userAgent = navigator.userAgent;
