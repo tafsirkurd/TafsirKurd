@@ -744,10 +744,10 @@
                         </small>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Duration (seconds)</label>
-                        <input type="number" class="form-input" id="episode-duration" min="0" placeholder="e.g., 3600 for 1 hour">
+                        <label class="form-label">Duration (m:ss)</label>
+                        <input type="text" class="form-input" id="episode-duration" placeholder="e.g., 2:54 or 45:30" pattern="[0-9]+:[0-5][0-9]">
                         <small style="color: var(--text-secondary); font-size: 12px; margin-top: 4px; display: block;">
-                            Optional - helps display progress bars
+                            Format: minutes:seconds (e.g., 6:42 for 6 min 42 sec)
                         </small>
                     </div>
                 </form>
@@ -1507,7 +1507,7 @@
                     document.getElementById('episode-description').value = data.description || '';
                     document.getElementById('episode-video-url').value = data.video_url;
                     document.getElementById('episode-thumbnail').value = data.thumbnail || '';
-                    document.getElementById('episode-duration').value = data.duration || '';
+                    document.getElementById('episode-duration').value = data.duration ? formatDuration(data.duration) : '';
                     seriesSelect.value = data.series_id;
                 }
             } else {
@@ -1555,7 +1555,7 @@
                     description: description || null,
                     video_url: videoUrl,
                     thumbnail_url: thumbnail || null,
-                    duration: duration ? parseInt(duration) : null,
+                    duration: parseDuration(duration),
                     video_type: 's3'
                 };
 
@@ -1648,6 +1648,16 @@
             const mins = Math.floor(seconds / 60);
             const secs = seconds % 60;
             return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Parse "m:ss" or "mm:ss" format to seconds
+        function parseDuration(timeStr) {
+            if (!timeStr) return null;
+            const parts = timeStr.split(':');
+            if (parts.length !== 2) return null;
+            const mins = parseInt(parts[0]) || 0;
+            const secs = parseInt(parts[1]) || 0;
+            return mins * 60 + secs;
         }
 
         // Add button handler
