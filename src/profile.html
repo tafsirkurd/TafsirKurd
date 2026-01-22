@@ -133,6 +133,7 @@
             color: var(--text);
             font-size: 0.9rem;
             font-weight: 500;
+            font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif;
             cursor: pointer;
             transition: all 0.3s;
         }
@@ -284,7 +285,13 @@
             border-radius: 8px;
             color: var(--text);
             font-size: 0.95rem;
+            font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif;
             transition: all 0.3s;
+        }
+
+        .form-input::placeholder {
+            font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif;
+            color: var(--text-muted);
         }
 
         .form-input:focus, .form-select:focus {
@@ -304,6 +311,7 @@
             border: none;
             font-size: 0.95rem;
             font-weight: 600;
+            font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif;
             cursor: pointer;
             transition: all 0.3s;
             display: inline-flex;
@@ -907,7 +915,8 @@
         .header-dropdown {
             position: absolute;
             top: calc(100% + 10px);
-            right: 0;
+            left: 0;
+            right: auto;
             background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -949,6 +958,8 @@
             gap: 0.75rem;
             transition: background 0.3s;
             cursor: pointer;
+            font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif;
+            font-size: 0.95rem;
         }
 
         .header-dropdown-item:hover {
@@ -1021,22 +1032,10 @@
                             <div class="header-dropdown-name" id="dropdownHeaderName"></div>
                             <div class="header-dropdown-email" id="dropdownHeaderEmail"></div>
                         </div>
-                        <a href="/profile.html" class="header-dropdown-item">
-                            <i class="fas fa-user"></i>
-                            پرۆفایل
-                        </a>
                         <div class="header-dropdown-item" onclick="openEditModal()">
                             <i class="fas fa-edit"></i>
                             دەستکاریکرنا پرۆفایلێ
                         </div>
-                        <a href="/settings.html" class="header-dropdown-item">
-                            <i class="fas fa-cog"></i>
-                            رێکخستن
-                        </a>
-                        <a href="/bookmarks.html" class="header-dropdown-item">
-                            <i class="fas fa-bookmark"></i>
-                            نیشانەکراو
-                        </a>
                         <div class="header-dropdown-divider"></div>
                         <div class="header-dropdown-item logout" onclick="logout()">
                             <i class="fas fa-sign-out-alt"></i>
