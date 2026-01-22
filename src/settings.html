@@ -893,60 +893,17 @@
             }
         });
 
-        // Initialize all toggle click handlers
+        // Initialize toggle styles (onclick handlers are in HTML)
         function initToggleHandlers() {
-            console.log('Initializing toggle handlers...');
+            console.log('Initializing toggle styles...');
 
-            const darkModeToggle = document.getElementById('darkModeToggle');
-            const tafsirToggle = document.getElementById('tafsirToggle');
-            const autoScrollToggle = document.getElementById('autoScrollToggle');
-            const emailNotificationsToggle = document.getElementById('emailNotificationsToggle');
-            const browserNotificationsToggle = document.getElementById('browserNotificationsToggle');
+            // Just set cursor styles - onclick handlers are inline in HTML
+            const toggles = document.querySelectorAll('.setting-toggle');
+            toggles.forEach(toggle => {
+                toggle.style.cursor = 'pointer';
+            });
 
-            if (darkModeToggle) {
-                darkModeToggle.style.cursor = 'pointer';
-                darkModeToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Dark mode clicked');
-                    toggleDarkMode();
-                });
-                console.log('Dark mode toggle initialized');
-            }
-            if (tafsirToggle) {
-                tafsirToggle.style.cursor = 'pointer';
-                tafsirToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleTafsir();
-                });
-            }
-            if (autoScrollToggle) {
-                autoScrollToggle.style.cursor = 'pointer';
-                autoScrollToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleAutoScroll();
-                });
-            }
-            if (emailNotificationsToggle) {
-                emailNotificationsToggle.style.cursor = 'pointer';
-                emailNotificationsToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleEmailNotifications();
-                });
-            }
-            if (browserNotificationsToggle) {
-                browserNotificationsToggle.style.cursor = 'pointer';
-                browserNotificationsToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleBrowserNotifications();
-                });
-            }
-
-            console.log('All toggle handlers initialized');
+            console.log('Toggle styles initialized');
         }
 
         function loadSettings() {
