@@ -635,11 +635,31 @@
             border-radius: 16px;
             width: 100%;
             max-width: 500px;
-            max-height: 90vh;
+            max-height: 85vh;
             overflow-y: auto;
+            overflow-x: hidden;
             position: relative;
             animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        .modal-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .modal-container::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .modal-container::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
         }
 
         @keyframes slideUpModal {
