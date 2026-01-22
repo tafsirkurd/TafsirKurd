@@ -1268,9 +1268,12 @@
         }
 
         // 2. Load from Supabase database (if available)
-        if (typeof supabase !== 'undefined') {
+        // Wait a bit for Supabase to initialize on TV page
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        if (window.tvSupabase) {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.tvSupabase
                     .from('tv_episodes')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -1279,20 +1282,24 @@
                     console.log(`✅ Loaded ${data.length} videos from Supabase`);
 
                     // Convert Supabase format to our format
-                    const supabaseVideos = data.map(v => ({
-                        id: v.id,
-                        videoId: v.video_url,
-                        title: v.title,
-                        description: v.description,
-                        series: v.series,
-                        category: v.category,
-                        thumbnail: v.thumbnail_url || `https://img.youtube.com/vi/${v.video_url}/maxresdefault.jpg`,
-                        embedUrl: `https://www.youtube.com/embed/${v.video_url}`,
-                        viewCount: v.view_count || 0,
-                        likeCount: v.like_count || 0,
-                        rating: v.rating || 0,
-                        createdAt: v.created_at
-                    }));
+                    const supabaseVideos = data.map(v => {
+                        const isS3 = v.video_type === 's3' || v.video_url?.startsWith('http');
+                        return {
+                            id: v.id,
+                            videoId: v.video_url,
+                            videoType: v.video_type || (isS3 ? 's3' : 'youtube'),
+                            title: v.title,
+                            description: v.description,
+                            series: v.series,
+                            category: v.category,
+                            thumbnail: v.thumbnail_url || (isS3 ? null : `https://img.youtube.com/vi/${v.video_url}/maxresdefault.jpg`),
+                            embedUrl: isS3 ? v.video_url : `https://www.youtube.com/embed/${v.video_url}`,
+                            viewCount: v.view_count || 0,
+                            likeCount: v.like_count || 0,
+                            rating: v.rating || 0,
+                            createdAt: v.created_at
+                        };
+                    });
 
                     // Merge with local videos (avoid duplicates by video_url)
                     const existingVideoIds = new Set(allVideos.map(v => v.videoId));
@@ -1426,9 +1433,22 @@
         `;
     }
 
-    // Play S3 video in the native HTML5 player
-    window.playVideo = function(videoUrl, title, episodeId) {
-        console.log('🎬 Play S3 video requested:', videoUrl, title, episodeId);
+    // Play video (S3 native or YouTube iframe)
+    window.playVideo = function(videoUrlOrId, title, episodeId) {
+        // Handle being called with just episodeId
+        if (title === undefined && episodeId === undefined) {
+            const episode = state.playlist.find(ep => ep.id === videoUrlOrId);
+            if (episode) {
+                return window.playVideo(episode.videoId, episode.title, episode.id);
+            } else {
+                console.error('❌ Episode not found:', videoUrlOrId);
+                showNotification('⚠️ ڤیدیۆ نەهاتە دیتن!');
+                return;
+            }
+        }
+
+        const videoUrl = videoUrlOrId;
+        console.log('🎬 Play video requested:', videoUrl, title, episodeId);
 
         // Check if user is authenticated
         if (!isAuthenticated()) {
@@ -1916,36 +1936,7 @@
         console.log('✅ User signed out');
     };
 
-    // ===== PLAY VIDEO =====
-    window.playVideo = function(episodeId) {
-        console.log('🎬 playVideo called with episodeId:', episodeId);
-
-        // Find the episode data
-        const episode = state.playlist.find(ep => ep.id === episodeId);
-        if (!episode) {
-            console.error('❌ Episode not found:', episodeId);
-            showNotification('⚠️ ڤیدیۆ نەهاتە دیتن!');
-            return;
-        }
-
-        // Call playYouTubeVideo with the video data
-        if (episode.videoId) {
-            console.log('▶️ Playing YouTube video:', episode.videoId);
-            window.playVideo(episode.videoId, episode.title, episode.id);
-        } else {
-            console.error('❌ No videoId found for episode:', episode);
-            showNotification('⚠️ ڤیدیۆ ID نینە!');
-        }
-
-        // Update like button state
-        if (state.likedEpisodes.includes(episodeId)) {
-            elements.likeBtn.classList.add('active');
-            elements.likeBtn.innerHTML = '<i class="fas fa-thumbs-up"></i> حەزلێکری';
-        } else {
-            elements.likeBtn.classList.remove('active');
-            elements.likeBtn.innerHTML = '<i class="far fa-thumbs-up"></i> حەزلێبکە';
-        }
-    };
+    // Note: playVideo function is defined earlier for S3 videos
 
     // ===== CHAPTERS =====
     function addChapterMarkers() {
