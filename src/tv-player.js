@@ -1484,9 +1484,23 @@
 
         // Show native video element
         videoElement.style.display = 'block';
+        videoElement.controls = true; // Ensure controls are visible
 
         // Set video source
+        console.log('🎥 Setting video source:', videoUrl);
         videoElement.src = videoUrl;
+        videoElement.load(); // Force load
+
+        // Add error handler
+        videoElement.onerror = function(e) {
+            console.error('❌ Video error:', videoElement.error);
+            showNotification('⚠️ هەڵەیەک دا لە بارکرنا ڤیدیۆ');
+        };
+
+        // Add loadeddata handler
+        videoElement.onloadeddata = function() {
+            console.log('✅ Video data loaded successfully');
+        };
 
         // Auto-play video
         videoElement.play().catch(err => {
