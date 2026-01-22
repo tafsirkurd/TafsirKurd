@@ -3399,6 +3399,7 @@
                     if (!config.supabaseUrl || !config.supabaseKey) throw new Error('Invalid config');
 
                     supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                    window.tvSupabase = supabaseClient; // Expose for tv-player.js
                     console.log('✅ Supabase initialized securely on TV page');
                     return true;
                 } catch (error) {
