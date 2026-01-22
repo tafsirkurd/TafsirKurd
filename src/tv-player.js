@@ -1467,60 +1467,128 @@
         // Update current episode
         state.currentEpisode = episodeId;
 
-        // Create or get inline video player
-        let inlinePlayer = document.getElementById('inlineVideoPlayer');
+        // Find the clicked episode card and play video in place
+        const clickedCard = document.querySelector(`.episode-card[onclick*="${episodeId}"]`) ||
+                           document.querySelector(`.episode-item[onclick*="${episodeId}"]`);
 
-        if (!inlinePlayer) {
-            // Create inline player container using safe DOM methods
-            inlinePlayer = document.createElement('div');
-            inlinePlayer.id = 'inlineVideoPlayer';
-
-            // Create header
-            const header = document.createElement('div');
-            header.className = 'inline-player-header';
-
-            const titleEl = document.createElement('h3');
-            titleEl.className = 'inline-player-title';
-
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'inline-player-close';
-            closeBtn.onclick = function() { closeInlinePlayer(); };
-            const closeIcon = document.createElement('i');
-            closeIcon.className = 'fas fa-times';
-            closeBtn.appendChild(closeIcon);
-
-            header.appendChild(titleEl);
-            header.appendChild(closeBtn);
-
-            // Create video element
-            const video = document.createElement('video');
-            video.id = 'inlineVideo';
-            video.controls = true;
-            video.playsInline = true;
-
-            inlinePlayer.appendChild(header);
-            inlinePlayer.appendChild(video);
-
-            // Insert at top of main content area
-            const mainContent = document.querySelector('.main-content') || document.querySelector('.content-area') || document.body;
-            mainContent.insertBefore(inlinePlayer, mainContent.firstChild);
+        // Close any existing player
+        const existingPlayer = document.querySelector('.inline-video-wrapper');
+        if (existingPlayer) {
+            const existingVideo = existingPlayer.querySelector('video');
+            if (existingVideo) existingVideo.pause();
+            existingPlayer.remove();
         }
 
-        // Style the inline player
-        inlinePlayer.style.cssText = 'display:block; width:100%; max-width:900px; margin:20px auto; background:#000; border-radius:12px; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,0.3);';
+        // Create video wrapper
+        const videoWrapper = document.createElement('div');
+        videoWrapper.className = 'inline-video-wrapper';
+        videoWrapper.style.cssText = 'position:relative; width:100%; background:#000; border-radius:12px; overflow:hidden; margin:10px 0; aspect-ratio:16/9;';
 
-        const playerHeader = inlinePlayer.querySelector('.inline-player-header');
-        playerHeader.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color:white;';
+        // Create video element
+        const videoElement = document.createElement('video');
+        videoElement.id = 'activeVideo';
+        videoElement.playsInline = true;
+        videoElement.style.cssText = 'width:100%; height:100%; object-fit:contain; background:#000;';
 
-        const playerTitle = inlinePlayer.querySelector('.inline-player-title');
-        playerTitle.style.cssText = 'margin:0; font-size:1.1rem; font-weight:600;';
-        playerTitle.textContent = title;
+        // Create custom controls
+        const controls = document.createElement('div');
+        controls.className = 'custom-controls';
+        controls.style.cssText = 'position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.9)); padding:15px; display:flex; align-items:center; gap:15px; opacity:0; transition:opacity 0.3s;';
 
-        const closeBtnEl = inlinePlayer.querySelector('.inline-player-close');
-        closeBtnEl.style.cssText = 'background:rgba(255,255,255,0.1); border:none; color:white; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s;';
+        // Play/Pause button
+        const playBtn = document.createElement('button');
+        playBtn.style.cssText = 'background:none; border:none; color:white; font-size:20px; cursor:pointer; padding:5px;';
+        const playIcon = document.createElement('i');
+        playIcon.className = 'fas fa-pause';
+        playBtn.appendChild(playIcon);
+        playBtn.onclick = function() {
+            if (videoElement.paused) {
+                videoElement.play();
+                playIcon.className = 'fas fa-pause';
+            } else {
+                videoElement.pause();
+                playIcon.className = 'fas fa-play';
+            }
+        };
 
-        const videoElement = document.getElementById('inlineVideo');
-        videoElement.style.cssText = 'width:100%; max-height:500px; background:#000;';
+        // Progress bar
+        const progressContainer = document.createElement('div');
+        progressContainer.style.cssText = 'flex:1; height:5px; background:rgba(255,255,255,0.3); border-radius:3px; cursor:pointer; position:relative;';
+        const progressBar = document.createElement('div');
+        progressBar.style.cssText = 'height:100%; background:#1ab7ea; border-radius:3px; width:0%; transition:width 0.1s;';
+        progressContainer.appendChild(progressBar);
+        progressContainer.onclick = function(e) {
+            const rect = progressContainer.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            videoElement.currentTime = percent * videoElement.duration;
+        };
+
+        // Time display
+        const timeDisplay = document.createElement('span');
+        timeDisplay.style.cssText = 'color:white; font-size:12px; min-width:80px;';
+        timeDisplay.textContent = '0:00 / 0:00';
+
+        // Fullscreen button
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.style.cssText = 'background:none; border:none; color:white; font-size:18px; cursor:pointer; padding:5px;';
+        const fsIcon = document.createElement('i');
+        fsIcon.className = 'fas fa-expand';
+        fullscreenBtn.appendChild(fsIcon);
+        fullscreenBtn.onclick = function() {
+            if (videoElement.requestFullscreen) videoElement.requestFullscreen();
+            else if (videoElement.webkitRequestFullscreen) videoElement.webkitRequestFullscreen();
+        };
+
+        // Close button
+        const closeBtn = document.createElement('button');
+        closeBtn.style.cssText = 'background:none; border:none; color:white; font-size:18px; cursor:pointer; padding:5px;';
+        const closeIcon = document.createElement('i');
+        closeIcon.className = 'fas fa-times';
+        closeBtn.appendChild(closeIcon);
+        closeBtn.onclick = function() {
+            videoElement.pause();
+            videoWrapper.remove();
+        };
+
+        controls.appendChild(playBtn);
+        controls.appendChild(progressContainer);
+        controls.appendChild(timeDisplay);
+        controls.appendChild(fullscreenBtn);
+        controls.appendChild(closeBtn);
+
+        videoWrapper.appendChild(videoElement);
+        videoWrapper.appendChild(controls);
+
+        // Show controls on hover
+        videoWrapper.onmouseenter = function() { controls.style.opacity = '1'; };
+        videoWrapper.onmouseleave = function() { if (!videoElement.paused) controls.style.opacity = '0'; };
+
+        // Update progress
+        videoElement.ontimeupdate = function() {
+            const percent = (videoElement.currentTime / videoElement.duration) * 100;
+            progressBar.style.width = percent + '%';
+            const current = formatTime(videoElement.currentTime);
+            const total = formatTime(videoElement.duration);
+            timeDisplay.textContent = current + ' / ' + total;
+        };
+
+        videoElement.onplay = function() { playIcon.className = 'fas fa-pause'; };
+        videoElement.onpause = function() { playIcon.className = 'fas fa-play'; controls.style.opacity = '1'; };
+
+        // Insert after the clicked card or at a reasonable position
+        if (clickedCard) {
+            clickedCard.parentNode.insertBefore(videoWrapper, clickedCard.nextSibling);
+        } else {
+            const container = document.querySelector('.episodes-grid') || document.querySelector('.content-area') || document.body;
+            container.insertBefore(videoWrapper, container.firstChild);
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return mins + ':' + secs.toString().padStart(2, '0');
+        }
 
         if (!videoElement) {
             console.error('❌ Video player element not found');
@@ -1559,30 +1627,21 @@
 
         console.log('✅ Native S3 video player initialized');
 
-        // Scroll to player
-        inlinePlayer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
         // Track view
         trackVideoView(episodeId);
 
         showNotification('▶️ دەستپێکرنا ڤیدیۆ...');
     };
 
-    // Close inline player
+    // Close any active video player
     window.closeInlinePlayer = function() {
-        const inlinePlayer = document.getElementById('inlineVideoPlayer');
-        const videoElement = document.getElementById('inlineVideo');
-
-        if (videoElement) {
-            videoElement.pause();
-            videoElement.src = '';
+        const wrapper = document.querySelector('.inline-video-wrapper');
+        if (wrapper) {
+            const video = wrapper.querySelector('video');
+            if (video) video.pause();
+            wrapper.remove();
         }
-
-        if (inlinePlayer) {
-            inlinePlayer.style.display = 'none';
-        }
-
-        console.log('✅ Inline player closed');
+        console.log('✅ Video player closed');
     };
 
     // Track video view
