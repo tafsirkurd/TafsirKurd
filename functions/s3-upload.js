@@ -110,24 +110,41 @@ export async function onRequest(context) {
 async function verifyAdminToken(token, env) {
     try {
         // Use Supabase to verify the admin session
-        const supabaseUrl = env.SUPABASE_URL;
-        const supabaseKey = env.SUPABASE_SERVICE_KEY || env.SUPABASE_ANON_KEY;
+        const supabaseUrl = env.SUPABASE_URL?.replace(/[\n\r\s]/g, '');
+        const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY?.replace(/[\n\r\s]/g, '');
 
-        const response = await fetch(`${supabaseUrl}/rest/v1/admin_sessions?token=eq.${token}&is_active=eq.true&select=id,expires_at`, {
+        if (!supabaseUrl || !supabaseKey) {
+            console.error('Missing Supabase credentials');
+            return false;
+        }
+
+        // Query admin_sessions table for valid token
+        const url = `${supabaseUrl}/rest/v1/admin_sessions?token=eq.${encodeURIComponent(token)}&is_active=eq.true&select=id,expires_at,user_id`;
+
+        const response = await fetch(url, {
             headers: {
                 'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Content-Type': 'application/json'
             }
         });
 
-        if (!response.ok) return false;
+        if (!response.ok) {
+            console.error('Supabase response not ok:', response.status);
+            return false;
+        }
 
         const sessions = await response.json();
+        console.log('Sessions found:', sessions?.length || 0);
+
         if (!sessions || sessions.length === 0) return false;
 
         // Check if session is not expired
         const session = sessions[0];
-        if (new Date(session.expires_at) < new Date()) return false;
+        if (new Date(session.expires_at) < new Date()) {
+            console.error('Session expired');
+            return false;
+        }
 
         return true;
     } catch (error) {
