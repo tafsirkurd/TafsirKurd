@@ -666,6 +666,10 @@
                         <label class="form-label">Thumbnail URL</label>
                         <input type="url" class="form-input" id="series-thumbnail">
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">Speaker/Sheikh</label>
+                        <input type="text" class="form-input" id="series-speaker" placeholder="e.g., Sheikh Ahmad, Dr. Muhammad">
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -1420,10 +1424,12 @@
                     document.getElementById('series-title').value = data.name_ku;
                     document.getElementById('series-description').value = data.description_ku || '';
                     document.getElementById('series-thumbnail').value = data.thumbnail_url || '';
+                    document.getElementById('series-speaker').value = data.speaker || '';
                     categorySelect.value = data.category_id;
                 }
             } else {
                 title.textContent = 'Add Series';
+                document.getElementById('series-speaker').value = '';
                 if (categoryId) {
                     categorySelect.value = categoryId;
                 }
@@ -1443,6 +1449,7 @@
             const title = document.getElementById('series-title').value;
             const description = document.getElementById('series-description').value;
             const thumbnailUrl = document.getElementById('series-thumbnail').value;
+            const speaker = document.getElementById('series-speaker').value;
 
             if (!categoryId) {
                 alert('Please select a category');
@@ -1455,12 +1462,12 @@
                 if (id) {
                     await supabase
                         .from('tv_series')
-                        .update({ category_id: categoryId, name_ku: title, description_ku: description, thumbnail_url: thumbnailUrl })
+                        .update({ category_id: categoryId, name_ku: title, description_ku: description, thumbnail_url: thumbnailUrl, speaker: speaker || null })
                         .eq('id', id);
                 } else {
                     await supabase
                         .from('tv_series')
-                        .insert({ category_id: categoryId, name_ku: title, description_ku: description, thumbnail_url: thumbnailUrl });
+                        .insert({ category_id: categoryId, name_ku: title, description_ku: description, thumbnail_url: thumbnailUrl, speaker: speaker || null });
                 }
 
                 closeSeriesModal();

@@ -102,6 +102,9 @@
         watchProgress: {},
         likedEpisodes: [],
         seriesData: {}, // Series info from database
+        categoriesData: [], // Categories from database
+        sheikhsData: [], // Sheikhs/speakers from database
+        activeFilter: null, // Current filter (category or sheikh)
         currentQuality: '1080',
         currentSpeed: 1,
         subtitlesEnabled: false,
@@ -224,9 +227,25 @@
         const topicsGrid = document.getElementById('topicsGrid');
         if (!topicsGrid) return;
 
+        // Filter episodes based on activeFilter
+        let filteredEpisodes = state.playlist;
+        if (state.activeFilter) {
+            if (state.activeFilter.type === 'category') {
+                // Filter by category - show only series belonging to this category
+                filteredEpisodes = state.playlist.filter(ep =>
+                    ep.seriesCategoryId === state.activeFilter.value
+                );
+            } else if (state.activeFilter.type === 'sheikh') {
+                // Filter by sheikh/speaker - show only series by this speaker
+                filteredEpisodes = state.playlist.filter(ep =>
+                    ep.seriesSpeaker === state.activeFilter.value
+                );
+            }
+        }
+
         // Group episodes by category/series
         const topics = {};
-        state.playlist.forEach(episode => {
+        filteredEpisodes.forEach(episode => {
             const topicKey = episode.series || episode.category || 'general';
             if (!topics[topicKey]) {
                 topics[topicKey] = {
@@ -241,8 +260,23 @@
             topics[topicKey].episodes.push(episode);
         });
 
+        // Show active filter indicator
+        let filterIndicator = '';
+        if (state.activeFilter) {
+            const filterName = state.activeFilter.type === 'category'
+                ? state.categoriesData.find(c => c.id === state.activeFilter.value)?.name_ku || state.activeFilter.value
+                : state.activeFilter.value;
+            const filterIcon = state.activeFilter.type === 'category' ? 'fa-folder' : 'fa-user-tie';
+            filterIndicator = `
+                <div class="active-filter-indicator">
+                    <span><i class="fas ${filterIcon}"></i> ${filterName}</span>
+                    <button onclick="filterByCategory(null); filterBySheikh(null);" title="لابردنی فلتەر"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+        }
+
         // Render topic cards
-        topicsGrid.innerHTML = Object.values(topics).map(topic => {
+        topicsGrid.innerHTML = filterIndicator + Object.values(topics).map(topic => {
             const episodeCount = topic.episodes.length;
             const seriesProgress = state.seriesProgress[topic.id];
             const completedCount = seriesProgress ? seriesProgress.completedEpisodes.length : 0;
@@ -273,11 +307,13 @@
 
         // Show empty state if no topics
         if (Object.keys(topics).length === 0) {
+            const isFiltered = state.activeFilter !== null;
             topicsGrid.innerHTML = `
                 <div class="empty-state">
-                    <i class="fas fa-folder-open"></i>
-                    <h3>هیچ بابەتەکێ نینە</h3>
-                    <p>ھێجا ھیچ بابەتەکێ نەھاتییە زێدەکرن</p>
+                    <i class="fas ${isFiltered ? 'fa-filter' : 'fa-folder-open'}"></i>
+                    <h3>${isFiltered ? 'هیچ زنجیرەیەک نەدۆزرایەوە' : 'هیچ بابەتەکێ نینە'}</h3>
+                    <p>${isFiltered ? 'هیچ زنجیرەیەک لەم فلتەرەدا نینە' : 'ھێجا ھیچ بابەتەکێ نەھاتییە زێدەکرن'}</p>
+                    ${isFiltered ? '<button class="btn btn-secondary" onclick="filterByCategory(null); filterBySheikh(null);" style="margin-top:1rem;"><i class="fas fa-times"></i> لابردنی فلتەر</button>' : ''}
                 </div>
             `;
         }
@@ -1383,7 +1419,9 @@
                         seriesMap[s.id] = {
                             title: s.name_ku,
                             description: s.description_ku,
-                            thumbnail: s.thumbnail_url
+                            thumbnail: s.thumbnail_url,
+                            categoryId: s.category_id,
+                            speaker: s.speaker
                         };
                     });
                     state.seriesData = seriesMap;
@@ -1413,6 +1451,8 @@
                             seriesTitle: seriesInfo.title,
                             seriesDescription: seriesInfo.description,
                             seriesThumbnail: seriesInfo.thumbnail,
+                            seriesCategoryId: seriesInfo.categoryId,
+                            seriesSpeaker: seriesInfo.speaker,
                             category: v.category,
                             thumbnail: v.thumbnail_url || (isS3 ? null : `https://img.youtube.com/vi/${v.video_url}/maxresdefault.jpg`),
                             embedUrl: isS3 ? v.video_url : `https://www.youtube.com/embed/${v.video_url}`,
@@ -2021,6 +2061,146 @@
         console.log('✅ Video player closed');
     };
 
+    // ===== SIDEBAR SECTIONS (Categories & Sheikhs) =====
+    window.toggleSidebarSection = function(section) {
+        const content = document.getElementById(section + 'Section');
+        const arrow = document.getElementById(section + 'Arrow');
+        const header = arrow?.parentElement;
+
+        if (content && arrow) {
+            const isOpen = content.style.display !== 'none';
+            content.style.display = isOpen ? 'none' : 'block';
+            header?.classList.toggle('open', !isOpen);
+        }
+    };
+
+    // Load categories into sidebar
+    async function loadSidebarCategories() {
+        if (!window.tvSupabase) return;
+
+        try {
+            const { data: categories } = await window.tvSupabase
+                .from('tv_categories')
+                .select('*')
+                .order('name_ku');
+
+            if (categories && categories.length > 0) {
+                state.categoriesData = categories;
+                const categoryList = document.getElementById('categoryList');
+                if (categoryList) {
+                    categoryList.innerHTML = `
+                        <button class="filter-item active" onclick="filterByCategory(null)">
+                            <i class="fas fa-list"></i>
+                            <span>هەموو</span>
+                        </button>
+                        ${categories.map(cat => `
+                            <button class="filter-item" onclick="filterByCategory('${cat.id}')" data-category="${cat.id}">
+                                <i class="fas fa-folder"></i>
+                                <span>${cat.name_ku}</span>
+                            </button>
+                        `).join('')}
+                    `;
+                }
+                console.log('✅ Loaded', categories.length, 'categories');
+            }
+        } catch (err) {
+            console.warn('Could not load categories:', err);
+        }
+    }
+
+    // Load sheikhs/speakers into sidebar
+    async function loadSidebarSheikhs() {
+        if (!window.tvSupabase) return;
+
+        try {
+            // Get unique speakers from tv_series
+            const { data: series } = await window.tvSupabase
+                .from('tv_series')
+                .select('speaker')
+                .not('speaker', 'is', null);
+
+            if (series) {
+                const uniqueSpeakers = [...new Set(series.map(s => s.speaker).filter(Boolean))];
+                state.sheikhsData = uniqueSpeakers;
+
+                const sheikhList = document.getElementById('sheikhList');
+                if (sheikhList && uniqueSpeakers.length > 0) {
+                    sheikhList.innerHTML = `
+                        <button class="filter-item active" onclick="filterBySheikh(null)">
+                            <i class="fas fa-users"></i>
+                            <span>هەموو</span>
+                        </button>
+                        ${uniqueSpeakers.map(speaker => `
+                            <button class="filter-item" onclick="filterBySheikh('${speaker}')" data-sheikh="${speaker}">
+                                <i class="fas fa-user-tie"></i>
+                                <span>${speaker}</span>
+                            </button>
+                        `).join('')}
+                    `;
+                    console.log('✅ Loaded', uniqueSpeakers.length, 'sheikhs');
+                } else if (sheikhList) {
+                    sheikhList.innerHTML = '<p style="padding:10px;font-size:0.85rem;color:var(--text-muted);">هیچ شێخەک نەدۆزرایەوە</p>';
+                }
+            }
+        } catch (err) {
+            console.warn('Could not load sheikhs:', err);
+        }
+    }
+
+    // Filter series by category
+    window.filterByCategory = function(categoryId) {
+        state.activeFilter = categoryId ? { type: 'category', value: categoryId } : null;
+
+        // Update active state in category list
+        document.querySelectorAll('#categoryList .filter-item').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.category === categoryId || (!categoryId && !btn.dataset.category));
+        });
+
+        // Clear sheikh filter active state when filtering by category
+        if (categoryId) {
+            document.querySelectorAll('#sheikhList .filter-item').forEach(btn => {
+                btn.classList.toggle('active', !btn.dataset.sheikh);
+            });
+        }
+
+        // Re-render topics with filter
+        renderTopics();
+
+        // Show active view
+        switchView('topics');
+    };
+
+    // Filter series by sheikh
+    window.filterBySheikh = function(speaker) {
+        state.activeFilter = speaker ? { type: 'sheikh', value: speaker } : null;
+
+        // Update active state in sheikh list
+        document.querySelectorAll('#sheikhList .filter-item').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.sheikh === speaker || (!speaker && !btn.dataset.sheikh));
+        });
+
+        // Clear category filter active state when filtering by sheikh
+        if (speaker) {
+            document.querySelectorAll('#categoryList .filter-item').forEach(btn => {
+                btn.classList.toggle('active', !btn.dataset.category);
+            });
+        }
+
+        // Re-render topics with filter
+        renderTopics();
+
+        // Show active view
+        switchView('topics');
+    };
+
+    // Call these after playlist loads
+    const originalLoadPlaylist = loadPlaylist;
+    loadPlaylist = async function() {
+        await originalLoadPlaylist();
+        await loadSidebarCategories();
+        await loadSidebarSheikhs();
+    };
+
     // Track video view
     function trackVideoView(episodeId) {
         const videos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
@@ -2476,13 +2656,6 @@
             markersContainer.appendChild(marker);
         });
     }
-
-    // ===== CATEGORY FILTER =====
-    window.filterByCategory = function(category) {
-        console.log('Filtering by category:', category);
-        showNotification(`پۆل: ${category}`);
-        // Implement filtering logic
-    };
 
     // ===== LOAD SERIES =====
     window.loadSeries = function(series) {

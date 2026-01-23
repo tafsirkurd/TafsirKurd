@@ -158,6 +158,151 @@
             background: #1d4ed8;
         }
 
+        /* Sidebar Sections (Categories, Sheikhs) */
+        .sidebar-section {
+            margin: 4px 0;
+        }
+
+        .sidebar-section-header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: right;
+        }
+
+        .sidebar-section-header:hover {
+            background: var(--primary-light);
+            color: var(--text);
+        }
+
+        .sidebar-section-header .section-arrow {
+            margin-right: auto;
+            font-size: 0.75rem;
+            transition: transform 0.3s;
+        }
+
+        .sidebar-section-header.open .section-arrow {
+            transform: rotate(180deg);
+        }
+
+        .sidebar-section-content {
+            padding: 0 8px 8px 8px;
+        }
+
+        .filter-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: right;
+            width: 100%;
+        }
+
+        .filter-item:hover {
+            background: var(--primary-light);
+            color: var(--text);
+        }
+
+        .filter-item.active {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+
+        .filter-item .filter-count {
+            margin-right: auto;
+            font-size: 0.75rem;
+            background: var(--bg);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .sidebar-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 12px 16px;
+        }
+
+        [data-theme="dark"] .sidebar-section-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="dark"] .filter-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="dark"] .filter-item.active {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        /* Active Filter Indicator */
+        .active-filter-indicator {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.08));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .active-filter-indicator span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #3b82f6;
+        }
+
+        .active-filter-indicator button {
+            margin-right: auto;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border: none;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .active-filter-indicator button:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        [data-theme="dark"] .active-filter-indicator {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1));
+        }
+
+        [data-theme="dark"] .active-filter-indicator button {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
         /* ===== RESET ===== */
         * {
             margin: 0;
@@ -2883,10 +3028,43 @@
             </div>
 
             <nav class="sidebar-nav">
+                <!-- All Series -->
                 <button class="sidebar-btn active" data-view="topics">
-                    <i class="fas fa-th-large"></i>
-                    <span>بابەت</span>
+                    <i class="fas fa-tv"></i>
+                    <span>هەموو زنجیرەکان</span>
                 </button>
+
+                <!-- Categories Filter -->
+                <div class="sidebar-section">
+                    <button class="sidebar-section-header" onclick="toggleSidebarSection('categories')">
+                        <i class="fas fa-folder"></i>
+                        <span>پۆلەکان</span>
+                        <i class="fas fa-chevron-down section-arrow" id="categoriesArrow"></i>
+                    </button>
+                    <div class="sidebar-section-content" id="categoriesSection" style="display:none;">
+                        <div id="categoryList" class="filter-list">
+                            <!-- Categories loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sheikhs/Speakers Filter -->
+                <div class="sidebar-section">
+                    <button class="sidebar-section-header" onclick="toggleSidebarSection('sheikhs')">
+                        <i class="fas fa-user-tie"></i>
+                        <span>شێخەکان</span>
+                        <i class="fas fa-chevron-down section-arrow" id="sheikhsArrow"></i>
+                    </button>
+                    <div class="sidebar-section-content" id="sheikhsSection" style="display:none;">
+                        <div id="sheikhList" class="filter-list">
+                            <!-- Sheikhs loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-divider"></div>
+
+                <!-- Other nav items -->
                 <button class="sidebar-btn" data-view="bookmarks">
                     <i class="fas fa-bookmark"></i>
                     <span>خەزنکراو</span>
