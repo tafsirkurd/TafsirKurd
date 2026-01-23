@@ -347,9 +347,12 @@
 
 /* Fallback icon when image fails to load */
 .topic-fallback-icon {
-    display: none;
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
@@ -482,9 +485,12 @@
 
 /* Fallback icon when episode image fails */
 .episode-fallback-icon {
-    display: none;
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
