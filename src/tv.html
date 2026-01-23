@@ -145,17 +145,17 @@
         }
 
         [data-theme="dark"] .sidebar-btn.active::before {
-            background: #3b82f6;
+            background: #ffffff;
         }
 
         /* Light mode sidebar (default) */
         .sidebar-btn.active {
-            background: #3b82f6;
+            background: #1a1a1a;
             color: #ffffff;
         }
 
         .sidebar-btn.active::before {
-            background: #1d4ed8;
+            background: #000000;
         }
 
         /* Sidebar Sections (Categories, Sheikhs) */
@@ -227,8 +227,9 @@
         }
 
         .filter-item.active {
-            background: rgba(59, 130, 246, 0.15);
-            color: #3b82f6;
+            background: rgba(0, 0, 0, 0.08);
+            color: #1a1a1a;
+            font-weight: 500;
         }
 
         .filter-item .filter-count {
@@ -254,7 +255,8 @@
         }
 
         [data-theme="dark"] .filter-item.active {
-            background: rgba(59, 130, 246, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
         }
 
         /* Active Filter Indicator */
@@ -264,8 +266,8 @@
             align-items: center;
             gap: 12px;
             padding: 12px 16px;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.08));
-            border: 1px solid rgba(59, 130, 246, 0.3);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.03));
+            border: 1px solid rgba(0, 0, 0, 0.15);
             border-radius: 12px;
             margin-bottom: 16px;
         }
@@ -276,7 +278,7 @@
             gap: 8px;
             font-size: 0.95rem;
             font-weight: 500;
-            color: #3b82f6;
+            color: #1a1a1a;
         }
 
         .active-filter-indicator button {
@@ -296,7 +298,12 @@
         }
 
         [data-theme="dark"] .active-filter-indicator {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1));
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="dark"] .active-filter-indicator span {
+            color: #ffffff;
         }
 
         [data-theme="dark"] .active-filter-indicator button {
@@ -437,8 +444,8 @@
             outline: none;
             width: 350px;
             background: #ffffff;
-            border-color: #3b82f6;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
+            border-color: #1a1a1a;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .icon-btn {
@@ -549,7 +556,7 @@
         }
 
         .notification-item.unread {
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(0, 0, 0, 0.05);
         }
 
         .notification-icon {

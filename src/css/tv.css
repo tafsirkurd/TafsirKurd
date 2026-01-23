@@ -169,7 +169,7 @@
     transform: translateY(-50%);
     width: 4px;
     height: 70%;
-    background: #3b82f6;
+    background: #1a1a1a;
     border-radius: 2px 0 0 2px;
 }
 
@@ -179,12 +179,12 @@
 }
 
 [data-theme="light"] .sidebar-btn.active {
-    background: #3b82f6;
+    background: #1a1a1a;
     color: #ffffff;
 }
 
 [data-theme="light"] .sidebar-btn.active::before {
-    background: #1d4ed8;
+    background: #000000;
 }
 
 .sidebar-footer {
