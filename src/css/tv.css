@@ -156,8 +156,8 @@
 }
 
 .sidebar-btn.active {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    background: #1a1a1a !important;
+    color: #ffffff !important;
     font-weight: 600;
 }
 
