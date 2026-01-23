@@ -1569,14 +1569,16 @@
         const clickedCard = document.querySelector(`.episode-card[onclick*="${episodeId}"]`) ||
                            document.querySelector(`.episode-item[onclick*="${episodeId}"]`);
 
-        // Close any existing player and restore original card
+        // Close any existing player and restore original thumbnail
         const existingWrapper = document.querySelector('.inline-video-wrapper');
         if (existingWrapper) {
             const existingVideo = existingWrapper.querySelector('video');
             if (existingVideo) existingVideo.pause();
-            // Restore original card if it was hidden
-            const hiddenCard = document.querySelector('.episode-card-hidden');
-            if (hiddenCard) hiddenCard.classList.remove('episode-card-hidden');
+            // Restore hidden thumbnail
+            const hiddenThumbnail = document.querySelector('.episode-thumbnail[style*="display: none"]');
+            if (hiddenThumbnail) {
+                hiddenThumbnail.style.removeProperty('display');
+            }
             existingWrapper.remove();
         }
 
@@ -1764,8 +1766,7 @@
         if (clickedCard) {
             const thumbnail = clickedCard.querySelector('.episode-thumbnail');
             if (thumbnail) {
-                // Store original content and hide it
-                thumbnail.dataset.originalDisplay = thumbnail.style.display;
+                // Hide thumbnail
                 thumbnail.style.display = 'none';
                 // Insert video wrapper after thumbnail (inside the card)
                 thumbnail.parentNode.insertBefore(videoWrapper, thumbnail.nextSibling);
@@ -1774,7 +1775,8 @@
                 closeBtn.onclick = function() {
                     videoElement.pause();
                     videoWrapper.remove();
-                    thumbnail.style.display = thumbnail.dataset.originalDisplay || 'block';
+                    // Restore thumbnail - remove inline display to use CSS default
+                    thumbnail.style.removeProperty('display');
                 };
             } else {
                 // No thumbnail found, just insert inside card
@@ -1865,6 +1867,13 @@
         if (wrapper) {
             const video = wrapper.querySelector('video');
             if (video) video.pause();
+
+            // Restore hidden thumbnail
+            const hiddenThumbnail = document.querySelector('.episode-thumbnail[style*="display: none"]');
+            if (hiddenThumbnail) {
+                hiddenThumbnail.style.removeProperty('display');
+            }
+
             wrapper.remove();
         }
         console.log('✅ Video player closed');
