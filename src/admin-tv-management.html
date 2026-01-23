@@ -7,8 +7,12 @@
     <script src="utils/theme-loader.js"></script>
     <title>TV Management - TafsirKurd Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/fontawesome/all.min.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- FFmpeg for MOV to MP4 conversion -->
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/umd/ffmpeg.js"></script>
+    <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
     <link rel="stylesheet" href="/css/admin-styles.css">
     <style>
         .view-tabs {
@@ -727,6 +731,17 @@
                                 <div id="uploadComplete" style="display: none;">
                                     <i class="fas fa-check-circle" style="font-size: 32px; color: var(--accent-green); margin-bottom: 8px;"></i>
                                     <p style="margin: 0; color: var(--accent-green); font-size: 14px;">Upload complete!</p>
+                                </div>
+                                <div id="conversionProgress" style="display: none;">
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                        <i class="fas fa-sync-alt fa-spin" style="color: var(--accent-purple);"></i>
+                                        <span style="flex: 1; text-align: left; font-size: 14px; color: var(--text-primary);">Converting MOV → MP4...</span>
+                                        <span id="conversionPercent" style="font-size: 14px; font-weight: 600; color: var(--accent-purple);">0%</span>
+                                    </div>
+                                    <div style="background: var(--bg-tertiary); border-radius: 4px; height: 8px; overflow: hidden;">
+                                        <div id="conversionProgressBar" style="background: var(--accent-purple); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                                    </div>
+                                    <small id="conversionStatus" style="color: var(--text-secondary); margin-top: 6px; display: block;">Loading converter...</small>
                                 </div>
                             </div>
                             <!-- Manual URL Input -->
@@ -1749,6 +1764,80 @@
             }
         });
 
+        // FFmpeg instance for MOV conversion
+        let ffmpeg = null;
+        let ffmpegLoaded = false;
+
+        // Check if file needs conversion (MOV, AVI, etc.)
+        function needsConversion(file) {
+            const name = file.name.toLowerCase();
+            return name.endsWith('.mov') || name.endsWith('.avi') || name.endsWith('.wmv') || name.endsWith('.mkv');
+        }
+
+        // Convert video to MP4 using FFmpeg.wasm
+        async function convertToMP4(file) {
+            const conversionProgress = document.getElementById('conversionProgress');
+            const conversionProgressBar = document.getElementById('conversionProgressBar');
+            const conversionPercent = document.getElementById('conversionPercent');
+            const conversionStatus = document.getElementById('conversionStatus');
+
+            conversionProgress.style.display = 'block';
+            conversionStatus.textContent = 'Loading converter (first time may take a moment)...';
+
+            try {
+                // Load FFmpeg if not already loaded
+                if (!ffmpegLoaded) {
+                    const { FFmpeg } = FFmpegWASM;
+                    const { fetchFile } = FFmpegUtil;
+                    ffmpeg = new FFmpeg();
+
+                    ffmpeg.on('progress', ({ progress }) => {
+                        const pct = Math.round(progress * 100);
+                        conversionProgressBar.style.width = pct + '%';
+                        conversionPercent.textContent = pct + '%';
+                        conversionStatus.textContent = 'Converting... ' + pct + '%';
+                    });
+
+                    await ffmpeg.load({
+                        coreURL: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js',
+                        wasmURL: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm',
+                    });
+                    ffmpegLoaded = true;
+                }
+
+                conversionStatus.textContent = 'Reading file...';
+                const { fetchFile } = FFmpegUtil;
+
+                // Write input file
+                const ext = file.name.substring(file.name.lastIndexOf('.'));
+                const inputName = 'input' + ext;
+                await ffmpeg.writeFile(inputName, await fetchFile(file));
+
+                conversionStatus.textContent = 'Converting to MP4...';
+
+                // Convert to MP4 with H.264
+                await ffmpeg.exec(['-i', inputName, '-c:v', 'libx264', '-preset', 'fast', '-crf', '23', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', 'output.mp4']);
+
+                // Read output
+                const data = await ffmpeg.readFile('output.mp4');
+
+                // Cleanup
+                await ffmpeg.deleteFile(inputName);
+                await ffmpeg.deleteFile('output.mp4');
+
+                conversionProgress.style.display = 'none';
+
+                // Create new file with MP4 extension
+                const mp4Name = file.name.replace(/\.[^/.]+$/, '.mp4');
+                return new File([data], mp4Name, { type: 'video/mp4' });
+
+            } catch (err) {
+                console.error('Conversion error:', err);
+                conversionProgress.style.display = 'none';
+                throw new Error('Video conversion failed');
+            }
+        }
+
         // Main upload function
         async function handleVideoUpload(file) {
             // Validate file size (500MB max)
@@ -1756,6 +1845,19 @@
             if (file.size > maxSize) {
                 alert('File too large. Maximum size is 500MB.');
                 return;
+            }
+
+            // Check if conversion is needed (MOV, AVI, etc.)
+            if (needsConversion(file)) {
+                try {
+                    uploadPlaceholder.style.display = 'none';
+                    file = await convertToMP4(file);
+                    console.log('Converted to MP4:', file.name);
+                } catch (err) {
+                    alert('Could not convert video. Try using cloudconvert.com to convert to MP4 first.');
+                    uploadPlaceholder.style.display = 'block';
+                    return;
+                }
             }
 
             // Load local file into thumbnail picker immediately (no CORS issues!)
