@@ -1762,6 +1762,76 @@
         videoElement.onplay = function() { playIcon.className = 'fas fa-pause'; };
         videoElement.onpause = function() { playIcon.className = 'fas fa-play'; controls.style.opacity = '1'; };
 
+        // YouTube-style keyboard shortcuts
+        function handleKeyboard(e) {
+            // Don't handle if typing in an input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            const video = document.querySelector('.inline-video-wrapper video');
+            if (!video) return;
+
+            switch(e.key.toLowerCase()) {
+                case ' ':  // Space - play/pause
+                case 'k':  // K - play/pause (YouTube style)
+                    e.preventDefault();
+                    if (video.paused) video.play();
+                    else video.pause();
+                    break;
+                case 'arrowleft':  // Left arrow - rewind 5s
+                case 'j':  // J - rewind 10s (YouTube style)
+                    e.preventDefault();
+                    video.currentTime = Math.max(0, video.currentTime - (e.key === 'j' ? 10 : 5));
+                    break;
+                case 'arrowright':  // Right arrow - forward 5s
+                case 'l':  // L - forward 10s (YouTube style)
+                    e.preventDefault();
+                    video.currentTime = Math.min(video.duration, video.currentTime + (e.key === 'l' ? 10 : 5));
+                    break;
+                case 'arrowup':  // Up arrow - volume up
+                    e.preventDefault();
+                    video.volume = Math.min(1, video.volume + 0.1);
+                    volumeSlider.value = video.volume;
+                    updateVolumeIcon();
+                    break;
+                case 'arrowdown':  // Down arrow - volume down
+                    e.preventDefault();
+                    video.volume = Math.max(0, video.volume - 0.1);
+                    volumeSlider.value = video.volume;
+                    updateVolumeIcon();
+                    break;
+                case 'm':  // M - mute/unmute
+                    e.preventDefault();
+                    video.muted = !video.muted;
+                    updateVolumeIcon();
+                    break;
+                case 'f':  // F - fullscreen
+                    e.preventDefault();
+                    if (video.requestFullscreen) video.requestFullscreen();
+                    else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+                    break;
+                case 'escape':  // Escape - close player
+                    e.preventDefault();
+                    closeBtn.click();
+                    break;
+                case '0': case '1': case '2': case '3': case '4':
+                case '5': case '6': case '7': case '8': case '9':
+                    // Number keys - seek to percentage (0=0%, 5=50%, etc.)
+                    e.preventDefault();
+                    video.currentTime = (parseInt(e.key) / 10) * video.duration;
+                    break;
+            }
+        }
+
+        // Add keyboard listener
+        document.addEventListener('keydown', handleKeyboard);
+
+        // Remove keyboard listener when player closes
+        const originalCloseClick = closeBtn.onclick;
+        closeBtn.onclick = function() {
+            document.removeEventListener('keydown', handleKeyboard);
+            if (originalCloseClick) originalCloseClick();
+        };
+
         // Replace the thumbnail inside the clicked card with video
         if (clickedCard) {
             const thumbnail = clickedCard.querySelector('.episode-thumbnail');
