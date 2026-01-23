@@ -1578,12 +1578,17 @@
             existingWrapper.remove();
         }
 
-        // Create video wrapper - will adjust size based on video orientation
+        // Create video wrapper - matches the thumbnail it replaces
         const videoWrapper = document.createElement('div');
         videoWrapper.className = 'inline-video-wrapper';
 
-        // Initial size (will be adjusted when video loads)
-        videoWrapper.style.cssText = 'position:relative; width:100%; max-width:400px; background:#000; border-radius:8px; overflow:hidden; margin:10px auto;';
+        // Get the thumbnail dimensions to match exactly
+        const thumbnail = clickedCard ? clickedCard.querySelector('.episode-thumbnail') : null;
+        const thumbRect = thumbnail ? thumbnail.getBoundingClientRect() : null;
+        const width = thumbRect ? Math.min(thumbRect.width, 350) : 280;
+        const height = thumbRect ? Math.min(thumbRect.height, 200) : 160;
+
+        videoWrapper.style.cssText = `position:relative; width:${width}px; height:${height}px; background:#000; border-radius:8px; overflow:hidden;`;
 
         // Prevent wrapper clicks from doing anything
         videoWrapper.onclick = function(e) { e.stopPropagation(); };
@@ -1629,17 +1634,17 @@
             videoElement.currentTime = percent * videoElement.duration;
         };
 
-        // Controls row
+        // Controls row (compact)
         const controlsRow = document.createElement('div');
-        controlsRow.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:8px 12px;';
+        controlsRow.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:4px 8px;';
 
-        // Left controls
+        // Left controls (compact)
         const leftControls = document.createElement('div');
-        leftControls.style.cssText = 'display:flex; align-items:center; gap:12px;';
+        leftControls.style.cssText = 'display:flex; align-items:center; gap:6px;';
 
         // Play/Pause button
         const playBtn = document.createElement('button');
-        playBtn.style.cssText = 'background:none; border:none; color:white; font-size:18px; cursor:pointer; padding:0; display:flex; align-items:center;';
+        playBtn.style.cssText = 'background:none; border:none; color:white; font-size:14px; cursor:pointer; padding:0; display:flex; align-items:center;';
         const playIcon = document.createElement('i');
         playIcon.className = 'fas fa-pause';
         playBtn.appendChild(playIcon);
@@ -1655,7 +1660,7 @@
 
         // Volume button
         const volumeBtn = document.createElement('button');
-        volumeBtn.style.cssText = 'background:none; border:none; color:white; font-size:16px; cursor:pointer; padding:0; display:flex; align-items:center;';
+        volumeBtn.style.cssText = 'background:none; border:none; color:white; font-size:12px; cursor:pointer; padding:0; display:flex; align-items:center;';
         const volumeIcon = document.createElement('i');
         volumeIcon.className = 'fas fa-volume-up';
         volumeBtn.appendChild(volumeIcon);
@@ -1664,51 +1669,22 @@
             volumeIcon.className = videoElement.muted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
         };
 
-        // Time display
+        // Time display (compact, no title to save space)
         const timeDisplay = document.createElement('span');
-        timeDisplay.style.cssText = 'color:white; font-size:12px; font-family:monospace;';
-        timeDisplay.textContent = '0:00 / 0:00';
-
-        // Title
-        const titleDisplay = document.createElement('span');
-        titleDisplay.style.cssText = 'color:rgba(255,255,255,0.8); font-size:12px; margin-left:8px;';
-        titleDisplay.textContent = '• ' + title;
+        timeDisplay.style.cssText = 'color:white; font-size:10px; font-family:monospace;';
+        timeDisplay.textContent = '0:00';
 
         leftControls.appendChild(playBtn);
         leftControls.appendChild(volumeBtn);
         leftControls.appendChild(timeDisplay);
-        leftControls.appendChild(titleDisplay);
 
-        // Right controls
+        // Right controls (compact - only essential buttons)
         const rightControls = document.createElement('div');
-        rightControls.style.cssText = 'display:flex; align-items:center; gap:12px;';
-
-        // Settings button
-        const settingsBtn = document.createElement('button');
-        settingsBtn.style.cssText = 'background:none; border:none; color:white; font-size:16px; cursor:pointer; padding:0; opacity:0.8;';
-        const settingsIcon = document.createElement('i');
-        settingsIcon.className = 'fas fa-cog';
-        settingsBtn.appendChild(settingsIcon);
-
-        // Picture-in-picture button
-        const pipBtn = document.createElement('button');
-        pipBtn.style.cssText = 'background:none; border:none; color:white; font-size:16px; cursor:pointer; padding:0; opacity:0.8;';
-        const pipIcon = document.createElement('i');
-        pipIcon.className = 'fas fa-clone';
-        pipBtn.appendChild(pipIcon);
-        pipBtn.onclick = async function() {
-            try {
-                if (document.pictureInPictureElement) {
-                    await document.exitPictureInPicture();
-                } else {
-                    await videoElement.requestPictureInPicture();
-                }
-            } catch(e) { console.log('PiP not supported'); }
-        };
+        rightControls.style.cssText = 'display:flex; align-items:center; gap:6px;';
 
         // Fullscreen button (for VIDEO element)
         const fullscreenBtn = document.createElement('button');
-        fullscreenBtn.style.cssText = 'background:none; border:none; color:white; font-size:16px; cursor:pointer; padding:0; opacity:0.8;';
+        fullscreenBtn.style.cssText = 'background:none; border:none; color:white; font-size:12px; cursor:pointer; padding:0; opacity:0.9;';
         const fsIcon = document.createElement('i');
         fsIcon.className = 'fas fa-expand';
         fullscreenBtn.appendChild(fsIcon);
@@ -1724,13 +1700,11 @@
 
         // Close button
         const closeBtn = document.createElement('button');
-        closeBtn.style.cssText = 'background:none; border:none; color:white; font-size:16px; cursor:pointer; padding:0; opacity:0.8;';
+        closeBtn.style.cssText = 'background:none; border:none; color:white; font-size:12px; cursor:pointer; padding:0; opacity:0.9;';
         const closeIcon = document.createElement('i');
         closeIcon.className = 'fas fa-times';
         closeBtn.appendChild(closeIcon);
 
-        rightControls.appendChild(settingsBtn);
-        rightControls.appendChild(pipBtn);
         rightControls.appendChild(fullscreenBtn);
         rightControls.appendChild(closeBtn);
 
@@ -1751,9 +1725,7 @@
         videoElement.ontimeupdate = function() {
             const percent = (videoElement.currentTime / videoElement.duration) * 100;
             progressBar.style.width = percent + '%';
-            const current = formatTime(videoElement.currentTime);
-            const total = formatTime(videoElement.duration);
-            timeDisplay.textContent = current + ' / ' + total;
+            timeDisplay.textContent = formatTime(videoElement.currentTime);
         };
 
         videoElement.onplay = function() { playIcon.className = 'fas fa-pause'; };
@@ -1808,7 +1780,7 @@
             showNotification('⚠️ هەڵەیەک دا لە بارکرنا ڤیدیۆ');
         };
 
-        // Add loadedmetadata handler - detect orientation and resize
+        // Add loadedmetadata handler - detect orientation and resize (keep compact)
         videoElement.onloadedmetadata = function() {
             const vw = videoElement.videoWidth;
             const vh = videoElement.videoHeight;
@@ -1817,15 +1789,14 @@
             console.log(`📐 Video dimensions: ${vw}x${vh} (${isPortrait ? 'Portrait' : 'Landscape'})`);
 
             if (isPortrait) {
-                // Portrait video (like reels) - taller than wide
-                videoWrapper.style.maxWidth = '280px';
-                videoWrapper.style.height = '500px';
+                // Portrait video (like reels) - compact size
+                videoWrapper.style.width = '180px';
+                videoWrapper.style.height = '320px';
                 videoElement.style.objectFit = 'contain';
             } else {
-                // Landscape video - wider than tall
-                videoWrapper.style.maxWidth = '500px';
-                videoWrapper.style.height = 'auto';
-                videoWrapper.style.aspectRatio = '16/9';
+                // Landscape video - compact size
+                videoWrapper.style.width = '320px';
+                videoWrapper.style.height = '180px';
                 videoElement.style.objectFit = 'contain';
             }
         };
