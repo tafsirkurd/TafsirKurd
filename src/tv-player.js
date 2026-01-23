@@ -1612,11 +1612,11 @@
 
         // Progress bar (top of controls)
         const progressContainer = document.createElement('div');
-        progressContainer.style.cssText = 'width:100%; height:4px; background:rgba(255,255,255,0.3); cursor:pointer; position:relative;';
+        progressContainer.style.cssText = 'width:calc(100% - 16px); margin:0 8px; height:5px; background:rgba(255,255,255,0.3); cursor:pointer; position:relative; border-radius:3px;';
         const progressBar = document.createElement('div');
-        progressBar.style.cssText = 'height:100%; background:#e50914; width:0%; transition:width 0.1s; position:relative;';
+        progressBar.style.cssText = 'height:100%; background:#ffffff; width:0%; transition:width 0.1s; position:relative; border-radius:3px;';
         const progressHandle = document.createElement('div');
-        progressHandle.style.cssText = 'position:absolute; right:-6px; top:-4px; width:12px; height:12px; background:#e50914; border-radius:50%; opacity:0; transition:opacity 0.2s;';
+        progressHandle.style.cssText = 'position:absolute; right:-7px; top:-5px; width:14px; height:14px; background:#ffffff; border-radius:50%; opacity:0; transition:opacity 0.2s; box-shadow:0 0 4px rgba(0,0,0,0.5);';
         progressBar.appendChild(progressHandle);
         progressContainer.appendChild(progressBar);
         progressContainer.onmouseenter = function() { progressHandle.style.opacity = '1'; };
@@ -1627,17 +1627,17 @@
             videoElement.currentTime = percent * videoElement.duration;
         };
 
-        // Controls row (compact)
+        // Controls row
         const controlsRow = document.createElement('div');
-        controlsRow.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:4px 8px;';
+        controlsRow.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:10px 12px;';
 
-        // Left controls (compact)
+        // Left controls
         const leftControls = document.createElement('div');
-        leftControls.style.cssText = 'display:flex; align-items:center; gap:6px;';
+        leftControls.style.cssText = 'display:flex; align-items:center; gap:12px;';
 
         // Play/Pause button
         const playBtn = document.createElement('button');
-        playBtn.style.cssText = 'background:none; border:none; color:white; font-size:14px; cursor:pointer; padding:0; display:flex; align-items:center;';
+        playBtn.style.cssText = 'background:none; border:none; color:white; font-size:20px; cursor:pointer; padding:0; display:flex; align-items:center;';
         const playIcon = document.createElement('i');
         playIcon.className = 'fas fa-pause';
         playBtn.appendChild(playIcon);
@@ -1653,7 +1653,7 @@
 
         // Volume button
         const volumeBtn = document.createElement('button');
-        volumeBtn.style.cssText = 'background:none; border:none; color:white; font-size:12px; cursor:pointer; padding:0; display:flex; align-items:center;';
+        volumeBtn.style.cssText = 'background:none; border:none; color:white; font-size:18px; cursor:pointer; padding:0; display:flex; align-items:center;';
         const volumeIcon = document.createElement('i');
         volumeIcon.className = 'fas fa-volume-up';
         volumeBtn.appendChild(volumeIcon);
@@ -1662,22 +1662,22 @@
             volumeIcon.className = videoElement.muted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
         };
 
-        // Time display (compact, no title to save space)
+        // Time display
         const timeDisplay = document.createElement('span');
-        timeDisplay.style.cssText = 'color:white; font-size:10px; font-family:monospace;';
+        timeDisplay.style.cssText = 'color:white; font-size:13px; font-family:monospace;';
         timeDisplay.textContent = '0:00';
 
         leftControls.appendChild(playBtn);
         leftControls.appendChild(volumeBtn);
         leftControls.appendChild(timeDisplay);
 
-        // Right controls (compact - only essential buttons)
+        // Right controls
         const rightControls = document.createElement('div');
-        rightControls.style.cssText = 'display:flex; align-items:center; gap:6px;';
+        rightControls.style.cssText = 'display:flex; align-items:center; gap:12px;';
 
         // Fullscreen button (for VIDEO element)
         const fullscreenBtn = document.createElement('button');
-        fullscreenBtn.style.cssText = 'background:none; border:none; color:white; font-size:12px; cursor:pointer; padding:0; opacity:0.9;';
+        fullscreenBtn.style.cssText = 'background:none; border:none; color:white; font-size:18px; cursor:pointer; padding:0; opacity:0.9;';
         const fsIcon = document.createElement('i');
         fsIcon.className = 'fas fa-expand';
         fullscreenBtn.appendChild(fsIcon);
@@ -1693,7 +1693,7 @@
 
         // Close button
         const closeBtn = document.createElement('button');
-        closeBtn.style.cssText = 'background:none; border:none; color:white; font-size:12px; cursor:pointer; padding:0; opacity:0.9;';
+        closeBtn.style.cssText = 'background:none; border:none; color:white; font-size:18px; cursor:pointer; padding:0; opacity:0.9;';
         const closeIcon = document.createElement('i');
         closeIcon.className = 'fas fa-times';
         closeBtn.appendChild(closeIcon);
