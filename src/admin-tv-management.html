@@ -745,7 +745,7 @@
                                     <i class="fas fa-magic"></i> Drag slider to pick a frame from video
                                 </p>
                                 <div style="position: relative; background: #000; border-radius: 6px; overflow: hidden; margin-bottom: 10px;">
-                                    <video id="thumbnailVideo" style="width: 100%; max-height: 200px; display: block;" muted></video>
+                                    <video id="thumbnailVideo" style="width: 100%; max-height: 200px; display: block;" muted crossorigin="anonymous"></video>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                                     <span style="font-size: 12px; color: var(--text-tertiary);">0:00</span>
@@ -1751,6 +1751,10 @@
                 return;
             }
 
+            // Load local file into thumbnail picker immediately (no CORS issues!)
+            const localVideoUrl = URL.createObjectURL(file);
+            loadVideoForThumbnail(localVideoUrl);
+
             // Show progress UI
             uploadPlaceholder.style.display = 'none';
             uploadComplete.style.display = 'none';
@@ -1801,8 +1805,7 @@
                 uploadComplete.style.display = 'block';
                 videoUrlInput.value = publicUrl;
 
-                // Load video into thumbnail picker
-                loadVideoForThumbnail(publicUrl);
+                // Thumbnail picker already loaded from local file (no CORS issues)
 
                 // Reset after 3 seconds
                 setTimeout(() => {
@@ -1915,22 +1918,27 @@
 
         // Capture current frame as thumbnail
         function captureFrame() {
-            const canvas = document.createElement('canvas');
-            canvas.width = thumbnailVideo.videoWidth;
-            canvas.height = thumbnailVideo.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(thumbnailVideo, 0, 0, canvas.width, canvas.height);
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = thumbnailVideo.videoWidth || 640;
+                canvas.height = thumbnailVideo.videoHeight || 360;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(thumbnailVideo, 0, 0, canvas.width, canvas.height);
 
-            // Convert to data URL (JPEG for smaller size)
-            capturedThumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                // Convert to data URL (JPEG for smaller size)
+                capturedThumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.85);
 
-            // Show preview
-            capturedThumbnailImg.src = capturedThumbnailDataUrl;
-            capturedThumbnail.style.display = 'block';
+                // Show preview
+                capturedThumbnailImg.src = capturedThumbnailDataUrl;
+                capturedThumbnail.style.display = 'block';
 
-            // For now, we'll upload this as a data URL (works for small thumbnails)
-            // In production, you'd upload this to S3 and get a URL
-            uploadThumbnailToS3(capturedThumbnailDataUrl);
+                // Upload to S3
+                uploadThumbnailToS3(capturedThumbnailDataUrl);
+            } catch (error) {
+                console.error('Failed to capture frame:', error);
+                // CORS error - show message to user
+                alert('Cannot capture frame due to CORS restrictions.\n\nPlease use "or paste URL" option to manually add a thumbnail URL, or take a screenshot and upload it separately.');
+            }
         }
 
         // Upload captured thumbnail to S3
