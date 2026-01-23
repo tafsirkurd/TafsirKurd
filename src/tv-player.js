@@ -1578,25 +1578,31 @@
             existingWrapper.remove();
         }
 
-        // Create video wrapper to replace the card thumbnail
+        // Create video wrapper to replace the card thumbnail (same size as thumbnail)
         const videoWrapper = document.createElement('div');
         videoWrapper.className = 'inline-video-wrapper';
-        videoWrapper.style.cssText = 'position:relative; width:100%; background:#000; border-radius:12px; overflow:hidden; aspect-ratio:16/9;';
+
+        // Get thumbnail size to match
+        const thumbnail = clickedCard ? clickedCard.querySelector('.episode-thumbnail') : null;
+        const thumbWidth = thumbnail ? thumbnail.offsetWidth : 300;
+        const thumbHeight = thumbnail ? thumbnail.offsetHeight : 170;
+
+        videoWrapper.style.cssText = `position:relative; width:${thumbWidth}px; height:${thumbHeight}px; background:#000; border-radius:8px; overflow:hidden;`;
 
         // Create video element
         const videoElement = document.createElement('video');
         videoElement.id = 'activeVideo';
         videoElement.playsInline = true;
-        videoElement.style.cssText = 'width:100%; height:100%; object-fit:contain; background:#000;';
+        videoElement.style.cssText = 'width:100%; height:100%; object-fit:cover; background:#000;';
 
-        // Create custom controls
+        // Create custom controls (compact for card size)
         const controls = document.createElement('div');
         controls.className = 'custom-controls';
-        controls.style.cssText = 'position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.9)); padding:15px; display:flex; align-items:center; gap:15px; opacity:0; transition:opacity 0.3s;';
+        controls.style.cssText = 'position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.8)); padding:8px 10px; display:flex; align-items:center; gap:8px; opacity:1; transition:opacity 0.3s;';
 
         // Play/Pause button
         const playBtn = document.createElement('button');
-        playBtn.style.cssText = 'background:none; border:none; color:white; font-size:20px; cursor:pointer; padding:5px;';
+        playBtn.style.cssText = 'background:none; border:none; color:white; font-size:14px; cursor:pointer; padding:3px;';
         const playIcon = document.createElement('i');
         playIcon.className = 'fas fa-pause';
         playBtn.appendChild(playIcon);
@@ -1624,12 +1630,12 @@
 
         // Time display
         const timeDisplay = document.createElement('span');
-        timeDisplay.style.cssText = 'color:white; font-size:12px; min-width:80px;';
+        timeDisplay.style.cssText = 'color:white; font-size:10px; min-width:60px;';
         timeDisplay.textContent = '0:00 / 0:00';
 
         // Fullscreen button
         const fullscreenBtn = document.createElement('button');
-        fullscreenBtn.style.cssText = 'background:none; border:none; color:white; font-size:18px; cursor:pointer; padding:5px;';
+        fullscreenBtn.style.cssText = 'background:none; border:none; color:white; font-size:14px; cursor:pointer; padding:3px;';
         const fsIcon = document.createElement('i');
         fsIcon.className = 'fas fa-expand';
         fullscreenBtn.appendChild(fsIcon);
@@ -1640,7 +1646,7 @@
 
         // Close button
         const closeBtn = document.createElement('button');
-        closeBtn.style.cssText = 'background:none; border:none; color:white; font-size:18px; cursor:pointer; padding:5px;';
+        closeBtn.style.cssText = 'background:none; border:none; color:white; font-size:14px; cursor:pointer; padding:3px;';
         const closeIcon = document.createElement('i');
         closeIcon.className = 'fas fa-times';
         closeBtn.appendChild(closeIcon);
