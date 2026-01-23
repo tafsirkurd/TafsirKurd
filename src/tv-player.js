@@ -1578,16 +1578,12 @@
             existingWrapper.remove();
         }
 
-        // Create video wrapper to replace the card thumbnail (same size as thumbnail)
+        // Create video wrapper - will adjust size based on video orientation
         const videoWrapper = document.createElement('div');
         videoWrapper.className = 'inline-video-wrapper';
 
-        // Get thumbnail size to match
-        const thumbnail = clickedCard ? clickedCard.querySelector('.episode-thumbnail') : null;
-        const thumbWidth = thumbnail ? thumbnail.offsetWidth : 300;
-        const thumbHeight = thumbnail ? thumbnail.offsetHeight : 170;
-
-        videoWrapper.style.cssText = `position:relative; width:${thumbWidth}px; height:${thumbHeight}px; background:#000; border-radius:8px; overflow:hidden;`;
+        // Initial size (will be adjusted when video loads)
+        videoWrapper.style.cssText = 'position:relative; width:100%; max-width:400px; background:#000; border-radius:8px; overflow:hidden; margin:10px auto;';
 
         // Create video element
         const videoElement = document.createElement('video');
@@ -1727,6 +1723,28 @@
         videoElement.onerror = function(e) {
             console.error('❌ Video error:', videoElement.error);
             showNotification('⚠️ هەڵەیەک دا لە بارکرنا ڤیدیۆ');
+        };
+
+        // Add loadedmetadata handler - detect orientation and resize
+        videoElement.onloadedmetadata = function() {
+            const vw = videoElement.videoWidth;
+            const vh = videoElement.videoHeight;
+            const isPortrait = vh > vw;
+
+            console.log(`📐 Video dimensions: ${vw}x${vh} (${isPortrait ? 'Portrait' : 'Landscape'})`);
+
+            if (isPortrait) {
+                // Portrait video (like reels) - taller than wide
+                videoWrapper.style.maxWidth = '280px';
+                videoWrapper.style.height = '500px';
+                videoElement.style.objectFit = 'contain';
+            } else {
+                // Landscape video - wider than tall
+                videoWrapper.style.maxWidth = '500px';
+                videoWrapper.style.height = 'auto';
+                videoWrapper.style.aspectRatio = '16/9';
+                videoElement.style.objectFit = 'contain';
+            }
         };
 
         // Add loadeddata handler
