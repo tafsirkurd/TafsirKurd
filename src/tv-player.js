@@ -1585,16 +1585,32 @@
         // Initial size (will be adjusted when video loads)
         videoWrapper.style.cssText = 'position:relative; width:100%; max-width:400px; background:#000; border-radius:8px; overflow:hidden; margin:10px auto;';
 
+        // Prevent wrapper clicks from doing anything
+        videoWrapper.onclick = function(e) { e.stopPropagation(); };
+
         // Create video element
         const videoElement = document.createElement('video');
         videoElement.id = 'activeVideo';
         videoElement.playsInline = true;
         videoElement.style.cssText = 'width:100%; height:100%; object-fit:cover; background:#000;';
 
+        // Click on video to play/pause (stop propagation)
+        videoElement.onclick = function(e) {
+            e.stopPropagation();
+            if (videoElement.paused) {
+                videoElement.play();
+            } else {
+                videoElement.pause();
+            }
+        };
+
         // Create Netflix-style controls container
         const controls = document.createElement('div');
         controls.className = 'custom-controls';
-        controls.style.cssText = 'position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.9)); padding:0; opacity:0; transition:opacity 0.3s;';
+        controls.style.cssText = 'position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.9)); padding:0; opacity:0; transition:opacity 0.3s; z-index:100;';
+
+        // Stop clicks from propagating to video wrapper
+        controls.onclick = function(e) { e.stopPropagation(); };
 
         // Progress bar (top of controls)
         const progressContainer = document.createElement('div');
