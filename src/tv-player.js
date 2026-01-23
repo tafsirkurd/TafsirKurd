@@ -1667,7 +1667,10 @@
 
         // Play/Pause button
         const playBtn = document.createElement('button');
-        playBtn.style.cssText = 'background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; display:flex; align-items:center;';
+        playBtn.style.cssText = 'background:none; border:none; color:white; font-size:26px; cursor:pointer; padding:4px; display:flex; align-items:center; transition:transform 0.1s;';
+        playBtn.title = 'Play/Pause (Space or K)';
+        playBtn.onmouseenter = function() { this.style.transform = 'scale(1.1)'; };
+        playBtn.onmouseleave = function() { this.style.transform = 'scale(1)'; };
         const playIcon = document.createElement('i');
         playIcon.className = 'fas fa-pause';
         playBtn.appendChild(playIcon);
@@ -1681,39 +1684,75 @@
             }
         };
 
-        // Volume container (button + slider)
+        // Volume container (button + slider + percentage)
         const volumeContainer = document.createElement('div');
-        volumeContainer.style.cssText = 'display:flex; align-items:center; gap:8px;';
+        volumeContainer.style.cssText = 'display:flex; align-items:center; gap:10px;';
 
         // Volume button
         const volumeBtn = document.createElement('button');
         volumeBtn.style.cssText = 'background:none; border:none; color:white; font-size:22px; cursor:pointer; padding:0; display:flex; align-items:center;';
+        volumeBtn.title = 'Mute/Unmute (M)';
         const volumeIcon = document.createElement('i');
-        volumeIcon.className = 'fas fa-volume-up';
+        volumeIcon.className = 'fas fa-volume-high';
         volumeBtn.appendChild(volumeIcon);
+
+        // Volume slider container with labels
+        const sliderContainer = document.createElement('div');
+        sliderContainer.style.cssText = 'display:flex; align-items:center; gap:6px;';
+
+        // Min label
+        const minLabel = document.createElement('span');
+        minLabel.textContent = '🔈';
+        minLabel.style.cssText = 'font-size:10px; opacity:0.6;';
 
         // Volume slider
         const volumeSlider = document.createElement('input');
         volumeSlider.type = 'range';
         volumeSlider.min = '0';
-        volumeSlider.max = '1';
-        volumeSlider.step = '0.1';
-        volumeSlider.value = '1';
-        volumeSlider.style.cssText = 'width:70px; height:4px; cursor:pointer; accent-color:white; background:rgba(255,255,255,0.3); border-radius:2px; -webkit-appearance:none; appearance:none;';
+        volumeSlider.max = '100';
+        volumeSlider.step = '5';
+        volumeSlider.value = '100';
+        volumeSlider.style.cssText = 'width:80px; height:5px; cursor:pointer; accent-color:white; background:linear-gradient(to right, rgba(255,255,255,0.8) 100%, rgba(255,255,255,0.3) 100%); border-radius:3px; -webkit-appearance:none; appearance:none;';
 
-        // Update volume icon based on level
+        // Max label
+        const maxLabel = document.createElement('span');
+        maxLabel.textContent = '🔊';
+        maxLabel.style.cssText = 'font-size:10px; opacity:0.6;';
+
+        // Volume percentage display
+        const volumePercent = document.createElement('span');
+        volumePercent.textContent = '100%';
+        volumePercent.style.cssText = 'color:white; font-size:12px; min-width:35px; text-align:center; font-weight:500;';
+
+        sliderContainer.appendChild(minLabel);
+        sliderContainer.appendChild(volumeSlider);
+        sliderContainer.appendChild(maxLabel);
+
+        // Update volume icon and slider visual
         function updateVolumeIcon() {
+            const vol = videoElement.muted ? 0 : Math.round(videoElement.volume * 100);
+            volumePercent.textContent = vol + '%';
+
+            // Update slider background to show filled portion
+            volumeSlider.style.background = `linear-gradient(to right, rgba(255,255,255,0.9) ${vol}%, rgba(255,255,255,0.3) ${vol}%)`;
+
             if (videoElement.muted || videoElement.volume === 0) {
-                volumeIcon.className = 'fas fa-volume-mute';
-            } else if (videoElement.volume < 0.5) {
+                volumeIcon.className = 'fas fa-volume-xmark';
+                volumeIcon.style.color = '#ff6b6b';
+            } else if (videoElement.volume < 0.3) {
+                volumeIcon.className = 'fas fa-volume-off';
+                volumeIcon.style.color = 'white';
+            } else if (videoElement.volume < 0.7) {
                 volumeIcon.className = 'fas fa-volume-low';
+                volumeIcon.style.color = 'white';
             } else {
                 volumeIcon.className = 'fas fa-volume-high';
+                volumeIcon.style.color = 'white';
             }
         }
 
         volumeSlider.oninput = function() {
-            videoElement.volume = this.value;
+            videoElement.volume = this.value / 100;
             videoElement.muted = false;
             updateVolumeIcon();
         };
@@ -1724,7 +1763,8 @@
         };
 
         volumeContainer.appendChild(volumeBtn);
-        volumeContainer.appendChild(volumeSlider);
+        volumeContainer.appendChild(sliderContainer);
+        volumeContainer.appendChild(volumePercent);
 
         // Time display
         const timeDisplay = document.createElement('span');
@@ -1741,7 +1781,10 @@
 
         // Fullscreen button (for VIDEO element)
         const fullscreenBtn = document.createElement('button');
-        fullscreenBtn.style.cssText = 'background:none; border:none; color:white; font-size:22px; cursor:pointer; padding:0; opacity:0.9;';
+        fullscreenBtn.style.cssText = 'background:none; border:none; color:white; font-size:22px; cursor:pointer; padding:4px; display:flex; align-items:center; transition:transform 0.1s;';
+        fullscreenBtn.title = 'Fullscreen (F)';
+        fullscreenBtn.onmouseenter = function() { this.style.transform = 'scale(1.1)'; };
+        fullscreenBtn.onmouseleave = function() { this.style.transform = 'scale(1)'; };
         const fsIcon = document.createElement('i');
         fsIcon.className = 'fas fa-expand';
         fullscreenBtn.appendChild(fsIcon);
@@ -1757,7 +1800,10 @@
 
         // Close button
         const closeBtn = document.createElement('button');
-        closeBtn.style.cssText = 'background:none; border:none; color:white; font-size:22px; cursor:pointer; padding:0; opacity:0.9;';
+        closeBtn.style.cssText = 'background:none; border:none; color:#ff6b6b; font-size:22px; cursor:pointer; padding:4px; display:flex; align-items:center; transition:transform 0.1s;';
+        closeBtn.title = 'Close (Escape)';
+        closeBtn.onmouseenter = function() { this.style.transform = 'scale(1.1)'; this.style.color = '#ff4757'; };
+        closeBtn.onmouseleave = function() { this.style.transform = 'scale(1)'; this.style.color = '#ff6b6b'; };
         const closeIcon = document.createElement('i');
         closeIcon.className = 'fas fa-xmark';
         closeBtn.appendChild(closeIcon);
