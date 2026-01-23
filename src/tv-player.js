@@ -1467,22 +1467,25 @@
         // Update current episode
         state.currentEpisode = episodeId;
 
-        // Find the clicked episode card and play video in place
+        // Find the clicked episode card
         const clickedCard = document.querySelector(`.episode-card[onclick*="${episodeId}"]`) ||
                            document.querySelector(`.episode-item[onclick*="${episodeId}"]`);
 
-        // Close any existing player
-        const existingPlayer = document.querySelector('.inline-video-wrapper');
-        if (existingPlayer) {
-            const existingVideo = existingPlayer.querySelector('video');
+        // Close any existing player and restore original card
+        const existingWrapper = document.querySelector('.inline-video-wrapper');
+        if (existingWrapper) {
+            const existingVideo = existingWrapper.querySelector('video');
             if (existingVideo) existingVideo.pause();
-            existingPlayer.remove();
+            // Restore original card if it was hidden
+            const hiddenCard = document.querySelector('.episode-card-hidden');
+            if (hiddenCard) hiddenCard.classList.remove('episode-card-hidden');
+            existingWrapper.remove();
         }
 
-        // Create video wrapper
+        // Create video wrapper to replace the card thumbnail
         const videoWrapper = document.createElement('div');
         videoWrapper.className = 'inline-video-wrapper';
-        videoWrapper.style.cssText = 'position:relative; width:100%; background:#000; border-radius:12px; overflow:hidden; margin:10px 0; aspect-ratio:16/9;';
+        videoWrapper.style.cssText = 'position:relative; width:100%; background:#000; border-radius:12px; overflow:hidden; aspect-ratio:16/9;';
 
         // Create video element
         const videoElement = document.createElement('video');
@@ -1575,11 +1578,29 @@
         videoElement.onplay = function() { playIcon.className = 'fas fa-pause'; };
         videoElement.onpause = function() { playIcon.className = 'fas fa-play'; controls.style.opacity = '1'; };
 
-        // Insert after the clicked card or at a reasonable position
+        // Replace the thumbnail inside the clicked card with video
         if (clickedCard) {
-            clickedCard.parentNode.insertBefore(videoWrapper, clickedCard.nextSibling);
+            const thumbnail = clickedCard.querySelector('.episode-thumbnail');
+            if (thumbnail) {
+                // Store original content and hide it
+                thumbnail.dataset.originalDisplay = thumbnail.style.display;
+                thumbnail.style.display = 'none';
+                // Insert video wrapper after thumbnail (inside the card)
+                thumbnail.parentNode.insertBefore(videoWrapper, thumbnail.nextSibling);
+
+                // Update close button to restore thumbnail
+                closeBtn.onclick = function() {
+                    videoElement.pause();
+                    videoWrapper.remove();
+                    thumbnail.style.display = thumbnail.dataset.originalDisplay || 'block';
+                };
+            } else {
+                // No thumbnail found, just insert inside card
+                clickedCard.insertBefore(videoWrapper, clickedCard.firstChild);
+            }
         } else {
-            const container = document.querySelector('.episodes-grid') || document.querySelector('.content-area') || document.body;
+            // Fallback: find any episodes container
+            const container = document.querySelector('.episodes-grid') || document.querySelector('.latest-episodes') || document.body;
             container.insertBefore(videoWrapper, container.firstChild);
         }
 
