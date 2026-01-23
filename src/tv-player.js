@@ -4,6 +4,96 @@
 (function() {
     'use strict';
 
+    // ===== THUMBNAIL CACHE =====
+    const thumbnailCache = {};
+
+    // Generate thumbnail from video URL
+    async function generateVideoThumbnail(videoUrl, seekTime = 2) {
+        // Check cache first
+        if (thumbnailCache[videoUrl]) {
+            return thumbnailCache[videoUrl];
+        }
+
+        return new Promise((resolve) => {
+            const video = document.createElement('video');
+            video.crossOrigin = 'anonymous';
+            video.muted = true;
+            video.preload = 'metadata';
+
+            video.onloadedmetadata = function() {
+                // Seek to specified time or 10% of duration
+                video.currentTime = Math.min(seekTime, video.duration * 0.1);
+            };
+
+            video.onseeked = function() {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 320;
+                    canvas.height = 180;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const thumbnail = canvas.toDataURL('image/jpeg', 0.7);
+                    thumbnailCache[videoUrl] = thumbnail;
+                    resolve(thumbnail);
+                } catch (e) {
+                    console.warn('Could not generate thumbnail:', e);
+                    resolve(null);
+                }
+                video.remove();
+            };
+
+            video.onerror = function() {
+                console.warn('Video load error for thumbnail');
+                resolve(null);
+                video.remove();
+            };
+
+            // Timeout after 5 seconds
+            setTimeout(() => {
+                if (!thumbnailCache[videoUrl]) {
+                    resolve(null);
+                    video.remove();
+                }
+            }, 5000);
+
+            video.src = videoUrl;
+        });
+    }
+
+    // Generate thumbnail for an image element (called on error)
+    window.generateThumbnailForImage = async function(imgElement) {
+        const videoUrl = imgElement.dataset.videoUrl;
+        if (!videoUrl) return;
+
+        const thumbnail = await generateVideoThumbnail(videoUrl);
+        if (thumbnail) {
+            imgElement.src = thumbnail;
+        }
+    };
+
+    // Load thumbnails for episodes without them
+    async function loadMissingThumbnails() {
+        const cards = document.querySelectorAll('.episode-card img, .episode-thumbnail img');
+        for (const img of cards) {
+            if (img.src.includes('data:image/svg+xml') || !img.src || img.dataset.thumbnailLoaded) {
+                continue;
+            }
+            // Check if this card has a video URL
+            const card = img.closest('.episode-card') || img.closest('.episode-item');
+            if (card) {
+                const onclick = card.getAttribute('onclick') || '';
+                const videoUrlMatch = onclick.match(/https:\/\/[^'",]+/);
+                if (videoUrlMatch) {
+                    const thumbnail = await generateVideoThumbnail(videoUrlMatch[0]);
+                    if (thumbnail) {
+                        img.src = thumbnail;
+                        img.dataset.thumbnailLoaded = 'true';
+                    }
+                }
+            }
+        }
+    }
+
     // ===== GLOBAL STATE =====
     const state = {
         currentEpisode: null,
@@ -1393,6 +1483,9 @@
         });
 
         console.log(`📺 Rendered ${videos.length} videos total`);
+
+        // Load thumbnails from videos that don't have thumbnails
+        setTimeout(() => loadMissingThumbnails(), 500);
     }
 
     // Create episode card HTML
@@ -1401,10 +1494,13 @@
             ? state.watchProgress[video.id].percent
             : 0;
 
+        // Use cached thumbnail or placeholder
+        const thumbnailSrc = video.thumbnail || thumbnailCache[video.videoId] || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22225%22%3E%3Crect fill=%22%231a1a1a%22 width=%22400%22 height=%22225%22/%3E%3Ctext fill=%22%23999%22 font-family=%22Arial%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3ELoading...%3C/text%3E%3C/svg%3E';
+
         return `
-            <div class="episode-card" onclick="playVideo('${video.videoId}', '${video.title}', '${video.id}')">
+            <div class="episode-card" onclick="playVideo('${video.videoId}', '${video.title}', '${video.id}')" data-video-url="${video.videoId}">
                 <div class="episode-thumbnail">
-                    <img src="${video.thumbnail}" alt="${video.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22225%22%3E%3Crect fill=%22%231a1a1a%22 width=%22400%22 height=%22225%22/%3E%3Ctext fill=%22%23999%22 font-family=%22Arial%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3E%D9%88%DB%8E%D9%86%DB%95 %DA%A4%DB%8C%D8%AF%DB%8C%DB%86%3C/text%3E%3C/svg%3E'">
+                    <img src="${thumbnailSrc}" alt="${video.title}" data-video-url="${video.videoId}" onerror="generateThumbnailForImage(this)">
                     ${showProgress ? `<div class="episode-progress" style="width: ${progress}%;"></div>` : ''}
                     <div class="play-overlay">
                         <i class="fas fa-play"></i>
