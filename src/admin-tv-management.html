@@ -779,8 +779,7 @@
                             </div>
                             <div id="noVideoMessage" style="text-align: center; padding: 20px; color: var(--text-tertiary);">
                                 <i class="fas fa-arrow-up" style="font-size: 24px; margin-bottom: 8px; display: block; animation: bounce 1s infinite;"></i>
-                                <span style="font-size: 13px;"><strong>Step 1:</strong> Upload a video above ↑</span>
-                                <br><span style="font-size: 12px; opacity: 0.7;">Then you can pick a frame as thumbnail</span>
+                                <span style="font-size: 13px;">Upload a video above ↑ to pick thumbnail</span>
                                 <style>
                                     @keyframes bounce {
                                         0%, 100% { transform: translateY(0); }
@@ -1914,13 +1913,19 @@
                 uploadComplete.style.display = 'block';
                 videoUrlInput.value = publicUrl;
 
-                // Thumbnail picker already loaded from local file (no CORS issues)
+                // Make sure thumbnail picker is loaded (try local file first, fallback to S3)
+                if (thumbnailPreviewSection.style.display !== 'block') {
+                    console.log('Thumbnail preview not showing, trying S3 URL');
+                    loadVideoForThumbnail(publicUrl);
+                }
 
-                // Reset after 3 seconds
+                // Keep upload complete visible but don't reset to placeholder
                 setTimeout(() => {
                     uploadComplete.style.display = 'none';
+                    // Show a success message instead of resetting
                     uploadPlaceholder.style.display = 'block';
-                }, 3000);
+                    uploadPlaceholder.querySelector('p').textContent = 'Video uploaded! You can upload another or pick thumbnail below.';
+                }, 2000);
 
             } catch (error) {
                 console.error('Upload error:', error);
@@ -1979,16 +1984,23 @@
 
         // Load video for thumbnail picking
         function loadVideoForThumbnail(videoUrl) {
+            console.log('Loading video for thumbnail:', videoUrl);
+
             if (!videoUrl) {
                 thumbnailPreviewSection.style.display = 'none';
                 noVideoMessage.style.display = 'block';
                 return;
             }
 
+            // Show loading state
+            noVideoMessage.querySelector('i').className = 'fas fa-spinner fa-spin';
+            noVideoMessage.querySelector('span').textContent = 'Loading video preview...';
+
             thumbnailVideo.src = videoUrl;
             thumbnailVideo.load();
 
             thumbnailVideo.onloadedmetadata = function() {
+                console.log('Video metadata loaded, duration:', thumbnailVideo.duration);
                 thumbnailPreviewSection.style.display = 'block';
                 noVideoMessage.style.display = 'none';
                 thumbnailSeeker.max = Math.floor(thumbnailVideo.duration);
@@ -1998,10 +2010,13 @@
                 thumbnailVideo.currentTime = Math.min(2, thumbnailVideo.duration);
             };
 
-            thumbnailVideo.onerror = function() {
-                console.error('Failed to load video for thumbnail');
+            thumbnailVideo.onerror = function(e) {
+                console.error('Failed to load video for thumbnail:', e);
                 thumbnailPreviewSection.style.display = 'none';
                 noVideoMessage.style.display = 'block';
+                noVideoMessage.querySelector('i').className = 'fas fa-exclamation-triangle';
+                noVideoMessage.querySelector('i').style.color = 'var(--accent-red)';
+                noVideoMessage.querySelector('span').textContent = 'Could not load preview. Paste thumbnail URL below.';
             };
         }
 
