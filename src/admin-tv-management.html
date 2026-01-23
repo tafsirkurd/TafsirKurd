@@ -2065,12 +2065,24 @@
             }
         }
 
+        // Convert data URL to Blob without using fetch (CSP safe)
+        function dataURLtoBlob(dataUrl) {
+            const arr = dataUrl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr], { type: mime });
+        }
+
         // Upload captured thumbnail to S3
         async function uploadThumbnailToS3(dataUrl) {
             try {
-                // Convert data URL to Blob
-                const response = await fetch(dataUrl);
-                const blob = await response.blob();
+                // Convert data URL to Blob (CSP safe method)
+                const blob = dataURLtoBlob(dataUrl);
                 const file = new File([blob], 'thumbnail-' + Date.now() + '.jpg', { type: 'image/jpeg' });
 
                 // Get admin token
