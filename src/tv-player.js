@@ -1578,17 +1578,10 @@
             existingWrapper.remove();
         }
 
-        // Create video wrapper - matches the thumbnail it replaces
+        // Create video wrapper
         const videoWrapper = document.createElement('div');
         videoWrapper.className = 'inline-video-wrapper';
-
-        // Get the thumbnail dimensions to match exactly
-        const thumbnail = clickedCard ? clickedCard.querySelector('.episode-thumbnail') : null;
-        const thumbRect = thumbnail ? thumbnail.getBoundingClientRect() : null;
-        const width = thumbRect ? Math.min(thumbRect.width, 350) : 280;
-        const height = thumbRect ? Math.min(thumbRect.height, 200) : 160;
-
-        videoWrapper.style.cssText = `position:relative; width:${width}px; height:${height}px; background:#000; border-radius:8px; overflow:hidden;`;
+        videoWrapper.style.cssText = 'position:relative; width:100%; max-width:600px; background:#000; border-radius:12px; overflow:hidden; margin:15px auto;';
 
         // Prevent wrapper clicks from doing anything
         videoWrapper.onclick = function(e) { e.stopPropagation(); };
@@ -1780,7 +1773,7 @@
             showNotification('⚠️ هەڵەیەک دا لە بارکرنا ڤیدیۆ');
         };
 
-        // Add loadedmetadata handler - detect orientation and resize (keep compact)
+        // Add loadedmetadata handler - detect orientation and resize
         videoElement.onloadedmetadata = function() {
             const vw = videoElement.videoWidth;
             const vh = videoElement.videoHeight;
@@ -1789,14 +1782,16 @@
             console.log(`📐 Video dimensions: ${vw}x${vh} (${isPortrait ? 'Portrait' : 'Landscape'})`);
 
             if (isPortrait) {
-                // Portrait video (like reels) - compact size
-                videoWrapper.style.width = '180px';
-                videoWrapper.style.height = '320px';
+                // Portrait video (like reels)
+                videoWrapper.style.width = '280px';
+                videoWrapper.style.height = '500px';
                 videoElement.style.objectFit = 'contain';
             } else {
-                // Landscape video - compact size
-                videoWrapper.style.width = '320px';
-                videoWrapper.style.height = '180px';
+                // Landscape video
+                videoWrapper.style.width = '100%';
+                videoWrapper.style.maxWidth = '600px';
+                videoWrapper.style.height = 'auto';
+                videoWrapper.style.aspectRatio = '16/9';
                 videoElement.style.objectFit = 'contain';
             }
         };
