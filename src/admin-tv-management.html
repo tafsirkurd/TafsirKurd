@@ -741,8 +741,8 @@
                         <!-- Thumbnail Picker -->
                         <div id="thumbnailPicker" style="border: 1px solid var(--border-light); border-radius: 8px; padding: 15px; margin-bottom: 10px;">
                             <div id="thumbnailPreviewSection" style="display: none;">
-                                <p style="margin: 0 0 10px 0; font-size: 13px; color: var(--text-secondary);">
-                                    <i class="fas fa-magic"></i> Drag slider to pick a frame from video
+                                <p style="margin: 0 0 10px 0; font-size: 13px; color: var(--accent-green); font-weight: 600;">
+                                    <i class="fas fa-check-circle"></i> Video loaded! Drag slider to pick your thumbnail frame:
                                 </p>
                                 <div style="position: relative; background: #000; border-radius: 6px; overflow: hidden; margin-bottom: 10px;">
                                     <video id="thumbnailVideo" style="width: 100%; max-height: 200px; display: block;" muted crossorigin="anonymous"></video>
@@ -763,8 +763,15 @@
                                 </div>
                             </div>
                             <div id="noVideoMessage" style="text-align: center; padding: 20px; color: var(--text-tertiary);">
-                                <i class="fas fa-film" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
-                                <span style="font-size: 13px;">Upload a video first to pick thumbnail from frame</span>
+                                <i class="fas fa-arrow-up" style="font-size: 24px; margin-bottom: 8px; display: block; animation: bounce 1s infinite;"></i>
+                                <span style="font-size: 13px;"><strong>Step 1:</strong> Upload a video above ↑</span>
+                                <br><span style="font-size: 12px; opacity: 0.7;">Then you can pick a frame as thumbnail</span>
+                                <style>
+                                    @keyframes bounce {
+                                        0%, 100% { transform: translateY(0); }
+                                        50% { transform: translateY(-5px); }
+                                    }
+                                </style>
                             </div>
                         </div>
                         <!-- Manual URL Input -->
