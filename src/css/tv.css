@@ -348,20 +348,18 @@
 /* Fallback icon when image fails to load */
 .topic-fallback-icon {
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
     display: none;
-    align-items: center;
-    justify-content: center;
+    place-items: center;
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
     color: rgba(255, 255, 255, 0.6);
     font-size: 3rem;
 }
 
 .topic-card-image.no-image .topic-fallback-icon {
-    display: flex;
+    display: grid;
 }
 
 .topic-card:hover .topic-fallback-icon {
@@ -486,20 +484,18 @@
 /* Fallback icon when episode image fails */
 .episode-fallback-icon {
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
     display: none;
-    align-items: center;
-    justify-content: center;
+    place-items: center;
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
     color: rgba(255, 255, 255, 0.5);
     font-size: 2rem;
 }
 
 .episode-thumbnail.no-image .episode-fallback-icon {
-    display: flex;
+    display: grid;
 }
 
 .episode-play-overlay {
