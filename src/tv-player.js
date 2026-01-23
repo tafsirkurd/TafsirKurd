@@ -101,6 +101,7 @@
         watchlist: [],
         watchProgress: {},
         likedEpisodes: [],
+        seriesData: {}, // Series info from database
         currentQuality: '1080',
         currentSpeed: 1,
         subtitlesEnabled: false,
@@ -233,7 +234,8 @@
                     title: episode.seriesTitle || episode.categoryTitle || 'عام',
                     description: episode.seriesDescription || '',
                     episodes: [],
-                    thumbnail: episode.thumbnail || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="225"%3E%3Crect fill="%231a1a1a" width="400" height="225"/%3E%3Ctext fill="%23999" font-family="Arial" font-size="20" x="50%25" y="50%25" text-anchor="middle" dominant-baseline="middle"%3E%D9%88%DB%8E%D9%86%DB%95 %DA%A4%DB%8C%D8%AF%DB%8C%DB%86%3C/text%3E%3C/svg%3E'
+                    // Use series thumbnail first, then episode thumbnail as fallback
+                    thumbnail: episode.seriesThumbnail || episode.thumbnail || ''
                 };
             }
             topics[topicKey].episodes.push(episode);
@@ -1369,6 +1371,26 @@
 
         if (window.tvSupabase) {
             try {
+                // Load series data first
+                const { data: seriesData } = await window.tvSupabase
+                    .from('tv_series')
+                    .select('*');
+
+                // Store series info for later use
+                const seriesMap = {};
+                if (seriesData) {
+                    seriesData.forEach(s => {
+                        seriesMap[s.id] = {
+                            title: s.name_ku,
+                            description: s.description_ku,
+                            thumbnail: s.thumbnail_url
+                        };
+                    });
+                    state.seriesData = seriesMap;
+                    console.log(`✅ Loaded ${seriesData.length} series from Supabase`);
+                }
+
+                // Load episodes
                 const { data, error } = await window.tvSupabase
                     .from('tv_episodes')
                     .select('*')
@@ -1380,13 +1402,17 @@
                     // Convert Supabase format to our format
                     const supabaseVideos = data.map(v => {
                         const isS3 = v.video_type === 's3' || v.video_url?.startsWith('http');
+                        const seriesInfo = seriesMap[v.series_id] || {};
                         return {
                             id: v.id,
                             videoId: v.video_url,
                             videoType: v.video_type || (isS3 ? 's3' : 'youtube'),
                             title: v.title,
                             description: v.description,
-                            series: v.series,
+                            series: v.series_id || v.series,
+                            seriesTitle: seriesInfo.title,
+                            seriesDescription: seriesInfo.description,
+                            seriesThumbnail: seriesInfo.thumbnail,
                             category: v.category,
                             thumbnail: v.thumbnail_url || (isS3 ? null : `https://img.youtube.com/vi/${v.video_url}/maxresdefault.jpg`),
                             embedUrl: isS3 ? v.video_url : `https://www.youtube.com/embed/${v.video_url}`,
