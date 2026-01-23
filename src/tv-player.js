@@ -248,7 +248,8 @@
             return `
                 <div class="topic-card" onclick="window.tvApp.showTopic('${topic.id}')">
                     <div class="topic-card-image">
-                        <img src="${topic.thumbnail}" alt="${topic.title}" loading="lazy">
+                        <img src="${topic.thumbnail}" alt="${topic.title}" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
+                        <div class="topic-fallback-icon"><i class="fas fa-play-circle"></i></div>
                         ${completedCount > 0 ? `
                             <div class="topic-card-badge">
                                 ${completedCount}/${episodeCount} تەواو
@@ -319,7 +320,8 @@
                     <div class="episode-number">${String(index + 1).padStart(2, '0')}</div>
 
                     <div class="episode-thumbnail">
-                        <img src="${episode.thumbnail || 'data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"120\" height=\"68\"%3E%3Crect fill=\"%231a1a1a\" width=\"120\" height=\"68\"/%3E%3Ctext fill=\"%23999\" font-family=\"Arial\" font-size=\"12\" x=\"50%25\" y=\"50%25\" text-anchor=\"middle\" dominant-baseline=\"middle\"%3E%D9%88%DB%8E%D9%86%DB%95%3C/text%3E%3C/svg%3E'}" alt="${episode.title}" loading="lazy">
+                        <img src="${episode.thumbnail || ''}" alt="${episode.title}" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
+                        <div class="episode-fallback-icon"><i class="fas fa-film"></i></div>
                         <div class="episode-play-overlay">
                             <div class="episode-play-icon">
                                 <i class="fas fa-play"></i>
