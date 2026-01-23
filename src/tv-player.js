@@ -1591,14 +1591,39 @@
         videoElement.playsInline = true;
         videoElement.style.cssText = 'width:100%; height:100%; object-fit:cover; background:#000;';
 
-        // Create custom controls (compact for card size)
+        // Create Netflix-style controls container
         const controls = document.createElement('div');
         controls.className = 'custom-controls';
-        controls.style.cssText = 'position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.8)); padding:8px 10px; display:flex; align-items:center; gap:8px; opacity:1; transition:opacity 0.3s;';
+        controls.style.cssText = 'position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.9)); padding:0; opacity:0; transition:opacity 0.3s;';
+
+        // Progress bar (top of controls)
+        const progressContainer = document.createElement('div');
+        progressContainer.style.cssText = 'width:100%; height:4px; background:rgba(255,255,255,0.3); cursor:pointer; position:relative;';
+        const progressBar = document.createElement('div');
+        progressBar.style.cssText = 'height:100%; background:#e50914; width:0%; transition:width 0.1s; position:relative;';
+        const progressHandle = document.createElement('div');
+        progressHandle.style.cssText = 'position:absolute; right:-6px; top:-4px; width:12px; height:12px; background:#e50914; border-radius:50%; opacity:0; transition:opacity 0.2s;';
+        progressBar.appendChild(progressHandle);
+        progressContainer.appendChild(progressBar);
+        progressContainer.onmouseenter = function() { progressHandle.style.opacity = '1'; };
+        progressContainer.onmouseleave = function() { progressHandle.style.opacity = '0'; };
+        progressContainer.onclick = function(e) {
+            const rect = progressContainer.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            videoElement.currentTime = percent * videoElement.duration;
+        };
+
+        // Controls row
+        const controlsRow = document.createElement('div');
+        controlsRow.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:8px 12px;';
+
+        // Left controls
+        const leftControls = document.createElement('div');
+        leftControls.style.cssText = 'display:flex; align-items:center; gap:12px;';
 
         // Play/Pause button
         const playBtn = document.createElement('button');
-        playBtn.style.cssText = 'background:none; border:none; color:white; font-size:14px; cursor:pointer; padding:3px;';
+        playBtn.style.cssText = 'background:none; border:none; color:white; font-size:18px; cursor:pointer; padding:0; display:flex; align-items:center;';
         const playIcon = document.createElement('i');
         playIcon.className = 'fas fa-pause';
         playBtn.appendChild(playIcon);
@@ -1612,57 +1637,99 @@
             }
         };
 
-        // Progress bar
-        const progressContainer = document.createElement('div');
-        progressContainer.style.cssText = 'flex:1; height:5px; background:rgba(255,255,255,0.3); border-radius:3px; cursor:pointer; position:relative;';
-        const progressBar = document.createElement('div');
-        progressBar.style.cssText = 'height:100%; background:#1ab7ea; border-radius:3px; width:0%; transition:width 0.1s;';
-        progressContainer.appendChild(progressBar);
-        progressContainer.onclick = function(e) {
-            const rect = progressContainer.getBoundingClientRect();
-            const percent = (e.clientX - rect.left) / rect.width;
-            videoElement.currentTime = percent * videoElement.duration;
+        // Volume button
+        const volumeBtn = document.createElement('button');
+        volumeBtn.style.cssText = 'background:none; border:none; color:white; font-size:16px; cursor:pointer; padding:0; display:flex; align-items:center;';
+        const volumeIcon = document.createElement('i');
+        volumeIcon.className = 'fas fa-volume-up';
+        volumeBtn.appendChild(volumeIcon);
+        volumeBtn.onclick = function() {
+            videoElement.muted = !videoElement.muted;
+            volumeIcon.className = videoElement.muted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
         };
 
         // Time display
         const timeDisplay = document.createElement('span');
-        timeDisplay.style.cssText = 'color:white; font-size:10px; min-width:60px;';
+        timeDisplay.style.cssText = 'color:white; font-size:12px; font-family:monospace;';
         timeDisplay.textContent = '0:00 / 0:00';
 
-        // Fullscreen button
+        // Title
+        const titleDisplay = document.createElement('span');
+        titleDisplay.style.cssText = 'color:rgba(255,255,255,0.8); font-size:12px; margin-left:8px;';
+        titleDisplay.textContent = '• ' + title;
+
+        leftControls.appendChild(playBtn);
+        leftControls.appendChild(volumeBtn);
+        leftControls.appendChild(timeDisplay);
+        leftControls.appendChild(titleDisplay);
+
+        // Right controls
+        const rightControls = document.createElement('div');
+        rightControls.style.cssText = 'display:flex; align-items:center; gap:12px;';
+
+        // Settings button
+        const settingsBtn = document.createElement('button');
+        settingsBtn.style.cssText = 'background:none; border:none; color:white; font-size:16px; cursor:pointer; padding:0; opacity:0.8;';
+        const settingsIcon = document.createElement('i');
+        settingsIcon.className = 'fas fa-cog';
+        settingsBtn.appendChild(settingsIcon);
+
+        // Picture-in-picture button
+        const pipBtn = document.createElement('button');
+        pipBtn.style.cssText = 'background:none; border:none; color:white; font-size:16px; cursor:pointer; padding:0; opacity:0.8;';
+        const pipIcon = document.createElement('i');
+        pipIcon.className = 'fas fa-clone';
+        pipBtn.appendChild(pipIcon);
+        pipBtn.onclick = async function() {
+            try {
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                } else {
+                    await videoElement.requestPictureInPicture();
+                }
+            } catch(e) { console.log('PiP not supported'); }
+        };
+
+        // Fullscreen button (for VIDEO element)
         const fullscreenBtn = document.createElement('button');
-        fullscreenBtn.style.cssText = 'background:none; border:none; color:white; font-size:14px; cursor:pointer; padding:3px;';
+        fullscreenBtn.style.cssText = 'background:none; border:none; color:white; font-size:16px; cursor:pointer; padding:0; opacity:0.8;';
         const fsIcon = document.createElement('i');
         fsIcon.className = 'fas fa-expand';
         fullscreenBtn.appendChild(fsIcon);
         fullscreenBtn.onclick = function() {
-            if (videoElement.requestFullscreen) videoElement.requestFullscreen();
-            else if (videoElement.webkitRequestFullscreen) videoElement.webkitRequestFullscreen();
+            if (videoElement.requestFullscreen) {
+                videoElement.requestFullscreen();
+            } else if (videoElement.webkitEnterFullscreen) {
+                videoElement.webkitEnterFullscreen();
+            } else if (videoElement.webkitRequestFullscreen) {
+                videoElement.webkitRequestFullscreen();
+            }
         };
 
         // Close button
         const closeBtn = document.createElement('button');
-        closeBtn.style.cssText = 'background:none; border:none; color:white; font-size:14px; cursor:pointer; padding:3px;';
+        closeBtn.style.cssText = 'background:none; border:none; color:white; font-size:16px; cursor:pointer; padding:0; opacity:0.8;';
         const closeIcon = document.createElement('i');
         closeIcon.className = 'fas fa-times';
         closeBtn.appendChild(closeIcon);
-        closeBtn.onclick = function() {
-            videoElement.pause();
-            videoWrapper.remove();
-        };
 
-        controls.appendChild(playBtn);
+        rightControls.appendChild(settingsBtn);
+        rightControls.appendChild(pipBtn);
+        rightControls.appendChild(fullscreenBtn);
+        rightControls.appendChild(closeBtn);
+
+        controlsRow.appendChild(leftControls);
+        controlsRow.appendChild(rightControls);
+
         controls.appendChild(progressContainer);
-        controls.appendChild(timeDisplay);
-        controls.appendChild(fullscreenBtn);
-        controls.appendChild(closeBtn);
+        controls.appendChild(controlsRow);
 
         videoWrapper.appendChild(videoElement);
         videoWrapper.appendChild(controls);
 
         // Show controls on hover
-        videoWrapper.onmouseenter = function() { controls.style.opacity = '1'; };
-        videoWrapper.onmouseleave = function() { if (!videoElement.paused) controls.style.opacity = '0'; };
+        videoWrapper.onmouseenter = function() { controls.style.opacity = '1'; progressHandle.style.opacity = '1'; };
+        videoWrapper.onmouseleave = function() { controls.style.opacity = '0'; progressHandle.style.opacity = '0'; };
 
         // Update progress
         videoElement.ontimeupdate = function() {
