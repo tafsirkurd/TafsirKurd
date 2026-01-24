@@ -137,7 +137,12 @@
       "Bash(do echo \"Attempt $i:\")",
       "mcp__plugin_supabase_supabase__list_tables",
       "mcp__plugin_supabase_supabase__apply_migration",
-      "mcp__plugin_supabase_supabase__execute_sql"
+      "mcp__plugin_supabase_supabase__execute_sql",
+      "Bash(if grep -q \"topbar-actions\" \"$f\")",
+      "Bash(! grep -q \"sessionTimer\" \"$f\")",
+      "Bash(! grep -q \"admin-login\" \"$f\")",
+      "Bash(if grep -q \"sessionTimer\" \"$f\")",
+      "Bash(! grep -q \"admin-session-timer-ui\" \"$f\")"
     ],
     "deny": [],
     "ask": []

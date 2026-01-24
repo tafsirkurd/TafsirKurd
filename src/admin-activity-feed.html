@@ -116,6 +116,11 @@
                 <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
                 <div class="topbar-search"><i data-lucide="search"></i><input type="text" placeholder="Search activities..."></div>
                 <div class="topbar-actions">
+                    <!-- Session Timer Display -->
+                    <div class="session-timer" id="sessionTimer" title="Session expires after 20 minutes">
+                        <i data-lucide="clock"></i>
+                        <span id="sessionTimerText">20:00</span>
+                    </div>
                     <button class="topbar-btn" style="position: relative;">
                         <i data-lucide="bell"></i>
                         <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span></button>
@@ -197,6 +202,7 @@
         </main>
     </div>
 
+    <script src="/utils/admin-session-timer-ui.js?v=4"></script>
     <script src="/utils/admin-auth.js?v=3"></script>
     <script src="/utils/admin-notifications.js"></script>
     <script>
