@@ -1431,7 +1431,7 @@
                     throw new Error('Failed to get upload URL');
                 }
 
-                const { uploadUrl, fileUrl } = await response.json();
+                const { uploadUrl, publicUrl } = await response.json();
 
                 // Upload to S3
                 await uploadToS3(file, uploadUrl, (progress) => {
@@ -1442,8 +1442,8 @@
                 // Success - show preview and set URL
                 thumbnailUploading.style.display = 'none';
                 thumbnailPreview.style.display = 'block';
-                thumbnailPreviewImg.src = fileUrl;
-                document.getElementById('series-thumbnail').value = fileUrl;
+                thumbnailPreviewImg.src = publicUrl;
+                document.getElementById('series-thumbnail').value = publicUrl;
 
             } catch (error) {
                 console.error('Thumbnail upload error:', error);
