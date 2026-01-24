@@ -512,7 +512,7 @@
                     <div class="page-actions">
                         <button class="btn btn-primary" id="add-btn">
                             <i data-lucide="plus"></i>
-                            <span id="add-btn-text">Add Category</span>
+                            <span id="add-btn-text">Add Series</span>
                         </button>
                     </div>
                 </div>
@@ -567,13 +567,6 @@
                     </div>
                 </div>
 
-                <!-- CATEGORY SERIES VIEW -->
-                <div class="view-panel" id="category-series-view">
-                    <div class="series-list" id="category-series-list">
-                        <!-- Series in category will be loaded here -->
-                    </div>
-                </div>
-
                 <!-- SERIES EPISODES VIEW -->
                 <div class="view-panel" id="series-episodes-view">
                     <div class="card">
@@ -600,35 +593,6 @@
         </main>
     </div>
 
-    <!-- CATEGORY MODAL -->
-    <div class="modal" id="category-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="category-modal-title">Add Category</h3>
-                <button class="modal-close" onclick="closeCategoryModal()">
-                    <i data-lucide="x"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="category-form">
-                    <input type="hidden" id="category-id">
-                    <div class="form-group">
-                        <label class="form-label">Name</label>
-                        <input type="text" class="form-input" id="category-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-input form-textarea" id="category-description"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeCategoryModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveCategoryForm()">Save</button>
-            </div>
-        </div>
-    </div>
-
     <!-- SERIES MODAL -->
     <div class="modal" id="series-modal">
         <div class="modal-content">
@@ -641,13 +605,6 @@
             <div class="modal-body">
                 <form id="series-form">
                     <input type="hidden" id="series-id">
-                    <input type="hidden" id="series-category-id">
-                    <div class="form-group">
-                        <label class="form-label">Category</label>
-                        <select class="form-input" id="series-category-select" required>
-                            <option value="">Select category...</option>
-                        </select>
-                    </div>
                     <div class="form-group">
                         <label class="form-label">Title</label>
                         <input type="text" class="form-input" id="series-title" required>
@@ -813,8 +770,7 @@
     <script src="/utils/admin-notifications.js"></script>
     <script>
         let currentView = 'all-series';
-        let currentCategory = null;
-        let currentSeries = null;
+                let currentSeries = null;
 
         // Initialize
         (async () => {
@@ -894,11 +850,6 @@
                 addBtnText.textContent = 'Add Episode';
                 addBtn.onclick = openEpisodeModal;
                 document.getElementById('breadcrumb').style.display = 'none';
-            } else if (view === 'category-series') {
-                document.getElementById('category-series-view').classList.add('active');
-                addBtnText.textContent = 'Add Series';
-                addBtn.onclick = () => openSeriesModal(currentCategory.id);
-                updateBreadcrumb();
             } else if (view === 'series-episodes') {
                 document.getElementById('series-episodes-view').classList.add('active');
                 addBtnText.textContent = 'Add Episode';
@@ -913,20 +864,11 @@
             const breadcrumb = document.getElementById('breadcrumb');
             breadcrumb.style.display = 'flex';
             breadcrumb.innerHTML = `
-                <span class="breadcrumb-item" onclick="switchView('categories')">
-                    <i data-lucide="tv"></i>
-                    Categories
+                <span class="breadcrumb-item" onclick="switchView('all-series')">
+                    <i data-lucide="list"></i>
+                    All Series
                 </span>
             `;
-
-            if (currentCategory) {
-                breadcrumb.innerHTML += `
-                    <span class="breadcrumb-separator">›</span>
-                    <span class="breadcrumb-item ${!currentSeries ? 'active' : ''}" onclick="viewCategorySeries('${currentCategory.id}', '${currentCategory.name_ku}')">
-                        ${currentCategory.name_ku}
-                    </span>
-                `;
-            }
 
             if (currentSeries) {
                 breadcrumb.innerHTML += `
@@ -938,76 +880,6 @@
             }
 
             lucide.createIcons();
-        }
-
-        // Load categories
-        async function loadCategories() {
-            const supabase = window.adminAuth.getSupabase();
-            if (!supabase) return;
-
-            try {
-                const { data: categories, error } = await supabase
-                    .from('tv_categories')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-
-                const grid = document.getElementById('categories-grid');
-
-                if (!categories || categories.length === 0) {
-                    grid.innerHTML = `
-                        <div class="empty-state" style="grid-column: 1 / -1;">
-                            <div class="empty-state-icon">
-                                <i data-lucide="folder-x" style="width: 100%; height: 100%;"></i>
-                            </div>
-                            <div class="empty-state-title">No Categories</div>
-                            <div class="empty-state-text">Create your first TV category to get started</div>
-                            <button class="btn btn-primary" onclick="openCategoryModal()">
-                                <i data-lucide="plus"></i>
-                                Add Category
-                            </button>
-                        </div>
-                    `;
-                    lucide.createIcons();
-                    return;
-                }
-
-                // Get series counts for each category
-                const categoriesWithCounts = await Promise.all(
-                    categories.map(async (cat) => {
-                        const { count } = await supabase
-                            .from('tv_series')
-                            .select('*', { count: 'exact', head: true })
-                            .eq('category_id', cat.id);
-                        return { ...cat, seriesCount: count || 0 };
-                    })
-                );
-
-                grid.innerHTML = categoriesWithCounts.map(cat => `
-                    <div class="category-card" onclick="viewCategorySeries('${cat.id}', '${cat.name_ku}')">
-                        <div class="category-card-header">
-                            <div class="category-card-title">${cat.name_ku}</div>
-                        </div>
-                        <div class="category-card-desc">${cat.slug || ''}</div>
-                        <div class="category-card-footer">
-                            <div class="category-card-count">${cat.seriesCount} series</div>
-                            <div class="category-card-actions">
-                                <button class="table-btn" onclick="event.stopPropagation(); editCategory('${cat.id}')" title="Edit">
-                                    <i data-lucide="edit-2"></i>
-                                </button>
-                                <button class="table-btn" onclick="event.stopPropagation(); deleteCategory('${cat.id}')" title="Delete">
-                                    <i data-lucide="trash-2"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-
-                lucide.createIcons();
-            } catch (error) {
-                console.error('Error loading categories:', error);
-            }
         }
 
         // Load all series
@@ -1044,7 +916,7 @@
                 }
 
                 list.innerHTML = series.map(s => `
-                    <div class="series-card" onclick="viewSeriesEpisodes('${s.id}', '${s.name_ku}', '${s.category_id}')">
+                    <div class="series-card" onclick="viewSeriesEpisodes('${s.id}', '${s.name_ku}')">
                         <div class="series-thumbnail">
                             ${s.thumbnail_url ? `<img src="${s.thumbnail_url}" alt="${s.name_ku}">` : '<i data-lucide="image"></i>'}
                         </div>
@@ -1130,86 +1002,9 @@
             }
         }
 
-        // View category series
-        async function viewCategorySeries(categoryId, categoryName) {
-            currentCategory = { id: categoryId, name_ku: categoryName };
-            currentSeries = null;
-
-            const supabase = window.adminAuth.getSupabase();
-            if (!supabase) return;
-
-            try {
-                const { data: series, error } = await supabase
-                    .from('tv_series')
-                    .select('*')
-                    .eq('category_id', categoryId)
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-
-                const list = document.getElementById('category-series-list');
-
-                if (!series || series.length === 0) {
-                    list.innerHTML = `
-                        <div class="empty-state" style="grid-column: 1 / -1;">
-                            <div class="empty-state-icon">
-                                <i data-lucide="video-off" style="width: 100%; height: 100%;"></i>
-                            </div>
-                            <div class="empty-state-title">No Series</div>
-                            <div class="empty-state-text">This category doesn't have any series yet</div>
-                            <button class="btn btn-primary" onclick="openSeriesModal('${categoryId}')">
-                                <i data-lucide="plus"></i>
-                                Add Series
-                            </button>
-                        </div>
-                    `;
-                } else {
-                    list.innerHTML = series.map(s => `
-                        <div class="series-card" onclick="viewSeriesEpisodes('${s.id}', '${s.name_ku}', '${categoryId}')">
-                            <div class="series-thumbnail">
-                                ${s.thumbnail_url ? `<img src="${s.thumbnail_url}" alt="${s.name_ku}">` : '<i data-lucide="image"></i>'}
-                            </div>
-                            <div class="series-card-body">
-                                <div class="series-card-title">${s.name_ku}</div>
-                                <div class="series-card-meta">
-                                    <span>${categoryName}</span>
-                                    <div>
-                                        <button class="table-btn" onclick="event.stopPropagation(); editSeries('${s.id}')" title="Edit">
-                                            <i data-lucide="edit-2"></i>
-                                        </button>
-                                        <button class="table-btn" onclick="event.stopPropagation(); deleteSeries('${s.id}')" title="Delete">
-                                            <i data-lucide="trash-2"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-
-                switchView('category-series');
-                lucide.createIcons();
-            } catch (error) {
-                console.error('Error loading category series:', error);
-            }
-        }
-
         // View series episodes
-        async function viewSeriesEpisodes(seriesId, seriesTitle, categoryId) {
+        async function viewSeriesEpisodes(seriesId, seriesTitle) {
             currentSeries = { id: seriesId, name_ku: seriesTitle };
-
-            if (!currentCategory && categoryId) {
-                const supabase = window.adminAuth.getSupabase();
-                const { data } = await supabase
-                    .from('tv_categories')
-                    .select('id, name_ku')
-                    .eq('id', categoryId)
-                    .single();
-
-                if (data) {
-                    currentCategory = data;
-                }
-            }
 
             const supabase = window.adminAuth.getSupabase();
             if (!supabase) return;
@@ -1272,136 +1067,18 @@
             }
         }
 
-        // Category CRUD
-        async function openCategoryModal(categoryId = null) {
-            const modal = document.getElementById('category-modal');
-            const title = document.getElementById('category-modal-title');
-            const form = document.getElementById('category-form');
-
-            form.reset();
-            document.getElementById('category-id').value = '';
-
-            if (categoryId) {
-                title.textContent = 'Edit Category';
-                const supabase = window.adminAuth.getSupabase();
-                const { data } = await supabase
-                    .from('tv_categories')
-                    .select('*')
-                    .eq('id', categoryId)
-                    .single();
-
-                if (data) {
-                    document.getElementById('category-id').value = data.id;
-                    document.getElementById('category-name').value = data.name_ku;
-                    document.getElementById('category-description').value = data.slug || '';
-                }
-            } else {
-                title.textContent = 'Add Category';
-            }
-
-            modal.classList.add('active');
-            lucide.createIcons();
-        }
-
-        function closeCategoryModal() {
-            document.getElementById('category-modal').classList.remove('active');
-        }
-
-        async function saveCategoryForm() {
-            const id = document.getElementById('category-id').value;
-            const name = document.getElementById('category-name').value;
-            const description = document.getElementById('category-description').value;
-
-            const supabase = window.adminAuth.getSupabase();
-
-            try {
-                if (id) {
-                    await supabase
-                        .from('tv_categories')
-                        .update({ name_ku: name, slug: description })
-                        .eq('id', id);
-                } else {
-                    await supabase
-                        .from('tv_categories')
-                        .insert({ name_ku: name, slug: description });
-                }
-
-                closeCategoryModal();
-                loadCategories();
-            } catch (error) {
-                console.error('Error saving category:', error);
-                alert('Error saving category');
-            }
-        }
-
-        async function editCategory(id) {
-            openCategoryModal(id);
-        }
-
-        async function deleteCategory(id) {
-            if (!confirm('Are you sure you want to delete this category? All series and episodes in this category will be affected.')) return;
-
-            const supabase = window.adminAuth.getSupabase();
-            if (!supabase) {
-                alert('Error: Not connected to database');
-                return;
-            }
-
-            try {
-                console.log('Deleting category:', id);
-
-                const { data, error } = await supabase
-                    .from('tv_categories')
-                    .delete()
-                    .eq('id', id)
-                    .select();
-
-                console.log('Delete result:', { data, error });
-
-                if (error) {
-                    console.error('Supabase delete error:', error);
-                    alert('Error deleting category: ' + error.message);
-                    return;
-                }
-
-                if (!data || data.length === 0) {
-                    alert('Delete failed - no rows affected. You may not have permission.');
-                    return;
-                }
-
-                alert('Category deleted successfully');
-                loadCategories();
-            } catch (error) {
-                console.error('Error deleting category:', error);
-                alert('Error deleting category: ' + error.message);
-            }
-        }
-
         // Series CRUD
-        async function openSeriesModal(categoryId = null, seriesId = null) {
+        async function openSeriesModal(seriesId = null) {
             const modal = document.getElementById('series-modal');
             const title = document.getElementById('series-modal-title');
             const form = document.getElementById('series-form');
-            const categorySelect = document.getElementById('series-category-select');
 
             form.reset();
             document.getElementById('series-id').value = '';
-            document.getElementById('series-category-id').value = categoryId || '';
-
-            // Load categories for dropdown
-            const supabase = window.adminAuth.getSupabase();
-            const { data: categories } = await supabase
-                .from('tv_categories')
-                .select('*')
-                .order('name_ku');
-
-            if (categories) {
-                categorySelect.innerHTML = '<option value="">Select category...</option>' +
-                    categories.map(cat => `<option value="${cat.id}">${cat.name_ku}</option>`).join('');
-            }
 
             if (seriesId) {
                 title.textContent = 'Edit Series';
+                const supabase = window.adminAuth.getSupabase();
                 const { data } = await supabase
                     .from('tv_series')
                     .select('*')
@@ -1414,14 +1091,10 @@
                     document.getElementById('series-description').value = data.description_ku || '';
                     document.getElementById('series-thumbnail').value = data.thumbnail_url || '';
                     document.getElementById('series-speaker').value = data.speaker || '';
-                    categorySelect.value = data.category_id;
                 }
             } else {
                 title.textContent = 'Add Series';
                 document.getElementById('series-speaker').value = '';
-                if (categoryId) {
-                    categorySelect.value = categoryId;
-                }
             }
 
             modal.classList.add('active');
@@ -1434,14 +1107,13 @@
 
         async function saveSeriesForm() {
             const id = document.getElementById('series-id').value;
-            const categoryId = document.getElementById('series-category-select').value;
             const title = document.getElementById('series-title').value;
             const description = document.getElementById('series-description').value;
             const thumbnailUrl = document.getElementById('series-thumbnail').value;
             const speaker = document.getElementById('series-speaker').value;
 
-            if (!categoryId) {
-                alert('Please select a category');
+            if (!title) {
+                alert('Please enter a title');
                 return;
             }
 
@@ -1451,19 +1123,16 @@
                 if (id) {
                     await supabase
                         .from('tv_series')
-                        .update({ category_id: categoryId, name_ku: title, description_ku: description, thumbnail_url: thumbnailUrl, speaker: speaker || null })
+                        .update({ name_ku: title, description_ku: description, thumbnail_url: thumbnailUrl, speaker: speaker || null })
                         .eq('id', id);
                 } else {
                     await supabase
                         .from('tv_series')
-                        .insert({ category_id: categoryId, name_ku: title, description_ku: description, thumbnail_url: thumbnailUrl, speaker: speaker || null });
+                        .insert({ name_ku: title, description_ku: description, thumbnail_url: thumbnailUrl, speaker: speaker || null });
                 }
 
                 closeSeriesModal();
                 loadAllSeries();
-                if (currentView === 'category-series' && currentCategory) {
-                    viewCategorySeries(currentCategory.id, currentCategory.name_ku);
-                }
             } catch (error) {
                 console.error('Error saving series:', error);
                 alert('Error saving series');
@@ -1507,9 +1176,6 @@
 
                 alert('Series deleted successfully');
                 loadAllSeries();
-                if (currentView === 'category-series' && currentCategory) {
-                    viewCategorySeries(currentCategory.id, currentCategory.name_ku);
-                }
             } catch (error) {
                 console.error('Error deleting series:', error);
                 alert('Error deleting series: ' + error.message);
@@ -1620,7 +1286,7 @@
                 closeEpisodeModal();
                 loadAllEpisodes();
                 if (currentView === 'series-episodes' && currentSeries) {
-                    viewSeriesEpisodes(currentSeries.id, currentSeries.name_ku, currentCategory?.id);
+                    viewSeriesEpisodes(currentSeries.id, currentSeries.name_ku);
                 }
             } catch (error) {
                 console.error('Error saving episode:', error);
@@ -1682,7 +1348,7 @@
                 alert('Episode deleted successfully');
                 loadAllEpisodes();
                 if (currentView === 'series-episodes' && currentSeries) {
-                    viewSeriesEpisodes(currentSeries.id, currentSeries.name_ku, currentCategory?.id);
+                    viewSeriesEpisodes(currentSeries.id, currentSeries.name_ku);
                 }
             } catch (error) {
                 console.error('Error deleting episode:', error);
