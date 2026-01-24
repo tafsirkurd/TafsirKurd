@@ -643,6 +643,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            direction: rtl;
         }
 
         .player-container {
@@ -654,50 +655,46 @@
             justify-content: center;
         }
 
+        /* Video wrapper - contains video and overlay together */
+        .video-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
         .video-player {
             max-width: 100%;
             max-height: 100%;
-            width: auto;
-            height: auto;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
             background: #000;
         }
 
-        /* Landscape video - full width */
-        .player-container.landscape .video-player {
-            width: 100%;
+        /* Portrait video specific */
+        .player-container.portrait .video-wrapper {
             height: 100%;
-        }
-
-        /* Portrait video specific - center and limit width */
-        .player-container.portrait {
-            flex-direction: column;
+            width: auto;
         }
 
         .player-container.portrait .video-player {
             width: auto;
             height: 100%;
-            max-width: 100%;
+            max-height: 100vh;
         }
 
-        /* Portrait overlay adjustments */
-        .player-container.portrait .player-overlay {
-            max-width: min(100%, 450px);
-            left: 50%;
-            transform: translateX(-50%);
-            border-radius: 12px 12px 0 0;
-            padding: 1.5rem;
-        }
-
-        .player-container.portrait .video-controls {
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .player-container.portrait .progress-bar {
+        /* Landscape video */
+        .player-container.landscape .video-wrapper {
             width: 100%;
-            order: -1;
-            margin-bottom: 8px;
+            height: 100%;
+        }
+
+        .player-container.landscape .video-player {
+            width: 100%;
+            height: 100%;
         }
 
         .player-overlay {
@@ -719,6 +716,8 @@
 
         .video-info {
             margin-bottom: 1rem;
+            direction: rtl;
+            text-align: right;
         }
 
         .video-title {
@@ -758,6 +757,8 @@
             display: flex;
             gap: 1rem;
             margin-top: 1rem;
+            flex-wrap: wrap;
+            direction: rtl;
         }
 
         .action-btn {
@@ -859,6 +860,7 @@
             align-items: center;
             gap: 1rem;
             flex-wrap: wrap;
+            direction: ltr; /* Controls stay LTR for universal usability */
         }
 
         .progress-bar {
@@ -869,6 +871,7 @@
             cursor: pointer;
             position: relative;
             min-width: 200px;
+            direction: ltr; /* Progress always left-to-right */
         }
 
         .progress-filled {
