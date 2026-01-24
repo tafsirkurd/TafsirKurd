@@ -849,7 +849,7 @@
             try {
                 const { data: series, error } = await supabase
                     .from('tv_series')
-                    .select('*, tv_categories(name_ku)')
+                    .select('*')
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
@@ -882,7 +882,7 @@
                         <div class="series-card-body">
                             <div class="series-card-title">${s.name_ku}</div>
                             <div class="series-card-meta">
-                                <span>${s.tv_categories?.name_ku || 'Unknown'}</span>
+                                <span>${s.speaker || ''}</span>
                                 <div>
                                     <button class="table-btn" onclick="event.stopPropagation(); editSeries('${s.id}')" title="Edit">
                                         <i data-lucide="edit-2"></i>
