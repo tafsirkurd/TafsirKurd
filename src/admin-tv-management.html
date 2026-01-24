@@ -1403,23 +1403,27 @@
             thumbnailPercent.textContent = '0';
 
             try {
+                // Get admin token
+                const adminToken = sessionStorage.getItem('adminToken');
+                if (!adminToken) {
+                    throw new Error('Not authenticated');
+                }
+
                 // Generate unique filename
                 const ext = file.name.split('.').pop().toLowerCase();
-                const filename = `thumbnails/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${ext}`;
+                const filename = `thumbnail-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${ext}`;
 
-                // Get presigned URL from Edge Function
-                const supabase = window.adminAuth.getSupabase();
-                const { data: { session } } = await supabase.auth.getSession();
-
-                const response = await fetch('https://gijupzejtbpifjzwadee.supabase.co/functions/v1/s3-upload', {
+                // Request presigned URL
+                const response = await fetch('/s3-upload', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${session.access_token}`
+                        'Authorization': `Bearer ${adminToken}`
                     },
                     body: JSON.stringify({
                         filename: filename,
-                        contentType: file.type
+                        contentType: file.type,
+                        folder: 'thumbnails'
                     })
                 });
 
