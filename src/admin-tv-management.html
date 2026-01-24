@@ -691,22 +691,28 @@
                                     <img id="capturedThumbnailImg" style="max-width: 150px; border-radius: 4px; border: 2px solid var(--accent-green);">
                                 </div>
                             </div>
-                            <div id="noVideoMessage" style="text-align: center; padding: 20px; color: var(--text-tertiary);">
-                                <i class="fas fa-arrow-up" style="font-size: 24px; margin-bottom: 8px; display: block; animation: bounce 1s infinite;"></i>
-                                <span style="font-size: 13px;">Upload a video above ↑ to pick thumbnail</span>
-                                <style>
-                                    @keyframes bounce {
-                                        0%, 100% { transform: translateY(0); }
-                                        50% { transform: translateY(-5px); }
-                                    }
-                                </style>
+                            <div id="noVideoMessage" style="text-align: center; padding: 20px; color: var(--text-tertiary); cursor: pointer; border: 2px dashed transparent; border-radius: 8px; transition: all 0.3s;"
+                                ondragover="event.preventDefault(); this.style.borderColor='var(--accent-blue)'; this.style.background='rgba(59,130,246,0.05)';"
+                                ondragleave="this.style.borderColor='transparent'; this.style.background='transparent';"
+                                ondrop="event.preventDefault(); this.style.borderColor='transparent'; this.style.background='transparent'; handleEpisodeThumbnailDrop(event);"
+                                onclick="document.getElementById('episodeThumbnailFileInput').click();">
+                                <input type="file" id="episodeThumbnailFileInput" accept="image/*" style="display: none;" onchange="handleEpisodeThumbnailFile(this.files[0])">
+                                <i class="fas fa-image" style="font-size: 32px; margin-bottom: 8px; display: block;"></i>
+                                <span style="font-size: 13px;">Drag & drop image or <span style="color: var(--accent-blue);">browse</span></span>
+                                <p style="font-size: 11px; margin: 8px 0 0 0;">or upload video above to pick a frame</p>
+                            </div>
+                            <div id="episodeThumbnailUploading" style="display: none; text-align: center; padding: 20px;">
+                                <div style="width: 100%; height: 8px; background: var(--border-light); border-radius: 4px; overflow: hidden;">
+                                    <div id="episodeThumbnailProgressBar" style="height: 100%; background: var(--accent-blue); width: 0%; transition: width 0.3s;"></div>
+                                </div>
+                                <p style="margin: 8px 0 0 0; color: var(--text-secondary); font-size: 12px;"><span id="episodeThumbnailPercent">0</span>% uploading...</p>
+                            </div>
+                            <div id="episodeThumbnailPreview" style="display: none; text-align: center; padding: 10px; cursor: pointer;" onclick="document.getElementById('episodeThumbnailFileInput').click();">
+                                <img id="episodeThumbnailPreviewImg" style="max-width: 100%; max-height: 150px; border-radius: 8px;">
+                                <p style="margin: 8px 0 0 0; color: var(--text-secondary); font-size: 12px;">Click to change</p>
                             </div>
                         </div>
-                        <!-- Manual URL Input -->
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="color: var(--text-tertiary); font-size: 12px;">or paste URL:</span>
-                            <input type="url" class="form-input" id="episode-thumbnail" placeholder="https://..." style="flex: 1;">
-                        </div>
+                        <input type="hidden" id="episode-thumbnail">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Duration (m:ss)</label>
@@ -1159,6 +1165,14 @@
             form.reset();
             document.getElementById('episode-id').value = '';
             document.getElementById('episode-series-id').value = seriesId || '';
+            resetEpisodeThumbnailUI();
+
+            // Reset video upload UI
+            document.getElementById('uploadPlaceholder').style.display = 'block';
+            document.getElementById('uploadProgress').style.display = 'none';
+            document.getElementById('uploadComplete').style.display = 'none';
+            document.getElementById('thumbnailPreviewSection').style.display = 'none';
+            document.getElementById('capturedThumbnail').style.display = 'none';
 
             // Load series for dropdown
             const supabase = window.adminAuth.getSupabase();
@@ -1189,6 +1203,13 @@
                     document.getElementById('episode-thumbnail').value = data.thumbnail || '';
                     document.getElementById('episode-duration').value = data.duration ? formatDuration(data.duration) : '';
                     seriesSelect.value = data.series_id;
+
+                    // Show existing thumbnail if available
+                    if (data.thumbnail && data.thumbnail !== 'undefined') {
+                        document.getElementById('noVideoMessage').style.display = 'none';
+                        document.getElementById('episodeThumbnailPreview').style.display = 'block';
+                        document.getElementById('episodeThumbnailPreviewImg').src = data.thumbnail;
+                    }
                 }
             } else {
                 title.textContent = 'Add Episode';
@@ -1466,6 +1487,111 @@
             thumbnailUploading.style.display = 'none';
             thumbnailProgressBar.style.width = '0%';
             document.getElementById('series-thumbnail').value = '';
+        }
+
+        // ========== EPISODE THUMBNAIL UPLOAD FUNCTIONALITY ==========
+        function handleEpisodeThumbnailDrop(e) {
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+                handleEpisodeThumbnailFile(files[0]);
+            } else {
+                alert('Please drop an image file (PNG, JPG, WebP)');
+            }
+        }
+
+        async function handleEpisodeThumbnailFile(file) {
+            if (!file) return;
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image too large. Maximum size is 5MB.');
+                return;
+            }
+
+            const noVideoMessage = document.getElementById('noVideoMessage');
+            const uploading = document.getElementById('episodeThumbnailUploading');
+            const preview = document.getElementById('episodeThumbnailPreview');
+            const progressBar = document.getElementById('episodeThumbnailProgressBar');
+            const percent = document.getElementById('episodeThumbnailPercent');
+            const previewImg = document.getElementById('episodeThumbnailPreviewImg');
+
+            // Show uploading state
+            noVideoMessage.style.display = 'none';
+            document.getElementById('thumbnailPreviewSection').style.display = 'none';
+            document.getElementById('capturedThumbnail').style.display = 'none';
+            preview.style.display = 'none';
+            uploading.style.display = 'block';
+            progressBar.style.width = '0%';
+            percent.textContent = '0';
+
+            try {
+                // Get admin token
+                const adminToken = sessionStorage.getItem('adminToken');
+                if (!adminToken) {
+                    throw new Error('Not authenticated');
+                }
+
+                // Generate unique filename
+                const ext = file.name.split('.').pop().toLowerCase();
+                const filename = `episode-thumb-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${ext}`;
+
+                // Request presigned URL
+                const response = await fetch('/s3-upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({
+                        filename: filename,
+                        contentType: file.type,
+                        folder: 'thumbnails'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to get upload URL');
+                }
+
+                const { uploadUrl, publicUrl } = await response.json();
+
+                if (!uploadUrl || !publicUrl) {
+                    throw new Error('Invalid response from server');
+                }
+
+                // Upload to S3
+                await uploadToS3(file, uploadUrl, (progress) => {
+                    progressBar.style.width = progress + '%';
+                    percent.textContent = progress;
+                });
+
+                // Success - show preview and set URL
+                uploading.style.display = 'none';
+                preview.style.display = 'block';
+                previewImg.src = publicUrl;
+                document.getElementById('episode-thumbnail').value = publicUrl;
+                console.log('Episode thumbnail uploaded:', publicUrl);
+
+            } catch (error) {
+                console.error('Episode thumbnail upload error:', error);
+                alert('Failed to upload thumbnail: ' + error.message);
+                // Reset to default view
+                uploading.style.display = 'none';
+                noVideoMessage.style.display = 'block';
+            }
+        }
+
+        function resetEpisodeThumbnailUI() {
+            document.getElementById('noVideoMessage').style.display = 'block';
+            document.getElementById('episodeThumbnailUploading').style.display = 'none';
+            document.getElementById('episodeThumbnailPreview').style.display = 'none';
+            document.getElementById('episode-thumbnail').value = '';
         }
 
         // Add button handler
