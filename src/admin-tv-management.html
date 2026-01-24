@@ -1053,7 +1053,7 @@
                     document.getElementById('series-speaker').value = data.speaker || '';
 
                     // Show existing thumbnail if available
-                    if (data.thumbnail_url) {
+                    if (data.thumbnail_url && data.thumbnail_url !== 'undefined') {
                         thumbnailPlaceholder.style.display = 'none';
                         thumbnailPreview.style.display = 'block';
                         thumbnailPreviewImg.src = data.thumbnail_url;
@@ -1107,7 +1107,7 @@
         }
 
         async function editSeries(id) {
-            openSeriesModal(null, id);
+            openSeriesModal(id);
         }
 
         async function deleteSeries(id) {
