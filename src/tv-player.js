@@ -2092,7 +2092,7 @@
                     `;
                     console.log('✅ Loaded', uniqueSpeakers.length, 'sheikhs');
                 } else if (sheikhList) {
-                    sheikhList.innerHTML = '<p style="padding:10px;font-size:0.85rem;color:var(--text-muted);">هیچ شێخەک نەدۆزرایەوە</p>';
+                    sheikhList.innerHTML = '<p style="padding:10px;font-size:0.85rem;color:var(--text-muted);">هیچ ماموستایەک نەدۆزرایەوە</p>';
                 }
             }
         } catch (err) {
