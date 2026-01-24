@@ -721,6 +721,22 @@
                             Format: minutes:seconds (e.g., 6:42 for 6 min 42 sec)
                         </small>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-clock" style="margin-left: 4px;"></i>
+                            Schedule Publish Time (Optional)
+                        </label>
+                        <input type="datetime-local" class="form-input" id="episode-scheduled">
+                        <small style="color: var(--text-secondary); font-size: 12px; margin-top: 4px; display: block;">
+                            Leave empty to publish immediately. Set a future date/time to schedule.
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="episode-published" checked style="width: 18px; height: 18px;">
+                            <span class="form-label" style="margin: 0;">Published (visible to users)</span>
+                        </label>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -1204,6 +1220,17 @@
                     document.getElementById('episode-duration').value = data.duration ? formatDuration(data.duration) : '';
                     seriesSelect.value = data.series_id;
 
+                    // Set scheduled time if exists
+                    if (data.scheduled_at) {
+                        const scheduled = new Date(data.scheduled_at);
+                        document.getElementById('episode-scheduled').value = scheduled.toISOString().slice(0, 16);
+                    } else {
+                        document.getElementById('episode-scheduled').value = '';
+                    }
+
+                    // Set published checkbox
+                    document.getElementById('episode-published').checked = data.is_published !== false;
+
                     // Show existing thumbnail if available
                     if (data.thumbnail && data.thumbnail !== 'undefined') {
                         document.getElementById('noVideoMessage').style.display = 'none';
@@ -1213,6 +1240,8 @@
                 }
             } else {
                 title.textContent = 'Add Episode';
+                document.getElementById('episode-scheduled').value = '';
+                document.getElementById('episode-published').checked = true;
                 if (seriesId) {
                     seriesSelect.value = seriesId;
                 }
@@ -1235,6 +1264,8 @@
             const videoUrl = document.getElementById('episode-video-url').value;
             const thumbnail = document.getElementById('episode-thumbnail').value;
             const duration = document.getElementById('episode-duration').value;
+            const scheduledAt = document.getElementById('episode-scheduled').value;
+            const isPublished = document.getElementById('episode-published').checked;
 
             if (!seriesId) {
                 alert('Please select a series');
@@ -1257,7 +1288,9 @@
                     video_url: videoUrl,
                     thumbnail_url: thumbnail || null,
                     duration: parseDuration(duration),
-                    video_type: 's3'
+                    video_type: 's3',
+                    scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+                    is_published: isPublished
                 };
 
                 if (id) {
