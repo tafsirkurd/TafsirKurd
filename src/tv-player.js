@@ -1119,6 +1119,24 @@
     }
 
     function onMetadataLoaded() {
+        // Detect portrait vs landscape video
+        const vw = elements.video.videoWidth;
+        const vh = elements.video.videoHeight;
+        const isPortrait = vh > vw;
+        const playerContainer = document.querySelector('.player-container');
+
+        if (playerContainer) {
+            if (isPortrait) {
+                playerContainer.classList.add('portrait');
+                playerContainer.classList.remove('landscape');
+                console.log(`📐 Portrait video detected: ${vw}x${vh}`);
+            } else {
+                playerContainer.classList.add('landscape');
+                playerContainer.classList.remove('portrait');
+                console.log(`📐 Landscape video detected: ${vw}x${vh}`);
+            }
+        }
+
         // Load saved progress
         if (state.currentEpisode && state.watchProgress[state.currentEpisode]) {
             const savedTime = state.watchProgress[state.currentEpisode].currentTime;
