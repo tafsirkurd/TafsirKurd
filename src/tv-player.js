@@ -1124,16 +1124,30 @@
         const vh = elements.video.videoHeight;
         const isPortrait = vh > vw;
         const playerContainer = document.querySelector('.player-container');
+        const playerOverlay = document.querySelector('.player-overlay');
 
         if (playerContainer) {
             if (isPortrait) {
                 playerContainer.classList.add('portrait');
                 playerContainer.classList.remove('landscape');
                 console.log(`📐 Portrait video detected: ${vw}x${vh}`);
+
+                // Adjust overlay to match video width after render
+                setTimeout(() => {
+                    adjustOverlayForPortrait();
+                }, 100);
             } else {
                 playerContainer.classList.add('landscape');
                 playerContainer.classList.remove('portrait');
                 console.log(`📐 Landscape video detected: ${vw}x${vh}`);
+
+                // Reset overlay styles for landscape
+                if (playerOverlay) {
+                    playerOverlay.style.width = '';
+                    playerOverlay.style.left = '';
+                    playerOverlay.style.right = '';
+                    playerOverlay.style.transform = '';
+                }
             }
         }
 
@@ -1148,6 +1162,37 @@
         // Add chapter markers
         addChapterMarkers();
     }
+
+    function adjustOverlayForPortrait() {
+        const video = elements.video;
+        const playerOverlay = document.querySelector('.player-overlay');
+
+        if (!video || !playerOverlay) return;
+
+        // Get the actual rendered dimensions of the video
+        const videoRect = video.getBoundingClientRect();
+        const containerRect = video.parentElement.getBoundingClientRect();
+
+        // Calculate video position within container
+        const videoWidth = videoRect.width;
+        const videoLeft = videoRect.left - containerRect.left;
+
+        // Position overlay to match video
+        playerOverlay.style.width = videoWidth + 'px';
+        playerOverlay.style.left = videoLeft + 'px';
+        playerOverlay.style.right = 'auto';
+        playerOverlay.style.transform = 'none';
+
+        console.log(`📐 Overlay adjusted: width=${videoWidth}px, left=${videoLeft}px`);
+    }
+
+    // Re-adjust on window resize
+    window.addEventListener('resize', () => {
+        const playerContainer = document.querySelector('.player-container');
+        if (playerContainer && playerContainer.classList.contains('portrait')) {
+            adjustOverlayForPortrait();
+        }
+    });
 
     function onVideoEnded() {
         elements.playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
