@@ -2129,32 +2129,38 @@
         if (!window.tvSupabase) return;
 
         try {
-            // Get unique speakers from tv_series
-            const { data: series } = await window.tvSupabase
-                .from('tv_series')
-                .select('speaker')
-                .not('speaker', 'is', null);
+            // Get speakers from tv_speakers table
+            const { data: speakers } = await window.tvSupabase
+                .from('tv_speakers')
+                .select('name, thumbnail_url')
+                .eq('is_active', true)
+                .order('display_order')
+                .order('name');
 
-            if (series) {
-                const uniqueSpeakers = [...new Set(series.map(s => s.speaker).filter(Boolean))];
-                state.sheikhsData = uniqueSpeakers;
+            if (speakers && speakers.length > 0) {
+                state.sheikhsData = speakers.map(s => s.name);
 
                 const sheikhList = document.getElementById('sheikhList');
-                if (sheikhList && uniqueSpeakers.length > 0) {
+                if (sheikhList) {
                     sheikhList.innerHTML = `
                         <button class="filter-item active" onclick="filterBySheikh(null)">
                             <i class="fas fa-users"></i>
                             <span>هەموو</span>
                         </button>
-                        ${uniqueSpeakers.map(speaker => `
-                            <button class="filter-item" onclick="filterBySheikh('${speaker}')" data-sheikh="${speaker}">
-                                <i class="fas fa-user-tie"></i>
-                                <span>${speaker}</span>
+                        ${speakers.map(speaker => `
+                            <button class="filter-item" onclick="filterBySheikh('${speaker.name}')" data-sheikh="${speaker.name}">
+                                ${speaker.thumbnail_url
+                                    ? `<img src="${speaker.thumbnail_url}" alt="${speaker.name}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`
+                                    : '<i class="fas fa-user-tie"></i>'}
+                                <span>${speaker.name}</span>
                             </button>
                         `).join('')}
                     `;
-                    console.log('✅ Loaded', uniqueSpeakers.length, 'sheikhs');
-                } else if (sheikhList) {
+                    console.log('✅ Loaded', speakers.length, 'sheikhs from tv_speakers');
+                }
+            } else {
+                const sheikhList = document.getElementById('sheikhList');
+                if (sheikhList) {
                     sheikhList.innerHTML = '<p style="padding:10px;font-size:0.85rem;color:var(--text-muted);">هیچ ماموستایەک نەدۆزرایەوە</p>';
                 }
             }

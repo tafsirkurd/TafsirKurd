@@ -577,8 +577,28 @@
                         <input type="hidden" id="series-thumbnail">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Speaker/Sheikh</label>
-                        <input type="text" class="form-input" id="series-speaker" placeholder="e.g., Sheikh Ahmad, Dr. Muhammad">
+                        <label class="form-label">Speaker/Sheikh (ماموستا)</label>
+                        <div style="display: flex; gap: 8px;">
+                            <select class="form-input" id="series-speaker-select" style="flex: 1;">
+                                <option value="">Select speaker...</option>
+                                <!-- Speakers loaded dynamically -->
+                            </select>
+                            <button type="button" class="btn btn-secondary" onclick="showNewSpeakerInput()" title="Add new speaker" style="padding: 8px 12px;">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div id="newSpeakerInput" style="display: none; margin-top: 8px;">
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" class="form-input" id="new-speaker-name" placeholder="Enter new speaker name..." style="flex: 1;">
+                                <button type="button" class="btn btn-primary" onclick="addNewSpeaker()" style="padding: 8px 12px;">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="hideNewSpeakerInput()" style="padding: 8px 12px;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <input type="hidden" id="series-speaker">
                     </div>
                 </form>
             </div>
@@ -1053,10 +1073,15 @@
             const modal = document.getElementById('series-modal');
             const title = document.getElementById('series-modal-title');
             const form = document.getElementById('series-form');
+            const speakerSelect = document.getElementById('series-speaker-select');
 
             form.reset();
             document.getElementById('series-id').value = '';
             resetThumbnailUI();
+            hideNewSpeakerInput();
+
+            // Load speakers for dropdown
+            await loadSpeakersDropdown();
 
             if (seriesId) {
                 title.textContent = 'Edit Series';
@@ -1072,7 +1097,10 @@
                     document.getElementById('series-title').value = data.name_ku;
                     document.getElementById('series-description').value = data.description_ku || '';
                     document.getElementById('series-thumbnail').value = data.thumbnail_url || '';
+
+                    // Set speaker in dropdown and hidden field
                     document.getElementById('series-speaker').value = data.speaker || '';
+                    speakerSelect.value = data.speaker || '';
 
                     // Show existing thumbnail if available
                     if (data.thumbnail_url && data.thumbnail_url !== 'undefined') {
@@ -1084,11 +1112,80 @@
             } else {
                 title.textContent = 'Add Series';
                 document.getElementById('series-speaker').value = '';
+                speakerSelect.value = '';
             }
 
             modal.classList.add('active');
             lucide.createIcons();
         }
+
+        // Load speakers into dropdown
+        async function loadSpeakersDropdown() {
+            const supabase = window.adminAuth.getSupabase();
+            const speakerSelect = document.getElementById('series-speaker-select');
+
+            const { data: speakers } = await supabase
+                .from('tv_speakers')
+                .select('*')
+                .eq('is_active', true)
+                .order('name');
+
+            speakerSelect.innerHTML = '<option value="">Select speaker...</option>' +
+                (speakers || []).map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+        }
+
+        // Show new speaker input
+        function showNewSpeakerInput() {
+            document.getElementById('newSpeakerInput').style.display = 'block';
+            document.getElementById('new-speaker-name').focus();
+        }
+
+        // Hide new speaker input
+        function hideNewSpeakerInput() {
+            document.getElementById('newSpeakerInput').style.display = 'none';
+            document.getElementById('new-speaker-name').value = '';
+        }
+
+        // Add new speaker to database
+        async function addNewSpeaker() {
+            const name = document.getElementById('new-speaker-name').value.trim();
+            if (!name) {
+                alert('Please enter a speaker name');
+                return;
+            }
+
+            const supabase = window.adminAuth.getSupabase();
+
+            try {
+                const { error } = await supabase
+                    .from('tv_speakers')
+                    .insert({ name });
+
+                if (error) {
+                    if (error.code === '23505') {
+                        alert('This speaker already exists');
+                    } else {
+                        throw error;
+                    }
+                    return;
+                }
+
+                // Reload dropdown and select new speaker
+                await loadSpeakersDropdown();
+                document.getElementById('series-speaker-select').value = name;
+                document.getElementById('series-speaker').value = name;
+                hideNewSpeakerInput();
+
+            } catch (error) {
+                console.error('Error adding speaker:', error);
+                alert('Error adding speaker');
+            }
+        }
+
+        // Update hidden field when dropdown changes
+        document.getElementById('series-speaker-select').addEventListener('change', function() {
+            document.getElementById('series-speaker').value = this.value;
+        });
 
         function closeSeriesModal() {
             document.getElementById('series-modal').classList.remove('active');
