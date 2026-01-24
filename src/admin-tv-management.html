@@ -705,6 +705,9 @@
                                     <button type="button" class="btn btn-primary" onclick="captureFrame()" style="flex: 1;">
                                         <i class="fas fa-camera"></i> Capture This Frame
                                     </button>
+                                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('episodeThumbnailFileInput').click()" style="flex: 1;">
+                                        <i class="fas fa-folder-open"></i> Upload Image
+                                    </button>
                                 </div>
                                 <div id="capturedThumbnail" style="display: none; margin-top: 10px; text-align: center;">
                                     <p style="margin: 0 0 8px 0; font-size: 12px; color: var(--accent-green);"><i class="fas fa-check"></i> Thumbnail captured!</p>
@@ -1878,6 +1881,9 @@
             const localVideoUrl = URL.createObjectURL(file);
             loadVideoForThumbnail(localVideoUrl);
 
+            // Auto-detect video duration
+            detectVideoDuration(localVideoUrl);
+
             // Show progress UI
             uploadPlaceholder.style.display = 'none';
             uploadComplete.style.display = 'none';
@@ -2053,6 +2059,30 @@
             const mins = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
             return mins + ':' + secs.toString().padStart(2, '0');
+        }
+
+        // Auto-detect video duration and fill the duration input
+        function detectVideoDuration(videoUrl) {
+            if (!videoUrl) return;
+
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+            video.src = videoUrl;
+
+            video.onloadedmetadata = function() {
+                const duration = Math.floor(video.duration);
+                const mins = Math.floor(duration / 60);
+                const secs = duration % 60;
+                const formattedDuration = `${mins}:${secs.toString().padStart(2, '0')}`;
+                document.getElementById('episode-duration').value = formattedDuration;
+                console.log('Auto-detected video duration:', formattedDuration);
+                // Clean up
+                video.src = '';
+            };
+
+            video.onerror = function() {
+                console.warn('Could not auto-detect video duration');
+            };
         }
 
         // Capture current frame as thumbnail
