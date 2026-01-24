@@ -1180,6 +1180,64 @@
             margin-right: -3px;
         }
 
+        /* Locked/Scheduled Episode Styles */
+        .episode-card.locked {
+            opacity: 0.7;
+        }
+
+        .episode-card.locked .play-overlay {
+            background: rgba(0, 0, 0, 0.7);
+            opacity: 1;
+        }
+
+        .episode-card.locked .play-overlay i {
+            color: #ffc107;
+        }
+
+        .episode-card.locked:hover {
+            transform: none;
+        }
+
+        .locked-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffc107;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            z-index: 5;
+        }
+
+        .locked-time {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            text-align: center;
+            z-index: 5;
+        }
+
+        /* Shake animation for locked episodes */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .episode-card.shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
         .quick-actions {
             position: absolute;
             top: 0.5rem;

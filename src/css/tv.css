@@ -639,6 +639,40 @@
     font-size: 1.2rem;
 }
 
+/* Locked/Scheduled Episode */
+.episode-item.locked {
+    opacity: 0.7;
+}
+
+.episode-item.locked:hover {
+    transform: none;
+}
+
+.episode-item.locked .episode-play-overlay {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.episode-item.locked .episode-play-icon {
+    background: rgba(255, 193, 7, 0.9);
+}
+
+.episode-item.locked .episode-play-icon i {
+    color: #000;
+}
+
+/* Shake animation for locked episodes */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.episode-item.shake,
+.episode-card.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
 /* ===== HISTORY LIST (Timeline Style) ===== */
 .history-list {
     display: flex;

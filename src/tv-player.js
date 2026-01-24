@@ -340,16 +340,29 @@
             const isBookmarked = state.bookmarks.some(b => b.episodeId === episode.id);
             const isCompleted = progress && progress.percent >= 95;
 
+            // Check if episode is locked (scheduled for future)
+            const locked = isEpisodeLocked(episode);
+            const lockedClass = locked ? 'locked' : '';
+            const clickHandler = locked
+                ? `shakeLockedEpisode(this)`
+                : `window.tvApp.playEpisode('${episode.id}')`;
+
             return `
-                <div class="episode-item ${isCompleted ? 'completed' : ''}" onclick="window.tvApp.playEpisode('${episode.id}')">
+                <div class="episode-item ${isCompleted ? 'completed' : ''} ${lockedClass}" onclick="${clickHandler}">
                     <div class="episode-number">${String(index + 1).padStart(2, '0')}</div>
 
                     <div class="episode-thumbnail">
                         <img src="${episode.thumbnail || ''}" alt="${episode.title}" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
                         <div class="episode-fallback-icon"><i class="fas fa-film"></i></div>
+                        ${locked ? `
+                            <div class="locked-badge">
+                                <i class="fas fa-lock"></i>
+                                <span>داگرتی</span>
+                            </div>
+                        ` : ''}
                         <div class="episode-play-overlay">
                             <div class="episode-play-icon">
-                                <i class="fas fa-play"></i>
+                                <i class="fas fa-${locked ? 'lock' : 'play'}"></i>
                             </div>
                         </div>
                         ${progress && progress.percent > 0 && progress.percent < 95 ? `
@@ -361,7 +374,11 @@
 
                     <div class="episode-info">
                         <h4 class="episode-title">${episode.title}</h4>
-                        ${episode.description ? `
+                        ${locked ? `
+                            <p class="episode-description" style="color: #ffc107;">
+                                <i class="fas fa-clock"></i> دێ ڤەببێت دوور ${formatScheduledTime(episode.scheduled_at)}
+                            </p>
+                        ` : episode.description ? `
                             <p class="episode-description">${episode.description}</p>
                         ` : ''}
                         <div class="episode-meta">
@@ -1488,7 +1505,10 @@
                     console.log(`✅ Loaded ${data.length} videos from Supabase`);
 
                     // Convert Supabase format to our format
-                    const supabaseVideos = data.map(v => {
+                    // Filter out unpublished episodes (but keep scheduled ones to show as locked)
+                    const publishedData = data.filter(v => v.is_published !== false);
+
+                    const supabaseVideos = publishedData.map(v => {
                         const isS3 = v.video_type === 's3' || v.video_url?.startsWith('http');
                         const seriesInfo = seriesMap[v.series_id] || {};
                         return {
@@ -1509,7 +1529,9 @@
                             viewCount: v.view_count || 0,
                             likeCount: v.like_count || 0,
                             rating: v.rating || 0,
-                            createdAt: v.created_at
+                            createdAt: v.created_at,
+                            scheduled_at: v.scheduled_at,
+                            is_published: v.is_published
                         };
                     });
 
@@ -1606,22 +1628,65 @@
         setTimeout(() => loadMissingThumbnails(), 500);
     }
 
+    // Check if episode is locked (scheduled for future)
+    function isEpisodeLocked(video) {
+        if (!video.scheduled_at) return false;
+        const scheduledTime = new Date(video.scheduled_at);
+        return scheduledTime > new Date();
+    }
+
+    // Format scheduled time for display
+    function formatScheduledTime(scheduledAt) {
+        const date = new Date(scheduledAt);
+        const now = new Date();
+        const diffMs = date - now;
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffDays > 0) {
+            return `${diffDays} ڕۆژ`;
+        } else if (diffHours > 0) {
+            return `${diffHours} کاتژمێر`;
+        } else {
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            return `${diffMins} خولەک`;
+        }
+    }
+
     // Create episode card HTML
     function createEpisodeCard(video, showProgress = false) {
         const progress = showProgress && state.watchProgress[video.id]
             ? state.watchProgress[video.id].percent
             : 0;
 
+        // Check if episode is locked
+        const locked = isEpisodeLocked(video);
+        const lockedClass = locked ? 'locked' : '';
+
         // Use cached thumbnail or placeholder
         const thumbnailSrc = video.thumbnail || thumbnailCache[video.videoId] || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22225%22%3E%3Crect fill=%22%231a1a1a%22 width=%22400%22 height=%22225%22/%3E%3Ctext fill=%22%23999%22 font-family=%22Arial%22 font-size=%2220%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3ELoading...%3C/text%3E%3C/svg%3E';
 
+        // Click handler - either play or shake if locked
+        const clickHandler = locked
+            ? `shakeLockedEpisode(this)`
+            : `playVideo('${video.videoId}', '${video.title}', '${video.id}')`;
+
         return `
-            <div class="episode-card" onclick="playVideo('${video.videoId}', '${video.title}', '${video.id}')" data-video-url="${video.videoId}">
+            <div class="episode-card ${lockedClass}" onclick="${clickHandler}" data-video-url="${video.videoId}" data-episode-id="${video.id}">
                 <div class="episode-thumbnail">
                     <img src="${thumbnailSrc}" alt="${video.title}" data-video-url="${video.videoId}" onerror="generateThumbnailForImage(this)">
                     ${showProgress ? `<div class="episode-progress" style="width: ${progress}%;"></div>` : ''}
+                    ${locked ? `
+                        <div class="locked-badge">
+                            <i class="fas fa-lock"></i>
+                            <span>داگرتی</span>
+                        </div>
+                        <div class="locked-time">
+                            <i class="fas fa-clock"></i> دێ ڤەببێت دوور ${formatScheduledTime(video.scheduled_at)}
+                        </div>
+                    ` : ''}
                     <div class="play-overlay">
-                        <i class="fas fa-play"></i>
+                        <i class="fas fa-${locked ? 'lock' : 'play'}"></i>
                     </div>
                     <div class="quick-actions">
                         <button class="quick-btn" onclick="event.stopPropagation(); addToWatchlist('${video.id}')" title="زێدەبکە لیستێ">
@@ -1650,6 +1715,14 @@
             </div>
         `;
     }
+
+    // Shake locked episode card
+    window.shakeLockedEpisode = function(element) {
+        element.classList.add('shake');
+        setTimeout(() => {
+            element.classList.remove('shake');
+        }, 500);
+    };
 
     // Play video (S3 native or YouTube iframe)
     window.playVideo = function(videoUrlOrId, title, episodeId) {
