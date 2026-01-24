@@ -877,7 +877,7 @@
                 list.innerHTML = series.map(s => `
                     <div class="series-card" onclick="viewSeriesEpisodes('${s.id}', '${s.name_ku}')">
                         <div class="series-thumbnail">
-                            ${s.thumbnail_url ? `<img src="${s.thumbnail_url}" alt="${s.name_ku}">` : '<i data-lucide="image"></i>'}
+                            ${s.thumbnail_url && s.thumbnail_url !== 'undefined' ? `<img src="${s.thumbnail_url}" alt="${s.name_ku}">` : '<i data-lucide="image"></i>'}
                         </div>
                         <div class="series-card-body">
                             <div class="series-card-title">${s.name_ku}</div>
@@ -1076,7 +1076,7 @@
             const id = document.getElementById('series-id').value;
             const title = document.getElementById('series-title').value;
             const description = document.getElementById('series-description').value;
-            const thumbnailUrl = document.getElementById('series-thumbnail').value;
+            const thumbnailUrl = document.getElementById('series-thumbnail').value || null;
             const speaker = document.getElementById('series-speaker').value;
 
             if (!title) {
@@ -1433,6 +1433,10 @@
 
                 const { uploadUrl, publicUrl } = await response.json();
 
+                if (!uploadUrl || !publicUrl) {
+                    throw new Error('Invalid response from server');
+                }
+
                 // Upload to S3
                 await uploadToS3(file, uploadUrl, (progress) => {
                     thumbnailProgressBar.style.width = progress + '%';
@@ -1444,6 +1448,7 @@
                 thumbnailPreview.style.display = 'block';
                 thumbnailPreviewImg.src = publicUrl;
                 document.getElementById('series-thumbnail').value = publicUrl;
+                console.log('Thumbnail uploaded:', publicUrl);
 
             } catch (error) {
                 console.error('Thumbnail upload error:', error);
