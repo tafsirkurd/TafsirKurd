@@ -514,19 +514,15 @@
 
                 <!-- BREADCRUMB -->
                 <div class="breadcrumb" id="breadcrumb" style="display: none;">
-                    <span class="breadcrumb-item" data-view="categories">
+                    <span class="breadcrumb-item" data-view="all-series">
                         <i data-lucide="tv"></i>
-                        Categories
+                        All Series
                     </span>
                 </div>
 
                 <!-- VIEW TABS -->
                 <div class="view-tabs">
-                    <button class="tab-btn active" data-view="categories">
-                        <i data-lucide="folder"></i>
-                        Categories
-                    </button>
-                    <button class="tab-btn" data-view="all-series">
+                    <button class="tab-btn active" data-view="all-series">
                         <i data-lucide="list"></i>
                         All Series
                     </button>
@@ -536,15 +532,8 @@
                     </button>
                 </div>
 
-                <!-- CATEGORIES VIEW -->
-                <div class="view-panel active" id="categories-view">
-                    <div class="category-grid" id="categories-grid">
-                        <!-- Categories will be loaded here -->
-                    </div>
-                </div>
-
                 <!-- ALL SERIES VIEW -->
-                <div class="view-panel" id="all-series-view">
+                <div class="view-panel active" id="all-series-view">
                     <div class="series-list" id="all-series-list">
                         <!-- All series will be loaded here -->
                     </div>
@@ -817,7 +806,7 @@
     <script src="/utils/admin-auth.js?v=3"></script>
     <script src="/utils/admin-notifications.js"></script>
     <script>
-        let currentView = 'categories';
+        let currentView = 'all-series';
         let currentCategory = null;
         let currentSeries = null;
 
@@ -825,7 +814,6 @@
         (async () => {
             const isAuth = await window.adminAuth.checkAuth();
             if (isAuth) {
-                loadCategories();
                 loadAllSeries();
                 loadAllEpisodes();
             }
@@ -890,12 +878,7 @@
             const addBtn = document.getElementById('add-btn');
             const addBtnText = document.getElementById('add-btn-text');
 
-            if (view === 'categories') {
-                document.getElementById('categories-view').classList.add('active');
-                addBtnText.textContent = 'Add Category';
-                addBtn.onclick = openCategoryModal;
-                document.getElementById('breadcrumb').style.display = 'none';
-            } else if (view === 'all-series') {
+            if (view === 'all-series') {
                 document.getElementById('all-series-view').classList.add('active');
                 addBtnText.textContent = 'Add Series';
                 addBtn.onclick = openSeriesModal;
@@ -1720,8 +1703,7 @@
 
         // Add button handler
         document.getElementById('add-btn').addEventListener('click', () => {
-            if (currentView === 'categories') openCategoryModal();
-            else if (currentView === 'all-series') openSeriesModal();
+            if (currentView === 'all-series') openSeriesModal();
             else if (currentView === 'all-episodes') openEpisodeModal();
         });
 
