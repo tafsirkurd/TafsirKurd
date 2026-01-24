@@ -1313,9 +1313,12 @@
                     document.getElementById('episode-title').value = data.title;
                     document.getElementById('episode-description').value = data.description || '';
                     document.getElementById('episode-video-url').value = data.video_url;
-                    document.getElementById('episode-thumbnail').value = data.thumbnail || '';
                     document.getElementById('episode-duration').value = data.duration ? formatDuration(data.duration) : '';
                     seriesSelect.value = data.series_id;
+
+                    // Set thumbnail - check both possible column names
+                    const thumbUrl = data.thumbnail_url || data.thumbnail || '';
+                    document.getElementById('episode-thumbnail').value = thumbUrl;
 
                     // Set scheduled time if exists
                     if (data.scheduled_at) {
@@ -1329,10 +1332,10 @@
                     document.getElementById('episode-published').checked = data.is_published !== false;
 
                     // Show existing thumbnail if available
-                    if (data.thumbnail && data.thumbnail !== 'undefined') {
+                    if (thumbUrl && thumbUrl !== 'undefined') {
                         document.getElementById('noVideoMessage').style.display = 'none';
                         document.getElementById('episodeThumbnailPreview').style.display = 'block';
-                        document.getElementById('episodeThumbnailPreviewImg').src = data.thumbnail;
+                        document.getElementById('episodeThumbnailPreviewImg').src = thumbUrl;
                     }
                 }
             } else {
