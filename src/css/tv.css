@@ -466,7 +466,8 @@
 }
 
 .episode-thumbnail {
-    width: 240px;
+    width: 280px;
+    min-width: 280px;
     aspect-ratio: 16 / 9;
     border-radius: 8px;
     overflow: hidden;
@@ -514,15 +515,15 @@
 }
 
 .episode-play-icon {
-    width: 75px;
-    height: 75px;
+    width: 60px;
+    height: 60px;
     background: rgba(255, 255, 255, 0.95);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #000;
-    font-size: 2rem;
+    font-size: 1.5rem;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     transition: transform 0.2s ease;
 }
