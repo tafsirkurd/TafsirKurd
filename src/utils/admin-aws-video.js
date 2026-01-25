@@ -284,7 +284,7 @@ async function saveVideoMetadata(s3Key, bucketName, s3Url) {
     };
 
     const { data, error } = await supabaseClient
-        .from('tv_videos')
+        .from('islamvoice_videos')
         .insert([videoData])
         .select();
 
@@ -316,7 +316,7 @@ async function refreshVideosList() {
         }
 
         const { data: videos, error } = await window.supabaseClient
-            .from('tv_videos')
+            .from('islamvoice_videos')
             .select('*')
             .order('created_at', { ascending: false });
 
@@ -395,7 +395,7 @@ function createVideoCard(video) {
 // Video management functions
 async function viewVideo(videoId) {
     const { data: video, error } = await supabaseClient
-        .from('tv_videos')
+        .from('islamvoice_videos')
         .select('*')
         .eq('id', videoId)
         .single();
@@ -419,7 +419,7 @@ async function editVideo(videoId) {
 async function togglePublish(videoId, shouldPublish) {
     try {
         const { error } = await supabaseClient
-            .from('tv_videos')
+            .from('islamvoice_videos')
             .update({
                 is_published: shouldPublish,
                 published_at: shouldPublish ? new Date().toISOString() : null
@@ -442,7 +442,7 @@ async function deleteVideo(videoId, videoTitle) {
 
     try {
         const { error } = await supabaseClient
-            .from('tv_videos')
+            .from('islamvoice_videos')
             .delete()
             .eq('id', videoId);
 

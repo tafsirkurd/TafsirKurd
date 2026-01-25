@@ -1479,7 +1479,7 @@
             try {
                 // Load series data first
                 const { data: seriesData } = await window.islamvoiceSupabase
-                    .from('tv_series')
+                    .from('islamvoice_series')
                     .select('*');
 
                 // Store series info for later use
@@ -1500,7 +1500,7 @@
 
                 // Load episodes
                 const { data, error } = await window.islamvoiceSupabase
-                    .from('tv_episodes')
+                    .from('islamvoice_episodes')
                     .select('*')
                     .order('created_at', { ascending: false });
 
@@ -2241,9 +2241,9 @@
         if (!window.islamvoiceSupabase) return;
 
         try {
-            // Get speakers from tv_speakers table
+            // Get speakers from islamvoice_speakers table
             const { data: speakers } = await window.islamvoiceSupabase
-                .from('tv_speakers')
+                .from('islamvoice_speakers')
                 .select('name, thumbnail_url')
                 .eq('is_active', true)
                 .order('display_order')
@@ -2268,7 +2268,7 @@
                             </button>
                         `).join('')}
                     `;
-                    console.log('✅ Loaded', speakers.length, 'sheikhs from tv_speakers');
+                    console.log('✅ Loaded', speakers.length, 'sheikhs from islamvoice_speakers');
                 }
             } else {
                 const sheikhList = document.getElementById('sheikhList');
@@ -2347,7 +2347,7 @@
             if (typeof supabase !== 'undefined') {
                 try {
                     const { error } = await supabase
-                        .from('tv_episodes')
+                        .from('islamvoice_episodes')
                         .delete()
                         .eq('id', videoId);
 
@@ -2872,7 +2872,7 @@
             if (typeof supabase !== 'undefined') {
                 try {
                     const { data, error } = await supabase
-                        .from('tv_episodes')
+                        .from('islamvoice_episodes')
                         .insert([{
                             title,
                             description: desc,

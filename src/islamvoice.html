@@ -3837,8 +3837,8 @@
             try {
                 // Fetch recent episodes as notifications
                 const { data: episodes, error } = await supabaseClient
-                    .from('tv_episodes')
-                    .select('id, title, created_at, tv_series(name_ku)')
+                    .from('islamvoice_episodes')
+                    .select('id, title, created_at, islamvoice_series(name_ku)')
                     .order('created_at', { ascending: false })
                     .limit(5);
 
@@ -3882,7 +3882,7 @@
 
                     const timeDiv = document.createElement('div');
                     timeDiv.className = 'notification-time';
-                    timeDiv.textContent = (ep.tv_series?.name_ku || '') + ' • ' + formatTimeAgo(ep.created_at);
+                    timeDiv.textContent = (ep.islamvoice_series?.name_ku || '') + ' • ' + formatTimeAgo(ep.created_at);
 
                     contentDiv.appendChild(titleDiv);
                     contentDiv.appendChild(timeDiv);

@@ -1271,7 +1271,7 @@
         if (typeof supabase !== 'undefined') {
             try {
                 const { data, error } = await supabase
-                    .from('tv_episodes')
+                    .from('islamvoice_episodes')
                     .select('*')
                     .eq('video_type', 'youtube')
                     .order('created_at', { ascending: false });
@@ -1555,7 +1555,7 @@
             if (typeof supabase !== 'undefined') {
                 try {
                     const { error } = await supabase
-                        .from('tv_episodes')
+                        .from('islamvoice_episodes')
                         .delete()
                         .eq('id', videoId);
 
@@ -2092,7 +2092,7 @@
             if (typeof supabase !== 'undefined') {
                 try {
                     const { data, error } = await supabase
-                        .from('tv_episodes')
+                        .from('islamvoice_episodes')
                         .insert([{
                             title,
                             description: desc,
