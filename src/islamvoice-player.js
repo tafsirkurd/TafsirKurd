@@ -1839,7 +1839,7 @@
         // Create video wrapper
         const videoWrapper = document.createElement('div');
         videoWrapper.className = 'inline-video-wrapper';
-        videoWrapper.style.cssText = 'position:relative; width:100%; max-width:600px; background:#000; border-radius:12px; overflow:hidden; margin:15px auto; display:flex; align-items:center; justify-content:center;';
+        videoWrapper.style.cssText = 'position:relative; width:100%; max-width:600px; background:#000; border-radius:12px; overflow:hidden; margin:15px auto; display:flex; align-items:center; justify-content:center; direction:ltr;';
 
         // Prevent wrapper clicks from doing anything
         videoWrapper.onclick = function(e) { e.stopPropagation(); };
@@ -2014,8 +2014,8 @@
         volumeContainer.appendChild(volumeSlider);
 
         leftBtns.appendChild(playBtn);
-        leftBtns.appendChild(forwardBtn);
         leftBtns.appendChild(rewindBtn);
+        leftBtns.appendChild(forwardBtn);
         leftBtns.appendChild(volumeContainer);
 
         // Right buttons
