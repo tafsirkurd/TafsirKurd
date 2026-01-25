@@ -2339,8 +2339,33 @@
             updateBadgeCounts();
         };
 
-        // Replace the thumbnail inside the clicked card with video
-        if (clickedCard) {
+        // Check if clicking from sidebar views (history, bookmarks, continue)
+        const isSidebarView = clickedCard && clickedCard.closest('.view-container:not(#topicsView):not(#episodesView)');
+
+        // For sidebar views or no card found, show video in main content area prominently
+        if (isSidebarView || !clickedCard) {
+            // Create a video modal/overlay at top of main content
+            const mainContent = document.getElementById('main-content') || document.querySelector('.main-content') || document.body;
+
+            // Style for prominent display
+            videoWrapper.style.cssText = 'position:relative; width:100%; max-width:800px; background:#000; border-radius:12px; overflow:hidden; margin:20px auto; display:flex; align-items:center; justify-content:center; direction:ltr; box-shadow: 0 10px 40px rgba(0,0,0,0.5);';
+
+            // Insert at top of main content
+            mainContent.insertBefore(videoWrapper, mainContent.firstChild);
+
+            // Scroll to video
+            videoWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Update close button
+            closeBtn.onclick = function() {
+                document.removeEventListener('keydown', handleKeyboard);
+                videoElement.pause();
+                videoWrapper.remove();
+                state.currentEpisode = null;
+                updateBadgeCounts();
+            };
+        } else if (clickedCard) {
+            // For regular episode cards in main grid
             const thumbnail = clickedCard.querySelector('.episode-thumbnail');
             if (thumbnail) {
                 // Hide thumbnail
@@ -2351,11 +2376,9 @@
                 // Update close button to restore thumbnail
                 closeBtn.onclick = function() {
                     document.removeEventListener('keydown', handleKeyboard);
-                    videoElement.pause(); // This triggers onpause which saves progress
+                    videoElement.pause();
                     videoWrapper.remove();
-                    // Restore thumbnail - remove inline display to use CSS default
                     thumbnail.style.removeProperty('display');
-                    // Clear current episode
                     state.currentEpisode = null;
                     updateBadgeCounts();
                 };
@@ -2363,10 +2386,6 @@
                 // No thumbnail found, just insert inside card
                 clickedCard.insertBefore(videoWrapper, clickedCard.firstChild);
             }
-        } else {
-            // Fallback: find any episodes container
-            const container = document.querySelector('.episodes-grid') || document.querySelector('.latest-episodes') || document.body;
-            container.insertBefore(videoWrapper, container.firstChild);
         }
 
         // Set video source
