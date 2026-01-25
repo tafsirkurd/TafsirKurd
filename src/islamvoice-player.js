@@ -1839,16 +1839,31 @@
         // Create video wrapper
         const videoWrapper = document.createElement('div');
         videoWrapper.className = 'inline-video-wrapper';
-        videoWrapper.style.cssText = 'position:relative; width:100%; max-width:600px; background:#000; border-radius:12px; overflow:hidden; margin:15px auto;';
+        videoWrapper.style.cssText = 'position:relative; width:100%; max-width:600px; background:#000; border-radius:12px; overflow:hidden; margin:15px auto; display:flex; align-items:center; justify-content:center;';
 
         // Prevent wrapper clicks from doing anything
         videoWrapper.onclick = function(e) { e.stopPropagation(); };
+
+        // Create loading spinner
+        const loadingSpinner = document.createElement('div');
+        loadingSpinner.className = 'inline-video-loading';
+        loadingSpinner.style.cssText = 'position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:200;';
+
+        const spinnerCircle = document.createElement('div');
+        spinnerCircle.style.cssText = 'width:50px; height:50px; border:4px solid rgba(255,255,255,0.2); border-top-color:#fff; border-radius:50%; animation:spin 1s linear infinite;';
+
+        const spinnerText = document.createElement('p');
+        spinnerText.textContent = 'چاڤەڕێبە...';
+        spinnerText.style.cssText = 'margin-top:15px; color:#fff; font-size:0.9rem;';
+
+        loadingSpinner.appendChild(spinnerCircle);
+        loadingSpinner.appendChild(spinnerText);
 
         // Create video element
         const videoElement = document.createElement('video');
         videoElement.id = 'activeVideo';
         videoElement.playsInline = true;
-        videoElement.style.cssText = 'width:100%; height:100%; object-fit:cover; background:#000;';
+        videoElement.style.cssText = 'width:100%; height:100%; object-fit:contain; background:#000; display:block; margin:auto;';
 
         // Click on video to play/pause (stop propagation)
         videoElement.onclick = function(e) {
@@ -2047,6 +2062,7 @@
 
         videoWrapper.appendChild(videoElement);
         videoWrapper.appendChild(controls);
+        videoWrapper.appendChild(loadingSpinner);
 
         // Show controls on hover
         videoWrapper.onmouseenter = function() { controls.style.opacity = '1'; progressHandle.style.opacity = '1'; };
@@ -2204,9 +2220,33 @@
             }
         };
 
-        // Add loadeddata handler
+        // Add loadeddata handler - hide loading spinner
         videoElement.onloadeddata = function() {
             console.log('✅ Video data loaded successfully');
+            if (loadingSpinner) {
+                loadingSpinner.style.display = 'none';
+            }
+        };
+
+        // Also hide on canplay (sometimes loadeddata doesn't fire)
+        videoElement.oncanplay = function() {
+            if (loadingSpinner) {
+                loadingSpinner.style.display = 'none';
+            }
+        };
+
+        // Show spinner when buffering
+        videoElement.onwaiting = function() {
+            if (loadingSpinner) {
+                loadingSpinner.style.display = 'flex';
+            }
+        };
+
+        // Hide spinner when playing
+        videoElement.onplaying = function() {
+            if (loadingSpinner) {
+                loadingSpinner.style.display = 'none';
+            }
         };
 
         // Auto-play video
