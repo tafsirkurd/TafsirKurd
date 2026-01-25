@@ -448,20 +448,20 @@
 
         if (bookmarkCount) {
             const count = state.bookmarks.length;
-            bookmarkCount.textContent = count;
-            bookmarkCount.style.display = count > 0 ? 'block' : 'none';
+            bookmarkCount.textContent = count > 0 ? count : '';
+            bookmarkCount.style.display = count > 0 ? 'flex' : 'none';
         }
 
         if (continueCount) {
             const count = state.continueWatching.length;
-            continueCount.textContent = count;
-            continueCount.style.display = count > 0 ? 'block' : 'none';
+            continueCount.textContent = count > 0 ? count : '';
+            continueCount.style.display = count > 0 ? 'flex' : 'none';
         }
 
         if (historyCount) {
             const count = state.watchHistory.length;
-            historyCount.textContent = count > 99 ? '99+' : count;
-            historyCount.style.display = count > 0 ? 'block' : 'none';
+            historyCount.textContent = count > 0 ? (count > 99 ? '99+' : count) : '';
+            historyCount.style.display = count > 0 ? 'flex' : 'none';
         }
     }
 
