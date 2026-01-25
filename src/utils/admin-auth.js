@@ -22,7 +22,7 @@ const ROLE_PERMISSIONS = {
             'messages',
             'videos',
             'video-library',
-            'tv-management',
+            'islamvoice-management',
             'backgrounds',
             'translations',
             'schedule'

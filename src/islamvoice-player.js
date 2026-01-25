@@ -1475,10 +1475,10 @@
         // Wait a bit for Supabase to initialize on TV page
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        if (window.tvSupabase) {
+        if (window.islamvoiceSupabase) {
             try {
                 // Load series data first
-                const { data: seriesData } = await window.tvSupabase
+                const { data: seriesData } = await window.islamvoiceSupabase
                     .from('tv_series')
                     .select('*');
 
@@ -1499,7 +1499,7 @@
                 }
 
                 // Load episodes
-                const { data, error } = await window.tvSupabase
+                const { data, error } = await window.islamvoiceSupabase
                     .from('tv_episodes')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -2238,11 +2238,11 @@
 
     // Load sheikhs/speakers into sidebar
     async function loadSidebarSheikhs() {
-        if (!window.tvSupabase) return;
+        if (!window.islamvoiceSupabase) return;
 
         try {
             // Get speakers from tv_speakers table
-            const { data: speakers } = await window.tvSupabase
+            const { data: speakers } = await window.islamvoiceSupabase
                 .from('tv_speakers')
                 .select('name, thumbnail_url')
                 .eq('is_active', true)
@@ -2537,8 +2537,8 @@
 
     // Check if user is authenticated
     function isAuthenticated() {
-        // Check Supabase session via window.tvSupabase
-        if (window.tvSupabase) {
+        // Check Supabase session via window.islamvoiceSupabase
+        if (window.islamvoiceSupabase) {
             // Supabase stores session in localStorage with key like 'sb-*-auth-token'
             const keys = Object.keys(localStorage);
             const supabaseKey = keys.find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
