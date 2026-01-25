@@ -30,7 +30,7 @@
     <!-- Fonts -->
     <link rel="stylesheet" href="/assets/fonts/fonts.css">
     <link rel="stylesheet" href="/assets/fontawesome/all.min.css">
-    <link rel="stylesheet" href="/css/islamvoice.css?v=2">
+    <link rel="stylesheet" href="/css/islamvoice.css?v=4">
 
     <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -62,6 +62,78 @@
             --transition-fast: 0.2s;
             --transition-medium: 0.4s;
             --cubic: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Preloader */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .preloader.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .preloader-content {
+            text-align: center;
+        }
+
+        .preloader-logo {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 20px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .preloader-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .preloader-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .preloader-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .preloader-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: bounce 1.4s ease-in-out infinite;
+        }
+
+        .preloader-dot:nth-child(1) { animation-delay: 0s; }
+        .preloader-dot:nth-child(2) { animation-delay: 0.2s; }
+        .preloader-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
         }
 
         /* Dark mode */
@@ -674,16 +746,38 @@
             background: #000;
         }
 
-        /* Portrait video specific */
+        /* Portrait video specific - centered with animation */
+        .player-container.portrait {
+            animation: fadeInCenter 0.4s ease-out;
+        }
+
         .player-container.portrait .video-wrapper {
             height: 100%;
             width: auto;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .player-container.portrait .video-player {
             width: auto;
             height: 100%;
             max-height: 100vh;
+            max-width: 60vw;
+            margin: 0 auto;
+            display: block;
+        }
+
+        @keyframes fadeInCenter {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         /* Landscape video */
@@ -763,6 +857,28 @@
         .player-container:hover .player-overlay,
         .player-overlay.show {
             opacity: 1;
+        }
+
+        /* Fullscreen mode fixes */
+        .player-container:fullscreen {
+            background: #000;
+        }
+
+        .player-container:fullscreen .player-overlay {
+            z-index: 2147483647; /* Max z-index for fullscreen */
+        }
+
+        .player-container:fullscreen .video-controls {
+            z-index: 2147483647;
+        }
+
+        /* Webkit fullscreen (Safari) */
+        .player-container:-webkit-full-screen {
+            background: #000;
+        }
+
+        .player-container:-webkit-full-screen .player-overlay {
+            z-index: 2147483647;
         }
 
         .video-info {
@@ -3104,6 +3220,20 @@
     </style>
 </head>
 <body>
+    <!-- Preloader -->
+    <div class="preloader" id="preloader">
+        <div class="preloader-content">
+            <img src="/assets/images/logo.png" alt="دەنگێ ئیسلامێ" class="preloader-logo">
+            <h1 class="preloader-title">دەنگێ ئیسلامێ</h1>
+            <p class="preloader-subtitle">چاڤەڕێبە...</p>
+            <div class="preloader-dots">
+                <div class="preloader-dot"></div>
+                <div class="preloader-dot"></div>
+                <div class="preloader-dot"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Navigation -->
     <nav class="nav" id="nav">
         <div class="nav-container">
@@ -3714,7 +3844,7 @@
 
     <!-- JavaScript -->
     <!-- Native HTML5 Video Player (AWS S3) -->
-    <script src="/islamvoice-player.js?v=20260119-s3"></script>
+    <script src="/islamvoice-player.js?v=20260126"></script>
     <script>
         // Set current year in footer
         document.getElementById('year').textContent = new Date().getFullYear();
@@ -4122,6 +4252,15 @@
 // Mobile Menu Toggle        const mobileMenuToggle = document.getElementById('mobileMenuToggle');        const navMenu = document.querySelector('.nav-menu');        if (mobileMenuToggle && navMenu) {            mobileMenuToggle.addEventListener('click', function() {                this.classList.toggle('active');                navMenu.classList.toggle('active');            });            // Close menu when clicking on a link            navMenu.querySelectorAll('.nav-link').forEach(link => {                link.addEventListener('click', () => {                    mobileMenuToggle.classList.remove('active');                    navMenu.classList.remove('active');                });            });            // Close menu when clicking outside            document.addEventListener('click', function(event) {                if (!mobileMenuToggle.contains(event.target) && !navMenu.contains(event.target)) {                    mobileMenuToggle.classList.remove('active');                    navMenu.classList.remove('active');                }            });        }
         // Initialize auth on page load
         window.addEventListener('load', async () => {
+            // Hide preloader
+            const preloader = document.getElementById('preloader');
+            if (preloader) {
+                setTimeout(() => {
+                    preloader.classList.add('fade-out');
+                    setTimeout(() => preloader.remove(), 500);
+                }, 300);
+            }
+
             // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
             if (window.TafsirKurdSecurity) {
                 window.TafsirKurdSecurity.init({
