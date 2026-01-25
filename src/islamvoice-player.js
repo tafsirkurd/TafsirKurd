@@ -444,6 +444,7 @@
     function updateBadgeCounts() {
         const bookmarkCount = document.getElementById('bookmarkCount');
         const continueCount = document.getElementById('continueCount');
+        const historyCount = document.getElementById('historyCount');
 
         if (bookmarkCount) {
             const count = state.bookmarks.length;
@@ -455,6 +456,12 @@
             const count = state.continueWatching.length;
             continueCount.textContent = count;
             continueCount.style.display = count > 0 ? 'block' : 'none';
+        }
+
+        if (historyCount) {
+            const count = state.watchHistory.length;
+            historyCount.textContent = count > 99 ? '99+' : count;
+            historyCount.style.display = count > 0 ? 'block' : 'none';
         }
     }
 
@@ -2159,12 +2166,62 @@
 
         videoElement.onpause = function() {
             playIcon.className = 'fas fa-play';
+
+            // Save progress when paused
+            if (videoElement.duration > 0) {
+                const percent = (videoElement.currentTime / videoElement.duration) * 100;
+
+                state.watchProgress[episodeId] = {
+                    currentTime: videoElement.currentTime,
+                    duration: videoElement.duration,
+                    percent: percent,
+                    timestamp: Date.now(),
+                    completed: percent >= 95
+                };
+                localStorage.setItem('watchProgress', JSON.stringify(state.watchProgress));
+
+                // Update continueWatching
+                if (percent > 5 && percent < 95) {
+                    updateContinueWatching(episodeId, videoElement.currentTime, videoElement.duration);
+                } else if (percent >= 95) {
+                    // Remove from continueWatching if completed
+                    state.continueWatching = state.continueWatching.filter(item => item.episodeId !== episodeId);
+                    localStorage.setItem('continueWatching', JSON.stringify(state.continueWatching));
+                }
+
+                // Add to watch history
+                addToWatchHistory(episodeId, percent >= 95);
+            }
         };
+
+        // Throttle progress saving (every 5 seconds)
+        let lastProgressSave = 0;
 
         videoElement.ontimeupdate = function() {
             const percent = (videoElement.currentTime / videoElement.duration) * 100;
             progressFilled.style.width = percent + '%';
             currentTime.textContent = formatTime(videoElement.currentTime);
+
+            // Save progress every 5 seconds
+            const now = Date.now();
+            if (now - lastProgressSave > 5000 && videoElement.duration > 0) {
+                lastProgressSave = now;
+
+                // Save to watchProgress
+                state.watchProgress[episodeId] = {
+                    currentTime: videoElement.currentTime,
+                    duration: videoElement.duration,
+                    percent: percent,
+                    timestamp: now,
+                    completed: false
+                };
+                localStorage.setItem('watchProgress', JSON.stringify(state.watchProgress));
+
+                // Update continueWatching if between 5% and 95%
+                if (percent > 5 && percent < 95) {
+                    updateContinueWatching(episodeId, videoElement.currentTime, videoElement.duration);
+                }
+            }
         };
 
         videoElement.onloadedmetadata = function() {
@@ -2261,8 +2318,10 @@
         // Close button handler (will be updated later)
         closeBtn.onclick = function() {
             document.removeEventListener('keydown', handleKeyboard);
-            videoElement.pause();
+            videoElement.pause(); // This triggers onpause which saves progress
             videoWrapper.remove();
+            state.currentEpisode = null;
+            updateBadgeCounts();
         };
 
         // Replace the thumbnail inside the clicked card with video
@@ -2276,10 +2335,14 @@
 
                 // Update close button to restore thumbnail
                 closeBtn.onclick = function() {
-                    videoElement.pause();
+                    document.removeEventListener('keydown', handleKeyboard);
+                    videoElement.pause(); // This triggers onpause which saves progress
                     videoWrapper.remove();
                     // Restore thumbnail - remove inline display to use CSS default
                     thumbnail.style.removeProperty('display');
+                    // Clear current episode
+                    state.currentEpisode = null;
+                    updateBadgeCounts();
                 };
             } else {
                 // No thumbnail found, just insert inside card
@@ -2295,6 +2358,19 @@
         console.log('🎥 Setting video source:', videoUrl);
         videoElement.src = videoUrl;
         videoElement.load();
+
+        // Check for saved progress and resume from where user left off
+        let savedStartTime = 0;
+        const savedProgress = state.watchProgress[episodeId];
+        const continueItem = state.continueWatching.find(item => item.episodeId === episodeId);
+
+        if (continueItem && continueItem.currentTime > 0 && continueItem.percent < 95) {
+            savedStartTime = continueItem.currentTime;
+            console.log('📍 Resuming from continueWatching:', savedStartTime);
+        } else if (savedProgress && savedProgress.currentTime > 0 && savedProgress.percent < 95) {
+            savedStartTime = savedProgress.currentTime;
+            console.log('📍 Resuming from watchProgress:', savedStartTime);
+        }
 
         // Add error handler
         videoElement.onerror = function(e) {
@@ -2332,6 +2408,12 @@
             // Update duration display
             if (duration) {
                 duration.textContent = formatTime(videoElement.duration);
+            }
+
+            // Resume from saved position
+            if (savedStartTime > 0 && savedStartTime < videoElement.duration - 5) {
+                videoElement.currentTime = savedStartTime;
+                showNotification('▶️ بەردەوامکرنا لە ' + formatTime(savedStartTime));
             }
         };
 
@@ -2373,6 +2455,33 @@
         // Setup ended listener
         videoElement.onended = function() {
             console.log('✅ Video ended');
+
+            // Mark as completed in watchProgress
+            state.watchProgress[episodeId] = {
+                currentTime: videoElement.duration,
+                duration: videoElement.duration,
+                percent: 100,
+                timestamp: Date.now(),
+                completed: true
+            };
+            localStorage.setItem('watchProgress', JSON.stringify(state.watchProgress));
+
+            // Remove from continueWatching since it's completed
+            state.continueWatching = state.continueWatching.filter(item => item.episodeId !== episodeId);
+            localStorage.setItem('continueWatching', JSON.stringify(state.continueWatching));
+
+            // Add to watch history as completed
+            addToWatchHistory(episodeId, true);
+
+            // Update series progress if applicable
+            const episode = state.playlist.find(e => e.id === episodeId);
+            if (episode && episode.series) {
+                updateSeriesProgress(episode.series, episodeId, true);
+            }
+
+            // Update badge counts
+            updateBadgeCounts();
+
             if (state.autoPlayNext) {
                 setTimeout(() => playNextEpisode(), 2000);
             }
