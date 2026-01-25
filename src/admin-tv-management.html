@@ -1923,7 +1923,13 @@
             } catch (err) {
                 console.error('Conversion error:', err);
                 conversionProgress.style.display = 'none';
-                throw new Error('Video conversion failed');
+
+                // Check for SharedArrayBuffer error
+                if (err.message && err.message.includes('SharedArrayBuffer')) {
+                    throw new Error('Browser security restrictions prevent video conversion. Please use Chrome and ensure the site has proper headers, or convert using cloudconvert.com');
+                }
+
+                throw new Error('Video conversion failed: ' + err.message);
             }
         }
 
@@ -1943,7 +1949,8 @@
                     file = await convertToMP4(file);
                     console.log('Converted to MP4:', file.name);
                 } catch (err) {
-                    alert('Could not convert video. Try using cloudconvert.com to convert to MP4 first.');
+                    console.error('Conversion failed:', err);
+                    alert('MOV Conversion: ' + err.message + '\n\nPlease convert your video to MP4 using:\nhttps://cloudconvert.com/mp4-converter');
                     uploadPlaceholder.style.display = 'block';
                     return;
                 }
