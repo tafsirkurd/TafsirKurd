@@ -764,7 +764,7 @@ tbody tr:hover {
 /* Role-based sidebar visibility - hide restricted items early */
 body[data-role="analyst"] .nav-item[href*="messages"],
 body[data-role="analyst"] .nav-item[href*="videos"],
-body[data-role="analyst"] .nav-item[href*="tv-management"],
+body[data-role="analyst"] .nav-item[href*="islamvoice-management"],
 body[data-role="analyst"] .nav-item[href*="backgrounds"],
 body[data-role="analyst"] .nav-item[href*="account-management"],
 body[data-role="analyst"] .nav-item[href*="features"],

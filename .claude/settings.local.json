@@ -142,7 +142,10 @@
       "Bash(! grep -q \"sessionTimer\" \"$f\")",
       "Bash(! grep -q \"admin-login\" \"$f\")",
       "Bash(if grep -q \"sessionTimer\" \"$f\")",
-      "Bash(! grep -q \"admin-session-timer-ui\" \"$f\")"
+      "Bash(! grep -q \"admin-session-timer-ui\" \"$f\")",
+      "Bash(do sed -i 's|admin-tv-management\\\\.html|admin-islamvoice-management.html|g' \"$f\")",
+      "Bash(do sed -i 's|TV Management|IslamVoice|g' \"$f\")",
+      "Bash(do sed -i 's|tv-management|islamvoice-management|g' \"$f\")"
     ],
     "deny": [],
     "ask": []
