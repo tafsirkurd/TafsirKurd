@@ -663,7 +663,7 @@
 
                 // Get total videos count
                 const { count: totalCount, error: countError } = await supabase
-                    .from('tv_episodes')
+                    .from('islamvoice_episodes')
                     .select('*', { count: 'exact', head: true });
 
                 if (!countError) {
@@ -676,7 +676,7 @@
                 const todayISO = today.toISOString();
 
                 const { count: todayCount, error: todayError } = await supabase
-                    .from('tv_episodes')
+                    .from('islamvoice_episodes')
                     .select('*', { count: 'exact', head: true })
                     .gte('created_at', todayISO);
 

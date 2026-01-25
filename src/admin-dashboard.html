@@ -400,7 +400,7 @@
 
                 // Load video count
                 const { count: videoCount } = await supabase
-                    .from('tv_videos')
+                    .from('islamvoice_videos')
                     .select('*', { count: 'exact', head: true });
 
                 const metricVideos = document.getElementById('metricVideos');
@@ -521,7 +521,7 @@
 
                 // Load recent videos
                 const { data: recentVideos } = await supabase
-                    .from('tv_videos')
+                    .from('islamvoice_videos')
                     .select('id, title, thumbnail_url, view_count, created_at')
                     .order('created_at', { ascending: false })
                     .limit(5);

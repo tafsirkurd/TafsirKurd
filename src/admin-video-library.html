@@ -594,7 +594,7 @@
         async function loadVideos() {
             try {
                 const { data, error } = await supabase
-                    .from('tv_videos')
+                    .from('islamvoice_videos')
                     .select('*')
                     .order('created_at', { ascending: false });
 
@@ -827,7 +827,7 @@
 
             try {
                 const { error } = await supabase
-                    .from('tv_videos')
+                    .from('islamvoice_videos')
                     .insert([videoData]);
 
                 if (error) throw error;
@@ -855,7 +855,7 @@
 
             try {
                 const { error } = await supabase
-                    .from('tv_videos')
+                    .from('islamvoice_videos')
                     .update(updates)
                     .eq('id', id);
 
@@ -874,7 +874,7 @@
 
             try {
                 const { error } = await supabase
-                    .from('tv_videos')
+                    .from('islamvoice_videos')
                     .delete()
                     .eq('id', id);
 

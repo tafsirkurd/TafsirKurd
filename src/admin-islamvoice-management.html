@@ -893,7 +893,7 @@
 
             try {
                 const { data: series, error } = await supabase
-                    .from('tv_series')
+                    .from('islamvoice_series')
                     .select('*')
                     .order('created_at', { ascending: false });
 
@@ -954,8 +954,8 @@
 
             try {
                 const { data: episodes, error } = await supabase
-                    .from('tv_episodes')
-                    .select('*, tv_series(name_ku)')
+                    .from('islamvoice_episodes')
+                    .select('*, islamvoice_series(name_ku)')
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
@@ -983,7 +983,7 @@
                 tbody.innerHTML = episodes.map(ep => `
                     <tr>
                         <td>${ep.title}</td>
-                        <td>${ep.tv_series?.name_ku || 'Unknown'}</td>
+                        <td>${ep.islamvoice_series?.name_ku || 'Unknown'}</td>
                         <td>${ep.episode_number || 'N/A'}</td>
                         <td>${ep.duration ? formatDuration(ep.duration) : 'N/A'}</td>
                         <td>${new Date(ep.created_at).toLocaleDateString()}</td>
@@ -1015,7 +1015,7 @@
 
             try {
                 const { data: episodes, error } = await supabase
-                    .from('tv_episodes')
+                    .from('islamvoice_episodes')
                     .select('*')
                     .eq('series_id', seriesId)
                     .order('episode_number', { ascending: true });
@@ -1090,7 +1090,7 @@
                 title.textContent = 'Edit Series';
                 const supabase = window.adminAuth.getSupabase();
                 const { data } = await supabase
-                    .from('tv_series')
+                    .from('islamvoice_series')
                     .select('*')
                     .eq('id', seriesId)
                     .single();
@@ -1128,7 +1128,7 @@
             const speakerSelect = document.getElementById('series-speaker-select');
 
             const { data: speakers } = await supabase
-                .from('tv_speakers')
+                .from('islamvoice_speakers')
                 .select('*')
                 .eq('is_active', true)
                 .order('name');
@@ -1161,7 +1161,7 @@
 
             try {
                 const { error } = await supabase
-                    .from('tv_speakers')
+                    .from('islamvoice_speakers')
                     .insert({ name });
 
                 if (error) {
@@ -1211,12 +1211,12 @@
             try {
                 if (id) {
                     await supabase
-                        .from('tv_series')
+                        .from('islamvoice_series')
                         .update({ name_ku: title, description_ku: description, thumbnail_url: thumbnailUrl, speaker: speaker || null })
                         .eq('id', id);
                 } else {
                     await supabase
-                        .from('tv_series')
+                        .from('islamvoice_series')
                         .insert({ name_ku: title, description_ku: description, thumbnail_url: thumbnailUrl, speaker: speaker || null });
                 }
 
@@ -1245,7 +1245,7 @@
                 console.log('Deleting series:', id);
 
                 const { data, error } = await supabase
-                    .from('tv_series')
+                    .from('islamvoice_series')
                     .delete()
                     .eq('id', id)
                     .select();
@@ -1293,7 +1293,7 @@
             // Load series for dropdown
             const supabase = window.adminAuth.getSupabase();
             const { data: series } = await supabase
-                .from('tv_series')
+                .from('islamvoice_series')
                 .select('*')
                 .order('name_ku');
 
@@ -1305,7 +1305,7 @@
             if (episodeId) {
                 title.textContent = 'Edit Episode';
                 const { data } = await supabase
-                    .from('tv_episodes')
+                    .from('islamvoice_episodes')
                     .select('*')
                     .eq('id', episodeId)
                     .single();
@@ -1349,7 +1349,7 @@
                     seriesSelect.value = seriesId;
                     // Auto-calculate next episode number
                     const { data: episodes } = await supabase
-                        .from('tv_episodes')
+                        .from('islamvoice_episodes')
                         .select('episode_number')
                         .eq('series_id', seriesId)
                         .order('episode_number', { ascending: false })
@@ -1379,7 +1379,7 @@
 
             const supabase = window.adminAuth.getSupabase();
             const { data: episodes } = await supabase
-                .from('tv_episodes')
+                .from('islamvoice_episodes')
                 .select('episode_number')
                 .eq('series_id', seriesId)
                 .order('episode_number', { ascending: false })
@@ -1430,12 +1430,12 @@
 
                 if (id) {
                     await supabase
-                        .from('tv_episodes')
+                        .from('islamvoice_episodes')
                         .update(episodeData)
                         .eq('id', id);
                 } else {
                     await supabase
-                        .from('tv_episodes')
+                        .from('islamvoice_episodes')
                         .insert(episodeData);
                 }
 
@@ -1468,7 +1468,7 @@
 
                 // First verify the episode exists
                 const { data: existing, error: checkError } = await supabase
-                    .from('tv_episodes')
+                    .from('islamvoice_episodes')
                     .select('id')
                     .eq('id', id)
                     .single();
@@ -1482,7 +1482,7 @@
 
                 // Now delete it
                 const { data, error, count } = await supabase
-                    .from('tv_episodes')
+                    .from('islamvoice_episodes')
                     .delete()
                     .eq('id', id)
                     .select();
