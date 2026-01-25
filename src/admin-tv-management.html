@@ -624,7 +624,7 @@
                     <input type="hidden" id="episode-series-id">
                     <div class="form-group">
                         <label class="form-label">Series</label>
-                        <select class="form-input" id="episode-series-select" required>
+                        <select class="form-input" id="episode-series-select" required onchange="updateNextEpisodeNumber()">
                             <option value="">Select series...</option>
                         </select>
                     </div>
@@ -1347,6 +1347,17 @@
                 document.getElementById('episode-published').checked = true;
                 if (seriesId) {
                     seriesSelect.value = seriesId;
+                    // Auto-calculate next episode number
+                    const { data: lastEpisode } = await supabase
+                        .from('tv_episodes')
+                        .select('episode_number')
+                        .eq('series_id', seriesId)
+                        .order('episode_number', { ascending: false })
+                        .limit(1)
+                        .single();
+
+                    const nextNumber = (lastEpisode?.episode_number || 0) + 1;
+                    document.getElementById('episode-number').value = nextNumber;
                 }
             }
 
@@ -1356,6 +1367,27 @@
 
         function closeEpisodeModal() {
             document.getElementById('episode-modal').classList.remove('active');
+        }
+
+        // Auto-calculate next episode number when series changes
+        async function updateNextEpisodeNumber() {
+            const seriesId = document.getElementById('episode-series-select').value;
+            const episodeId = document.getElementById('episode-id').value;
+
+            // Only auto-fill for new episodes, not when editing
+            if (!seriesId || episodeId) return;
+
+            const supabase = window.adminAuth.getSupabase();
+            const { data: lastEpisode } = await supabase
+                .from('tv_episodes')
+                .select('episode_number')
+                .eq('series_id', seriesId)
+                .order('episode_number', { ascending: false })
+                .limit(1)
+                .single();
+
+            const nextNumber = (lastEpisode?.episode_number || 0) + 1;
+            document.getElementById('episode-number').value = nextNumber;
         }
 
         async function saveEpisodeForm() {

@@ -376,7 +376,7 @@
                         <h4 class="episode-title">${episode.title}</h4>
                         ${locked ? `
                             <p class="episode-description" style="color: #ffc107;">
-                                <i class="fas fa-clock"></i> دێ ڤەببێت دوور ${formatScheduledTime(episode.scheduled_at)}
+                                <i class="fas fa-clock"></i> دێ ڤەببێت دوور <span data-countdown="${episode.scheduled_at}">${formatScheduledTime(episode.scheduled_at)}</span>
                             </p>
                         ` : episode.description ? `
                             <p class="episode-description">${episode.description}</p>
@@ -408,6 +408,9 @@
                 </div>
             `;
         }
+
+        // Start countdown timers for scheduled episodes
+        startCountdownTimers();
     }
 
     // Render bookmarks
@@ -1626,6 +1629,9 @@
 
         // Load thumbnails from videos that don't have thumbnails
         setTimeout(() => loadMissingThumbnails(), 500);
+
+        // Start countdown timers for scheduled episodes
+        startCountdownTimers();
     }
 
     // Check if episode is locked (scheduled for future)
@@ -1635,22 +1641,54 @@
         return scheduledTime > new Date();
     }
 
-    // Format scheduled time for display
+    // Format scheduled time for display with full countdown
     function formatScheduledTime(scheduledAt) {
         const date = new Date(scheduledAt);
         const now = new Date();
         const diffMs = date - now;
-        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const diffDays = Math.floor(diffHours / 24);
 
-        if (diffDays > 0) {
-            return `${diffDays} ڕۆژ`;
-        } else if (diffHours > 0) {
-            return `${diffHours} کاتژمێر`;
+        if (diffMs <= 0) return 'ئێستا!';
+
+        const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+        if (days > 0) {
+            return `${days}ڕ ${hours}ک ${mins}خ ${secs}چ`;
+        } else if (hours > 0) {
+            return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         } else {
-            const diffMins = Math.floor(diffMs / (1000 * 60));
-            return `${diffMins} خولەک`;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
         }
+    }
+
+    // Live countdown timers
+    let countdownIntervals = [];
+
+    function startCountdownTimers() {
+        // Clear any existing intervals
+        countdownIntervals.forEach(interval => clearInterval(interval));
+        countdownIntervals = [];
+
+        // Find all countdown elements and start updating them
+        document.querySelectorAll('[data-countdown]').forEach(el => {
+            const scheduledAt = el.getAttribute('data-countdown');
+            const updateCountdown = () => {
+                const newTime = formatScheduledTime(scheduledAt);
+                el.textContent = newTime;
+
+                // Check if time is up
+                if (new Date(scheduledAt) <= new Date()) {
+                    // Refresh the page to show unlocked episode
+                    location.reload();
+                }
+            };
+
+            updateCountdown();
+            const interval = setInterval(updateCountdown, 1000);
+            countdownIntervals.push(interval);
+        });
     }
 
     // Create episode card HTML
@@ -1682,7 +1720,7 @@
                             <span>داگرتی</span>
                         </div>
                         <div class="locked-time">
-                            <i class="fas fa-clock"></i> دێ ڤەببێت دوور ${formatScheduledTime(video.scheduled_at)}
+                            <i class="fas fa-clock"></i> <span data-countdown="${video.scheduled_at}">${formatScheduledTime(video.scheduled_at)}</span>
                         </div>
                     ` : ''}
                     <div class="play-overlay">
