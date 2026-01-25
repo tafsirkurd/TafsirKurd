@@ -364,6 +364,7 @@
                             <div class="episode-play-icon">
                                 <i class="fas fa-${locked ? 'lock' : 'play'}"></i>
                             </div>
+                            ${episode.duration ? `<span class="episode-duration">${episode.duration}</span>` : ''}
                         </div>
                         ${progress && progress.percent > 0 && progress.percent < 95 ? `
                             <div class="episode-progress-bar">
