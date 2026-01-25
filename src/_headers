@@ -1,3 +1,9 @@
+# 🎬 Admin page - FFmpeg MOV conversion requires these headers
+/admin-islamvoice-management.html
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: credentialless
+  Cache-Control: no-cache, no-store, must-revalidate
+
 # 🚀 HTML FILES - NO CACHE (always fetch fresh from server)
 # This prevents Cloudflare from serving stale HTML after deployments
 /*.html
