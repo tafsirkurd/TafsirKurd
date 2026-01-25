@@ -30,7 +30,7 @@
     <!-- Fonts -->
     <link rel="stylesheet" href="/assets/fonts/fonts.css">
     <link rel="stylesheet" href="/assets/fontawesome/all.min.css">
-    <link rel="stylesheet" href="/css/islamvoice.css?v=5">
+    <link rel="stylesheet" href="/css/islamvoice.css?v=6">
 
     <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -100,6 +100,31 @@
 
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        /* Loading States */
+        .loading-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            width: 100%;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-content p {
+            margin-top: 20px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
         }
 
         /* Dark mode */
@@ -3519,7 +3544,11 @@
 
                 <!-- Topic Cards Grid -->
                 <div class="topics-grid" id="topicsGrid">
-                    <!-- Will be populated dynamically from categories/series -->
+                    <!-- Loading State -->
+                    <div class="loading-content" id="topicsLoader">
+                        <div class="loading-spinner"></div>
+                        <p>چاڤەڕێبە...</p>
+                    </div>
                 </div>
             </div>
 
@@ -3538,7 +3567,11 @@
 
                 <!-- Episodes List -->
                 <div class="episodes-list" id="episodesList">
-                    <!-- Will be populated dynamically -->
+                    <!-- Loading State -->
+                    <div class="loading-content" id="episodesLoader">
+                        <div class="loading-spinner"></div>
+                        <p>چاڤەڕێبە...</p>
+                    </div>
                 </div>
             </div>
 
