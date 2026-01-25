@@ -1281,12 +1281,52 @@
             position: absolute;
             bottom: 0.5rem;
             left: 0.5rem;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             color: #ffffff;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             font-weight: 600;
+            z-index: 5;
+        }
+
+        /* Duration inside play overlay */
+        .episode-play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .episode-thumbnail:hover .episode-play-overlay {
+            opacity: 1;
+        }
+
+        .episode-play-overlay .episode-play-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .episode-play-overlay .episode-play-icon i {
+            color: #000;
+            font-size: 1.2rem;
+            margin-right: -2px;
+        }
+
+        .episode-play-overlay .episode-duration {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            opacity: 1;
         }
 
         .episode-progress {
