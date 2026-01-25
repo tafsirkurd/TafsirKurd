@@ -309,9 +309,9 @@
     // Show topic's episodes
     function showTopic(topicId) {
         currentTopicId = topicId;
-        const episodes = state.playlist.filter(ep =>
-            (ep.series || ep.category || 'general') === topicId
-        );
+        const episodes = state.playlist
+            .filter(ep => (ep.series || ep.category || 'general') === topicId)
+            .sort((a, b) => (a.episodeNumber || 0) - (b.episodeNumber || 0));
 
         if (episodes.length === 0) return;
 
@@ -1527,6 +1527,7 @@
                             seriesCategoryId: seriesInfo.categoryId,
                             seriesSpeaker: seriesInfo.speaker,
                             category: v.category,
+                            episodeNumber: v.episode_number || 0,
                             thumbnail: v.thumbnail_url || (isS3 ? null : `https://img.youtube.com/vi/${v.video_url}/maxresdefault.jpg`),
                             embedUrl: isS3 ? v.video_url : `https://www.youtube.com/embed/${v.video_url}`,
                             viewCount: v.view_count || 0,
