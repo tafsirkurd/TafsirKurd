@@ -44,7 +44,7 @@
 }
 
 /* ===== TV CONTAINER (SIDEBAR + CONTENT) ===== */
-.tv-container {
+.islamvoice-container {
     display: flex;
     min-height: 100vh;
     padding-top: 70px; /* Nav height */
@@ -897,7 +897,7 @@
 
 /* Mobile landscape and small tablets */
 @media (max-width: 768px) {
-    .tv-container {
+    .islamvoice-container {
         padding-top: 120px; /* Increased for wrapped navbar */
     }
 
@@ -988,7 +988,7 @@
 
 /* Mobile portrait */
 @media (max-width: 480px) {
-    .tv-container {
+    .islamvoice-container {
         padding-top: 140px; /* Extra space for wrapped navbar */
     }
 
@@ -1094,7 +1094,7 @@
 
 /* Very small mobile devices */
 @media (max-width: 360px) {
-    .tv-container {
+    .islamvoice-container {
         padding-top: 150px;
     }
 

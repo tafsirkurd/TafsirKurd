@@ -1786,7 +1786,7 @@
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + '/tv'
+                        redirectTo: window.location.origin + '/islamvoice'
                     }
                 });
 
@@ -1825,7 +1825,7 @@
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'facebook',
                     options: {
-                        redirectTo: window.location.origin + '/tv'
+                        redirectTo: window.location.origin + '/islamvoice'
                     }
                 });
 
@@ -1851,7 +1851,7 @@
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'apple',
                     options: {
-                        redirectTo: window.location.origin + '/tv'
+                        redirectTo: window.location.origin + '/islamvoice'
                     }
                 });
 
@@ -1885,7 +1885,7 @@
                 const { data, error } = await supabase.auth.signInWithOtp({
                     email: email,
                     options: {
-                        emailRedirectTo: window.location.origin + '/tv'
+                        emailRedirectTo: window.location.origin + '/islamvoice'
                     }
                 });
 

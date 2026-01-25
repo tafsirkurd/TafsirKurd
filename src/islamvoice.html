@@ -3187,7 +3187,7 @@
     </nav>
 
     <!-- Main Container with Sidebar -->
-    <div class="tv-container">
+    <div class="islamvoice-container">
         <!-- Sidebar Navigation -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
@@ -3493,7 +3493,7 @@
                 </div>
             </div>
         </main>
-    </div> <!-- End .tv-container -->
+    </div> <!-- End .islamvoice-container -->
 
     <!-- Search Modal -->
     <div class="modal" id="searchModal">
@@ -3733,7 +3733,7 @@
                     if (!config.supabaseUrl || !config.supabaseKey) throw new Error('Invalid config');
 
                     supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
-                    window.tvSupabase = supabaseClient; // Expose for tv-player.js
+                    window.islamvoiceSupabase = supabaseClient; // Expose for islamvoice-player.js
                     console.log('✅ Supabase initialized securely on TV page');
                     return true;
                 } catch (error) {
