@@ -1348,15 +1348,15 @@
                 if (seriesId) {
                     seriesSelect.value = seriesId;
                     // Auto-calculate next episode number
-                    const { data: lastEpisode } = await supabase
+                    const { data: episodes } = await supabase
                         .from('tv_episodes')
                         .select('episode_number')
                         .eq('series_id', seriesId)
                         .order('episode_number', { ascending: false })
-                        .limit(1)
-                        .single();
+                        .limit(1);
 
-                    const nextNumber = (lastEpisode?.episode_number || 0) + 1;
+                    const lastEpisodeNum = episodes && episodes.length > 0 ? (episodes[0].episode_number || 0) : 0;
+                    const nextNumber = lastEpisodeNum + 1;
                     document.getElementById('episode-number').value = nextNumber;
                 }
             }
@@ -1378,15 +1378,15 @@
             if (!seriesId || episodeId) return;
 
             const supabase = window.adminAuth.getSupabase();
-            const { data: lastEpisode } = await supabase
+            const { data: episodes } = await supabase
                 .from('tv_episodes')
                 .select('episode_number')
                 .eq('series_id', seriesId)
                 .order('episode_number', { ascending: false })
-                .limit(1)
-                .single();
+                .limit(1);
 
-            const nextNumber = (lastEpisode?.episode_number || 0) + 1;
+            const lastEpisodeNum = episodes && episodes.length > 0 ? (episodes[0].episode_number || 0) : 0;
+            const nextNumber = lastEpisodeNum + 1;
             document.getElementById('episode-number').value = nextNumber;
         }
 
