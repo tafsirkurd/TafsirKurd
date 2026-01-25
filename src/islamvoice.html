@@ -231,6 +231,45 @@
             background: #000000 !important;
         }
 
+        /* Sidebar Badge Styling */
+        .sidebar-btn {
+            position: relative;
+        }
+
+        .sidebar-btn .badge {
+            position: absolute;
+            top: 50%;
+            left: 12px;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark, #1557b0));
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-btn .badge:empty,
+        .sidebar-btn .badge[data-count="0"] {
+            display: none !important;
+        }
+
+        .sidebar-btn:hover .badge {
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        [data-theme="dark"] .sidebar-btn .badge {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+
         /* Sidebar Sections (Categories, Sheikhs) */
         .sidebar-section {
             margin: 4px 0;
@@ -3942,59 +3981,113 @@
             }
         }
 
+        // Get read notification IDs from localStorage
+        function getReadNotifications() {
+            try {
+                return JSON.parse(localStorage.getItem('readNotifications') || '[]');
+            } catch {
+                return [];
+            }
+        }
+
+        // Save read notification IDs to localStorage
+        function saveReadNotifications(ids) {
+            localStorage.setItem('readNotifications', JSON.stringify(ids));
+        }
+
+        // Mark a single notification as read
+        function markNotificationRead(episodeId) {
+            const readIds = getReadNotifications();
+            if (!readIds.includes(episodeId)) {
+                readIds.push(episodeId);
+                saveReadNotifications(readIds);
+                updateNotificationBadge();
+            }
+        }
+
+        // Update notification badge count
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notificationBadge');
+            const unreadItems = document.querySelectorAll('.notification-item.unread');
+            const count = unreadItems.length;
+            badge.textContent = count > 0 ? count : '0';
+            badge.style.display = count > 0 ? 'flex' : 'none';
+        }
+
+        // Create empty notification message
+        function createEmptyNotification(icon, message) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'notification-empty';
+            const iconEl = document.createElement('i');
+            iconEl.className = 'fas fa-' + icon;
+            const textEl = document.createElement('p');
+            textEl.textContent = message;
+            emptyDiv.appendChild(iconEl);
+            emptyDiv.appendChild(textEl);
+            return emptyDiv;
+        }
+
         async function loadNotifications() {
             const notificationList = document.getElementById('notificationList');
             const badge = document.getElementById('notificationBadge');
 
             if (!supabaseClient) {
                 notificationList.textContent = '';
-                const emptyDiv = document.createElement('div');
-                emptyDiv.className = 'notification-empty';
-                emptyDiv.innerHTML = '<i class="fas fa-bell-slash"></i><p>چوونەژوورەوە بکە بۆ دیتنی ئاگادارکرنەوەکان</p>';
-                notificationList.appendChild(emptyDiv);
+                notificationList.appendChild(createEmptyNotification('bell-slash', 'چوونەژوورەوە بکە بۆ دیتنی ئاگادارکرنەوەکان'));
                 badge.textContent = '0';
                 badge.style.display = 'none';
                 return;
             }
 
             try {
-                // Fetch recent episodes as notifications
+                // Fetch recent episodes as notifications (last 10)
                 const { data: episodes, error } = await supabaseClient
                     .from('islamvoice_episodes')
                     .select('id, title, created_at, islamvoice_series(name_ku)')
                     .order('created_at', { ascending: false })
-                    .limit(5);
+                    .limit(10);
 
                 if (error) throw error;
 
                 notificationList.textContent = '';
 
                 if (!episodes || episodes.length === 0) {
-                    const emptyDiv = document.createElement('div');
-                    emptyDiv.className = 'notification-empty';
-                    emptyDiv.innerHTML = '<i class="fas fa-bell-slash"></i><p>هیچ ئاگادارکرنەوەیەک نییە</p>';
-                    notificationList.appendChild(emptyDiv);
+                    notificationList.appendChild(createEmptyNotification('bell-slash', 'هیچ ئاگادارکرنەوەیەک نییە'));
                     badge.textContent = '0';
                     badge.style.display = 'none';
                     return;
                 }
 
-                // Check which ones are new (within last 7 days)
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                // Get read notifications from localStorage
+                const readIds = getReadNotifications();
+
+                // Only consider episodes from last 30 days as potential notifications
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
                 let unreadCount = 0;
                 episodes.forEach(ep => {
-                    const isNew = new Date(ep.created_at) > sevenDaysAgo;
-                    if (isNew) unreadCount++;
+                    const episodeDate = new Date(ep.created_at);
+                    const isRecent = episodeDate > thirtyDaysAgo;
+                    const isRead = readIds.includes(ep.id);
+                    const isUnread = isRecent && !isRead;
+
+                    if (isUnread) unreadCount++;
 
                     const item = document.createElement('div');
-                    item.className = 'notification-item' + (isNew ? ' unread' : '');
-                    item.onclick = () => playEpisodeFromNotification(ep.id);
+                    item.className = 'notification-item' + (isUnread ? ' unread' : '');
+                    item.dataset.episodeId = ep.id;
+                    item.onclick = () => {
+                        markNotificationRead(ep.id);
+                        item.classList.remove('unread');
+                        playEpisodeFromNotification(ep.id);
+                    };
 
                     const iconDiv = document.createElement('div');
                     iconDiv.className = 'notification-icon new-episode';
-                    iconDiv.innerHTML = '<i class="fas fa-play-circle"></i>';
+                    const playIcon = document.createElement('i');
+                    playIcon.className = 'fas fa-play-circle';
+                    iconDiv.appendChild(playIcon);
 
                     const contentDiv = document.createElement('div');
                     contentDiv.className = 'notification-content';
@@ -4020,10 +4113,7 @@
             } catch (error) {
                 console.error('Error loading notifications:', error);
                 notificationList.textContent = '';
-                const emptyDiv = document.createElement('div');
-                emptyDiv.className = 'notification-empty';
-                emptyDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i><p>هەڵەیەک ڕوویدا</p>';
-                notificationList.appendChild(emptyDiv);
+                notificationList.appendChild(createEmptyNotification('exclamation-circle', 'هەڵەیەک ڕوویدا'));
             }
         }
 
@@ -4053,10 +4143,18 @@
 
         function markAllNotificationsRead(event) {
             if (event) event.stopPropagation();
-            // Remove unread class from all items
+
+            // Get all unread items and mark them as read in localStorage
+            const readIds = getReadNotifications();
             document.querySelectorAll('.notification-item.unread').forEach(item => {
+                const episodeId = item.dataset.episodeId;
+                if (episodeId && !readIds.includes(episodeId)) {
+                    readIds.push(episodeId);
+                }
                 item.classList.remove('unread');
             });
+            saveReadNotifications(readIds);
+
             // Hide badge
             const badge = document.getElementById('notificationBadge');
             badge.textContent = '0';
