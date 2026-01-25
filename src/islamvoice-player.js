@@ -330,6 +330,19 @@
         document.getElementById('episodesView').classList.add('active');
     }
 
+    // Format episode duration (seconds to m:ss or h:mm:ss)
+    function formatEpisodeDuration(seconds) {
+        if (!seconds || isNaN(seconds)) return '';
+        seconds = Math.floor(seconds);
+        const hours = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        if (hours > 0) {
+            return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
     // Render episodes list (generic function used by multiple views)
     function renderEpisodesList(episodes, containerId) {
         const container = document.getElementById(containerId);
@@ -364,7 +377,7 @@
                             <div class="episode-play-icon">
                                 <i class="fas fa-${locked ? 'lock' : 'play'}"></i>
                             </div>
-                            ${episode.duration ? `<span class="episode-duration">${episode.duration}</span>` : ''}
+                            ${episode.duration ? `<span class="episode-duration">${formatEpisodeDuration(episode.duration)}</span>` : ''}
                         </div>
                         ${progress && progress.percent > 0 && progress.percent < 95 ? `
                             <div class="episode-progress-bar">
@@ -383,7 +396,7 @@
                             <p class="episode-description">${episode.description}</p>
                         ` : ''}
                         <div class="episode-meta">
-                            ${episode.duration ? `<span><i class="fas fa-clock"></i> ${episode.duration} خولەک</span>` : ''}
+                            ${episode.duration ? `<span><i class="fas fa-clock"></i> ${formatEpisodeDuration(episode.duration)}</span>` : ''}
                             ${episode.views ? `<span><i class="fas fa-eye"></i> ${episode.views} بینەر</span>` : ''}
                         </div>
                     </div>
@@ -1579,6 +1592,7 @@
                             seriesSpeaker: seriesInfo.speaker,
                             category: v.category,
                             episodeNumber: v.episode_number || 0,
+                            duration: v.duration || null,
                             thumbnail: v.thumbnail_url || (isS3 ? null : `https://img.youtube.com/vi/${v.video_url}/maxresdefault.jpg`),
                             embedUrl: isS3 ? v.video_url : `https://www.youtube.com/embed/${v.video_url}`,
                             viewCount: v.view_count || 0,
