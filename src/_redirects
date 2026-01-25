@@ -1,4 +1,4 @@
-# Redirect old /tv routes to /islamvoice
-/tv /islamvoice 301
-/tv.html /islamvoice.html 301
-/admin-tv-management.html /admin-islamvoice-management.html 301
+# Block old /tv routes - return 404
+/tv /404.html 404
+/tv.html /404.html 404
+/admin-tv-management.html /404.html 404
