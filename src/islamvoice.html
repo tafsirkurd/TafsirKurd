@@ -30,7 +30,7 @@
     <!-- Fonts -->
     <link rel="stylesheet" href="/assets/fonts/fonts.css">
     <link rel="stylesheet" href="/assets/fontawesome/all.min.css">
-    <link rel="stylesheet" href="/css/islamvoice.css?v=6">
+    <link rel="stylesheet" href="/css/islamvoice.css?v=7">
 
     <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -110,6 +110,10 @@
             justify-content: center;
             padding: 80px 20px;
             width: 100%;
+            min-height: 300px;
+            grid-column: 1 / -1; /* Span all grid columns */
+            text-align: center;
+            margin: 0 auto;
         }
 
         .loading-spinner {
@@ -3832,7 +3836,7 @@
 
     <!-- JavaScript -->
     <!-- Native HTML5 Video Player (AWS S3) -->
-    <script src="/islamvoice-player.js?v=20260129"></script>
+    <script src="/islamvoice-player.js?v=20260130"></script>
     <script>
         // Set current year in footer
         document.getElementById('year').textContent = new Date().getFullYear();

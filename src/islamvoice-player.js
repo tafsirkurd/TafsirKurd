@@ -271,7 +271,7 @@
             return `
                 <div class="topic-card" onclick="window.tvApp.showTopic('${topic.id}')">
                     <div class="topic-card-image">
-                        <img src="${topic.thumbnail}" alt="${topic.title}" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
+                        <img src="${topic.thumbnail}" alt="${topic.title}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
                         <div class="topic-fallback-icon"><i class="fas fa-play-circle"></i></div>
                         ${completedCount > 0 ? `
                             <div class="topic-card-badge">
@@ -352,7 +352,7 @@
                     <div class="episode-number">${String(index + 1).padStart(2, '0')}</div>
 
                     <div class="episode-thumbnail">
-                        <img src="${episode.thumbnail || ''}" alt="${episode.title}" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
+                        <img src="${episode.thumbnail || ''}" alt="${episode.title}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
                         <div class="episode-fallback-icon"><i class="fas fa-film"></i></div>
                         ${locked ? `
                             <div class="locked-badge">
@@ -1478,7 +1478,7 @@
 
         container.innerHTML = state.playlist.map((ep, index) => `
             <div class="playlist-item ${ep.id === state.currentEpisode ? 'playing' : ''}" onclick="playVideo(${ep.id})">
-                <img src="${ep.thumbnail}" class="playlist-thumb" alt="${ep.title}">
+                <img src="${ep.thumbnail}" class="playlist-thumb" alt="${ep.title}" loading="lazy" decoding="async">
                 <div class="playlist-info">
                     <div class="playlist-title">${index + 1}. ${ep.title}</div>
                     <div class="playlist-duration">${ep.duration}</div>
@@ -1911,12 +1911,45 @@
         progressFilled.style.cssText = 'height:100%; background:#fff; border-radius:3px; width:0%; transition:width 0.1s;';
         progressBar.appendChild(progressFilled);
 
-        // Progress bar click to seek
-        progressBar.onclick = function(e) {
+        // Progress bar seeking with drag support
+        let isDragging = false;
+
+        function seekToPosition(e) {
             const rect = progressBar.getBoundingClientRect();
-            const percent = (e.clientX - rect.left) / rect.width;
-            videoElement.currentTime = percent * videoElement.duration;
-        };
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let percent = (clientX - rect.left) / rect.width;
+            percent = Math.max(0, Math.min(1, percent)); // Clamp between 0 and 1
+            if (videoElement.duration) {
+                videoElement.currentTime = percent * videoElement.duration;
+                progressFilled.style.width = (percent * 100) + '%';
+            }
+        }
+
+        progressBar.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            seekToPosition(e);
+        });
+
+        progressBar.addEventListener('touchstart', function(e) {
+            isDragging = true;
+            seekToPosition(e);
+        }, { passive: true });
+
+        document.addEventListener('mousemove', function(e) {
+            if (isDragging) seekToPosition(e);
+        });
+
+        document.addEventListener('touchmove', function(e) {
+            if (isDragging) seekToPosition(e);
+        }, { passive: true });
+
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+        });
+
+        document.addEventListener('touchend', function() {
+            isDragging = false;
+        });
 
         // Duration
         const duration = document.createElement('span');
@@ -1959,7 +1992,10 @@
         forwardIcon.className = 'fas fa-forward';
         forwardBtn.appendChild(forwardIcon);
 
-        // Volume button
+        // Volume container with button and slider
+        const volumeContainer = document.createElement('div');
+        volumeContainer.style.cssText = 'display:flex; align-items:center; gap:8px;';
+
         const volumeBtn = document.createElement('button');
         volumeBtn.style.cssText = 'background:none; border:none; color:white; font-size:20px; cursor:pointer; padding:8px; display:flex; align-items:center; justify-content:center;';
         volumeBtn.setAttribute('aria-label', 'Mute/Unmute');
@@ -1967,10 +2003,20 @@
         volumeIcon.className = 'fas fa-volume-high';
         volumeBtn.appendChild(volumeIcon);
 
+        const volumeSlider = document.createElement('input');
+        volumeSlider.type = 'range';
+        volumeSlider.min = '0';
+        volumeSlider.max = '100';
+        volumeSlider.value = '100';
+        volumeSlider.style.cssText = 'width:70px; height:4px; cursor:pointer; accent-color:white; -webkit-appearance:none; appearance:none; background:linear-gradient(to right, #fff 100%, rgba(255,255,255,0.3) 100%); border-radius:2px;';
+
+        volumeContainer.appendChild(volumeBtn);
+        volumeContainer.appendChild(volumeSlider);
+
         leftBtns.appendChild(playBtn);
         leftBtns.appendChild(forwardBtn);
         leftBtns.appendChild(rewindBtn);
-        leftBtns.appendChild(volumeBtn);
+        leftBtns.appendChild(volumeContainer);
 
         // Right buttons
         const rightBtns = document.createElement('div');
@@ -2011,8 +2057,12 @@
             return mins + ':' + secs.toString().padStart(2, '0');
         }
 
-        // Update volume icon
+        // Update volume icon and slider
         function updateVolumeIcon() {
+            const vol = videoElement.muted ? 0 : Math.round(videoElement.volume * 100);
+            volumeSlider.value = vol;
+            volumeSlider.style.background = `linear-gradient(to right, #fff ${vol}%, rgba(255,255,255,0.3) ${vol}%)`;
+
             if (videoElement.muted || videoElement.volume === 0) {
                 volumeIcon.className = 'fas fa-volume-xmark';
             } else if (videoElement.volume < 0.5) {
@@ -2045,6 +2095,15 @@
         volumeBtn.onclick = function() {
             videoElement.muted = !videoElement.muted;
             updateVolumeIcon();
+        };
+
+        // Volume slider
+        volumeSlider.oninput = function() {
+            videoElement.volume = this.value / 100;
+            videoElement.muted = false;
+            updateVolumeIcon();
+            // Update slider background
+            this.style.background = `linear-gradient(to right, #fff ${this.value}%, rgba(255,255,255,0.3) ${this.value}%)`;
         };
 
         // Fullscreen - use wrapper for better control visibility
