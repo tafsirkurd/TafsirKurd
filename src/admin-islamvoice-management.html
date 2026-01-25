@@ -467,14 +467,19 @@
                 </div>
 
                 <!-- VIEW TABS -->
-                <div class="view-tabs">
-                    <button class="tab-btn active" data-view="all-series">
-                        <i data-lucide="list"></i>
-                        All Series
-                    </button>
-                    <button class="tab-btn" data-view="all-episodes">
-                        <i data-lucide="film"></i>
-                        All Episodes
+                <div class="view-tabs" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; gap: 8px;">
+                        <button class="tab-btn active" data-view="all-series">
+                            <i data-lucide="list"></i>
+                            All Series
+                        </button>
+                        <button class="tab-btn" data-view="all-episodes">
+                            <i data-lucide="film"></i>
+                            All Episodes
+                        </button>
+                    </div>
+                    <button class="btn btn-secondary" onclick="recompressAllThumbnails()" id="recompressBtn" style="font-size: 12px; padding: 6px 12px;">
+                        <i class="fas fa-compress-alt"></i> Re-compress Thumbnails
                     </button>
                 </div>
 
@@ -1611,6 +1616,156 @@
                 img.onerror = () => resolve(file); // Fallback to original
                 img.src = URL.createObjectURL(file);
             });
+        }
+
+        // Compress image from URL
+        async function compressImageFromUrl(imageUrl, maxWidth = 640, maxHeight = 360, quality = 0.65) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    let { width, height } = img;
+                    if (width > maxWidth || height > maxHeight) {
+                        const ratio = Math.min(maxWidth / width, maxHeight / height);
+                        width = Math.round(width * ratio);
+                        height = Math.round(height * ratio);
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            resolve(blob);
+                        } else {
+                            reject(new Error('Failed to compress'));
+                        }
+                    }, 'image/jpeg', quality);
+                };
+
+                img.onerror = () => reject(new Error('Failed to load image'));
+                img.src = imageUrl;
+            });
+        }
+
+        // Re-compress all existing thumbnails
+        async function recompressAllThumbnails() {
+            const btn = document.getElementById('recompressBtn');
+            const originalIcon = btn.querySelector('i');
+            btn.disabled = true;
+            originalIcon.className = 'fas fa-spinner fa-spin';
+            btn.querySelector('i').nextSibling.textContent = ' Loading...';
+
+            try {
+                const supabase = window.adminAuth.getSupabase();
+                const adminToken = sessionStorage.getItem('adminToken');
+
+                // Get all thumbnails
+                const { data: episodes } = await supabase
+                    .from('islamvoice_episodes')
+                    .select('id, title, thumbnail_url')
+                    .not('thumbnail_url', 'is', null);
+
+                const { data: series } = await supabase
+                    .from('islamvoice_series')
+                    .select('id, name_ku, thumbnail_url')
+                    .not('thumbnail_url', 'is', null);
+
+                const allItems = [
+                    ...(episodes || []).map(e => ({ type: 'episode', id: e.id, name: e.title, url: e.thumbnail_url })),
+                    ...(series || []).map(s => ({ type: 'series', id: s.id, name: s.name_ku, url: s.thumbnail_url }))
+                ];
+
+                if (allItems.length === 0) {
+                    alert('No thumbnails found to compress');
+                    btn.disabled = false;
+                    originalIcon.className = 'fas fa-compress-alt';
+                    btn.querySelector('i').nextSibling.textContent = ' Re-compress Thumbnails';
+                    return;
+                }
+
+                let processed = 0;
+                let success = 0;
+                let failed = 0;
+
+                for (const item of allItems) {
+                    processed++;
+                    btn.querySelector('i').nextSibling.textContent = ` ${processed}/${allItems.length}...`;
+
+                    try {
+                        // Download and compress
+                        const compressedBlob = await compressImageFromUrl(item.url);
+                        const originalSize = await fetch(item.url).then(r => r.blob()).then(b => b.size);
+
+                        console.log(`${item.name}: ${(originalSize/1024).toFixed(0)}KB -> ${(compressedBlob.size/1024).toFixed(0)}KB`);
+
+                        // Skip if already small enough (within 20% of target)
+                        if (compressedBlob.size >= originalSize * 0.8) {
+                            console.log(`Skipping ${item.name} - already optimized`);
+                            success++;
+                            continue;
+                        }
+
+                        // Upload new compressed version
+                        const filename = `compressed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
+
+                        const presignResponse = await fetch('/s3-upload', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${adminToken}`
+                            },
+                            body: JSON.stringify({
+                                filename: filename,
+                                contentType: 'image/jpeg',
+                                folder: 'thumbnails'
+                            })
+                        });
+
+                        if (!presignResponse.ok) throw new Error('Failed to get upload URL');
+
+                        const { uploadUrl, publicUrl } = await presignResponse.json();
+
+                        // Upload to S3
+                        await fetch(uploadUrl, {
+                            method: 'PUT',
+                            body: compressedBlob,
+                            headers: { 'Content-Type': 'image/jpeg' }
+                        });
+
+                        // Update database
+                        if (item.type === 'episode') {
+                            await supabase.from('islamvoice_episodes').update({ thumbnail_url: publicUrl }).eq('id', item.id);
+                        } else {
+                            await supabase.from('islamvoice_series').update({ thumbnail_url: publicUrl }).eq('id', item.id);
+                        }
+
+                        success++;
+                    } catch (err) {
+                        console.error(`Failed to compress ${item.name}:`, err);
+                        failed++;
+                    }
+                }
+
+                alert(`Done! Compressed: ${success}, Failed: ${failed}`);
+
+                // Refresh the views
+                loadAllSeries();
+                loadAllEpisodes();
+
+            } catch (err) {
+                console.error('Re-compress error:', err);
+                alert('Error: ' + err.message);
+            }
+
+            btn.disabled = false;
+            originalIcon.className = 'fas fa-compress-alt';
+            btn.querySelector('i').nextSibling.textContent = ' Re-compress Thumbnails';
         }
 
         async function handleThumbnailUpload(file) {
