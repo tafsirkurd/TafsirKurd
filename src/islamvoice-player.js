@@ -475,9 +475,12 @@
         showTopic,
         playEpisode,
         toggleBookmark: function(episodeId) {
-            toggleBookmark(episodeId);
-            // Re-render current view
-            switchView(currentView);
+            const isNowBookmarked = toggleBookmark(episodeId);
+            // Update just the button, don't re-render whole view
+            const btn = document.querySelector(`button[onclick*="toggleBookmark('${episodeId}')"]`);
+            if (btn) {
+                btn.classList.toggle('active', isNowBookmarked);
+            }
             updateBadgeCounts();
         }
     };
@@ -744,6 +747,20 @@
                 elements.audioOnlyBtn.innerHTML = '<i class="fas fa-video"></i> پیشاندانا ڤیدیۆ';
             }
         }
+
+        // Load continue watching, history, bookmarks, and series progress
+        const continueWatching = localStorage.getItem('continueWatching');
+        const watchHistory = localStorage.getItem('watchHistory');
+        const seriesProgress = localStorage.getItem('seriesProgress');
+        const bookmarks = localStorage.getItem('bookmarks');
+
+        if (continueWatching) state.continueWatching = JSON.parse(continueWatching);
+        if (watchHistory) state.watchHistory = JSON.parse(watchHistory);
+        if (seriesProgress) state.seriesProgress = JSON.parse(seriesProgress);
+        if (bookmarks) state.bookmarks = JSON.parse(bookmarks);
+
+        // Update badge counts after loading
+        updateBadgeCounts();
     }
 
     // ===== EVENT LISTENERS =====
@@ -2615,8 +2632,8 @@
             `;
         } else {
             searchResultsContainer.innerHTML = results.slice(0, 8).map(video => `
-                <div class="search-result-item" onclick="playVideo('${video.id}')" style="
-                    padding: 1rem;
+                <div class="search-result-item" onclick="window.tvApp.playEpisode('${video.id}'); hideSearchResults();" style="
+                    padding: 0.75rem 1rem;
                     border-bottom: 1px solid var(--border);
                     cursor: pointer;
                     transition: background var(--transition-fast);
@@ -2630,13 +2647,16 @@
                         background: var(--bg);
                         border-radius: 6px;
                         flex-shrink: 0;
-                    "></div>
+                        overflow: hidden;
+                    ">
+                        <img src="${video.thumbnail || ''}" alt="${video.title || ''}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
+                    </div>
                     <div style="flex: 1; min-width: 0;">
                         <div style="font-weight: 600; color: var(--text); margin-bottom: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                             ${video.title || 'بێناڤ'}
                         </div>
                         <div style="font-size: 0.85rem; color: var(--text-muted);">
-                            ${video.category || video.series || ''}
+                            ${video.seriesTitle || video.category || ''}
                         </div>
                     </div>
                 </div>
@@ -2656,7 +2676,14 @@
         if (searchResultsContainer) {
             searchResultsContainer.style.display = 'none';
         }
+        // Clear search input
+        if (elements.navSearchInput) {
+            elements.navSearchInput.value = '';
+        }
     }
+
+    // Expose hideSearchResults for onclick handlers
+    window.hideSearchResults = hideSearchResults;
 
     // ===== NOTIFICATIONS =====
     function toggleNotifications() {
@@ -3285,7 +3312,8 @@
         localStorage.setItem('bookmarks', JSON.stringify(state.bookmarks));
         syncToSupabase('bookmarks', state.bookmarks);
 
-        return !existingIndex > -1; // Return new bookmark state
+        // Return true if now bookmarked, false if removed
+        return existingIndex === -1;
     }
 
     // Check if episode is bookmarked
