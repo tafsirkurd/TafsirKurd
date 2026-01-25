@@ -1,0 +1,4 @@
+# Redirect old /tv routes to /islamvoice
+/tv /islamvoice 301
+/tv.html /islamvoice.html 301
+/admin-tv-management.html /admin-islamvoice-management.html 301
