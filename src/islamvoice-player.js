@@ -839,7 +839,9 @@
 
         // Player overlay (show/hide controls)
         let controlsTimeout;
-        document.querySelector('.player-container').addEventListener('mousemove', () => {
+        const playerContainer = document.querySelector('.player-container');
+
+        function showControls() {
             elements.playerOverlay.classList.add('show');
             clearTimeout(controlsTimeout);
             controlsTimeout = setTimeout(() => {
@@ -847,6 +849,30 @@
                     elements.playerOverlay.classList.remove('show');
                 }
             }, 3000);
+        }
+
+        // Mouse events
+        playerContainer.addEventListener('mousemove', showControls);
+
+        // Touch events for mobile
+        playerContainer.addEventListener('touchstart', showControls, { passive: true });
+
+        // Click/tap to toggle controls
+        playerContainer.addEventListener('click', (e) => {
+            // Don't toggle if clicking on controls themselves
+            if (e.target.closest('.player-overlay, .control-btn, .video-controls, .dropdown-menu')) {
+                return;
+            }
+            if (elements.playerOverlay.classList.contains('show')) {
+                elements.playerOverlay.classList.remove('show');
+            } else {
+                showControls();
+            }
+        });
+
+        // Show controls initially when video starts
+        elements.video.addEventListener('play', () => {
+            showControls();
         });
 
         // Nav scroll effect
