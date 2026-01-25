@@ -1875,277 +1875,318 @@
             }
         };
 
-        // Create Netflix-style controls container
-        const controls = document.createElement('div');
-        controls.className = 'custom-controls';
-        controls.style.cssText = 'position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.9)); padding:0; opacity:0; transition:opacity 0.3s; z-index:100;';
+        // ========== SIMPLE ACCESSIBLE VIDEO CONTROLS ==========
 
-        // Stop clicks from propagating to video wrapper
+        // Controls container - always visible at bottom
+        const controls = document.createElement('div');
+        controls.className = 'video-controls-bar';
+        controls.style.cssText = `
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.95));
+            padding: 15px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        `;
         controls.onclick = function(e) { e.stopPropagation(); };
 
-        // Progress bar (top of controls)
-        const progressContainer = document.createElement('div');
-        progressContainer.style.cssText = 'width:calc(100% - 16px); margin:0 8px; height:5px; background:rgba(255,255,255,0.3); cursor:pointer; position:relative; border-radius:3px;';
+        // Progress bar row
+        const progressRow = document.createElement('div');
+        progressRow.style.cssText = 'display:flex; align-items:center; gap:10px; width:100%;';
+
+        // Current time
+        const currentTime = document.createElement('span');
+        currentTime.style.cssText = 'color:white; font-size:12px; min-width:40px; text-align:center;';
+        currentTime.textContent = '0:00';
+
+        // Progress bar
         const progressBar = document.createElement('div');
-        progressBar.style.cssText = 'height:100%; background:#ffffff; width:0%; transition:width 0.1s; position:relative; border-radius:3px;';
-        const progressHandle = document.createElement('div');
-        progressHandle.style.cssText = 'position:absolute; right:-7px; top:-5px; width:14px; height:14px; background:#ffffff; border-radius:50%; opacity:0; transition:opacity 0.2s; box-shadow:0 0 4px rgba(0,0,0,0.5);';
-        progressBar.appendChild(progressHandle);
-        progressContainer.appendChild(progressBar);
-        progressContainer.onmouseenter = function() { progressHandle.style.opacity = '1'; };
-        progressContainer.onmouseleave = function() { progressHandle.style.opacity = '0'; };
-        progressContainer.onclick = function(e) {
-            const rect = progressContainer.getBoundingClientRect();
+        progressBar.style.cssText = 'flex:1; height:6px; background:rgba(255,255,255,0.3); border-radius:3px; cursor:pointer; position:relative;';
+
+        const progressFilled = document.createElement('div');
+        progressFilled.style.cssText = 'height:100%; background:#fff; border-radius:3px; width:0%; transition:width 0.1s;';
+        progressBar.appendChild(progressFilled);
+
+        // Progress bar click to seek
+        progressBar.onclick = function(e) {
+            const rect = progressBar.getBoundingClientRect();
             const percent = (e.clientX - rect.left) / rect.width;
             videoElement.currentTime = percent * videoElement.duration;
         };
 
-        // Controls row
-        const controlsRow = document.createElement('div');
-        controlsRow.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:12px 16px;';
+        // Duration
+        const duration = document.createElement('span');
+        duration.style.cssText = 'color:white; font-size:12px; min-width:40px; text-align:center;';
+        duration.textContent = '0:00';
 
-        // Left controls
-        const leftControls = document.createElement('div');
-        leftControls.style.cssText = 'display:flex; align-items:center; gap:16px;';
+        progressRow.appendChild(currentTime);
+        progressRow.appendChild(progressBar);
+        progressRow.appendChild(duration);
+
+        // Buttons row
+        const buttonsRow = document.createElement('div');
+        buttonsRow.style.cssText = 'display:flex; align-items:center; justify-content:space-between; width:100%;';
+
+        // Left buttons
+        const leftBtns = document.createElement('div');
+        leftBtns.style.cssText = 'display:flex; align-items:center; gap:15px;';
 
         // Play/Pause button
         const playBtn = document.createElement('button');
-        playBtn.style.cssText = 'background:none; border:none; color:white; font-size:26px; cursor:pointer; padding:4px; display:flex; align-items:center; transition:transform 0.1s;';
-        playBtn.title = 'Play/Pause (Space or K)';
-        playBtn.onmouseenter = function() { this.style.transform = 'scale(1.1)'; };
-        playBtn.onmouseleave = function() { this.style.transform = 'scale(1)'; };
+        playBtn.style.cssText = 'background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:8px; display:flex; align-items:center; justify-content:center;';
+        playBtn.setAttribute('aria-label', 'Play/Pause');
         const playIcon = document.createElement('i');
-        playIcon.className = 'fas fa-pause';
+        playIcon.className = 'fas fa-play';
         playBtn.appendChild(playIcon);
-        playBtn.onclick = function() {
-            if (videoElement.paused) {
-                videoElement.play();
-                playIcon.className = 'fas fa-pause';
-            } else {
-                videoElement.pause();
-                playIcon.className = 'fas fa-play';
-            }
-        };
 
-        // Volume container (button + slider + percentage)
-        const volumeContainer = document.createElement('div');
-        volumeContainer.style.cssText = 'display:flex; align-items:center; gap:10px;';
+        // Rewind 10s button
+        const rewindBtn = document.createElement('button');
+        rewindBtn.style.cssText = 'background:none; border:none; color:white; font-size:20px; cursor:pointer; padding:8px; display:flex; align-items:center; justify-content:center;';
+        rewindBtn.setAttribute('aria-label', 'Rewind 10 seconds');
+        const rewindIcon = document.createElement('i');
+        rewindIcon.className = 'fas fa-backward';
+        rewindBtn.appendChild(rewindIcon);
+
+        // Forward 10s button
+        const forwardBtn = document.createElement('button');
+        forwardBtn.style.cssText = 'background:none; border:none; color:white; font-size:20px; cursor:pointer; padding:8px; display:flex; align-items:center; justify-content:center;';
+        forwardBtn.setAttribute('aria-label', 'Forward 10 seconds');
+        const forwardIcon = document.createElement('i');
+        forwardIcon.className = 'fas fa-forward';
+        forwardBtn.appendChild(forwardIcon);
 
         // Volume button
         const volumeBtn = document.createElement('button');
-        volumeBtn.style.cssText = 'background:none; border:none; color:white; font-size:22px; cursor:pointer; padding:0; display:flex; align-items:center;';
-        volumeBtn.title = 'Mute/Unmute (M)';
+        volumeBtn.style.cssText = 'background:none; border:none; color:white; font-size:20px; cursor:pointer; padding:8px; display:flex; align-items:center; justify-content:center;';
+        volumeBtn.setAttribute('aria-label', 'Mute/Unmute');
         const volumeIcon = document.createElement('i');
         volumeIcon.className = 'fas fa-volume-high';
         volumeBtn.appendChild(volumeIcon);
 
-        // Volume slider container with labels
-        const sliderContainer = document.createElement('div');
-        sliderContainer.style.cssText = 'display:flex; align-items:center; gap:6px;';
+        leftBtns.appendChild(playBtn);
+        leftBtns.appendChild(rewindBtn);
+        leftBtns.appendChild(forwardBtn);
+        leftBtns.appendChild(volumeBtn);
 
-        // Min label
-        const minLabel = document.createElement('span');
-        minLabel.textContent = '🔈';
-        minLabel.style.cssText = 'font-size:10px; opacity:0.6;';
+        // Right buttons
+        const rightBtns = document.createElement('div');
+        rightBtns.style.cssText = 'display:flex; align-items:center; gap:15px;';
 
-        // Volume slider
-        const volumeSlider = document.createElement('input');
-        volumeSlider.type = 'range';
-        volumeSlider.min = '0';
-        volumeSlider.max = '100';
-        volumeSlider.step = '5';
-        volumeSlider.value = '100';
-        volumeSlider.style.cssText = 'width:80px; height:5px; cursor:pointer; accent-color:white; background:linear-gradient(to right, rgba(255,255,255,0.8) 100%, rgba(255,255,255,0.3) 100%); border-radius:3px; -webkit-appearance:none; appearance:none;';
+        // Fullscreen button
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.style.cssText = 'background:none; border:none; color:white; font-size:22px; cursor:pointer; padding:8px; display:flex; align-items:center; justify-content:center;';
+        fullscreenBtn.setAttribute('aria-label', 'Fullscreen');
+        const fsIcon = document.createElement('i');
+        fsIcon.className = 'fas fa-expand';
+        fullscreenBtn.appendChild(fsIcon);
 
-        // Max label
-        const maxLabel = document.createElement('span');
-        maxLabel.textContent = '🔊';
-        maxLabel.style.cssText = 'font-size:10px; opacity:0.6;';
+        // Close button
+        const closeBtn = document.createElement('button');
+        closeBtn.style.cssText = 'background:none; border:none; color:#ff6b6b; font-size:22px; cursor:pointer; padding:8px; display:flex; align-items:center; justify-content:center;';
+        closeBtn.setAttribute('aria-label', 'Close');
+        const closeIcon = document.createElement('i');
+        closeIcon.className = 'fas fa-times';
+        closeBtn.appendChild(closeIcon);
 
-        // Volume percentage display
-        const volumePercent = document.createElement('span');
-        volumePercent.textContent = '100%';
-        volumePercent.style.cssText = 'color:white; font-size:12px; min-width:35px; text-align:center; font-weight:500;';
+        rightBtns.appendChild(fullscreenBtn);
+        rightBtns.appendChild(closeBtn);
 
-        sliderContainer.appendChild(minLabel);
-        sliderContainer.appendChild(volumeSlider);
-        sliderContainer.appendChild(maxLabel);
+        buttonsRow.appendChild(leftBtns);
+        buttonsRow.appendChild(rightBtns);
 
-        // Update volume icon and slider visual
+        controls.appendChild(progressRow);
+        controls.appendChild(buttonsRow);
+
+        // ========== EVENT HANDLERS ==========
+
+        // Format time helper
+        function formatTime(seconds) {
+            if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return mins + ':' + secs.toString().padStart(2, '0');
+        }
+
+        // Update volume icon
         function updateVolumeIcon() {
-            const vol = videoElement.muted ? 0 : Math.round(videoElement.volume * 100);
-            volumePercent.textContent = vol + '%';
-
-            // Update slider background to show filled portion
-            volumeSlider.style.background = `linear-gradient(to right, rgba(255,255,255,0.9) ${vol}%, rgba(255,255,255,0.3) ${vol}%)`;
-
             if (videoElement.muted || videoElement.volume === 0) {
                 volumeIcon.className = 'fas fa-volume-xmark';
-                volumeIcon.style.color = '#ff6b6b';
-            } else if (videoElement.volume < 0.3) {
-                volumeIcon.className = 'fas fa-volume-off';
-                volumeIcon.style.color = 'white';
-            } else if (videoElement.volume < 0.7) {
+            } else if (videoElement.volume < 0.5) {
                 volumeIcon.className = 'fas fa-volume-low';
-                volumeIcon.style.color = 'white';
             } else {
                 volumeIcon.className = 'fas fa-volume-high';
-                volumeIcon.style.color = 'white';
             }
         }
 
-        volumeSlider.oninput = function() {
-            videoElement.volume = this.value / 100;
-            videoElement.muted = false;
-            updateVolumeIcon();
+        // Play/Pause
+        playBtn.onclick = function() {
+            if (videoElement.paused) {
+                videoElement.play();
+            } else {
+                videoElement.pause();
+            }
         };
 
+        // Rewind 10s
+        rewindBtn.onclick = function() {
+            videoElement.currentTime = Math.max(0, videoElement.currentTime - 10);
+        };
+
+        // Forward 10s
+        forwardBtn.onclick = function() {
+            videoElement.currentTime = Math.min(videoElement.duration || 0, videoElement.currentTime + 10);
+        };
+
+        // Mute/Unmute
         volumeBtn.onclick = function() {
             videoElement.muted = !videoElement.muted;
             updateVolumeIcon();
         };
 
-        volumeContainer.appendChild(volumeBtn);
-        volumeContainer.appendChild(sliderContainer);
-        volumeContainer.appendChild(volumePercent);
-
-        // Time display
-        const timeDisplay = document.createElement('span');
-        timeDisplay.style.cssText = 'color:white; font-size:14px; font-family:monospace;';
-        timeDisplay.textContent = '0:00';
-
-        leftControls.appendChild(playBtn);
-        leftControls.appendChild(volumeContainer);
-        leftControls.appendChild(timeDisplay);
-
-        // Right controls
-        const rightControls = document.createElement('div');
-        rightControls.style.cssText = 'display:flex; align-items:center; gap:16px;';
-
-        // Fullscreen button (for VIDEO element)
-        const fullscreenBtn = document.createElement('button');
-        fullscreenBtn.style.cssText = 'background:none; border:none; color:white; font-size:22px; cursor:pointer; padding:4px; display:flex; align-items:center; transition:transform 0.1s;';
-        fullscreenBtn.title = 'Fullscreen (F)';
-        fullscreenBtn.onmouseenter = function() { this.style.transform = 'scale(1.1)'; };
-        fullscreenBtn.onmouseleave = function() { this.style.transform = 'scale(1)'; };
-        const fsIcon = document.createElement('i');
-        fsIcon.className = 'fas fa-expand';
-        fullscreenBtn.appendChild(fsIcon);
+        // Fullscreen - use wrapper for better control visibility
         fullscreenBtn.onclick = function() {
-            if (videoElement.requestFullscreen) {
-                videoElement.requestFullscreen();
-            } else if (videoElement.webkitEnterFullscreen) {
-                videoElement.webkitEnterFullscreen();
-            } else if (videoElement.webkitRequestFullscreen) {
-                videoElement.webkitRequestFullscreen();
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+                fsIcon.className = 'fas fa-expand';
+            } else {
+                // Try wrapper first, then video
+                if (videoWrapper.requestFullscreen) {
+                    videoWrapper.requestFullscreen();
+                } else if (videoElement.requestFullscreen) {
+                    videoElement.requestFullscreen();
+                } else if (videoElement.webkitEnterFullscreen) {
+                    videoElement.webkitEnterFullscreen();
+                } else if (videoElement.webkitRequestFullscreen) {
+                    videoElement.webkitRequestFullscreen();
+                }
+                fsIcon.className = 'fas fa-compress';
             }
         };
 
-        // Close button
-        const closeBtn = document.createElement('button');
-        closeBtn.style.cssText = 'background:none; border:none; color:#ff6b6b; font-size:22px; cursor:pointer; padding:4px; display:flex; align-items:center; transition:transform 0.1s;';
-        closeBtn.title = 'Close (Escape)';
-        closeBtn.onmouseenter = function() { this.style.transform = 'scale(1.1)'; this.style.color = '#ff4757'; };
-        closeBtn.onmouseleave = function() { this.style.transform = 'scale(1)'; this.style.color = '#ff6b6b'; };
-        const closeIcon = document.createElement('i');
-        closeIcon.className = 'fas fa-xmark';
-        closeBtn.appendChild(closeIcon);
+        // Listen for fullscreen changes
+        document.addEventListener('fullscreenchange', function() {
+            if (document.fullscreenElement) {
+                fsIcon.className = 'fas fa-compress';
+            } else {
+                fsIcon.className = 'fas fa-expand';
+            }
+        });
 
-        rightControls.appendChild(fullscreenBtn);
-        rightControls.appendChild(closeBtn);
-
-        controlsRow.appendChild(leftControls);
-        controlsRow.appendChild(rightControls);
-
-        controls.appendChild(progressContainer);
-        controls.appendChild(controlsRow);
-
-        videoWrapper.appendChild(videoElement);
-        videoWrapper.appendChild(controls);
-        videoWrapper.appendChild(loadingSpinner);
-
-        // Show controls on hover
-        videoWrapper.onmouseenter = function() { controls.style.opacity = '1'; progressHandle.style.opacity = '1'; };
-        videoWrapper.onmouseleave = function() { controls.style.opacity = '0'; progressHandle.style.opacity = '0'; };
-
-        // Update progress
-        videoElement.ontimeupdate = function() {
-            const percent = (videoElement.currentTime / videoElement.duration) * 100;
-            progressBar.style.width = percent + '%';
-            timeDisplay.textContent = formatTime(videoElement.currentTime);
+        // Video events
+        videoElement.onplay = function() {
+            playIcon.className = 'fas fa-pause';
         };
 
-        videoElement.onplay = function() { playIcon.className = 'fas fa-pause'; };
-        videoElement.onpause = function() { playIcon.className = 'fas fa-play'; controls.style.opacity = '1'; };
+        videoElement.onpause = function() {
+            playIcon.className = 'fas fa-play';
+        };
 
-        // YouTube-style keyboard shortcuts
+        videoElement.ontimeupdate = function() {
+            const percent = (videoElement.currentTime / videoElement.duration) * 100;
+            progressFilled.style.width = percent + '%';
+            currentTime.textContent = formatTime(videoElement.currentTime);
+        };
+
+        videoElement.onloadedmetadata = function() {
+            duration.textContent = formatTime(videoElement.duration);
+        };
+
+        videoElement.ondurationchange = function() {
+            duration.textContent = formatTime(videoElement.duration);
+        };
+
+        // Click on video to play/pause
+        videoElement.onclick = function(e) {
+            e.stopPropagation();
+            if (videoElement.paused) {
+                videoElement.play();
+            } else {
+                videoElement.pause();
+            }
+        };
+
+        // Touch support for mobile
+        let controlsVisible = true;
+        let hideTimeout;
+
+        function showControls() {
+            controls.style.opacity = '1';
+            controlsVisible = true;
+            clearTimeout(hideTimeout);
+            hideTimeout = setTimeout(function() {
+                if (!videoElement.paused) {
+                    controls.style.opacity = '0';
+                    controlsVisible = false;
+                }
+            }, 3000);
+        }
+
+        videoWrapper.addEventListener('touchstart', showControls, { passive: true });
+        videoWrapper.addEventListener('mousemove', showControls);
+        videoWrapper.addEventListener('mouseenter', function() {
+            controls.style.opacity = '1';
+        });
+
+        // Keyboard shortcuts
         function handleKeyboard(e) {
-            // Don't handle if typing in an input
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-            const video = document.querySelector('.inline-video-wrapper video');
+            const video = videoElement;
             if (!video) return;
 
             switch(e.key.toLowerCase()) {
-                case ' ':  // Space - play/pause
-                case 'k':  // K - play/pause (YouTube style)
+                case ' ':
+                case 'k':
                     e.preventDefault();
                     if (video.paused) video.play();
                     else video.pause();
                     break;
-                case 'arrowleft':  // Left arrow - rewind 5s
-                case 'j':  // J - rewind 10s (YouTube style)
+                case 'arrowleft':
+                case 'j':
                     e.preventDefault();
-                    video.currentTime = Math.max(0, video.currentTime - (e.key === 'j' ? 10 : 5));
+                    video.currentTime = Math.max(0, video.currentTime - 10);
                     break;
-                case 'arrowright':  // Right arrow - forward 5s
-                case 'l':  // L - forward 10s (YouTube style)
+                case 'arrowright':
+                case 'l':
                     e.preventDefault();
-                    video.currentTime = Math.min(video.duration, video.currentTime + (e.key === 'l' ? 10 : 5));
+                    video.currentTime = Math.min(video.duration || 0, video.currentTime + 10);
                     break;
-                case 'arrowup':  // Up arrow - volume up
-                    e.preventDefault();
-                    video.volume = Math.min(1, video.volume + 0.1);
-                    volumeSlider.value = video.volume;
-                    updateVolumeIcon();
-                    break;
-                case 'arrowdown':  // Down arrow - volume down
-                    e.preventDefault();
-                    video.volume = Math.max(0, video.volume - 0.1);
-                    volumeSlider.value = video.volume;
-                    updateVolumeIcon();
-                    break;
-                case 'm':  // M - mute/unmute
+                case 'm':
                     e.preventDefault();
                     video.muted = !video.muted;
                     updateVolumeIcon();
                     break;
-                case 'f':  // F - fullscreen
+                case 'f':
                     e.preventDefault();
-                    if (video.requestFullscreen) video.requestFullscreen();
-                    else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+                    fullscreenBtn.click();
                     break;
-                case 'escape':  // Escape - close player
+                case 'escape':
                     e.preventDefault();
-                    closeBtn.click();
-                    break;
-                case '0': case '1': case '2': case '3': case '4':
-                case '5': case '6': case '7': case '8': case '9':
-                    // Number keys - seek to percentage (0=0%, 5=50%, etc.)
-                    e.preventDefault();
-                    video.currentTime = (parseInt(e.key) / 10) * video.duration;
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    } else {
+                        closeBtn.click();
+                    }
                     break;
             }
         }
 
-        // Add keyboard listener
         document.addEventListener('keydown', handleKeyboard);
 
-        // Remove keyboard listener when player closes
-        const originalCloseClick = closeBtn.onclick;
+        // Append elements to wrapper
+        videoWrapper.appendChild(videoElement);
+        videoWrapper.appendChild(controls);
+        videoWrapper.appendChild(loadingSpinner);
+
+        // Close button handler (will be updated later)
         closeBtn.onclick = function() {
             document.removeEventListener('keydown', handleKeyboard);
-            if (originalCloseClick) originalCloseClick();
+            videoElement.pause();
+            videoWrapper.remove();
         };
 
         // Replace the thumbnail inside the clicked card with video
@@ -2174,18 +2215,6 @@
             container.insertBefore(videoWrapper, container.firstChild);
         }
 
-        function formatTime(seconds) {
-            if (isNaN(seconds)) return '0:00';
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return mins + ':' + secs.toString().padStart(2, '0');
-        }
-
-        if (!videoElement) {
-            console.error('❌ Video player element not found');
-            return;
-        }
-
         // Set video source
         console.log('🎥 Setting video source:', videoUrl);
         videoElement.src = videoUrl;
@@ -2197,8 +2226,12 @@
             showNotification('⚠️ هەڵەیەک دا لە بارکرنا ڤیدیۆ');
         };
 
-        // Add loadedmetadata handler - detect orientation and resize
+        // Store original onloadedmetadata to extend it
+        const originalMetadataHandler = videoElement.onloadedmetadata;
         videoElement.onloadedmetadata = function() {
+            // Call original handler for duration
+            if (originalMetadataHandler) originalMetadataHandler.call(this);
+
             const vw = videoElement.videoWidth;
             const vh = videoElement.videoHeight;
             const isPortrait = vh > vw;
@@ -2206,9 +2239,10 @@
             console.log(`📐 Video dimensions: ${vw}x${vh} (${isPortrait ? 'Portrait' : 'Landscape'})`);
 
             if (isPortrait) {
-                // Portrait video (like reels)
-                videoWrapper.style.width = '280px';
-                videoWrapper.style.height = '500px';
+                // Portrait video (like reels) - centered
+                videoWrapper.style.width = '320px';
+                videoWrapper.style.height = '568px';
+                videoWrapper.style.margin = '15px auto';
                 videoElement.style.objectFit = 'contain';
             } else {
                 // Landscape video
@@ -2217,6 +2251,11 @@
                 videoWrapper.style.height = 'auto';
                 videoWrapper.style.aspectRatio = '16/9';
                 videoElement.style.objectFit = 'contain';
+            }
+
+            // Update duration display
+            if (duration) {
+                duration.textContent = formatTime(videoElement.duration);
             }
         };
 
