@@ -9,11 +9,16 @@
       "source": "/tv.html",
       "destination": "/islamvoice.html",
       "permanent": true
+    },
+    {
+      "source": "/admin-tv-management.html",
+      "destination": "/admin-islamvoice-management.html",
+      "permanent": true
     }
   ],
   "headers": [
     {
-      "source": "/src/admin-tv-management.html",
+      "source": "/src/admin-islamvoice-management.html",
       "headers": [
         {
           "key": "Cross-Origin-Opener-Policy",

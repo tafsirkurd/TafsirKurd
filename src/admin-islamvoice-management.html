@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="utils/theme-loader.js"></script>
-    <title>TV Management - TafsirKurd Admin</title>
+    <title>IslamVoice - TafsirKurd Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/fontawesome/all.min.css">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -295,7 +295,7 @@
             if (role === 'super_admin') {
                 css = '.sidebar-nav{visibility:visible}';
             } else if (role === 'analyst') {
-                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="tv-management"],.nav-item[href*="backgrounds"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="backgrounds"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
             } else if (role === 'editor') {
                 css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
             }
@@ -342,9 +342,9 @@
                         <i data-lucide="video"></i>
                         <span class="nav-item-label">Videos</span>
                     </a>
-                    <a href="/admin-tv-management.html" class="nav-item active">
+                    <a href="/admin-islamvoice-management.html" class="nav-item active">
                         <i data-lucide="tv"></i>
-                        <span class="nav-item-label">TV Management</span>
+                        <span class="nav-item-label">IslamVoice</span>
                     </a>
                     <a href="/admin-backgrounds.html" class="nav-item">
                         <i data-lucide="image"></i>
@@ -449,7 +449,7 @@
 
             <div class="content-area">
                 <div class="page-header">
-                    <h1 class="page-title">TV Management</h1>
+                    <h1 class="page-title">IslamVoice</h1>
                     <div class="page-actions">
                         <button class="btn btn-primary" id="add-btn">
                             <i data-lucide="plus"></i>
