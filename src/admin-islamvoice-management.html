@@ -1577,15 +1577,9 @@
             }
         });
 
-        // Compress image to reduce file size
-        async function compressImage(file, maxWidth = 1280, maxHeight = 720, quality = 0.85) {
+        // Compress image to reduce file size (target: < 100KB)
+        async function compressImage(file, maxWidth = 640, maxHeight = 360, quality = 0.65) {
             return new Promise((resolve) => {
-                // If file is already small enough, return it as-is
-                if (file.size <= 2 * 1024 * 1024) {
-                    resolve(file);
-                    return;
-                }
-
                 const img = new Image();
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
@@ -1593,7 +1587,7 @@
                 img.onload = () => {
                     let { width, height } = img;
 
-                    // Calculate new dimensions
+                    // Calculate new dimensions - always resize for thumbnails
                     if (width > maxWidth || height > maxHeight) {
                         const ratio = Math.min(maxWidth / width, maxHeight / height);
                         width = Math.round(width * ratio);
@@ -1609,7 +1603,7 @@
                             type: 'image/jpeg',
                             lastModified: Date.now()
                         });
-                        console.log(`Compressed image: ${(file.size/1024/1024).toFixed(2)}MB -> ${(compressedFile.size/1024/1024).toFixed(2)}MB`);
+                        console.log(`Compressed image: ${(file.size/1024).toFixed(0)}KB -> ${(compressedFile.size/1024).toFixed(0)}KB`);
                         resolve(compressedFile);
                     }, 'image/jpeg', quality);
                 };
@@ -1620,10 +1614,8 @@
         }
 
         async function handleThumbnailUpload(file) {
-            // Compress large images automatically
-            if (file.size > 2 * 1024 * 1024) {
-                file = await compressImage(file);
-            }
+            // Always compress thumbnails for faster loading
+            file = await compressImage(file);
 
             // Show uploading state
             thumbnailPlaceholder.style.display = 'none';
@@ -1717,10 +1709,8 @@
                 return;
             }
 
-            // Compress large images automatically
-            if (file.size > 2 * 1024 * 1024) {
-                file = await compressImage(file);
-            }
+            // Always compress thumbnails for faster loading
+            file = await compressImage(file);
 
             const noVideoMessage = document.getElementById('noVideoMessage');
             const uploading = document.getElementById('episodeThumbnailUploading');
