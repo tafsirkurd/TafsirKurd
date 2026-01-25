@@ -891,7 +891,7 @@
         function getPageIcon(path) {
             if (path === '/') return '🏠';
             if (path.includes('/surah/')) return '📖';
-            if (path.includes('/tv')) return '📺';
+            if (path.includes('/islamvoice')) return '📺';
             if (path.includes('/contact')) return '📧';
             if (path.includes('/about')) return 'ℹ️';
             return '📄';
@@ -904,7 +904,7 @@
                 const match = path.match(/\/surah\/(\d+)/);
                 return match ? `Surah ${match[1]}` : 'Surah';
             }
-            if (path.includes('/tv')) return 'TV Page';
+            if (path.includes('/islamvoice')) return 'TV Page';
             if (path.includes('/contact')) return 'Contact Page';
             if (path.includes('/about')) return 'About Page';
 
