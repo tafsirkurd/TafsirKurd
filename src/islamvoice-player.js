@@ -1968,8 +1968,8 @@
         volumeBtn.appendChild(volumeIcon);
 
         leftBtns.appendChild(playBtn);
-        leftBtns.appendChild(rewindBtn);
         leftBtns.appendChild(forwardBtn);
+        leftBtns.appendChild(rewindBtn);
         leftBtns.appendChild(volumeBtn);
 
         // Right buttons
