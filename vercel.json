@@ -1,4 +1,16 @@
 {
+  "redirects": [
+    {
+      "source": "/tv",
+      "destination": "/islamvoice",
+      "permanent": true
+    },
+    {
+      "source": "/tv.html",
+      "destination": "/islamvoice.html",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/src/admin-tv-management.html",

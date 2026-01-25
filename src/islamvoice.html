@@ -3114,7 +3114,7 @@
 
             <ul class="nav-menu">
                 <li><a href="/" class="nav-link">سەرەکی</a></li>
-                <li><a href="/tv.html" class="nav-link active">دەنگێ ئیسلامێ</a></li>
+                <li><a href="/islamvoice.html" class="nav-link active">دەنگێ ئیسلامێ</a></li>
                 <li><a href="/quran.html" class="nav-link">قورئان</a></li>
             </ul>
 <!-- Mobile Menu Toggle -->            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">                <span></span>                <span></span>                <span></span>            </button>
@@ -3147,7 +3147,7 @@
                 </button>
 
                 <!-- Login Button (shown when not authenticated) -->
-                <a href="/login.html?source=tv" class="icon-btn" id="loginBtn" aria-label="Login" title="چوونەژوورەوە" style="display: none;">
+                <a href="/login.html?source=islamvoice" class="icon-btn" id="loginBtn" aria-label="Login" title="چوونەژوورەوە" style="display: none;">
                     <i class="fas fa-sign-in-alt"></i>
                 </a>
 
@@ -3679,7 +3679,7 @@
                     <h3 class="footer-section-title">رۆژپەڕا دیکە</h3>
                     <div class="footer-links">
                         <a href="/quran" class="footer-link">قورئانا پیرۆز</a>
-                        <a href="/tv" class="footer-link">دەنگێ ئیسلامێ</a>
+                        <a href="/islamvoice" class="footer-link">دەنگێ ئیسلامێ</a>
                         <a href="/" class="footer-link">سەرەکی</a>
                     </div>
                 </div>
@@ -3997,7 +3997,7 @@
                 const { data, error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + '/tv.html',
+                        redirectTo: window.location.origin + '/islamvoice.html',
                         queryParams: {
                             access_type: 'offline',
                             prompt: 'consent',
@@ -4026,7 +4026,7 @@
                 const { error } = await supabaseClient.auth.signInWithOtp({
                     email: email,
                     options: {
-                        emailRedirectTo: window.location.origin + '/tv.html',
+                        emailRedirectTo: window.location.origin + '/islamvoice.html',
                     }
                 });
 
