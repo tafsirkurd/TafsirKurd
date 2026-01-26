@@ -898,12 +898,18 @@
 /* Mobile landscape and small tablets */
 @media (max-width: 768px) {
     .islamvoice-container {
-        padding-top: 120px; /* Increased for wrapped navbar */
+        padding-top: 70px;
     }
 
     .sidebar {
         top: 60px;
         width: 280px;
+        transform: translateX(100%);
+        box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
     }
 
     .main-content {

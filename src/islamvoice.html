@@ -4482,31 +4482,44 @@
             }
         })();
 
-        // Mobile Menu Toggle
+        // Mobile Menu Toggle - Opens the SIDEBAR
         const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-        const navMenu = document.querySelector('.nav-menu');
-        if (mobileMenuToggle && navMenu) {
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.querySelector('.sidebar-overlay');
+        if (mobileMenuToggle && sidebar) {
             mobileMenuToggle.addEventListener('click', function(e) {
                 e.stopPropagation();
                 this.classList.toggle('active');
-                navMenu.classList.toggle('active');
+                sidebar.classList.toggle('active');
+                if (sidebarOverlay) sidebarOverlay.classList.toggle('active');
             });
 
-            // Close menu when clicking on a link
-            navMenu.querySelectorAll('.nav-link').forEach(link => {
-                link.addEventListener('click', () => {
+            // Close sidebar when clicking on a sidebar button
+            sidebar.querySelectorAll('.sidebar-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
                     mobileMenuToggle.classList.remove('active');
-                    navMenu.classList.remove('active');
+                    sidebar.classList.remove('active');
+                    if (sidebarOverlay) sidebarOverlay.classList.remove('active');
                 });
             });
 
-            // Close menu when clicking outside
+            // Close sidebar when clicking outside
             document.addEventListener('click', function(event) {
-                if (!mobileMenuToggle.contains(event.target) && !navMenu.contains(event.target)) {
+                if (!mobileMenuToggle.contains(event.target) && !sidebar.contains(event.target)) {
                     mobileMenuToggle.classList.remove('active');
-                    navMenu.classList.remove('active');
+                    sidebar.classList.remove('active');
+                    if (sidebarOverlay) sidebarOverlay.classList.remove('active');
                 }
             });
+
+            // Close sidebar when clicking overlay
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function() {
+                    mobileMenuToggle.classList.remove('active');
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                });
+            }
         }
         // Initialize auth on page load
         window.addEventListener('load', async () => {
