@@ -377,7 +377,7 @@
                                 <span>داگرتی</span>
                             </div>
                         ` : ''}
-                        ${isWatched ? '<div class="watched-overlay"><span>WATCHED</span></div>' : ''}
+                        ${isWatched ? '<div class="watched-overlay"><span>هاتیە دیتن</span></div>' : ''}
                         <div class="episode-play-overlay">
                             <div class="episode-play-icon">
                                 <i class="fas fa-${locked ? 'lock' : 'play'}"></i>
@@ -1324,7 +1324,7 @@
                 if (thumbnail && !thumbnail.querySelector('.watched-overlay')) {
                     const overlay = document.createElement('div');
                     overlay.className = 'watched-overlay';
-                    overlay.innerHTML = '<span>WATCHED</span>';
+                    overlay.innerHTML = '<span>هاتیە دیتن</span>';
                     thumbnail.appendChild(overlay);
                 }
                 card.classList.add('is-watched');
