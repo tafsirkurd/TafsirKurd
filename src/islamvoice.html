@@ -1407,6 +1407,23 @@
             font-weight: 600;
         }
 
+        /* YouTube-style progress bar (black) */
+        .episode-progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 5;
+        }
+
+        .episode-progress-fill {
+            height: 100%;
+            background: #000000;
+            transition: width 0.3s ease;
+        }
+
         .play-overlay {
             position: absolute;
             top: 50%;
