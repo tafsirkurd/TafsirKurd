@@ -115,6 +115,7 @@
         // NEW: Streaming platform features
         continueWatching: [],
         watchHistory: [],
+        watchedVideos: [], // Track fully watched/completed videos
         seriesProgress: {},
         bookmarks: [],
         userPreferences: {
@@ -304,6 +305,9 @@
                 </div>
             `;
         }
+
+        // Update watched indicators on rendered cards
+        setTimeout(() => updateWatchedIndicators(), 100);
     }
 
     // Show topic's episodes
@@ -360,8 +364,12 @@
                 ? `shakeLockedEpisode(this)`
                 : `window.tvApp.playEpisode('${episode.id}')`;
 
+            // Check if video was fully watched
+            const isWatched = state.watchedVideos.includes(episode.id);
+
             return `
-                <div class="episode-item ${isCompleted ? 'completed' : ''} ${lockedClass}" onclick="${clickHandler}">
+                <div class="episode-item ${isCompleted ? 'completed' : ''} ${isWatched ? 'is-watched' : ''} ${lockedClass}" data-video-id="${episode.id}" onclick="${clickHandler}">
+                    ${isWatched ? '<div class="watched-badge"><i class="fas fa-check-circle"></i></div>' : ''}
                     <div class="episode-number">${String(index + 1).padStart(2, '0')}</div>
 
                     <div class="episode-thumbnail">
@@ -769,14 +777,16 @@
             }
         }
 
-        // Load continue watching, history, bookmarks, and series progress
+        // Load continue watching, history, bookmarks, watched videos, and series progress
         const continueWatching = localStorage.getItem('continueWatching');
         const watchHistory = localStorage.getItem('watchHistory');
+        const watchedVideos = localStorage.getItem('watchedVideos');
         const seriesProgress = localStorage.getItem('seriesProgress');
         const bookmarks = localStorage.getItem('bookmarks');
 
         if (continueWatching) state.continueWatching = JSON.parse(continueWatching);
         if (watchHistory) state.watchHistory = JSON.parse(watchHistory);
+        if (watchedVideos) state.watchedVideos = JSON.parse(watchedVideos);
         if (seriesProgress) state.seriesProgress = JSON.parse(seriesProgress);
         if (bookmarks) state.bookmarks = JSON.parse(bookmarks);
 
@@ -1285,12 +1295,48 @@
         if (state.currentEpisode) {
             state.watchProgress[state.currentEpisode].completed = true;
             localStorage.setItem('watchProgress', JSON.stringify(state.watchProgress));
+
+            // Add to watched videos list (if not already there)
+            if (!state.watchedVideos.includes(state.currentEpisode)) {
+                state.watchedVideos.push(state.currentEpisode);
+                localStorage.setItem('watchedVideos', JSON.stringify(state.watchedVideos));
+                console.log('✅ Video marked as watched:', state.currentEpisode);
+
+                // Update the UI to show watched indicator
+                updateWatchedIndicators();
+
+                // Sync to Supabase if logged in
+                syncToSupabase('watchedVideos', state.watchedVideos);
+            }
+
+            // Remove from continue watching since it's completed
+            state.continueWatching = state.continueWatching.filter(
+                item => item.episodeId !== state.currentEpisode
+            );
+            localStorage.setItem('continueWatching', JSON.stringify(state.continueWatching));
         }
 
         // Auto-play next episode
         if (state.autoPlayNext) {
             playNextEpisode();
         }
+    }
+
+    // Update watched indicators on all visible video cards
+    function updateWatchedIndicators() {
+        document.querySelectorAll('.episode-item, .topic-card, .video-card').forEach(card => {
+            const videoId = card.dataset.videoId || card.dataset.episodeId || card.dataset.id;
+            if (videoId && state.watchedVideos.includes(videoId)) {
+                if (!card.querySelector('.watched-badge')) {
+                    const badge = document.createElement('div');
+                    badge.className = 'watched-badge';
+                    badge.innerHTML = '<i class="fas fa-check-circle"></i>';
+                    badge.title = 'تەواو کراوە';
+                    card.appendChild(badge);
+                }
+                card.classList.add('is-watched');
+            }
+        });
     }
 
     // ===== SKIP INTRO =====
