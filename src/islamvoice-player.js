@@ -365,7 +365,7 @@
             const watchPercent = progress ? progress.percent : 0;
 
             return `
-                <div class="episode-item ${isCompleted ? 'completed' : ''} ${isWatched ? 'is-watched' : ''} ${lockedClass}" data-video-id="${episode.id}" onclick="${clickHandler}">
+                <div class="episode-item ${isCompleted ? 'completed' : ''} ${isWatched ? 'is-watched' : ''} ${lockedClass}" data-video-id="${episode.id}">
                     <div class="episode-number">${String(index + 1).padStart(2, '0')}</div>
 
                     <div class="episode-thumbnail">
@@ -378,7 +378,7 @@
                             </div>
                         ` : ''}
                         ${isWatched ? '<div class="watched-overlay"><span>هاتیە دیتن</span></div>' : ''}
-                        <div class="episode-play-overlay">
+                        <div class="episode-play-overlay" onclick="${clickHandler}">
                             <div class="episode-play-icon">
                                 <i class="fas fa-${locked ? 'lock' : 'play'}"></i>
                             </div>
