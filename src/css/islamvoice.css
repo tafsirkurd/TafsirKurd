@@ -300,6 +300,11 @@
     max-width: 100%;
     box-sizing: border-box;
     min-height: 50vh;
+    direction: rtl;
+}
+
+.topics-grid > * {
+    direction: rtl;
 }
 
 /* When topics-grid contains only empty-state, make it full width */
