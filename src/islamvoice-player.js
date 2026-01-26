@@ -246,10 +246,17 @@
                     description: episode.seriesDescription || '',
                     episodes: [],
                     // Use series thumbnail first, then episode thumbnail as fallback
-                    thumbnail: episode.seriesThumbnail || episode.thumbnail || ''
+                    thumbnail: episode.seriesThumbnail || episode.thumbnail || '',
+                    // Track series created date for sorting
+                    createdAt: episode.seriesCreatedAt || episode.created_at || ''
                 };
             }
             topics[topicKey].episodes.push(episode);
+        });
+
+        // Sort topics by createdAt (newest first - will appear on right in RTL)
+        const sortedTopics = Object.values(topics).sort((a, b) => {
+            return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
         // Show active filter indicator
@@ -264,7 +271,7 @@
         }
 
         // Render topic cards
-        topicsGrid.innerHTML = filterIndicator + Object.values(topics).map(topic => {
+        topicsGrid.innerHTML = filterIndicator + sortedTopics.map(topic => {
             const episodeCount = topic.episodes.length;
             // Count watched episodes in this series
             const watchedCount = topic.episodes.filter(ep => state.watchedVideos.includes(ep.id)).length;
