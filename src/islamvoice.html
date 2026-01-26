@@ -1297,6 +1297,7 @@
 
         /* Episode item (list view) */
         .episode-item {
+            position: relative;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -1377,6 +1378,43 @@
             height: 4px;
             background: var(--danger);
             transition: width var(--transition-medium);
+        }
+
+        /* Watched Badge - shows checkmark on completed videos */
+        .watched-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+            z-index: 10;
+            animation: watchedPop 0.3s ease;
+        }
+
+        @keyframes watchedPop {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .is-watched .episode-thumbnail::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(16, 185, 129, 0.1);
+            pointer-events: none;
+        }
+
+        .is-watched .episode-title {
+            color: var(--text-muted);
         }
 
         .play-overlay {
