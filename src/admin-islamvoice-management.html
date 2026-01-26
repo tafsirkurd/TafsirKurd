@@ -1622,8 +1622,12 @@
         async function compressImageFromUrl(imageUrl, maxWidth = 640, maxHeight = 360, quality = 0.65) {
             // First try to fetch the image as blob to bypass CORS issues
             try {
-                const response = await fetch(imageUrl, { mode: 'cors' });
-                if (!response.ok) throw new Error('Fetch failed');
+                const response = await fetch(imageUrl, {
+                    mode: 'cors',
+                    cache: 'no-store',  // Bypass cache to get fresh CORS headers
+                    headers: { 'Cache-Control': 'no-cache' }
+                });
+                if (!response.ok) throw new Error(`Fetch failed: ${response.status} ${response.statusText}`);
                 const blob = await response.blob();
                 const blobUrl = URL.createObjectURL(blob);
 
@@ -1741,6 +1745,7 @@
                 let processed = 0;
                 let success = 0;
                 let failed = 0;
+                let failedItems = [];
 
                 for (const item of allItems) {
                     processed++;
@@ -1796,12 +1801,18 @@
 
                         success++;
                     } catch (err) {
-                        console.error(`Failed to compress ${item.name}:`, err);
+                        console.error(`Failed to compress ${item.name} (${item.url}):`, err.message);
+                        failedItems.push(`${item.name}: ${err.message}`);
                         failed++;
                     }
                 }
 
-                alert(`Done! Compressed: ${success}, Failed: ${failed}`);
+                if (failed > 0) {
+                    console.log('Failed items:', failedItems);
+                    alert(`Done! Compressed: ${success}, Failed: ${failed}\n\nCheck browser console (F12) for details.`);
+                } else {
+                    alert(`Done! Compressed: ${success}, Failed: ${failed}`);
+                }
 
                 // Refresh the views
                 loadAllSeries();
