@@ -1382,48 +1382,22 @@
 
         /* ===== WATCHED VIDEO TRACKING STYLES ===== */
 
-        /* Netflix-style: Fade watched videos */
-        .is-watched {
-            opacity: 0.5;
-            transition: opacity 0.3s ease;
-        }
-
-        .is-watched:hover {
-            opacity: 0.85;
-        }
-
-        .is-watched .episode-title {
-            color: var(--text-muted);
-        }
-
-        /* Netflix-style dark overlay with WATCHED text */
+        /* Small badge showing "هاتیە دیتن" on watched videos */
         .watched-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            top: 8px;
+            right: 8px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            padding: 4px 10px;
+            border-radius: 4px;
             z-index: 8;
-            border-radius: inherit;
+            pointer-events: none;
         }
 
         .watched-overlay span {
             color: white;
-            font-size: 0.85rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            padding: 6px 12px;
-            border: 2px solid white;
-            border-radius: 4px;
-        }
-
-        .is-watched:hover .watched-overlay {
-            opacity: 0.7;
+            font-size: 0.7rem;
+            font-weight: 600;
         }
 
         .play-overlay {
