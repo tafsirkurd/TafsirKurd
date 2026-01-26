@@ -300,6 +300,11 @@
     max-width: 100%;
     box-sizing: border-box;
     min-height: 50vh;
+    direction: ltr; /* Match admin panel order */
+}
+
+.topics-grid > * {
+    direction: rtl; /* Keep RTL for Kurdish text inside cards */
 }
 
 /* When topics-grid contains only empty-state, make it full width */
