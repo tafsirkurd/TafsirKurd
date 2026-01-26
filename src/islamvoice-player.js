@@ -384,6 +384,11 @@
                             </div>
                             ${episode.duration ? `<span class="episode-duration">${formatEpisodeDuration(episode.duration)}</span>` : ''}
                         </div>
+                        ${watchPercent > 0 ? `
+                            <div class="episode-progress-bar">
+                                <div class="episode-progress-fill" style="width: ${watchPercent}%;"></div>
+                            </div>
+                        ` : ''}
                     </div>
 
                     <div class="episode-info">
