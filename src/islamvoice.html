@@ -4482,7 +4482,32 @@
             }
         })();
 
-// Mobile Menu Toggle        const mobileMenuToggle = document.getElementById('mobileMenuToggle');        const navMenu = document.querySelector('.nav-menu');        if (mobileMenuToggle && navMenu) {            mobileMenuToggle.addEventListener('click', function() {                this.classList.toggle('active');                navMenu.classList.toggle('active');            });            // Close menu when clicking on a link            navMenu.querySelectorAll('.nav-link').forEach(link => {                link.addEventListener('click', () => {                    mobileMenuToggle.classList.remove('active');                    navMenu.classList.remove('active');                });            });            // Close menu when clicking outside            document.addEventListener('click', function(event) {                if (!mobileMenuToggle.contains(event.target) && !navMenu.contains(event.target)) {                    mobileMenuToggle.classList.remove('active');                    navMenu.classList.remove('active');                }            });        }
+        // Mobile Menu Toggle
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const navMenu = document.querySelector('.nav-menu');
+        if (mobileMenuToggle && navMenu) {
+            mobileMenuToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.classList.toggle('active');
+                navMenu.classList.toggle('active');
+            });
+
+            // Close menu when clicking on a link
+            navMenu.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenuToggle.classList.remove('active');
+                    navMenu.classList.remove('active');
+                });
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!mobileMenuToggle.contains(event.target) && !navMenu.contains(event.target)) {
+                    mobileMenuToggle.classList.remove('active');
+                    navMenu.classList.remove('active');
+                }
+            });
+        }
         // Initialize auth on page load
         window.addEventListener('load', async () => {
             // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
