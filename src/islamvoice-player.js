@@ -266,17 +266,19 @@
         // Render topic cards
         topicsGrid.innerHTML = filterIndicator + Object.values(topics).map(topic => {
             const episodeCount = topic.episodes.length;
-            const seriesProgress = state.seriesProgress[topic.id];
-            const completedCount = seriesProgress ? seriesProgress.completedEpisodes.length : 0;
+            // Count watched episodes in this series
+            const watchedCount = topic.episodes.filter(ep => state.watchedVideos.includes(ep.id)).length;
+            const progressPercent = episodeCount > 0 ? Math.round((watchedCount / episodeCount) * 100) : 0;
+            const isSeriesComplete = watchedCount === episodeCount && episodeCount > 0;
 
             return `
-                <div class="topic-card" onclick="window.tvApp.showTopic('${topic.id}')">
+                <div class="topic-card ${isSeriesComplete ? 'series-complete' : ''}" onclick="window.tvApp.showTopic('${topic.id}')">
                     <div class="topic-card-image">
                         <img src="${topic.thumbnail}" alt="${topic.title}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
                         <div class="topic-fallback-icon"><i class="fas fa-play-circle"></i></div>
-                        ${completedCount > 0 ? `
-                            <div class="topic-card-badge">
-                                ${completedCount}/${episodeCount} تەواو
+                        ${isSeriesComplete ? `
+                            <div class="series-complete-badge">
+                                <i class="fas fa-trophy"></i>
                             </div>
                         ` : ''}
                     </div>
@@ -287,7 +289,13 @@
                         ` : ''}
                         <div class="topic-card-meta">
                             <span><i class="fas fa-play-circle"></i> ${episodeCount} بەش</span>
+                            ${watchedCount > 0 ? `<span class="watched-count"><i class="fas fa-check-circle"></i> ${watchedCount}/${episodeCount}</span>` : ''}
                         </div>
+                        ${watchedCount > 0 ? `
+                            <div class="series-progress-bar">
+                                <div class="series-progress-fill ${isSeriesComplete ? 'complete' : ''}" style="width: ${progressPercent}%;"></div>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
             `;
@@ -366,10 +374,10 @@
 
             // Check if video was fully watched
             const isWatched = state.watchedVideos.includes(episode.id);
+            const watchPercent = progress ? progress.percent : 0;
 
             return `
                 <div class="episode-item ${isCompleted ? 'completed' : ''} ${isWatched ? 'is-watched' : ''} ${lockedClass}" data-video-id="${episode.id}" onclick="${clickHandler}">
-                    ${isWatched ? '<div class="watched-badge"><i class="fas fa-check-circle"></i></div>' : ''}
                     <div class="episode-number">${String(index + 1).padStart(2, '0')}</div>
 
                     <div class="episode-thumbnail">
@@ -381,17 +389,16 @@
                                 <span>داگرتی</span>
                             </div>
                         ` : ''}
+                        ${isWatched ? '<div class="watched-check"><i class="fas fa-check"></i></div>' : ''}
                         <div class="episode-play-overlay">
                             <div class="episode-play-icon">
                                 <i class="fas fa-${locked ? 'lock' : 'play'}"></i>
                             </div>
                             ${episode.duration ? `<span class="episode-duration">${formatEpisodeDuration(episode.duration)}</span>` : ''}
                         </div>
-                        ${progress && progress.percent > 0 && progress.percent < 95 ? `
-                            <div class="episode-progress-bar">
-                                <div class="episode-progress-fill" style="width: ${progress.percent}%;"></div>
-                            </div>
-                        ` : ''}
+                        <div class="episode-progress-bar ${isWatched ? 'completed' : ''}">
+                            <div class="episode-progress-fill" style="width: ${isWatched ? 100 : watchPercent}%;"></div>
+                        </div>
                     </div>
 
                     <div class="episode-info">
