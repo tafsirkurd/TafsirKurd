@@ -717,8 +717,8 @@
         initSidebarNavigation(); // Initialize new sidebar navigation
         setupEventListeners();
         setupKeyboardShortcuts();
-        await loadPlaylist(); // Wait for videos to load
-        renderTopics(); // Render topics on initial load
+        await loadPlaylist(); // Loads cached data instantly, then fetches fresh data
+        // renderTopics is called inside loadPlaylist after data loads
         console.log('✅ تەفسیر TV Player initialized');
     }
 
@@ -1528,16 +1528,44 @@
     async function loadPlaylist() {
         let allVideos = [];
 
-        // 1. Load from localStorage first
+        // 1. Load CACHED data from localStorage IMMEDIATELY (instant display)
+        const cachedVideos = localStorage.getItem('islamvoice_cached_videos');
+        const cachedSeries = localStorage.getItem('islamvoice_cached_series');
+
+        if (cachedVideos) {
+            try {
+                allVideos = JSON.parse(cachedVideos);
+                state.playlist = allVideos;
+                console.log(`⚡ Instant load: ${allVideos.length} videos from cache`);
+
+                // Load cached series data too
+                if (cachedSeries) {
+                    state.seriesData = JSON.parse(cachedSeries);
+                }
+
+                // Render immediately with cached data
+                renderTopics();
+            } catch (e) {
+                console.warn('Cache parse error:', e);
+            }
+        }
+
+        // Also check legacy localStorage
         const localVideos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
-        if (localVideos.length > 0) {
+        if (localVideos.length > 0 && allVideos.length === 0) {
             allVideos = [...localVideos];
+            state.playlist = allVideos;
+            renderTopics();
             console.log(`✅ Loaded ${localVideos.length} videos from localStorage`);
         }
 
-        // 2. Load from Supabase database (if available)
-        // Wait a bit for Supabase to initialize on TV page
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // 2. Load fresh data from Supabase in background (no delay!)
+        // Wait for Supabase to be ready (check every 50ms, max 2 seconds)
+        let waitTime = 0;
+        while (!window.islamvoiceSupabase && waitTime < 2000) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+            waitTime += 50;
+        }
 
         if (window.islamvoiceSupabase) {
             try {
@@ -1604,11 +1632,18 @@
                         };
                     });
 
-                    // Merge with local videos (avoid duplicates by video_url)
-                    const existingVideoIds = new Set(allVideos.map(v => v.videoId));
-                    const newVideos = supabaseVideos.filter(v => !existingVideoIds.has(v.videoId));
+                    // Use fresh Supabase data (replace cached)
+                    allVideos = supabaseVideos;
 
-                    allVideos = [...allVideos, ...newVideos];
+                    // 🚀 CACHE the fresh data for instant loading next time
+                    try {
+                        localStorage.setItem('islamvoice_cached_videos', JSON.stringify(supabaseVideos));
+                        localStorage.setItem('islamvoice_cached_series', JSON.stringify(seriesMap));
+                        localStorage.setItem('islamvoice_cache_time', Date.now().toString());
+                        console.log('💾 Cached videos and series for instant loading');
+                    } catch (e) {
+                        console.warn('Cache save error:', e);
+                    }
                 } else if (error) {
                     console.warn('⚠️ Supabase load skipped:', error.message);
                 }
@@ -1622,8 +1657,8 @@
             state.playlist = allVideos;
             console.log(`📺 Total videos loaded: ${allVideos.length}`);
 
-            // Render videos in the page
-            renderEpisodes();
+            // Render topics (this will show the series/categories)
+            renderTopics();
         } else {
             console.log('⚠️ No videos found. Upload some in the admin panel!');
 
