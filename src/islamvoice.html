@@ -1941,19 +1941,24 @@
         @media (max-width: 968px) {
             .nav-container {
                 padding: 0.75rem 1rem;
-                flex-wrap: wrap;
-                gap: 0.5rem;
+                flex-wrap: nowrap;
+                gap: 0.75rem;
             }
 
             .mobile-menu-toggle {
                 display: flex;
-                order: 1;
+                order: 3;
             }
 
             .nav-logo {
+                order: 1;
+                flex: 0 0 auto;
+            }
+
+            .nav-actions {
                 order: 2;
                 flex: 1;
-                justify-content: flex-end;
+                justify-content: flex-start;
             }
 
             .nav-menu {
@@ -1993,12 +1998,6 @@
                 background: var(--card-bg);
                 opacity: 1;
                 padding-right: 2rem;
-            }
-
-            .nav-actions {
-                order: 3;
-                gap: 0.5rem;
-                flex-wrap: nowrap;
             }
 
             /* Hide search input on tablets/mobile, show search button */
@@ -3458,9 +3457,6 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <button class="sidebar-toggle" id="sidebarToggle" aria-label="گۆڕینا لایکێشە">
-                    <i class="fas fa-bars"></i>
-                </button>
                 <h1 class="sidebar-title">دەنگێ ئیسلامێ</h1>
             </div>
 
