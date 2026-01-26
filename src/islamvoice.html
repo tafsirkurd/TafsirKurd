@@ -1382,54 +1382,13 @@
 
         /* ===== WATCHED VIDEO TRACKING STYLES ===== */
 
-        /* Small checkmark on thumbnail corner (for completed videos) */
-        .watched-check {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            width: 22px;
-            height: 22px;
-            background: linear-gradient(135deg, #10b981, #059669);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 10px;
-            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.5);
-            z-index: 10;
-            animation: checkPop 0.3s ease;
+        /* Netflix-style: Fade watched videos */
+        .is-watched {
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
         }
 
-        @keyframes checkPop {
-            0% { transform: scale(0); }
-            60% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-
-        /* YouTube-style progress bar at bottom of thumbnail */
-        .episode-progress-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.3);
-            z-index: 5;
-        }
-
-        .episode-progress-fill {
-            height: 100%;
-            background: #e53935;
-            transition: width 0.3s ease;
-        }
-
-        .episode-progress-bar.completed .episode-progress-fill {
-            background: linear-gradient(90deg, #10b981, #059669);
-        }
-
-        /* Dim watched videos slightly */
-        .is-watched .episode-thumbnail img {
+        .is-watched:hover {
             opacity: 0.85;
         }
 
@@ -1437,71 +1396,34 @@
             color: var(--text-muted);
         }
 
-        /* ===== SERIES PROGRESS STYLES ===== */
-
-        /* Progress bar under series card */
-        .series-progress-bar {
-            width: 100%;
-            height: 4px;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 2px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-
-        .series-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #3b82f6, #2563eb);
-            border-radius: 2px;
-            transition: width 0.5s ease;
-        }
-
-        .series-progress-fill.complete {
-            background: linear-gradient(90deg, #10b981, #059669);
-        }
-
-        [data-theme="dark"] .series-progress-bar {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        /* Watched count in meta */
-        .watched-count {
-            color: #10b981 !important;
-            font-weight: 600;
-        }
-
-        /* Trophy badge for completed series */
-        .series-complete-badge {
+        /* Netflix-style dark overlay with WATCHED text */
+        .watched-overlay {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            border-radius: 50%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.5);
-            z-index: 10;
-            animation: trophyPop 0.5s ease;
-        }
-
-        @keyframes trophyPop {
-            0% { transform: scale(0) rotate(-30deg); }
-            60% { transform: scale(1.2) rotate(10deg); }
-            100% { transform: scale(1) rotate(0deg); }
-        }
-
-        .series-complete .topic-card-image::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
-            pointer-events: none;
+            z-index: 8;
             border-radius: inherit;
+        }
+
+        .watched-overlay span {
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 6px 12px;
+            border: 2px solid white;
+            border-radius: 4px;
+        }
+
+        .is-watched:hover .watched-overlay {
+            opacity: 0.7;
         }
 
         .play-overlay {

@@ -268,19 +268,12 @@
             const episodeCount = topic.episodes.length;
             // Count watched episodes in this series
             const watchedCount = topic.episodes.filter(ep => state.watchedVideos.includes(ep.id)).length;
-            const progressPercent = episodeCount > 0 ? Math.round((watchedCount / episodeCount) * 100) : 0;
-            const isSeriesComplete = watchedCount === episodeCount && episodeCount > 0;
 
             return `
-                <div class="topic-card ${isSeriesComplete ? 'series-complete' : ''}" onclick="window.tvApp.showTopic('${topic.id}')">
+                <div class="topic-card" onclick="window.tvApp.showTopic('${topic.id}')">
                     <div class="topic-card-image">
                         <img src="${topic.thumbnail}" alt="${topic.title}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
                         <div class="topic-fallback-icon"><i class="fas fa-play-circle"></i></div>
-                        ${isSeriesComplete ? `
-                            <div class="series-complete-badge">
-                                <i class="fas fa-trophy"></i>
-                            </div>
-                        ` : ''}
                     </div>
                     <div class="topic-card-content">
                         <h3 class="topic-card-title">${topic.title}</h3>
@@ -291,11 +284,6 @@
                             <span><i class="fas fa-play-circle"></i> ${episodeCount} بەش</span>
                             ${watchedCount > 0 ? `<span class="watched-count"><i class="fas fa-check-circle"></i> ${watchedCount}/${episodeCount}</span>` : ''}
                         </div>
-                        ${watchedCount > 0 ? `
-                            <div class="series-progress-bar">
-                                <div class="series-progress-fill ${isSeriesComplete ? 'complete' : ''}" style="width: ${progressPercent}%;"></div>
-                            </div>
-                        ` : ''}
                     </div>
                 </div>
             `;
@@ -389,15 +377,12 @@
                                 <span>داگرتی</span>
                             </div>
                         ` : ''}
-                        ${isWatched ? '<div class="watched-check"><i class="fas fa-check"></i></div>' : ''}
+                        ${isWatched ? '<div class="watched-overlay"><span>WATCHED</span></div>' : ''}
                         <div class="episode-play-overlay">
                             <div class="episode-play-icon">
                                 <i class="fas fa-${locked ? 'lock' : 'play'}"></i>
                             </div>
                             ${episode.duration ? `<span class="episode-duration">${formatEpisodeDuration(episode.duration)}</span>` : ''}
-                        </div>
-                        <div class="episode-progress-bar ${isWatched ? 'completed' : ''}">
-                            <div class="episode-progress-fill" style="width: ${isWatched ? 100 : watchPercent}%;"></div>
                         </div>
                     </div>
 
