@@ -580,6 +580,11 @@
             transform: scale(1.1);
         }
 
+        /* Mobile search button - hidden by default, shown on mobile */
+        .mobile-search-btn {
+            display: none;
+        }
+
         .notification-badge {
             position: absolute;
             top: -5px;
@@ -1916,24 +1921,28 @@
 
         @media (max-width: 968px) {
             .nav-container {
-                padding: 1rem;
+                padding: 0.75rem 1rem;
+                flex-wrap: wrap;
+                gap: 0.5rem;
             }
 
             .mobile-menu-toggle {
                 display: flex;
-                order: 2;
+                order: 1;
             }
 
             .nav-logo {
-                order: 1;
+                order: 2;
+                flex: 1;
+                justify-content: flex-end;
             }
 
             .nav-menu {
                 position: fixed;
-                top: 70px;
+                top: 60px;
                 right: -100%;
                 width: 280px;
-                height: calc(100vh - 70px);
+                height: calc(100vh - 60px);
                 background: var(--bg);
                 border-left: 1px solid var(--border);
                 flex-direction: column;
@@ -1969,21 +1978,17 @@
 
             .nav-actions {
                 order: 3;
-                gap: 0.75rem;
+                gap: 0.5rem;
+                flex-wrap: nowrap;
             }
 
+            /* Hide search input on tablets/mobile, show search button */
             .nav-search-container {
-                order: 4;
-                width: 100%;
-                margin-top: 0.75rem;
+                display: none;
             }
 
-            .nav-search-input {
-                width: 100%;
-            }
-
-            .nav-search-input:focus {
-                width: 100%;
+            .mobile-search-btn {
+                display: flex;
             }
         }
 
@@ -1993,7 +1998,7 @@
             }
 
             .nav-logo span {
-                font-size: 1.2rem;
+                font-size: 1.1rem;
             }
 
             .nav-logo img {
@@ -2004,6 +2009,11 @@
                 width: 36px;
                 height: 36px;
                 font-size: 0.9rem;
+            }
+
+            /* Hide search in nav on mobile - use inline search toggle */
+            .nav-search-container {
+                display: none !important;
             }
 
             .notification-badge {
@@ -2022,6 +2032,7 @@
 
             .content {
                 padding: 1rem;
+                padding-top: 1.5rem;
             }
 
             .episodes-grid {
@@ -2936,7 +2947,7 @@
         }
 
         .footer-social-icons a:hover {
-            color: var(--primary);
+            color: #1d4ed8;
             transform: translateY(-3px);
         }
 
@@ -3000,7 +3011,7 @@
         }
 
         .footer-link:hover {
-            color: var(--primary);
+            color: #1d4ed8;
             transform: translateX(-5px);
         }
 
@@ -3050,7 +3061,7 @@
         }
 
         .footer-meta-link:hover {
-            color: var(--primary);
+            color: #1d4ed8;
         }
 
         @media (max-width: 1024px) {
@@ -3341,6 +3352,10 @@
 <!-- Mobile Menu Toggle -->            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">                <span></span>                <span></span>                <span></span>            </button>
 
             <div class="nav-actions">
+                <!-- Mobile Search Button (visible only on mobile) -->
+                <button class="icon-btn mobile-search-btn" id="mobileSearchBtn" aria-label="گەڕان" title="گەڕان" onclick="openSearchModal()">
+                    <i class="fas fa-search"></i>
+                </button>
                 <div class="nav-search-container">
                     <i class="fas fa-search search-icon"></i>
                     <input type="text" class="nav-search-input" id="navSearchInput" placeholder="بگەڕێ بۆ بەش، زنجیرە، یان بابەت..." autocomplete="off" aria-label="گەڕان">
@@ -3734,7 +3749,7 @@
     </div> <!-- End .islamvoice-container -->
 
     <!-- Search Modal -->
-    <div class="modal" id="searchModal">
+    <div class="modal" id="searchModal" onclick="if(event.target === this) closeSearchModal()">
         <div class="search-container">
             <input
                 type="text"
@@ -4281,6 +4296,26 @@
         // Close auth modal
         function closeAuthModal() {
             document.getElementById('authModal').classList.remove('active');
+        }
+
+        // Open search modal
+        function openSearchModal() {
+            const modal = document.getElementById('searchModal');
+            if (modal) {
+                modal.classList.add('active');
+                const input = document.getElementById('searchInput');
+                if (input) {
+                    setTimeout(() => input.focus(), 100);
+                }
+            }
+        }
+
+        // Close search modal
+        function closeSearchModal() {
+            const modal = document.getElementById('searchModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
         }
 
         // Google Sign In
