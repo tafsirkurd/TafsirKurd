@@ -247,15 +247,21 @@
                     episodes: [],
                     // Use series thumbnail first, then episode thumbnail as fallback
                     thumbnail: episode.seriesThumbnail || episode.thumbnail || '',
-                    // Track series created date for sorting
+                    // Track series order and created date for sorting
+                    displayOrder: episode.seriesDisplayOrder ?? 999,
                     createdAt: episode.seriesCreatedAt || episode.created_at || ''
                 };
             }
             topics[topicKey].episodes.push(episode);
         });
 
-        // Sort topics by createdAt (newest first - will appear on right in RTL)
+        // Sort topics by display_order first, then by createdAt
         const sortedTopics = Object.values(topics).sort((a, b) => {
+            // First sort by display_order (lower = first)
+            if (a.displayOrder !== b.displayOrder) {
+                return a.displayOrder - b.displayOrder;
+            }
+            // Then by createdAt (newest first)
             return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
@@ -1634,7 +1640,9 @@
                             description: s.description_ku,
                             thumbnail: s.thumbnail_url,
                             categoryId: s.category_id,
-                            speaker: s.speaker
+                            speaker: s.speaker,
+                            displayOrder: s.display_order ?? 999,
+                            createdAt: s.created_at
                         };
                     });
                     state.seriesData = seriesMap;
@@ -1669,6 +1677,8 @@
                             seriesThumbnail: seriesInfo.thumbnail,
                             seriesCategoryId: seriesInfo.categoryId,
                             seriesSpeaker: seriesInfo.speaker,
+                            seriesDisplayOrder: seriesInfo.displayOrder,
+                            seriesCreatedAt: seriesInfo.createdAt,
                             category: v.category,
                             episodeNumber: v.episode_number || 0,
                             duration: v.duration || null,

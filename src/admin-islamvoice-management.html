@@ -73,6 +73,69 @@
             transform: translateY(-2px);
         }
 
+        .series-card.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .series-card.drag-over {
+            border: 2px dashed var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .series-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: var(--bg-surface);
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+        }
+
+        .drag-hint {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .drag-hint i {
+            width: 16px;
+            height: 16px;
+        }
+
+        .series-card .drag-handle {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 24px;
+            height: 24px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: grab;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .series-card:hover .drag-handle {
+            opacity: 1;
+        }
+
+        .series-card .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .series-thumbnail {
+            position: relative;
+        }
+
         .series-thumbnail {
             width: 100%;
             height: 135px;
@@ -892,6 +955,8 @@
         }
 
         // Load all series
+        let allSeriesData = [];
+
         async function loadAllSeries() {
             const supabase = window.adminAuth.getSupabase();
             if (!supabase) return;
@@ -900,10 +965,12 @@
                 const { data: series, error } = await supabase
                     .from('islamvoice_series')
                     .select('*')
+                    .order('display_order', { ascending: true, nullsFirst: false })
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
 
+                allSeriesData = series || [];
                 const list = document.getElementById('all-series-list');
 
                 if (!series || series.length === 0) {
@@ -924,12 +991,34 @@
                     return;
                 }
 
-                list.innerHTML = series.map(s => `
-                    <div class="series-card" onclick="viewSeriesEpisodes('${s.id}', '${s.name_ku}')">
+                // Add header with drag hint
+                let html = `
+                    <div class="series-list-header" style="grid-column: 1 / -1;">
+                        <div class="drag-hint">
+                            <i data-lucide="grip-vertical"></i>
+                            <span>Drag series to reorder</span>
+                        </div>
+                        <span style="font-size: 13px; color: var(--text-tertiary);">${series.length} series</span>
+                    </div>
+                `;
+
+                html += series.map((s, index) => `
+                    <div class="series-card"
+                         draggable="true"
+                         data-series-id="${s.id}"
+                         data-index="${index}"
+                         ondragstart="handleDragStart(event)"
+                         ondragover="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)"
+                         ondrop="handleDrop(event)"
+                         ondragend="handleDragEnd(event)">
                         <div class="series-thumbnail">
+                            <div class="drag-handle" onmousedown="event.stopPropagation()">
+                                <i data-lucide="grip-vertical"></i>
+                            </div>
                             ${s.thumbnail_url && s.thumbnail_url !== 'undefined' ? `<img src="${s.thumbnail_url}" alt="${s.name_ku}">` : '<i data-lucide="image"></i>'}
                         </div>
-                        <div class="series-card-body">
+                        <div class="series-card-body" onclick="viewSeriesEpisodes('${s.id}', '${s.name_ku}')">
                             <div class="series-card-title">${s.name_ku}</div>
                             <div class="series-card-meta">
                                 <span>${s.speaker || ''}</span>
@@ -946,9 +1035,97 @@
                     </div>
                 `).join('');
 
+                list.innerHTML = html;
                 lucide.createIcons();
             } catch (error) {
                 console.error('Error loading series:', error);
+            }
+        }
+
+        // Drag and drop handlers
+        let draggedItem = null;
+
+        function handleDragStart(e) {
+            draggedItem = e.target.closest('.series-card');
+            draggedItem.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', draggedItem.dataset.seriesId);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const card = e.target.closest('.series-card');
+            if (card && card !== draggedItem) {
+                card.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            const card = e.target.closest('.series-card');
+            if (card) {
+                card.classList.remove('drag-over');
+            }
+        }
+
+        function handleDragEnd(e) {
+            if (draggedItem) {
+                draggedItem.classList.remove('dragging');
+            }
+            document.querySelectorAll('.series-card').forEach(card => {
+                card.classList.remove('drag-over');
+            });
+            draggedItem = null;
+        }
+
+        async function handleDrop(e) {
+            e.preventDefault();
+            const targetCard = e.target.closest('.series-card');
+            if (!targetCard || targetCard === draggedItem) return;
+
+            targetCard.classList.remove('drag-over');
+
+            const draggedId = draggedItem.dataset.seriesId;
+            const targetId = targetCard.dataset.seriesId;
+
+            // Reorder in the array
+            const draggedIndex = allSeriesData.findIndex(s => s.id === draggedId);
+            const targetIndex = allSeriesData.findIndex(s => s.id === targetId);
+
+            if (draggedIndex === -1 || targetIndex === -1) return;
+
+            // Remove dragged item and insert at target position
+            const [draggedSeries] = allSeriesData.splice(draggedIndex, 1);
+            allSeriesData.splice(targetIndex, 0, draggedSeries);
+
+            // Update display_order in database
+            await saveSeriesOrder();
+
+            // Re-render
+            loadAllSeries();
+        }
+
+        async function saveSeriesOrder() {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+
+            try {
+                // Update each series with its new display_order
+                const updates = allSeriesData.map((series, index) => ({
+                    id: series.id,
+                    display_order: index
+                }));
+
+                for (const update of updates) {
+                    await supabase
+                        .from('islamvoice_series')
+                        .update({ display_order: update.display_order })
+                        .eq('id', update.id);
+                }
+
+                console.log('✅ Series order saved');
+            } catch (error) {
+                console.error('Error saving series order:', error);
             }
         }
 
