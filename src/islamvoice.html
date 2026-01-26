@@ -1885,9 +1885,9 @@
         /* Mobile Hamburger Menu */
         .mobile-menu-toggle {
             display: none;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #ffffff;
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #111827;
             width: 40px;
             height: 40px;
             border-radius: 8px;
@@ -1902,9 +1902,28 @@
         .mobile-menu-toggle span {
             width: 20px;
             height: 2px;
-            background: #ffffff;
+            background: #111827;
             border-radius: 2px;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+        }
+
+        /* Dark mode hamburger styles */
+        [data-theme="dark"] .mobile-menu-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="dark"] .mobile-menu-toggle span {
+            background: #ffffff;
+        }
+
+        .mobile-menu-toggle:hover {
+            background: rgba(0, 0, 0, 0.1);
+            transform: scale(1.05);
+        }
+
+        [data-theme="dark"] .mobile-menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .mobile-menu-toggle.active span:nth-child(1) {
@@ -2947,8 +2966,12 @@
         }
 
         .footer-social-icons a:hover {
-            color: #1d4ed8;
+            color: #111827;
             transform: translateY(-3px);
+        }
+
+        [data-theme="dark"] .footer-social-icons a:hover {
+            color: #ffffff;
         }
 
         .footer-section {
@@ -3011,8 +3034,12 @@
         }
 
         .footer-link:hover {
-            color: #1d4ed8;
+            color: #111827;
             transform: translateX(-5px);
+        }
+
+        [data-theme="dark"] .footer-link:hover {
+            color: #ffffff;
         }
 
         .footer-bottom {
@@ -3061,7 +3088,11 @@
         }
 
         .footer-meta-link:hover {
-            color: #1d4ed8;
+            color: #111827;
+        }
+
+        [data-theme="dark"] .footer-meta-link:hover {
+            color: #ffffff;
         }
 
         @media (max-width: 1024px) {
