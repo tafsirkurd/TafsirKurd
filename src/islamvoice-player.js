@@ -2574,6 +2574,16 @@
             };
             localStorage.setItem('watchProgress', JSON.stringify(state.watchProgress));
 
+            // Add to watched videos list (Netflix-style tracking)
+            if (!state.watchedVideos.includes(episodeId)) {
+                state.watchedVideos.push(episodeId);
+                localStorage.setItem('watchedVideos', JSON.stringify(state.watchedVideos));
+                console.log('✅ Video marked as watched:', episodeId);
+
+                // Update the UI to show watched indicator
+                updateWatchedIndicators();
+            }
+
             // Remove from continueWatching since it's completed
             state.continueWatching = state.continueWatching.filter(item => item.episodeId !== episodeId);
             localStorage.setItem('continueWatching', JSON.stringify(state.continueWatching));
