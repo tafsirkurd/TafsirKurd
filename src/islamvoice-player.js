@@ -1319,12 +1319,13 @@
         document.querySelectorAll('.episode-item, .topic-card, .video-card').forEach(card => {
             const videoId = card.dataset.videoId || card.dataset.episodeId || card.dataset.id;
             if (videoId && state.watchedVideos.includes(videoId)) {
-                if (!card.querySelector('.watched-badge')) {
-                    const badge = document.createElement('div');
-                    badge.className = 'watched-badge';
-                    badge.innerHTML = '<i class="fas fa-check-circle"></i>';
-                    badge.title = 'تەواو کراوە';
-                    card.appendChild(badge);
+                // Add Netflix-style watched overlay to thumbnail
+                const thumbnail = card.querySelector('.episode-thumbnail');
+                if (thumbnail && !thumbnail.querySelector('.watched-overlay')) {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'watched-overlay';
+                    overlay.innerHTML = '<span>WATCHED</span>';
+                    thumbnail.appendChild(overlay);
                 }
                 card.classList.add('is-watched');
             }
@@ -3539,7 +3540,7 @@
 
     // Supabase Sync
     async function syncToSupabase(dataType, data) {
-        if (typeof supabase === 'undefined') return;
+        if (typeof supabase === 'undefined' || !supabase || typeof supabase.from !== 'function') return;
 
         const user = JSON.parse(localStorage.getItem('user') || 'null');
         if (!user) return;
