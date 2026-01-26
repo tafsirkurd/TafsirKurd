@@ -2147,18 +2147,11 @@
                 return;
             }
 
-            // Check if conversion is needed (MOV, AVI, etc.)
+            // Check if file needs conversion (MOV, AVI, etc.) - must be MP4
             if (needsConversion(file)) {
-                try {
-                    uploadPlaceholder.style.display = 'none';
-                    file = await convertToMP4(file);
-                    console.log('Converted to MP4:', file.name);
-                } catch (err) {
-                    console.error('Conversion failed:', err);
-                    alert('MOV Conversion: ' + err.message + '\n\nPlease convert your video to MP4 using:\nhttps://cloudconvert.com/mp4-converter');
-                    uploadPlaceholder.style.display = 'block';
-                    return;
-                }
+                const ext = file.name.split('.').pop().toUpperCase();
+                alert(`${ext} files are not supported.\n\nPlease convert to MP4 first using:\nhttps://cloudconvert.com/mp4-converter\n\nOr on iPhone: Use "Files" app to save as MP4`);
+                return;
             }
 
             // Load local file into thumbnail picker immediately (no CORS issues!)
