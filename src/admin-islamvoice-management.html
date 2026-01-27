@@ -718,7 +718,29 @@
                                 <div id="uploadPlaceholder">
                                     <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: var(--text-tertiary); margin-bottom: 8px;"></i>
                                     <p style="margin: 0; color: var(--text-secondary); font-size: 14px;">Drag & drop video or <span style="color: var(--accent-blue); cursor: pointer;" onclick="document.getElementById('videoFileInput').click()">browse</span></p>
-                                    <small style="color: var(--text-tertiary);">MP4, WebM, MOV (max 500MB)</small>
+                                    <small style="color: var(--text-tertiary);">MP4, WebM (max 500MB)</small>
+                                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-light);">
+                                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; justify-content: center;">
+                                            <input type="checkbox" id="compressVideo" checked style="width: 16px; height: 16px;">
+                                            <span style="font-size: 13px; color: var(--text-secondary);">Compress video (saves storage)</span>
+                                        </label>
+                                        <select id="compressionQuality" style="margin-top: 8px; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-light); background: var(--bg-tertiary); color: var(--text-primary); font-size: 12px;">
+                                            <option value="low">Low quality (~70% smaller)</option>
+                                            <option value="medium" selected>Medium quality (~50% smaller)</option>
+                                            <option value="high">High quality (~30% smaller)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="compressionProgressUI" style="display: none;">
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                        <i class="fas fa-compress-alt" style="color: var(--accent-purple);"></i>
+                                        <span style="flex: 1; text-align: left; font-size: 14px; color: var(--text-primary);">Compressing video...</span>
+                                        <span id="compressionPercent" style="font-size: 14px; font-weight: 600; color: var(--accent-purple);">0%</span>
+                                    </div>
+                                    <div style="background: var(--bg-tertiary); border-radius: 4px; height: 8px; overflow: hidden;">
+                                        <div id="compressionProgressBar" style="background: var(--accent-purple); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                                    </div>
+                                    <small id="compressionStatus" style="color: var(--text-secondary); margin-top: 6px; display: block;">Processing...</small>
                                 </div>
                                 <div id="uploadProgress" style="display: none;">
                                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
@@ -1470,6 +1492,7 @@
             document.getElementById('uploadPlaceholder').style.display = 'block';
             document.getElementById('uploadProgress').style.display = 'none';
             document.getElementById('uploadComplete').style.display = 'none';
+            document.getElementById('compressionProgressUI').style.display = 'none';
             document.getElementById('thumbnailPreviewSection').style.display = 'none';
             document.getElementById('capturedThumbnail').style.display = 'none';
 
@@ -2316,6 +2339,112 @@
             }
         }
 
+        // Compress video using canvas and MediaRecorder
+        async function compressVideo(file, quality = 'medium') {
+            return new Promise((resolve, reject) => {
+                const compressionUI = document.getElementById('compressionProgressUI');
+                const compressionPercent = document.getElementById('compressionPercent');
+                const compressionProgressBar = document.getElementById('compressionProgressBar');
+                const compressionStatus = document.getElementById('compressionStatus');
+
+                compressionUI.style.display = 'block';
+                compressionStatus.textContent = 'Loading video...';
+
+                const video = document.createElement('video');
+                video.muted = true;
+                video.playsInline = true;
+
+                const qualitySettings = {
+                    low: { scale: 0.5, bitrate: 1000000 },      // 720p-ish, 1Mbps
+                    medium: { scale: 0.7, bitrate: 2000000 },   // ~900p, 2Mbps
+                    high: { scale: 0.85, bitrate: 3500000 }     // ~1000p, 3.5Mbps
+                };
+
+                const settings = qualitySettings[quality] || qualitySettings.medium;
+
+                video.onloadedmetadata = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    // Scale down resolution
+                    canvas.width = Math.round(video.videoWidth * settings.scale);
+                    canvas.height = Math.round(video.videoHeight * settings.scale);
+
+                    compressionStatus.textContent = `Compressing ${video.videoWidth}x${video.videoHeight} → ${canvas.width}x${canvas.height}...`;
+
+                    const stream = canvas.captureStream(30);
+                    const chunks = [];
+
+                    // Try VP9 first (better compression), fallback to VP8
+                    let mimeType = 'video/webm;codecs=vp9';
+                    if (!MediaRecorder.isTypeSupported(mimeType)) {
+                        mimeType = 'video/webm;codecs=vp8';
+                    }
+                    if (!MediaRecorder.isTypeSupported(mimeType)) {
+                        mimeType = 'video/webm';
+                    }
+
+                    const recorder = new MediaRecorder(stream, {
+                        mimeType,
+                        videoBitsPerSecond: settings.bitrate
+                    });
+
+                    recorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) chunks.push(e.data);
+                    };
+
+                    recorder.onstop = () => {
+                        compressionUI.style.display = 'none';
+                        const blob = new Blob(chunks, { type: 'video/webm' });
+                        const compressedName = file.name.replace(/\.[^/.]+$/, '_compressed.webm');
+                        const compressedFile = new File([blob], compressedName, { type: 'video/webm' });
+
+                        console.log(`Compression: ${(file.size / 1024 / 1024).toFixed(1)}MB → ${(compressedFile.size / 1024 / 1024).toFixed(1)}MB`);
+                        resolve(compressedFile);
+                    };
+
+                    recorder.onerror = (e) => {
+                        compressionUI.style.display = 'none';
+                        reject(new Error('Compression failed: ' + e.error));
+                    };
+
+                    recorder.start();
+
+                    const duration = video.duration;
+                    let currentTime = 0;
+
+                    function drawFrame() {
+                        if (currentTime >= duration) {
+                            recorder.stop();
+                            return;
+                        }
+
+                        video.currentTime = currentTime;
+                    }
+
+                    video.onseeked = () => {
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        currentTime += 1 / 30; // 30fps
+
+                        const progress = Math.round((currentTime / duration) * 100);
+                        compressionPercent.textContent = progress + '%';
+                        compressionProgressBar.style.width = progress + '%';
+
+                        requestAnimationFrame(drawFrame);
+                    };
+
+                    video.currentTime = 0;
+                };
+
+                video.onerror = () => {
+                    compressionUI.style.display = 'none';
+                    reject(new Error('Failed to load video for compression'));
+                };
+
+                video.src = URL.createObjectURL(file);
+            });
+        }
+
         // Main upload function
         async function handleVideoUpload(file) {
             // Validate file size (500MB max)
@@ -2339,11 +2468,28 @@
             // Auto-detect video duration
             detectVideoDuration(localVideoUrl);
 
+            // Check if compression is enabled
+            const compressCheckbox = document.getElementById('compressVideo');
+            const qualitySelect = document.getElementById('compressionQuality');
+            let fileToUpload = file;
+
+            if (compressCheckbox && compressCheckbox.checked) {
+                try {
+                    uploadPlaceholder.style.display = 'none';
+                    const quality = qualitySelect ? qualitySelect.value : 'medium';
+                    fileToUpload = await compressVideo(file, quality);
+                    console.log(`Original: ${(file.size / 1024 / 1024).toFixed(1)}MB, Compressed: ${(fileToUpload.size / 1024 / 1024).toFixed(1)}MB`);
+                } catch (err) {
+                    console.warn('Compression failed, uploading original:', err);
+                    fileToUpload = file;
+                }
+            }
+
             // Show progress UI
             uploadPlaceholder.style.display = 'none';
             uploadComplete.style.display = 'none';
             uploadProgress.style.display = 'block';
-            uploadFileName.textContent = file.name;
+            uploadFileName.textContent = fileToUpload.name;
             uploadProgressBar.style.width = '0%';
             uploadPercent.textContent = '0%';
             uploadStatus.textContent = 'Getting upload URL...';
@@ -2363,8 +2509,8 @@
                         'Authorization': `Bearer ${adminToken}`
                     },
                     body: JSON.stringify({
-                        filename: file.name,
-                        contentType: file.type,
+                        filename: fileToUpload.name,
+                        contentType: fileToUpload.type,
                         folder: 'tv-videos'
                     })
                 });
@@ -2379,7 +2525,7 @@
                 // Upload to S3 with progress
                 uploadStatus.textContent = 'Uploading to S3...';
 
-                await uploadToS3(file, uploadUrl, (progress) => {
+                await uploadToS3(fileToUpload, uploadUrl, (progress) => {
                     uploadProgressBar.style.width = progress + '%';
                     uploadPercent.textContent = progress + '%';
                 });
