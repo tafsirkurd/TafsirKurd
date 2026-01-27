@@ -1,9 +1,9 @@
 // Cloudflare Pages Function - Enhanced Admin Authentication
 // Device locking, heartbeat tracking, permission checks
-// v1.1 - Auto-unlock on logout
+// v1.2 - Using bcrypt-ts for Cloudflare Workers compatibility
 
 import { createClient } from '@supabase/supabase-js';
-import bcrypt from 'bcryptjs';
+import { compare } from 'bcrypt-ts';
 
 export async function onRequest(context) {
     const { request, env } = context;
@@ -281,8 +281,8 @@ export async function onRequest(context) {
             }
         }
 
-        // 6. Verify password
-        const passwordMatch = await bcrypt.compare(password, user.password_hash);
+        // 6. Verify password using bcrypt-ts (compatible with Cloudflare Workers)
+        const passwordMatch = await compare(password, user.password_hash);
 
         if (!passwordMatch) {
             const newFailedAttempts = (user.failed_attempts || 0) + 1;
