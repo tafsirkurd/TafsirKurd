@@ -356,6 +356,30 @@
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
 
+    // Format time ago (for comments)
+    function formatTimeAgo(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'ئێستا';
+        if (diffMins < 60) return diffMins + ' خولەک پێش';
+        if (diffHours < 24) return diffHours + ' کاتژمێر پێش';
+        if (diffDays < 7) return diffDays + ' ڕۆژ پێش';
+        if (diffDays < 30) return Math.floor(diffDays / 7) + ' هەفتە پێش';
+        return date.toLocaleDateString('ku');
+    }
+
+    // Escape HTML for security
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     // Render episodes list (generic function used by multiple views)
     function renderEpisodesList(episodes, containerId) {
         const container = document.getElementById(containerId);
@@ -420,6 +444,11 @@
                     </div>
 
                     <div class="episode-actions" onclick="event.stopPropagation()">
+                        <button class="episode-action-btn"
+                                onclick="window.tvApp.shareEpisode('${episode.id}', '${episode.title.replace(/'/g, "\\'")}')"
+                                title="پارڤەکرن">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
                         <button class="episode-action-btn ${isBookmarked ? 'active' : ''}"
                                 onclick="window.tvApp.toggleBookmark('${episode.id}')"
                                 title="${isBookmarked ? 'حەزفکرن ژ خەزنکراوان' : 'خەزنکرن'}">
@@ -509,6 +538,44 @@
         }
     }
 
+    // Check if user is authenticated
+    function isUserAuthenticated() {
+        const user = localStorage.getItem('user');
+        const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+        return user && isAuthenticated;
+    }
+
+    // Redirect to login with return URL
+    function redirectToLogin() {
+        sessionStorage.setItem('login_redirect_destination', '/islamvoice.html');
+        window.location.href = '/login.html?redirect=/islamvoice.html';
+    }
+
+    // Require login for action - returns true if logged in, redirects otherwise
+    function requireLogin(actionName) {
+        if (!isUserAuthenticated()) {
+            showNotification(`تکایە بۆ ${actionName} پێشتر بچۆ ژوورەوە`);
+            setTimeout(() => {
+                redirectToLogin();
+            }, 1500);
+            return false;
+        }
+        return true;
+    }
+
+    // Get current user ID
+    function getCurrentUserId() {
+        const user = localStorage.getItem('user');
+        if (user) {
+            try {
+                return JSON.parse(user).id;
+            } catch (e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
     // Expose functions to window for onclick handlers
     window.tvApp = {
         showTopic,
@@ -521,8 +588,392 @@
                 btn.classList.toggle('active', isNowBookmarked);
             }
             updateBadgeCounts();
+        },
+        // Toggle like on episode
+        toggleLike: async function(episodeId) {
+            if (!requireLogin('حەزکرن')) return;
+
+            const userId = getCurrentUserId();
+            if (!userId) return;
+
+            try {
+                if (!window.islamvoiceSupabase) {
+                    showNotification('هەڵە: پەیوەندی ب سیستەمێ نییە');
+                    return;
+                }
+
+                // Check if already liked
+                const { data: existingLike } = await window.islamvoiceSupabase
+                    .from('islamvoice_likes')
+                    .select('id')
+                    .eq('episode_id', episodeId)
+                    .eq('user_id', userId)
+                    .single();
+
+                const btn = document.querySelector(`button[onclick*="toggleLike('${episodeId}')"]`);
+
+                if (existingLike) {
+                    // Unlike
+                    await window.islamvoiceSupabase
+                        .from('islamvoice_likes')
+                        .delete()
+                        .eq('episode_id', episodeId)
+                        .eq('user_id', userId);
+
+                    // Update like count
+                    const { data: episode } = await window.islamvoiceSupabase
+                        .from('islamvoice_episodes')
+                        .select('like_count')
+                        .eq('id', episodeId)
+                        .single();
+
+                    await window.islamvoiceSupabase
+                        .from('islamvoice_episodes')
+                        .update({ like_count: Math.max(0, (episode?.like_count || 1) - 1) })
+                        .eq('id', episodeId);
+
+                    if (btn) {
+                        btn.classList.remove('active');
+                        const count = btn.querySelector('.action-count');
+                        if (count) {
+                            const newCount = parseInt(count.textContent) - 1;
+                            if (newCount <= 0) {
+                                count.remove();
+                            } else {
+                                count.textContent = newCount;
+                            }
+                        }
+                    }
+                    showNotification('حەزکرن هاتە لابردن');
+                } else {
+                    // Like
+                    await window.islamvoiceSupabase
+                        .from('islamvoice_likes')
+                        .insert({ episode_id: episodeId, user_id: userId });
+
+                    // Update like count
+                    const { data: episode } = await window.islamvoiceSupabase
+                        .from('islamvoice_episodes')
+                        .select('like_count')
+                        .eq('id', episodeId)
+                        .single();
+
+                    await window.islamvoiceSupabase
+                        .from('islamvoice_episodes')
+                        .update({ like_count: (episode?.like_count || 0) + 1 })
+                        .eq('id', episodeId);
+
+                    if (btn) {
+                        btn.classList.add('active');
+                        let count = btn.querySelector('.action-count');
+                        if (count) {
+                            count.textContent = parseInt(count.textContent) + 1;
+                        } else {
+                            count = document.createElement('span');
+                            count.className = 'action-count';
+                            count.textContent = '1';
+                            btn.appendChild(count);
+                        }
+                    }
+                    showNotification('❤️ حەزکرا!');
+                }
+            } catch (err) {
+                console.error('Like error:', err);
+                showNotification('هەڵەیەک ڕوویدا');
+            }
+        },
+        // Show comments modal
+        showComments: async function(episodeId, episodeTitle) {
+            window.tvApp.openCommentsModal(episodeId, episodeTitle);
+        },
+        // Open comments modal
+        openCommentsModal: async function(episodeId, episodeTitle) {
+            // Create modal if doesn't exist
+            let modal = document.getElementById('commentsModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'commentsModal';
+                modal.className = 'comments-modal';
+                modal.innerHTML = `
+                    <div class="comments-modal-overlay" onclick="window.tvApp.closeCommentsModal()"></div>
+                    <div class="comments-modal-container">
+                        <div class="comments-modal-header">
+                            <h3 id="commentsModalTitle">شیرۆڤەکان</h3>
+                            <button class="comments-close-btn" onclick="window.tvApp.closeCommentsModal()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="comments-list" id="commentsList">
+                            <div class="comments-loading"><i class="fas fa-spinner fa-spin"></i> بارکردن...</div>
+                        </div>
+                        <div class="comments-input-area">
+                            <textarea id="commentInput" placeholder="شیرۆڤەیەک بنووسە..." rows="2"></textarea>
+                            <button class="comment-submit-btn" onclick="window.tvApp.submitComment()">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+
+            // Store current episode ID
+            modal.dataset.episodeId = episodeId;
+
+            // Update title
+            document.getElementById('commentsModalTitle').textContent = `شیرۆڤەکان - ${episodeTitle}`;
+
+            // Show modal
+            modal.classList.add('active');
+
+            // Load comments
+            await window.tvApp.loadComments(episodeId);
+        },
+        // Close comments modal
+        closeCommentsModal: function() {
+            const modal = document.getElementById('commentsModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        },
+        // Load comments for episode
+        loadComments: async function(episodeId) {
+            const list = document.getElementById('commentsList');
+            if (!list) return;
+
+            list.innerHTML = '<div class="comments-loading"><i class="fas fa-spinner fa-spin"></i> بارکردن...</div>';
+
+            try {
+                if (!window.islamvoiceSupabase) {
+                    list.innerHTML = '<div class="comments-empty">هەڵە: پەیوەندی ب سیستەمێ نییە</div>';
+                    return;
+                }
+
+                const { data: comments, error } = await window.islamvoiceSupabase
+                    .from('islamvoice_comments')
+                    .select('*, profiles(display_name, avatar_url)')
+                    .eq('episode_id', episodeId)
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (error) throw error;
+
+                if (!comments || comments.length === 0) {
+                    list.innerHTML = '<div class="comments-empty"><i class="fas fa-comments"></i><p>هیچ شیرۆڤەیەک نییە. یەکەم کەس بە کە شیرۆڤە دەکات!</p></div>';
+                    return;
+                }
+
+                const userId = getCurrentUserId();
+
+                list.innerHTML = comments.map(comment => {
+                    const avatar = comment.profiles?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(comment.profiles?.display_name || 'User')}`;
+                    const name = comment.profiles?.display_name || 'بەکارهێنەر';
+                    const timeAgo = formatTimeAgo(comment.created_at);
+                    const isOwn = comment.user_id === userId;
+
+                    return `
+                        <div class="comment-item ${isOwn ? 'own-comment' : ''}" data-comment-id="${comment.id}">
+                            <img src="${avatar}" alt="${name}" class="comment-avatar">
+                            <div class="comment-content">
+                                <div class="comment-header">
+                                    <span class="comment-author">${name}</span>
+                                    <span class="comment-time">${timeAgo}</span>
+                                </div>
+                                <p class="comment-text">${escapeHtml(comment.content)}</p>
+                                ${isOwn ? `
+                                    <button class="comment-delete-btn" onclick="window.tvApp.deleteComment('${comment.id}')">
+                                        <i class="fas fa-trash"></i> سڕینەوە
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Load comments error:', err);
+                list.innerHTML = '<div class="comments-empty">هەڵەیەک ڕوویدا لە بارکردنی شیرۆڤەکان</div>';
+            }
+        },
+        // Submit new comment
+        submitComment: async function() {
+            if (!requireLogin('شیرۆڤەکرن')) return;
+
+            const modal = document.getElementById('commentsModal');
+            const input = document.getElementById('commentInput');
+            if (!modal || !input) return;
+
+            const episodeId = modal.dataset.episodeId;
+            const content = input.value.trim();
+
+            if (!content) {
+                showNotification('تکایە شیرۆڤەیەک بنووسە');
+                return;
+            }
+
+            if (content.length > 500) {
+                showNotification('شیرۆڤە زۆر درێژە (زۆرینە ٥٠٠ پیت)');
+                return;
+            }
+
+            const userId = getCurrentUserId();
+            if (!userId) return;
+
+            try {
+                if (!window.islamvoiceSupabase) {
+                    showNotification('هەڵە: پەیوەندی ب سیستەمێ نییە');
+                    return;
+                }
+
+                // Insert comment
+                const { error } = await window.islamvoiceSupabase
+                    .from('islamvoice_comments')
+                    .insert({ episode_id: episodeId, user_id: userId, content: content });
+
+                if (error) throw error;
+
+                // Update comment count
+                const { data: episode } = await window.islamvoiceSupabase
+                    .from('islamvoice_episodes')
+                    .select('comment_count')
+                    .eq('id', episodeId)
+                    .single();
+
+                await window.islamvoiceSupabase
+                    .from('islamvoice_episodes')
+                    .update({ comment_count: (episode?.comment_count || 0) + 1 })
+                    .eq('id', episodeId);
+
+                // Clear input and reload comments
+                input.value = '';
+                showNotification('✅ شیرۆڤە زیادکرا!');
+                await window.tvApp.loadComments(episodeId);
+
+                // Update comment count on button
+                const btn = document.querySelector(`button[onclick*="showComments('${episodeId}'"]`);
+                if (btn) {
+                    let count = btn.querySelector('.action-count');
+                    if (count) {
+                        count.textContent = parseInt(count.textContent) + 1;
+                    } else {
+                        count = document.createElement('span');
+                        count.className = 'action-count';
+                        count.textContent = '1';
+                        btn.appendChild(count);
+                    }
+                }
+            } catch (err) {
+                console.error('Submit comment error:', err);
+                showNotification('هەڵەیەک ڕوویدا');
+            }
+        },
+        // Delete own comment
+        deleteComment: async function(commentId) {
+            if (!requireLogin('سڕینەوەی شیرۆڤە')) return;
+
+            if (!confirm('دڵنیایت لە سڕینەوەی ئەم شیرۆڤەیە؟')) return;
+
+            const userId = getCurrentUserId();
+            if (!userId) return;
+
+            try {
+                const modal = document.getElementById('commentsModal');
+                const episodeId = modal?.dataset.episodeId;
+
+                // Delete comment (only if owned by user)
+                const { error } = await window.islamvoiceSupabase
+                    .from('islamvoice_comments')
+                    .delete()
+                    .eq('id', commentId)
+                    .eq('user_id', userId);
+
+                if (error) throw error;
+
+                // Update comment count
+                if (episodeId) {
+                    const { data: episode } = await window.islamvoiceSupabase
+                        .from('islamvoice_episodes')
+                        .select('comment_count')
+                        .eq('id', episodeId)
+                        .single();
+
+                    await window.islamvoiceSupabase
+                        .from('islamvoice_episodes')
+                        .update({ comment_count: Math.max(0, (episode?.comment_count || 1) - 1) })
+                        .eq('id', episodeId);
+                }
+
+                showNotification('شیرۆڤە سڕایەوە');
+
+                // Reload comments
+                if (episodeId) {
+                    await window.tvApp.loadComments(episodeId);
+                }
+            } catch (err) {
+                console.error('Delete comment error:', err);
+                showNotification('هەڵەیەک ڕوویدا');
+            }
+        },
+        shareEpisode: async function(episodeId, title) {
+            const shareUrl = `${window.location.origin}/islamvoice?video=${episodeId}`;
+            const shareData = {
+                title: title || 'تەفسیر کورد',
+                text: `${title} - تەفسیر کورد`,
+                url: shareUrl
+            };
+
+            try {
+                // Use native share if available (mobile)
+                if (navigator.share) {
+                    await navigator.share(shareData);
+                } else {
+                    // Fallback: copy to clipboard
+                    await navigator.clipboard.writeText(shareUrl);
+                    showNotification('✅ لینک کۆپی کرا!');
+                }
+
+                // Track share in database
+                await trackShare(episodeId);
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Share error:', err);
+                    // Try clipboard as fallback
+                    try {
+                        await navigator.clipboard.writeText(shareUrl);
+                        showNotification('✅ لینک کۆپی کرا!');
+                        await trackShare(episodeId);
+                    } catch (e) {
+                        showNotification('❌ نەتوانرا پارڤە بکرێت');
+                    }
+                }
+            }
         }
     };
+
+    // Track share count
+    async function trackShare(episodeId) {
+        try {
+            if (window.islamvoiceSupabase) {
+                // Increment share_count in database
+                const { data, error } = await window.islamvoiceSupabase.rpc('increment_share_count', { episode_id: episodeId });
+                if (error) {
+                    // Fallback: update directly
+                    const { data: episode } = await window.islamvoiceSupabase
+                        .from('islamvoice_episodes')
+                        .select('share_count')
+                        .eq('id', episodeId)
+                        .single();
+
+                    await window.islamvoiceSupabase
+                        .from('islamvoice_episodes')
+                        .update({ share_count: (episode?.share_count || 0) + 1 })
+                        .eq('id', episodeId);
+                }
+                console.log('✅ Share tracked for:', episodeId);
+            }
+        } catch (err) {
+            console.warn('Failed to track share:', err);
+        }
+    }
 
     // ===== YOUTUBE PLAYER =====
     let youtubePlayer = null;
@@ -1685,7 +2136,10 @@
                             thumbnail: v.thumbnail_url || (isS3 ? null : `https://img.youtube.com/vi/${v.video_url}/maxresdefault.jpg`),
                             embedUrl: isS3 ? v.video_url : `https://www.youtube.com/embed/${v.video_url}`,
                             viewCount: v.view_count || 0,
+                            views: v.view_count || 0,
+                            shareCount: v.share_count || 0,
                             likeCount: v.like_count || 0,
+                            commentCount: v.comment_count || 0,
                             rating: v.rating || 0,
                             createdAt: v.created_at,
                             scheduled_at: v.scheduled_at,

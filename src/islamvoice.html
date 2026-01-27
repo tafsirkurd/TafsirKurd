@@ -3886,68 +3886,7 @@
         </div>
     </div>
 
-    <!-- Auth Modal (Sign Up / Sign In) -->
-    <div class="auth-modal" id="authModal">
-        <div class="auth-modal-overlay" onclick="closeAuthModal()"></div>
-        <div class="auth-modal-container">
-            <button class="auth-close-btn" onclick="closeAuthModal()" aria-label="داخستن">
-                <i class="fas fa-times"></i>
-            </button>
-
-            <div class="auth-content">
-                <!-- Left Side: Form -->
-                <div class="auth-form-side">
-                    <div class="auth-logo">
-                        <img src="/assets/images/logo.png" alt="تەفسیر كورد">
-                    </div>
-
-                    <h2 class="auth-title">دروستکرنا هەژمارێ</h2>
-
-                    <!-- Social Login Buttons -->
-                    <div class="auth-social-buttons">
-                        <button class="auth-social-btn google-btn" onclick="signInWithGoogle()">
-                            <i class="fab fa-google"></i>
-                            <span>گووگڵ</span>
-                        </button>
-                    </div>
-
-                    <div class="auth-divider">
-                        <span>یان</span>
-                    </div>
-
-                    <!-- Email Form -->
-                    <form class="auth-email-form" id="authEmailForm" onsubmit="signUpWithEmail(event)">
-                        <div class="auth-input-group">
-                            <label for="authEmail">ئیمەیل</label>
-                            <input type="email" id="authEmail" placeholder="ئیمەیلێ خو بنڤیسە..." required>
-                        </div>
-
-                        <button type="submit" class="auth-submit-btn">
-                            پێشڤە
-                        </button>
-                    </form>
-
-                    <p class="auth-signin-link">
-                        جێهێ هەژمارەکێ هەیە؟ <a href="#" onclick="showSignIn(); return false;">دەستنیشانبکە</a>
-                    </p>
-
-                    <p class="auth-terms">
-                        ب تۆمارکرنێ تو رازیی ل سەر <a href="/terms" target="_blank">مەرجێن خزمەتگوزاری</a> و <a href="/privacy" target="_blank">سیاسەتا تایبەتمەندی</a> یا تەفسیرکورد
-                    </p>
-                </div>
-
-                <!-- Right Side: Image Side with Logo -->
-                <div class="auth-image-side">
-                    <div class="auth-image-content">
-                        <!-- Large centered logo/brand -->
-                        <div class="auth-brand-image">
-                            <img src="/assets/images/logo.png" alt="TafsirKurd" style="max-width: 200px; filter: brightness(0) invert(1) drop-shadow(0 10px 30px rgba(0,0,0,0.3)); opacity: 0.95;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Auth now redirects to login.html instead of using modal -->
 
     <!-- Notification Toast -->
     <div class="notification" id="notification">
@@ -4356,14 +4295,19 @@
             }
         });
 
-        // Open auth modal
+        // Redirect to login page (instead of modal)
         function openAuthModal() {
-            document.getElementById('authModal').classList.add('active');
+            // Store redirect destination so user comes back after login
+            sessionStorage.setItem('login_redirect_destination', '/islamvoice.html');
+            window.location.href = '/login.html?redirect=/islamvoice.html';
         }
 
-        // Close auth modal
+        // Close auth modal (legacy, kept for compatibility)
         function closeAuthModal() {
-            document.getElementById('authModal').classList.remove('active');
+            const modal = document.getElementById('authModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
         }
 
         // Open search modal

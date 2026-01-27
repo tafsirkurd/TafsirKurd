@@ -9800,6 +9800,7 @@
         function goToLogin() {
             // Pass current page so we can redirect back after login
             const currentPage = window.location.pathname;
+            sessionStorage.setItem('login_redirect_destination', currentPage);
             window.location.href = `/login.html?redirect=${encodeURIComponent(currentPage)}`;
         }
 
