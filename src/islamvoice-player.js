@@ -94,6 +94,45 @@
         }
     }
 
+    // Track video view - increment view count in database
+    async function trackVideoView(episodeId) {
+        if (!episodeId || !supabase) return;
+
+        // Use a session key to prevent multiple views in same session
+        const viewKey = `islamvoice_viewed_${episodeId}`;
+        if (sessionStorage.getItem(viewKey)) {
+            console.log('📊 View already tracked this session');
+            return;
+        }
+
+        try {
+            // Increment view_count using RPC or direct update
+            const { error } = await supabase.rpc('increment_episode_view', { episode_id: episodeId });
+
+            if (error) {
+                // Fallback: direct update if RPC doesn't exist
+                console.log('📊 RPC not available, using direct update');
+                const { data: episode } = await supabase
+                    .from('islamvoice_episodes')
+                    .select('view_count')
+                    .eq('id', episodeId)
+                    .single();
+
+                const currentViews = episode?.view_count || 0;
+                await supabase
+                    .from('islamvoice_episodes')
+                    .update({ view_count: currentViews + 1 })
+                    .eq('id', episodeId);
+            }
+
+            // Mark as viewed in session
+            sessionStorage.setItem(viewKey, 'true');
+            console.log('📊 View tracked for episode:', episodeId);
+        } catch (err) {
+            console.error('📊 Error tracking view:', err);
+        }
+    }
+
     // ===== GLOBAL STATE =====
     const state = {
         currentEpisode: null,
@@ -2407,6 +2446,9 @@
 
         // Update current episode
         state.currentEpisode = episodeId;
+
+        // Track view (async, don't await)
+        trackVideoView(episodeId);
 
         // Find the clicked episode card
         const clickedCard = document.querySelector(`.episode-card[onclick*="${episodeId}"]`) ||
