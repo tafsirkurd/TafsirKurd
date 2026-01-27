@@ -1,5 +1,6 @@
-// Cloudflare Pages Function - S3 Presigned URL Generator
-// Generates presigned URLs for direct S3 uploads from admin panel
+// Cloudflare Pages Function - R2 Presigned URL Generator
+// Generates presigned URLs for direct R2 uploads from admin panel
+// R2 is S3-compatible with FREE egress (data transfer)
 
 export async function onRequest(context) {
     const { request, env } = context;
@@ -33,7 +34,7 @@ export async function onRequest(context) {
             );
         }
 
-        // Validate admin token (simple check - you can enhance this)
+        // Validate admin token
         const adminToken = request.headers.get('Authorization')?.replace('Bearer ', '');
         if (!adminToken) {
             return new Response(
@@ -56,49 +57,87 @@ export async function onRequest(context) {
         const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
         const key = `${folder}/${timestamp}-${sanitizedFilename}`;
 
-        // Get S3 credentials from environment
-        const accessKeyId = env.AWS_ACCESS_KEY_ID;
-        const secretAccessKey = env.AWS_SECRET_ACCESS_KEY;
-        const bucket = env.AWS_S3_BUCKET;
-        const region = env.AWS_S3_REGION || 'eu-north-1';
+        // Check if using R2 or S3
+        const useR2 = env.R2_ACCESS_KEY_ID && env.R2_SECRET_ACCESS_KEY;
 
-        if (!accessKeyId || !secretAccessKey || !bucket) {
-            console.error('Missing AWS credentials');
-            return new Response(
-                JSON.stringify({ error: 'Server configuration error' }),
-                { status: 500, headers: corsHeaders }
-            );
+        let presignedUrl, publicUrl;
+
+        if (useR2) {
+            // Cloudflare R2 configuration
+            const accessKeyId = env.R2_ACCESS_KEY_ID;
+            const secretAccessKey = env.R2_SECRET_ACCESS_KEY;
+            const accountId = env.CF_ACCOUNT_ID;
+            const bucket = env.R2_BUCKET || 'tafsirkurd-videos';
+            const publicDomain = env.R2_PUBLIC_DOMAIN; // Custom domain or r2.dev subdomain
+
+            if (!accessKeyId || !secretAccessKey || !accountId) {
+                console.error('Missing R2 credentials');
+                return new Response(
+                    JSON.stringify({ error: 'Server configuration error - R2 credentials missing' }),
+                    { status: 500, headers: corsHeaders }
+                );
+            }
+
+            // Generate presigned URL for R2
+            presignedUrl = await generateR2PresignedUrl({
+                accessKeyId,
+                secretAccessKey,
+                accountId,
+                bucket,
+                key,
+                contentType,
+                expiresIn: 3600
+            });
+
+            // Public URL - use custom domain if configured, otherwise use r2.dev
+            publicUrl = publicDomain
+                ? `https://${publicDomain}/${key}`
+                : `https://pub-${accountId}.r2.dev/${bucket}/${key}`;
+
+        } else {
+            // Fallback to AWS S3
+            const accessKeyId = env.AWS_ACCESS_KEY_ID;
+            const secretAccessKey = env.AWS_SECRET_ACCESS_KEY;
+            const bucket = env.AWS_S3_BUCKET;
+            const region = env.AWS_S3_REGION || 'eu-north-1';
+
+            if (!accessKeyId || !secretAccessKey || !bucket) {
+                console.error('Missing AWS credentials');
+                return new Response(
+                    JSON.stringify({ error: 'Server configuration error' }),
+                    { status: 500, headers: corsHeaders }
+                );
+            }
+
+            presignedUrl = await generateS3PresignedUrl({
+                accessKeyId,
+                secretAccessKey,
+                bucket,
+                region,
+                key,
+                contentType,
+                expiresIn: 3600
+            });
+
+            const cloudfrontDomain = env.AWS_CLOUDFRONT_DOMAIN;
+            publicUrl = cloudfrontDomain
+                ? `https://${cloudfrontDomain}/${key}`
+                : `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
         }
-
-        // Generate presigned URL
-        const presignedUrl = await generatePresignedUrl({
-            accessKeyId,
-            secretAccessKey,
-            bucket,
-            region,
-            key,
-            contentType,
-            expiresIn: 3600 // 1 hour
-        });
-
-        // CloudFront URL (if configured) or direct S3 URL
-        const cloudfrontDomain = env.AWS_CLOUDFRONT_DOMAIN;
-        const publicUrl = cloudfrontDomain
-            ? `https://${cloudfrontDomain}/${key}`
-            : `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
 
         return new Response(
             JSON.stringify({
                 success: true,
                 uploadUrl: presignedUrl,
                 publicUrl: publicUrl,
-                key: key
+                key: key,
+                storage: useR2 ? 'r2' : 's3'
             }),
             { status: 200, headers: corsHeaders }
         );
 
     } catch (error) {
-        console.error('S3 upload error:', error);
+        console.error('Upload error:', error);
         return new Response(
             JSON.stringify({ error: 'Internal server error', details: error.message }),
             { status: 500, headers: corsHeaders }
@@ -109,7 +148,6 @@ export async function onRequest(context) {
 // Verify admin token against your auth system
 async function verifyAdminToken(token, env) {
     try {
-        // Use Supabase to verify the admin session
         const supabaseUrl = env.SUPABASE_URL?.replace(/[\n\r\s]/g, '');
         const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY?.replace(/[\n\r\s]/g, '');
 
@@ -118,8 +156,7 @@ async function verifyAdminToken(token, env) {
             return false;
         }
 
-        // Query admin_sessions table for valid token
-        const url = `${supabaseUrl}/rest/v1/admin_sessions?token=eq.${encodeURIComponent(token)}&is_active=eq.true&select=id,expires_at,user_id`;
+        const url = `${supabaseUrl}/rest/v1/admin_sessions?token=eq.${encodeURIComponent(token)}&select=id,expires_at,user_id`;
 
         const response = await fetch(url, {
             headers: {
@@ -129,22 +166,13 @@ async function verifyAdminToken(token, env) {
             }
         });
 
-        if (!response.ok) {
-            console.error('Supabase response not ok:', response.status);
-            return false;
-        }
+        if (!response.ok) return false;
 
         const sessions = await response.json();
-        console.log('Sessions found:', sessions?.length || 0);
-
         if (!sessions || sessions.length === 0) return false;
 
-        // Check if session is not expired
         const session = sessions[0];
-        if (new Date(session.expires_at) < new Date()) {
-            console.error('Session expired');
-            return false;
-        }
+        if (new Date(session.expires_at) < new Date()) return false;
 
         return true;
     } catch (error) {
@@ -153,8 +181,63 @@ async function verifyAdminToken(token, env) {
     }
 }
 
-// Generate AWS S3 presigned URL using AWS Signature Version 4
-async function generatePresignedUrl({ accessKeyId, secretAccessKey, bucket, region, key, contentType, expiresIn }) {
+// Generate Cloudflare R2 presigned URL (S3-compatible)
+async function generateR2PresignedUrl({ accessKeyId, secretAccessKey, accountId, bucket, key, contentType, expiresIn }) {
+    const service = 's3';
+    const region = 'auto'; // R2 always uses 'auto' as region
+    const host = `${accountId}.r2.cloudflarestorage.com`;
+    const endpoint = `https://${host}/${bucket}/${key}`;
+
+    const now = new Date();
+    const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
+    const dateStamp = amzDate.slice(0, 8);
+
+    const credential = `${accessKeyId}/${dateStamp}/${region}/${service}/aws4_request`;
+
+    const params = new URLSearchParams({
+        'X-Amz-Algorithm': 'AWS4-HMAC-SHA256',
+        'X-Amz-Credential': credential,
+        'X-Amz-Date': amzDate,
+        'X-Amz-Expires': expiresIn.toString(),
+        'X-Amz-SignedHeaders': 'content-type;host'
+    });
+
+    const canonicalUri = `/${bucket}/${key}`;
+    const canonicalQueryString = params.toString().split('&').sort().join('&');
+    const canonicalHeaders = `content-type:${contentType}\nhost:${host}\n`;
+    const signedHeaders = 'content-type;host';
+    const payloadHash = 'UNSIGNED-PAYLOAD';
+
+    const canonicalRequest = [
+        'PUT',
+        canonicalUri,
+        canonicalQueryString,
+        canonicalHeaders,
+        signedHeaders,
+        payloadHash
+    ].join('\n');
+
+    const algorithm = 'AWS4-HMAC-SHA256';
+    const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
+    const canonicalRequestHash = await sha256Hex(canonicalRequest);
+
+    const stringToSign = [
+        algorithm,
+        amzDate,
+        credentialScope,
+        canonicalRequestHash
+    ].join('\n');
+
+    const signingKey = await getSignatureKey(secretAccessKey, dateStamp, region, service);
+    const signature = await hmacHex(signingKey, stringToSign);
+
+    params.set('X-Amz-Signature', signature);
+
+    return `${endpoint}?${params.toString()}`;
+}
+
+// Generate AWS S3 presigned URL (fallback)
+async function generateS3PresignedUrl({ accessKeyId, secretAccessKey, bucket, region, key, contentType, expiresIn }) {
     const service = 's3';
     const host = `${bucket}.s3.${region}.amazonaws.com`;
     const endpoint = `https://${host}/${key}`;
@@ -173,7 +256,6 @@ async function generatePresignedUrl({ accessKeyId, secretAccessKey, bucket, regi
         'X-Amz-SignedHeaders': 'content-type;host'
     });
 
-    // Create canonical request
     const canonicalUri = '/' + key;
     const canonicalQueryString = params.toString().split('&').sort().join('&');
     const canonicalHeaders = `content-type:${contentType}\nhost:${host}\n`;
@@ -189,7 +271,6 @@ async function generatePresignedUrl({ accessKeyId, secretAccessKey, bucket, regi
         payloadHash
     ].join('\n');
 
-    // Create string to sign
     const algorithm = 'AWS4-HMAC-SHA256';
     const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
     const canonicalRequestHash = await sha256Hex(canonicalRequest);
@@ -201,11 +282,9 @@ async function generatePresignedUrl({ accessKeyId, secretAccessKey, bucket, regi
         canonicalRequestHash
     ].join('\n');
 
-    // Calculate signature
     const signingKey = await getSignatureKey(secretAccessKey, dateStamp, region, service);
     const signature = await hmacHex(signingKey, stringToSign);
 
-    // Add signature to params
     params.set('X-Amz-Signature', signature);
 
     return `${endpoint}?${params.toString()}`;
