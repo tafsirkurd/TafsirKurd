@@ -541,6 +541,10 @@
                             <i data-lucide="film"></i>
                             All Episodes
                         </button>
+                        <button class="tab-btn" data-view="drafts">
+                            <i data-lucide="file-edit"></i>
+                            Drafts <span id="drafts-count" style="background: var(--accent-orange); color: white; padding: 2px 6px; border-radius: 10px; font-size: 11px; margin-left: 4px;">0</span>
+                        </button>
                     </div>
                     <button class="btn btn-secondary" onclick="recompressAllThumbnails()" id="recompressBtn" style="font-size: 12px; padding: 6px 12px;">
                         <i class="fas fa-compress-alt"></i> Re-compress Thumbnails
@@ -571,6 +575,35 @@
                                 </thead>
                                 <tbody id="all-episodes-tbody">
                                     <!-- Episodes will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DRAFTS VIEW -->
+                <div class="view-panel" id="drafts-view">
+                    <div class="card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0;"><i class="fas fa-file-alt"></i> Draft Episodes</h3>
+                            <button class="btn btn-primary" onclick="openEpisodeModal(null, null, true)">
+                                <i class="fas fa-plus"></i> New Draft
+                            </button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Series</th>
+                                        <th>Episode #</th>
+                                        <th>Video</th>
+                                        <th>Created</th>
+                                        <th style="width: 150px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="drafts-tbody">
+                                    <!-- Drafts will be loaded here -->
                                 </tbody>
                             </table>
                         </div>
@@ -719,28 +752,6 @@
                                     <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: var(--text-tertiary); margin-bottom: 8px;"></i>
                                     <p style="margin: 0; color: var(--text-secondary); font-size: 14px;">Drag & drop video or <span style="color: var(--accent-blue); cursor: pointer;" onclick="document.getElementById('videoFileInput').click()">browse</span></p>
                                     <small style="color: var(--text-tertiary);">MP4, WebM (max 500MB)</small>
-                                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-light);">
-                                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; justify-content: center;">
-                                            <input type="checkbox" id="compressVideo" checked style="width: 16px; height: 16px;">
-                                            <span style="font-size: 13px; color: var(--text-secondary);">Compress video (saves storage)</span>
-                                        </label>
-                                        <select id="compressionQuality" style="margin-top: 8px; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-light); background: var(--bg-tertiary); color: var(--text-primary); font-size: 12px;">
-                                            <option value="low">Low quality (~70% smaller)</option>
-                                            <option value="medium" selected>Medium quality (~50% smaller)</option>
-                                            <option value="high">High quality (~30% smaller)</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div id="compressionProgressUI" style="display: none;">
-                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                        <i class="fas fa-compress-alt" style="color: var(--accent-purple);"></i>
-                                        <span style="flex: 1; text-align: left; font-size: 14px; color: var(--text-primary);">Compressing video...</span>
-                                        <span id="compressionPercent" style="font-size: 14px; font-weight: 600; color: var(--accent-purple);">0%</span>
-                                    </div>
-                                    <div style="background: var(--bg-tertiary); border-radius: 4px; height: 8px; overflow: hidden;">
-                                        <div id="compressionProgressBar" style="background: var(--accent-purple); height: 100%; width: 0%; transition: width 0.3s;"></div>
-                                    </div>
-                                    <small id="compressionStatus" style="color: var(--text-secondary); margin-top: 6px; display: block;">Processing...</small>
                                 </div>
                                 <div id="uploadProgress" style="display: none;">
                                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
@@ -853,9 +864,16 @@
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" style="display: flex; justify-content: space-between;">
                 <button class="btn btn-secondary" onclick="closeEpisodeModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveEpisodeForm()">Save</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn" style="background: var(--accent-orange); color: white;" onclick="saveEpisodeForm(true)">
+                        <i class="fas fa-save"></i> Save Draft
+                    </button>
+                    <button class="btn btn-primary" onclick="saveEpisodeForm(false)">
+                        <i class="fas fa-upload"></i> Publish
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -873,6 +891,7 @@
             if (isAuth) {
                 loadAllSeries();
                 loadAllEpisodes();
+                loadDrafts(); // Load drafts count for badge
             }
         })();
 
@@ -950,6 +969,12 @@
                 addBtnText.textContent = 'Add Episode';
                 addBtn.onclick = () => openEpisodeModal(currentSeries.id);
                 updateBreadcrumb();
+            } else if (view === 'drafts') {
+                document.getElementById('drafts-view').classList.add('active');
+                addBtnText.textContent = 'New Draft';
+                addBtn.onclick = () => openEpisodeModal(null, null, true);
+                document.getElementById('breadcrumb').style.display = 'none';
+                loadDrafts();
             }
 
             lucide.createIcons();
@@ -1152,15 +1177,17 @@
             }
         }
 
-        // Load all episodes
+        // Load published episodes only
         async function loadAllEpisodes() {
             const supabase = window.adminAuth.getSupabase();
             if (!supabase) return;
 
             try {
+                // Only load published episodes (is_published = true or null for backwards compat)
                 const { data: episodes, error } = await supabase
                     .from('islamvoice_episodes')
                     .select('*, islamvoice_series(name_ku)')
+                    .or('is_published.eq.true,is_published.is.null')
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
@@ -1208,6 +1235,96 @@
                 lucide.createIcons();
             } catch (error) {
                 console.error('Error loading episodes:', error);
+            }
+        }
+
+        // Load draft episodes
+        async function loadDrafts() {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+
+            try {
+                const { data: drafts, error } = await supabase
+                    .from('islamvoice_episodes')
+                    .select('*, islamvoice_series(name_ku)')
+                    .eq('is_published', false)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                // Update drafts count
+                document.getElementById('drafts-count').textContent = drafts?.length || 0;
+
+                const tbody = document.getElementById('drafts-tbody');
+
+                if (!drafts || drafts.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px;">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">
+                                        <i data-lucide="file-edit" style="width: 100%; height: 100%;"></i>
+                                    </div>
+                                    <div class="empty-state-title">No Drafts</div>
+                                    <div class="empty-state-text">Create a draft to prepare episodes before publishing</div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                tbody.innerHTML = drafts.map(ep => `
+                    <tr>
+                        <td>${ep.title || '<em>Untitled</em>'}</td>
+                        <td>${ep.islamvoice_series?.name_ku || '<em>No series</em>'}</td>
+                        <td>${ep.episode_number || 'N/A'}</td>
+                        <td>${ep.video_url ? '<i class="fas fa-check-circle" style="color: var(--accent-green);"></i>' : '<i class="fas fa-times-circle" style="color: var(--accent-red);"></i>'}</td>
+                        <td>${new Date(ep.created_at).toLocaleDateString()}</td>
+                        <td>
+                            <div class="table-actions" style="gap: 4px;">
+                                <button class="btn btn-primary" style="padding: 4px 10px; font-size: 12px;" onclick="publishDraft('${ep.id}')" title="Publish">
+                                    <i class="fas fa-upload"></i> Publish
+                                </button>
+                                <button class="table-btn" onclick="editEpisode('${ep.id}')" title="Edit">
+                                    <i data-lucide="edit-2"></i>
+                                </button>
+                                <button class="table-btn" onclick="deleteEpisode('${ep.id}')" title="Delete">
+                                    <i data-lucide="trash-2"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Error loading drafts:', error);
+            }
+        }
+
+        // Publish a draft
+        async function publishDraft(episodeId) {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+
+            if (!confirm('Publish this episode? It will be visible to users.')) return;
+
+            try {
+                const { error } = await supabase
+                    .from('islamvoice_episodes')
+                    .update({ is_published: true })
+                    .eq('id', episodeId);
+
+                if (error) throw error;
+
+                showNotification('Episode published successfully!', 'success');
+                loadDrafts(); // Refresh drafts list
+                loadAllEpisodes(); // Refresh published episodes list
+            } catch (error) {
+                console.error('Error publishing draft:', error);
+                showNotification('Failed to publish: ' + error.message, 'error');
             }
         }
 
@@ -1488,13 +1605,14 @@
             document.getElementById('episode-series-id').value = seriesId || '';
             resetEpisodeThumbnailUI();
 
-            // Reset video upload UI
+            // Reset video upload UI completely
             document.getElementById('uploadPlaceholder').style.display = 'block';
             document.getElementById('uploadProgress').style.display = 'none';
             document.getElementById('uploadComplete').style.display = 'none';
-            document.getElementById('compressionProgressUI').style.display = 'none';
             document.getElementById('thumbnailPreviewSection').style.display = 'none';
             document.getElementById('capturedThumbnail').style.display = 'none';
+            // Reset file input so same file can be re-selected
+            document.getElementById('videoFileInput').value = '';
 
             // Load series for dropdown
             const supabase = window.adminAuth.getSupabase();
@@ -1596,7 +1714,7 @@
             document.getElementById('episode-number').value = nextNumber;
         }
 
-        async function saveEpisodeForm() {
+        async function saveEpisodeForm(isDraft = false) {
             const id = document.getElementById('episode-id').value;
             const seriesId = document.getElementById('episode-series-select').value;
             const episodeNumber = document.getElementById('episode-number').value;
@@ -1606,7 +1724,9 @@
             const thumbnail = document.getElementById('episode-thumbnail').value;
             const duration = document.getElementById('episode-duration').value;
             const scheduledAt = document.getElementById('episode-scheduled').value;
-            const isPublished = document.getElementById('episode-published').checked;
+            // isDraft=true means save as draft (is_published=false)
+            // isDraft=false means publish (is_published=true)
+            const isPublished = !isDraft;
 
             if (!seriesId) {
                 alert('Please select a series');
@@ -1646,7 +1766,16 @@
                 }
 
                 closeEpisodeModal();
-                loadAllEpisodes();
+
+                // Show appropriate success message
+                if (isDraft) {
+                    showNotification('Episode saved as draft!', 'success');
+                    loadDrafts(); // Refresh drafts list
+                } else {
+                    showNotification('Episode published successfully!', 'success');
+                    loadAllEpisodes(); // Refresh published episodes
+                }
+
                 if (currentView === 'series-episodes' && currentSeries) {
                     viewSeriesEpisodes(currentSeries.id, currentSeries.name_ku);
                 }
@@ -1709,6 +1838,7 @@
 
                 alert('Episode deleted successfully');
                 loadAllEpisodes();
+                loadDrafts(); // Refresh drafts count
                 if (currentView === 'series-episodes' && currentSeries) {
                     viewSeriesEpisodes(currentSeries.id, currentSeries.name_ku);
                 }
@@ -2339,112 +2469,6 @@
             }
         }
 
-        // Compress video using canvas and MediaRecorder
-        async function compressVideo(file, quality = 'medium') {
-            return new Promise((resolve, reject) => {
-                const compressionUI = document.getElementById('compressionProgressUI');
-                const compressionPercent = document.getElementById('compressionPercent');
-                const compressionProgressBar = document.getElementById('compressionProgressBar');
-                const compressionStatus = document.getElementById('compressionStatus');
-
-                compressionUI.style.display = 'block';
-                compressionStatus.textContent = 'Loading video...';
-
-                const video = document.createElement('video');
-                video.muted = true;
-                video.playsInline = true;
-
-                const qualitySettings = {
-                    low: { scale: 0.5, bitrate: 1000000 },      // 720p-ish, 1Mbps
-                    medium: { scale: 0.7, bitrate: 2000000 },   // ~900p, 2Mbps
-                    high: { scale: 0.85, bitrate: 3500000 }     // ~1000p, 3.5Mbps
-                };
-
-                const settings = qualitySettings[quality] || qualitySettings.medium;
-
-                video.onloadedmetadata = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-
-                    // Scale down resolution
-                    canvas.width = Math.round(video.videoWidth * settings.scale);
-                    canvas.height = Math.round(video.videoHeight * settings.scale);
-
-                    compressionStatus.textContent = `Compressing ${video.videoWidth}x${video.videoHeight} → ${canvas.width}x${canvas.height}...`;
-
-                    const stream = canvas.captureStream(30);
-                    const chunks = [];
-
-                    // Try VP9 first (better compression), fallback to VP8
-                    let mimeType = 'video/webm;codecs=vp9';
-                    if (!MediaRecorder.isTypeSupported(mimeType)) {
-                        mimeType = 'video/webm;codecs=vp8';
-                    }
-                    if (!MediaRecorder.isTypeSupported(mimeType)) {
-                        mimeType = 'video/webm';
-                    }
-
-                    const recorder = new MediaRecorder(stream, {
-                        mimeType,
-                        videoBitsPerSecond: settings.bitrate
-                    });
-
-                    recorder.ondataavailable = (e) => {
-                        if (e.data.size > 0) chunks.push(e.data);
-                    };
-
-                    recorder.onstop = () => {
-                        compressionUI.style.display = 'none';
-                        const blob = new Blob(chunks, { type: 'video/webm' });
-                        const compressedName = file.name.replace(/\.[^/.]+$/, '_compressed.webm');
-                        const compressedFile = new File([blob], compressedName, { type: 'video/webm' });
-
-                        console.log(`Compression: ${(file.size / 1024 / 1024).toFixed(1)}MB → ${(compressedFile.size / 1024 / 1024).toFixed(1)}MB`);
-                        resolve(compressedFile);
-                    };
-
-                    recorder.onerror = (e) => {
-                        compressionUI.style.display = 'none';
-                        reject(new Error('Compression failed: ' + e.error));
-                    };
-
-                    recorder.start();
-
-                    const duration = video.duration;
-                    let currentTime = 0;
-
-                    function drawFrame() {
-                        if (currentTime >= duration) {
-                            recorder.stop();
-                            return;
-                        }
-
-                        video.currentTime = currentTime;
-                    }
-
-                    video.onseeked = () => {
-                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        currentTime += 1 / 30; // 30fps
-
-                        const progress = Math.round((currentTime / duration) * 100);
-                        compressionPercent.textContent = progress + '%';
-                        compressionProgressBar.style.width = progress + '%';
-
-                        requestAnimationFrame(drawFrame);
-                    };
-
-                    video.currentTime = 0;
-                };
-
-                video.onerror = () => {
-                    compressionUI.style.display = 'none';
-                    reject(new Error('Failed to load video for compression'));
-                };
-
-                video.src = URL.createObjectURL(file);
-            });
-        }
-
         // Main upload function
         async function handleVideoUpload(file) {
             // Validate file size (500MB max)
@@ -2468,22 +2492,8 @@
             // Auto-detect video duration
             detectVideoDuration(localVideoUrl);
 
-            // Check if compression is enabled
-            const compressCheckbox = document.getElementById('compressVideo');
-            const qualitySelect = document.getElementById('compressionQuality');
+            // Use original file directly (use HandBrake for compression before upload)
             let fileToUpload = file;
-
-            if (compressCheckbox && compressCheckbox.checked) {
-                try {
-                    uploadPlaceholder.style.display = 'none';
-                    const quality = qualitySelect ? qualitySelect.value : 'medium';
-                    fileToUpload = await compressVideo(file, quality);
-                    console.log(`Original: ${(file.size / 1024 / 1024).toFixed(1)}MB, Compressed: ${(fileToUpload.size / 1024 / 1024).toFixed(1)}MB`);
-                } catch (err) {
-                    console.warn('Compression failed, uploading original:', err);
-                    fileToUpload = file;
-                }
-            }
 
             // Show progress UI
             uploadPlaceholder.style.display = 'none';
@@ -2541,18 +2551,24 @@
                     loadVideoForThumbnail(publicUrl);
                 }
 
+                // Reset file input so another video can be uploaded
+                document.getElementById('videoFileInput').value = '';
+
                 // Keep upload complete visible but don't reset to placeholder
                 setTimeout(() => {
                     uploadComplete.style.display = 'none';
                     // Show a success message instead of resetting
                     uploadPlaceholder.style.display = 'block';
-                    uploadPlaceholder.querySelector('p').textContent = 'Video uploaded! You can upload another or pick thumbnail below.';
+                    uploadPlaceholder.querySelector('p').innerHTML = 'Video uploaded! <span style="color: var(--accent-blue); cursor: pointer;" onclick="document.getElementById(\'videoFileInput\').click()">Upload another</span> or pick thumbnail below.';
                 }, 2000);
 
             } catch (error) {
                 console.error('Upload error:', error);
                 uploadStatus.textContent = 'Upload failed: ' + error.message;
                 uploadStatus.style.color = 'var(--accent-red)';
+
+                // Reset file input so user can try again
+                document.getElementById('videoFileInput').value = '';
 
                 setTimeout(() => {
                     uploadProgress.style.display = 'none';
