@@ -457,6 +457,36 @@
     box-shadow: var(--shadow-md);
 }
 
+/* Currently playing episode highlight */
+.episode-item.now-playing,
+.episode-card.now-playing {
+    background: var(--primary-light);
+    border: 2px solid var(--primary);
+    box-shadow: 0 0 20px rgba(var(--primary-rgb, 59, 130, 246), 0.3);
+    position: relative;
+}
+
+.episode-item.now-playing::after,
+.episode-card.now-playing::after {
+    content: '▶ دەچێت';
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: var(--primary);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    z-index: 10;
+    animation: pulse-playing 2s infinite;
+}
+
+@keyframes pulse-playing {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
 .episode-number {
     font-size: 1.5rem;
     font-weight: 700;
