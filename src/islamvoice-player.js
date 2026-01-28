@@ -2525,14 +2525,30 @@
         videoElement.preload = 'auto';
         videoElement.style.cssText = 'width:100%; height:100%; object-fit:contain; background:#000; display:block; margin:auto;';
 
-        // Click on video to play/pause (stop propagation)
-        videoElement.onclick = function(e) {
-            e.stopPropagation();
+        // Track play state to prevent rapid toggle errors
+        let isPlayPending = false;
+
+        // Safe play/pause function
+        function safeTogglePlay() {
+            if (isPlayPending) return;
+
             if (videoElement.paused) {
-                videoElement.play();
+                isPlayPending = true;
+                videoElement.play()
+                    .then(() => { isPlayPending = false; })
+                    .catch(err => {
+                        isPlayPending = false;
+                        if (err.name !== 'AbortError') console.log('Play error:', err);
+                    });
             } else {
                 videoElement.pause();
             }
+        }
+
+        // Click on video to play/pause (stop propagation)
+        videoElement.onclick = function(e) {
+            e.stopPropagation();
+            safeTogglePlay();
         };
 
         // ========== SIMPLE ACCESSIBLE VIDEO CONTROLS ==========
@@ -2734,11 +2750,7 @@
 
         // Play/Pause
         playBtn.onclick = function() {
-            if (videoElement.paused) {
-                videoElement.play();
-            } else {
-                videoElement.pause();
-            }
+            safeTogglePlay();
         };
 
         // Rewind 10s
@@ -2868,16 +2880,6 @@
             duration.textContent = formatTime(videoElement.duration);
         };
 
-        // Click on video to play/pause
-        videoElement.onclick = function(e) {
-            e.stopPropagation();
-            if (videoElement.paused) {
-                videoElement.play();
-            } else {
-                videoElement.pause();
-            }
-        };
-
         // Touch support for mobile
         let controlsVisible = true;
         let hideTimeout;
@@ -2911,8 +2913,7 @@
                 case ' ':
                 case 'k':
                     e.preventDefault();
-                    if (video.paused) video.play();
-                    else video.pause();
+                    safeTogglePlay();
                     break;
                 case 'arrowleft':
                 case 'j':
