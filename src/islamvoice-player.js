@@ -3097,10 +3097,15 @@
             }
         };
 
-        // Auto-play video
-        videoElement.play().catch(err => {
-            console.warn('Auto-play prevented:', err);
-            showNotification('پێکن بکە بۆ پێشاندانا ڤیدیۆیێ');
+        // Auto-play video when ready
+        videoElement.addEventListener('canplay', function autoPlay() {
+            videoElement.removeEventListener('canplay', autoPlay);
+            videoElement.play().catch(err => {
+                if (err.name !== 'AbortError') {
+                    console.warn('Auto-play prevented:', err);
+                    showNotification('پێکن بکە بۆ پێشاندانا ڤیدیۆیێ');
+                }
+            });
         });
 
         // Setup ended listener
