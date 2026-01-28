@@ -2139,18 +2139,18 @@
                     console.log(`✅ Loaded ${seriesData.length} series from Supabase`);
                 }
 
-                // Load episodes
+                // Load episodes - only published ones (is_published = true or null for backwards compat)
                 const { data, error } = await window.islamvoiceSupabase
                     .from('islamvoice_episodes')
                     .select('*')
+                    .or('is_published.eq.true,is_published.is.null')
                     .order('created_at', { ascending: false });
 
                 if (!error && data && data.length > 0) {
-                    console.log(`✅ Loaded ${data.length} videos from Supabase`);
+                    console.log(`✅ Loaded ${data.length} published videos from Supabase`);
 
                     // Convert Supabase format to our format
-                    // Filter out unpublished episodes (but keep scheduled ones to show as locked)
-                    const publishedData = data.filter(v => v.is_published !== false);
+                    const publishedData = data;
 
                     const supabaseVideos = publishedData.map(v => {
                         const isS3 = v.video_type === 's3' || v.video_url?.startsWith('http');
