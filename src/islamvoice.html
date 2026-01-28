@@ -695,8 +695,12 @@
         }
 
         .notification-icon.new-episode {
-            background: rgba(231, 76, 60, 0.2);
-            color: var(--danger);
+            background: rgba(21, 87, 176, 0.2);
+            color: #1557b0;
+        }
+        [data-theme="dark"] .notification-icon.new-episode {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
         }
 
         .notification-icon.new-series {
@@ -1394,7 +1398,7 @@
             position: absolute;
             top: 8px;
             right: 8px;
-            background: var(--danger);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark, #1557b0));
             padding: 4px 10px;
             border-radius: 4px;
             z-index: 8;
@@ -1405,6 +1409,9 @@
             color: white;
             font-size: 0.7rem;
             font-weight: 600;
+        }
+        [data-theme="dark"] .watched-overlay {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
         }
 
         /* Progress bar - matches badge color */
@@ -1420,8 +1427,11 @@
 
         .episode-progress-fill {
             height: 100%;
-            background: var(--danger);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark, #1557b0));
             transition: width 0.3s ease;
+        }
+        [data-theme="dark"] .episode-progress-fill {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
         }
 
         .play-overlay {
