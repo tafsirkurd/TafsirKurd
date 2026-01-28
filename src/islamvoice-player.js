@@ -2464,6 +2464,11 @@
             if (hiddenThumbnail) {
                 hiddenThumbnail.style.removeProperty('display');
             }
+            // Remove old keyboard handler
+            if (window._currentVideoKeyboardHandler) {
+                document.removeEventListener('keydown', window._currentVideoKeyboardHandler);
+                window._currentVideoKeyboardHandler = null;
+            }
             existingWrapper.remove();
         }
 
@@ -2472,12 +2477,22 @@
             el.classList.remove('now-playing');
         });
 
-        // Highlight the currently playing card
-        const playingCard = document.querySelector(`.episode-card[data-episode-id="${episodeId}"]`) ||
-                           document.querySelector(`.episode-card[onclick*="${episodeId}"]`) ||
-                           document.querySelector(`.episode-item[onclick*="${episodeId}"]`);
+        // Highlight the currently playing card - try multiple selectors
+        let playingCard = document.querySelector(`.episode-card[data-episode-id="${episodeId}"]`);
+        if (!playingCard) {
+            // Try finding by onclick attribute
+            document.querySelectorAll('.episode-card, .episode-item').forEach(card => {
+                const onclick = card.getAttribute('onclick') || '';
+                if (onclick.includes(episodeId)) {
+                    playingCard = card;
+                }
+            });
+        }
         if (playingCard) {
             playingCard.classList.add('now-playing');
+            console.log('🎯 Highlighted playing card:', playingCard);
+        } else {
+            console.log('⚠️ Could not find card to highlight for:', episodeId);
         }
 
         // Create video wrapper - bigger size
@@ -2929,6 +2944,8 @@
             }
         }
 
+        // Store handler reference for cleanup and add listener
+        window._currentVideoKeyboardHandler = handleKeyboard;
         document.addEventListener('keydown', handleKeyboard);
 
         // Append elements to wrapper
