@@ -447,7 +447,7 @@
 
             return `
                 <div class="episode-item ${isCompleted ? 'completed' : ''} ${isWatched ? 'is-watched' : ''} ${lockedClass}" data-video-id="${episode.id}">
-                    <div class="episode-number">${toKu(String(index + 1).padStart(2, '0'))}</div>
+                    <div class="episode-number">${toKu(index + 1)}</div>
 
                     <div class="episode-thumbnail">
                         <img src="${episode.thumbnail || ''}" alt="${episode.title}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
