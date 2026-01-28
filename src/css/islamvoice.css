@@ -416,7 +416,7 @@
 }
 
 .topic-card-meta i {
-    color: var(--info);
+    color: var(--text-muted);
 }
 
 /* ===== EPISODES LIST ===== */

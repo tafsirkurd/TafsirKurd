@@ -247,8 +247,8 @@
             top: 50%;
             left: 12px;
             transform: translateY(-50%);
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark, #1557b0));
-            color: white;
+            background: #000;
+            color: #fff;
             font-size: 0.7rem;
             font-weight: 600;
             min-width: 20px;
@@ -272,8 +272,9 @@
         }
 
         [data-theme="dark"] .sidebar-btn .badge {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+            background: #fff;
+            color: #000;
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
         }
 
         /* Sidebar Sections (Categories, Sheikhs) */
@@ -646,7 +647,7 @@
         .mark-all-read {
             background: none;
             border: none;
-            color: var(--info);
+            color: var(--text);
             font-size: 0.85rem;
             cursor: pointer;
             font-family: inherit;
@@ -733,7 +734,7 @@
         }
 
         .notification-dropdown-footer a {
-            color: var(--info);
+            color: var(--text);
             text-decoration: none;
             font-size: 0.9rem;
             font-weight: 500;
