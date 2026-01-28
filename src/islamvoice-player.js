@@ -2467,10 +2467,23 @@
             existingWrapper.remove();
         }
 
-        // Create video wrapper
+        // Remove highlight from any previously playing card
+        document.querySelectorAll('.episode-card.now-playing, .episode-item.now-playing').forEach(el => {
+            el.classList.remove('now-playing');
+        });
+
+        // Highlight the currently playing card
+        const playingCard = document.querySelector(`.episode-card[data-episode-id="${episodeId}"]`) ||
+                           document.querySelector(`.episode-card[onclick*="${episodeId}"]`) ||
+                           document.querySelector(`.episode-item[onclick*="${episodeId}"]`);
+        if (playingCard) {
+            playingCard.classList.add('now-playing');
+        }
+
+        // Create video wrapper - bigger size
         const videoWrapper = document.createElement('div');
         videoWrapper.className = 'inline-video-wrapper';
-        videoWrapper.style.cssText = 'position:relative; width:100%; max-width:600px; background:#000; border-radius:12px; overflow:hidden; margin:15px auto; display:flex; align-items:center; justify-content:center; direction:ltr;';
+        videoWrapper.style.cssText = 'position:relative; width:100%; max-width:900px; background:#000; border-radius:12px; overflow:hidden; margin:15px auto; display:flex; align-items:center; justify-content:center; direction:ltr;';
 
         // Prevent wrapper clicks from doing anything
         videoWrapper.onclick = function(e) { e.stopPropagation(); };
@@ -2494,6 +2507,7 @@
         const videoElement = document.createElement('video');
         videoElement.id = 'activeVideo';
         videoElement.playsInline = true;
+        videoElement.preload = 'auto';
         videoElement.style.cssText = 'width:100%; height:100%; object-fit:contain; background:#000; display:block; margin:auto;';
 
         // Click on video to play/pause (stop propagation)
