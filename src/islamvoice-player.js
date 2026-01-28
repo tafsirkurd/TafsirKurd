@@ -4,6 +4,11 @@
 (function() {
     'use strict';
 
+    // Kurdish number helper - converts digits to Kurdish if available
+    function toKu(val) {
+        return window.KurdishNumbers ? window.KurdishNumbers.toKurdish(val) : String(val);
+    }
+
     // ===== THUMBNAIL CACHE =====
     const thumbnailCache = {};
 
@@ -333,8 +338,8 @@
                             <p class="topic-card-description">${topic.description}</p>
                         ` : ''}
                         <div class="topic-card-meta">
-                            <span><i class="fas fa-play-circle"></i> ${episodeCount} بەش</span>
-                            ${watchedCount > 0 ? `<span class="watched-count"><i class="fas fa-check-circle"></i> ${watchedCount}/${episodeCount}</span>` : ''}
+                            <span><i class="fas fa-play-circle"></i> ${toKu(episodeCount)} بەش</span>
+                            ${watchedCount > 0 ? `<span class="watched-count"><i class="fas fa-check-circle"></i> ${toKu(watchedCount)}/${toKu(episodeCount)}</span>` : ''}
                         </div>
                     </div>
                 </div>
@@ -372,7 +377,7 @@
         const topicDescription = document.getElementById('topicDescription');
 
         topicTitle.textContent = episodes[0].seriesTitle || episodes[0].categoryTitle || 'بابەت';
-        topicDescription.textContent = `${episodes.length} بەش`;
+        topicDescription.textContent = `${toKu(episodes.length)} بەش`;
 
         // Render episodes list
         renderEpisodesList(episodes, 'episodesList');
@@ -390,9 +395,9 @@
         const mins = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
         if (hours > 0) {
-            return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            return toKu(`${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
         }
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
+        return toKu(`${mins}:${secs.toString().padStart(2, '0')}`);
     }
 
     // Format time ago (for comments)
@@ -442,7 +447,7 @@
 
             return `
                 <div class="episode-item ${isCompleted ? 'completed' : ''} ${isWatched ? 'is-watched' : ''} ${lockedClass}" data-video-id="${episode.id}">
-                    <div class="episode-number">${String(index + 1).padStart(2, '0')}</div>
+                    <div class="episode-number">${toKu(String(index + 1).padStart(2, '0'))}</div>
 
                     <div class="episode-thumbnail">
                         <img src="${episode.thumbnail || ''}" alt="${episode.title}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
@@ -478,7 +483,7 @@
                         ` : ''}
                         <div class="episode-meta">
                             ${episode.duration ? `<span><i class="fas fa-clock"></i> ${formatEpisodeDuration(episode.duration)}</span>` : ''}
-                            ${episode.views ? `<span><i class="fas fa-eye"></i> ${episode.views} بینەر</span>` : ''}
+                            ${episode.views ? `<span><i class="fas fa-eye"></i> ${toKu(episode.views)} بینەر</span>` : ''}
                         </div>
                     </div>
 
@@ -548,19 +553,19 @@
 
         if (bookmarkCount) {
             const count = state.bookmarks.length;
-            bookmarkCount.textContent = count > 0 ? count : '';
+            bookmarkCount.textContent = count > 0 ? toKu(count) : '';
             bookmarkCount.style.display = count > 0 ? 'flex' : 'none';
         }
 
         if (continueCount) {
             const count = state.continueWatching.length;
-            continueCount.textContent = count > 0 ? count : '';
+            continueCount.textContent = count > 0 ? toKu(count) : '';
             continueCount.style.display = count > 0 ? 'flex' : 'none';
         }
 
         if (historyCount) {
             const count = state.watchHistory.length;
-            historyCount.textContent = count > 0 ? (count > 99 ? '99+' : count) : '';
+            historyCount.textContent = count > 0 ? (count > 99 ? toKu('99+') : toKu(count)) : '';
             historyCount.style.display = count > 0 ? 'flex' : 'none';
         }
     }
