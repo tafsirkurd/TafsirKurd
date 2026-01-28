@@ -4124,7 +4124,8 @@
             const badge = document.getElementById('notificationBadge');
             const unreadItems = document.querySelectorAll('.notification-item.unread');
             const count = unreadItems.length;
-            badge.textContent = count > 0 ? count : '0';
+            const toKu = window.KurdishNumbers ? window.KurdishNumbers.toKurdish : String;
+            badge.textContent = count > 0 ? toKu(count) : '٠';
             badge.style.display = count > 0 ? 'flex' : 'none';
         }
 
@@ -4271,7 +4272,7 @@
 
             // Hide badge
             const badge = document.getElementById('notificationBadge');
-            badge.textContent = '0';
+            badge.textContent = '٠';
             badge.style.display = 'none';
         }
 
