@@ -695,8 +695,8 @@
         }
 
         .notification-icon.new-episode {
-            background: rgba(46, 204, 113, 0.2);
-            color: var(--success);
+            background: rgba(231, 76, 60, 0.2);
+            color: var(--danger);
         }
 
         .notification-icon.new-series {
@@ -1394,7 +1394,7 @@
             position: absolute;
             top: 8px;
             right: 8px;
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: var(--danger);
             padding: 4px 10px;
             border-radius: 4px;
             z-index: 8;
@@ -1407,7 +1407,7 @@
             font-weight: 600;
         }
 
-        /* YouTube-style progress bar (black) */
+        /* Progress bar - matches badge color */
         .episode-progress-bar {
             position: absolute;
             bottom: 0;
@@ -1420,7 +1420,7 @@
 
         .episode-progress-fill {
             height: 100%;
-            background: #000000;
+            background: var(--danger);
             transition: width 0.3s ease;
         }
 
@@ -3972,12 +3972,18 @@
         </div>
     </footer>
 
+    <!-- Kurdish Number Utility -->
+    <script src="/utils/kurdish-numbers.js"></script>
+    <script src="/utils/auto-kurdish-numbers.js"></script>
+
     <!-- JavaScript -->
     <!-- Native HTML5 Video Player (AWS S3) -->
     <script src="/islamvoice-player.js?v=20260132"></script>
     <script>
-        // Set current year in footer
-        document.getElementById('year').textContent = new Date().getFullYear();
+        // Set current year in footer (Kurdish numerals)
+        const yearEl = document.getElementById('year');
+        const currentYear = new Date().getFullYear();
+        yearEl.textContent = window.KurdishNumbers ? window.KurdishNumbers.toKurdish(currentYear) : currentYear;
 
         // ===== AUTHENTICATION SYSTEM =====
         let supabaseClient = null;
