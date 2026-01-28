@@ -2450,8 +2450,10 @@
         // Track view (async, don't await)
         trackVideoView(episodeId);
 
-        // Find the clicked episode card
-        const clickedCard = document.querySelector(`.episode-card[onclick*="${episodeId}"]`) ||
+        // Find the clicked episode card by data attribute first, then fallback to onclick
+        const clickedCard = document.querySelector(`.episode-card[data-episode-id="${episodeId}"]`) ||
+                           document.querySelector(`.episode-item[data-video-id="${episodeId}"]`) ||
+                           document.querySelector(`.episode-card[onclick*="${episodeId}"]`) ||
                            document.querySelector(`.episode-item[onclick*="${episodeId}"]`);
 
         // Close any existing player and restore original thumbnail
@@ -2477,17 +2479,8 @@
             el.classList.remove('now-playing');
         });
 
-        // Highlight the currently playing card - try multiple selectors
-        let playingCard = document.querySelector(`.episode-card[data-episode-id="${episodeId}"]`);
-        if (!playingCard) {
-            // Try finding by onclick attribute
-            document.querySelectorAll('.episode-card, .episode-item').forEach(card => {
-                const onclick = card.getAttribute('onclick') || '';
-                if (onclick.includes(episodeId)) {
-                    playingCard = card;
-                }
-            });
-        }
+        // Highlight the currently playing card
+        let playingCard = clickedCard;
         if (playingCard) {
             playingCard.classList.add('now-playing');
             console.log('🎯 Highlighted playing card:', playingCard);
