@@ -2387,6 +2387,15 @@
         const uploadStatus = document.getElementById('uploadStatus');
         const videoUrlInput = document.getElementById('episode-video-url');
 
+        // Click anywhere in drop zone to upload
+        videoDropZone.addEventListener('click', (e) => {
+            // Only trigger if clicking on the placeholder area (not on progress UI)
+            if (uploadPlaceholder.style.display !== 'none') {
+                videoFileInput.click();
+            }
+        });
+        videoDropZone.style.cursor = 'pointer';
+
         // Drag and drop handlers
         videoDropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -2585,12 +2594,16 @@
                 // Reset file input so another video can be uploaded
                 document.getElementById('videoFileInput').value = '';
 
-                // Keep upload complete visible but don't reset to placeholder
+                // Keep upload complete visible briefly, then reset to allow another upload
                 setTimeout(() => {
                     uploadComplete.style.display = 'none';
-                    // Show a success message instead of resetting
                     uploadPlaceholder.style.display = 'block';
-                    uploadPlaceholder.querySelector('p').innerHTML = 'Video uploaded! <span style="color: var(--accent-blue); cursor: pointer;" onclick="document.getElementById(\'videoFileInput\').click()">Upload another</span> or pick thumbnail below.';
+                    // Reset placeholder to original state so user can upload another
+                    uploadPlaceholder.innerHTML = `
+                        <i class="fas fa-check-circle" style="font-size: 32px; color: var(--accent-green); margin-bottom: 8px;"></i>
+                        <p style="margin: 0; color: var(--text-secondary); font-size: 14px;">Video uploaded! <span style="color: var(--accent-blue); cursor: pointer;" onclick="document.getElementById('videoFileInput').click()">Click to upload another</span></p>
+                        <small style="color: var(--text-tertiary);">MP4, WebM (max 500MB)</small>
+                    `;
                 }, 2000);
 
             } catch (error) {
