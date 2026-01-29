@@ -645,14 +645,14 @@
         playEpisode,
         removeFromHistory: function(episodeId) {
             state.watchHistory = state.watchHistory.filter(h => h.episodeId !== episodeId);
-            localStorage.setItem('islamvoice_watchHistory', JSON.stringify(state.watchHistory));
+            localStorage.setItem('watchHistory', JSON.stringify(state.watchHistory));
             renderHistory();
             updateBadgeCounts();
             showNotification('سڕایەوە لە مێژوو');
         },
         removeFromContinue: function(episodeId) {
             state.continueWatching = state.continueWatching.filter(c => c.episodeId !== episodeId);
-            localStorage.setItem('islamvoice_continueWatching', JSON.stringify(state.continueWatching));
+            localStorage.setItem('continueWatching', JSON.stringify(state.continueWatching));
             renderContinueWatching();
             updateBadgeCounts();
             showNotification('سڕایەوە');
@@ -661,28 +661,28 @@
             // Mark as fully watched
             if (!state.watchedVideos.includes(episodeId)) {
                 state.watchedVideos.push(episodeId);
-                localStorage.setItem('islamvoice_watchedVideos', JSON.stringify(state.watchedVideos));
+                localStorage.setItem('watchedVideos', JSON.stringify(state.watchedVideos));
             }
             // Set progress to 100%
             state.watchProgress[episodeId] = { currentTime: 0, duration: 0, percent: 100 };
-            localStorage.setItem('islamvoice_watchProgress', JSON.stringify(state.watchProgress));
+            localStorage.setItem('watchProgress', JSON.stringify(state.watchProgress));
             // Remove from continue watching
             state.continueWatching = state.continueWatching.filter(c => c.episodeId !== episodeId);
-            localStorage.setItem('islamvoice_continueWatching', JSON.stringify(state.continueWatching));
+            localStorage.setItem('continueWatching', JSON.stringify(state.continueWatching));
             renderContinueWatching();
             updateBadgeCounts();
             showNotification('تەواو بووە');
         },
         clearAllHistory: function() {
             state.watchHistory = [];
-            localStorage.setItem('islamvoice_watchHistory', JSON.stringify(state.watchHistory));
+            localStorage.setItem('watchHistory', JSON.stringify(state.watchHistory));
             renderHistory();
             updateBadgeCounts();
             showNotification('مێژوو پاک کرایەوە');
         },
         clearAllContinue: function() {
             state.continueWatching = [];
-            localStorage.setItem('islamvoice_continueWatching', JSON.stringify(state.continueWatching));
+            localStorage.setItem('continueWatching', JSON.stringify(state.continueWatching));
             renderContinueWatching();
             updateBadgeCounts();
             showNotification('لیست پاک کرایەوە');
