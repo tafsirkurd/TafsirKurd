@@ -39,6 +39,18 @@
 
         const remainingMs = remaining;
 
+        // Session expired - force logout immediately
+        if (remainingMs <= 0) {
+            stopTimerDisplay();
+            alert('Session expired! You will be logged out.');
+            sessionStorage.removeItem('adminToken');
+            sessionStorage.removeItem('adminSessionStart');
+            sessionStorage.removeItem('warning5minShown');
+            sessionStorage.removeItem('warning2minShown');
+            window.location.href = '/admin-login.html';
+            return;
+        }
+
         // Update tooltip with full info
         const timeoutDate = new Date(startTime + SESSION_TIMEOUT);
         timerElement.title = `Session expires at ${timeoutDate.toLocaleTimeString()}\n(${remainingMinutes} min ${remainingSeconds} sec remaining)`;
