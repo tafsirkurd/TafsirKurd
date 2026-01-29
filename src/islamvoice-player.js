@@ -595,7 +595,21 @@
         const episode = state.playlist.find(ep => ep.id === episodeId);
         console.log('📺 Found episode:', episode);
         if (episode) {
-            playVideo(episode.videoId, episode.title, episode.id);
+            // Check if the episode card exists in DOM
+            const cardExists = document.querySelector(`.episode-card[data-episode-id="${episodeId}"]`) ||
+                              document.querySelector(`.episode-item[data-video-id="${episodeId}"]`);
+
+            if (!cardExists) {
+                // Card not in DOM - navigate to the episode's topic first so cards render
+                const topicId = episode.series || episode.category || 'general';
+                showTopic(topicId);
+                // Small delay to let DOM render the cards
+                setTimeout(() => {
+                    playVideo(episode.videoId, episode.title, episode.id);
+                }, 100);
+            } else {
+                playVideo(episode.videoId, episode.title, episode.id);
+            }
         } else {
             console.error('❌ Episode not found in playlist');
         }
