@@ -11,6 +11,16 @@
   Pragma: no-cache
   Expires: 0
 
+# 📦 JS & CSS - Short cache, must revalidate (cache busted via ?v= param)
+/*.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.css
+  Cache-Control: public, max-age=0, must-revalidate
+
+/utils/*.js
+  Cache-Control: public, max-age=0, must-revalidate
+
 # 🔒 GLOBAL SECURITY HEADERS - 100/100 Score
 /*
   X-Frame-Options: DENY
