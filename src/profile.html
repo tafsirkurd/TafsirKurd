@@ -512,6 +512,49 @@
             transition: width 0.6s;
         }
 
+        /* Mobile Tab Bar */
+        .mobile-tab-bar {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            z-index: 100;
+            padding: 0.5rem 0;
+            padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+        }
+
+        .mobile-tab-bar nav {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .mobile-tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2rem;
+            padding: 0.4rem 0.75rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit;
+            font-size: 0.7rem;
+            transition: color 0.3s;
+        }
+
+        .mobile-tab-item i {
+            font-size: 1.1rem;
+        }
+
+        .mobile-tab-item.active {
+            color: var(--text);
+            font-weight: 600;
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .profile-main {
@@ -520,12 +563,15 @@
             }
 
             .profile-sidebar {
-                transform: translateX(100%);
-                transition: transform 0.3s;
+                display: none;
             }
 
-            .profile-sidebar.open {
-                transform: translateX(0);
+            .mobile-tab-bar {
+                display: block;
+            }
+
+            .profile-main {
+                padding-bottom: 5rem;
             }
 
             .form-grid {
@@ -1016,8 +1062,151 @@
             }
 
             .header-dropdown {
-                right: 0;
-                left: auto;
+                position: fixed;
+                top: 60px;
+                left: 1rem;
+                right: auto;
+                min-width: 220px;
+                max-width: calc(100vw - 2rem);
+            }
+        }
+
+        /* ===== MOBILE LAYOUT ===== */
+        @media (max-width: 480px) {
+            .profile-header {
+                padding: 0.75rem;
+                height: 60px;
+            }
+
+            .profile-container {
+                padding-top: 60px;
+            }
+
+            .profile-header-avatar {
+                width: 36px;
+                height: 36px;
+            }
+
+            .profile-header-user {
+                gap: 0.6rem;
+            }
+
+            .profile-header-info h2 {
+                font-size: 0.85rem;
+            }
+
+            .profile-header-info p {
+                font-size: 0.7rem;
+            }
+
+            .profile-header-actions {
+                gap: 0.4rem;
+            }
+
+            .nav-icon-btn {
+                width: 34px;
+                height: 34px;
+                font-size: 0.85rem;
+            }
+
+            .profile-main {
+                padding: 1rem;
+            }
+
+            .section-title {
+                font-size: 1.2rem;
+            }
+
+            .section-description {
+                font-size: 0.85rem;
+                margin-bottom: 1.25rem;
+            }
+
+            .card {
+                padding: 1rem;
+                border-radius: 10px;
+                margin-bottom: 1rem;
+            }
+
+            .card-title {
+                font-size: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .form-input, .form-select {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
+
+            .btn {
+                padding: 0.75rem 1.25rem;
+                font-size: 0.9rem;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .toggle-group {
+                padding: 1rem;
+            }
+
+            .toggle-title {
+                font-size: 0.9rem;
+            }
+
+            .toggle-description {
+                font-size: 0.8rem;
+            }
+
+            .device-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+                padding: 1rem;
+            }
+
+            .device-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 1.1rem;
+            }
+
+            .device-details h4 {
+                font-size: 0.85rem;
+            }
+
+            .device-details p {
+                font-size: 0.75rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .stat-card {
+                padding: 1.25rem;
+            }
+
+            .stat-icon {
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .stat-label {
+                font-size: 0.8rem;
+            }
+
+            .header-dropdown {
+                top: 52px;
             }
         }
     </style>
@@ -1425,6 +1614,28 @@
         </main>
     </div>
 
+    <!-- Mobile Tab Bar -->
+    <div class="mobile-tab-bar">
+        <nav>
+            <button class="mobile-tab-item active" data-section="profile">
+                <i class="fas fa-user"></i>
+                <span>پرۆفایل</span>
+            </button>
+            <button class="mobile-tab-item" data-section="settings">
+                <i class="fas fa-cog"></i>
+                <span>رێکخستن</span>
+            </button>
+            <button class="mobile-tab-item" data-section="quran">
+                <i class="fas fa-book-quran"></i>
+                <span>قورئان</span>
+            </button>
+            <button class="mobile-tab-item" data-section="help">
+                <i class="fas fa-question-circle"></i>
+                <span>یارمەتی</span>
+            </button>
+        </nav>
+    </div>
+
     <script>
         // Initialize Supabase
         let supabaseClient = null;
@@ -1596,19 +1807,34 @@
             }
         }
 
+        // Navigation - shared logic for sidebar and mobile tabs
+        function switchSection(section, clickedItem) {
+            // Update sidebar active states
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            const sidebarItem = document.querySelector(`.sidebar-item[data-section="${section}"]`);
+            if (sidebarItem) sidebarItem.classList.add('active');
+
+            // Update mobile tab active states
+            document.querySelectorAll('.mobile-tab-item').forEach(i => i.classList.remove('active'));
+            const tabItem = document.querySelector(`.mobile-tab-item[data-section="${section}"]`);
+            if (tabItem) tabItem.classList.add('active');
+
+            // Show corresponding section
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(`${section}-section`).classList.add('active');
+
+            // Scroll to top on mobile
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         // Sidebar navigation
         document.querySelectorAll('.sidebar-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const section = item.dataset.section;
+            item.addEventListener('click', () => switchSection(item.dataset.section, item));
+        });
 
-                // Update active states
-                document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-
-                // Show corresponding section
-                document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-                document.getElementById(`${section}-section`).classList.add('active');
-            });
+        // Mobile tab bar navigation
+        document.querySelectorAll('.mobile-tab-item').forEach(item => {
+            item.addEventListener('click', () => switchSection(item.dataset.section, item));
         });
 
         // Update profile
