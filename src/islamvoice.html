@@ -1754,6 +1754,43 @@
             overflow-y: auto;
         }
 
+        @media (max-width: 768px) {
+            #searchModal {
+                align-items: flex-start;
+                padding: 1rem;
+                padding-top: 15vh;
+            }
+
+            .search-input {
+                font-size: 1.1rem;
+                padding: 1rem 1.25rem;
+                border-radius: 14px;
+            }
+
+            .search-results {
+                margin-top: 1rem;
+                max-height: 55vh;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #searchModal {
+                padding: 0.75rem;
+                padding-top: 10vh;
+            }
+
+            .search-input {
+                font-size: 1rem;
+                padding: 0.85rem 1rem;
+                border-radius: 12px;
+            }
+
+            .search-results {
+                margin-top: 0.75rem;
+                max-height: 60vh;
+            }
+        }
+
         /* Share Modal */
         .share-options {
             display: grid;
