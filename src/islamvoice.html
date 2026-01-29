@@ -3806,9 +3806,14 @@
 
             <!-- History View -->
             <div class="view-container" id="historyView">
-                <div class="view-header">
-                    <h2>مێژوو</h2>
-                    <p>ھەمی ڤیدیۆیێن کو تو دیتینە</p>
+                <div class="view-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h2>مێژوو</h2>
+                        <p>ھەمی ڤیدیۆیێن کو تو دیتینە</p>
+                    </div>
+                    <button onclick="window.tvApp.clearAllHistory()" style="background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-family: inherit; white-space: nowrap;">
+                        <i class="fas fa-trash-alt"></i> پاککرنەوە
+                    </button>
                 </div>
 
                 <div class="history-list" id="historyListContainer">
@@ -3818,9 +3823,14 @@
 
             <!-- Continue Watching View -->
             <div class="view-container" id="continueView">
-                <div class="view-header">
-                    <h2>بەردەوام ببە ل بینینێ</h2>
-                    <p>ڤیدیۆیێن کو تو نیڤ تەواھیکرینە</p>
+                <div class="view-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h2>بەردەوام ببە ل بینینێ</h2>
+                        <p>ڤیدیۆیێن کو تو نیڤ تەواھیکرینە</p>
+                    </div>
+                    <button onclick="window.tvApp.clearAllContinue()" style="background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-family: inherit; white-space: nowrap;">
+                        <i class="fas fa-trash-alt"></i> پاککرنەوە
+                    </button>
                 </div>
 
                 <div class="episodes-list" id="continueListContainer">

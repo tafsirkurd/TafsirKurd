@@ -498,6 +498,25 @@
                                 title="${isBookmarked ? 'حەزفکرن ژ خەزنکراوان' : 'خەزنکرن'}">
                             <i class="fas fa-bookmark"></i>
                         </button>
+                        ${containerId === 'historyListContainer' ? `
+                            <button class="episode-action-btn"
+                                    onclick="window.tvApp.removeFromHistory('${episode.id}')"
+                                    title="سڕینەوە لە مێژوو">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        ` : ''}
+                        ${containerId === 'continueListContainer' ? `
+                            <button class="episode-action-btn"
+                                    onclick="window.tvApp.markAsWatched('${episode.id}')"
+                                    title="تەواو بووە">
+                                <i class="fas fa-check-circle"></i>
+                            </button>
+                            <button class="episode-action-btn"
+                                    onclick="window.tvApp.removeFromContinue('${episode.id}')"
+                                    title="سڕینەوە">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
             `;
@@ -624,6 +643,50 @@
     window.tvApp = {
         showTopic,
         playEpisode,
+        removeFromHistory: function(episodeId) {
+            state.watchHistory = state.watchHistory.filter(h => h.episodeId !== episodeId);
+            localStorage.setItem('islamvoice_watchHistory', JSON.stringify(state.watchHistory));
+            renderHistory();
+            updateBadgeCounts();
+            showNotification('سڕایەوە لە مێژوو');
+        },
+        removeFromContinue: function(episodeId) {
+            state.continueWatching = state.continueWatching.filter(c => c.episodeId !== episodeId);
+            localStorage.setItem('islamvoice_continueWatching', JSON.stringify(state.continueWatching));
+            renderContinueWatching();
+            updateBadgeCounts();
+            showNotification('سڕایەوە');
+        },
+        markAsWatched: function(episodeId) {
+            // Mark as fully watched
+            if (!state.watchedVideos.includes(episodeId)) {
+                state.watchedVideos.push(episodeId);
+                localStorage.setItem('islamvoice_watchedVideos', JSON.stringify(state.watchedVideos));
+            }
+            // Set progress to 100%
+            state.watchProgress[episodeId] = { currentTime: 0, duration: 0, percent: 100 };
+            localStorage.setItem('islamvoice_watchProgress', JSON.stringify(state.watchProgress));
+            // Remove from continue watching
+            state.continueWatching = state.continueWatching.filter(c => c.episodeId !== episodeId);
+            localStorage.setItem('islamvoice_continueWatching', JSON.stringify(state.continueWatching));
+            renderContinueWatching();
+            updateBadgeCounts();
+            showNotification('تەواو بووە');
+        },
+        clearAllHistory: function() {
+            state.watchHistory = [];
+            localStorage.setItem('islamvoice_watchHistory', JSON.stringify(state.watchHistory));
+            renderHistory();
+            updateBadgeCounts();
+            showNotification('مێژوو پاک کرایەوە');
+        },
+        clearAllContinue: function() {
+            state.continueWatching = [];
+            localStorage.setItem('islamvoice_continueWatching', JSON.stringify(state.continueWatching));
+            renderContinueWatching();
+            updateBadgeCounts();
+            showNotification('لیست پاک کرایەوە');
+        },
         toggleBookmark: function(episodeId) {
             const isNowBookmarked = toggleBookmark(episodeId);
             // Update just the button, don't re-render whole view
