@@ -9730,15 +9730,22 @@
             const ayahElements = container.querySelectorAll('.ayah[data-ayah]');
             if (ayahElements.length === 0) return;
 
-            // Get total scrollable height
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const scrollPercentage = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
-
-            // Calculate ayahs read based on scroll percentage
             const totalAyahs = ayahElements.length;
-            const ayahsRead = Math.floor((scrollPercentage / 100) * totalAyahs);
-            const percentage = Math.min(100, Math.round(scrollPercentage));
+            const viewportMiddle = window.pageYOffset + (window.innerHeight / 2);
+
+            // Count how many ayahs the user has scrolled past (top of ayah is above viewport middle)
+            let ayahsRead = 0;
+            for (let i = 0; i < ayahElements.length; i++) {
+                const rect = ayahElements[i].getBoundingClientRect();
+                const ayahTop = rect.top + window.pageYOffset;
+                if (ayahTop <= viewportMiddle) {
+                    ayahsRead = i + 1;
+                } else {
+                    break;
+                }
+            }
+
+            const percentage = Math.min(100, Math.round((ayahsRead / totalAyahs) * 100));
 
             // Update sticky progress bar
             const progressFillSticky = document.getElementById('progressFillSticky');
