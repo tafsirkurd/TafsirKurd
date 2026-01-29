@@ -461,8 +461,7 @@
 .episode-item.now-playing,
 .episode-card.now-playing {
     background: var(--primary-light);
-    border: 2px solid var(--primary);
-    box-shadow: 0 0 20px rgba(var(--primary-rgb, 59, 130, 246), 0.3);
+    border: 2px solid var(--accent);
     position: relative;
 }
 
@@ -472,19 +471,19 @@
     position: absolute;
     top: 8px;
     left: 8px;
-    background: var(--primary);
-    color: white;
+    background: #000;
+    color: #fff;
     padding: 4px 10px;
     border-radius: 20px;
     font-size: 0.7rem;
     font-weight: 600;
     z-index: 10;
-    animation: pulse-playing 2s infinite;
 }
 
-@keyframes pulse-playing {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+[data-theme="dark"] .episode-item.now-playing::after,
+[data-theme="dark"] .episode-card.now-playing::after {
+    background: #fff;
+    color: #000;
 }
 
 .episode-number {
@@ -617,7 +616,7 @@
 }
 
 .episode-meta i {
-    color: var(--info);
+    color: var(--text-muted);
 }
 
 .episode-actions {
