@@ -1430,6 +1430,12 @@
             });
         }
 
+        // Modal search - live results as you type
+        const modalSearchInput = document.getElementById('searchInput');
+        if (modalSearchInput) {
+            modalSearchInput.addEventListener('input', handleModalSearch);
+        }
+
         // Old search button (fallback)
         if (elements.searchBtn) {
             elements.searchBtn.addEventListener('click', openSearchModal);
@@ -3398,6 +3404,77 @@
 
     function closeSearchModal() {
         elements.searchModal.classList.remove('active');
+        const modalInput = document.getElementById('searchInput');
+        const resultsDiv = document.getElementById('searchResults');
+        if (modalInput) modalInput.value = '';
+        if (resultsDiv) resultsDiv.innerHTML = '';
+    }
+
+    // ===== MODAL SEARCH (mobile) =====
+    function handleModalSearch(e) {
+        const query = e.target.value.toLowerCase().trim();
+        const resultsDiv = document.getElementById('searchResults');
+        if (!resultsDiv) return;
+
+        if (query.length === 0) {
+            resultsDiv.innerHTML = '';
+            return;
+        }
+
+        const results = [];
+        state.playlist.forEach(video => {
+            if (video.title && video.title.toLowerCase().includes(query)) {
+                results.push(video);
+            } else if (video.description && video.description.toLowerCase().includes(query)) {
+                results.push(video);
+            } else if (video.category && video.category.toLowerCase().includes(query)) {
+                results.push(video);
+            } else if (video.series && video.series.toLowerCase().includes(query)) {
+                results.push(video);
+            }
+        });
+
+        if (results.length === 0) {
+            resultsDiv.innerHTML = `
+                <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                    <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                    <p>هیچ ئەنجامێ نەهاتە دیتن</p>
+                </div>
+            `;
+        } else {
+            resultsDiv.innerHTML = results.slice(0, 10).map(video => `
+                <div onclick="window.tvApp.playEpisode('${video.id}'); document.getElementById('searchModal').classList.remove('active');" style="
+                    padding: 0.75rem 1rem;
+                    border-bottom: 1px solid var(--border);
+                    cursor: pointer;
+                    display: flex;
+                    gap: 0.75rem;
+                    align-items: center;
+                    background: var(--card-bg);
+                    border-radius: 8px;
+                    margin-bottom: 0.5rem;
+                ">
+                    <div style="
+                        width: 70px;
+                        height: 40px;
+                        background: var(--bg);
+                        border-radius: 6px;
+                        flex-shrink: 0;
+                        overflow: hidden;
+                    ">
+                        <img src="${video.thumbnail || ''}" alt="" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 600; color: var(--text); margin-bottom: 0.15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.9rem;">
+                            ${video.title || 'بێناڤ'}
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                            ${video.seriesTitle || video.category || ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
     }
 
     // ===== INLINE SEARCH =====
