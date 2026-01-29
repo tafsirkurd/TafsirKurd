@@ -2961,33 +2961,8 @@
             updateBadgeCounts();
         };
 
-        // Check if clicking from sidebar views (history, bookmarks, continue)
-        const isSidebarView = clickedCard && clickedCard.closest('.view-container:not(#topicsView):not(#episodesView)');
-
-        // For sidebar views or no card found, show video in main content area prominently
-        if (isSidebarView || !clickedCard) {
-            // Create a video modal/overlay at top of main content
-            const mainContent = document.getElementById('main-content') || document.querySelector('.main-content') || document.body;
-
-            // Style for prominent display
-            videoWrapper.style.cssText = 'position:relative; width:100%; max-width:800px; background:#000; border-radius:12px; overflow:hidden; margin:20px auto; display:flex; align-items:center; justify-content:center; direction:ltr; box-shadow: 0 10px 40px rgba(0,0,0,0.5);';
-
-            // Insert at top of main content
-            mainContent.insertBefore(videoWrapper, mainContent.firstChild);
-
-            // Scroll to video
-            videoWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-            // Update close button
-            closeBtn.onclick = function() {
-                document.removeEventListener('keydown', handleKeyboard);
-                videoElement.pause();
-                videoWrapper.remove();
-                state.currentEpisode = null;
-                updateBadgeCounts();
-            };
-        } else if (clickedCard) {
-            // For regular episode cards in main grid
+        // Always insert video inside the card if found
+        if (clickedCard) {
             const thumbnail = clickedCard.querySelector('.episode-thumbnail');
             if (thumbnail) {
                 // Hide thumbnail
@@ -3008,6 +2983,23 @@
                 // No thumbnail found, just insert inside card
                 clickedCard.insertBefore(videoWrapper, clickedCard.firstChild);
             }
+
+            // Scroll card into view
+            clickedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            // No card found - show video at top of main content
+            const mainContent = document.getElementById('main-content') || document.querySelector('.main-content') || document.body;
+            videoWrapper.style.cssText = 'position:relative; width:100%; max-width:800px; background:#000; border-radius:12px; overflow:hidden; margin:20px auto; display:flex; align-items:center; justify-content:center; direction:ltr;';
+            mainContent.insertBefore(videoWrapper, mainContent.firstChild);
+            videoWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            closeBtn.onclick = function() {
+                document.removeEventListener('keydown', handleKeyboard);
+                videoElement.pause();
+                videoWrapper.remove();
+                state.currentEpisode = null;
+                updateBadgeCounts();
+            };
         }
 
         // Set video source
