@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Tafsir Kurd Logo - White Kufic Calligraphy -->
+  <g fill="#ffffff">
+    <!-- Right side - کورد (Kurd) -->
+    <!-- ک (kaf) -->
+    <rect x="380" y="120" width="28" height="180"/>
+    <rect x="380" y="120" width="80" height="28"/>
+    <rect x="432" y="120" width="28" height="80"/>
+    <!-- Small dot above ک -->
+    <rect x="400" y="80" width="20" height="20"/>
+
+    <!-- و (waw) -->
+    <rect x="320" y="180" width="28" height="120"/>
+    <rect x="320" y="180" width="60" height="28"/>
+    <rect x="320" y="272" width="60" height="28"/>
+
+    <!-- ر (ra) -->
+    <rect x="270" y="220" width="28" height="80"/>
+    <rect x="270" y="272" width="50" height="28"/>
+
+    <!-- د (dal) -->
+    <rect x="200" y="180" width="28" height="120"/>
+    <rect x="200" y="180" width="60" height="28"/>
+
+    <!-- Center line connecting -->
+    <rect x="100" y="300" width="360" height="28"/>
+
+    <!-- Left side - تفسیر (Tafsir) -->
+    <!-- ت (ta) -->
+    <rect x="52" y="180" width="28" height="148"/>
+    <rect x="52" y="180" width="100" height="28"/>
+    <rect x="124" y="180" width="28" height="80"/>
+    <!-- Two dots above ت -->
+    <rect x="70" y="140" width="18" height="18"/>
+    <rect x="100" y="140" width="18" height="18"/>
+
+    <!-- ف (fa) -->
+    <rect x="160" y="180" width="28" height="120"/>
+    <!-- Dot above ف -->
+    <rect x="165" y="140" width="18" height="18"/>
+
+    <!-- س (sin) - three teeth -->
+    <rect x="200" y="240" width="20" height="60"/>
+    <rect x="230" y="260" width="20" height="40"/>
+    <rect x="260" y="240" width="20" height="60"/>
+
+    <!-- ی (ya) -->
+    <rect x="290" y="340" width="28" height="60"/>
+    <!-- Two dots below ی -->
+    <rect x="280" y="410" width="16" height="16"/>
+    <rect x="305" y="410" width="16" height="16"/>
+
+    <!-- ر (ra) at end -->
+    <rect x="340" y="340" width="28" height="60"/>
+    <rect x="340" y="372" width="50" height="28"/>
+
+    <!-- Decorative bottom dot -->
+    <rect x="180" y="380" width="20" height="20"/>
+  </g>
+</svg>

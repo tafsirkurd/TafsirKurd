@@ -49,7 +49,7 @@
                         <a href="/" class="footer-link">مالپەڕێ سەرەکی</a>
                         <a href="/quran" class="footer-link">قورئانا پیرۆز</a>
                         <a href="/#features" class="footer-link">تایبەتمەندی</a>
-                        <a href="/#about" class="footer-link">دەربارەی مە</a>
+                        <a href="/about" class="footer-link">دەربارەی مە</a>
                     </div>
                 </div>
 
