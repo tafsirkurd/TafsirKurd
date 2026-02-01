@@ -162,21 +162,25 @@
             background: rgba(0, 0, 0, 0.95);
         }
 
-        [data-theme="dark"] .nav-logo {
+        [data-theme="dark"] .nav-logo .header-title {
             color: #ffffff;
         }
 
-        [data-theme="dark"] .nav-logo img {
-            filter: brightness(0) invert(1);
+        [data-theme="dark"] .nav-logo .logo-image {
+            filter: invert(1) brightness(1.2);
         }
 
         [data-theme="dark"] .nav-link {
-            color: rgba(255, 255, 255, 0.8);
+            color: #e5e5e5;
+        }
+
+        [data-theme="dark"] .nav-link::before {
+            background: #fff;
         }
 
         [data-theme="dark"] .nav-link:hover,
         [data-theme="dark"] .nav-link.active {
-            color: #ffffff;
+            color: #000;
         }
 
         [data-theme="dark"] .icon-btn {
@@ -497,35 +501,92 @@
         .nav-logo {
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #111827;
+            gap: 15px;
             text-decoration: none;
             white-space: nowrap;
             flex-shrink: 0;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .nav-logo img {
-            height: 40px;
+        .nav-logo:hover {
+            transform: scale(1.03);
+        }
+
+        .nav-logo .logo-image {
+            width: 55px;
+            height: 55px;
+            object-fit: contain;
+            border-radius: 50%;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .nav-logo:hover .logo-image {
+            transform: rotate(-5deg) scale(1.1);
+        }
+
+        .nav-logo .header-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary, #111827);
+            transition: letter-spacing 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .nav-logo:hover .header-title {
+            letter-spacing: 1px;
         }
 
         .nav-menu {
             display: flex;
-            gap: 2rem;
+            gap: 4px;
             list-style: none;
+            margin: 0;
+            padding: 0;
         }
 
         .nav-link {
-            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            color: #111827;
             text-decoration: none;
             font-weight: 500;
-            transition: color var(--transition-fast);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            background: #000;
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: -1;
+        }
+
+        .nav-link:hover::before,
+        .nav-link.active::before {
+            transform: scale(1);
+            opacity: 1;
         }
 
         .nav-link:hover,
         .nav-link.active {
-            color: #111827;
+            color: #fff;
+        }
+
+        .nav-link i {
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-link:hover i,
+        .nav-link.active i {
+            transform: scale(1.1);
         }
 
         .nav-actions {
@@ -3475,15 +3536,17 @@
     <!-- Navigation -->
     <nav class="nav" id="nav">
         <div class="nav-container">
-            <a href="/islamvoice.html" class="nav-logo">
-                <img src="/assets/images/TafsirKurd.png" alt="تەفسیر کورد">
-                <span>دەنگێ ئیسلامێ</span>
-            </a>
+            <div class="nav-logo">
+                <a href="/" style="display: flex; align-items: center;">
+                    <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="logo-image">
+                </a>
+                <div class="header-title">تەفسیر کورد</div>
+            </div>
 
             <ul class="nav-menu">
-                <li><a href="/" class="nav-link">سەرەکی</a></li>
-                <li><a href="/islamvoice.html" class="nav-link active">دەنگێ ئیسلامێ</a></li>
-                <li><a href="/quran.html" class="nav-link">قورئان</a></li>
+                <li><a href="/" class="nav-link"><i class="fas fa-home"></i><span>سەرەکی</span></a></li>
+                <li><a href="/quran" class="nav-link"><i class="fas fa-book-open"></i><span>قورئان</span></a></li>
+                <li><a href="/islamvoice" class="nav-link active"><i class="fas fa-play-circle"></i><span>ئیسلام ڤۆیس</span></a></li>
             </ul>
 <!-- Mobile Menu Toggle -->            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">                <span></span>                <span></span>                <span></span>            </button>
 
