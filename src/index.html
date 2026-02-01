@@ -176,10 +176,8 @@
     gtag('config', 'G-WVQC0MKLFN');
   </script>
 
-  <!-- Favicons - Big site sizes for better visibility -->
-    <link rel="icon" type="image/png" sizes="192x192" href="assets/images/logo.png">
-  <link rel="shortcut icon" href="assets/images/favicon.ico" type="image/x-icon">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/images/apple-touch-icon.png">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
   <link rel="manifest" href="manifest.json">
 
   <!-- DNS Prefetch & Preconnect for external resources -->
@@ -189,6 +187,7 @@
   <!-- Critical Font Preloading - Only preload fonts actually used on this page -->
   <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=16" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/hafs.woff2?v=16" as="font" type="font/woff2" crossorigin>
 
   <!-- Local Fonts - Zero external requests, instant loading -->
   <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
@@ -596,24 +595,65 @@ body.no-scroll {
 }
 
 /* Navigation */
+@keyframes navReveal {
+    0% {
+        transform: translateY(-100%) scaleY(0.8);
+        opacity: 0;
+        filter: blur(12px);
+    }
+    60% {
+        transform: translateY(4px) scaleY(1.02);
+        opacity: 0.9;
+        filter: blur(2px);
+    }
+    100% {
+        transform: translateY(0) scaleY(1);
+        opacity: 1;
+        filter: blur(0);
+    }
+}
+
 nav {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    background: rgba(255, 255, 255, 0.7) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06) !important;
+    border-bottom: none !important;
     z-index: 900;
-    padding: 15px 0;
-    transition: all var(--transition-medium) var(--cubic);
+    padding: 14px 0;
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: navReveal 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
 }
 
 nav.scrolled-nav {
-    padding: 10px 0;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+    padding: 8px 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="dark"] nav {
+    background: #0a0a0a !important;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-theme="dark"] nav.scrolled-nav {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+@keyframes navItemReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.9);
+        filter: blur(8px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
 }
 
 .nav-container {
@@ -630,18 +670,32 @@ nav.scrolled-nav {
     align-items: center;
     gap: 15px;
     text-decoration: none;
-    transition: transform var(--transition-medium) var(--cubic), filter var(--transition-medium);
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease;
+    animation: navItemReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
 }
+
+.nav-logo:hover {
+    transform: scale(1.03);
+}
+
+.nav-links > *:nth-child(1) { animation: navItemReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.9s both; }
+.nav-links > *:nth-child(2) { animation: navItemReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 1.05s both; }
+.nav-links > *:nth-child(3) { animation: navItemReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 1.2s both; }
+.nav-links > *:nth-child(4) { animation: navItemReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 1.35s both; }
+.nav-links > *:nth-child(5) { animation: navItemReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 1.5s both; }
 
 @keyframes logoFloat {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-5px);
-    }
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-3px) rotate(-1deg); }
+    75% { transform: translateY(-3px) rotate(1deg); }
+    50% { transform: translateY(-6px) rotate(0deg); }
 }
 
+@keyframes logoPulseRing {
+    0% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.1); }
+    70% { box-shadow: 0 0 0 10px rgba(0, 0, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+}
 
 .header-title {
     font-size: 1.8rem;
@@ -654,19 +708,26 @@ nav.scrolled-nav {
     font-synthesis: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: letter-spacing 0.4s ease;
+}
+
+.nav-logo:hover .header-title {
+    letter-spacing: 1px;
 }
 
 .logo-image {
     width: 55px;
     height: 55px;
     object-fit: contain;
-    transition: transform var(--transition-medium) var(--cubic);
-    animation: logoFloat 3s ease-in-out infinite;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+    animation: logoFloat 4s ease-in-out infinite;
+    border-radius: 50%;
 }
 
 .logo-image:hover {
-    transform: rotate(5deg) scale(1.1);
-    animation: none;
+    transform: rotate(8deg) scale(1.15);
+    animation: logoPulseRing 1.5s ease-in-out infinite;
+    filter: brightness(1.1);
 }
 
 .hero-logo-static {
@@ -701,127 +762,424 @@ nav.scrolled-nav {
     cursor: pointer;
     padding: 10px;
     z-index: 1001;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hamburger-menu:hover {
+    transform: scale(1.08);
+}
+
+.hamburger-menu:active {
+    transform: scale(0.95);
 }
 
 .hamburger-menu span {
-    width: 30px;
-    height: 3px;
+    width: 26px;
+    height: 2.5px;
     background: var(--primary);
-    border-radius: 3px;
-    transition: all var(--transition-medium) var(--cubic);
+    border-radius: 4px;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: center;
+}
+
+.hamburger-menu span:nth-child(2) {
+    width: 20px;
+    margin-right: auto;
 }
 
 .nav-active .hamburger-menu span:nth-child(1) {
-    transform: rotate(45deg) translate(8px, 8px);
+    transform: rotate(45deg) translate(6px, 6px);
 }
 
 .nav-active .hamburger-menu span:nth-child(2) {
     opacity: 0;
+    transform: scaleX(0);
 }
 
 .nav-active .hamburger-menu span:nth-child(3) {
-    transform: rotate(-45deg) translate(8px, -8px);
+    transform: rotate(-45deg) translate(6px, -6px);
 }
 
 .nav-links {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
 }
 
 .nav-link {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 20px;
-    color: #000000;
+    padding: 11px 18px;
+    color: #1a1a1a;
     text-decoration: none;
-    border-radius: 12px;
-    transition: all var(--transition-medium) var(--cubic);
+    border-radius: 14px;
+    transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     font-weight: 500;
     position: relative;
     overflow: hidden;
+    letter-spacing: 0;
 }
 
 [data-theme="dark"] .nav-link {
-    color: #ffffff;
+    color: #e8e8e8;
 }
 
+/* Animated background pill on hover */
 .nav-link::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
+    inset: 0;
+    border-radius: 14px;
     background: var(--primary);
-    transition: left var(--transition-medium) var(--cubic);
+    transform: scale(0.5);
+    opacity: 0;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
     z-index: -1;
+}
+
+/* Glow effect behind active/hovered link */
+.nav-link::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 18px;
+    background: var(--primary);
+    opacity: 0;
+    filter: blur(12px);
+    transition: opacity 0.5s ease;
+    z-index: -2;
 }
 
 .nav-link:hover::before,
 .nav-link.active::before {
-    left: 0;
+    transform: scale(1);
+    opacity: 1;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+    opacity: 0.15;
+}
+
+[data-theme="dark"] .nav-link:hover::after,
+[data-theme="dark"] .nav-link.active::after {
+    opacity: 0.25;
 }
 
 .nav-link:hover,
 .nav-link.active {
     color: var(--accent);
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    letter-spacing: 0.3px;
 }
 
 .nav-link i {
-    font-size: 1.1rem;
-    transition: transform var(--transition-medium) var(--cubic);
-    color: #000000;
+    font-size: 1.05rem;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease;
+    color: #1a1a1a;
 }
 
 [data-theme="dark"] .nav-link i {
-    color: #ffffff;
+    color: #e8e8e8;
 }
 
 .nav-link:hover i,
 .nav-link.active i {
-    transform: scale(1.2) rotate(10deg);
+    transform: scale(1.25) rotate(12deg);
     color: var(--accent);
 }
 
+/* Active link bottom indicator dot */
+.nav-link.active {
+    position: relative;
+}
+
+@keyframes activeIndicatorPop {
+    0% { transform: translateX(50%) scale(0); }
+    60% { transform: translateX(50%) scale(1.3); }
+    100% { transform: translateX(50%) scale(1); }
+}
+
+.nav-link.active .nav-active-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: activeIndicatorPop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
 /* Special highlighted style for Quran nav link */
+@keyframes quranLinkShimmer {
+    0% { background-position: 200% center; }
+    100% { background-position: -200% center; }
+}
+
 .nav-link-quran {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    background: linear-gradient(135deg, var(--primary), #1a1a1a, var(--primary));
+    background-size: 200% 100%;
     color: var(--accent) !important;
-    border-radius: 8px;
+    border-radius: 12px;
     font-weight: 600;
-    box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.3);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
     position: relative;
 }
 
 [data-theme="dark"] .nav-link-quran {
-    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, #e8e8e8, #ffffff, #e8e8e8);
+    background-size: 200% 100%;
+    color: #000 !important;
+    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
 }
 
 .nav-link-quran i {
     color: var(--accent) !important;
 }
 
+[data-theme="dark"] .nav-link-quran i {
+    color: #000 !important;
+}
+
 .nav-link-quran::before {
     display: none;
 }
 
+.nav-link-quran::after {
+    display: none;
+}
+
 .nav-link-quran:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 25px rgba(var(--primary-rgb), 0.5);
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    animation: quranLinkShimmer 3s ease-in-out infinite;
 }
 
 [data-theme="dark"] .nav-link-quran:hover {
-    box-shadow: 0 6px 30px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 35px rgba(255, 255, 255, 0.2);
+    color: #000 !important;
+}
+
+/* Nav Dropdown */
+.nav-dropdown {
+    position: relative;
+}
+
+.nav-dropdown-trigger {
+    cursor: pointer;
+}
+
+.nav-dropdown-arrow {
+    font-size: 0.6rem;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    margin-right: 2px;
+}
+
+.nav-dropdown:hover .nav-dropdown-arrow {
+    transform: rotate(180deg) translateY(-1px);
+}
+
+@keyframes dropdownReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(16px) scale(0.9) rotateX(-8deg);
+        filter: blur(8px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotateX(0deg);
+        filter: blur(0);
+    }
+}
+
+.nav-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 280px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 20px;
+    padding: 10px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(16px) scale(0.9) rotateX(-8deg);
+    transform-origin: top center;
+    filter: blur(8px);
+    transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+                visibility 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+                filter 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1100;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12),
+                0 8px 20px rgba(0, 0, 0, 0.06);
+    perspective: 800px;
+}
+
+[data-theme="dark"] .nav-dropdown-menu {
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+                0 8px 20px rgba(0, 0, 0, 0.3);
+    background: #141414;
+}
+
+.nav-dropdown:hover .nav-dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1) rotateX(0deg);
+    filter: blur(0);
+}
+
+@keyframes dropItemSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(12px) translateX(8px);
+        filter: blur(6px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) translateX(0);
+        filter: blur(0);
+    }
+}
+
+.nav-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    text-decoration: none;
+    color: var(--primary);
+    border-radius: 14px;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-dropdown-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.04);
+    opacity: 0;
+    transform: scale(0.85);
+    transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"] .nav-dropdown-item::before {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-dropdown-item:hover::before {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.nav-dropdown-item:hover {
+    transform: translateX(-6px);
+}
+
+/* stagger dropdown items with slide-in */
+.nav-dropdown:hover .nav-dropdown-item:nth-child(1) {
+    animation: dropItemSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+}
+.nav-dropdown:hover .nav-dropdown-item:nth-child(2) {
+    animation: dropItemSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+.nav-dropdown-item:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .nav-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-dropdown-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 2px solid rgba(0, 0, 0, 0.08);
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.4s ease,
+                box-shadow 0.4s ease;
+}
+
+.nav-dropdown-item:hover .nav-dropdown-avatar {
+    transform: scale(1.15) rotate(-3deg);
+    border-color: rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="dark"] .nav-dropdown-item:hover .nav-dropdown-avatar {
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .nav-dropdown-avatar {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-dropdown-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+[data-theme="dark"] .nav-dropdown-img {
+    filter: invert(1) brightness(1.2);
+}
+
+.nav-dropdown-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #333, #555);
+    color: #fff;
+    font-size: 1.1rem;
+}
+
+[data-theme="dark"] .nav-dropdown-placeholder {
+    background: linear-gradient(135deg, #888, #aaa);
+    color: #000;
+}
+
+.nav-dropdown-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nav-dropdown-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #000;
+}
+
+[data-theme="dark"] .nav-dropdown-name {
+    color: #fff;
+}
+
+.nav-dropdown-role {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+[data-theme="dark"] .nav-dropdown-role {
+    color: #999;
 }
 
 .nav-overlay {
     display: none;
 }
 
-/* Header with smooth fade transition */
+/* Header with modern animated background */
 header {
     margin-top: 95px;
     padding: 60px 20px 40px;
@@ -829,33 +1187,73 @@ header {
     overflow: hidden;
     color: var(--accent);
     min-height: 400px;
+    background: #141414;
 }
 
-.header-bg-layer {
+/* Scroll-linked shimmer sweep on header */
+.header-scroll-shimmer {
     position: absolute;
     top: 0;
-    left: 0;
-    width: 100%;
+    left: -100%;
+    width: 60%;
     height: 100%;
-    background-size: cover;
-    background-position: center;
-    transition: opacity 1.5s ease-in-out;  /* Changed from 3s to 1.5s */
-    z-index: 0;
-}
-
-.header-bg-layer::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.85) 100%);
+    background: linear-gradient(
+        100deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.02) 30%,
+        rgba(255, 255, 255, 0.06) 50%,
+        rgba(255, 255, 255, 0.02) 70%,
+        transparent 100%
+    );
+    pointer-events: none;
     z-index: 1;
 }
 
-[data-theme="dark"] .header-bg-layer::before {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.6) 100%);
+/* Pulsing edge glow for header - top & bottom */
+@keyframes headerEdgePulse {
+    0%, 100% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 0.9;
+    }
+}
+
+.header-edge-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    pointer-events: none;
+    z-index: 5;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.2) 15%,
+        rgba(255, 255, 255, 0.6) 50%,
+        rgba(255, 255, 255, 0.2) 85%,
+        transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+header.header-in-view .header-edge-bottom {
+    animation: headerEdgePulse 4s ease-in-out infinite;
+}
+
+.header-bg-layer {
+    display: none;
+}
+
+#heroCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
 }
 
 .hero-inner {
@@ -896,107 +1294,312 @@ header {
     margin-left: auto;
     margin-right: auto;
     line-height: 1.8;
-    opacity: 0.95;
-    animation: fadeInUp 1s ease 0.2s both;
     color: #ffffff;
+    opacity: 0;
 }
 
-/* Tab Navigation */
-.tab-navigation {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 40px;
-    flex-wrap: wrap;
-    animation: fadeInUp 1s ease 0.4s both;
+/* Each line slides up and fades in */
+.hero-sub .hero-line {
+    display: block;
+    margin-bottom: 8px;
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(6px);
+    animation: heroLineReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.tab-btn {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    color: #ffffff;
-    padding: 15px 30px;
-    border-radius: 12px;
-    font-family: 'IBM Plex Sans Arabic', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-medium) var(--cubic);
+.hero-sub.ready {
+    opacity: 1;
+}
+
+@keyframes heroLineReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(30px) scaleY(1.3);
+        filter: blur(12px);
+    }
+    100% {
+        opacity: 0.95;
+        transform: translateY(0) scaleY(1);
+        filter: blur(0);
+    }
+}
+
+/* Hero Search Bar */
+.hero-search-wrap {
+    max-width: 600px;
+    margin: 0 auto 36px;
+    opacity: 0;
+    transform: translateY(24px);
+    animation: fadeInUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 1.4s forwards;
+}
+
+.hero-search {
     display: flex;
     align-items: center;
-    gap: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 60px;
+    padding: 6px 24px;
+    gap: 12px;
+    transition: background 0.35s ease, border-color 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
     position: relative;
     overflow: hidden;
 }
 
-.tab-btn::before {
+.hero-search::before {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transition: width 0.6s, height 0.6s, top 0.6s, left 0.6s;
-    transform: translate(-50%, -50%);
+    inset: 0;
+    border-radius: 60px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: searchShimmer 3s ease-in-out infinite;
+    pointer-events: none;
 }
 
-.tab-btn:hover::before {
-    width: 300px;
-    height: 300px;
+@keyframes searchShimmer {
+    0%, 100% { background-position: 200% 0; }
+    50% { background-position: -200% 0; }
 }
 
-.tab-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+.hero-search:focus-within {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.02);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.08), 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
-.tab-btn.active {
-    background: #ffffff;
-    color: #000000;
-    border-color: #ffffff;
+.hero-search-icon {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.05rem;
+    transition: color 0.3s ease;
+    flex-shrink: 0;
 }
 
-.tab-btn-quran {
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.2));
-    border: 2px solid rgba(255, 215, 0, 0.5);
-    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+.hero-search:focus-within .hero-search-icon {
+    color: rgba(255, 255, 255, 0.9);
 }
 
-.tab-btn-quran:hover {
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.3));
-    border-color: rgba(255, 215, 0, 0.7);
-    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+.hero-search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    -webkit-appearance: none;
+    color: #fff;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    padding: 12px 0;
+    direction: rtl;
 }
 
-.tab-btn-quran.active {
-    background: linear-gradient(135deg, #ffd700, #ffa500);
-    color: #000000;
-    border-color: #ffd700;
-    box-shadow: 0 8px 30px rgba(255, 215, 0, 0.5);
+.hero-search-input:focus {
+    border: none;
+    outline: none;
+    box-shadow: none;
 }
 
-.tab-btn i {
+.hero-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 300;
+}
+
+@media (max-width: 768px) {
+    .hero-search-wrap { max-width: 90%; }
+    .hero-search { padding: 4px 18px; }
+    .hero-search-input { font-size: 0.9rem; }
+}
+
+@media (max-width: 480px) {
+    .hero-search { padding: 3px 14px; gap: 8px; }
+    .hero-search-input { font-size: 0.85rem; padding: 10px 0; }
+}
+
+/* Hero Cards */
+.hero-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 10px 0 0;
+    perspective: 1200px;
+}
+
+@keyframes heroCardEnterLeft {
+    0% {
+        opacity: 0;
+        transform: translateX(80px) rotateY(-12deg) scale(0.85);
+        filter: blur(12px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) rotateY(0deg) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes heroCardEnterRight {
+    0% {
+        opacity: 0;
+        transform: translateX(-80px) rotateY(12deg) scale(0.85);
+        filter: blur(12px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) rotateY(0deg) scale(1);
+        filter: blur(0);
+    }
+}
+
+.hero-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    overflow: hidden;
+    text-decoration: none;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.4s var(--cubic);
+    opacity: 0;
+}
+
+.hero-card:nth-child(1) {
+    animation: heroCardEnterLeft 1.1s cubic-bezier(0.16, 1, 0.3, 1) 1.6s forwards;
+}
+
+.hero-card:nth-child(2) {
+    animation: heroCardEnterRight 1.1s cubic-bezier(0.16, 1, 0.3, 1) 1.85s forwards;
+}
+
+.hero-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.hero-card-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.06) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.hero-card:hover .hero-card-glow {
+    opacity: 1;
+}
+
+.hero-card-img {
+    width: 100%;
+    height: 160px;
+    overflow: hidden;
+    position: relative;
+}
+
+.hero-card-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.12));
+    font-size: 3rem;
+    color: rgba(255, 255, 255, 0.7);
+    transition: all 0.4s ease;
+}
+
+.hero-card:hover .hero-card-placeholder {
+    color: #fff;
+    font-size: 3.2rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.18));
+}
+
+.hero-card-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hero-card-body {
+    padding: 20px 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hero-card-title {
     font-size: 1.3rem;
-    transition: transform var(--transition-medium) var(--cubic);
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.01em;
 }
 
-.tab-btn:hover i {
-    transform: rotate(360deg) scale(1.2);
+.hero-card-desc {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+    line-height: 1.6;
 }
 
-/* Tab Content */
-.tab-content {
-    display: none;
-    animation: fadeIn var(--transition-medium) ease;
+.hero-card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    opacity: 0.8;
+    transition: all 0.3s ease;
 }
 
-.tab-content.active {
-    display: block;
+.hero-card-cta i {
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
 }
+
+.hero-card:hover .hero-card-cta {
+    opacity: 1;
+}
+
+.hero-card:hover .hero-card-cta i {
+    transform: translateX(-6px);
+}
+
+/* Subtle shine animation on cards */
+@keyframes cardShine {
+    0% { left: -100%; }
+    100% { left: 200%; }
+}
+
+.hero-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+    animation: cardShine 4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.hero-card:nth-child(2)::after {
+    animation-delay: 2s;
+}
+
 
 @keyframes fadeIn {
     from {
@@ -1121,6 +1724,33 @@ section.show {
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
 }
 
+.feature-card-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    display: block;
+}
+
+.feature-card-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--accent);
+    font-size: 1rem;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.3s ease;
+}
+
+.feature-card-link:hover .feature-card-arrow {
+    transform: translateX(-6px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
 .feature-title {
     font-family: 'IBM Plex Sans Arabic', sans-serif;
     font-weight: 700;
@@ -1144,6 +1774,819 @@ section.show {
 
 .feature-card:hover .feature-desc {
     color: var(--text);
+}
+
+/* ========== Daily Content Section ========== */
+#daily-content {
+    margin-bottom: 80px;
+}
+
+#daily-content .section-title {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.daily-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.daily-card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    padding: 28px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.45s ease,
+                border-color 0.35s ease;
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+    filter: blur(6px);
+}
+
+#daily-content.show .daily-card {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                filter 0.7s ease,
+                box-shadow 0.45s ease,
+                border-color 0.35s ease;
+}
+
+#daily-content.show .daily-card:nth-child(1) { transition-delay: 0.05s; }
+#daily-content.show .daily-card:nth-child(2) { transition-delay: 0.15s; }
+#daily-content.show .daily-card:nth-child(3) { transition-delay: 0.25s; }
+#daily-content.show .daily-card:nth-child(4) { transition-delay: 0.35s; }
+#daily-content.show .daily-card:nth-child(5) { transition-delay: 0.45s; }
+#daily-content.show .daily-card:nth-child(6) { transition-delay: 0.55s; }
+
+.daily-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+    transition: left 0.6s ease;
+    pointer-events: none;
+}
+
+.daily-card:hover::before {
+    left: 100%;
+}
+
+.daily-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+    border-color: var(--primary);
+}
+
+/* Badge */
+.daily-card-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 30px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-bottom: 18px;
+    letter-spacing: 0.02em;
+    background: #111;
+    color: #fff;
+}
+
+[data-theme="dark"] .daily-card-badge {
+    background: #f0f0f0;
+    color: #111;
+}
+
+/* Card top row */
+.daily-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.daily-card-top .daily-card-badge {
+    margin-bottom: 0;
+}
+
+/* Timer */
+.daily-card-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+.daily-card-timer i {
+    font-size: 0.7rem;
+}
+
+/* Ayah Card */
+.daily-ayah-arabic {
+    font-family: 'KFGQPC Hafs', 'Scheherazade New', 'Traditional Arabic', serif;
+    font-size: 1.5rem;
+    line-height: 2.2;
+    color: var(--text);
+    margin-bottom: 14px;
+    text-align: center;
+    direction: rtl;
+}
+
+.daily-ayah-divider {
+    width: 50px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    margin: 0 auto 14px;
+    border-radius: 2px;
+}
+
+.daily-ayah-kurdish {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 14px;
+    direction: rtl;
+}
+
+.daily-ayah-ref {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 0.82rem;
+    color: var(--primary);
+    text-align: center;
+    font-weight: 600;
+    opacity: 0.85;
+}
+
+/* Ayah Card Link */
+.daily-ayah {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    cursor: pointer;
+}
+
+/* Episode Card */
+.daily-episode {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    cursor: pointer;
+}
+
+.daily-episode-thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    background: var(--border-color);
+    position: relative;
+}
+
+.daily-episode-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.daily-episode:hover .daily-episode-thumb img {
+    transform: scale(1.06);
+}
+
+.daily-episode-thumb-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 2.4rem;
+}
+
+.daily-episode-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 48px;
+    height: 48px;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.1rem;
+    backdrop-filter: blur(6px);
+    transition: transform 0.3s ease, background 0.3s ease;
+    pointer-events: none;
+}
+
+.daily-episode:hover .daily-episode-play {
+    transform: translate(-50%, -50%) scale(1.12);
+    background: rgba(180, 60, 60, 0.75);
+}
+
+.daily-episode-title {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    direction: rtl;
+    line-height: 1.5;
+}
+
+.daily-episode-series {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    direction: rtl;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .daily-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .daily-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+    #daily-content {
+        margin-bottom: 50px;
+    }
+    .daily-ayah-arabic {
+        font-size: 1.3rem;
+    }
+}
+
+/* Reach Showcase Container */
+.reach-showcase {
+    background: #0e0e0e;
+    border-radius: 0;
+    padding: 60px 40px 50px;
+    margin: 0;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+}
+
+/* Scroll-driven light beam that sweeps across */
+.reach-showcase .scroll-light-beam {
+    position: absolute;
+    top: 0;
+    left: -40%;
+    width: 25%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.015) 20%,
+        rgba(255, 255, 255, 0.06) 45%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.06) 55%,
+        rgba(255, 255, 255, 0.015) 80%,
+        transparent 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    filter: blur(30px);
+    transition: opacity 0.5s ease;
+}
+
+.reach-showcase.in-view .scroll-light-beam {
+    opacity: 1;
+}
+
+/* Scroll-driven moving gradient orbs */
+.reach-showcase .scroll-orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+    filter: blur(80px);
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+.reach-showcase .scroll-orb-1 {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.06) 0%, transparent 70%);
+    top: -100px;
+    right: -100px;
+}
+
+.reach-showcase .scroll-orb-2 {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.04) 0%, transparent 70%);
+    bottom: -80px;
+    left: -80px;
+}
+
+.reach-showcase.in-view .scroll-orb {
+    opacity: 1;
+}
+
+/* Stat cards scroll-driven 3D reveal */
+.reach-showcase .stat-card {
+    transform: translateY(60px) rotateX(15deg) scale(0.9);
+    opacity: 0;
+    filter: blur(8px);
+    transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.7s ease,
+                filter 0.7s ease,
+                background 0.3s ease,
+                border-color 0.3s ease;
+}
+
+.reach-showcase.in-view .stat-card {
+    transform: translateY(0) rotateX(0deg) scale(1);
+    opacity: 1;
+    filter: blur(0);
+}
+
+.reach-showcase.in-view .stat-card:nth-child(1) { transition-delay: 0s; }
+.reach-showcase.in-view .stat-card:nth-child(2) { transition-delay: 0.12s; }
+.reach-showcase.in-view .stat-card:nth-child(3) { transition-delay: 0.24s; }
+.reach-showcase.in-view .stat-card:nth-child(4) { transition-delay: 0.36s; }
+
+/* Title scroll reveal */
+.reach-showcase .reach-title {
+    transform: translateY(30px);
+    opacity: 0;
+    filter: blur(6px);
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.6s ease,
+                filter 0.6s ease;
+}
+
+.reach-showcase .reach-title + .section-divider {
+    transform: scaleX(0);
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
+}
+
+.reach-showcase.in-view .reach-title {
+    transform: translateY(0);
+    opacity: 1;
+    filter: blur(0);
+}
+
+.reach-showcase.in-view .reach-title + .section-divider {
+    transform: scaleX(1);
+}
+
+/* Top/bottom edge lines that glow when in view */
+.reach-showcase .scroll-edge {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    pointer-events: none;
+    z-index: 5;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.15) 20%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0.15) 80%,
+        transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+.reach-showcase .scroll-edge-top { top: 0; }
+.reach-showcase .scroll-edge-bottom { bottom: 0; }
+
+.reach-showcase.in-view .scroll-edge {
+    opacity: 1;
+    animation: edgeBreathe 3s ease-in-out infinite;
+}
+
+@keyframes edgeBreathe {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}
+
+[data-theme="dark"] .reach-showcase .scroll-edge {
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(0, 0, 0, 0.3) 20%,
+        rgba(0, 0, 0, 0.6) 50%,
+        rgba(0, 0, 0, 0.3) 80%,
+        transparent 100%
+    );
+}
+
+[data-theme="dark"] .reach-showcase .scroll-orb-1 {
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.08) 0%, transparent 70%);
+}
+
+[data-theme="dark"] .reach-showcase .scroll-orb-2 {
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.06) 0%, transparent 70%);
+}
+
+[data-theme="dark"] .reach-showcase .scroll-light-beam {
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(0, 0, 0, 0.03) 20%,
+        rgba(0, 0, 0, 0.1) 50%,
+        rgba(0, 0, 0, 0.03) 80%,
+        transparent 100%
+    );
+}
+
+.reach-showcase #reach {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    perspective: 1000px;
+}
+
+@media (max-width: 768px) {
+    .reach-showcase {
+        padding: 40px 20px 35px;
+    }
+    .reach-showcase #reach {
+        padding: 0;
+    }
+}
+
+.reach-showcase::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+        radial-gradient(ellipse 50% 60% at 10% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 50% at 90% 80%, rgba(255, 255, 255, 0.025) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.reach-showcase::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    pointer-events: none;
+}
+
+.reach-showcase .reach-title {
+    color: #ffffff;
+}
+
+.reach-showcase .stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.reach-showcase .stat-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.reach-showcase .stat-number,
+.reach-showcase .stat-unit {
+    color: #ffffff;
+}
+
+.reach-showcase .stat-label {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.reach-showcase .stat-icon {
+    background: transparent;
+    box-shadow: none;
+}
+
+.reach-showcase .stat-icon i {
+    color: #ffffff !important;
+}
+
+.reach-showcase .stat-card:hover .stat-number,
+.reach-showcase .stat-card:hover .stat-unit {
+    color: #ffffff;
+}
+
+.reach-showcase .stat-card:hover .stat-label {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.reach-showcase .stat-card:hover .stat-icon i {
+    color: #ffffff !important;
+}
+
+/* Dark mode - showcases stay dark, no changes needed */
+[data-theme="dark"] .reach-showcase {
+    background: #f0f0f0;
+}
+
+[data-theme="dark"] .reach-showcase::before {
+    background:
+        radial-gradient(ellipse 50% 60% at 10% 20%, rgba(0, 0, 0, 0.03) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 50% at 90% 80%, rgba(0, 0, 0, 0.025) 0%, transparent 70%);
+}
+
+[data-theme="dark"] .reach-showcase::after {
+    border-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .reach-showcase .stat-card {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .reach-showcase .stat-card:hover {
+    background: rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .reach-showcase .reach-title,
+[data-theme="dark"] .reach-showcase .stat-number,
+[data-theme="dark"] .reach-showcase .stat-unit {
+    color: #000000;
+}
+
+[data-theme="dark"] .reach-showcase .stat-label {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] .reach-showcase .stat-icon i {
+    color: #000000 !important;
+}
+
+[data-theme="dark"] .reach-showcase .stat-card:hover .stat-number,
+[data-theme="dark"] .reach-showcase .stat-card:hover .stat-unit {
+    color: #000000;
+}
+
+[data-theme="dark"] .reach-showcase .stat-card:hover .stat-label {
+    color: rgba(0, 0, 0, 0.8);
+}
+
+[data-theme="dark"] .reach-showcase .stat-card:hover .stat-icon i {
+    color: #000000 !important;
+}
+
+@media (max-width: 768px) {
+    .reach-showcase {
+        padding: 40px 15px 35px;
+    }
+}
+
+/* Videos Showcase Container */
+.videos-showcase {
+    background: #0e0e0e;
+    padding: 60px 40px 50px;
+    margin: 0;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+}
+
+.videos-showcase::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+        radial-gradient(ellipse 50% 60% at 85% 25%, rgba(255, 255, 255, 0.03) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 50% at 15% 75%, rgba(255, 255, 255, 0.025) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.videos-showcase::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    pointer-events: none;
+}
+
+.videos-showcase #videos {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    perspective: 800px;
+}
+
+/* Diagonal light streak */
+.videos-showcase .scroll-streak {
+    position: absolute;
+    top: -50%;
+    left: -20%;
+    width: 15%;
+    height: 200%;
+    background: linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.03) 30%,
+        rgba(255, 255, 255, 0.07) 50%,
+        rgba(255, 255, 255, 0.03) 70%,
+        transparent 100%
+    );
+    transform: rotate(-25deg);
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    filter: blur(20px);
+    transition: opacity 0.5s ease;
+}
+
+.videos-showcase.in-view .scroll-streak {
+    opacity: 1;
+}
+
+/* Side glow orbs */
+.videos-showcase .vid-orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+    filter: blur(90px);
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+
+.videos-showcase .vid-orb-1 {
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+    top: -80px;
+    left: -120px;
+}
+
+.videos-showcase .vid-orb-2 {
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.04) 0%, transparent 70%);
+    bottom: -60px;
+    right: -100px;
+}
+
+.videos-showcase.in-view .vid-orb {
+    opacity: 1;
+}
+
+/* Edge lines */
+.videos-showcase .vid-edge {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    pointer-events: none;
+    z-index: 5;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.15) 25%,
+        rgba(255, 255, 255, 0.35) 50%,
+        rgba(255, 255, 255, 0.15) 75%,
+        transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+.videos-showcase .vid-edge-top { top: 0; }
+.videos-showcase .vid-edge-bottom { bottom: 0; }
+
+.videos-showcase.in-view .vid-edge {
+    opacity: 1;
+    animation: edgeBreathe 3.5s ease-in-out infinite;
+}
+
+/* Title scroll reveal */
+.videos-showcase .videos-title {
+    color: #ffffff;
+    transform: translateY(25px);
+    opacity: 0;
+    filter: blur(5px);
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.6s ease,
+                filter 0.6s ease;
+}
+
+.videos-showcase.in-view .videos-title {
+    transform: translateY(0);
+    opacity: 1;
+    filter: blur(0);
+}
+
+/* Video cards slide in from sides */
+.videos-showcase .video-card,
+.videos-showcase .videos-grid iframe {
+    transform: translateX(40px) scale(0.95);
+    opacity: 0;
+    filter: blur(6px);
+    transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.7s ease,
+                filter 0.7s ease,
+                background 0.3s ease,
+                border-color 0.3s ease;
+}
+
+.videos-showcase.in-view .video-card,
+.videos-showcase.in-view .videos-grid iframe {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+    filter: blur(0);
+}
+
+.videos-showcase.in-view .video-card:nth-child(1),
+.videos-showcase.in-view .videos-grid iframe:nth-child(1) { transition-delay: 0.05s; }
+.videos-showcase.in-view .video-card:nth-child(2),
+.videos-showcase.in-view .videos-grid iframe:nth-child(2) { transition-delay: 0.15s; }
+.videos-showcase.in-view .video-card:nth-child(3),
+.videos-showcase.in-view .videos-grid iframe:nth-child(3) { transition-delay: 0.25s; }
+
+[data-theme="dark"] .videos-showcase .vid-orb-1 {
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.07) 0%, transparent 70%);
+}
+[data-theme="dark"] .videos-showcase .vid-orb-2 {
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.05) 0%, transparent 70%);
+}
+[data-theme="dark"] .videos-showcase .scroll-streak {
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.05) 30%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.05) 70%, transparent 100%);
+}
+[data-theme="dark"] .videos-showcase .vid-edge {
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.3) 25%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.3) 75%, transparent 100%);
+}
+
+.videos-showcase .video-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.videos-showcase .video-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.videos-showcase .loading-content {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.videos-showcase .spinner {
+    border-color: rgba(255, 255, 255, 0.15);
+    border-top-color: #ffffff;
+}
+
+[data-theme="dark"] .videos-showcase {
+    background: #0a0a0a;
+}
+
+[data-theme="dark"] .videos-showcase .videos-title {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .videos-showcase .loading-content {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 768px) {
+    .videos-showcase {
+        padding: 40px 15px 35px;
+    }
+    .videos-showcase #videos {
+        padding: 0;
+    }
 }
 
 /* Stats Section with Hover Animations */
@@ -1520,17 +2963,101 @@ section.show {
 /* Bio Card with Hover */
 .bio-card {
     background: var(--card-bg);
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: var(--shadow-sm);
+    border-radius: 24px;
+    padding: 32px 28px;
     margin-bottom: 30px;
-    border: 1px solid var(--border-light);
-    transition: all var(--transition-medium) var(--cubic);
+    max-width: 750px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Animated gradient border */
+@keyframes bioCardBorderSpin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.bio-card::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 150%;
+    height: 150%;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0%,
+        rgba(0, 0, 0, 0.12) 25%,
+        transparent 50%,
+        rgba(0, 0, 0, 0.08) 75%,
+        transparent 100%
+    );
+    animation: bioCardBorderSpin 8s linear infinite;
+    z-index: -2;
+    border-radius: 24px;
+}
+
+/* Inner background to mask the spinning gradient, leaving only the edge visible */
+.bio-card::after {
+    content: '';
+    position: absolute;
+    inset: 1.5px;
+    background: var(--card-bg);
+    border-radius: 23px;
+    z-index: -1;
+}
+
+[data-theme="dark"] .bio-card::before {
+    background: conic-gradient(
+        from 0deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.15) 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.1) 75%,
+        transparent 100%
+    );
+}
+
+[data-theme="dark"] .bio-card {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
 .bio-card:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-5px);
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="dark"] .bio-card:hover {
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* Inner subtle glow on hover */
+.bio-card:hover::before {
+    animation-duration: 3s;
+}
+
+/* Scroll-in reveal */
+.bio-card {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+    filter: blur(8px);
+}
+
+.bio-card.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+    transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.6s ease,
+                opacity 0.8s ease,
+                filter 0.8s ease;
 }
 
 .quranic-verse {
@@ -1774,6 +3301,240 @@ textarea.form-control {
     background: rgba(231, 76, 60, 0.1);
     color: #c0392b;
     border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+/* Contact Section Redesign */
+.contact-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 0;
+    max-width: 950px;
+    margin: 0 auto;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+    position: relative;
+}
+
+[data-theme="dark"] .contact-wrapper {
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Info panel - dark side */
+.contact-info-panel {
+    background: #0e0e0e;
+    color: #ffffff;
+    padding: 48px 36px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+[data-theme="dark"] .contact-info-panel {
+    background: #f0f0f0;
+    color: #000000;
+}
+
+.contact-info-inner {
+    position: relative;
+    z-index: 2;
+}
+
+.contact-info-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 24px;
+    color: #ffffff;
+}
+
+[data-theme="dark"] .contact-info-icon {
+    background: rgba(0, 0, 0, 0.08);
+    color: #000000;
+}
+
+.contact-info-title {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+}
+
+.contact-info-desc {
+    font-size: 1rem;
+    line-height: 1.7;
+    opacity: 0.75;
+    margin-bottom: 32px;
+}
+
+.contact-info-links {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.contact-info-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 8px 12px;
+    border-radius: 10px;
+    margin: 0 -12px;
+}
+
+[data-theme="dark"] .contact-info-link {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.contact-info-link:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(-4px);
+}
+
+[data-theme="dark"] .contact-info-link:hover {
+    color: #000000;
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.contact-info-link i {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* Decorative orbs */
+.contact-orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.contact-orb-1 {
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.06) 0%, transparent 70%);
+    top: -60px;
+    right: -60px;
+    filter: blur(40px);
+}
+
+.contact-orb-2 {
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.04) 0%, transparent 70%);
+    bottom: -40px;
+    left: -30px;
+    filter: blur(50px);
+}
+
+[data-theme="dark"] .contact-orb-1 {
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.08) 0%, transparent 70%);
+}
+
+[data-theme="dark"] .contact-orb-2 {
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.05) 0%, transparent 70%);
+}
+
+/* Form panel */
+.contact-form-panel {
+    background: var(--card-bg);
+    padding: 48px 40px;
+}
+
+.contact-form-heading {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 28px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.contact-form .form-control {
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-size: 0.95rem;
+    background: var(--bg);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.contact-form .form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+    transform: none;
+}
+
+[data-theme="dark"] .contact-form .form-control:focus {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+}
+
+.contact-submit-btn {
+    width: 100%;
+    padding: 16px 28px !important;
+    border-radius: 14px !important;
+    font-size: 1.05rem !important;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.contact-submit-btn i {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.contact-submit-btn:hover i {
+    transform: translateX(-6px);
+}
+
+/* Scroll reveal for contact */
+.contact-wrapper {
+    opacity: 0;
+    transform: translateY(40px);
+    filter: blur(6px);
+    transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#contact.show .contact-wrapper {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+}
+
+@media (max-width: 768px) {
+    .contact-wrapper {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-info-panel {
+        padding: 36px 28px;
+    }
+
+    .contact-form-panel {
+        padding: 36px 28px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
 }
 
 .social-links {
@@ -2055,20 +3816,36 @@ footer {
         top: 0;
         right: -100%;
         height: 100vh;
-        width: 80%;
+        width: 82%;
         max-width: 400px;
         background: var(--card-bg);
         flex-direction: column;
         align-items: flex-start;
         padding: 100px 30px 30px;
-        box-shadow: var(--shadow-lg);
-        transition: right var(--transition-medium) var(--cubic);
+        box-shadow: -20px 0 60px rgba(0, 0, 0, 0.15);
+        transition: right 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         overflow-y: auto;
         z-index: 1000;
     }
 
+    [data-theme="dark"] .nav-links {
+        box-shadow: -20px 0 60px rgba(0, 0, 0, 0.5);
+    }
+
     .nav-active .nav-links {
         right: 0;
+    }
+
+    /* Stagger mobile nav items */
+    .nav-active .nav-links > *:nth-child(1) { animation: mobileNavItem 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+    .nav-active .nav-links > *:nth-child(2) { animation: mobileNavItem 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.17s both; }
+    .nav-active .nav-links > *:nth-child(3) { animation: mobileNavItem 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.24s both; }
+    .nav-active .nav-links > *:nth-child(4) { animation: mobileNavItem 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.31s both; }
+    .nav-active .nav-links > *:nth-child(5) { animation: mobileNavItem 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.38s both; }
+
+    @keyframes mobileNavItem {
+        0% { opacity: 0; transform: translateX(30px); filter: blur(4px); }
+        100% { opacity: 1; transform: translateX(0); filter: blur(0); }
     }
 
     .nav-overlay {
@@ -2078,10 +3855,11 @@ footer {
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
         opacity: 0;
         visibility: hidden;
-        transition: all var(--transition-medium) var(--cubic);
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         z-index: 899;
     }
 
@@ -2095,6 +3873,46 @@ footer {
         padding: 15px 20px;
     }
 
+    .nav-link::after {
+        display: none;
+    }
+
+    .nav-dropdown {
+        width: 100%;
+    }
+
+    .nav-dropdown-menu {
+        position: static;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        box-shadow: none;
+        border: none;
+        padding: 0 0 0 20px;
+        min-width: unset;
+        background: transparent;
+        backdrop-filter: none;
+        filter: none;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                    opacity 0.4s ease;
+        opacity: 0;
+    }
+
+    .nav-dropdown.open .nav-dropdown-menu {
+        max-height: 200px;
+        opacity: 1;
+    }
+
+    .nav-dropdown-item:hover {
+        transform: translateX(-4px);
+    }
+
+    .nav-dropdown-item {
+        padding: 10px 14px;
+    }
+
     .hero-title {
         font-size: 2.2rem;
     }
@@ -2103,9 +3921,17 @@ footer {
         font-size: 1rem;
     }
 
-    .tab-btn {
-        padding: 12px 20px;
-        font-size: 1rem;
+    .hero-cards {
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .hero-card-img {
+        height: 120px;
+    }
+
+    .hero-card-body {
+        padding: 16px 18px 20px;
     }
 
     .section-title {
@@ -2190,11 +4016,22 @@ footer {
         font-size: 0.95rem;
     }
 
-    .tab-btn {
-        padding: 10px 15px;
-        font-size: 0.9rem;
-        width: 100%;
-        justify-content: center;
+    .hero-cards {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        max-width: 340px;
+    }
+
+    .hero-card-img {
+        height: 100px;
+    }
+
+    .hero-card-title {
+        font-size: 1.1rem;
+    }
+
+    .hero-card-placeholder {
+        font-size: 2.2rem;
     }
 
     .preloader-title {
@@ -2296,7 +4133,7 @@ footer {
 @media print {
     .fab-container,
     nav,
-    .tab-navigation,
+    .hero-cards,
     .hamburger-menu {
         display: none !important;
     }
@@ -2532,33 +4369,44 @@ window.addEventListener('error', function(e) {
                 <i class="fas fa-home"></i>
                 <span>لاپەڕا سەرەکی </span>
             </a>
-            <a href="#features" class="nav-link" data-scroll="features">
-                <i class="fas fa-star"></i>
-                <span>تایبەتمەندی</span>
+            <a href="/quran" class="nav-link">
+                <i class="fas fa-book-open"></i>
+                <span>قورئان</span>
             </a>
-            <a href="#reach" class="nav-link" data-scroll="reach">
-                <i class="fas fa-chart-line"></i>
-                <span>ئامار</span>
+            <a href="/islamvoice" class="nav-link">
+                <i class="fas fa-play-circle"></i>
+                <span>ئیسلام ڤۆیس</span>
             </a>
-            <a href="#schedule" class="nav-link" data-scroll="schedule">
-                <i class="fas fa-calendar"></i>
-                <span>خشتە</span>
-            </a>
-            <a href="#plans" class="nav-link" data-scroll="plans">
-                <i class="fas fa-map-marked-alt"></i>
-                <span>پلان</span>
-            </a>
-            <a href="#about" class="nav-link" data-scroll="about">
-                <i class="fas fa-info-circle"></i>
-                <span>دەربارە</span>
-            </a>
+            <div class="nav-dropdown">
+                <a href="#" class="nav-link nav-dropdown-trigger" onclick="return false;">
+                    <i class="fas fa-info-circle"></i>
+                    <span>دەربارەی</span>
+                    <i class="fas fa-chevron-down nav-dropdown-arrow"></i>
+                </a>
+                <div class="nav-dropdown-menu">
+                    <a href="/about" class="nav-dropdown-item">
+                        <div class="nav-dropdown-avatar">
+                            <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="nav-dropdown-img">
+                        </div>
+                        <div class="nav-dropdown-info">
+                            <span class="nav-dropdown-name">تەفسیر کورد</span>
+                            <span class="nav-dropdown-role">دەربارەی پڕۆژە</span>
+                        </div>
+                    </a>
+                    <a href="/founder" class="nav-dropdown-item">
+                        <div class="nav-dropdown-avatar nav-dropdown-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="nav-dropdown-info">
+                            <span class="nav-dropdown-name">سامان عبدالرحمن</span>
+                            <span class="nav-dropdown-role">دامەزرێنەر</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
             <a href="#contact" class="nav-link" data-scroll="contact">
                 <i class="fas fa-envelope"></i>
                 <span>پەیوەندی</span>
-            </a>
-            <a href="#quran-section" class="nav-link nav-link-quran" data-scroll="quran-section">
-                <i class="fas fa-book-quran"></i>
-                <span>قورئان</span>
             </a>
         </div>
 
@@ -2568,35 +4416,80 @@ window.addEventListener('error', function(e) {
 
 <header id="headerBg">
     <div class="header-bg-layer" id="headerBgLayer"></div>
+    <canvas id="heroCanvas"></canvas>
+    <div class="header-scroll-shimmer"></div>
+    <div class="header-edge-bottom"></div>
     <div class="hero-inner">
         <img src="assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-title hero-logo-static" loading="lazy" style="height: 150px; width: auto; filter: brightness(0) invert(1);">
         <p class="hero-sub">بەردەستکرنا شرۆڤەکرنەکا ڕوون و ڕەسەن یا قورئانا پیرۆز ب زمانێ کوردی. ب شێوەیەکێ ڕوون و ب دلسۆزی و ڕێزگرتن، ئەم وانەیان ب شێوازێ ڤیدیویێن کورت و ئاسۆیی و هەروەسا تەفسیرا تەمام دروست دکەین دا کو پەیاما قورئانێ بگەهیتە هەمی ماڵان.</p>
 
-        <div class="tab-navigation">
-            <button class="tab-btn active" data-tab="mission">
-                <i class="fas fa-bullseye"></i>
-                <span>ئەرکێن مە ببینە</span>
-            </button>
-            <button class="tab-btn" data-tab="content">
-                <i class="fas fa-video"></i>
-                <span>ناڤەرۆک</span>
-            </button>
-            <button class="tab-btn tab-btn-quran" data-tab="quran">
-    <i class="fas fa-book"></i>
-    <span>خواندنا قورئانێ</span>
-</button>
+        <div class="hero-cards">
+            <a href="/quran" class="hero-card">
+                <div class="hero-card-glow"></div>
+                <div class="hero-card-img">
+                    <div class="hero-card-placeholder">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                </div>
+                <div class="hero-card-body">
+                    <h3 class="hero-card-title">قورئانا پیرۆز</h3>
+                    <p class="hero-card-desc">قورئانا پیرۆز ب تەفسیرا کوردی بخوینە</p>
+                    <span class="hero-card-cta">
+                        دەست پێبکە <i class="fas fa-arrow-left"></i>
+                    </span>
+                </div>
+            </a>
+            <a href="/islamvoice" class="hero-card">
+                <div class="hero-card-glow"></div>
+                <div class="hero-card-img">
+                    <div class="hero-card-placeholder">
+                        <i class="fas fa-play"></i>
+                    </div>
+                </div>
+                <div class="hero-card-body">
+                    <h3 class="hero-card-title">ئیسلام ڤۆیس</h3>
+                    <p class="hero-card-desc">ڤیدیۆیێن ئیسلامی ب کوردی تەماشە بکە</p>
+                    <span class="hero-card-cta">
+                        تەماشا بکە <i class="fas fa-arrow-left"></i>
+                    </span>
+                </div>
+            </a>
         </div>
     </div>
 </header>
 
 <main>
-    <div class="tab-contents">
+    <div id="missionContent">
 
-        <div class="tab-content active" id="missionContent">
+            <!-- Daily Content: Ayahs + Episodes -->
+            <section id="daily-content">
+                <h2 class="section-title">ناڤەڕۆکا ڕۆژانە</h2>
+                <div class="daily-grid" id="dailyGrid">
+                    <!-- 3 ayah cards + 3 episode cards injected by JS -->
+                </div>
+            </section>
+
             <section id="features">
                 <h2 class="section-title">ئەم چ پێشکێشدکەین</h2>
                 <div class="features-grid" id="features-container">
-                    <!-- Fallback content -->
+                    <!-- Link cards first (1, 2) -->
+                    <a href="/quran" class="feature-card feature-card-link">
+                        <div class="feature-icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <h3 class="feature-title">قورئانا پیرۆز بخوینە</h3>
+                        <p class="feature-desc">دەستگەهشتن ب تەفسیرا ئایەت ب ئایەت یا قورئانا پیرۆز. پەیاما خودایێ مەزن ب زمانێ دایک بخوینە، بگەڕە و فێرببە.</p>
+                        <span class="feature-card-arrow"><i class="fas fa-arrow-left"></i></span>
+                    </a>
+                    <a href="/islamvoice" class="feature-card feature-card-link">
+                        <div class="feature-icon">
+                            <i class="fas fa-play-circle"></i>
+                        </div>
+                        <h3 class="feature-title">ئیسلام ڤۆیس</h3>
+                        <p class="feature-desc">ڤیدیۆیێن ئیسلامی ب زمانێ کوردی تەماشا بکە. ناڤەڕۆکەکا دەنگی و دیاری بۆ فێربوون و ئیلهام.</p>
+                        <span class="feature-card-arrow"><i class="fas fa-arrow-left"></i></span>
+                    </a>
+                    <!-- Feature cards (3, 4, 5, 6) -->
                     <div class="feature-card">
                         <div class="feature-icon">
                             <i class="fas fa-mobile-alt"></i>
@@ -2630,45 +4523,56 @@ window.addEventListener('error', function(e) {
                 </div>
             </section>
 
-            <section id="reach">
-                <h2 class="section-title">دەستگەهشتن</h2>
-                <div class="stats-grid" id="social-stats-container">
-                    <!-- Loading state -->
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fab fa-instagram"></i>
-                        </div>
-                        <div class="stat-number" data-target="65">٠</div>
-                        <div class="stat-unit">ھ+</div>
-                        <div class="stat-label">فۆڵۆوەرێن ئینستاگرامى</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fab fa-tiktok"></i>
-                        </div>
-                        <div class="stat-number" data-target="10">٠</div>
-                        <div class="stat-unit">ھ+</div>
-                        <div class="stat-label">فۆڵۆوەرێن تیکتۆکى</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-eye"></i>
-                        </div>
-                        <div class="stat-number" data-target="25">٠</div>
-                        <div class="stat-unit">م+</div>
-                        <div class="stat-label">ژمارا بینەران</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-video"></i>
-                        </div>
-                        <div class="stat-number" data-target="1000">٠</div>
-                        <div class="stat-unit">+</div>
-                        <div class="stat-label">ڤیدیۆیێن بەلاڤکرین</div>
-                    </div>
-                </div>
-            </section>
+    </div>
+</main>
 
+<div class="reach-showcase">
+    <div class="scroll-light-beam"></div>
+    <div class="scroll-orb scroll-orb-1"></div>
+    <div class="scroll-orb scroll-orb-2"></div>
+    <div class="scroll-edge scroll-edge-top"></div>
+    <div class="scroll-edge scroll-edge-bottom"></div>
+    <section id="reach" class="show">
+        <h2 class="section-title reach-title">دەستگەهشتن</h2>
+        <div class="stats-grid" id="social-stats-container">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fab fa-instagram"></i>
+                </div>
+                <div class="stat-number" data-target="65">٠</div>
+                <div class="stat-unit">ھ+</div>
+                <div class="stat-label">فۆڵۆوەرێن ئینستاگرامى</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fab fa-tiktok"></i>
+                </div>
+                <div class="stat-number" data-target="10">٠</div>
+                <div class="stat-unit">ھ+</div>
+                <div class="stat-label">فۆڵۆوەرێن تیکتۆکى</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div class="stat-number" data-target="25">٠</div>
+                <div class="stat-unit">م+</div>
+                <div class="stat-label">ژمارا بینەران</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-video"></i>
+                </div>
+                <div class="stat-number" data-target="1000">٠</div>
+                <div class="stat-unit">+</div>
+                <div class="stat-label">ڤیدیۆیێن بەلاڤکرین</div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<main>
+    <div id="missionContent-continued">
             <section id="plans">
                 <h2 class="section-title">پلانێن مە بۆ پاشەڕۆژێ</h2>
                 <div class="plans-grid">
@@ -2690,19 +4594,29 @@ window.addEventListener('error', function(e) {
                     </div>
                 </div>
             </section>
+
+    </div>
+</main>
+
+<div class="videos-showcase">
+    <div class="scroll-streak"></div>
+    <div class="vid-orb vid-orb-1"></div>
+    <div class="vid-orb vid-orb-2"></div>
+    <div class="vid-edge vid-edge-top"></div>
+    <div class="vid-edge vid-edge-bottom"></div>
+    <section id="videos" class="show">
+        <h2 class="section-title videos-title">ڤیدیویێن تایبەت</h2>
+        <div class="videos-grid" id="dynamic-videos">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <p>چاڤەڕێبە...</p>
+            </div>
         </div>
+    </section>
+</div>
 
-        <div class="tab-content" id="contentContent">
-            <section id="videos">
-                <h2 class="section-title">ڤیدیویێن تایبەت</h2>
-                <div class="videos-grid" id="dynamic-videos">
-                    <div class="loading-content">
-                        <div class="spinner"></div>
-                        <p>چاڤەڕێبە...</p>
-                    </div>
-                </div>
-            </section>
-
+<main>
+    <div id="missionContent-continued-2">
             <section id="schedule">
                 <h2 class="section-title">خشتەیێ ڕۆژانە</h2>
                 <div class="schedule-grid" id="schedule-container">
@@ -2717,16 +4631,6 @@ window.addEventListener('error', function(e) {
                     </div>
                     <div class="schedule-card">
                         <div class="schedule-day">
-                            <i class="fas fa-sun"></i>
-                            ل سپێدەهییان
-                        </div>
-                        <div class="schedule-time">سپێدێ</div>
-                        <div class="schedule-topic">زکر و ستوری</div>
-                        <div class="schedule-desc">ڕۆژانە ناڤەڕۆکا زکر و ستورییێن ئیسلامیێن سپێدەهییان ل ستوری و کەناڵێ پەخشی یێ ئنستاگرامی دهێنە بەڵاڤکرن.
-ڕۆژا خۆ ب زکرێ خودێ دەستپێبکە.</div>
-                    </div>
-                    <div class="schedule-card">
-                        <div class="schedule-day">
                             <i class="fas fa-star"></i>
                             تایبەت ل ڕۆژا پێنجشەمبێ
                         </div>
@@ -2735,140 +4639,47 @@ window.addEventListener('error', function(e) {
                         <div class="schedule-desc">ناڤەڕۆکەکا تایبەت یا سەلەواتان، ڕیلزێن سورەتا الکهف، کو دبیتە بیرئینان بۆ خواندنا وێ - (سونەت)
 نەریتێن پیرۆز یێن پێنجشەمبێ.</div>
                     </div>
-                    <div class="schedule-card">
-                        <div class="schedule-day">
-                            <i class="fas fa-mosque"></i>
-                            ناڤەڕۆکا ئاسایی
-                        </div>
-                        <div class="schedule-time">ب بەردەوامی</div>
-                        <div class="schedule-topic">ستۆریێن ئنستاگرامی دەربارەی فەرموودە و سوننەتان</div>
-                        <div class="schedule-desc">ستوریێن پلاتفورما ئنستاگرامی و فێرکاریێن سوننەتان، قورئان خواندنا نوی دگەل تەفسیرا کوردی.
-نمونا ژیانا پێغەمبەرایەتی ل سەردەمێ مۆدرێن.</div>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <div class="tab-content" id="quranContent">
-            <section id="quran-section">
-                <h2 class="section-title">قورئانا پیرۆز بخوینە</h2>
-                <div style="text-align: center; padding: 60px 20px;">
-                    <div class="feature-icon" style="margin: 0 auto 30px;">
-    <i class="fas fa-book"></i>
-</div>
-                    <h3 style="font-size: 2rem; margin-bottom: 20px; color: var(--text);">قورئانێ ب تەفسیرا کوردی ببینە</h3>
-                    <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 40px; line-height: 1.8;">
-                        دەستگەهشتن ب تەفسیرا ئایەت ب ئایەت یا قورئانا پیرۆز. پەیاما خودایێ مەزن ب زمانێ دایک بخوینە و فێرببە و تێبگەهە.
-                    </p>
-                    <a href="/quran" class="cta">
-                        <i class="fas fa-book-open"></i>
-                        <span>دەست ب خواندنێ بکە</span>
-                    </a>
                 </div>
             </section>
         </div>
 
     </div>
 
-    <section id="about" class="about-section">
-        <h2 class="section-title">دەربارەی  تەفسیر کورد</h2>
-        <div class="bio">
-            <div>
-                <div class="bio-card">
-                    <h3 style="margin-bottom:24px; color: var(--text); font-size: 2rem;">ئەرکێ مە یێ پیرۆز</h3>
-
-                    <div class="quranic-verse">
-                        <div class="arabic-text">وَمَنْ أَحْسَنُ قَوْلًا مِّمَّن دَعَا إِلَى اللَّهِ وَعَمِلَ صَالِحًا وَقَالَ إِنَّنِي مِنَ الْمُسْلِمِينَ</div>
-                        <div class="verse-translation">"كه‌س ژ وى گۆتن باشتر نينه‌ يێ بۆ ته‌وحيدا خودێ وپه‌رستنا وى گازى كرى وكارێ چاك كرى، وگۆتى: هندى ئه‌زم ئه‌ز ژ وان موسلمانامه‌ يێن خۆ ئێخستينه‌ بن فه‌رمانا خودێ. وئه‌ڤ ئايه‌ته‌ به‌رێ مه‌ دده‌ته‌ هندێ كو ئه‌م بۆ خودێ گازى بكه‌ين، وبهايێ وان زانايان ژى به‌رچاڤ دكه‌ت يێن به‌رێ خه‌لكى دده‌نه‌ خودێ ل دويڤ وێ ڕێكێ يا پێغه‌مبه‌رێ خودێ موحه‌ممه‌د سلاڤ لێ بن پێ هاتى.'"</div>
-                        <div class="verse-reference">— سوڕەتا فصلت (41:33)</div>
-                    </div>
-
-                    <p style="font-size: 1.1rem; line-height: 1.8; margin-bottom: 24px;">ل تەفسیر کورد دێ دەست ب گەشتەکا پیرۆز کەین بۆ ئاشنابوون دگەل ڕێنمایێن ئیلاهی یێن قورئانێ بۆ دل و دەروونێن کوردان. ئەم د وێ باوەرێ داینە کو قورئان موعجیزا ئەبەدی یا خوداییە، پەرتوکەکە دگەل وان هەمی جیل و کەلتوور و ڕۆحان دئاخڤیت یێن لدیف حەقیێ دگەڕن.
-ئەرکێ مە ژ وەرگێڕانێ دەردکەڤیت، ئەم هەوڵ ددەین پرەک بین دناڤبەرا گەنجینەیا کلاسیک یا زانستێ ئیسلامێ و کۆمەڵگەها کوردی یا مۆدرێن، و پشتراستبین کو حیکمەتا کویر یا قورئانێ ب وێ ڕێز و ڕوونی و پیرۆزییا ئەو ژ هەژی بگەهیتە هەمی ماڵێن کوردان.</p>
-
-                    <div class="mission-highlight">
-                        <p style="font-style: italic; color: var(--text); margin: 0; text-align: center; font-weight: 500; font-size: 1.1rem;">
-                            "ئەم لدیف شوینپێیێن ئەوان زانایێن ڕاستگۆ دچین یێن ژیانا خۆ تەرخانکری بۆ شروڤەکرنا پەرتوکا خودێ، ئەوێن بتنێ ل ڕازیبوونا خودێ و هیدایەتا بەندەیێن وی دگەڕن."
-                        </p>
-                    </div>
-                </div>
-
-                <div style="margin-top:32px" class="bio-card">
-                    <h4 style="margin-bottom:24px; color: var(--text); font-size: 2rem;">ئەو بنەمایێن ڕێنماییا مە دکەن</h4>
-
-                    <div class="quranic-verse">
-                        <div class="arabic-text">الَّذِينَ آمَنُوا وَتَطْمَئِنُّ قُلُوبُهُم بِذِكْرِ اللَّهِ ۗ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ</div>
-                        <div class="verse-translation">"وئه‌و به‌رێ وان دده‌ته‌ هيدايه‌تێ ئه‌وێن دلێن وان ب ته‌وحيدا خودێ وزكرێ وى ته‌نا وڕحه‌ت دبن، ما نه‌ ب گوهدان وزكرێ خودێ دل ته‌نا وڕحه‌ت دبن."</div>
-                        <div class="verse-reference">— سوڕەتا الرعد (13:28)</div>
-                    </div>
-
-                    <div class="values-list">
-                        <p><strong>ڕەسەنایەتی:</strong> هەر تەفسیرەکا ئەم پێشکێش دکەین بنیاتێ وێ ژ فێرکاریێن ڕەسەن یێن پێغەمبەرێ خودێ محمد (سلاڤ لێبن) و لێکدانەڤەیێن زانایێن ڕاستەڕێ (السلف الصالح) هاتییە. ئەم پشتبەستنێ ب بەرهەمێن کلاسیک یێن باوەرپێکری دکەین، وەک (ابن کثیر، الطبري، القرطبي) و هندەکێن دی کو ژیانا خۆ بۆ تێگەهشتنا پەرتوکا خودای تەرخان کرییە.</p>
-
-                        <p><strong>ڕوونی:</strong> ئەم د وێ باوەریێ داینە کو پێدڤییە پەیاما خودای وەک ئاڤێ یا ڕوون بیت. ب زمانەکێ کوردی یێ سادە، ناڤەڕۆکا مە چەمکێن ئایینی یێن ئاڵوز دشکێنیت، دگەهیتە کویراتییا وان بێی کو ڕامانا خۆ ژدەستبدەن. ئەم بکارئینانا پراکتیکی پێشتر ددانین ژ ئاڵوزییا تیوری.</p>
-
-                        <p><strong>دەستگەهشتن:</strong> د ئەڤی سەردەمێ دیجیتاڵ دا، ئەم مفای ژ پلاتفورمێن مۆدرێن وەردگرین دا بشێین بگەهینە هەمی کورد زمانان ل هەر جهەکێ لێبن. کلیپێن شێواز کورت و ڕاست خزمەتا وان کەسان دکەن یێن پێدڤی ب بیرئینانێن ڕۆژانە هەی، ڤیدیویێن درێژ وەک خوراکەکینە بۆ روحا وان کەسان یێن تێگەهشتنەکا کویرتر دڤێت.</p>
-
-                        <p><strong>دلسۆزی:</strong> ئەڤ کارە بتنێ بۆ ڕازەمەندییا خودێ (لوجە الله الكريم) دهێتە ئەنجامدان. ئەم ل دویڤ چ دانپێدان و قازانجێن کەسوکی یێن دونیایی دا ناگەڕین، هیڤییا مە بتنێ ئەوە خودایێ مەزن هەوڵێن مە قەبویل بکەت و بکەتە ئامرازەکێ هیدایەتێ بۆ بەندەیێن خۆ.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="founder" class="founder-section">
-        <div class="founder-content">
-            <div class="founder-avatar">
-                <i class="fas fa-user-graduate"></i>
-            </div>
-            <h3 class="founder-name">سامان عبدالرحمن</h3>
-            <p class="founder-title">دامەزرێنەر و دروستکەرێ ناڤەڕۆکێن ئیسلامی</p>
-
-            <p class="founder-bio">
-                بەندەیەکێ خودایێ مەزن، کارێ من تایبەتە ب پارڤەکرنا فێرکاریێن جوان یێن ئیسلامێ ب ڕێکا زمانێ کوردی. ئەز ب ڤیانا خۆ یا مەزن بۆ قورئانا پیرۆز و ب پابەندبوون ب سونەتێن پێغەمبەر محمد (ﷺ) هەوڵ ددەم ببمە پرەک کو دلێ خەلکێ کورد ب ڕێنمایێن خودای و پەرتوکا وی ڤە گرێدەم. پشتی خواندنا ب ساڵان، من ئەرکێ خۆ کریە گەهاندنا زانستێ ئیسلامێ دا دەستگەهشتن بۆ هەبیت ب رێکەکا ڕەسەن و ڕاماندار بۆ کورد زمانان ل سەرانسەری جیهانێ.
-            </p>
-
-            <div class="quranic-verse" style="margin: 32px 0;">
-                <div class="arabic-text">إِنْ أُرِيدُ إِلَّا الْإِصْلَاحَ مَا اسْتَطَعْتُ ۚ وَمَا تَوْفِيقِي إِلَّا بِاللَّهِ</div>
-                <div class="verse-translation">"وهه‌ما من ب ڤى كارێ خۆ ژ چاككرنێ پێڤه‌تر چو ددى نه‌ڤێت، وهه‌ما ڕێككه‌فتنا من -د گه‌ل ڕاستییێ وچاككرنا هه‌وه‌- ب خودێ ب تنێیه‌."</div>
-                <div class="verse-reference">— سوڕەتا هود (11:88)</div>
-            </div>
-
-            <div class="quranic-verse" style="margin: 32px 0;">
-                <div class="arabic-text">رَبَّنَا تَقَبَّلْ مِنَّا ۖ إِنَّكَ أَنتَ السَّمِيعُ الْعَلِيمُ</div>
-                <div class="verse-translation">"خودايێ مه‌ تو كريارێن مه‌ يێن چاك ودوعايێن مه‌ ژ مه‌ قه‌بويل بكه‌، هندى تویى تو گوهدێرێ گۆتنێن به‌نییێن خۆيى، يێ پڕزانايى ب حالێ وان."</div>
-                <div class="verse-reference">— سوڕەتا البقرة (2:127)</div>
-            </div>
-
-            <div class="founder-mission">
-                <p class="founder-mission-text">
-                    <strong>پابەندبوونا تایبەت:</strong> هەر پەیڤەکا بهێتە گوتن، هەر ڤیدیویەکا بهێتە دروستکرن و هەر دەمەکێ بهێتە تەرخانکرن بۆ ئەڤی کاری کردارەکا پەرستنێیە بۆ خودایێ مەزن. پەیڕەوکرنا سوننەتا تەمام یا پێغەمبەر محمد (ص)، و پارڤەکرنا فەرمودێن باوەرپێکری د ستوریان دا بۆ هندێیە دا ژ وان کەسان بین یێن ب حیکمەت و ب بانگەوازییا جوان بانگەشا خەلکی دکەن بۆ لایێ خودێ (ادْعُ إِلَىٰ سَبِيلِ رَبِّكَ بِالْحِكْمَةِ وَالْمَوْعِظَةِ الْحَسَنَةِ).
-                </p>
-            </div>
-
-            <div class="founder-mission">
-                <p class="founder-mission-text">
-                    <strong>دوعا بۆ بینەرێن مە:</strong> خودایێ مەزن هەمی وان کەسان بپارێزیت یێن ب ڕێکا پەرتوکا وی لدیف هیدایەتێ دچن، مە ژ ئەهلێ قورئانێ ب هەژمێریت و هێزا مە موکم بکەت لسەر تێگەهشتن و بکارئینان و خۆڕاگریێ بۆ ڕێکا خۆ یا ڕاست. ئامین.
-                </p>
-            </div>
-        </div>
-    </section>
-
     <section id="contact">
-        <h2 class="section-title">پەیوەندی</h2>
-        <div>
-            <div class="bio-card">
-                <h4 style="margin-bottom:20px;color:var(--text);font-size:1.4rem;">پەیوەندیێ بکە</h4>
-                <p style="color:var(--text-muted);margin-bottom:24px;font-size:1.1rem;">ئەگەر تە پسیارەک یان پێشنیارەک هەیە، پەیوەندیێ ب مە بکە و ب زویترین دەم دێ بەرسڤا تە هێتە دان!</p>
-
-                <form id="contactForm" class="contact-form">
-                    <div class="form-group">
-                        <label for="name">ناڤ</label>
-                        <input type="text" id="name" name="name" class="form-control" required>
+        <div class="contact-wrapper">
+            <!-- Left side: info panel -->
+            <div class="contact-info-panel">
+                <div class="contact-info-inner">
+                    <div class="contact-info-icon">
+                        <i class="fas fa-envelope"></i>
                     </div>
-                    <div class="form-group">
-                        <label for="email">ئیمەیل</label>
-                        <input type="email" id="email" name="email" class="form-control" required>
+                    <h2 class="contact-info-title">پەیوەندی</h2>
+                    <p class="contact-info-desc">ئەگەر تە پسیارەک یان پێشنیارەک هەیە، پەیوەندیێ ب مە بکە و ب زویترین دەم دێ بەرسڤا تە هێتە دان!</p>
+                    <div class="contact-info-links">
+                        <a href="mailto:info@tafsirkurd.com" class="contact-info-link">
+                            <i class="fas fa-at"></i>
+                            <span>info@tafsirkurd.com</span>
+                        </a>
+                    </div>
+                </div>
+                <!-- Decorative orbs -->
+                <div class="contact-orb contact-orb-1"></div>
+                <div class="contact-orb contact-orb-2"></div>
+            </div>
+
+            <!-- Right side: form -->
+            <div class="contact-form-panel">
+                <h3 class="contact-form-heading">نامەیەکێ بنووسە</h3>
+                <form id="contactForm" class="contact-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">ناڤ</label>
+                            <input type="text" id="name" name="name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">ئیمەیل</label>
+                            <input type="email" id="email" name="email" class="form-control" required>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="subject">بابەت</label>
@@ -2878,9 +4689,9 @@ window.addEventListener('error', function(e) {
                         <label for="message">ناما تە</label>
                         <textarea id="message" name="message" rows="4" class="form-control" required></textarea>
                     </div>
-                    <button type="submit" class="btn" id="submitBtn">
-                        <i class="fas fa-paper-plane"></i>
-هنارتنا نامەیێ
+                    <button type="submit" class="btn contact-submit-btn" id="submitBtn">
+                        <span>هنارتنا نامەیێ</span>
+                        <i class="fas fa-arrow-left"></i>
                     </button>
                     <div id="formMessage" class="form-message"></div>
                 </form>
@@ -2934,7 +4745,7 @@ window.addEventListener('error', function(e) {
                 <div class="footer-links">
                     <a href="/quran" class="footer-link">قورئانا پیرۆز</a>
                     <a href="#features" class="footer-link" data-scroll="features">تایبەتمەندی</a>
-                    <a href="#about" class="footer-link" data-scroll="about">دەربارەی ئێمە</a>
+                    <a href="/about" class="footer-link">دەربارەی ئێمە</a>
                     <a href="#contact" class="footer-link" data-scroll="contact">پەیوەندی</a>
                 </div>
             </div>
@@ -2975,9 +4786,7 @@ window.addEventListener('error', function(e) {
 <script>
 // Background images - will be loaded from database
 // Placeholder image shows immediately while database loads
-let backgroundImages = [
-    'https://images.unsplash.com/photo-1649297711811-5cfa2774cbc7?q=80&w=1073&auto=format&fit=crop'
-];
+let backgroundImages = [];
 
 let currentBgIndex = 0;
 
@@ -3043,17 +4852,490 @@ function startBackgroundRotation() {
     });
 }
 
-function setInitialBackground() {
-    const headerLayer = document.getElementById('headerBgLayer');
-    if (headerLayer && backgroundImages.length > 0) {
-        headerLayer.style.backgroundImage = `url('${backgroundImages[currentBgIndex]}')`;
-        headerLayer.style.opacity = '1';
-        console.log('✅ [BG] Initial background set to:', backgroundImages[currentBgIndex]);
-    } else if (!headerLayer) {
-        console.error('❌ [BG] Header layer element not found');
-    } else {
-        console.warn('⚠️ [BG] No images available to set as background');
+async function initHeroCanvas() {
+    const canvas = document.getElementById('heroCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const header = document.getElementById('headerBg');
+    if (!header) return;
+
+    let w, h, elements = [], mouse = { x: -1000, y: -1000 };
+    const ELEMENT_COUNT = 50;
+    const MOUSE_RADIUS = 150;
+    let currentTheme = 'islamic'; // Default theme
+    let logoImage = null;
+
+    // Load theme from Supabase
+    async function loadTheme() {
+        try {
+            if (window.supabase) {
+                const { data, error } = await window.supabase
+                    .from('site_settings')
+                    .select('value')
+                    .eq('key', 'header_animation_theme')
+                    .single();
+                if (!error && data) {
+                    currentTheme = data.value;
+                    console.log('Loaded theme:', currentTheme);
+                }
+            }
+        } catch (e) {
+            console.log('Using default theme');
+        }
+        // Preload logo if needed - wait for it to load
+        if (currentTheme === 'logo') {
+            logoImage = new Image();
+            logoImage.crossOrigin = 'anonymous';
+            await new Promise((resolve) => {
+                logoImage.onload = resolve;
+                logoImage.onerror = resolve;
+                logoImage.src = '/assets/images/logo.png';
+            });
+            console.log('Logo loaded:', logoImage.complete, logoImage.width, logoImage.height);
+        }
     }
+
+    await loadTheme();
+
+    function resize() {
+        const rect = header.getBoundingClientRect();
+        w = canvas.width = rect.width;
+        h = canvas.height = rect.height;
+    }
+
+    // ============ DRAWING FUNCTIONS ============
+
+    function drawCrescent(ctx, x, y, size, opacity, rotation) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
+        ctx.beginPath();
+        ctx.arc(0, 0, size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(size * 0.35, -size * 0.1, size * 0.75, 0, Math.PI * 2);
+        ctx.fillStyle = '#141414';
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function drawStar5(ctx, x, y, size, opacity, rotation) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+            const outerAngle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+            const innerAngle = outerAngle + Math.PI / 5;
+            const outerX = Math.cos(outerAngle) * size;
+            const outerY = Math.sin(outerAngle) * size;
+            const innerX = Math.cos(innerAngle) * size * 0.4;
+            const innerY = Math.sin(innerAngle) * size * 0.4;
+            if (i === 0) ctx.moveTo(outerX, outerY);
+            else ctx.lineTo(outerX, outerY);
+            ctx.lineTo(innerX, innerY);
+        }
+        ctx.closePath();
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function drawStar8(ctx, x, y, size, opacity, rotation) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+            const outerAngle = (i * Math.PI) / 4 - Math.PI / 2;
+            const innerAngle = outerAngle + Math.PI / 8;
+            const outerX = Math.cos(outerAngle) * size;
+            const outerY = Math.sin(outerAngle) * size;
+            const innerX = Math.cos(innerAngle) * size * 0.5;
+            const innerY = Math.sin(innerAngle) * size * 0.5;
+            if (i === 0) ctx.moveTo(outerX, outerY);
+            else ctx.lineTo(outerX, outerY);
+            ctx.lineTo(innerX, innerY);
+        }
+        ctx.closePath();
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function drawDot(ctx, x, y, size, opacity) {
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+        ctx.fill();
+    }
+
+    function drawLantern(ctx, x, y, size, opacity, rotation) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation * 0.3);
+        // Glow
+        ctx.fillStyle = `rgba(255, 200, 100, ${opacity * 0.3})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        // Body
+        ctx.fillStyle = `rgba(255, 200, 100, ${opacity})`;
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.4, -size * 0.5);
+        ctx.lineTo(-size * 0.5, size * 0.5);
+        ctx.lineTo(size * 0.5, size * 0.5);
+        ctx.lineTo(size * 0.4, -size * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        // Top cap
+        ctx.fillRect(-size * 0.3, -size * 0.7, size * 0.6, size * 0.2);
+        // Hook
+        ctx.strokeStyle = `rgba(255, 200, 100, ${opacity})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, -size * 0.7);
+        ctx.lineTo(0, -size);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function drawMosque(ctx, x, y, size, opacity, rotation) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+        // Dome
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.7, Math.PI, 0);
+        ctx.fill();
+        // Base
+        ctx.fillRect(-size * 0.7, 0, size * 1.4, size * 0.4);
+        // Minaret left
+        ctx.fillRect(-size, -size * 0.3, size * 0.15, size * 0.7);
+        // Minaret top
+        ctx.beginPath();
+        ctx.moveTo(-size, -size * 0.3);
+        ctx.lineTo(-size + size * 0.075, -size * 0.5);
+        ctx.lineTo(-size + size * 0.15, -size * 0.3);
+        ctx.fill();
+        // Minaret right
+        ctx.fillRect(size - size * 0.15, -size * 0.3, size * 0.15, size * 0.7);
+        ctx.beginPath();
+        ctx.moveTo(size - size * 0.15, -size * 0.3);
+        ctx.lineTo(size - size * 0.075, -size * 0.5);
+        ctx.lineTo(size, -size * 0.3);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function drawHexagon(ctx, x, y, size, opacity, rotation) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const angle = (i * Math.PI) / 3;
+            const px = Math.cos(angle) * size;
+            const py = Math.sin(angle) * size;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function drawArabicLetter(ctx, x, y, size, opacity, letterIndex) {
+        const letters = ['ا', 'ب', 'س', 'م', 'ن', 'و', 'ر', 'ح', 'ل', 'ك'];
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+        ctx.font = `${size * 2.5}px 'Amiri', serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(letters[letterIndex % letters.length], 0, 0);
+        ctx.restore();
+    }
+
+    function drawQuranBook(ctx, x, y, size, opacity, rotation) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation * 0.2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+        // Open book shape
+        ctx.beginPath();
+        ctx.moveTo(-size, -size * 0.5);
+        ctx.quadraticCurveTo(-size * 0.5, -size * 0.7, 0, -size * 0.5);
+        ctx.quadraticCurveTo(size * 0.5, -size * 0.7, size, -size * 0.5);
+        ctx.lineTo(size, size * 0.5);
+        ctx.quadraticCurveTo(size * 0.5, size * 0.3, 0, size * 0.5);
+        ctx.quadraticCurveTo(-size * 0.5, size * 0.3, -size, size * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        // Center line
+        ctx.strokeStyle = '#141414';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, -size * 0.5);
+        ctx.lineTo(0, size * 0.5);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function drawLogoElement(ctx, x, y, size, opacity) {
+        if (logoImage && logoImage.complete) {
+            ctx.save();
+            ctx.globalAlpha = opacity;
+            ctx.drawImage(logoImage, x - size, y - size, size * 2, size * 2);
+            ctx.restore();
+        } else {
+            // Fallback circle with T
+            ctx.save();
+            ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#141414';
+            ctx.font = `bold ${size}px Inter, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('T', x, y);
+            ctx.restore();
+        }
+    }
+
+    function drawRing(ctx, x, y, size, opacity) {
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.4})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+
+    function drawConnections(ctx, elements) {
+        const CONNECTION_DIST = 150;
+        for (let i = 0; i < elements.length; i++) {
+            for (let j = i + 1; j < elements.length; j++) {
+                const dx = elements[i].x - elements[j].x;
+                const dy = elements[i].y - elements[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < CONNECTION_DIST) {
+                    const alpha = (1 - dist / CONNECTION_DIST) * 0.2;
+                    ctx.beginPath();
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                    ctx.lineWidth = 0.8;
+                    ctx.moveTo(elements[i].x, elements[i].y);
+                    ctx.lineTo(elements[j].x, elements[j].y);
+                    ctx.stroke();
+                }
+            }
+        }
+    }
+
+    // ============ ELEMENT CLASS ============
+
+    class AnimElement {
+        constructor() {
+            this.reset();
+        }
+        reset() {
+            this.x = Math.random() * w;
+            this.y = Math.random() * h;
+            this.speedX = (Math.random() - 0.5) * 0.3;
+            this.speedY = (Math.random() - 0.5) * 0.3;
+            this.rotation = Math.random() * Math.PI * 2;
+            this.rotSpeed = (Math.random() - 0.5) * 0.005;
+            this.pulseSpeed = Math.random() * 0.015 + 0.005;
+            this.pulseOffset = Math.random() * Math.PI * 2;
+            this.type = Math.floor(Math.random() * 4);
+            this.letterIndex = Math.floor(Math.random() * 10);
+
+            // Theme-specific sizing
+            switch(currentTheme) {
+                case 'islamic':
+                    this.size = this.type === 3 ? Math.random() * 2.5 + 1 : Math.random() * 12 + 8;
+                    this.baseOpacity = this.type === 3 ? Math.random() * 0.5 + 0.3 : Math.random() * 0.35 + 0.15;
+                    break;
+                case 'ramadan':
+                    this.size = Math.random() * 20 + 15;
+                    this.baseOpacity = Math.random() * 0.5 + 0.3;
+                    break;
+                case 'mosque':
+                    this.size = Math.random() * 25 + 20;
+                    this.baseOpacity = Math.random() * 0.2 + 0.1;
+                    this.speedX *= 0.5;
+                    this.speedY *= 0.5;
+                    break;
+                case 'geometric':
+                    this.size = Math.random() * 20 + 10;
+                    this.baseOpacity = Math.random() * 0.3 + 0.15;
+                    break;
+                case 'calligraphy':
+                    this.size = Math.random() * 15 + 10;
+                    this.baseOpacity = Math.random() * 0.4 + 0.2;
+                    break;
+                case 'quran':
+                    this.size = Math.random() * 18 + 12;
+                    this.baseOpacity = Math.random() * 0.3 + 0.15;
+                    break;
+                case 'logo':
+                    this.size = Math.random() * 30 + 25;
+                    this.baseOpacity = Math.random() * 0.4 + 0.3;
+                    break;
+                case 'classic':
+                default:
+                    this.size = this.type === 0 ? Math.random() * 3 + 1.5 : Math.random() * 20 + 10;
+                    this.baseOpacity = this.type === 0 ? Math.random() * 0.6 + 0.3 : Math.random() * 0.1 + 0.05;
+                    this.isRing = this.type !== 0;
+                    break;
+            }
+        }
+        update(t) {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            this.rotation += this.rotSpeed;
+
+            const dx = this.x - mouse.x;
+            const dy = this.y - mouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < MOUSE_RADIUS) {
+                const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS * 0.02;
+                this.x += dx * force;
+                this.y += dy * force;
+            }
+
+            if (this.x < -40) this.x = w + 40;
+            if (this.x > w + 40) this.x = -40;
+            if (this.y < -40) this.y = h + 40;
+            if (this.y > h + 40) this.y = -40;
+
+            this.currentOpacity = this.baseOpacity * (0.6 + 0.4 * Math.sin(t * this.pulseSpeed + this.pulseOffset));
+        }
+        draw(ctx, t) {
+            switch(currentTheme) {
+                case 'islamic':
+                    if (this.type === 0) drawCrescent(ctx, this.x, this.y, this.size, this.currentOpacity, this.rotation);
+                    else if (this.type === 1) drawStar5(ctx, this.x, this.y, this.size, this.currentOpacity, this.rotation);
+                    else if (this.type === 2) drawStar8(ctx, this.x, this.y, this.size, this.currentOpacity, this.rotation);
+                    else drawDot(ctx, this.x, this.y, this.size, this.currentOpacity);
+                    break;
+                case 'ramadan':
+                    drawLantern(ctx, this.x, this.y, this.size, this.currentOpacity, this.rotation);
+                    break;
+                case 'mosque':
+                    drawMosque(ctx, this.x, this.y, this.size, this.currentOpacity, this.rotation);
+                    break;
+                case 'geometric':
+                    if (this.type % 2 === 0) drawStar8(ctx, this.x, this.y, this.size, this.currentOpacity, this.rotation);
+                    else drawHexagon(ctx, this.x, this.y, this.size, this.currentOpacity, this.rotation);
+                    break;
+                case 'calligraphy':
+                    drawArabicLetter(ctx, this.x, this.y, this.size, this.currentOpacity, this.letterIndex);
+                    break;
+                case 'quran':
+                    drawQuranBook(ctx, this.x, this.y, this.size, this.currentOpacity, this.rotation);
+                    break;
+                case 'logo':
+                    drawLogoElement(ctx, this.x, this.y, this.size, this.currentOpacity);
+                    break;
+                case 'classic':
+                default:
+                    if (this.isRing) {
+                        const pulse = 0.8 + 0.2 * Math.sin(t * 0.008 + this.pulseOffset);
+                        drawRing(ctx, this.x, this.y, this.size * pulse, this.currentOpacity);
+                    } else {
+                        drawDot(ctx, this.x, this.y, this.size, this.currentOpacity);
+                    }
+                    break;
+            }
+        }
+    }
+
+    function drawVignette(ctx) {
+        const grad = ctx.createRadialGradient(w / 2, h / 2, h * 0.2, w / 2, h / 2, h * 0.9);
+        grad.addColorStop(0, 'rgba(20, 20, 20, 0)');
+        grad.addColorStop(1, 'rgba(20, 20, 20, 0.35)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+    }
+
+    function init() {
+        resize();
+        elements = [];
+        const count = currentTheme === 'classic' ? 80 : ELEMENT_COUNT;
+        for (let i = 0; i < count; i++) {
+            elements.push(new AnimElement());
+        }
+    }
+
+    let frame = 0;
+    function animate() {
+        frame++;
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#141414';
+        ctx.fillRect(0, 0, w, h);
+
+        elements.forEach(el => {
+            el.update(frame);
+            el.draw(ctx, frame);
+        });
+
+        if (currentTheme === 'classic') {
+            drawConnections(ctx, elements);
+        }
+
+        drawVignette(ctx);
+        requestAnimationFrame(animate);
+    }
+
+    header.addEventListener('mousemove', e => {
+        const rect = header.getBoundingClientRect();
+        mouse.x = e.clientX - rect.left;
+        mouse.y = e.clientY - rect.top;
+    });
+    header.addEventListener('mouseleave', () => {
+        mouse.x = -1000;
+        mouse.y = -1000;
+    });
+
+    window.addEventListener('resize', () => {
+        resize();
+        elements.forEach(el => {
+            if (el.x > w || el.y > h) el.reset();
+        });
+    });
+
+    init();
+    animate();
+}
+
+function setInitialBackground() {
+    return new Promise((resolve) => {
+        const headerLayer = document.getElementById('headerBgLayer');
+        if (headerLayer && backgroundImages.length > 0) {
+            const img = new Image();
+            img.onload = () => {
+                headerLayer.style.backgroundImage = `url('${backgroundImages[currentBgIndex]}')`;
+                headerLayer.style.opacity = '1';
+                console.log('✅ [BG] Initial background loaded and set:', backgroundImages[currentBgIndex]);
+                resolve(true);
+            };
+            img.onerror = () => {
+                console.error('❌ [BG] Failed to load background image');
+                resolve(false);
+            };
+            img.src = backgroundImages[currentBgIndex];
+        } else if (!headerLayer) {
+            console.error('❌ [BG] Header layer element not found');
+            resolve(false);
+        } else {
+            console.warn('⚠️ [BG] No images available to set as background');
+            resolve(false);
+        }
+    });
 }
 
 (function() {
@@ -3092,10 +5374,11 @@ function initPreloader() {
     // Mark as visited for this session
     sessionStorage.setItem('hasVisited', 'true');
 
-    const minLoadTime = 1500; // Reduced from 3000ms to 1500ms
+    const minLoadTime = 1500;
     const startTime = Date.now();
 
-    function hidePreloader() {
+    // Make hidePreloader globally accessible
+    window.hidePreloader = function() {
         const elapsed = Date.now() - startTime;
         const remainingTime = Math.max(0, minLoadTime - elapsed);
 
@@ -3106,33 +5389,13 @@ function initPreloader() {
                 mainContent.classList.add('loaded');
                 document.body.style.overflow = 'auto';
                 document.body.classList.remove('no-scroll');
-            }, 600); // Faster fade out
+            }, 600);
         }, remainingTime);
-    }
+    };
 
     document.body.classList.add('no-scroll');
 
-    if (document.readyState === 'complete') {
-        hidePreloader();
-    } else {
-        window.addEventListener('load', hidePreloader);
-    }
-}
-
-function initTabs() {
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const targetTab = btn.dataset.tab;
-            tabBtns.forEach(b => b.classList.remove('active'));
-            tabContents.forEach(c => c.classList.remove('active'));
-            btn.classList.add('active');
-            const targetContent = document.getElementById(targetTab + 'Content');
-            if (targetContent) targetContent.classList.add('active');
-        });
-    });
+    // Don't auto-hide - wait for background image to load
 }
 
 class FloatingActionButtons {
@@ -3277,49 +5540,31 @@ function setupMobileMenu() {
             if (scrollTarget) {
                 e.preventDefault();
 
-                const missionSections = ['features', 'reach', 'plans'];
-                const contentSections = ['videos', 'schedule'];
-                const quranSections = ['quran-section'];
+                const targetElement = document.getElementById(scrollTarget);
+                if (targetElement) {
+                    const offset = 100;
+                    const elementPosition = targetElement.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - offset;
 
-                let targetTab = null;
-                if (missionSections.includes(scrollTarget)) {
-                    targetTab = 'mission';
-                } else if (contentSections.includes(scrollTarget)) {
-                    targetTab = 'content';
-                } else if (quranSections.includes(scrollTarget)) {
-                    targetTab = 'quran';
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
                 }
-
-                if (targetTab) {
-                    const currentActiveTab = document.querySelector('.tab-content.active');
-                    const targetTabContent = document.getElementById(targetTab + 'Content');
-
-                    if (currentActiveTab !== targetTabContent) {
-                        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
-                        const tabBtn = document.querySelector(`[data-tab="${targetTab}"]`);
-                        if (tabBtn) tabBtn.classList.add('active');
-                        if (targetTabContent) targetTabContent.classList.add('active');
-                    }
-                }
-
-                setTimeout(() => {
-                    const targetElement = document.getElementById(scrollTarget);
-                    if (targetElement) {
-                        const offset = 100;
-                        const elementPosition = targetElement.getBoundingClientRect().top;
-                        const offsetPosition = elementPosition + window.pageYOffset - offset;
-
-                        window.scrollTo({
-                            top: offsetPosition,
-                            behavior: 'smooth'
-                        });
-                    }
-                }, 100);
             }
         });
     });
+
+    // Mobile dropdown toggle
+    const dropdownTrigger = document.querySelector('.nav-dropdown-trigger');
+    const navDropdown = document.querySelector('.nav-dropdown');
+    if (dropdownTrigger && navDropdown) {
+        dropdownTrigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            navDropdown.classList.toggle('open');
+        });
+    }
 }
 
 function setupNavScrollEffect() {
@@ -3371,6 +5616,135 @@ function setupNavScrollEffect() {
     });
 }
 
+function setupHeroWordReveal() {
+    const heroSub = document.querySelector('.hero-sub');
+    if (!heroSub) return;
+
+    // Split text into chunks and wrap each in a span line
+    const fullText = heroSub.textContent.trim();
+    const words = fullText.split(/\s+/);
+
+    // Break into 3 equal chunks
+    const linesArr = [];
+    const third = Math.ceil(words.length / 3);
+    linesArr.push(words.slice(0, third).join(' '));
+    linesArr.push(words.slice(third, third * 2).join(' '));
+    linesArr.push(words.slice(third * 2).join(' '));
+
+    heroSub.textContent = '';
+    linesArr.forEach((line, i) => {
+        const span = document.createElement('span');
+        span.className = 'hero-line';
+        span.textContent = line;
+        span.style.animationDelay = (0.2 + i * 0.12) + 's';
+        heroSub.appendChild(span);
+    });
+
+    heroSub.classList.add('ready');
+}
+
+function setupShowcaseScrollBorder() {
+    const showcase = document.querySelector('.reach-showcase');
+    const header = document.getElementById('headerBg');
+
+    // Reach showcase: light beam + orb movement + card reveals
+    if (showcase) {
+        const beam = showcase.querySelector('.scroll-light-beam');
+        const orb1 = showcase.querySelector('.scroll-orb-1');
+        const orb2 = showcase.querySelector('.scroll-orb-2');
+
+        window.addEventListener('scroll', () => {
+            const rect = showcase.getBoundingClientRect();
+            const windowH = window.innerHeight;
+            const inView = rect.top < windowH && rect.bottom > 0;
+
+            if (inView) {
+                showcase.classList.add('in-view');
+
+                const start = windowH;
+                const end = -rect.height;
+                const progress = Math.min(1, Math.max(0, (start - rect.top) / (start - end)));
+
+                // Sweep light beam from left (-40%) to right (120%)
+                if (beam) {
+                    beam.style.left = (-40 + progress * 160) + '%';
+                }
+
+                // Float orbs with parallax
+                if (orb1) {
+                    orb1.style.transform = `translate(${progress * -60}px, ${progress * 40}px)`;
+                }
+                if (orb2) {
+                    orb2.style.transform = `translate(${progress * 50}px, ${progress * -30}px)`;
+                }
+            } else {
+                showcase.classList.remove('in-view');
+            }
+        }, { passive: true });
+    }
+
+    // Videos showcase: diagonal streak + orb parallax
+    const vidShowcase = document.querySelector('.videos-showcase');
+    if (vidShowcase) {
+        const streak = vidShowcase.querySelector('.scroll-streak');
+        const vOrb1 = vidShowcase.querySelector('.vid-orb-1');
+        const vOrb2 = vidShowcase.querySelector('.vid-orb-2');
+
+        window.addEventListener('scroll', () => {
+            const rect = vidShowcase.getBoundingClientRect();
+            const windowH = window.innerHeight;
+            const inView = rect.top < windowH && rect.bottom > 0;
+
+            if (inView) {
+                vidShowcase.classList.add('in-view');
+
+                const start = windowH;
+                const end = -rect.height;
+                const progress = Math.min(1, Math.max(0, (start - rect.top) / (start - end)));
+
+                // Sweep diagonal streak across
+                if (streak) {
+                    streak.style.left = (-20 + progress * 120) + '%';
+                }
+                // Float orbs
+                if (vOrb1) {
+                    vOrb1.style.transform = `translate(${progress * 40}px, ${progress * 30}px)`;
+                }
+                if (vOrb2) {
+                    vOrb2.style.transform = `translate(${progress * -35}px, ${progress * -25}px)`;
+                }
+            } else {
+                vidShowcase.classList.remove('in-view');
+            }
+        }, { passive: true });
+    }
+
+    // Header: shimmer sweep + edge glow on scroll
+    if (header) {
+        const shimmer = header.querySelector('.header-scroll-shimmer');
+        window.addEventListener('scroll', () => {
+            const rect = header.getBoundingClientRect();
+            const windowH = window.innerHeight;
+            const inView = rect.bottom > 0;
+
+            if (inView) {
+                header.classList.add('header-in-view');
+                if (shimmer) {
+                    // Map scroll: when header is fully visible (top=95) shimmer is at left,
+                    // as header scrolls out shimmer sweeps to the right
+                    const headerH = rect.height;
+                    const scrolled = Math.min(1, Math.max(0, -rect.top / headerH));
+                    // Move shimmer from -100% to +140% across the header
+                    const shimmerPos = -100 + (scrolled * 240);
+                    shimmer.style.left = shimmerPos + '%';
+                }
+            } else {
+                header.classList.remove('header-in-view');
+            }
+        }, { passive: true });
+    }
+}
+
 function setupScrollAnimations() {
     const observerOptions = {
         threshold: 0.1,
@@ -3391,6 +5765,12 @@ function setupScrollAnimations() {
     document.querySelectorAll('section').forEach(section => {
         observer.observe(section);
     });
+
+    // Observe bio-card for scroll reveal
+    document.querySelectorAll('.bio-card').forEach(card => {
+        observer.observe(card);
+    });
+
 }
 
 function animateCounters() {
@@ -3412,6 +5792,399 @@ function animateCounters() {
         }
         requestAnimationFrame(updateCounter);
     });
+}
+
+/* ========== Daily Content (Ayahs + Episodes) ========== */
+let _quranData = null;
+let _tafsirMap = null; // keyed by "surah:ayah"
+let _episodesCache = null;
+let _dailyTimerInterval = null;
+let _cardTimers = []; // each card has its own countdown
+let _currentAyahs = []; // stored ayah data for persistence
+let _currentEpisodes = []; // stored episode data for persistence
+const DAILY_STORAGE_KEY = 'tafsirkurd_daily_cards';
+
+function saveDailyState() {
+    try {
+        const state = {
+            ayahs: _currentAyahs,
+            episodes: _currentEpisodes,
+            timers: _cardTimers,
+            savedAt: Date.now()
+        };
+        localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(state));
+    } catch (e) { /* ignore */ }
+}
+
+function loadDailyState() {
+    try {
+        const stored = localStorage.getItem(DAILY_STORAGE_KEY);
+        if (!stored) return null;
+        return JSON.parse(stored);
+    } catch (e) {
+        return null;
+    }
+}
+
+// Surah count per chapter (ayah counts for all 114 surahs)
+const SURAH_AYAH_COUNTS = [7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,88,52,45,30,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
+
+function shuffleArray(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function createEl(tag, className, textContent) {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    if (textContent) el.textContent = textContent;
+    return el;
+}
+
+async function loadQuranData() {
+    if (_quranData && _tafsirMap) return;
+    const [qRes, tRes] = await Promise.all([
+        fetch('/data/quran.json'),
+        fetch('/data/kurdish_tafsir.json')
+    ]);
+    _quranData = await qRes.json();
+    const tafsirArr = await tRes.json();
+    // Build fast lookup map
+    _tafsirMap = {};
+    for (let i = 0; i < tafsirArr.length; i++) {
+        const t = tafsirArr[i];
+        _tafsirMap[t.surah + ':' + t.ayah] = t.kurdish_tafsir;
+    }
+}
+
+function getRandomAyahs(count) {
+    if (!_quranData || !_tafsirMap) return [];
+    const results = [];
+    const used = new Set();
+    let attempts = 0;
+    while (results.length < count && attempts < 100) {
+        attempts++;
+        const surah = Math.floor(Math.random() * 114) + 1;
+        const maxAyah = SURAH_AYAH_COUNTS[surah - 1];
+        const ayahIdx = Math.floor(Math.random() * maxAyah);
+        const key = surah + ':' + ayahIdx;
+        if (used.has(key)) continue;
+        used.add(key);
+
+        const surahData = _quranData[String(surah)];
+        if (!surahData || !surahData[ayahIdx]) continue;
+
+        const ayahObj = surahData[ayahIdx];
+        const tafsir = _tafsirMap[surah + ':' + ayahObj.verse];
+        if (!tafsir) continue;
+
+        results.push({
+            arabic: ayahObj.text,
+            tafsir: tafsir,
+            surah: surah,
+            ayah: ayahObj.verse
+        });
+    }
+    return results;
+}
+
+function formatTimer(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m + ':' + String(s).padStart(2, '0');
+}
+
+function renderDailyAyahs() {
+    const grid = document.getElementById('dailyGrid');
+    if (!grid || !_quranData || !_tafsirMap) return;
+
+    // Use saved ayahs if available, otherwise generate new
+    let picked;
+    if (_currentAyahs.length === 3) {
+        picked = _currentAyahs;
+    } else {
+        picked = getRandomAyahs(3);
+        _currentAyahs = picked;
+        saveDailyState();
+    }
+    grid.querySelectorAll('.daily-ayah').forEach(el => el.remove());
+
+    picked.forEach((ayah, i) => {
+        const cardIndex = i; // indices 0,1,2
+        const card = createEl('a', 'daily-card daily-ayah');
+        card.href = '/quran?surah=' + ayah.surah + '&ayah=' + ayah.ayah;
+
+        const topRow = createEl('div', 'daily-card-top');
+
+        const badge = createEl('div', 'daily-card-badge');
+        badge.appendChild(createEl('i', 'fas fa-book-open'));
+        badge.appendChild(document.createTextNode(' ئایەتا ڕۆژانە'));
+
+        const secs = _cardTimers[cardIndex] || 300;
+        const timer = createEl('div', 'daily-card-timer');
+        timer.appendChild(createEl('i', 'fas fa-clock'));
+        timer.appendChild(createEl('span', 'timer-value', formatTimer(secs)));
+        timer.dataset.cardIndex = cardIndex;
+
+        topRow.append(badge, timer);
+
+        const arabic = createEl('p', 'daily-ayah-arabic', ayah.arabic);
+        const divider = createEl('div', 'daily-ayah-divider');
+        const tafsir = createEl('p', 'daily-ayah-kurdish', ayah.tafsir);
+        const ref = createEl('p', 'daily-ayah-ref', 'سوورەت ' + ayah.surah + ' : ئایەت ' + ayah.ayah);
+
+        card.append(topRow, arabic, divider, tafsir, ref);
+
+        const firstEpisode = grid.querySelector('.daily-episode');
+        if (firstEpisode) {
+            grid.insertBefore(card, firstEpisode);
+        } else {
+            grid.appendChild(card);
+        }
+    });
+}
+
+async function loadEpisodesCache() {
+    if (_episodesCache) return _episodesCache;
+    if (!window.supabase || typeof window.supabase.from !== 'function') return [];
+    try {
+        const { data, error } = await window.supabase
+            .from('islamvoice_episodes')
+            .select('id, title, thumbnail_url, islamvoice_series(name_ku)')
+            .order('created_at', { ascending: false })
+            .limit(100);
+        if (!error && data && data.length > 0) {
+            // Only keep episodes that have a thumbnail
+            _episodesCache = data.filter(d => d.thumbnail_url && d.thumbnail_url.trim() !== '');
+            if (_episodesCache.length === 0) _episodesCache = data; // fallback: use all if none have thumbnails
+            return _episodesCache;
+        }
+    } catch (e) {
+        console.warn('Episodes cache load failed:', e);
+    }
+    return [];
+}
+
+function isUserLoggedIn() {
+    try {
+        const sb = window.supabase;
+        if (sb && sb.auth) {
+            const session = sb.auth.session ? sb.auth.session() : null;
+            if (session) return true;
+            // supabase v2
+            const stored = localStorage.getItem('sb-' + location.hostname + '-auth-token') ||
+                           localStorage.getItem('supabase.auth.token');
+            if (stored) return true;
+        }
+        // Check common auth keys
+        if (localStorage.getItem('auth_token') || localStorage.getItem('user')) return true;
+    } catch (e) {}
+    return false;
+}
+
+function buildEpisodeCard(ep, cardIndex) {
+    const card = createEl('a', 'daily-card daily-episode');
+    const dest = ep.id ? ('/islamvoice?episode=' + encodeURIComponent(ep.id)) : '/islamvoice';
+    card.href = dest;
+
+    // Login check happens on islamvoice page when trying to play, not here
+
+    const topRow = createEl('div', 'daily-card-top');
+
+    const badge = createEl('div', 'daily-card-badge');
+    badge.appendChild(createEl('i', 'fas fa-play'));
+    badge.appendChild(document.createTextNode(' ئیسلام ڤۆیس'));
+
+    const secs = _cardTimers[cardIndex] || 300;
+    const timer = createEl('div', 'daily-card-timer');
+    timer.appendChild(createEl('i', 'fas fa-clock'));
+    timer.appendChild(createEl('span', 'timer-value', formatTimer(secs)));
+    timer.dataset.cardIndex = cardIndex;
+
+    topRow.append(badge, timer);
+
+    const thumbWrap = createEl('div', 'daily-episode-thumb');
+    const img = document.createElement('img');
+    img.src = ep.thumbnail_url || '';
+    img.alt = ep.title || '';
+    img.loading = 'lazy';
+    thumbWrap.appendChild(img);
+
+    const playBtn = createEl('div', 'daily-episode-play');
+    playBtn.appendChild(createEl('i', 'fas fa-play'));
+    thumbWrap.appendChild(playBtn);
+
+    const title = createEl('h3', 'daily-episode-title', ep.title || 'ئەپیزۆد');
+    const series = createEl('p', 'daily-episode-series', ep.islamvoice_series?.name_ku || '');
+
+    card.append(topRow, thumbWrap, title, series);
+    return card;
+}
+
+function renderDailyEpisodes() {
+    const grid = document.getElementById('dailyGrid');
+    if (!grid) return;
+
+    grid.querySelectorAll('.daily-episode').forEach(el => el.remove());
+
+    if (!_episodesCache || _episodesCache.length === 0) return;
+
+    // Use saved episodes if available, otherwise pick new random ones
+    let picked;
+    if (_currentEpisodes.length === 3) {
+        picked = _currentEpisodes;
+    } else {
+        picked = shuffleArray(_episodesCache).slice(0, 3);
+        _currentEpisodes = picked;
+        saveDailyState();
+    }
+
+    picked.forEach((ep, i) => {
+        const cardIndex = 3 + i; // indices 3,4,5 (ayahs are 0,1,2)
+        grid.appendChild(buildEpisodeCard(ep, cardIndex));
+    });
+}
+
+function refreshSingleCard(cardIndex) {
+    const grid = document.getElementById('dailyGrid');
+    if (!grid) return;
+    const isAyah = cardIndex < 3;
+    const cards = isAyah
+        ? grid.querySelectorAll('.daily-ayah')
+        : grid.querySelectorAll('.daily-episode');
+    const localIdx = isAyah ? cardIndex : cardIndex - 3;
+    const oldCard = cards[localIdx];
+    if (!oldCard) return;
+
+    // Fade out
+    oldCard.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    oldCard.style.opacity = '0';
+    oldCard.style.transform = 'translateY(20px)';
+
+    setTimeout(() => {
+        if (isAyah && _quranData && _tafsirMap) {
+            const newAyahs = getRandomAyahs(1);
+            if (newAyahs.length > 0) {
+                const a = newAyahs[0];
+                // Update stored ayah data
+                _currentAyahs[localIdx] = a;
+                saveDailyState();
+
+                const newCard = createEl('a', 'daily-card daily-ayah');
+                newCard.href = '/quran?surah=' + a.surah + '&ayah=' + a.ayah;
+
+                const topRow = createEl('div', 'daily-card-top');
+                const badge = createEl('div', 'daily-card-badge');
+                badge.appendChild(createEl('i', 'fas fa-book-open'));
+                badge.appendChild(document.createTextNode(' ئایەتا ڕۆژانە'));
+                const secs = _cardTimers[cardIndex];
+                const timer = createEl('div', 'daily-card-timer');
+                timer.appendChild(createEl('i', 'fas fa-clock'));
+                timer.appendChild(createEl('span', 'timer-value', formatTimer(secs)));
+                timer.dataset.cardIndex = cardIndex;
+                topRow.append(badge, timer);
+
+                newCard.append(topRow,
+                    createEl('p', 'daily-ayah-arabic', a.arabic),
+                    createEl('div', 'daily-ayah-divider'),
+                    createEl('p', 'daily-ayah-kurdish', a.tafsir),
+                    createEl('p', 'daily-ayah-ref', 'سوورەت ' + a.surah + ' : ئایەت ' + a.ayah)
+                );
+
+                newCard.style.opacity = '0';
+                newCard.style.transform = 'translateY(20px)';
+                oldCard.replaceWith(newCard);
+                requestAnimationFrame(() => {
+                    newCard.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    newCard.style.opacity = '1';
+                    newCard.style.transform = 'translateY(0)';
+                });
+            }
+        } else if (!isAyah && _episodesCache && _episodesCache.length > 0) {
+            const ep = shuffleArray(_episodesCache)[0];
+            // Update stored episode data
+            _currentEpisodes[localIdx] = ep;
+            saveDailyState();
+
+            const newCard = buildEpisodeCard(ep, cardIndex);
+            newCard.style.opacity = '0';
+            newCard.style.transform = 'translateY(20px)';
+            oldCard.replaceWith(newCard);
+            requestAnimationFrame(() => {
+                newCard.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                newCard.style.opacity = '1';
+                newCard.style.transform = 'translateY(0)';
+            });
+        }
+    }, 450);
+}
+
+function initCardTimers() {
+    const saved = loadDailyState();
+    if (saved && saved.timers && saved.timers.length === 6) {
+        // Restore saved state
+        _cardTimers = saved.timers;
+        _currentAyahs = saved.ayahs || [];
+        _currentEpisodes = saved.episodes || [];
+    } else {
+        // Generate fresh timers (3-5 min each)
+        _cardTimers = [];
+        for (let i = 0; i < 6; i++) {
+            _cardTimers.push(180 + Math.floor(Math.random() * 121));
+        }
+    }
+}
+
+function startDailyTimer() {
+    if (_dailyTimerInterval) clearInterval(_dailyTimerInterval);
+    let saveCounter = 0;
+
+    _dailyTimerInterval = setInterval(() => {
+        for (let i = 0; i < 6; i++) {
+            _cardTimers[i]--;
+            if (_cardTimers[i] <= 0) {
+                _cardTimers[i] = 180 + Math.floor(Math.random() * 121);
+                refreshSingleCard(i);
+            }
+        }
+        // Update all visible timer displays
+        document.querySelectorAll('.daily-card-timer').forEach(el => {
+            const idx = parseInt(el.dataset.cardIndex, 10);
+            const span = el.querySelector('.timer-value');
+            if (span && !isNaN(idx) && _cardTimers[idx] !== undefined) {
+                span.textContent = formatTimer(_cardTimers[idx]);
+            }
+        });
+        // Save state every 10 seconds to persist timers
+        saveCounter++;
+        if (saveCounter >= 10) {
+            saveCounter = 0;
+            saveDailyState();
+        }
+    }, 1000);
+}
+
+async function initDailyContent() {
+    initCardTimers();
+    try {
+        await loadQuranData();
+    } catch (e) {
+        console.warn('Quran JSON load failed:', e);
+    }
+    renderDailyAyahs();
+
+    try {
+        await loadEpisodesCache();
+    } catch (e) {
+        console.warn('Episodes load failed:', e);
+    }
+    renderDailyEpisodes();
+
+    startDailyTimer();
 }
 
 const fallbackContent = {
@@ -3610,11 +6383,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     initPreloader();
-    initTabs();
-
-    // Show placeholder background immediately (no delay!)
-    setInitialBackground();
-    startBackgroundRotation();
 
     const yearElement = document.getElementById('year');
     if (yearElement) {
@@ -3624,12 +6392,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         await loadWebsiteContent();
 
-        // Load background images from database (will auto-update when ready)
+        // Load background images from database
         await loadBackgroundImagesFromDB();
+
+        // Wait for background image to load, then hide preloader
+        await setInitialBackground();
+        if (window.hidePreloader) {
+            window.hidePreloader();
+        }
+
+        startBackgroundRotation();
+
+        // Initialize hero canvas AFTER Supabase is ready
+        initHeroCanvas();
 
     } catch (error) {
         loadFallbackContent();
+        // Still init canvas with default theme if Supabase fails
+        initHeroCanvas();
+        // Hide preloader even on error
+        if (window.hidePreloader) {
+            window.hidePreloader();
+        }
     }
+
+    // Safety timeout - hide preloader after 5 seconds max
+    setTimeout(() => {
+        if (window.hidePreloader) {
+            window.hidePreloader();
+        }
+    }, 5000);
 
     // Load simple location tracker (doesn't depend on Supabase CDN)
     const locationScript = document.createElement('script');
@@ -3639,14 +6431,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     new FloatingActionButtons();
     setupHomeNavigation();  // ✅ FIXED - was "setupnetlify deploy --prodHomeNavigation()"
     setupScrollAnimations();
+    setupShowcaseScrollBorder();
+    setupHeroWordReveal();
     setupMobileMenu();
     setupNavScrollEffect();
     setupContactForm();
+
+    // Init daily content (loads JSON + episodes, starts 5-min timer)
+    try {
+        await initDailyContent();
+    } catch (e) {
+        console.warn('Daily content init failed:', e);
+    }
 
     if (window.supabase) {
         const contentRefreshInterval = setInterval(loadWebsiteContent, 300000);
         window.addEventListener('beforeunload', () => {
             if (contentRefreshInterval) clearInterval(contentRefreshInterval);
+            if (_dailyTimerInterval) clearInterval(_dailyTimerInterval);
         });
         // Load dynamic content from database
         loadSocialStats();
@@ -3686,7 +6488,24 @@ async function loadFeatures() {
             const container = document.getElementById('features-container');
             if (!container) return;
 
-            container.innerHTML = data.map(feature => `
+            container.innerHTML = `
+                <a href="/quran" class="feature-card feature-card-link">
+                    <div class="feature-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <h3 class="feature-title">قورئانا پیرۆز بخوینە</h3>
+                    <p class="feature-desc">دەستگەهشتن ب تەفسیرا ئایەت ب ئایەت یا قورئانا پیرۆز. پەیاما خودایێ مەزن ب زمانێ دایک بخوینە، بگەڕە و فێرببە.</p>
+                    <span class="feature-card-arrow"><i class="fas fa-arrow-left"></i></span>
+                </a>
+                <a href="/islamvoice" class="feature-card feature-card-link">
+                    <div class="feature-icon">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                    <h3 class="feature-title">ئیسلام ڤۆیس</h3>
+                    <p class="feature-desc">ڤیدیۆیێن ئیسلامی ب زمانێ کوردی تەماشا بکە. ناڤەڕۆکەکا دەنگی و دیاری بۆ فێربوون و ئیلهام.</p>
+                    <span class="feature-card-arrow"><i class="fas fa-arrow-left"></i></span>
+                </a>
+            ` + data.map(feature => `
                 <div class="feature-card">
                     <div class="feature-icon">
                         <i class="${feature.icon_class}"></i>
@@ -3718,7 +6537,10 @@ async function loadScheduleItems() {
             const container = document.getElementById('schedule-container');
             if (!container) return;
 
-            container.innerHTML = data.map(item => `
+            // Filter out "ناڤەڕۆکا ئاسایی" card
+            const filteredData = data.filter(item => !item.topic.includes('ناڤەڕۆکا ئاسایی'));
+
+            container.innerHTML = filteredData.map(item => `
                 <div class="schedule-card">
                     <div class="schedule-day">
                         <i class="${item.icon_class}"></i>
