@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>Header Animation - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Amiri&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .theme-card {
+            background: var(--bg-surface);
+            border: 2px solid var(--border-light);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .theme-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .theme-card.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+
+        .theme-card.active::after {
+            content: '';
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-card.active::before {
+            content: '\2713';
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 28px;
+            height: 28px;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-preview {
+            width: 100%;
+            height: 160px;
+            background: #141414;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-preview canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .theme-info {
+            padding: 16px;
+        }
+
+        .theme-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .theme-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .theme-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 20px;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .theme-badge.ramadan {
+            background: rgba(234, 179, 8, 0.1);
+            color: #eab308;
+        }
+
+        .theme-badge.classic {
+            background: rgba(107, 114, 128, 0.1);
+            color: #6b7280;
+        }
+
+        .save-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-light);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .save-bar.visible {
+            transform: translateY(0);
+        }
+
+        .save-bar-text {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .save-bar-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .current-theme-banner {
+            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+            color: white;
+            padding: 20px 24px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .current-theme-info h3 {
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .current-theme-info p {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .current-theme-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .current-theme-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .theme-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <style id="early-sidebar-hide">
+        .sidebar-nav { visibility: hidden; }
+    </style>
+    <script>
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+
+            if (role === 'super_admin') {
+                css = '.sidebar-nav{visibility:visible}';
+            } else if (role === 'analyst') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="backgrounds"],.nav-item[href*="header-animation"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'editor') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            }
+            if (role) {
+                style.textContent = css;
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- OVERVIEW -->
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item">
+                        <i data-lucide="bar-chart-2"></i>
+                        <span class="nav-item-label">Dashboard</span>
+                    </a>
+                    <a href="/admin-analytics.html" class="nav-item">
+                        <i data-lucide="trending-up"></i>
+                        <span class="nav-item-label">Analytics</span>
+                    </a>
+                </div>
+
+                <!-- CONTENT -->
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item">
+                        <i data-lucide="message-square"></i>
+                        <span class="nav-item-label">Messages</span>
+                        <span class="nav-item-badge" id="message-badge">0</span>
+                    </a>
+                    <a href="/admin-videos.html" class="nav-item">
+                        <i data-lucide="video"></i>
+                        <span class="nav-item-label">Videos</span>
+                    </a>
+                    <a href="/admin-islamvoice-management.html" class="nav-item">
+                        <i data-lucide="radio"></i>
+                        <span class="nav-item-label">IslamVoice</span>
+                    </a>
+                    <a href="/admin-backgrounds.html" class="nav-item">
+                        <i data-lucide="image"></i>
+                        <span class="nav-item-label">Backgrounds</span>
+                    </a>
+                    <a href="/admin-header-animation.html" class="nav-item active">
+                        <i data-lucide="sparkles"></i>
+                        <span class="nav-item-label">Header Animation</span>
+                    </a>
+                </div>
+
+                <!-- USERS -->
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item">
+                        <i data-lucide="users"></i>
+                        <span class="nav-item-label">Users</span>
+                    </a>
+                    <a href="/admin-reading-stats.html" class="nav-item">
+                        <i data-lucide="book-open"></i>
+                        <span class="nav-item-label">Reading Stats</span>
+                    </a>
+                </div>
+
+                <!-- SYSTEM -->
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-account-management.html" class="nav-item">
+                        <i data-lucide="user-cog"></i>
+                        <span class="nav-item-label">Admin Accounts</span>
+                    </a>
+                    <a href="/admin-features.html" class="nav-item">
+                        <i data-lucide="layers"></i>
+                        <span class="nav-item-label">Features</span>
+                    </a>
+                    <a href="/admin-schedule.html" class="nav-item">
+                        <i data-lucide="calendar"></i>
+                        <span class="nav-item-label">Schedule</span>
+                    </a>
+                    <a href="/admin-social-stats.html" class="nav-item">
+                        <i data-lucide="share-2"></i>
+                        <span class="nav-item-label">Social Stats</span>
+                    </a>
+                    <a href="/admin-bot-protection.html" class="nav-item">
+                        <i data-lucide="shield"></i>
+                        <span class="nav-item-label">Bot Protection</span>
+                    </a>
+                    <a href="/admin-database.html" class="nav-item">
+                        <i data-lucide="database"></i>
+                        <span class="nav-item-label">Database</span>
+                    </a>
+                    <a href="/admin-search-console.html" class="nav-item">
+                        <i data-lucide="search"></i>
+                        <span class="nav-item-label">Search Console</span>
+                    </a>
+                    <a href="/admin-email-templates.html" class="nav-item">
+                        <i data-lucide="mail"></i>
+                        <span class="nav-item-label">Email Templates</span>
+                    </a>
+                    <a href="/admin-activity-feed.html" class="nav-item">
+                        <i data-lucide="activity"></i>
+                        <span class="nav-item-label">Activity Feed</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar">
+                        <i data-lucide="user"></i>
+                    </div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name"></div>
+                        <div class="sidebar-profile-email"></div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; display: flex; align-items: center; transition: color 0.2s;" title="Logout">
+                        <i data-lucide="log-out"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- TOP BAR -->
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="topbar-search">
+                    <i data-lucide="sparkles"></i>
+                    <span style="color: var(--text-secondary); font-size: 14px;">Header Animation Themes</span>
+                </div>
+                <div class="topbar-actions">
+                    <div class="session-timer" id="sessionTimer" title="Session expires after 20 minutes">
+                        <i data-lucide="clock"></i>
+                        <span id="sessionTimerText">20:00</span>
+                    </div>
+                    <button class="topbar-btn" style="position: relative;">
+                        <i data-lucide="bell"></i>
+                        <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span>
+                    </button>
+                    <button class="topbar-btn" id="theme-toggle" title="Toggle Dark Mode">
+                        <i data-lucide="moon" id="theme-icon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- CONTENT AREA -->
+            <div class="content-area" style="padding-bottom: 100px;">
+                <div class="page-header">
+                    <h1 class="page-title">Header Animation</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" onclick="location.reload()">
+                            <i data-lucide="refresh-cw"></i>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Current Theme Banner -->
+                <div class="current-theme-banner">
+                    <div class="current-theme-info">
+                        <h3>Currently Active</h3>
+                        <p id="currentThemeName">Loading...</p>
+                    </div>
+                    <div class="current-theme-icon">
+                        <i data-lucide="sparkles"></i>
+                    </div>
+                </div>
+
+                <!-- Theme Grid -->
+                <h2 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Choose a Theme</h2>
+                <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 0;">Select an animation theme for your homepage header. Changes will apply immediately.</p>
+
+                <div class="theme-grid" id="themeGrid">
+                    <!-- Themes will be rendered here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Save Bar -->
+    <div class="save-bar" id="saveBar">
+        <div class="save-bar-text">You have unsaved changes</div>
+        <div class="save-bar-actions">
+            <button class="btn btn-secondary" onclick="cancelChanges()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveTheme()">
+                <i data-lucide="check"></i>
+                Save Changes
+            </button>
+        </div>
+    </div>
+
+    <script src="/utils/admin-session-timer-ui.js?v=4"></script>
+    <script src="/utils/admin-auth.js?v=3"></script>
+    <script src="/utils/admin-notifications.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // Theme definitions
+        const THEMES = [
+            {
+                id: 'islamic',
+                name: 'Crescent & Stars',
+                description: 'Floating crescent moons, 5-pointed stars, and 8-pointed Islamic stars',
+                badge: 'Islamic',
+                badgeClass: ''
+            },
+            {
+                id: 'ramadan',
+                name: 'Ramadan Lanterns',
+                description: 'Glowing lanterns floating gently - perfect for Ramadan season',
+                badge: 'Ramadan',
+                badgeClass: 'ramadan'
+            },
+            {
+                id: 'mosque',
+                name: 'Mosque Silhouettes',
+                description: 'Subtle mosque domes and minarets drifting across the sky',
+                badge: 'Islamic',
+                badgeClass: ''
+            },
+            {
+                id: 'geometric',
+                name: 'Islamic Geometry',
+                description: '8-pointed stars and hexagonal patterns in elegant motion',
+                badge: 'Islamic',
+                badgeClass: ''
+            },
+            {
+                id: 'calligraphy',
+                name: 'Arabic Letters',
+                description: 'Beautiful Arabic letters floating gracefully',
+                badge: 'Islamic',
+                badgeClass: ''
+            },
+            {
+                id: 'quran',
+                name: 'Open Quran Books',
+                description: 'Small Quran book silhouettes floating serenely',
+                badge: 'Islamic',
+                badgeClass: ''
+            },
+            {
+                id: 'logo',
+                name: 'TafsirKurd Logo',
+                description: 'Your logo floating with gentle parallax effect',
+                badge: 'Brand',
+                badgeClass: ''
+            },
+            {
+                id: 'classic',
+                name: 'Classic Particles',
+                description: 'Original circles and connecting lines animation',
+                badge: 'Classic',
+                badgeClass: 'classic'
+            }
+        ];
+
+        let currentTheme = 'islamic';
+        let selectedTheme = 'islamic';
+        let originalTheme = 'islamic';
+
+        // Initialize
+        (async () => {
+            const isAuth = await window.adminAuth.checkAuth();
+            if (isAuth) {
+                await loadCurrentTheme();
+                renderThemeGrid();
+                setupEventListeners();
+            }
+        })();
+
+        // Sidebar toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+
+        menuToggle.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
+        mobileMenuToggle.addEventListener('click', () => sidebar.classList.toggle('mobile-open'));
+
+        // Theme toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+
+        const savedTheme = localStorage.getItem('admin-theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeIcon.setAttribute('data-lucide', 'sun');
+            lucide.createIcons();
+        }
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+        });
+
+        function setupEventListeners() {
+            document.getElementById('themeGrid').addEventListener('click', (e) => {
+                const card = e.target.closest('.theme-card');
+                if (card) {
+                    selectTheme(card.dataset.theme);
+                }
+            });
+        }
+
+        async function loadCurrentTheme() {
+            try {
+                const supabase = window.adminAuth.getSupabase();
+                if (!supabase) return;
+
+                const { data, error } = await supabase
+                    .from('site_settings')
+                    .select('value')
+                    .eq('key', 'header_animation_theme')
+                    .single();
+
+                if (!error && data) {
+                    currentTheme = data.value;
+                    selectedTheme = data.value;
+                    originalTheme = data.value;
+                }
+
+                updateCurrentThemeBanner();
+            } catch (error) {
+                console.error('Error loading theme:', error);
+            }
+        }
+
+        function updateCurrentThemeBanner() {
+            const theme = THEMES.find(t => t.id === currentTheme);
+            document.getElementById('currentThemeName').textContent = theme ? theme.name : 'Unknown';
+        }
+
+        function renderThemeGrid() {
+            const grid = document.getElementById('themeGrid');
+            grid.textContent = '';
+
+            THEMES.forEach(theme => {
+                const card = document.createElement('div');
+                card.className = 'theme-card' + (selectedTheme === theme.id ? ' active' : '');
+                card.dataset.theme = theme.id;
+
+                const preview = document.createElement('div');
+                preview.className = 'theme-preview';
+                const canvas = document.createElement('canvas');
+                canvas.id = 'preview-' + theme.id;
+                preview.appendChild(canvas);
+
+                const info = document.createElement('div');
+                info.className = 'theme-info';
+
+                const name = document.createElement('div');
+                name.className = 'theme-name';
+                name.textContent = theme.name;
+
+                const desc = document.createElement('div');
+                desc.className = 'theme-description';
+                desc.textContent = theme.description;
+
+                const badge = document.createElement('span');
+                badge.className = 'theme-badge ' + theme.badgeClass;
+                badge.textContent = theme.badge;
+
+                info.appendChild(name);
+                info.appendChild(desc);
+                info.appendChild(badge);
+
+                card.appendChild(preview);
+                card.appendChild(info);
+                grid.appendChild(card);
+
+                // Start preview animation after adding to DOM
+                setTimeout(() => startPreviewAnimation(theme.id), 50);
+            });
+
+            lucide.createIcons();
+        }
+
+        function selectTheme(themeId) {
+            selectedTheme = themeId;
+
+            document.querySelectorAll('.theme-card').forEach(card => {
+                card.classList.toggle('active', card.dataset.theme === themeId);
+            });
+
+            const saveBar = document.getElementById('saveBar');
+            if (selectedTheme !== originalTheme) {
+                saveBar.classList.add('visible');
+            } else {
+                saveBar.classList.remove('visible');
+            }
+        }
+
+        function cancelChanges() {
+            selectedTheme = originalTheme;
+            document.querySelectorAll('.theme-card').forEach(card => {
+                card.classList.toggle('active', card.dataset.theme === originalTheme);
+            });
+            document.getElementById('saveBar').classList.remove('visible');
+        }
+
+        async function saveTheme() {
+            try {
+                const supabase = window.adminAuth.getSupabase();
+                if (!supabase) return;
+
+                const { error } = await supabase
+                    .from('site_settings')
+                    .upsert({
+                        key: 'header_animation_theme',
+                        value: selectedTheme,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'key' });
+
+                if (error) throw error;
+
+                currentTheme = selectedTheme;
+                originalTheme = selectedTheme;
+                updateCurrentThemeBanner();
+                document.getElementById('saveBar').classList.remove('visible');
+
+                alert('Theme saved successfully! The homepage will now show the new animation.');
+            } catch (error) {
+                console.error('Error saving theme:', error);
+                alert('Error saving theme: ' + error.message);
+            }
+        }
+
+        function startPreviewAnimation(themeId) {
+            const canvas = document.getElementById('preview-' + themeId);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width || 280;
+            canvas.height = rect.height || 160;
+
+            const w = canvas.width;
+            const h = canvas.height;
+            let elements = [];
+
+            const count = 15;
+            for (let i = 0; i < count; i++) {
+                elements.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    size: Math.random() * 10 + 5,
+                    speed: Math.random() * 0.3 + 0.1,
+                    rotation: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.02,
+                    opacity: Math.random() * 0.4 + 0.2,
+                    type: Math.floor(Math.random() * 3)
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, w, h);
+                ctx.fillStyle = '#141414';
+                ctx.fillRect(0, 0, w, h);
+
+                elements.forEach(el => {
+                    el.y -= el.speed;
+                    el.rotation += el.rotSpeed;
+                    if (el.y < -20) el.y = h + 20;
+
+                    ctx.save();
+                    ctx.translate(el.x, el.y);
+                    ctx.rotate(el.rotation);
+                    ctx.globalAlpha = el.opacity;
+
+                    switch(themeId) {
+                        case 'islamic':
+                            drawIslamicPreview(ctx, el);
+                            break;
+                        case 'ramadan':
+                            drawLanternPreview(ctx, el);
+                            break;
+                        case 'mosque':
+                            drawMosquePreview(ctx, el);
+                            break;
+                        case 'geometric':
+                            drawGeometricPreview(ctx, el);
+                            break;
+                        case 'calligraphy':
+                            drawCalligraphyPreview(ctx, el);
+                            break;
+                        case 'quran':
+                            drawQuranPreview(ctx, el);
+                            break;
+                        case 'logo':
+                            drawLogoPreview(ctx, el);
+                            break;
+                        case 'classic':
+                            drawClassicPreview(ctx, el);
+                            break;
+                    }
+
+                    ctx.restore();
+                });
+
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+
+        function drawIslamicPreview(ctx, el) {
+            ctx.fillStyle = 'white';
+            if (el.type === 0) {
+                ctx.beginPath();
+                ctx.arc(0, 0, el.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#141414';
+                ctx.beginPath();
+                ctx.arc(el.size * 0.35, -el.size * 0.1, el.size * 0.75, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                drawStar(ctx, el.size * 0.7, el.type === 1 ? 5 : 8);
+            }
+        }
+
+        function drawLanternPreview(ctx, el) {
+            ctx.fillStyle = 'rgba(255, 200, 100, ' + el.opacity + ')';
+            ctx.beginPath();
+            ctx.moveTo(-el.size * 0.4, -el.size * 0.3);
+            ctx.lineTo(-el.size * 0.5, el.size * 0.3);
+            ctx.lineTo(el.size * 0.5, el.size * 0.3);
+            ctx.lineTo(el.size * 0.4, -el.size * 0.3);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillRect(-el.size * 0.3, -el.size * 0.5, el.size * 0.6, el.size * 0.2);
+            ctx.fillStyle = 'rgba(255, 200, 100, ' + (el.opacity * 0.3) + ')';
+            ctx.beginPath();
+            ctx.arc(0, 0, el.size * 1.2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawMosquePreview(ctx, el) {
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(0, 0, el.size * 0.8, Math.PI, 0);
+            ctx.fill();
+            ctx.fillRect(-el.size * 0.8, 0, el.size * 1.6, el.size * 0.5);
+            ctx.fillRect(-el.size * 1.1, -el.size * 0.3, el.size * 0.2, el.size * 0.8);
+        }
+
+        function drawGeometricPreview(ctx, el) {
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            for (let i = 0; i < 8; i++) {
+                const angle = (i * Math.PI) / 4;
+                const x = Math.cos(angle) * el.size;
+                const y = Math.sin(angle) * el.size;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        function drawCalligraphyPreview(ctx, el) {
+            const letters = ['ا', 'ب', 'س', 'م', 'ن', 'و'];
+            ctx.fillStyle = 'white';
+            ctx.font = (el.size * 2) + 'px Amiri, serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(letters[el.type % letters.length], 0, 0);
+        }
+
+        function drawQuranPreview(ctx, el) {
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.moveTo(-el.size, -el.size * 0.6);
+            ctx.quadraticCurveTo(-el.size * 0.5, -el.size * 0.8, 0, -el.size * 0.6);
+            ctx.quadraticCurveTo(el.size * 0.5, -el.size * 0.8, el.size, -el.size * 0.6);
+            ctx.lineTo(el.size, el.size * 0.6);
+            ctx.quadraticCurveTo(el.size * 0.5, el.size * 0.4, 0, el.size * 0.6);
+            ctx.quadraticCurveTo(-el.size * 0.5, el.size * 0.4, -el.size, el.size * 0.6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#141414';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, -el.size * 0.6);
+            ctx.lineTo(0, el.size * 0.6);
+            ctx.stroke();
+        }
+
+        function drawLogoPreview(ctx, el) {
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(0, 0, el.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#141414';
+            ctx.font = 'bold ' + el.size + 'px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('T', 0, 0);
+        }
+
+        function drawClassicPreview(ctx, el) {
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(0, 0, el.size * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawStar(ctx, size, points) {
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            for (let i = 0; i < points; i++) {
+                const outerAngle = (i * 2 * Math.PI) / points - Math.PI / 2;
+                const innerAngle = outerAngle + Math.PI / points;
+                const outerX = Math.cos(outerAngle) * size;
+                const outerY = Math.sin(outerAngle) * size;
+                const innerX = Math.cos(innerAngle) * size * 0.4;
+                const innerY = Math.sin(innerAngle) * size * 0.4;
+                if (i === 0) ctx.moveTo(outerX, outerY);
+                else ctx.lineTo(outerX, outerY);
+                ctx.lineTo(innerX, innerY);
+            }
+            ctx.closePath();
+            ctx.fill();
+        }
+    </script>
+</body>
+</html>

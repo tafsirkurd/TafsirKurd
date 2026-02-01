@@ -1310,6 +1310,22 @@
         await loadPlaylist(); // Loads cached data instantly, then fetches fresh data
         // renderTopics is called inside loadPlaylist after data loads
         console.log('✅ تەفسیر TV Player initialized');
+
+        // Check for episode URL parameter and auto-play
+        checkUrlEpisodeParam();
+    }
+
+    // ===== CHECK URL EPISODE PARAMETER =====
+    function checkUrlEpisodeParam() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const episodeId = urlParams.get('episode');
+        if (episodeId) {
+            console.log('🎯 Episode ID found in URL:', episodeId);
+            // Small delay to ensure everything is loaded
+            setTimeout(() => {
+                playEpisode(episodeId);
+            }, 500);
+        }
     }
 
     // ===== LOAD SAVED DATA =====
@@ -2521,16 +2537,6 @@
 
         const videoUrl = videoUrlOrId;
         console.log('🎬 Play video requested:', videoUrl, title, episodeId);
-
-        // Check if user is authenticated
-        if (!isAuthenticated()) {
-            console.log('🔒 User not authenticated - showing auth modal');
-            showAuthModal();
-            showNotification('🔐 تکایە دەستنیشان بکە بۆ بینینی ڤیدیۆ', 4000);
-            return;
-        }
-
-        console.log('✅ User authenticated - playing video');
 
         // Update current episode
         state.currentEpisode = episodeId;
