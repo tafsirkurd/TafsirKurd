@@ -238,6 +238,7 @@
         }
 
         .nav-main {
+            width: 100%;
             height: var(--nav-height);
             display: flex;
             align-items: center;
@@ -249,6 +250,7 @@
         }
 
         .nav-container {
+            width: 100%;
             max-width: 1400px;
             margin: 0 auto;
             padding: 0 30px;
@@ -260,26 +262,36 @@
         .nav-logo {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 15px;
             text-decoration: none;
-            transition: transform 0.3s ease;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease;
         }
 
         .nav-logo:hover {
-            transform: scale(1.02);
+            transform: scale(1.03);
         }
 
         .nav-logo .logo-image {
-            width: 45px;
-            height: 45px;
+            width: 55px;
+            height: 55px;
             object-fit: contain;
             border-radius: 50%;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+        }
+
+        .nav-logo:hover .logo-image {
+            transform: rotate(-5deg) scale(1.1);
         }
 
         .nav-logo .header-title {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: 700;
+            transition: letter-spacing 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             color: var(--text);
+        }
+
+        .nav-logo:hover .header-title {
+            letter-spacing: 1px;
         }
 
         .nav-links {
@@ -1751,7 +1763,6 @@
 
         @media (max-width: 768px) {
             .search-results-dropdown {
-                top: calc(100% + 10px) !important;
                 max-height: 400px !important;
                 width: calc(100% - 20px) !important;
                 left: 50% !important;
@@ -1759,9 +1770,7 @@
             }
 
             #popularSearchesSection {
-                top: calc(100% + 10px) !important;
                 max-height: 400px !important;
-                width: calc(100% - 20px) !important;
                 padding: 0 !important;
             }
 
@@ -4811,8 +4820,10 @@
         <nav class="quran-nav">
             <div class="nav-main">
             <div class="nav-container">
-                <div class="nav-logo" onclick="showHomePage()" style="cursor: pointer;">
-                    <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="logo-image">
+                <div class="nav-logo">
+                    <a href="/" onclick="showHomePage(); return false;" style="display: flex; align-items: center;">
+                        <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="logo-image">
+                    </a>
                     <div class="header-title">تەفسیر کورد</div>
                 </div>
 
@@ -4909,7 +4920,7 @@
                     <div class="search-results-dropdown" id="searchResultsDropdown"></div>
 
                     <!-- Popular Searches Dropdown - Hidden by default, shown on search focus -->
-                    <div id="popularSearchesSection" style="display: none; position: absolute; top: calc(100% + 10px); left: 0; right: 0; z-index: 10000; max-height: 70vh; overflow-y: auto; overflow-x: hidden;">
+                    <div id="popularSearchesSection" style="display: none; position: fixed; z-index: 10000; max-height: 60vh; overflow-y: auto; overflow-x: hidden;">
                         <div style="background: var(--card-bg); border-radius: 20px; padding: 12px; box-shadow: var(--shadow-lg); border: 2px solid var(--border); box-sizing: border-box;">
                             <div style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
                                 <i class="fas fa-fire"></i>
@@ -5127,6 +5138,7 @@
                 if (returningFromSettings === 'true') {
                     const homePage = document.getElementById('homePage');
                     const readerPage = document.getElementById('surahReaderPage');
+                    const stickyHeader = document.getElementById('stickyProgressHeader');
 
                     // Instantly hide home, show reader
                     if (homePage) {
@@ -5137,6 +5149,11 @@
                         readerPage.classList.add('visible');
                         readerPage.style.display = 'block';
                     }
+                    // Show sticky header and add reading mode
+                    if (stickyHeader) {
+                        stickyHeader.style.display = 'block';
+                    }
+                    document.body.classList.add('reading-mode');
                 }
             })();
         </script>
@@ -6558,22 +6575,31 @@
             searchInput.addEventListener('focus', (e) => {
                 const query = e.target.value.trim();
                 if (!query) {
+                    // Calculate position and width based on search input
+                    const rect = searchInput.getBoundingClientRect();
+                    popularSearches.style.top = (rect.bottom + 10) + 'px';
+                    popularSearches.style.left = rect.left + 'px';
+                    popularSearches.style.width = rect.width + 'px';
+                    popularSearches.style.transform = 'none';
                     popularSearches.style.display = 'block';
                     hideSearchResults(); // Hide search results dropdown
                 }
             });
 
             // Close popup when scrolling
-            let hideSearchTimeout;
             window.addEventListener('scroll', () => {
-                clearTimeout(hideSearchTimeout);
-                hideSearchTimeout = setTimeout(() => {
-                    if (popularSearches.style.display === 'block' || searchResultsDropdown.classList.contains('active')) {
-                        hideSearchResults();
-                        popularSearches.style.display = 'none';
-                    }
-                }, 100);
+                if (popularSearches.style.display === 'block' || searchResultsDropdown.classList.contains('active')) {
+                    hideSearchResults();
+                    popularSearches.style.display = 'none';
+                }
             }, { passive: true });
+
+            // Close popup when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !popularSearches.contains(e.target)) {
+                    popularSearches.style.display = 'none';
+                }
+            });
 
             searchInput.addEventListener('input', (e) => {
                 const query = e.target.value.trim();
@@ -6584,6 +6610,11 @@
                 if (!query) {
                     hideSearchResults();
                     // Show popular searches when input is cleared
+                    const rect = searchInput.getBoundingClientRect();
+                    popularSearches.style.top = (rect.bottom + 10) + 'px';
+                    popularSearches.style.left = rect.left + 'px';
+                    popularSearches.style.width = rect.width + 'px';
+                    popularSearches.style.transform = 'none';
                     popularSearches.style.display = 'block';
                     return;
                 }
@@ -10309,10 +10340,12 @@
         const desktopHeaderHeight = 85;
 
         if (stickyProgress) {
-            const headerHeight = isMobileDevice ? mobileHeaderHeight : desktopHeaderHeight;
-            stickyProgress.style.top = headerHeight + 'px';
-            stickyProgress.style.display = 'block';
-            stickyProgress.style.visibility = 'visible';
+            const readerPage = document.getElementById('surahReaderPage');
+            const isReading = readerPage && readerPage.classList.contains('visible');
+            // Only show sticky header if in reader mode
+            if (isReading) {
+                stickyProgress.style.display = 'block';
+            }
         }
 
         // Initialize header state on page load - ALWAYS show header on load
