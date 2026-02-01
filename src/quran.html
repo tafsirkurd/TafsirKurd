@@ -81,13 +81,8 @@
         gtag('config', 'G-WVQC0MKLFN');
     </script>
 
-    <!-- Favicons - High quality with SVG for perfect scaling -->
-    <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
-    <link rel="icon" type="image/png" sizes="96x96" href="/assets/images/favicon-96x96.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/assets/images/web-app-manifest-512x512.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/web-app-manifest-192x192.png">
-    <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
 
     <!-- Console Cleaner - DISABLED for debugging -->
     <!-- <script src="/utils/console-cleaner.js" defer></script> -->
@@ -170,6 +165,9 @@
             --tafsir-font: 'IBM Plex Sans Arabic';
             --arabic-size: 2.2rem;
             --tafsir-size: 1.1rem;
+            --nav-height: 4.375rem;
+            --sticky-header-height: 3rem;
+            --total-header-height: calc(var(--nav-height) + var(--sticky-header-height));
         }
 
         [data-theme="dark"] {
@@ -188,6 +186,15 @@
 
         [data-theme="dark"] .logo-image {
             filter: invert(1) brightness(1.2);
+        }
+
+        [data-theme="dark"] .surah-card-number {
+            background: #fff;
+            color: #000;
+        }
+
+        [data-theme="dark"] .surah-card::before {
+            background: #fff;
         }
 
         * {
@@ -215,6 +222,150 @@
             transition: background-color var(--transition), color var(--transition);
             margin: 0;
             padding: 0;
+        }
+
+        /* Navigation Styles */
+        .quran-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .nav-main {
+            height: var(--nav-height);
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        [data-theme="dark"] .quran-nav {
+            background: #0a0a0a;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-logo:hover {
+            transform: scale(1.02);
+        }
+
+        .nav-logo .logo-image {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
+        .nav-logo .header-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            color: var(--text);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            background: var(--primary);
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: -1;
+        }
+
+        .nav-link:hover::before,
+        .nav-link.active::before {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--accent);
+        }
+
+        .nav-link i {
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-link:hover i,
+        .nav-link.active i {
+            transform: scale(1.1);
+            color: var(--accent);
+        }
+
+        .hamburger-menu {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 10px;
+            z-index: 1001;
+        }
+
+        .hamburger-menu span {
+            width: 24px;
+            height: 2px;
+            background: var(--text);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-active .hamburger-menu span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .nav-active .hamburger-menu span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .nav-active .hamburger-menu span:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -5px);
+        }
+
+        .nav-overlay {
+            display: none;
         }
 
         body.no-scroll {
@@ -483,36 +634,36 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.5);
             display: none;
-            align-items: center;
-            justify-content: center;
             z-index: 10000;
             opacity: 0;
-            transition: opacity var(--transition);
+            transition: opacity 0.3s ease;
         }
 
         .settings-modal.active {
-            display: flex;
+            display: block;
             opacity: 1;
         }
 
         .settings-content {
+            position: absolute;
+            top: 0;
+            right: 0;
             background: var(--card-bg);
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
+            padding: 30px;
+            width: 400px;
+            max-width: 90%;
+            height: 100%;
             overflow-y: auto;
-            box-shadow: var(--shadow-lg);
-            border: 3px solid var(--primary);
-            transform: scale(0.9);
-            transition: transform var(--transition);
+            box-shadow: -10px 0 40px rgba(0, 0, 0, 0.2);
+            border-left: 1px solid var(--border);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
         }
 
         .settings-modal.active .settings-content {
-            transform: scale(1);
+            transform: translateX(0);
         }
 
         .settings-header {
@@ -671,8 +822,7 @@
             flex-direction: column;
             z-index: 10001;
             transform: translateX(-100%);
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: var(--shadow-lg);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             will-change: transform;
         }
 
@@ -680,83 +830,75 @@
             transform: translateX(0);
         }
 
+        /* Sidebar overlay for mobile */
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .sidebar-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
         .sidebar-header {
-            padding: 20px;
+            padding: 16px 20px;
             border-bottom: 1px solid var(--border);
             background: var(--bg);
-            position: relative;
         }
 
-        .sidebar-close-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--bg);
-            border: 2px solid var(--border);
-            color: var(--text);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all var(--transition);
-            font-size: 1.1rem;
-        }
-
-        .sidebar-close-btn:hover {
-            background: var(--primary);
-            color: var(--accent);
-            border-color: var(--primary);
-            transform: rotate(90deg);
-        }
 
         .sidebar-logo {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 10px;
             cursor: pointer;
         }
 
         .sidebar-logo img {
-            width: 55px;
-            height: 55px;
-            transition: transform var(--transition);
+            width: 40px;
+            height: 40px;
+            transition: transform 0.3s ease;
             object-fit: contain;
-            animation: logoFloat 3s ease-in-out infinite;
+            border-radius: 8px;
         }
 
         .sidebar-logo:hover img {
-            transform: rotate(10deg) scale(1.1);
-            animation: none;
+            transform: scale(1.05);
         }
 
         .sidebar-title {
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             font-weight: 700;
-            color: var(--primary);
+            color: var(--text);
         }
 
         .sidebar-tabs {
             display: flex;
-            gap: 8px;
-            margin: 15px 0 10px 0;
-            padding: 0;
+            gap: 6px;
+            margin: 0;
+            padding: 12px 16px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
         }
 
         .sidebar-tab {
             flex: 1;
-            padding: 10px 15px;
-            background: var(--bg);
-            border: 2px solid var(--border);
-            border-radius: 10px;
+            padding: 10px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
             color: var(--text-muted);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -765,111 +907,101 @@
         }
 
         .sidebar-tab i {
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
         .sidebar-tab:hover {
-            background: var(--border-light);
-            border-color: var(--primary);
+            background: var(--border);
             color: var(--text);
         }
 
         .sidebar-tab.active {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: var(--accent);
+            background: #000;
+            color: #fff;
+        }
+
+        [data-theme="dark"] .sidebar-tab.active {
+            background: #fff;
+            color: #000;
         }
 
         .search-container-sidebar {
             margin-top: 15px;
         }
-
-        .search-input-sidebar {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            font-size: 0.95rem;
-            transition: all var(--transition);
-            background: var(--card-bg);
-            color: var(--text);
-            direction: rtl;
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
-        }
-
-        .search-input-sidebar::placeholder {
-            direction: rtl;
-            text-align: right;
-        }
-
-        .search-input-sidebar:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
         .surah-list-sidebar {
             flex: 1;
             overflow-y: auto;
-            padding: 10px;
+            padding: 8px 12px;
+            -webkit-overflow-scrolling: touch;
         }
 
         .surah-list-sidebar::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
 
         .surah-list-sidebar::-webkit-scrollbar-track {
-            background: var(--bg);
+            background: transparent;
         }
 
         .surah-list-sidebar::-webkit-scrollbar-thumb {
             background: var(--border);
-            border-radius: 3px;
+            border-radius: 2px;
         }
 
         .surah-list-sidebar::-webkit-scrollbar-thumb:hover {
-            background: var(--primary);
+            background: var(--text-muted);
         }
 
         .surah-item-sidebar {
-            padding: 12px 15px;
-            margin-bottom: 5px;
+            padding: 12px 16px;
+            margin-bottom: 4px;
             border-radius: 10px;
             cursor: pointer;
-            transition: all var(--transition);
-            border: 1px solid transparent;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             gap: 12px;
+            background: transparent;
         }
 
         .surah-item-sidebar:hover {
             background: var(--bg);
-            border-color: var(--primary);
-            transform: translateX(5px);
+        }
+
+        .surah-item-sidebar:active {
+            transform: scale(0.98);
         }
 
         .surah-item-sidebar.active {
-            background: var(--primary);
-            color: var(--accent);
-            border-color: var(--primary);
+            background: #000;
+        }
+
+        [data-theme="dark"] .surah-item-sidebar.active {
+            background: #fff;
         }
 
         .surah-num-sidebar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             background: var(--bg);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             flex-shrink: 0;
+            color: var(--text);
         }
 
         .surah-item-sidebar.active .surah-num-sidebar {
-            background: var(--accent);
-            color: var(--primary);
+            background: #fff;
+            color: #000;
+        }
+
+        [data-theme="dark"] .surah-item-sidebar.active .surah-num-sidebar {
+            background: #000;
+            color: #fff;
         }
 
         .surah-info-sidebar {
@@ -879,30 +1011,32 @@
 
         .surah-arabic-sidebar {
             font-family: 'SurahName', 'Scheherazade New', 'Traditional Arabic', serif;
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: normal;
-            color: var(--primary);
-            margin-bottom: 3px;
+            color: var(--text);
+            margin-bottom: 2px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .surah-name-sidebar {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--text);
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        .surah-item-sidebar.active .surah-name-sidebar {
-            color: var(--accent);
+        .surah-item-sidebar.active .surah-name-sidebar,
+        .surah-item-sidebar.active .surah-arabic-sidebar {
+            color: #fff;
         }
 
-        .surah-item-sidebar.active .surah-arabic-sidebar {
-            color: var(--accent);
+        [data-theme="dark"] .surah-item-sidebar.active .surah-name-sidebar,
+        [data-theme="dark"] .surah-item-sidebar.active .surah-arabic-sidebar {
+            color: #000;
         }
 
         .ayah-list-sidebar {
@@ -944,29 +1078,32 @@
             left: 0;
             top: 50%;
             transform: translateY(-50%);
-            width: 40px;
-            height: 80px;
-            background: var(--card-bg);
-            border: 2px solid var(--primary);
-            border-radius: 0 12px 12px 0;
+            width: 28px;
+            height: 56px;
+            background: #000;
+            border: none;
+            border-radius: 0 8px 8px 0;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 997;
-            transition: all var(--transition);
-            box-shadow: var(--shadow-md);
+            transition: all 0.2s ease;
+            color: #fff;
+        }
+
+        [data-theme="dark"] .sidebar-toggle {
+            background: #fff;
+            color: #000;
         }
 
         .sidebar-toggle:hover {
-            width: 50px;
-            background: var(--primary);
-            color: var(--accent);
+            width: 36px;
         }
 
         .sidebar-toggle i {
-            font-size: 1.3rem;
-            transition: transform var(--transition);
+            font-size: 0.9rem;
+            transition: transform 0.2s ease;
         }
 
         .sidebar-toggle.active i {
@@ -1079,40 +1216,124 @@
         }
 
         .user-profile-btn {
+            position: relative;
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px 20px;
-            background: transparent;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-            border-radius: 12px;
+            gap: 8px;
+            padding: 6px 12px 6px 8px;
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 50px;
             cursor: pointer;
-            transition: all var(--transition);
-            height: 48px;
-            box-sizing: border-box;
-            font-weight: 600;
+            transition: all 0.2s ease;
             font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        [data-theme="dark"] .user-profile-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
         .user-profile-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-            background: var(--primary);
-            color: var(--accent);
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] .user-profile-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
         }
 
         .user-avatar {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
-            border: 2px solid var(--primary);
+            object-fit: cover;
+            border: 2px solid var(--border);
         }
 
         .user-name {
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text);
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .user-profile-btn i {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* Profile Dropdown */
+        .profile-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            min-width: 200px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            display: none;
+            z-index: 10000;
+            overflow: hidden;
+        }
+
+        .profile-dropdown.show {
+            display: block;
+        }
+
+        .profile-dropdown-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        .profile-dropdown-name {
             font-weight: 600;
-            color: var(--primary);
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .profile-dropdown-email {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .profile-dropdown-item {
+            padding: 12px 16px;
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .profile-dropdown-item:hover {
+            background: var(--bg);
+        }
+
+        .profile-dropdown-item i {
+            width: 18px;
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .profile-dropdown-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+
+        .profile-dropdown-item.logout {
+            color: #ef4444;
+        }
+
+        .profile-dropdown-item.logout i {
+            color: #ef4444;
         }
 
         /* Feather Overlay - Enhanced Design */
@@ -1479,28 +1700,33 @@
 
         .hero-search-input {
             width: 100%;
-            padding: 20px 60px 20px 30px;
-            border: 3px solid var(--border);
-            border-radius: 50px;
-            font-size: 1.2rem;
+            padding: 16px 50px 16px 24px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            font-size: 1rem;
             background: var(--card-bg);
             color: var(--text);
-            transition: all var(--transition);
+            transition: all 0.3s ease;
             font-family: 'IBM Plex Sans Arabic', sans-serif;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .hero-search-input::placeholder {
+            color: var(--text-muted);
         }
 
         .hero-search-input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
         }
 
         .hero-search-icon {
             position: absolute;
-            left: 30px;
+            left: 20px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 1.5rem;
+            font-size: 1.1rem;
             color: var(--text-muted);
         }
 
@@ -1674,52 +1900,51 @@
             padding: 0 30px;
         }
 
-        /* Filter and Sort Controls */
+        /* Filter and Sort Controls - Modern 2026 */
         .filter-sort-controls {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: var(--card-bg);
-            border-radius: 16px;
-            border: 2px solid var(--border);
-            box-shadow: var(--shadow-sm);
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            background: #000;
+            border-radius: 12px;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 12px;
         }
 
         .filter-group {
             display: flex;
-            gap: 12px;
+            gap: 4px;
+            background: rgba(255,255,255,0.1);
+            padding: 4px;
+            border-radius: 8px;
         }
 
         .filter-btn {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            background: var(--bg);
-            color: var(--text);
-            border: 2px solid var(--border);
-            border-radius: 12px;
+            gap: 6px;
+            padding: 8px 16px;
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            border: none;
+            border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
-            transition: all var(--transition);
+            transition: all 0.2s;
             font-family: 'IBM Plex Sans Arabic', sans-serif;
-            font-size: 1rem;
+            font-size: 0.85rem;
         }
 
         .filter-btn:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-sm);
+            color: #fff;
+            background: rgba(255,255,255,0.1);
         }
 
         .filter-btn.active {
-            background: var(--primary);
-            color: var(--accent);
-            border-color: var(--primary);
+            background: #fff;
+            color: #000;
         }
 
         .filter-btn i {
@@ -1732,107 +1957,130 @@
             gap: 10px;
         }
 
+        .sort-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sort-group label {
+            display: none;
+        }
+
         .sort-select {
-            padding: 12px 40px 12px 20px;
-            background: var(--card-bg);
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            padding: 8px 32px 8px 12px;
+            background: rgba(255,255,255,0.1);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: left 15px center;
-            color: var(--text);
-            border: 2px solid var(--border);
-            border-radius: 12px;
+            background-position: left 10px center;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
-            transition: all var(--transition);
+            transition: all 0.2s;
             font-family: 'IBM Plex Sans Arabic', sans-serif;
-            font-size: 1rem;
+            font-size: 0.85rem;
             appearance: none;
             -webkit-appearance: none;
             -moz-appearance: none;
-            box-shadow: var(--shadow-sm);
         }
 
         .sort-select:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            background-color: var(--bg);
+            background: rgba(255,255,255,0.15);
         }
 
         .sort-select:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: rgba(255,255,255,0.2);
         }
 
         .sort-select option {
             padding: 10px;
-            background: var(--card-bg);
-            color: var(--text);
+            background: #222;
+            color: #fff;
             font-weight: 600;
         }
 
+        /* Surah Grid - Modern 2026 */
         .surah-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
         }
 
         .surah-card {
             background: var(--card-bg);
-            border-radius: 16px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 16px;
             cursor: pointer;
-            transition: all var(--transition);
-            border: 2px solid var(--border);
-            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .surah-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #000;
+            transform: scaleX(0);
+            transition: transform 0.2s;
+        }
+
+        .surah-card:hover::before {
+            transform: scaleX(1);
         }
 
         .surah-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-md);
             border-color: var(--primary);
+            background: var(--bg);
         }
 
         .surah-card-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            gap: 12px;
+            margin-bottom: 8px;
         }
 
         .surah-card-number {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: var(--accent);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #000;
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 0.85rem;
+            flex-shrink: 0;
         }
 
         .surah-card-info {
             flex: 1;
-            text-align: center;
+            min-width: 0;
         }
 
         .surah-card-arabic {
             font-family: 'SurahName', 'Scheherazade New', 'Traditional Arabic', serif;
-            font-size: 2.8rem;
+            font-size: 1.8rem;
             font-weight: normal;
-            color: var(--primary);
-            margin-bottom: 5px;
+            color: var(--text);
+            line-height: 1.2;
         }
 
         /* Reader header decorative icon - always visible, bigger and centered */
         .reader-header .surah-card-arabic {
             color: var(--text) !important;
             filter: none !important;
-            font-size: 4.5rem; /* Bigger decorative surah name icon (includes سورة + name) */
-            font-family: 'SurahName', 'Scheherazade New', 'Traditional Arabic', serif; /* SurahName decorative font */
+            font-size: 4.5rem;
+            font-family: 'SurahName', 'Scheherazade New', 'Traditional Arabic', serif;
             font-weight: normal;
             line-height: 1.2;
             text-align: center;
@@ -1841,17 +2089,22 @@
         }
 
         .surah-card-english {
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             font-weight: 600;
             color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .surah-card-ayahs {
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-top: 10px;
-            padding-top: 10px;
+            font-size: 0.8rem;
+            margin-top: 8px;
+            padding-top: 8px;
             border-top: 1px solid var(--border);
         }
 
@@ -1861,7 +2114,11 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 30px;
-            padding-top: 150px; /* Space for fixed header + back button visibility */
+            padding-top: calc(var(--nav-height) + 2rem);
+        }
+
+        body.reading-mode .surah-reader-page {
+            padding-top: calc(var(--total-header-height) + 2rem);
         }
 
         .surah-reader-page.visible {
@@ -1889,22 +2146,14 @@
 
         /* Sticky Progress Header - Quran.com style */
         .sticky-progress-header {
-            position: fixed;
-            top: 85px;
-            left: 0;
-            right: 0;
             width: 100%;
-            z-index: 998;
             background: var(--card-bg);
-            border-bottom: 2px solid var(--border);
-            border-top: 1px solid var(--border);
-            padding: 12px 0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             backdrop-filter: blur(10px);
-            transition: top 0.2s ease-out, box-shadow 0.2s ease;
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
+            transition: all 0.2s ease;
+            display: none;
         }
 
         .sticky-progress-content {
@@ -2662,7 +2911,11 @@
         /* Home Page */
         .home-page {
             display: block;
-            padding-top: 85px; /* Space for fixed header */
+            padding-top: var(--nav-height);
+        }
+
+        body.reading-mode .home-page {
+            padding-top: var(--total-header-height);
         }
 
         .home-page.hidden {
@@ -3379,6 +3632,12 @@
                 max-width: 100vw !important;
             }
 
+            /* Quick Actions Mobile - Stack buttons */
+            div[style*="grid-template-columns: repeat(3, 1fr)"] {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+            }
+
             /* Ensure all touch targets are at least 44x44px (Apple guidelines) */
             button, a, .clickable {
                 min-height: 44px;
@@ -3412,63 +3671,89 @@
                 overflow-x: hidden !important;
             }
 
-            .home-page {
-                padding-top: 56px; /* Space for compact fixed header on mobile */
+            /* Mobile Nav */
+            :root {
+                --nav-height: 3.5rem;
+                --sticky-header-height: 2.5rem;
             }
 
-            .surah-reader-page {
-                padding: 15px;
-                padding-top: 120px; /* Space for header + sticky progress + back button visibility on mobile */
+            .nav-container {
+                padding: 0 15px;
             }
 
-            .professional-header {
-                padding: 8px 0; /* Compact padding on mobile */
+            .nav-logo .logo-image {
+                width: 36px;
+                height: 36px;
             }
 
-            .header-container {
-                padding: 0 10px;
-                height: auto; /* Auto height for better fit */
+            .nav-logo .header-title {
+                font-size: 1.2rem;
             }
 
-            .header-logo-section {
-                gap: 10px; /* Reduced gap between logo and title */
+            .hamburger-menu {
+                display: flex;
             }
 
-            .header-title {
-                font-size: 1.25rem; /* Smaller, balanced title */
+            .nav-links {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 280px;
+                height: 100vh;
+                background: var(--card-bg);
+                flex-direction: column;
+                align-items: stretch;
+                padding: 80px 20px 30px;
+                gap: 8px;
+                transition: right 0.3s ease;
+                box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+                z-index: 1000;
             }
 
-            .header-logo-img {
-                width: 40px; /* Smaller logo on mobile */
-                height: 40px;
+            .nav-active .nav-links {
+                right: 0;
             }
 
-            .header-btn {
-                padding: 8px 10px; /* Better touch target */
-                font-size: 0.9rem; /* Slightly larger for readability */
-                min-height: 38px; /* Ensure good touch target */
+            .nav-link {
+                padding: 14px 16px;
+                border-radius: 10px;
+                justify-content: flex-start;
             }
 
-            .header-btn i {
-                font-size: 1rem; /* Proper icon size */
+            .nav-overlay {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.5);
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+                z-index: 999;
             }
 
-            .header-btn span {
-                display: none; /* Hide text, show only icons */
+            .nav-active .nav-overlay {
+                opacity: 1;
+                visibility: visible;
             }
 
             .hero-section {
-                padding: 30px 10px;
+                padding: 20px 15px;
             }
 
             .hero-logo-static {
-                height: 55px; /* Smaller on tablet/mobile */
-                margin-bottom: 15px;
+                height: 50px;
+                margin-bottom: 12px;
             }
 
             .hero-search-input {
-                padding: 10px 40px 10px 15px;
-                font-size: 0.85rem;
+                padding: 14px 40px 14px 18px;
+                font-size: 0.9rem;
+                border-radius: 12px;
+            }
+
+            .hero-search-icon {
+                left: 15px;
+                font-size: 1rem;
             }
 
             /* Two Column Grid - Mobile Reorder */
@@ -3522,31 +3807,41 @@
             }
 
             .surah-grid {
-                grid-template-columns: 1fr;
-                justify-items: center;
+                grid-template-columns: repeat(2, 1fr);
                 gap: 10px;
             }
 
             .surah-card {
                 max-width: 100%;
                 width: 100%;
-                padding: 12px;
+                padding: 14px;
             }
 
+            /* Mobile: No push, overlay instead */
             .main-content.shifted {
-                margin-left: var(--sidebar-width);
-                width: calc(100% - var(--sidebar-width));
+                margin-left: 0;
+                width: 100%;
             }
 
             .audio-player.shifted {
-                left: var(--sidebar-width);
-                width: calc(100% - var(--sidebar-width));
+                left: 0;
+                width: 100%;
+            }
+
+            /* Show overlay on mobile */
+            .sidebar-overlay {
+                display: block;
             }
 
             .sidebar-toggle {
-                width: 30px;
-                height: 60px;
-                font-size: 0.9rem;
+                width: 24px;
+                height: 48px;
+                font-size: 0.8rem;
+            }
+
+            .sidebar {
+                width: 85%;
+                max-width: 320px;
             }
 
             .surah-reader-page {
@@ -3574,17 +3869,14 @@
             }
 
             .ayah-action-btn {
-                width: 28px;
-                height: 28px;
-                font-size: 0.75rem;
+                width: 36px;
+                height: 36px;
+                font-size: 0.85rem;
+                /* Better touch target */
             }
 
             .sticky-progress-header {
-                padding: 6px 0; /* Compact on mobile */
-                top: 56px; /* Below compact header */
-                transition: top 0.2s ease-out;
-                display: block !important;
-                visibility: visible !important;
+                padding: 0.5rem 0;
             }
 
             .sticky-progress-content {
@@ -3626,8 +3918,8 @@
 
             .filter-sort-controls {
                 flex-direction: column;
-                gap: 15px;
-                padding: 15px;
+                gap: 10px;
+                padding: 12px;
             }
 
             .filter-group {
@@ -3637,8 +3929,8 @@
 
             .filter-btn {
                 flex: 1;
-                padding: 10px 16px;
-                font-size: 0.9rem;
+                padding: 8px 12px;
+                font-size: 0.8rem;
             }
 
             .sort-group {
@@ -3647,8 +3939,9 @@
             }
 
             .sort-select {
-                padding: 10px 16px;
-                font-size: 0.9rem;
+                width: 100%;
+                padding: 8px 12px;
+                font-size: 0.8rem;
             }
 
             .nav-btn {
@@ -3697,16 +3990,10 @@
             }
 
             /* Settings Modal Mobile */
-            .settings-modal {
-                padding: 0;
-            }
-
             .settings-content {
                 width: 100%;
-                height: 100%;
                 max-width: 100%;
-                max-height: 100%;
-                border-radius: 0;
+                border-left: none;
             }
 
             .settings-title {
@@ -3797,11 +4084,29 @@
 
             /* Make specific cards more compact */
             .surah-card,
-            #noGoalsCard,
-            #goalsCardContainer,
             .welcome-card {
                 padding: 20px !important;
                 margin: 8px 0 !important;
+            }
+
+            /* Quick Actions Mobile */
+            #continueReadingCard {
+                padding: 16px 20px !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 12px !important;
+            }
+
+            #continueReadingCard > div:first-child {
+                width: 100%;
+            }
+
+            #continueReadingCard #continueReadingSurahName {
+                font-size: 2.2rem !important;
+            }
+
+            #continueReadingCard > div:last-child {
+                align-self: flex-end;
             }
 
             /* Make body padding smaller */
@@ -4002,6 +4307,15 @@
                 width: 26px;
                 height: 26px;
                 font-size: 0.7rem;
+            }
+
+            /* Surah Grid - Single column on small phones */
+            .surah-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .surah-card {
+                padding: 12px;
             }
 
             #randomAyahArabic {
@@ -4223,8 +4537,8 @@
     </script>
 
     <!-- Settings Modal -->
-    <div class="settings-modal" id="settingsModal">
-        <div class="settings-content">
+    <div class="settings-modal" id="settingsModal" onclick="if(event.target === this) closeSettings()">
+        <div class="settings-content" onclick="event.stopPropagation()">
             <div class="settings-header">
                 <h2 class="settings-title">رێکخستن</h2>
                 <button class="settings-close" onclick="closeSettings()" aria-label="داخستنا ڕێکخستنان">
@@ -4372,6 +4686,9 @@
         </div>
     </div>
 
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -4379,9 +4696,6 @@
                 <img src="/assets/images/logo.png" alt="Tafsir Kurd" class="logo-image" width="40" height="40">
                 <div class="sidebar-title">قورئان</div>
             </div>
-            <button class="sidebar-close-btn" onclick="closeSidebar()" title="داخستن" aria-label="داخستنا مێنیو">
-                <i class="fas fa-times"></i>
-            </button>
 
             <!-- Tabs for Surah and Juz -->
             <div class="sidebar-tabs">
@@ -4393,10 +4707,6 @@
                     <i class="fas fa-layer-group"></i>
                     <span>جوز</span>
                 </button>
-            </div>
-
-            <div class="search-container-sidebar">
-                <input type="text" class="search-input-sidebar" placeholder="لێگەریانا قورئانێ…" id="sidebarSearch" aria-label="لێگەریانا قورئانێ">
             </div>
         </div>
         <div class="surah-list-sidebar" id="surahListSidebar"></div>
@@ -4497,31 +4807,89 @@
 
     <div class="main-content" id="mainContent" style="opacity: 0; visibility: hidden;">
 
-        <!-- Professional Header -->
-        <header class="professional-header">
-            <div class="header-container">
-                <div class="header-logo-section" onclick="showHomePage()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showHomePage();}" role="button" tabindex="0" aria-label="گەڕانەوە بۆ پەڕەیا سەرەکی">
-                    <img src="/assets/images/logo.png" alt="لۆگۆیا تەفسیر کورد" class="header-logo-img logo-image" width="40" height="40">
+        <!-- Navigation Header - Same as index.html -->
+        <nav class="quran-nav">
+            <div class="nav-main">
+            <div class="nav-container">
+                <div class="nav-logo" onclick="showHomePage()" style="cursor: pointer;">
+                    <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="logo-image">
                     <div class="header-title">تەفسیر کورد</div>
                 </div>
-                <nav class="header-nav">
-                    <a href="/" class="header-btn outline">
-                        <i class="fas fa-globe"></i>
-                        <span>مالپەڕێ سەرەکی</span>
+
+                <div class="hamburger-menu" id="hamburgerMenu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+
+                <div class="nav-links" id="navLinks">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>سەرەکی</span>
                     </a>
-                    <a href="/settings" class="header-btn outline" onclick="saveStateBeforeSettings(event)">
+                    <a href="/quran" class="nav-link active">
+                        <i class="fas fa-book-open"></i>
+                        <span>قورئان</span>
+                    </a>
+                    <a href="/islamvoice" class="nav-link">
+                        <i class="fas fa-play-circle"></i>
+                        <span>ئیسلام ڤۆیس</span>
+                    </a>
+                    <a href="/settings" class="nav-link" onclick="saveStateBeforeSettings(event)">
                         <i class="fas fa-cog"></i>
                         <span>رێکخستن</span>
                     </a>
                     <div id="authSection" style="opacity: 0; transition: opacity 0.3s;">
-                        <button class="header-btn" onclick="goToLogin()">
+                        <!-- Login link (shown when not authenticated) -->
+                        <a href="/login" class="nav-link" id="loginLink" onclick="goToLogin(); return false;">
                             <i class="fas fa-user"></i>
                             <span>چوونە ژوورڤە</span>
-                        </button>
+                        </a>
+                        <!-- User Profile (shown when authenticated) -->
+                        <div class="user-profile-btn" id="userProfileBtn" style="display: none;" onclick="toggleProfileDropdown(event)">
+                            <img id="userAvatar" class="user-avatar" src="/assets/images/default-avatar.png" alt="User">
+                            <span id="userName" class="user-name"></span>
+                            <i class="fas fa-chevron-down"></i>
+                            <div class="profile-dropdown" id="profileDropdown">
+                                <div class="profile-dropdown-header">
+                                    <div class="profile-dropdown-name" id="dropdownName"></div>
+                                    <div class="profile-dropdown-email" id="dropdownEmail"></div>
+                                </div>
+                                <a href="/profile" class="profile-dropdown-item">
+                                    <i class="fas fa-user"></i>
+                                    پرۆفایل
+                                </a>
+                                <div class="profile-dropdown-divider"></div>
+                                <div class="profile-dropdown-item logout" onclick="event.stopPropagation(); logoutUser()">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    دەرچوون
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </nav>
+                </div>
+
+                <div class="nav-overlay" id="navOverlay"></div>
             </div>
-        </header>
+            </div>
+            <!-- Sticky Progress Header - inside nav -->
+            <div class="sticky-progress-header" id="stickyProgressHeader">
+                <div class="sticky-progress-content">
+                    <div class="sticky-progress-left">
+                        <span class="sticky-surah-name" id="stickySurahName">Al-Fatihah</span>
+                    </div>
+                    <div class="sticky-progress-center">
+                        <div class="progress-bar-sticky">
+                            <div class="progress-fill-sticky" id="progressFillSticky"></div>
+                        </div>
+                        <span class="progress-percentage" id="progressPercentage">٠٪</span>
+                    </div>
+                    <div class="sticky-progress-right">
+                        <span class="sticky-ayah-count" id="stickyAyahCount">٠ / ٧ ئایەت</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
 
         <!-- HOME PAGE -->
         <div class="home-page" id="homePage">
@@ -4601,151 +4969,92 @@
                         </div>
                     </div>
                 </div>
-                <div class="hero-actions">
-                    <button class="hero-chip" id="heroSidebarBtn" type="button">
-                        <i class="fas fa-list"></i>
-                        <span>لیستەیا سوورەتان</span>
-                    </button>
-                    <button class="hero-chip" id="heroContinueBtn" type="button">
-                        <i class="fas fa-play-circle"></i>
-                        <span>بەردەوام بە د خواندنێ</span>
-                    </button>
-                    <button class="hero-chip" id="heroRandomBtn" type="button">
-                        <i class="fas fa-star"></i>
-                        <span>ئایەتا رۆژانە</span>
-                    </button>
-                </div>
             </section>
 
-            <!-- Random Ayah Section -->
-            <section id="dailyVerseSection" style="max-width: 1400px; margin: 40px auto; padding: 0 30px; transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); opacity: 1; overflow: visible;">
-                <div class="daily-verse-card" style="border-radius: 24px; padding: 45px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--primary); border: 2px solid var(--primary); position: relative; overflow: visible;">
-                    <!-- Decorative corner elements -->
-                    <div class="corner-decor corner-decor-top" style="position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); pointer-events: none;"></div>
-                    <div class="corner-decor corner-decor-bottom" style="position: absolute; bottom: -40px; left: -40px; width: 160px; height: 160px; background: radial-gradient(circle, var(--primary) 0%, transparent 70%); pointer-events: none;"></div>
-
-                    <!-- Top Islamic pattern decoration -->
-                    <div class="top-stripe-decor" style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), var(--primary), rgba(0, 0, 0, 0.1), transparent);"></div>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; position: relative; z-index: 1;">
-                        <div style="font-size: 1.7rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-star" style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));"></i>
-                            <span>ئایەتا رۆژانە</span>
+            <!-- Random Ayah Section - Compact 2026 Design -->
+            <section id="dailyVerseSection" style="max-width: 1400px; margin: 20px auto; padding: 0 30px; transition: all 0.4s ease;">
+                <div class="daily-verse-card" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px 24px; position: relative;">
+                    <!-- Header Row -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 32px; height: 32px; background: #000; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-star" style="color: #fff; font-size: 0.8rem;"></i>
+                            </div>
+                            <span style="font-size: 0.95rem; font-weight: 600; color: var(--text);">ئایەتا رۆژانە</span>
                         </div>
-                        <div style="background: linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.02) 100%); backdrop-filter: blur(10px); padding: 12px 24px; border-radius: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
-                            <i class="fas fa-clock" style="color: var(--primary);"></i>
-                            <span id="randomTimer" style="color: var(--text); font-variant-numeric: tabular-nums;">--:--:--</span>
-                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); font-variant-numeric: tabular-nums;" id="randomTimer">--:--:--</div>
                     </div>
 
-                    <div id="randomAyahArabic" style="font-family: 'KFGQPC Hafs', 'Scheherazade New', serif; font-size: 2.3rem; line-height: 2.2; text-align: center; margin-bottom: 25px; padding: 30px; background: linear-gradient(135deg, rgba(0, 0, 0, 0.03) 0%, rgba(0, 0, 0, 0.01) 100%); border-radius: 16px; min-height: 100px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.1); position: relative; z-index: 1;">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+                    <!-- Arabic Text -->
+                    <div id="randomAyahArabic" style="font-family: 'KFGQPC Hafs', 'Scheherazade New', serif; font-size: 1.5rem; line-height: 2; text-align: center; margin-bottom: 12px; color: var(--text);">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 1.2rem; color: var(--text-muted);"></i>
                     </div>
 
-                    <div id="randomAyahKurdish" style="font-size: 1.2rem; line-height: 2; padding: 25px; padding-right: 30px; border-right: 4px solid var(--primary); direction: rtl; text-align: right; margin-bottom: 25px; font-family: 'IBM Plex Sans Arabic', sans-serif; position: relative; z-index: 1; background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.02)); border-radius: 0 12px 12px 0;"></div>
+                    <!-- Kurdish Translation - Collapsible -->
+                    <div id="randomAyahKurdish" style="font-size: 0.95rem; line-height: 1.8; color: var(--text-muted); text-align: center; margin-bottom: 16px; padding: 0 20px;"></div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 25px; border-top: 2px solid; border-image: linear-gradient(90deg, transparent, var(--border), transparent) 1; flex-wrap: wrap; gap: 15px; position: relative; z-index: 1;">
-                        <div id="randomAyahRef" style="font-weight: 700; color: var(--primary); font-size: 1.15rem;"></div>
-                        <button onclick="gotoRandomAyah()" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 14px; cursor: pointer; font-weight: 700; transition: all var(--transition); display: flex; align-items: center; gap: 10px; font-family: 'IBM Plex Sans Arabic', sans-serif; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); position: relative; overflow: hidden;">
-                            <span style="position: relative; z-index: 1; display: flex; align-items: center; gap: 10px;">
-                                <i class="fas fa-arrow-left"></i>
-                                پتر ببیە
-                            </span>
-                            <div style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.15); opacity: 0; transition: opacity 0.3s;"></div>
+                    <!-- Footer Row -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--border);">
+                        <div id="randomAyahRef" style="font-size: 0.85rem; font-weight: 600; color: var(--text);"></div>
+                        <button onclick="gotoRandomAyah()" style="background: #000; color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: inherit;">
+                            <i class="fas fa-arrow-left"></i>
+                            بخوێنە
                         </button>
                     </div>
                 </div>
             </section>
 
-            <!-- Two Column Layout -->
-            <div style="max-width: 1400px; margin: 40px auto; padding: 0 30px; display: grid; grid-template-columns: 1fr 1.5fr; gap: 24px;">
-                <!-- Left Column -->
-                <div style="display: flex; flex-direction: column; gap: 24px;">
-                    <!-- Goals Card for users WITHOUT goals -->
-                    <div id="noGoalsCard" style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition);">
-                        <h3 style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-bullseye"></i>
-                            ئارمانجا تە د قورئانێدا:
-                        </h3>
-                        <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 25px;">
-                            ل دویڤ پێشکەفتنا خۆ هەرە، ئارمانجێن تایبەت ب خۆ دیار بکە، و بەردەوام بە.
-                        </p>
-                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                            <button onclick="requireLogin('goals')" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif;">
-                                <i class="fas fa-plus"></i> دیتنا پێشکەفتنا تە:
-                            </button>
+            <!-- Quick Actions Bar - Modern 2026 Compact Design -->
+            <div style="max-width: 1400px; margin: 24px auto; padding: 0 30px;">
+                <!-- Continue Reading - Compact -->
+                <div id="continueReadingCard" onclick="continueReading()" role="button" tabindex="0" style="background: #000; border-radius: 16px; padding: 20px 28px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <div style="font-family: 'SurahName', serif; font-size: 3rem; color: #fff; line-height: 1;" class="no-kurdish-convert" id="continueReadingSurahName">surah001</div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 2px;">بەردەوام بکە</div>
+                            <div style="font-size: 1.1rem; font-weight: 600; color: #fff;" id="continueReadingInfo">١. الفاتحة</div>
                         </div>
                     </div>
-
-                    <!-- Goals Card for users WITH goals -->
-                    <div id="goalsCardContainer" style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition); display: none;">
-                        <h3 style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-bullseye"></i>
-                            ئارمانجا تە د قورئانێدا:
-                        </h3>
-
-                        <!-- Streak Badge - Hidden by default until reading goal is set -->
-                        <div id="streakBadgeContainer" onclick="requireLogin('goals')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();requireLogin('goals');}" role="button" tabindex="0" aria-label="بینینا ئامانجێن وەرگرتنێ" style="background: linear-gradient(135deg, #58cc02 0%, #46a302 100%); border-radius: 12px; padding: 16px 24px; margin-bottom: 25px; display: none; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(88, 204, 2, 0.3); cursor: pointer; transition: all 0.3s;">
-                            <div style="display: flex; align-items: center; gap: 16px;">
-                                <div id="streakEmoji" style="font-size: 2.5rem;">🌱</div>
-                                <div style="display: flex; flex-direction: column;">
-                                    <div style="font-size: 2rem; font-weight: 800; color: white; line-height: 1;" id="streakDays">٠</div>
-                                    <a href="/goals" style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.9); font-weight: 600; text-decoration: none; display: block;">day streak <span style="color: rgba(255, 255, 255, 0.6);">›</span></a>
-                                </div>
-                            </div>
-                            <button onclick="event.stopPropagation(); requireLogin('reading-goal')" style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.3); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; font-family: 'IBM Plex Sans Arabic', sans-serif; display: flex; align-items: center; gap: 6px;">
-                                <i class="fas fa-bullseye"></i>
-                                دانانا ئارمانجەکێ
-                            </button>
-                        </div>
-
-                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                            <button onclick="requireLogin('goals')" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif;">
-                                <i class="fas fa-chart-line"></i> دیتنا پێشکەفتنا تە:
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Notes Card -->
-                    <div style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition);">
-                        <h3 style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-pencil-alt"></i>
-                            نیشان و تێبینییێن تە:
-                        </h3>
-                        <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 25px;">
-                            ئایەتێن تە یێن دلخواز پاشکەڤت بکە و تێبینییێن خۆ تۆمار بکە ب گەڕیانەکا داهاتی.
-                        </p>
-                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                            <button onclick="requireLogin('bookmarks')" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif;">
-                                <i class="fas fa-bookmark"></i> دیتنا نیشان و تێبینییێن تە:
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Welcome Card -->
-                    <div style="background: var(--card-bg); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: all var(--transition);">
-                        <h3 style="font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 12px;">
-                            <i class="fas fa-book-reader"></i>
-                            ب خێر بێی بۆ تەفسیر کورد
-                        </h3>
-                        <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 25px;">
-                            قورئانا پیرۆز بخوێنە بە تەفسیری سەناحی کوردی. هەموو ١١٤ سوورەتکان لەگەڵ تەفسیری تەواو.
-                        </p>
-                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                            <button onclick="scrollToSurahList()" style="padding: 14px 28px; background: var(--primary); color: var(--accent); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif;">
-                                <i class="fas fa-play"></i> دەستپێبکە
-                            </button>
-                        </div>
+                    <div style="background: #fff; color: #000; padding: 10px 20px; border-radius: 30px; font-weight: 700; font-size: 0.85rem;">
+                        <i class="fas fa-play" style="margin-left: 6px;"></i> بخوێنە
                     </div>
                 </div>
 
-                <!-- Right Column - Continue Reading -->
-                <div id="continueReadingCard" onclick="continueReading()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();continueReading();}" role="button" tabindex="0" aria-label="بەردەوامبوونا خواندنێ" style="background: var(--card-bg); border-radius: 20px; padding: 60px; box-shadow: var(--shadow-md); border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; min-height: 400px; cursor: pointer; transition: all var(--transition); position: relative; overflow: visible;">
-                    <div style="font-family: 'SurahName', 'Scheherazade New', serif; font-size: clamp(8rem, 15vw, 20rem); text-align: center; margin: auto 0; color: var(--primary); line-height: 1; max-width: 100%;" class="no-kurdish-convert" id="continueReadingSurahName">surah001</div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px;">
-                        <div style="font-size: 1.2rem; font-weight: 600; color: var(--text-muted);" id="continueReadingInfo">١. الفاتحة</div>
-                        <div style="background: var(--bg); padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.9rem;">بەردەوام بە</div>
+                <!-- Quick Action Buttons Row -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                    <!-- Goals Button -->
+                    <div id="noGoalsCard" onclick="requireLogin('goals')" role="button" tabindex="0" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; background: #000; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-bullseye" style="color: #fff; font-size: 1rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.95rem; font-weight: 600; color: var(--text);">ئارمانج</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">پێشکەفتنا تە</div>
+                        </div>
                     </div>
+
+                    <!-- Goals Card with Streak (hidden by default) -->
+                    <div id="goalsCardContainer" onclick="requireLogin('goals')" role="button" tabindex="0" style="background: #000; border-radius: 12px; padding: 16px 20px; cursor: pointer; transition: all 0.2s; display: none; align-items: center; gap: 12px;">
+                        <div id="streakBadgeContainer" style="display: flex; align-items: center; gap: 12px; width: 100%;">
+                            <div id="streakEmoji" style="font-size: 1.8rem;">🌱</div>
+                            <div>
+                                <div style="font-size: 1.2rem; font-weight: 800; color: #fff; line-height: 1;" id="streakDays">٠</div>
+                                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7);">day streak</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bookmarks Button -->
+                    <div onclick="requireLogin('bookmarks')" role="button" tabindex="0" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; background: #000; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-bookmark" style="color: #fff; font-size: 1rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.95rem; font-weight: 600; color: var(--text);">نیشانەکان</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">پاشکەڤتکرن</div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -4790,24 +5099,6 @@
                 <div class="surah-card-arabic no-kurdish-convert" id="readerSurahIcon" style="margin-bottom: 15px;">surah001</div>
                 <h2 class="reader-surah-name" id="readerSurahName">Al-Fatihah (الفاتحة)</h2>
                 <p class="reader-surah-info" id="readerSurahInfo">٧ ئایەت</p>
-            </div>
-
-            <!-- Sticky progress header -->
-            <div class="sticky-progress-header" id="stickyProgressHeader">
-                <div class="sticky-progress-content">
-                    <div class="sticky-progress-left">
-                        <span class="sticky-surah-name" id="stickySurahName">Al-Fatihah</span>
-                    </div>
-                    <div class="sticky-progress-center">
-                        <div class="progress-bar-sticky">
-                            <div class="progress-fill-sticky" id="progressFillSticky"></div>
-                        </div>
-                        <span class="progress-percentage" id="progressPercentage">٠٪</span>
-                    </div>
-                    <div class="sticky-progress-right">
-                        <span class="sticky-ayah-count" id="stickyAyahCount">٠ / ٧ ئایەت</span>
-                    </div>
-                </div>
             </div>
 
             <div class="ayah-container" id="ayahContainer">
@@ -5827,56 +6118,38 @@
 
         function onSignInSuccess() {
             console.log('🎉 onSignInSuccess called');
-            console.log('👤 Current user:', currentUser);
-            console.log('👤 currentUser.name:', currentUser?.name);
-            console.log('👤 currentUser.email:', currentUser?.email);
-            console.log('👤 currentUser.picture:', currentUser?.picture);
-            console.log('👤 currentUser.sub:', currentUser?.sub);
 
             // Use default avatar if no picture provided
             const userAvatar = currentUser.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(currentUser.name || 'User')}`;
             const userName = currentUser.name || 'User';
             const userEmail = currentUser.email || '';
 
-            console.log('🖼️ Avatar URL:', userAvatar);
-            console.log('👤 User name:', userName);
-            console.log('📧 User email:', userEmail);
-
-            // CRITICAL: Use requestAnimationFrame to ensure DOM is ready
             requestAnimationFrame(() => {
-                // Update auth section with profile button
                 const authSection = document.getElementById('authSection');
-                console.log('🔍 authSection element:', authSection);
-                console.log('🔍 authSection innerHTML before:', authSection?.innerHTML);
+                const loginLink = document.getElementById('loginLink');
+                const userProfileBtn = document.getElementById('userProfileBtn');
+                const avatarImg = document.getElementById('userAvatar');
+                const nameSpan = document.getElementById('userName');
+                const dropdownName = document.getElementById('dropdownName');
+                const dropdownEmail = document.getElementById('dropdownEmail');
 
                 if (authSection) {
-                    // First, remove all existing content
-                    while (authSection.firstChild) {
-                        authSection.removeChild(authSection.firstChild);
+                    // Hide login link, show profile button
+                    if (loginLink) loginLink.style.display = 'none';
+                    if (userProfileBtn) {
+                        userProfileBtn.style.display = 'flex';
+                        if (avatarImg) {
+                            avatarImg.src = userAvatar;
+                            avatarImg.onerror = function() {
+                                this.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userName)}`;
+                            };
+                        }
+                        if (nameSpan) nameSpan.textContent = userName.split(' ')[0];
+                        if (dropdownName) dropdownName.textContent = userName;
+                        if (dropdownEmail) dropdownEmail.textContent = userEmail;
                     }
-
-                    // Create and append the new button
-                    const profileButton = document.createElement('button');
-                    profileButton.className = 'user-profile-btn';
-                    profileButton.onclick = openFeatherOverlay;
-
-                    profileButton.innerHTML = `
-                        <img src="${userAvatar}" alt="${userName}" class="user-avatar" width="32" height="32" loading="lazy" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userName)}'">
-                        <span class="user-name">${userName.split(' ')[0]}</span>
-                        <i class="fas fa-chevron-down"></i>
-                    `;
-
-                    authSection.appendChild(profileButton);
                     authSection.style.opacity = '1';
-                    authSection.style.display = 'flex';
-
-                    console.log('✅ Auth section updated with DOM element');
-                    console.log('🔍 authSection innerHTML after:', authSection.innerHTML);
-                    console.log('✅ Auth section opacity:', authSection.style.opacity);
-                    console.log('✅ Auth section display:', authSection.style.display);
-                } else {
-                    console.error('❌ authSection element not found!');
-                    console.error('❌ Available elements:', document.querySelector('nav.header-nav'));
+                    console.log('✅ Auth section updated');
                 }
             });
 
@@ -6341,10 +6614,6 @@
                 }
             });
 
-            // Sidebar Search
-            document.getElementById('sidebarSearch').addEventListener('input', (e) => {
-                filterSurahs(e.target.value.trim());
-            });
         }
 
         // Settings Functions
@@ -6969,30 +7238,55 @@
             const toggle = document.getElementById('sidebarToggle');
             const mainContent = document.getElementById('mainContent');
             const audioPlayer = document.getElementById('audioPlayer');
+            const overlay = document.getElementById('sidebarOverlay');
+            const isMobile = window.innerWidth <= 768;
 
-            // Use requestAnimationFrame for smoother animation
             requestAnimationFrame(() => {
                 sidebar.classList.toggle('visible');
                 toggle.classList.toggle('active');
 
-                // Shift content on all screen sizes for smooth push effect
-                requestAnimationFrame(() => {
-                    mainContent.classList.toggle('shifted');
-                    if (audioPlayer) {
-                        audioPlayer.classList.toggle('shifted');
-                    }
-                });
+                // Show overlay on mobile
+                if (overlay) {
+                    overlay.classList.toggle('visible');
+                }
+
+                // Only shift content on desktop
+                if (!isMobile) {
+                    requestAnimationFrame(() => {
+                        mainContent.classList.toggle('shifted');
+                        if (audioPlayer) {
+                            audioPlayer.classList.toggle('shifted');
+                        }
+                    });
+                }
+
+                // Prevent body scroll on mobile when sidebar is open
+                if (isMobile && sidebar.classList.contains('visible')) {
+                    document.body.classList.add('no-scroll');
+                } else if (isMobile) {
+                    document.body.classList.remove('no-scroll');
+                }
             });
         }
 
         function closeSidebar() {
-            document.getElementById('sidebar').classList.remove('visible');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            sidebar.classList.remove('visible');
             document.getElementById('sidebarToggle').classList.remove('active');
             document.getElementById('mainContent').classList.remove('shifted');
+
+            if (overlay) {
+                overlay.classList.remove('visible');
+            }
+
             const audioPlayer = document.getElementById('audioPlayer');
             if (audioPlayer) {
                 audioPlayer.classList.remove('shifted');
             }
+
+            document.body.classList.remove('no-scroll');
         }
 
         function selectSurah(num) {
@@ -7057,6 +7351,10 @@
             // Show reader page
             document.getElementById('homePage').classList.add('hidden');
             document.getElementById('surahReaderPage').classList.add('visible');
+
+            // Show sticky progress header and add reading mode
+            document.getElementById('stickyProgressHeader').style.display = 'block';
+            document.body.classList.add('reading-mode');
 
             // Set initial header to first surah
             currentSurahNumber = startPosition.surah;
@@ -7365,6 +7663,10 @@
             document.getElementById('homePage').classList.add('hidden');
             document.getElementById('surahReaderPage').classList.add('visible');
 
+            // Show sticky progress header and add reading mode
+            document.getElementById('stickyProgressHeader').style.display = 'block';
+            document.body.classList.add('reading-mode');
+
             const info = surahNames[surahNum];
             const decorativeCode = getDecorativeSurahCode(surahNum);
             document.getElementById('readerSurahIcon').textContent = decorativeCode;
@@ -7570,6 +7872,10 @@
             // Show home page, hide reader
             document.getElementById('homePage').classList.remove('hidden');
             document.getElementById('surahReaderPage').classList.remove('visible');
+
+            // Hide sticky progress header and remove reading mode
+            document.getElementById('stickyProgressHeader').style.display = 'none';
+            document.body.classList.remove('reading-mode');
 
             // Force display changes
             document.getElementById('homePage').style.display = '';
@@ -9811,6 +10117,24 @@
             window.location.href = `/login.html?redirect=${encodeURIComponent(currentPage)}`;
         }
 
+        // Profile Dropdown Toggle
+        function toggleProfileDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('profileDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('profileDropdown');
+            const profileBtn = document.getElementById('userProfileBtn');
+            if (dropdown && profileBtn && !profileBtn.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
         // Feather Overlay Functions
         function openFeatherOverlay() {
             document.getElementById('featherOverlay').classList.add('active');
@@ -9943,41 +10267,34 @@
             });
         }
 
-        // Hero button event listeners
+        // Mobile Nav Toggle
         document.addEventListener('DOMContentLoaded', function() {
-            const heroSidebarBtn = document.getElementById('heroSidebarBtn');
-            const heroContinueBtn = document.getElementById('heroContinueBtn');
-            const heroRandomBtn = document.getElementById('heroRandomBtn');
+            const hamburgerMenu = document.getElementById('hamburgerMenu');
+            const navOverlay = document.getElementById('navOverlay');
+            const navContainer = document.querySelector('.nav-container');
 
-            if (heroSidebarBtn) {
-                heroSidebarBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Sidebar button clicked!');
-                    toggleSidebar();
-                });
+            function toggleNav() {
+                navContainer.classList.toggle('nav-active');
+                document.body.classList.toggle('no-scroll');
             }
 
-            if (heroContinueBtn) {
-                heroContinueBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Continue button clicked!');
-                    continueReading();
-                });
+            if (hamburgerMenu) {
+                hamburgerMenu.addEventListener('click', toggleNav);
             }
 
-            if (heroRandomBtn) {
-                heroRandomBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Random ayah button clicked!');
-                    const randomAyah = document.getElementById('randomAyahArabic');
-                    if (randomAyah) {
-                        randomAyah.scrollIntoView({behavior: 'smooth', block: 'center'});
+            if (navOverlay) {
+                navOverlay.addEventListener('click', toggleNav);
+            }
+
+            // Close nav when clicking a link
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (navContainer.classList.contains('nav-active')) {
+                        toggleNav();
                     }
                 });
-            }
+            });
         });
 
         // Header hide on scroll down, show on scroll up
