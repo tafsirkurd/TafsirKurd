@@ -150,6 +150,13 @@
     }
 
     /**
+     * Normalize text for matching (trim, collapse whitespace)
+     */
+    function normalizeText(text) {
+        return text ? text.trim().replace(/\s+/g, ' ') : '';
+    }
+
+    /**
      * Auto-apply translations to the page
      * Replaces text content that matches translations in database
      */
@@ -158,6 +165,12 @@
 
         const startTime = performance.now();
         let replacements = 0;
+
+        // Build normalized lookup for flexible matching
+        const normalizedLookup = {};
+        Object.keys(textToKey).forEach(text => {
+            normalizedLookup[normalizeText(text)] = textToKey[text];
+        });
 
         // Elements to check for text replacement
         const selectors = [
@@ -177,7 +190,15 @@
             '.section-title',
             '.card-title',
             '.stat-label',
-            '.metric-label'
+            '.metric-label',
+            '.hero-title',
+            '.hero-sub',
+            '.feature-title',
+            '.feature-desc',
+            '.card-text',
+            '.description',
+            '.subtitle',
+            '.info-text'
         ];
 
         // Attributes to check
@@ -188,20 +209,42 @@
             { attr: 'alt', selector: 'img[alt]' }
         ];
 
-        // Replace text content
+        // Helper to find and replace text
+        function tryReplace(text) {
+            const normalized = normalizeText(text);
+            const key = textToKey[text] || textToKey[normalized] || normalizedLookup[normalized];
+            if (key && translations[key]) {
+                return translations[key];
+            }
+            return null;
+        }
+
+        // Replace text content in elements
         selectors.forEach(selector => {
             try {
                 document.querySelectorAll(selector).forEach(el => {
-                    // Skip if element has children with text (we want leaf nodes)
-                    if (el.children.length > 0 && el.querySelector('span, a, button')) return;
-
-                    const text = el.textContent.trim();
-                    if (text && textToKey[text]) {
-                        const newText = translations[textToKey[text]];
+                    // For elements with no children, replace entire text
+                    if (el.children.length === 0) {
+                        const text = el.textContent.trim();
+                        const newText = tryReplace(text);
                         if (newText && newText !== text) {
                             el.textContent = newText;
                             replacements++;
                         }
+                    } else {
+                        // For elements with children, check direct text nodes
+                        el.childNodes.forEach(node => {
+                            if (node.nodeType === Node.TEXT_NODE) {
+                                const text = node.textContent.trim();
+                                if (text) {
+                                    const newText = tryReplace(text);
+                                    if (newText && newText !== text) {
+                                        node.textContent = newText;
+                                        replacements++;
+                                    }
+                                }
+                            }
+                        });
                     }
                 });
             } catch (e) {
