@@ -556,6 +556,9 @@
                     <button class="btn" onclick="openYouTubeImportModal()" style="font-size: 12px; padding: 6px 12px; background: #ff0000; color: white;">
                         <i class="fab fa-youtube"></i> YouTube Import
                     </button>
+                    <button class="btn btn-secondary" onclick="updateYouTubeDurations()" id="updateDurationsBtn" style="font-size: 12px; padding: 6px 12px;">
+                        <i class="fas fa-clock"></i> Fix YT Durations
+                    </button>
                 </div>
 
                 <!-- ALL SERIES VIEW -->
@@ -1007,6 +1010,8 @@
                 loadAllSeries();
                 loadAllEpisodes();
                 loadDrafts(); // Load drafts count for badge
+                // Auto-fix YouTube durations in background
+                setTimeout(() => autoFixYouTubeDurations(), 2000);
             }
         })();
 
@@ -3048,6 +3053,33 @@
                     return;
                 }
 
+                // Parse YouTube ISO 8601 duration (PT1H2M3S) to seconds
+                function parseYouTubeDuration(iso8601) {
+                    const match = iso8601.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+                    if (!match) return null;
+                    const hours = parseInt(match[1] || 0);
+                    const minutes = parseInt(match[2] || 0);
+                    const seconds = parseInt(match[3] || 0);
+                    return hours * 3600 + minutes * 60 + seconds;
+                }
+
+                // Fetch video durations in batches of 50
+                const videoIds = videos.map(v => v.videoId);
+                for (let i = 0; i < videoIds.length; i += 50) {
+                    const batchIds = videoIds.slice(i, i + 50).join(',');
+                    const videosApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${batchIds}&key=${config.youtubeApiKey}`;
+                    const videosRes = await fetch(videosApiUrl);
+                    if (videosRes.ok) {
+                        const videosData = await videosRes.json();
+                        videosData.items?.forEach(item => {
+                            const video = videos.find(v => v.videoId === item.id);
+                            if (video && item.contentDetails?.duration) {
+                                video.duration = parseYouTubeDuration(item.contentDetails.duration);
+                            }
+                        });
+                    }
+                }
+
                 // Sort by position
                 videos.sort((a, b) => a.position - b.position);
                 youtubeVideosData = videos;
@@ -3069,6 +3101,17 @@
             }
         }
 
+        function formatDurationForDisplay(seconds) {
+            if (!seconds) return '';
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            if (h > 0) {
+                return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
         function renderYouTubeVideosList() {
             const container = document.getElementById('youtube-videos-list');
             container.innerHTML = youtubeVideosData.map((video, index) => `
@@ -3076,15 +3119,19 @@
                     <input type="checkbox" ${video.selected ? 'checked' : ''}
                            onchange="youtubeVideosData[${index}].selected = this.checked"
                            style="width: 18px; height: 18px; flex-shrink: 0;">
-                    <img src="${video.thumbnail || ''}"
-                         style="width: 80px; height: 45px; object-fit: cover; border-radius: 4px; background: #000; flex-shrink: 0;"
-                         onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 9%22><rect fill=%22%23333%22 width=%2216%22 height=%229%22/><text x=%228%22 y=%225%22 fill=%22%23666%22 font-size=%222%22 text-anchor=%22middle%22>No thumb</text></svg>'">
+                    <div style="position: relative; flex-shrink: 0;">
+                        <img src="${video.thumbnail || ''}"
+                             style="width: 80px; height: 45px; object-fit: cover; border-radius: 4px; background: #000;"
+                             onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 9%22><rect fill=%22%23333%22 width=%2216%22 height=%229%22/><text x=%228%22 y=%225%22 fill=%22%23666%22 font-size=%222%22 text-anchor=%22middle%22>No thumb</text></svg>'">
+                        ${video.duration ? `<span style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.8); color: #fff; font-size: 10px; padding: 1px 4px; border-radius: 2px;">${formatDurationForDisplay(video.duration)}</span>` : ''}
+                    </div>
                     <div style="flex: 1; min-width: 0;">
                         <div style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${video.title}</div>
                         <div style="font-size: 11px; color: var(--text-tertiary);">
                             <a href="https://www.youtube.com/watch?v=${video.videoId}" target="_blank" style="color: var(--accent-blue);">
                                 <i class="fab fa-youtube"></i> ${video.videoId}
                             </a>
+                            ${video.duration ? `<span style="margin-left: 8px;"><i class="fas fa-clock"></i> ${formatDurationForDisplay(video.duration)}</span>` : ''}
                         </div>
                     </div>
                 </div>
@@ -3139,6 +3186,7 @@
                         video_url: video.videoId,  // Store just the video ID for YouTube
                         thumbnail_url: video.thumbnail || `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`,
                         video_type: 'youtube',
+                        duration: video.duration || null,
                         is_published: isPublished
                     };
 
@@ -3180,6 +3228,180 @@
                 }
             } else {
                 showNotification('Failed to import videos', 'error');
+            }
+        }
+
+        // Auto-fix YouTube durations silently in background
+        async function autoFixYouTubeDurations() {
+            try {
+                const configRes = await fetch('/config');
+                if (!configRes.ok) return;
+                const config = await configRes.json();
+                if (!config.youtubeApiKey) return;
+
+                const supabase = window.adminAuth.getSupabase();
+                if (!supabase) return;
+
+                // Fetch YouTube episodes without duration
+                const { data: episodes, error } = await supabase
+                    .from('islamvoice_episodes')
+                    .select('id, video_url, duration, video_type')
+                    .or('video_type.eq.youtube,video_url.not.like.http%')
+                    .is('duration', null);
+
+                if (error || !episodes?.length) return;
+
+                // Filter to only YouTube videos (11-char IDs)
+                const ytEpisodes = episodes.filter(ep => {
+                    return ep.video_type === 'youtube' ||
+                           (ep.video_url && /^[a-zA-Z0-9_-]{11}$/.test(ep.video_url));
+                });
+
+                if (ytEpisodes.length === 0) return;
+
+                console.log(`🔄 Auto-fixing ${ytEpisodes.length} YouTube durations...`);
+
+                // Parse duration
+                function parseYTDuration(iso8601) {
+                    const match = iso8601.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+                    if (!match) return null;
+                    return parseInt(match[1] || 0) * 3600 + parseInt(match[2] || 0) * 60 + parseInt(match[3] || 0);
+                }
+
+                // Fetch durations in batches
+                const videoIds = ytEpisodes.map(ep => ep.video_url);
+                const durationMap = {};
+
+                for (let i = 0; i < videoIds.length; i += 50) {
+                    const batchIds = videoIds.slice(i, i + 50).join(',');
+                    const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${batchIds}&key=${config.youtubeApiKey}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        data.items?.forEach(item => {
+                            if (item.contentDetails?.duration) {
+                                durationMap[item.id] = parseYTDuration(item.contentDetails.duration);
+                            }
+                        });
+                    }
+                }
+
+                // Update episodes
+                let updated = 0;
+                for (const ep of ytEpisodes) {
+                    const duration = durationMap[ep.video_url];
+                    if (duration) {
+                        const { error: updateError } = await supabase
+                            .from('islamvoice_episodes')
+                            .update({ duration, video_type: 'youtube' })
+                            .eq('id', ep.id);
+                        if (!updateError) updated++;
+                    }
+                }
+
+                if (updated > 0) {
+                    console.log(`✅ Fixed ${updated} YouTube durations`);
+                    loadAllEpisodes(); // Refresh list
+                }
+            } catch (e) {
+                console.warn('Auto-fix durations failed:', e);
+            }
+        }
+
+        // Update durations for existing YouTube episodes
+        async function updateYouTubeDurations() {
+            const btn = document.getElementById('updateDurationsBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+            try {
+                // Get config for YouTube API key
+                const configRes = await fetch('/config');
+                if (!configRes.ok) throw new Error('Failed to load config');
+                const config = await configRes.json();
+
+                if (!config.youtubeApiKey) {
+                    throw new Error('YouTube API key not configured');
+                }
+
+                const supabase = window.adminAuth.getSupabase();
+                if (!supabase) throw new Error('Database not connected');
+
+                // Fetch all YouTube episodes (video_type = 'youtube' or video_url is 11-char ID)
+                const { data: episodes, error } = await supabase
+                    .from('islamvoice_episodes')
+                    .select('id, video_url, duration, video_type')
+                    .or('video_type.eq.youtube,video_url.not.like.http%');
+
+                if (error) throw error;
+
+                // Filter to only YouTube videos (11-char IDs) with missing duration
+                const ytEpisodes = episodes.filter(ep => {
+                    const isYT = ep.video_type === 'youtube' ||
+                                 (ep.video_url && /^[a-zA-Z0-9_-]{11}$/.test(ep.video_url));
+                    return isYT && !ep.duration;
+                });
+
+                if (ytEpisodes.length === 0) {
+                    showNotification('All YouTube videos already have durations!', 'success');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-clock"></i> Fix YT Durations';
+                    return;
+                }
+
+                console.log(`Found ${ytEpisodes.length} YouTube episodes without duration`);
+
+                // Parse YouTube ISO 8601 duration
+                function parseYTDuration(iso8601) {
+                    const match = iso8601.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+                    if (!match) return null;
+                    const hours = parseInt(match[1] || 0);
+                    const minutes = parseInt(match[2] || 0);
+                    const seconds = parseInt(match[3] || 0);
+                    return hours * 3600 + minutes * 60 + seconds;
+                }
+
+                // Fetch durations in batches of 50
+                const videoIds = ytEpisodes.map(ep => ep.video_url);
+                const durationMap = {};
+
+                for (let i = 0; i < videoIds.length; i += 50) {
+                    const batchIds = videoIds.slice(i, i + 50).join(',');
+                    const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${batchIds}&key=${config.youtubeApiKey}`;
+
+                    const res = await fetch(apiUrl);
+                    if (res.ok) {
+                        const data = await res.json();
+                        data.items?.forEach(item => {
+                            if (item.contentDetails?.duration) {
+                                durationMap[item.id] = parseYTDuration(item.contentDetails.duration);
+                            }
+                        });
+                    }
+                }
+
+                // Update episodes in database
+                let updated = 0;
+                for (const ep of ytEpisodes) {
+                    const duration = durationMap[ep.video_url];
+                    if (duration) {
+                        const { error: updateError } = await supabase
+                            .from('islamvoice_episodes')
+                            .update({ duration, video_type: 'youtube' })
+                            .eq('id', ep.id);
+
+                        if (!updateError) updated++;
+                    }
+                }
+
+                showNotification(`Updated ${updated} episode durations!`, 'success');
+                loadAllEpisodes(); // Refresh the list
+
+            } catch (error) {
+                console.error('Update durations error:', error);
+                showNotification(error.message || 'Failed to update durations', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-clock"></i> Fix YT Durations';
             }
         }
     </script>
