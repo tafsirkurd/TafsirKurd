@@ -1251,49 +1251,14 @@
         }
     };
 
-    // YouTube IFrame API player instance
-    let ytPlayer = null;
-    let ytPlayerReady = false;
-    let ytCurrentEpisodeId = null;
-
-    // Load YouTube IFrame API
-    function loadYouTubeAPI() {
-        if (window.YT && window.YT.Player) {
-            ytPlayerReady = true;
-            return Promise.resolve();
-        }
-        return new Promise((resolve) => {
-            if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
-                // Script already loading, wait for it
-                const checkReady = setInterval(() => {
-                    if (window.YT && window.YT.Player) {
-                        ytPlayerReady = true;
-                        clearInterval(checkReady);
-                        resolve();
-                    }
-                }, 100);
-                return;
-            }
-            const tag = document.createElement('script');
-            tag.src = 'https://www.youtube.com/iframe_api';
-            document.head.appendChild(tag);
-            window.onYouTubeIframeAPIReady = () => {
-                ytPlayerReady = true;
-                resolve();
-            };
-        });
-    }
-
-    // Play YouTube video using official IFrame API
-    async function playYouTubeVideo(videoId, title, episodeId) {
+    // Play YouTube video - simple iframe (works with ad blockers like Brave)
+    function playYouTubeVideo(videoId, title, episodeId) {
         console.log('🎬 Playing YouTube video:', videoId, title, episodeId);
 
         // Track view
         trackVideoView(episodeId);
         addToWatchHistory(episodeId, false);
         updateBadgeCounts();
-
-        ytCurrentEpisodeId = episodeId;
         state.currentEpisode = episodeId;
 
         // Find clicked card
@@ -1301,12 +1266,13 @@
                            document.querySelector(`.episode-item[data-video-id="${episodeId}"]`) ||
                            document.querySelector(`.episode-card[onclick*="${episodeId}"]`);
 
-        // Close any existing player
-        const existingWrapper = document.querySelector('.yt-video-wrapper');
+        // Close any existing YouTube player
+        const existingWrapper = document.querySelector('.yt-inline-player');
         if (existingWrapper) {
-            if (ytPlayer) {
-                ytPlayer.destroy();
-                ytPlayer = null;
+            const oldCard = existingWrapper.closest('.episode-card, .episode-item');
+            if (oldCard) {
+                const oldThumb = oldCard.querySelector('.episode-thumbnail');
+                if (oldThumb) oldThumb.style.display = '';
             }
             existingWrapper.remove();
         }
@@ -1315,96 +1281,57 @@
         document.querySelectorAll('.episode-card.now-playing, .episode-item.now-playing').forEach(el => {
             el.classList.remove('now-playing');
         });
-        if (clickedCard) clickedCard.classList.add('now-playing');
 
-        // Create wrapper
+        if (!clickedCard) {
+            // No card found, open in new tab
+            window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+            return;
+        }
+
+        clickedCard.classList.add('now-playing');
+
+        // Hide thumbnail
+        const thumbnail = clickedCard.querySelector('.episode-thumbnail');
+        if (thumbnail) {
+            thumbnail.style.display = 'none';
+        }
+
+        // Create inline player wrapper
         const wrapper = document.createElement('div');
-        wrapper.className = 'yt-video-wrapper';
-        wrapper.style.cssText = 'position:relative; width:100%; max-width:900px; background:#000; border-radius:12px; overflow:hidden; margin:15px auto; aspect-ratio:16/9;';
+        wrapper.className = 'yt-inline-player';
+        wrapper.style.cssText = 'position:relative; width:100%; aspect-ratio:16/9; background:#000; border-radius:12px; overflow:hidden;';
         wrapper.onclick = e => e.stopPropagation();
 
-        // Player container
-        const playerDiv = document.createElement('div');
-        playerDiv.id = 'yt-player-' + Date.now();
-        playerDiv.style.cssText = 'width:100%; height:100%;';
-        wrapper.appendChild(playerDiv);
+        // Simple iframe (no API needed - works with Brave)
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+        iframe.style.cssText = 'width:100%; height:100%; border:none;';
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+        iframe.allowFullscreen = true;
+        wrapper.appendChild(iframe);
 
         // Close button
         const closeBtn = document.createElement('button');
         closeBtn.innerHTML = '<i class="fas fa-times"></i>';
-        closeBtn.style.cssText = 'position:absolute; top:10px; right:10px; z-index:200; background:rgba(0,0,0,0.7); color:white; border:none; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px;';
+        closeBtn.style.cssText = 'position:absolute; top:10px; right:10px; z-index:100; background:rgba(0,0,0,0.7); color:white; border:none; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px;';
         closeBtn.onclick = function(e) {
             e.stopPropagation();
-            if (ytPlayer) {
-                ytPlayer.destroy();
-                ytPlayer = null;
-            }
             wrapper.remove();
+            if (thumbnail) thumbnail.style.display = '';
+            clickedCard.classList.remove('now-playing');
             state.currentEpisode = null;
-            ytCurrentEpisodeId = null;
-            if (clickedCard) clickedCard.classList.remove('now-playing');
         };
         wrapper.appendChild(closeBtn);
 
-        // Insert wrapper
-        if (clickedCard) {
-            const thumbnail = clickedCard.querySelector('.episode-thumbnail');
-            if (thumbnail) {
-                thumbnail.after(wrapper);
-            } else {
-                clickedCard.prepend(wrapper);
-            }
-            clickedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Insert player where thumbnail was
+        if (thumbnail) {
+            thumbnail.parentNode.insertBefore(wrapper, thumbnail);
         } else {
-            const mainContent = document.getElementById('main-content') || document.querySelector('.main-content') || document.body;
-            mainContent.prepend(wrapper);
-            wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            clickedCard.prepend(wrapper);
         }
 
-        // Load YouTube API and create player
-        await loadYouTubeAPI();
-
-        ytPlayer = new YT.Player(playerDiv.id, {
-            videoId: videoId,
-            width: '100%',
-            height: '100%',
-            playerVars: {
-                autoplay: 1,
-                rel: 0,
-                modestbranding: 1,
-                playsinline: 1,
-                fs: 1
-            },
-            events: {
-                onReady: (e) => {
-                    console.log('✅ YouTube player ready');
-                    e.target.playVideo();
-                },
-                onStateChange: (e) => {
-                    if (e.data === YT.PlayerState.ENDED && ytCurrentEpisodeId) {
-                        addToWatchHistory(ytCurrentEpisodeId, true);
-                    }
-                },
-                onError: (e) => {
-                    console.error('YouTube player error:', e.data);
-                    // Error 150 = embedding disabled by video owner
-                    // Error 101 = video owner doesn't allow embedding
-                    // Error 2 = invalid video ID
-                    if (e.data === 150 || e.data === 101) {
-                        showNotification('📺 ڤیدیۆ لە YouTube.com ڤەدبێ...', 2000);
-                    }
-                    // Fallback: open in new tab
-                    setTimeout(() => {
-                        window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
-                    }, 500);
-                    wrapper.remove();
-                    if (ytPlayer) {
-                        ytPlayer.destroy();
-                        ytPlayer = null;
-                    }
-                }
-            }
-        });
+        // Scroll into view
+        clickedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     // ===== DOM ELEMENTS =====
