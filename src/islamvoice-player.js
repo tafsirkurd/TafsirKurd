@@ -1251,6 +1251,89 @@
         }
     };
 
+    // Play YouTube video in inline player (similar to S3 but with iframe)
+    function playYouTubeVideo(videoId, title, episodeId) {
+        console.log('🎬 Playing YouTube video:', videoId, title, episodeId);
+
+        // Update current episode
+        state.currentEpisode = episodeId;
+
+        // Track view
+        trackVideoView(episodeId);
+
+        // Find the clicked episode card
+        const clickedCard = document.querySelector(`.episode-card[data-episode-id="${episodeId}"]`) ||
+                           document.querySelector(`.episode-item[data-video-id="${episodeId}"]`) ||
+                           document.querySelector(`.episode-card[onclick*="${episodeId}"]`);
+
+        // Close any existing player
+        const existingWrapper = document.querySelector('.inline-video-wrapper');
+        if (existingWrapper) {
+            const hiddenThumbnail = document.querySelector('.episode-thumbnail[style*="display: none"]');
+            if (hiddenThumbnail) hiddenThumbnail.style.removeProperty('display');
+            existingWrapper.remove();
+        }
+
+        // Remove highlight from previously playing cards
+        document.querySelectorAll('.episode-card.now-playing, .episode-item.now-playing').forEach(el => {
+            el.classList.remove('now-playing');
+        });
+
+        // Highlight current card
+        if (clickedCard) clickedCard.classList.add('now-playing');
+
+        // Create video wrapper
+        const videoWrapper = document.createElement('div');
+        videoWrapper.className = 'inline-video-wrapper';
+        videoWrapper.style.cssText = 'position:relative; width:100%; max-width:900px; background:#000; border-radius:12px; overflow:hidden; margin:15px auto; aspect-ratio:16/9;';
+        videoWrapper.onclick = e => e.stopPropagation();
+
+        // Create YouTube iframe
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+        iframe.style.cssText = 'width:100%; height:100%; border:none;';
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        iframe.allowFullscreen = true;
+
+        // Create close button
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        closeBtn.style.cssText = 'position:absolute; top:10px; right:10px; z-index:200; background:rgba(0,0,0,0.7); color:white; border:none; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px;';
+        closeBtn.onclick = function(e) {
+            e.stopPropagation();
+            videoWrapper.remove();
+            state.currentEpisode = null;
+            if (clickedCard) {
+                clickedCard.classList.remove('now-playing');
+                const thumbnail = clickedCard.querySelector('.episode-thumbnail');
+                if (thumbnail) thumbnail.style.removeProperty('display');
+            }
+        };
+
+        videoWrapper.appendChild(iframe);
+        videoWrapper.appendChild(closeBtn);
+
+        // Insert video
+        if (clickedCard) {
+            const thumbnail = clickedCard.querySelector('.episode-thumbnail');
+            if (thumbnail) {
+                thumbnail.style.display = 'none';
+                thumbnail.parentNode.insertBefore(videoWrapper, thumbnail.nextSibling);
+            } else {
+                clickedCard.insertBefore(videoWrapper, clickedCard.firstChild);
+            }
+            clickedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            const mainContent = document.getElementById('main-content') || document.querySelector('.main-content') || document.body;
+            mainContent.insertBefore(videoWrapper, mainContent.firstChild);
+            videoWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Add to watch history
+        addToWatchHistory(episodeId, false);
+        updateBadgeCounts();
+    }
+
     // ===== DOM ELEMENTS =====
     const elements = {
         video: document.getElementById('videoPlayer'),
@@ -2537,6 +2620,19 @@
 
         const videoUrl = videoUrlOrId;
         console.log('🎬 Play video requested:', videoUrl, title, episodeId);
+
+        // Detect if this is a YouTube video ID (11-char alphanumeric) vs S3 URL
+        const isYouTubeVideo = videoUrl && !videoUrl.startsWith('http') && /^[a-zA-Z0-9_-]{11}$/.test(videoUrl);
+
+        // Also check episode data for video_type
+        const episode = state.playlist.find(ep => ep.id === episodeId);
+        const isYouTube = isYouTubeVideo || (episode && episode.videoType === 'youtube');
+
+        if (isYouTube) {
+            console.log('🎬 YouTube video detected, using YouTube player');
+            playYouTubeVideo(videoUrl, title, episodeId);
+            return;
+        }
 
         // Update current episode
         state.currentEpisode = episodeId;
