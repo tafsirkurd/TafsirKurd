@@ -902,11 +902,28 @@
                         Paste a YouTube playlist URL to import all videos as episodes
                     </small>
                 </div>
+                <!-- Playlist Info Preview (shown after fetch) -->
+                <div id="youtube-playlist-thumb-container" style="display: none; margin-bottom: 15px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <img id="youtube-playlist-thumb" src="" style="width: 120px; height: 68px; object-fit: cover; border-radius: 6px; background: #000;">
+                        <div>
+                            <div id="youtube-playlist-title" style="font-weight: 600; font-size: 14px; margin-bottom: 4px;"></div>
+                            <div style="font-size: 12px; color: var(--text-tertiary);">Playlist Thumbnail</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">Import to Series</label>
                     <select class="form-input" id="youtube-import-series" required>
                         <option value="">Select series...</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="youtube-update-series-thumb" checked style="width: 18px; height: 18px;">
+                        <span class="form-label" style="margin: 0;">Update series thumbnail with playlist thumbnail</span>
+                    </label>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Starting Episode Number</label>
@@ -2924,9 +2941,12 @@
             document.getElementById('youtube-playlist-url').value = '';
             document.getElementById('youtube-start-episode').value = '1';
             document.getElementById('youtube-import-published').checked = true;
+            document.getElementById('youtube-update-series-thumb').checked = true;
             document.getElementById('youtube-preview').style.display = 'none';
             document.getElementById('youtube-import-footer').style.display = 'none';
+            document.getElementById('youtube-playlist-thumb-container').style.display = 'none';
             youtubeVideosData = [];
+            window.youtubePlaylistData = null;
 
             // Populate series dropdown
             const select = document.getElementById('youtube-import-series');
@@ -2968,6 +2988,25 @@
                 const config = await fetch('/config').then(r => r.json());
                 if (!config.youtubeApiKey) {
                     throw new Error('YouTube API key not configured. Please add youtubeApiKey to your config.');
+                }
+
+                // First, fetch playlist metadata (title, thumbnail)
+                const playlistInfoUrl = `https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${config.youtubeApiKey}`;
+                const playlistInfoRes = await fetch(playlistInfoUrl);
+                if (playlistInfoRes.ok) {
+                    const playlistInfo = await playlistInfoRes.json();
+                    if (playlistInfo.items && playlistInfo.items[0]) {
+                        const pl = playlistInfo.items[0].snippet;
+                        window.youtubePlaylistData = {
+                            title: pl.title,
+                            description: pl.description,
+                            thumbnail: pl.thumbnails?.maxres?.url || pl.thumbnails?.high?.url || pl.thumbnails?.standard?.url || pl.thumbnails?.medium?.url
+                        };
+                        // Show playlist thumbnail preview
+                        document.getElementById('youtube-playlist-thumb').src = window.youtubePlaylistData.thumbnail || '';
+                        document.getElementById('youtube-playlist-thumb-container').style.display = window.youtubePlaylistData.thumbnail ? 'block' : 'none';
+                        document.getElementById('youtube-playlist-title').textContent = window.youtubePlaylistData.title || '';
+                    }
                 }
 
                 // Fetch playlist items from YouTube Data API
@@ -3072,6 +3111,7 @@
 
             const startEpisode = parseInt(document.getElementById('youtube-start-episode').value) || 1;
             const isPublished = document.getElementById('youtube-import-published').checked;
+            const updateSeriesThumb = document.getElementById('youtube-update-series-thumb').checked;
 
             const supabase = window.adminAuth.getSupabase();
             if (!supabase) {
@@ -3118,9 +3158,23 @@
             importBtn.innerHTML = '<i class="fas fa-download"></i> Import Selected';
 
             if (imported > 0) {
+                // Update series thumbnail if option is checked and we have playlist thumbnail
+                if (updateSeriesThumb && window.youtubePlaylistData?.thumbnail) {
+                    try {
+                        await supabase
+                            .from('islamvoice_series')
+                            .update({ thumbnail_url: window.youtubePlaylistData.thumbnail })
+                            .eq('id', seriesId);
+                        console.log('✅ Series thumbnail updated with playlist thumbnail');
+                    } catch (err) {
+                        console.error('Failed to update series thumbnail:', err);
+                    }
+                }
+
                 showNotification(`Imported ${imported} episodes!${errors > 0 ? ` (${errors} errors)` : ''}`, imported > 0 ? 'success' : 'error');
                 closeYouTubeImportModal();
                 loadAllEpisodes();
+                loadAllSeries(); // Refresh series to show updated thumbnail
                 if (currentView === 'drafts') {
                     loadDrafts();
                 }
