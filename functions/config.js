@@ -26,11 +26,13 @@ export async function onRequest(context) {
         // Clean environment variables - remove any newlines/whitespace that break HTTP headers
         const cleanUrl = env.SUPABASE_URL?.replace(/[\n\r\s]/g, '');
         const cleanKey = env.SUPABASE_ANON_KEY?.replace(/[\n\r\s]/g, '');
+        const youtubeKey = env.YOUTUBE_API_KEY?.replace(/[\n\r\s]/g, '');
 
-        // Return public Supabase configuration (ONLY anon key, NEVER service_role!)
+        // Return public configuration (ONLY anon key, NEVER service_role!)
         const config = {
             supabaseUrl: cleanUrl,
-            supabaseKey: cleanKey
+            supabaseKey: cleanKey,
+            youtubeApiKey: youtubeKey || null
         };
 
         console.log('Environment check:', {

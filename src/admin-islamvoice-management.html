@@ -553,6 +553,9 @@
                     <button class="btn btn-secondary" onclick="recompressAllThumbnails()" id="recompressBtn" style="font-size: 12px; padding: 6px 12px;">
                         <i class="fas fa-compress-alt"></i> Re-compress Thumbnails
                     </button>
+                    <button class="btn" onclick="openYouTubeImportModal()" style="font-size: 12px; padding: 6px 12px; background: #ff0000; color: white;">
+                        <i class="fab fa-youtube"></i> YouTube Import
+                    </button>
                 </div>
 
                 <!-- ALL SERIES VIEW -->
@@ -878,6 +881,66 @@
                         <i class="fas fa-upload"></i> Publish
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- YOUTUBE IMPORT MODAL -->
+    <div class="modal" id="youtube-import-modal">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);">
+                <h3 class="modal-title" style="color: white;"><i class="fab fa-youtube"></i> Import from YouTube Playlist</h3>
+                <button class="modal-close" onclick="closeYouTubeImportModal()" style="color: white;">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">YouTube Playlist URL</label>
+                    <input type="url" class="form-input" id="youtube-playlist-url" placeholder="https://www.youtube.com/playlist?list=PLxxxxxxxxx">
+                    <small style="color: var(--text-secondary); font-size: 12px; margin-top: 4px; display: block;">
+                        Paste a YouTube playlist URL to import all videos as episodes
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Import to Series</label>
+                    <select class="form-input" id="youtube-import-series" required>
+                        <option value="">Select series...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Starting Episode Number</label>
+                    <input type="number" class="form-input" id="youtube-start-episode" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="youtube-import-published" checked style="width: 18px; height: 18px;">
+                        <span class="form-label" style="margin: 0;">Publish immediately</span>
+                    </label>
+                </div>
+                <button class="btn btn-primary" onclick="fetchYouTubePlaylist()" id="fetch-playlist-btn" style="width: 100%; background: #ff0000;">
+                    <i class="fas fa-search"></i> Fetch Playlist Videos
+                </button>
+
+                <!-- Preview Area -->
+                <div id="youtube-preview" style="display: none; margin-top: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="margin: 0;"><i class="fas fa-list"></i> Found <span id="youtube-video-count">0</span> videos</h4>
+                        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer;">
+                            <input type="checkbox" id="youtube-select-all" checked onchange="toggleAllYouTubeVideos(this.checked)">
+                            Select All
+                        </label>
+                    </div>
+                    <div id="youtube-videos-list" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: 8px;">
+                        <!-- Videos will be listed here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" id="youtube-import-footer" style="display: none;">
+                <button class="btn btn-secondary" onclick="closeYouTubeImportModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="importSelectedYouTubeVideos()" style="background: #ff0000;">
+                    <i class="fas fa-download"></i> Import Selected
+                </button>
             </div>
         </div>
     </div>
@@ -2852,6 +2915,219 @@
                 loadVideoForThumbnail(this.value);
             }
         });
+
+        // ========== YOUTUBE IMPORT FUNCTIONS ==========
+        let youtubeVideosData = [];
+
+        function openYouTubeImportModal() {
+            document.getElementById('youtube-import-modal').classList.add('active');
+            document.getElementById('youtube-playlist-url').value = '';
+            document.getElementById('youtube-start-episode').value = '1';
+            document.getElementById('youtube-import-published').checked = true;
+            document.getElementById('youtube-preview').style.display = 'none';
+            document.getElementById('youtube-import-footer').style.display = 'none';
+            youtubeVideosData = [];
+
+            // Populate series dropdown
+            const select = document.getElementById('youtube-import-series');
+            select.innerHTML = '<option value="">Select series...</option>';
+            allSeriesData.forEach(s => {
+                select.innerHTML += `<option value="${s.id}">${s.name_ku}</option>`;
+            });
+
+            lucide.createIcons();
+        }
+
+        function closeYouTubeImportModal() {
+            document.getElementById('youtube-import-modal').classList.remove('active');
+        }
+
+        async function fetchYouTubePlaylist() {
+            const url = document.getElementById('youtube-playlist-url').value.trim();
+            if (!url) {
+                showNotification('Please enter a playlist URL', 'error');
+                return;
+            }
+
+            // Extract playlist ID from URL
+            let playlistId = null;
+            const match = url.match(/[?&]list=([^&]+)/);
+            if (match) {
+                playlistId = match[1];
+            } else {
+                showNotification('Invalid playlist URL. Make sure it contains ?list=...', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('fetch-playlist-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
+
+            try {
+                // Get YouTube API key from config
+                const config = await fetch('/config').then(r => r.json());
+                if (!config.youtubeApiKey) {
+                    throw new Error('YouTube API key not configured. Please add youtubeApiKey to your config.');
+                }
+
+                // Fetch playlist items from YouTube Data API
+                const videos = [];
+                let nextPageToken = '';
+
+                do {
+                    const apiUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${playlistId}&key=${config.youtubeApiKey}${nextPageToken ? '&pageToken=' + nextPageToken : ''}`;
+                    const response = await fetch(apiUrl);
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error?.message || 'Failed to fetch playlist');
+                    }
+
+                    const data = await response.json();
+
+                    for (const item of data.items) {
+                        const snippet = item.snippet;
+                        const videoId = snippet.resourceId?.videoId || item.contentDetails?.videoId;
+
+                        if (videoId) {
+                            videos.push({
+                                videoId,
+                                title: snippet.title,
+                                description: snippet.description || '',
+                                thumbnail: snippet.thumbnails?.maxres?.url || snippet.thumbnails?.high?.url || snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url,
+                                position: snippet.position,
+                                selected: true
+                            });
+                        }
+                    }
+
+                    nextPageToken = data.nextPageToken || '';
+                } while (nextPageToken);
+
+                if (videos.length === 0) {
+                    showNotification('No videos found in this playlist', 'warning');
+                    return;
+                }
+
+                // Sort by position
+                videos.sort((a, b) => a.position - b.position);
+                youtubeVideosData = videos;
+
+                // Display videos
+                renderYouTubeVideosList();
+                document.getElementById('youtube-preview').style.display = 'block';
+                document.getElementById('youtube-import-footer').style.display = 'flex';
+                document.getElementById('youtube-video-count').textContent = videos.length;
+
+                showNotification(`Found ${videos.length} videos!`, 'success');
+
+            } catch (error) {
+                console.error('YouTube fetch error:', error);
+                showNotification(error.message || 'Failed to fetch playlist', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-search"></i> Fetch Playlist Videos';
+            }
+        }
+
+        function renderYouTubeVideosList() {
+            const container = document.getElementById('youtube-videos-list');
+            container.innerHTML = youtubeVideosData.map((video, index) => `
+                <div style="display: flex; gap: 10px; padding: 10px; border-bottom: 1px solid var(--border-light); align-items: center;">
+                    <input type="checkbox" ${video.selected ? 'checked' : ''}
+                           onchange="youtubeVideosData[${index}].selected = this.checked"
+                           style="width: 18px; height: 18px; flex-shrink: 0;">
+                    <img src="${video.thumbnail || ''}"
+                         style="width: 80px; height: 45px; object-fit: cover; border-radius: 4px; background: #000; flex-shrink: 0;"
+                         onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 9%22><rect fill=%22%23333%22 width=%2216%22 height=%229%22/><text x=%228%22 y=%225%22 fill=%22%23666%22 font-size=%222%22 text-anchor=%22middle%22>No thumb</text></svg>'">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${video.title}</div>
+                        <div style="font-size: 11px; color: var(--text-tertiary);">
+                            <a href="https://www.youtube.com/watch?v=${video.videoId}" target="_blank" style="color: var(--accent-blue);">
+                                <i class="fab fa-youtube"></i> ${video.videoId}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleAllYouTubeVideos(checked) {
+            youtubeVideosData.forEach(v => v.selected = checked);
+            renderYouTubeVideosList();
+        }
+
+        async function importSelectedYouTubeVideos() {
+            const seriesId = document.getElementById('youtube-import-series').value;
+            if (!seriesId) {
+                showNotification('Please select a series', 'error');
+                return;
+            }
+
+            const selectedVideos = youtubeVideosData.filter(v => v.selected);
+            if (selectedVideos.length === 0) {
+                showNotification('No videos selected', 'error');
+                return;
+            }
+
+            const startEpisode = parseInt(document.getElementById('youtube-start-episode').value) || 1;
+            const isPublished = document.getElementById('youtube-import-published').checked;
+
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) {
+                showNotification('Database not connected', 'error');
+                return;
+            }
+
+            const importBtn = document.querySelector('#youtube-import-footer .btn-primary');
+            importBtn.disabled = true;
+            importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+
+            let imported = 0;
+            let errors = 0;
+
+            for (let i = 0; i < selectedVideos.length; i++) {
+                const video = selectedVideos[i];
+                const episodeNumber = startEpisode + i;
+
+                try {
+                    const episodeData = {
+                        series_id: seriesId,
+                        episode_number: episodeNumber,
+                        title: video.title,
+                        description: video.description || null,
+                        video_url: `https://www.youtube.com/watch?v=${video.videoId}`,
+                        thumbnail_url: video.thumbnail || null,
+                        video_type: 'youtube',
+                        is_published: isPublished
+                    };
+
+                    const { error } = await supabase
+                        .from('islamvoice_episodes')
+                        .insert(episodeData);
+
+                    if (error) throw error;
+                    imported++;
+                } catch (err) {
+                    console.error(`Error importing ${video.title}:`, err);
+                    errors++;
+                }
+            }
+
+            importBtn.disabled = false;
+            importBtn.innerHTML = '<i class="fas fa-download"></i> Import Selected';
+
+            if (imported > 0) {
+                showNotification(`Imported ${imported} episodes!${errors > 0 ? ` (${errors} errors)` : ''}`, imported > 0 ? 'success' : 'error');
+                closeYouTubeImportModal();
+                loadAllEpisodes();
+                if (currentView === 'drafts') {
+                    loadDrafts();
+                }
+            } else {
+                showNotification('Failed to import videos', 'error');
+            }
+        }
     </script>
 </body>
 </html>
