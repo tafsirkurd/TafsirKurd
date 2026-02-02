@@ -1387,9 +1387,21 @@
                 },
                 onError: (e) => {
                     console.error('YouTube player error:', e.data);
+                    // Error 150 = embedding disabled by video owner
+                    // Error 101 = video owner doesn't allow embedding
+                    // Error 2 = invalid video ID
+                    if (e.data === 150 || e.data === 101) {
+                        showNotification('📺 ڤیدیۆ لە YouTube.com ڤەدبێ...', 2000);
+                    }
                     // Fallback: open in new tab
-                    window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+                    setTimeout(() => {
+                        window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+                    }, 500);
                     wrapper.remove();
+                    if (ytPlayer) {
+                        ytPlayer.destroy();
+                        ytPlayer = null;
+                    }
                 }
             }
         });
