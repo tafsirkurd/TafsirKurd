@@ -444,9 +444,9 @@
                 categoryFilter.appendChild(option);
             });
 
-            // Normalize page names (remove .html suffix) and deduplicate
+            // Normalize page names (remove .html suffix, lowercase) and deduplicate
             const rawPages = allTranslations.map(t => t.page);
-            const normalizedPages = [...new Set(rawPages.map(p => p ? p.replace(/\.html$/i, '') : 'all'))].sort();
+            const normalizedPages = [...new Set(rawPages.map(p => normalizePage(p)))].sort();
             const pageFilter = document.getElementById('pageFilter');
 
             while (pageFilter.options.length > 1) {
@@ -461,25 +461,35 @@
             });
 
             // Check for duplicates and offer cleanup
-            const hasDuplicates = rawPages.some(p => p && p.endsWith('.html'));
-            if (hasDuplicates) {
-                console.log('Duplicate page names detected. Running cleanup...');
+            const needsCleanup = rawPages.some(p => p && (p.endsWith('.html') || p !== p.toLowerCase()));
+            if (needsCleanup) {
+                console.log('Inconsistent page names detected. Running cleanup...');
                 cleanupPageNames();
             }
+        }
+
+        // Normalize page name: lowercase, remove .html
+        function normalizePage(page) {
+            if (!page) return 'all';
+            return page.toLowerCase().replace(/\.html$/i, '');
         }
 
         // Cleanup function to normalize page names in database
         async function cleanupPageNames() {
             try {
-                // Find all records with .html suffix
-                const toUpdate = allTranslations.filter(t => t.page && t.page.endsWith('.html'));
+                // Find all records that need normalization (has .html or not lowercase)
+                const toUpdate = allTranslations.filter(t => {
+                    if (!t.page) return false;
+                    const normalized = normalizePage(t.page);
+                    return t.page !== normalized;
+                });
 
                 if (toUpdate.length === 0) return;
 
-                console.log(`Cleaning up ${toUpdate.length} records with .html suffix...`);
+                console.log(`Cleaning up ${toUpdate.length} records with inconsistent page names...`);
 
                 for (const record of toUpdate) {
-                    const normalizedPage = record.page.replace(/\.html$/i, '');
+                    const normalizedPage = normalizePage(record.page);
                     await supabase
                         .from('kurdish_translations')
                         .update({ page: normalizedPage })
@@ -507,9 +517,8 @@
                 const matchesKey = !keyFilter || t.key_id.toLowerCase().includes(keyFilter);
                 const matchesCategory = !categoryFilter || t.category === categoryFilter;
 
-                // Normalize page comparison (handle both "quran" and "quran.html")
-                const normalizedRecordPage = t.page ? t.page.replace(/\.html$/i, '') : 'all';
-                const matchesPage = !pageFilter || normalizedRecordPage === pageFilter;
+                // Normalize page comparison (handle "quran", "Quran", "quran.html", etc.)
+                const matchesPage = !pageFilter || normalizePage(t.page) === pageFilter;
 
                 return matchesSearch && matchesKey && matchesCategory && matchesPage;
             });
