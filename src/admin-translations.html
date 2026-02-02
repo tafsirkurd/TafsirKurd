@@ -263,6 +263,7 @@
                 <div class="page-header">
                     <h1 class="page-title">Kurdish Translations</h1>
                     <div class="page-actions">
+                        <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn"><i data-lucide="download"></i>Import All (400+)</button>
                         <button class="btn btn-primary" onclick="openAddModal()"><i data-lucide="plus"></i>Add Translation</button>
                     </div>
                 </div>
@@ -676,6 +677,75 @@
             } catch (error) {
                 console.error('Error deleting translation:', error);
                 alert('Failed to delete translation');
+            }
+        }
+
+        // Bulk import all translations
+        async function importAllTranslations() {
+            if (!confirm('This will import 400+ translations from all pages. Existing entries will be skipped. Continue?')) return;
+
+            const btn = document.getElementById('importBtn');
+            const btnLabel = btn.querySelector('span') || btn;
+            btn.disabled = true;
+            btnLabel.textContent = 'Importing...';
+
+            try {
+                // Load the bulk translations script
+                const script = document.createElement('script');
+                script.src = '/utils/bulk-translations.js?v=' + Date.now();
+                document.head.appendChild(script);
+
+                // Wait for script to load
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                if (!window.BULK_TRANSLATIONS) {
+                    throw new Error('Failed to load translations data');
+                }
+
+                let added = 0, skipped = 0, errors = 0;
+                const total = window.BULK_TRANSLATIONS.length;
+
+                for (let i = 0; i < total; i++) {
+                    const t = window.BULK_TRANSLATIONS[i];
+                    btnLabel.textContent = 'Importing ' + (i + 1) + '/' + total + '...';
+
+                    try {
+                        // Check if exists
+                        const { data: existing } = await supabase
+                            .from('kurdish_translations')
+                            .select('id')
+                            .eq('key_id', t.key_id)
+                            .maybeSingle();
+
+                        if (existing) {
+                            skipped++;
+                            continue;
+                        }
+
+                        // Insert new
+                        const { error } = await supabase
+                            .from('kurdish_translations')
+                            .insert(t);
+
+                        if (error) {
+                            console.error('Error: ' + t.key_id, error);
+                            errors++;
+                        } else {
+                            added++;
+                        }
+                    } catch (e) {
+                        errors++;
+                    }
+                }
+
+                alert('Import complete!\n\nAdded: ' + added + '\nSkipped (existing): ' + skipped + '\nErrors: ' + errors);
+                loadTranslations();
+            } catch (error) {
+                console.error('Import failed:', error);
+                alert('Import failed: ' + error.message);
+            } finally {
+                btnLabel.textContent = 'Import All (400+)';
+                btn.disabled = false;
             }
         }
     </script>
