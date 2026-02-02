@@ -444,19 +444,53 @@
                 categoryFilter.appendChild(option);
             });
 
-            const pages = [...new Set(allTranslations.map(t => t.page))].sort();
+            // Normalize page names (remove .html suffix) and deduplicate
+            const rawPages = allTranslations.map(t => t.page);
+            const normalizedPages = [...new Set(rawPages.map(p => p ? p.replace(/\.html$/i, '') : 'all'))].sort();
             const pageFilter = document.getElementById('pageFilter');
 
             while (pageFilter.options.length > 1) {
                 pageFilter.remove(1);
             }
 
-            pages.forEach(page => {
+            normalizedPages.forEach(page => {
                 const option = document.createElement('option');
                 option.value = page;
                 option.textContent = page;
                 pageFilter.appendChild(option);
             });
+
+            // Check for duplicates and offer cleanup
+            const hasDuplicates = rawPages.some(p => p && p.endsWith('.html'));
+            if (hasDuplicates) {
+                console.log('Duplicate page names detected. Running cleanup...');
+                cleanupPageNames();
+            }
+        }
+
+        // Cleanup function to normalize page names in database
+        async function cleanupPageNames() {
+            try {
+                // Find all records with .html suffix
+                const toUpdate = allTranslations.filter(t => t.page && t.page.endsWith('.html'));
+
+                if (toUpdate.length === 0) return;
+
+                console.log(`Cleaning up ${toUpdate.length} records with .html suffix...`);
+
+                for (const record of toUpdate) {
+                    const normalizedPage = record.page.replace(/\.html$/i, '');
+                    await supabase
+                        .from('kurdish_translations')
+                        .update({ page: normalizedPage })
+                        .eq('id', record.id);
+                }
+
+                console.log('Cleanup complete. Reloading...');
+                loadTranslations();
+            } catch (error) {
+                console.error('Cleanup failed:', error);
+            }
         }
 
         function filterTranslations() {
@@ -472,7 +506,10 @@
 
                 const matchesKey = !keyFilter || t.key_id.toLowerCase().includes(keyFilter);
                 const matchesCategory = !categoryFilter || t.category === categoryFilter;
-                const matchesPage = !pageFilter || t.page === pageFilter;
+
+                // Normalize page comparison (handle both "quran" and "quran.html")
+                const normalizedRecordPage = t.page ? t.page.replace(/\.html$/i, '') : 'all';
+                const matchesPage = !pageFilter || normalizedRecordPage === pageFilter;
 
                 return matchesSearch && matchesKey && matchesCategory && matchesPage;
             });
