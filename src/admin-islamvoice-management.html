@@ -1197,6 +1197,9 @@
                             <div class="series-card-meta">
                                 <span>${s.speaker || ''}</span>
                                 <div>
+                                    <button class="table-btn" onclick="event.stopPropagation(); reverseEpisodeNumbers('${s.id}', '${s.name_ku}')" title="Reverse Episode Order">
+                                        <i data-lucide="arrow-up-down"></i>
+                                    </button>
                                     <button class="table-btn" onclick="event.stopPropagation(); editSeries('${s.id}')" title="Edit">
                                         <i data-lucide="edit-2"></i>
                                     </button>
@@ -1716,6 +1719,65 @@
             } catch (error) {
                 console.error('Error deleting series:', error);
                 alert('Error deleting series: ' + error.message);
+            }
+        }
+
+        // Reverse episode numbers for a series
+        async function reverseEpisodeNumbers(seriesId, seriesName) {
+            if (!confirm(`Reverse episode order for "${seriesName}"?\n\nThis will swap episode numbers (1↔30, 2↔29, etc.)`)) return;
+
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) {
+                showNotification('Database not connected', 'error');
+                return;
+            }
+
+            try {
+                // Get all episodes for this series
+                const { data: episodes, error } = await supabase
+                    .from('islamvoice_episodes')
+                    .select('id, episode_number')
+                    .eq('series_id', seriesId)
+                    .order('episode_number', { ascending: true });
+
+                if (error) throw error;
+                if (!episodes || episodes.length < 2) {
+                    showNotification('Not enough episodes to reverse', 'warning');
+                    return;
+                }
+
+                // Calculate reversed episode numbers
+                const maxEp = Math.max(...episodes.map(e => e.episode_number));
+                const minEp = Math.min(...episodes.map(e => e.episode_number));
+
+                // Update each episode with reversed number
+                let updated = 0;
+                for (const ep of episodes) {
+                    const newNumber = maxEp - ep.episode_number + minEp;
+                    const { error: updateError } = await supabase
+                        .from('islamvoice_episodes')
+                        .update({ episode_number: newNumber + 10000 }) // Temp offset to avoid conflicts
+                        .eq('id', ep.id);
+                    if (!updateError) updated++;
+                }
+
+                // Remove temp offset
+                for (const ep of episodes) {
+                    const newNumber = maxEp - ep.episode_number + minEp;
+                    await supabase
+                        .from('islamvoice_episodes')
+                        .update({ episode_number: newNumber })
+                        .eq('id', ep.id);
+                }
+
+                showNotification(`Reversed ${updated} episode numbers!`, 'success');
+                loadAllEpisodes();
+                if (currentSeries) {
+                    viewSeriesEpisodes(currentSeries.id, currentSeries.name);
+                }
+            } catch (error) {
+                console.error('Error reversing episodes:', error);
+                showNotification('Error reversing episodes: ' + error.message, 'error');
             }
         }
 
