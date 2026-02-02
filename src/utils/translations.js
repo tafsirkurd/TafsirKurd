@@ -12,15 +12,16 @@
     const CACHE_EXPIRY_KEY = 'tafsirkurd_translations_expiry';
     const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
-    // Supabase config
-    const SUPABASE_URL = 'https://fqyvgxzcbpyrjcuavifd.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxeXZneHpjYnB5cmpjdWF2aWZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYyNDcyMDQsImV4cCI6MjA1MTgyMzIwNH0.cFbOv9NaClOvjXKswDQ5bDNkVn8TxaEHvPvT3_GwLXY';
+    // Supabase config (loaded from /config endpoint)
+    let SUPABASE_URL = null;
+    let SUPABASE_ANON_KEY = null;
 
     // Storage
     let translations = {};       // key_id -> kurdish_text
     let textToKey = {};          // kurdish_text -> key_id (reverse lookup)
     let isLoaded = false;
     let loadPromise = null;
+    let configLoaded = false;
 
     /**
      * Load from localStorage cache
@@ -54,10 +55,35 @@
     }
 
     /**
+     * Load Supabase config from /config endpoint
+     */
+    async function loadConfig() {
+        if (configLoaded) return true;
+        try {
+            const response = await fetch('/config');
+            if (!response.ok) throw new Error('Failed to fetch config');
+            const config = await response.json();
+            SUPABASE_URL = config.supabaseUrl;
+            SUPABASE_ANON_KEY = config.supabaseKey;
+            configLoaded = true;
+            return true;
+        } catch (e) {
+            console.warn('Config load failed:', e);
+            return false;
+        }
+    }
+
+    /**
      * Fetch translations from Supabase
      */
     async function fetchFromSupabase() {
         try {
+            // Load config first
+            if (!configLoaded) {
+                const loaded = await loadConfig();
+                if (!loaded) throw new Error('Could not load Supabase config');
+            }
+
             const response = await fetch(
                 `${SUPABASE_URL}/rest/v1/kurdish_translations?select=key_id,kurdish_text`,
                 {
