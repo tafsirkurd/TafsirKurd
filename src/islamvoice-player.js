@@ -1251,7 +1251,13 @@
         }
     };
 
-    // Play YouTube video - simple iframe (works with ad blockers like Brave)
+    // Detect if browser blocks YouTube embeds (Brave, etc.)
+    function isBraveBrowser() {
+        return navigator.brave && navigator.brave.isBrave ||
+               navigator.userAgent.includes('Brave');
+    }
+
+    // Play YouTube video - simple iframe with fallback for blocked browsers
     function playYouTubeVideo(videoId, title, episodeId) {
         console.log('🎬 Playing YouTube video:', videoId, title, episodeId);
 
@@ -1302,13 +1308,54 @@
         wrapper.style.cssText = 'position:relative; width:100%; aspect-ratio:16/9; background:#000; border-radius:12px; overflow:hidden;';
         wrapper.onclick = e => e.stopPropagation();
 
-        // Simple iframe (no API needed - works with Brave)
+        // Simple iframe
         const iframe = document.createElement('iframe');
         iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
         iframe.style.cssText = 'width:100%; height:100%; border:none;';
         iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
         iframe.allowFullscreen = true;
         wrapper.appendChild(iframe);
+
+        // Fallback overlay (shows if embed blocked)
+        const fallbackOverlay = document.createElement('div');
+        fallbackOverlay.className = 'yt-fallback-overlay';
+        fallbackOverlay.style.cssText = 'position:absolute; inset:0; background:rgba(0,0,0,0.9); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:15px; opacity:0; pointer-events:none; transition:opacity 0.3s;';
+        fallbackOverlay.innerHTML = `
+            <i class="fab fa-youtube" style="font-size:48px; color:#ff0000;"></i>
+            <p style="color:white; margin:0; text-align:center; font-size:14px;">ڤیدیۆ هاتیە بلۆک کرن<br><small style="opacity:0.7;">Ad blocker یان Brave Shields</small></p>
+            <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank"
+               style="background:#ff0000; color:white; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:8px;">
+                <i class="fab fa-youtube"></i> Watch on YouTube
+            </a>
+            <button onclick="this.closest('.yt-fallback-overlay').style.display='none'"
+                    style="background:transparent; border:1px solid rgba(255,255,255,0.3); color:white; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:12px;">
+                Try Again
+            </button>
+        `;
+        wrapper.appendChild(fallbackOverlay);
+
+        // Show fallback after 3 seconds if iframe likely blocked
+        setTimeout(() => {
+            // Check if iframe loaded by trying to access it
+            try {
+                if (wrapper.isConnected) {
+                    fallbackOverlay.style.opacity = '1';
+                    fallbackOverlay.style.pointerEvents = 'auto';
+                }
+            } catch(e) {
+                fallbackOverlay.style.opacity = '1';
+                fallbackOverlay.style.pointerEvents = 'auto';
+            }
+        }, 3000);
+
+        // Hide fallback if iframe loads successfully
+        iframe.onload = function() {
+            // Give it a moment to actually render
+            setTimeout(() => {
+                fallbackOverlay.style.opacity = '0';
+                fallbackOverlay.style.pointerEvents = 'none';
+            }, 500);
+        };
 
         // Close button
         const closeBtn = document.createElement('button');
