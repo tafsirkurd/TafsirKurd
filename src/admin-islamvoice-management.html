@@ -3096,8 +3096,8 @@
                         episode_number: episodeNumber,
                         title: video.title,
                         description: video.description || null,
-                        video_url: `https://www.youtube.com/watch?v=${video.videoId}`,
-                        thumbnail_url: video.thumbnail || null,
+                        video_url: video.videoId,  // Store just the video ID for YouTube
+                        thumbnail_url: video.thumbnail || `https://img.youtube.com/vi/${video.videoId}/maxresdefault.jpg`,
                         video_type: 'youtube',
                         is_published: isPublished
                     };
