@@ -1734,11 +1734,10 @@
 
             try {
                 // Get all episodes for this series
-                const { data: episodes, error } = await supabase
+                let { data: episodes, error } = await supabase
                     .from('islamvoice_episodes')
                     .select('id, episode_number')
-                    .eq('series_id', seriesId)
-                    .order('episode_number', { ascending: true });
+                    .eq('series_id', seriesId);
 
                 if (error) throw error;
                 if (!episodes || episodes.length < 2) {
@@ -1746,31 +1745,45 @@
                     return;
                 }
 
-                // Calculate reversed episode numbers
-                const maxEp = Math.max(...episodes.map(e => e.episode_number));
-                const minEp = Math.min(...episodes.map(e => e.episode_number));
-
-                // Update each episode with reversed number
-                let updated = 0;
+                // Fix any episodes with temp offset first (from previous buggy run)
                 for (const ep of episodes) {
-                    const newNumber = maxEp - ep.episode_number + minEp;
-                    const { error: updateError } = await supabase
-                        .from('islamvoice_episodes')
-                        .update({ episode_number: newNumber + 10000 }) // Temp offset to avoid conflicts
-                        .eq('id', ep.id);
-                    if (!updateError) updated++;
+                    if (ep.episode_number >= 10000) {
+                        const fixed = ep.episode_number - 10000;
+                        await supabase
+                            .from('islamvoice_episodes')
+                            .update({ episode_number: fixed })
+                            .eq('id', ep.id);
+                        ep.episode_number = fixed;
+                    }
                 }
 
-                // Remove temp offset
-                for (const ep of episodes) {
-                    const newNumber = maxEp - ep.episode_number + minEp;
+                // Sort by episode number
+                episodes.sort((a, b) => a.episode_number - b.episode_number);
+
+                // Build mapping with new reversed numbers
+                const total = episodes.length;
+                const mapping = episodes.map((ep, index) => ({
+                    id: ep.id,
+                    newNum: total - index  // Last becomes 1, first becomes total
+                }));
+
+                // Step 1: Move all to temp (add 100000)
+                for (const m of mapping) {
                     await supabase
                         .from('islamvoice_episodes')
-                        .update({ episode_number: newNumber })
-                        .eq('id', ep.id);
+                        .update({ episode_number: m.newNum + 100000 })
+                        .eq('id', m.id);
                 }
 
-                showNotification(`Reversed ${updated} episode numbers!`, 'success');
+                // Step 2: Set final numbers
+                for (const m of mapping) {
+                    await supabase
+                        .from('islamvoice_episodes')
+                        .update({ episode_number: m.newNum })
+                        .eq('id', m.id);
+                }
+
+                showNotification(`Reversed ${episodes.length} episode numbers!`, 'success');
                 loadAllEpisodes();
                 if (currentSeries) {
                     viewSeriesEpisodes(currentSeries.id, currentSeries.name);
