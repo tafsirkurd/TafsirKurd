@@ -714,9 +714,14 @@
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeSeriesModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveSeriesForm()">Save</button>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <button class="btn" onclick="closeSeriesModal(); setTimeout(() => openYouTubeImportModal(), 100);" style="font-size: 12px; padding: 6px 12px; background: #ff0000; color: white;">
+                    <i class="fab fa-youtube"></i> YouTube Import
+                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" onclick="closeSeriesModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveSeriesForm()">Save</button>
+                </div>
             </div>
         </div>
     </div>
