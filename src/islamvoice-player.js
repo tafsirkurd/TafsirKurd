@@ -1309,21 +1309,6 @@
         iframe.allowFullscreen = true;
         wrapper.appendChild(iframe);
 
-        // "Watch on YouTube" link - hidden, shows after 5 seconds for users with blocked embeds
-        const ytLink = document.createElement('a');
-        ytLink.href = `https://www.youtube.com/watch?v=${videoId}`;
-        ytLink.target = '_blank';
-        ytLink.innerHTML = '<i class="fab fa-youtube"></i> ناکارە؟ لە YouTube تەماشابکە';
-        ytLink.style.cssText = 'position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:rgba(255,0,0,0.9); color:white; padding:8px 16px; border-radius:20px; text-decoration:none; font-size:12px; font-weight:600; display:flex; align-items:center; gap:6px; z-index:50; opacity:0; pointer-events:none; transition:opacity 0.3s;';
-        wrapper.appendChild(ytLink);
-        // Show after 5 seconds (for blocked embeds)
-        setTimeout(() => {
-            if (wrapper.isConnected) {
-                ytLink.style.opacity = '0.85';
-                ytLink.style.pointerEvents = 'auto';
-            }
-        }, 5000);
-
         // Close button
         const closeBtn = document.createElement('button');
         closeBtn.innerHTML = '<i class="fas fa-times"></i>';
