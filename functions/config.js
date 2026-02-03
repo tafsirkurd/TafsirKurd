@@ -4,8 +4,27 @@
 export async function onRequest(context) {
     const { request, env } = context;
 
+    // Only allow requests from tafsirkurd.com
+    const origin = request.headers.get('Origin') || '';
+    const referer = request.headers.get('Referer') || '';
+    const allowedDomains = ['tafsirkurd.com', 'localhost', '127.0.0.1'];
+
+    const isAllowed = allowedDomains.some(domain =>
+        origin.includes(domain) || referer.includes(domain)
+    );
+
+    // Block direct browser access (no origin/referer = someone typing URL directly)
+    const isDirectAccess = !origin && !referer;
+
+    if (!isAllowed || isDirectAccess) {
+        return new Response(
+            JSON.stringify({ error: 'Access denied' }),
+            { status: 403, headers: { 'Content-Type': 'application/json' } }
+        );
+    }
+
     const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': origin || 'https://tafsirkurd.com',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json'
