@@ -27,7 +27,10 @@ export async function onRequest(context) {
         'Access-Control-Allow-Origin': origin || 'https://tafsirkurd.com',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
     };
 
     if (request.method === 'OPTIONS') {
