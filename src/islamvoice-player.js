@@ -1301,13 +1301,23 @@
         wrapper.style.cssText = 'position:relative; width:100%; aspect-ratio:16/9; background:#000; border-radius:12px; overflow:hidden;';
         wrapper.onclick = e => e.stopPropagation();
 
-        // Simple iframe - works on most browsers
+        // Simple iframe
         const iframe = document.createElement('iframe');
         iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
         iframe.style.cssText = 'width:100%; height:100%; border:none;';
         iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
         iframe.allowFullscreen = true;
         wrapper.appendChild(iframe);
+
+        // "Watch on YouTube" link (for browsers that block embed)
+        const ytLink = document.createElement('a');
+        ytLink.href = `https://www.youtube.com/watch?v=${videoId}`;
+        ytLink.target = '_blank';
+        ytLink.innerHTML = '<i class="fab fa-youtube"></i> ناکارە؟ لە YouTube تەماشابکە';
+        ytLink.style.cssText = 'position:absolute; bottom:10px; left:50%; transform:translateX(-50%); background:rgba(255,0,0,0.9); color:white; padding:8px 16px; border-radius:20px; text-decoration:none; font-size:12px; font-weight:600; display:flex; align-items:center; gap:6px; z-index:50; opacity:0.9; transition:opacity 0.2s;';
+        ytLink.onmouseenter = () => ytLink.style.opacity = '1';
+        ytLink.onmouseleave = () => ytLink.style.opacity = '0.9';
+        wrapper.appendChild(ytLink);
 
         // Close button
         const closeBtn = document.createElement('button');
