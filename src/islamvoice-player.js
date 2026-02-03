@@ -1251,16 +1251,8 @@
         }
     };
 
-    // Detect Brave browser
-    async function isBraveBrowser() {
-        if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
-            return await navigator.brave.isBrave();
-        }
-        return false;
-    }
-
-    // Play YouTube video - simple iframe, with Brave detection
-    async function playYouTubeVideo(videoId, title, episodeId) {
+    // Play YouTube video - simple iframe for all browsers
+    function playYouTubeVideo(videoId, title, episodeId) {
         console.log('🎬 Playing YouTube video:', videoId, title, episodeId);
 
         // Track view
@@ -1268,9 +1260,6 @@
         addToWatchHistory(episodeId, false);
         updateBadgeCounts();
         state.currentEpisode = episodeId;
-
-        // Check if Brave browser
-        const isBrave = await isBraveBrowser();
 
         // Find clicked card
         const clickedCard = document.querySelector(`.episode-card[data-episode-id="${episodeId}"]`) ||
@@ -1312,33 +1301,13 @@
         wrapper.style.cssText = 'position:relative; width:100%; aspect-ratio:16/9; background:#000; border-radius:12px; overflow:hidden;';
         wrapper.onclick = e => e.stopPropagation();
 
-        // For Brave: show message immediately
-        if (isBrave) {
-            wrapper.innerHTML = `
-                <div style="position:absolute; inset:0; background:linear-gradient(135deg, #1a1a2e, #16213e); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:15px; padding:20px;">
-                    <i class="fab fa-youtube" style="font-size:56px; color:#ff0000;"></i>
-                    <p style="color:white; margin:0; text-align:center; font-size:15px; line-height:1.5;">
-                        Brave بلۆکی YouTube دەکات<br>
-                        <small style="opacity:0.7;">Brave blocks YouTube embeds</small>
-                    </p>
-                    <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank"
-                       style="background:#ff0000; color:white; padding:14px 28px; border-radius:8px; text-decoration:none; font-weight:600; display:flex; align-items:center; gap:10px; font-size:15px;">
-                        <i class="fab fa-youtube"></i> Watch on YouTube
-                    </a>
-                    <p style="color:rgba(255,255,255,0.5); margin:0; text-align:center; font-size:11px;">
-                        یان Shields بکوژێنە بۆ ئەم ماڵپەڕە
-                    </p>
-                </div>
-            `;
-        } else {
-            // For other browsers: simple iframe
-            const iframe = document.createElement('iframe');
-            iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
-            iframe.style.cssText = 'width:100%; height:100%; border:none;';
-            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-            iframe.allowFullscreen = true;
-            wrapper.appendChild(iframe);
-        }
+        // Simple iframe - works on most browsers
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+        iframe.style.cssText = 'width:100%; height:100%; border:none;';
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+        iframe.allowFullscreen = true;
+        wrapper.appendChild(iframe);
 
         // Close button
         const closeBtn = document.createElement('button');
