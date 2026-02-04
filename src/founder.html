@@ -553,9 +553,12 @@
 
 <section class="hero">
   <div class="hero-content">
-    <div class="avatar">
+    <div class="avatar" id="founderAvatar">
       <i class="fas fa-user"></i>
     </div>
+    <script>
+      (function(){var u=localStorage.getItem('founder_avatar_url');if(u){var a=document.getElementById('founderAvatar');var i=document.createElement('img');i.src=u;i.alt='سامان عبدالرحمن';while(a.firstChild)a.removeChild(a.firstChild);a.appendChild(i);}})();
+    </script>
     <h1>سامان عبدالرحمن</h1>
     <p class="hero-role">دامەزرێنەرێ تەفسیر کورد</p>
   </div>
@@ -681,7 +684,7 @@
     }
   });
 
-  // Load founder avatar from site_settings
+  // Refresh founder avatar cache from site_settings
   (async function() {
     try {
       var cfg = await fetch('/config').then(function(r) { return r.json(); });
@@ -691,16 +694,19 @@
       });
       var rows = await res.json();
       if (rows && rows[0] && rows[0].value) {
-        var avatar = document.querySelector('.avatar');
-        if (avatar) {
+        localStorage.setItem('founder_avatar_url', rows[0].value);
+        var avatar = document.getElementById('founderAvatar');
+        if (avatar && !avatar.querySelector('img')) {
           var img = document.createElement('img');
           img.src = rows[0].value;
           img.alt = 'سامان عبدالرحمن';
           while (avatar.firstChild) avatar.removeChild(avatar.firstChild);
           avatar.appendChild(img);
         }
+      } else {
+        localStorage.removeItem('founder_avatar_url');
       }
-    } catch (e) { /* keep icon fallback */ }
+    } catch (e) { /* keep current state */ }
   })();
 </script>
 </body>
