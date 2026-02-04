@@ -154,8 +154,33 @@
       font-size: 1.3rem;
       color: var(--text-secondary);
       max-width: 700px;
-      margin: 0 auto 48px;
+      margin: 0 auto 32px;
       line-height: 1.9;
+    }
+    .social-links {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 48px;
+    }
+    .social-link {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 1.1rem;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .social-link:hover {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+      transform: translateY(-4px);
     }
     .scroll-indicator {
       position: absolute;
@@ -642,6 +667,20 @@
     <span class="hero-label">دەربارەی مە</span>
     <h1>تەفسیر کورد</h1>
     <p class="hero-desc">پلاتفۆرمەکا کوردی بۆ خویندنا قورئانا پیرۆز ب تەفسیرا ساناهی و وەرگێڕانا کوردی یا ماموستا تەحسین ئیبراهیم دۆسکی.</p>
+    <div class="social-links">
+      <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener" class="social-link" aria-label="Instagram">
+        <i class="fab fa-instagram"></i>
+      </a>
+      <a href="https://www.youtube.com/@tafsirkurd" target="_blank" rel="noopener" class="social-link" aria-label="YouTube">
+        <i class="fab fa-youtube"></i>
+      </a>
+      <a href="https://t.me/tafsirkurd" target="_blank" rel="noopener" class="social-link" aria-label="Telegram">
+        <i class="fab fa-telegram"></i>
+      </a>
+      <a href="mailto:info@tafsirkurd.com" class="social-link" aria-label="Email">
+        <i class="fas fa-envelope"></i>
+      </a>
+    </div>
   </div>
   <div class="scroll-indicator">
     <span>بەر ب خوارڤە بچە</span>
