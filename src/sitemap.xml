@@ -8,19 +8,19 @@
   <!-- Homepage - Highest Priority -->
   <url>
     <loc>https://tafsirkurd.com/</loc>
-    <lastmod>2026-01-30</lastmod>
+    <lastmod>2026-02-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
       <image:loc>https://tafsirkurd.com/assets/images/logo.png</image:loc>
-      <image:title>Tafsir Kurd Logo - تەفسیر کورد</image:title>
+      <image:title>TafsirKurd - تەفسیر کورد</image:title>
     </image:image>
   </url>
 
-  <!-- Main Quran Reading Page - Very High Priority -->
+  <!-- Main Quran Reading Page -->
   <url>
-    <loc>https://tafsirkurd.com/Quran.html</loc>
-    <lastmod>2025-12-06</lastmod>
+    <loc>https://tafsirkurd.com/quran</loc>
+    <lastmod>2026-02-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <image:image>
@@ -29,71 +29,88 @@
     </image:image>
   </url>
 
-  <!-- Key User Features - High Priority for Sitelinks -->
+  <!-- IslamVoice - Video Content -->
   <url>
-    <loc>https://tafsirkurd.com/goals.html</loc>
-    <lastmod>2025-12-06</lastmod>
+    <loc>https://tafsirkurd.com/islamvoice</loc>
+    <lastmod>2026-02-04</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
 
+  <!-- About Page -->
   <url>
-    <loc>https://tafsirkurd.com/reading-goal.html</loc>
-    <lastmod>2025-12-06</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://tafsirkurd.com/bookmarks.html</loc>
-    <lastmod>2025-12-06</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://tafsirkurd.com/about.html</loc>
-    <lastmod>2026-01-30</lastmod>
+    <loc>https://tafsirkurd.com/about</loc>
+    <lastmod>2026-02-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
-  <!-- User Account Pages - Medium Priority -->
+  <!-- Founder Page -->
   <url>
-    <loc>https://tafsirkurd.com/profile.html</loc>
-    <lastmod>2025-12-06</lastmod>
+    <loc>https://tafsirkurd.com/founder</loc>
+    <lastmod>2026-02-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
+  <!-- Key User Features -->
   <url>
-    <loc>https://tafsirkurd.com/settings.html</loc>
-    <lastmod>2025-12-06</lastmod>
+    <loc>https://tafsirkurd.com/goals</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://tafsirkurd.com/reading-goal</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://tafsirkurd.com/bookmarks</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- User Account Pages -->
+  <url>
+    <loc>https://tafsirkurd.com/profile</loc>
+    <lastmod>2026-02-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
-  <!-- Authentication Pages - Low Priority -->
   <url>
-    <loc>https://tafsirkurd.com/login.html</loc>
-    <lastmod>2025-12-06</lastmod>
-    <changefreq>yearly</changefreq>
+    <loc>https://tafsirkurd.com/settings</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
 
-  <!-- Legal Pages - Low Priority -->
+  <!-- Authentication -->
   <url>
-    <loc>https://tafsirkurd.com/privacy-policy.html</loc>
-    <lastmod>2025-12-06</lastmod>
+    <loc>https://tafsirkurd.com/login</loc>
+    <lastmod>2026-02-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
+  <!-- Legal Pages -->
   <url>
-    <loc>https://tafsirkurd.com/terms-and-conditions.html</loc>
-    <lastmod>2025-12-06</lastmod>
+    <loc>https://tafsirkurd.com/privacy-policy</loc>
+    <lastmod>2026-02-04</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
+    <priority>0.2</priority>
+  </url>
+
+  <url>
+    <loc>https://tafsirkurd.com/terms-and-conditions</loc>
+    <lastmod>2026-02-04</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
   </url>
 
 </urlset>
