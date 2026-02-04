@@ -1322,33 +1322,6 @@
         };
         wrapper.appendChild(closeBtn);
 
-        // Detect Brave browser and show help notice after delay
-        const isBrave = navigator.brave && navigator.brave.isBrave;
-        if (isBrave) {
-            setTimeout(() => {
-                // Only show if wrapper still exists and no help notice yet
-                if (!wrapper.parentNode || wrapper.querySelector('.brave-help-notice')) return;
-
-                const helpNotice = document.createElement('div');
-                helpNotice.className = 'brave-help-notice';
-                helpNotice.style.cssText = 'position:absolute; bottom:10px; left:10px; right:50px; z-index:99; background:rgba(0,0,0,0.85); color:white; padding:10px 12px; border-radius:8px; font-size:12px; line-height:1.4; direction:ltr; text-align:left;';
-                helpNotice.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:16px;">🛡️</span>
-                        <div>
-                            <strong>Brave Shields may block YouTube</strong><br>
-                            <span style="opacity:0.8;">Click the lion icon → Shields DOWN</span>
-                        </div>
-                        <button onclick="this.parentNode.parentNode.remove()" style="margin-left:auto; background:none; border:none; color:white; cursor:pointer; font-size:14px;">✕</button>
-                    </div>
-                `;
-                wrapper.appendChild(helpNotice);
-
-                // Auto-hide after 10 seconds
-                setTimeout(() => helpNotice.remove(), 10000);
-            }, 3000);
-        }
-
         // Insert player where thumbnail was
         if (thumbnail) {
             thumbnail.parentNode.insertBefore(wrapper, thumbnail);

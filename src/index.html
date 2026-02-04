@@ -5798,18 +5798,18 @@ function animateCounters() {
 /* ========== Daily Content (Ayahs + Episodes) ========== */
 let _quranData = null;
 let _tafsirMap = null; // keyed by "surah:ayah"
-let _episodesCache = null;
+let _seriesCache = null;
 let _dailyTimerInterval = null;
 let _cardTimers = []; // each card has its own countdown
 let _currentAyahs = []; // stored ayah data for persistence
-let _currentEpisodes = []; // stored episode data for persistence
+let _currentSeries = []; // stored series data for persistence
 const DAILY_STORAGE_KEY = 'tafsirkurd_daily_cards';
 
 function saveDailyState() {
     try {
         const state = {
             ayahs: _currentAyahs,
-            episodes: _currentEpisodes,
+            series: _currentSeries,
             timers: _cardTimers,
             savedAt: Date.now()
         };
@@ -5949,23 +5949,22 @@ function renderDailyAyahs() {
     });
 }
 
-async function loadEpisodesCache() {
-    if (_episodesCache) return _episodesCache;
+async function loadSeriesCache() {
+    if (_seriesCache) return _seriesCache;
     if (!window.supabase || typeof window.supabase.from !== 'function') return [];
     try {
         const { data, error } = await window.supabase
-            .from('islamvoice_episodes')
-            .select('id, title, thumbnail_url, islamvoice_series(name_ku)')
-            .order('created_at', { ascending: false })
-            .limit(100);
+            .from('islamvoice_series')
+            .select('id, name_ku, description_ku, thumbnail_url, speaker')
+            .order('display_order', { ascending: true, nullsFirst: false })
+            .order('created_at', { ascending: false });
         if (!error && data && data.length > 0) {
-            // Only keep episodes that have a thumbnail
-            _episodesCache = data.filter(d => d.thumbnail_url && d.thumbnail_url.trim() !== '');
-            if (_episodesCache.length === 0) _episodesCache = data; // fallback: use all if none have thumbnails
-            return _episodesCache;
+            _seriesCache = data.filter(d => d.thumbnail_url && d.thumbnail_url.trim() !== '');
+            if (_seriesCache.length === 0) _seriesCache = data;
+            return _seriesCache;
         }
     } catch (e) {
-        console.warn('Episodes cache load failed:', e);
+        console.warn('Series cache load failed:', e);
     }
     return [];
 }
@@ -5987,12 +5986,9 @@ function isUserLoggedIn() {
     return false;
 }
 
-function buildEpisodeCard(ep, cardIndex) {
+function buildSeriesCard(s, cardIndex) {
     const card = createEl('a', 'daily-card daily-episode');
-    const dest = ep.id ? ('/islamvoice?episode=' + encodeURIComponent(ep.id)) : '/islamvoice';
-    card.href = dest;
-
-    // Login check happens on islamvoice page when trying to play, not here
+    card.href = '/islamvoice';
 
     const topRow = createEl('div', 'daily-card-top');
 
@@ -6010,8 +6006,8 @@ function buildEpisodeCard(ep, cardIndex) {
 
     const thumbWrap = createEl('div', 'daily-episode-thumb');
     const img = document.createElement('img');
-    img.src = ep.thumbnail_url || '';
-    img.alt = ep.title || '';
+    img.src = s.thumbnail_url || '';
+    img.alt = s.name_ku || '';
     img.loading = 'lazy';
     thumbWrap.appendChild(img);
 
@@ -6019,34 +6015,34 @@ function buildEpisodeCard(ep, cardIndex) {
     playBtn.appendChild(createEl('i', 'fas fa-play'));
     thumbWrap.appendChild(playBtn);
 
-    const title = createEl('h3', 'daily-episode-title', ep.title || 'ئەپیزۆد');
-    const series = createEl('p', 'daily-episode-series', ep.islamvoice_series?.name_ku || '');
+    const title = createEl('h3', 'daily-episode-title', s.name_ku || 'زنجیرە');
+    const speaker = createEl('p', 'daily-episode-series', s.speaker || '');
 
-    card.append(topRow, thumbWrap, title, series);
+    card.append(topRow, thumbWrap, title, speaker);
     return card;
 }
 
-function renderDailyEpisodes() {
+function renderDailySeries() {
     const grid = document.getElementById('dailyGrid');
     if (!grid) return;
 
     grid.querySelectorAll('.daily-episode').forEach(el => el.remove());
 
-    if (!_episodesCache || _episodesCache.length === 0) return;
+    if (!_seriesCache || _seriesCache.length === 0) return;
 
-    // Use saved episodes if available, otherwise pick new random ones
+    // Use saved series if available, otherwise pick new random ones
     let picked;
-    if (_currentEpisodes.length === 3) {
-        picked = _currentEpisodes;
+    if (_currentSeries.length === 3) {
+        picked = _currentSeries;
     } else {
-        picked = shuffleArray(_episodesCache).slice(0, 3);
-        _currentEpisodes = picked;
+        picked = shuffleArray(_seriesCache).slice(0, 3);
+        _currentSeries = picked;
         saveDailyState();
     }
 
-    picked.forEach((ep, i) => {
+    picked.forEach((s, i) => {
         const cardIndex = 3 + i; // indices 3,4,5 (ayahs are 0,1,2)
-        grid.appendChild(buildEpisodeCard(ep, cardIndex));
+        grid.appendChild(buildSeriesCard(s, cardIndex));
     });
 }
 
@@ -6105,13 +6101,13 @@ function refreshSingleCard(cardIndex) {
                     newCard.style.transform = 'translateY(0)';
                 });
             }
-        } else if (!isAyah && _episodesCache && _episodesCache.length > 0) {
-            const ep = shuffleArray(_episodesCache)[0];
-            // Update stored episode data
-            _currentEpisodes[localIdx] = ep;
+        } else if (!isAyah && _seriesCache && _seriesCache.length > 0) {
+            const s = shuffleArray(_seriesCache)[0];
+            // Update stored series data
+            _currentSeries[localIdx] = s;
             saveDailyState();
 
-            const newCard = buildEpisodeCard(ep, cardIndex);
+            const newCard = buildSeriesCard(s, cardIndex);
             newCard.style.opacity = '0';
             newCard.style.transform = 'translateY(20px)';
             oldCard.replaceWith(newCard);
@@ -6130,7 +6126,7 @@ function initCardTimers() {
         // Restore saved state
         _cardTimers = saved.timers;
         _currentAyahs = saved.ayahs || [];
-        _currentEpisodes = saved.episodes || [];
+        _currentSeries = saved.series || [];
     } else {
         // Generate fresh timers (3-5 min each)
         _cardTimers = [];
@@ -6179,11 +6175,11 @@ async function initDailyContent() {
     renderDailyAyahs();
 
     try {
-        await loadEpisodesCache();
+        await loadSeriesCache();
     } catch (e) {
-        console.warn('Episodes load failed:', e);
+        console.warn('Series load failed:', e);
     }
-    renderDailyEpisodes();
+    renderDailySeries();
 
     startDailyTimer();
 }
