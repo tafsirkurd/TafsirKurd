@@ -10,6 +10,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
     <link rel="stylesheet" href="/css/admin-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
     <style>
         .images-grid {
             display: grid;
@@ -101,8 +103,67 @@
             font-weight: 600;
             color: var(--text-primary);
         }
+        /* Crop Modal */
+        .crop-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .crop-modal-content {
+            background: var(--bg-surface);
+            border-radius: 12px;
+            max-width: 720px;
+            width: 94%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        .crop-modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .crop-modal-header h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .crop-dimensions {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-family: monospace;
+        }
+        .crop-preview {
+            flex: 1;
+            overflow: hidden;
+            background: #1a1a1a;
+            min-height: 300px;
+            max-height: 60vh;
+        }
+        .crop-preview img {
+            display: block;
+            max-width: 100%;
+        }
+        .crop-actions {
+            padding: 14px 20px;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
         @media (max-width: 768px) {
             .images-grid { grid-template-columns: 1fr; }
+            .crop-modal-content { width: 98%; max-height: 95vh; }
+            .crop-preview { min-height: 200px; }
         }
     </style>
 
@@ -266,6 +327,22 @@
                 </div>
             </div>
         </main>
+
+        <div class="crop-modal" id="cropModal" style="display:none">
+            <div class="crop-modal-content">
+                <div class="crop-modal-header">
+                    <h3 id="cropTitle">Crop Image</h3>
+                    <span class="crop-dimensions" id="cropDimensions"></span>
+                </div>
+                <div class="crop-preview">
+                    <img id="cropImage" src="" alt="Crop preview">
+                </div>
+                <div class="crop-actions">
+                    <button class="btn btn-secondary" onclick="cancelCrop()">Cancel</button>
+                    <button class="btn btn-primary" id="cropSaveBtn" onclick="confirmCrop()">Crop & Save</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="/utils/admin-session-timer-ui.js?v=4"></script>
@@ -346,39 +423,115 @@
             }
         }
 
+        // Cropper state
+        let cropper = null;
+        let currentCropKey = null;
+
+        const ASPECT_RATIOS = {
+            founder_avatar_url: 1,
+            hero_card_quran_image: 16 / 9,
+            hero_card_islamvoice_image: 16 / 9
+        };
+
+        const CROP_TITLES = {
+            founder_avatar_url: 'Crop Founder Avatar (1:1)',
+            hero_card_quran_image: 'Crop Quran Card (16:9)',
+            hero_card_islamvoice_image: 'Crop IslamVoice Card (16:9)'
+        };
+
         function pickFile(key) {
             document.getElementById('file-' + key).click();
         }
 
-        async function handleUpload(key, input) {
+        function handleUpload(key, input) {
             const file = input.files[0];
             if (!file || !supabase) return;
 
-            const ext = file.name.split('.').pop().toLowerCase();
-            const fileName = key + '-' + Date.now() + '.' + ext;
-            const filePath = 'site-images/' + fileName;
+            currentCropKey = key;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const cropImage = document.getElementById('cropImage');
+                cropImage.src = e.target.result;
+
+                document.getElementById('cropTitle').textContent = CROP_TITLES[key] || 'Crop Image';
+                document.getElementById('cropDimensions').textContent = '';
+                document.getElementById('cropModal').style.display = 'flex';
+
+                // Destroy previous cropper if any
+                if (cropper) { cropper.destroy(); cropper = null; }
+
+                cropper = new Cropper(cropImage, {
+                    aspectRatio: ASPECT_RATIOS[key] || NaN,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 0.85,
+                    responsive: true,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: true,
+                    background: true,
+                    crop: function(event) {
+                        var w = Math.round(event.detail.width);
+                        var h = Math.round(event.detail.height);
+                        document.getElementById('cropDimensions').textContent = w + ' × ' + h + ' px';
+                    }
+                });
+            };
+            reader.readAsDataURL(file);
+            input.value = '';
+        }
+
+        async function confirmCrop() {
+            if (!cropper || !currentCropKey || !supabase) return;
+
+            var btn = document.getElementById('cropSaveBtn');
+            btn.textContent = 'Uploading...';
+            btn.disabled = true;
 
             try {
-                const { error: uploadError } = await supabase.storage
+                var canvas = cropper.getCroppedCanvas({ imageSmoothingQuality: 'high' });
+                var blob = await new Promise(function(resolve) {
+                    canvas.toBlob(resolve, 'image/jpeg', 0.9);
+                });
+
+                var fileName = currentCropKey + '-' + Date.now() + '.jpg';
+                var filePath = 'site-images/' + fileName;
+
+                var uploadResult = await supabase.storage
                     .from('site-images')
-                    .upload(filePath, file, { cacheControl: '3600', upsert: true });
+                    .upload(filePath, blob, { contentType: 'image/jpeg', cacheControl: '3600', upsert: true });
 
-                if (uploadError) throw uploadError;
+                if (uploadResult.error) throw uploadResult.error;
 
-                const { data: urlData } = supabase.storage
+                var urlData = supabase.storage
                     .from('site-images')
                     .getPublicUrl(filePath);
 
-                const url = urlData.publicUrl;
-                document.getElementById('url-' + key).value = url;
-                updatePreview(key, url);
-                await saveToDb(key, url);
-                alert('Image uploaded and saved!');
+                var url = urlData.data.publicUrl;
+                document.getElementById('url-' + currentCropKey).value = url;
+                updatePreview(currentCropKey, url);
+                await saveToDb(currentCropKey, url);
+
+                closeCropModal();
+                alert('Image cropped and saved!');
             } catch (e) {
                 console.error('Upload failed:', e);
-                alert('Upload failed: ' + e.message + '\n\nYou can paste an image URL directly instead.');
+                alert('Upload failed: ' + e.message);
+            } finally {
+                btn.textContent = 'Crop & Save';
+                btn.disabled = false;
             }
-            input.value = '';
+        }
+
+        function cancelCrop() {
+            closeCropModal();
+        }
+
+        function closeCropModal() {
+            document.getElementById('cropModal').style.display = 'none';
+            if (cropper) { cropper.destroy(); cropper = null; }
+            currentCropKey = null;
         }
 
         async function saveImage(key) {
