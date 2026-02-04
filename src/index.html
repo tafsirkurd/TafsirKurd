@@ -6375,6 +6375,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         await loadWebsiteContent();
 
+        // Load founder avatar into nav dropdown
+        try {
+            if (window.supabase) {
+                var avatarResult = await window.supabase
+                    .from('site_settings')
+                    .select('value')
+                    .eq('key', 'founder_avatar_url')
+                    .single();
+                if (!avatarResult.error && avatarResult.data && avatarResult.data.value) {
+                    var avatarEl = document.querySelector('.nav-dropdown-item[href="/founder"] .nav-dropdown-avatar');
+                    if (avatarEl) {
+                        var img = document.createElement('img');
+                        img.src = avatarResult.data.value;
+                        img.alt = 'سامان عبدالرحمن';
+                        img.className = 'nav-dropdown-img';
+                        while (avatarEl.firstChild) avatarEl.removeChild(avatarEl.firstChild);
+                        avatarEl.appendChild(img);
+                    }
+                }
+            }
+        } catch (e) { /* keep icon fallback */ }
+
         // Load background images from database
         await loadBackgroundImagesFromDB();
 
