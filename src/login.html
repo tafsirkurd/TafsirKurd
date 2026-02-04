@@ -1694,6 +1694,7 @@ Press Ctrl+Shift+C to copy this report
 
                 // Initialize Supabase client
                 supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                window.supabaseClient = supabaseClient;
                 console.log('✅ Supabase initialized securely');
                 return true;
 
