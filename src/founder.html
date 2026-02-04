@@ -143,6 +143,12 @@
       margin: 0 auto 40px;
       border: 4px solid var(--bg);
       box-shadow: 0 0 0 1px var(--border), 0 40px 80px -20px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     [data-theme="dark"] .avatar {
       box-shadow: 0 0 0 1px var(--border), 0 40px 80px -20px rgba(255,255,255,0.1);
@@ -674,6 +680,28 @@
       navbar.classList.remove('scrolled');
     }
   });
+
+  // Load founder avatar from site_settings
+  (async function() {
+    try {
+      var cfg = await fetch('/config').then(function(r) { return r.json(); });
+      if (!cfg.supabaseUrl || !cfg.supabaseKey) return;
+      var res = await fetch(cfg.supabaseUrl + '/rest/v1/site_settings?key=eq.founder_avatar_url&select=value', {
+        headers: { 'apikey': cfg.supabaseKey, 'Authorization': 'Bearer ' + cfg.supabaseKey }
+      });
+      var rows = await res.json();
+      if (rows && rows[0] && rows[0].value) {
+        var avatar = document.querySelector('.avatar');
+        if (avatar) {
+          var img = document.createElement('img');
+          img.src = rows[0].value;
+          img.alt = 'سامان عبدالرحمن';
+          while (avatar.firstChild) avatar.removeChild(avatar.firstChild);
+          avatar.appendChild(img);
+        }
+      }
+    } catch (e) { /* keep icon fallback */ }
+  })();
 </script>
 </body>
 </html>
