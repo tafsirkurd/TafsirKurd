@@ -3,9 +3,7 @@
 
 User-agent: *
 Allow: /
+Disallow: /admin-*
 
 # Sitemap location
 Sitemap: https://tafsirkurd.com/sitemap.xml
-
-# Crawl-delay (optional - helps prevent server overload)
-Crawl-delay: 1
