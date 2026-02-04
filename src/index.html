@@ -4375,7 +4375,7 @@ window.addEventListener('error', function(e) {
                         </div>
                     </a>
                     <a href="/founder" class="nav-dropdown-item">
-                        <div class="nav-dropdown-avatar nav-dropdown-placeholder">
+                        <div class="nav-dropdown-avatar nav-dropdown-placeholder" id="founderNavAvatar">
                             <i class="fas fa-user"></i>
                         </div>
                         <div class="nav-dropdown-info">
@@ -4383,6 +4383,7 @@ window.addEventListener('error', function(e) {
                             <span class="nav-dropdown-role">دامەزرێنەر</span>
                         </div>
                     </a>
+                    <script>(function(){var u=localStorage.getItem('founder_avatar_url');if(u){var a=document.getElementById('founderNavAvatar');var i=document.createElement('img');i.src=u;i.alt='سامان عبدالرحمن';i.className='nav-dropdown-img';while(a.firstChild)a.removeChild(a.firstChild);a.appendChild(i);}})()</script>
                 </div>
             </div>
             <a href="#contact" class="nav-link" data-scroll="contact">
@@ -6375,7 +6376,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         await loadWebsiteContent();
 
-        // Load founder avatar into nav dropdown
+        // Refresh founder avatar cache
         try {
             if (window.supabase) {
                 var avatarResult = await window.supabase
@@ -6384,8 +6385,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     .eq('key', 'founder_avatar_url')
                     .single();
                 if (!avatarResult.error && avatarResult.data && avatarResult.data.value) {
-                    var avatarEl = document.querySelector('.nav-dropdown-item[href="/founder"] .nav-dropdown-avatar');
-                    if (avatarEl) {
+                    localStorage.setItem('founder_avatar_url', avatarResult.data.value);
+                    var avatarEl = document.getElementById('founderNavAvatar');
+                    if (avatarEl && !avatarEl.querySelector('img')) {
                         var img = document.createElement('img');
                         img.src = avatarResult.data.value;
                         img.alt = 'سامان عبدالرحمن';
@@ -6393,9 +6395,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         while (avatarEl.firstChild) avatarEl.removeChild(avatarEl.firstChild);
                         avatarEl.appendChild(img);
                     }
+                } else {
+                    localStorage.removeItem('founder_avatar_url');
                 }
             }
-        } catch (e) { /* keep icon fallback */ }
+        } catch (e) { /* keep current state */ }
 
         // Load background images from database
         await loadBackgroundImagesFromDB();
