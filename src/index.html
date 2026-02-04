@@ -4861,7 +4861,8 @@ async function initHeroCanvas() {
     if (!header) return;
 
     let w, h, elements = [], mouse = { x: -1000, y: -1000 };
-    const ELEMENT_COUNT = 50;
+    const isMobile = window.innerWidth <= 768;
+    const ELEMENT_COUNT = isMobile ? 20 : 50;
     const MOUSE_RADIUS = 150;
     let currentTheme = 'islamic'; // Default theme
     let logoImage = null;
@@ -5157,8 +5158,13 @@ async function initHeroCanvas() {
             // Theme-specific sizing
             switch(currentTheme) {
                 case 'islamic':
-                    this.size = this.type === 3 ? Math.random() * 2.5 + 1 : Math.random() * 12 + 8;
-                    this.baseOpacity = this.type === 3 ? Math.random() * 0.5 + 0.3 : Math.random() * 0.35 + 0.15;
+                    if (isMobile) {
+                        this.size = this.type === 3 ? Math.random() * 1.5 + 0.5 : Math.random() * 8 + 5;
+                        this.baseOpacity = this.type === 3 ? Math.random() * 0.3 + 0.15 : Math.random() * 0.2 + 0.08;
+                    } else {
+                        this.size = this.type === 3 ? Math.random() * 3 + 1.5 : Math.random() * 16 + 10;
+                        this.baseOpacity = this.type === 3 ? Math.random() * 0.5 + 0.3 : Math.random() * 0.4 + 0.2;
+                    }
                     break;
                 case 'ramadan':
                     this.size = Math.random() * 20 + 15;
