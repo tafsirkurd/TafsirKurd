@@ -105,17 +105,41 @@
             .images-grid { grid-template-columns: 1fr; }
         }
     </style>
+
+    <style id="early-sidebar-hide">
+        /* Hide sidebar nav by default until role is confirmed */
+        .sidebar-nav { visibility: hidden; }
+    </style>
+    <script>
+        // Early role-based sidebar hiding - runs before body renders
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+
+            if (role === 'super_admin') {
+                css = '.sidebar-nav{visibility:visible}';
+            } else if (role === 'analyst') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="backgrounds"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'editor') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            }
+            if (role) {
+                style.textContent = css;
+            }
+        })();
+    </script>
 </head>
 <body>
-    <div class="admin-layout">
+    <div class="dashboard-container">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-brand">
-                    <img src="/assets/images/logo.png" alt="TafsirKurd" class="sidebar-logo">
-                    <span class="sidebar-brand-text">TafsirKurd</span>
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
                 </div>
                 <button class="sidebar-toggle" id="menu-toggle">
-                    <i data-lucide="panel-left-close"></i>
+                    <i data-lucide="chevron-left"></i>
                 </button>
             </div>
             <nav class="sidebar-nav">
