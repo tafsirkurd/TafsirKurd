@@ -4408,7 +4408,7 @@ window.addEventListener('error', function(e) {
         <div class="hero-cards">
             <a href="/quran" class="hero-card">
                 <div class="hero-card-glow"></div>
-                <div class="hero-card-img">
+                <div class="hero-card-img" id="quranCardImg">
                     <div class="hero-card-placeholder">
                         <i class="fas fa-book-open"></i>
                     </div>
@@ -4423,7 +4423,7 @@ window.addEventListener('error', function(e) {
             </a>
             <a href="/islamvoice" class="hero-card">
                 <div class="hero-card-glow"></div>
-                <div class="hero-card-img">
+                <div class="hero-card-img" id="islamvoiceCardImg">
                     <div class="hero-card-placeholder">
                         <i class="fas fa-play"></i>
                     </div>
@@ -4793,6 +4793,47 @@ async function loadBackgroundImagesFromDB() {
         }
     } catch (error) {
         console.error('❌ [BG] Error loading background images:', error);
+    }
+}
+
+// Load hero card images from site_images table
+async function loadHeroCardImages() {
+    try {
+        if (!window.supabase) return;
+
+        const { data, error } = await window.supabase
+            .from('site_images')
+            .select('key, value')
+            .in('key', ['hero_card_quran_image', 'hero_card_islamvoice_image']);
+
+        if (error) throw error;
+
+        if (data) {
+            data.forEach(item => {
+                if (item.value) {
+                    const img = document.createElement('img');
+                    img.src = item.value;
+                    img.alt = '';
+                    img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+
+                    if (item.key === 'hero_card_quran_image') {
+                        const container = document.getElementById('quranCardImg');
+                        if (container) {
+                            container.textContent = '';
+                            container.appendChild(img);
+                        }
+                    } else if (item.key === 'hero_card_islamvoice_image') {
+                        const container = document.getElementById('islamvoiceCardImg');
+                        if (container) {
+                            container.textContent = '';
+                            container.appendChild(img);
+                        }
+                    }
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error loading hero card images:', error);
     }
 }
 
@@ -6403,6 +6444,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Load background images from database
         await loadBackgroundImagesFromDB();
+
+        // Load hero card images from database
+        await loadHeroCardImages();
 
         // Wait for background image to load, then hide preloader
         await setInitialBackground();

@@ -362,6 +362,45 @@
                             <input type="file" class="upload-input" id="file-login_hero_islamvoice_image" accept="image/*" onchange="handleUpload('login_hero_islamvoice_image', this)">
                         </div>
                     </div>
+                <h3 class="section-divider">IslamVoice Page</h3>
+                <div class="images-grid">
+                    <div class="image-card" data-key="islamvoice_hero_image">
+                        <div class="image-card-preview" id="preview-islamvoice_hero_image">
+                            <div class="placeholder"><i data-lucide="play"></i></div>
+                        </div>
+                        <div class="image-card-body">
+                            <div class="image-card-title">IslamVoice Hero Image</div>
+                            <div class="image-card-desc">Hero/banner image for the IslamVoice page header</div>
+                            <span class="status-badge empty" id="status-islamvoice_hero_image">Not Set</span>
+                            <input type="url" class="image-card-url" id="url-islamvoice_hero_image" placeholder="Paste image URL...">
+                            <div class="image-card-actions">
+                                <button class="btn btn-secondary" onclick="pickFile('islamvoice_hero_image')">Upload</button>
+                                <button class="btn btn-primary" onclick="saveImage('islamvoice_hero_image')">Save</button>
+                                <button class="btn btn-danger" onclick="removeImage('islamvoice_hero_image')" style="flex:0;padding:8px 12px;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                            </div>
+                            <input type="file" class="upload-input" id="file-islamvoice_hero_image" accept="image/*" onchange="handleUpload('islamvoice_hero_image', this)">
+                        </div>
+                    </div>
+
+                    <div class="image-card" data-key="islamvoice_featured_image">
+                        <div class="image-card-preview" id="preview-islamvoice_featured_image">
+                            <div class="placeholder"><i data-lucide="star"></i></div>
+                        </div>
+                        <div class="image-card-body">
+                            <div class="image-card-title">IslamVoice Featured Image</div>
+                            <div class="image-card-desc">Featured/promotional image for IslamVoice section</div>
+                            <span class="status-badge empty" id="status-islamvoice_featured_image">Not Set</span>
+                            <input type="url" class="image-card-url" id="url-islamvoice_featured_image" placeholder="Paste image URL...">
+                            <div class="image-card-actions">
+                                <button class="btn btn-secondary" onclick="pickFile('islamvoice_featured_image')">Upload</button>
+                                <button class="btn btn-primary" onclick="saveImage('islamvoice_featured_image')">Save</button>
+                                <button class="btn btn-danger" onclick="removeImage('islamvoice_featured_image')" style="flex:0;padding:8px 12px;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                            </div>
+                            <input type="file" class="upload-input" id="file-islamvoice_featured_image" accept="image/*" onchange="handleUpload('islamvoice_featured_image', this)">
+                        </div>
+                    </div>
+                </div>
+
                 <h3 class="section-divider">About Page</h3>
                 <div class="images-grid">
                     <div class="image-card" data-key="tafsir_book_image">
@@ -409,7 +448,7 @@
     <script>
         lucide.createIcons();
 
-        const IMAGE_KEYS = ['founder_avatar_url', 'hero_card_quran_image', 'hero_card_islamvoice_image', 'login_hero_quran_image', 'login_hero_islamvoice_image', 'tafsir_book_image'];
+        const IMAGE_KEYS = ['founder_avatar_url', 'hero_card_quran_image', 'hero_card_islamvoice_image', 'login_hero_quran_image', 'login_hero_islamvoice_image', 'islamvoice_hero_image', 'islamvoice_featured_image', 'tafsir_book_image'];
         let supabase = null;
 
         (async () => {
