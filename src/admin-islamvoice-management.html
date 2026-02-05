@@ -557,6 +557,9 @@
                     <button class="btn" onclick="openYouTubeImportModal()" style="font-size: 12px; padding: 6px 12px; background: #ff0000; color: white;">
                         <i class="fab fa-youtube"></i> YouTube Import
                     </button>
+                    <button class="btn" onclick="syncAllPlaylists()" id="syncPlaylistsBtn" style="font-size: 12px; padding: 6px 12px; background: #1a1a2e; color: #00d4ff; border: 1px solid #00d4ff;">
+                        <i class="fas fa-sync-alt"></i> Sync Playlists
+                    </button>
                     <button class="btn btn-secondary" onclick="updateYouTubeDurations()" id="updateDurationsBtn" style="font-size: 12px; padding: 6px 12px;">
                         <i class="fas fa-clock"></i> Fix YT Durations
                     </button>
@@ -1024,6 +1027,8 @@
                 loadDrafts(); // Load drafts count for badge
                 // Auto-fix YouTube durations in background
                 setTimeout(() => autoFixYouTubeDurations(), 2000);
+                // Auto-sync YouTube playlists in background
+                setTimeout(() => autoSyncPlaylists(), 4000);
             }
         })();
 
@@ -1199,7 +1204,10 @@
                             ${s.thumbnail_url && s.thumbnail_url !== 'undefined' ? `<img src="${s.thumbnail_url}" alt="${s.name_ku}">` : '<i data-lucide="image"></i>'}
                         </div>
                         <div class="series-card-body" onclick="viewSeriesEpisodes('${s.id}', '${s.name_ku}')">
-                            <div class="series-card-title">${s.name_ku}</div>
+                            <div class="series-card-title">
+                                ${s.name_ku}
+                                ${s.youtube_playlist_id ? '<span style="display:inline-flex;align-items:center;gap:3px;background:#ff000018;color:#ff0000;font-size:10px;padding:2px 6px;border-radius:8px;margin-right:6px;font-weight:500;vertical-align:middle;"><i class="fab fa-youtube" style="font-size:10px;"></i> sync</span>' : ''}
+                            </div>
                             <div class="series-card-meta">
                                 <span>${s.speaker || ''}</span>
                                 <div>
@@ -3091,6 +3099,7 @@
                     if (playlistInfo.items && playlistInfo.items[0]) {
                         const pl = playlistInfo.items[0].snippet;
                         window.youtubePlaylistData = {
+                            playlistId: playlistId,
                             title: pl.title,
                             description: pl.description,
                             thumbnail: pl.thumbnails?.maxres?.url || pl.thumbnails?.high?.url || pl.thumbnails?.standard?.url || pl.thumbnails?.medium?.url
@@ -3311,6 +3320,19 @@
                     }
                 }
 
+                // Save YouTube playlist ID to series for auto-sync
+                if (window.youtubePlaylistData?.playlistId) {
+                    try {
+                        await supabase
+                            .from('islamvoice_series')
+                            .update({ youtube_playlist_id: window.youtubePlaylistData.playlistId })
+                            .eq('id', seriesId);
+                        console.log('✅ Playlist ID saved for auto-sync:', window.youtubePlaylistData.playlistId);
+                    } catch (err) {
+                        console.error('Failed to save playlist ID:', err);
+                    }
+                }
+
                 showNotification(`Imported ${imported} episodes!${errors > 0 ? ` (${errors} errors)` : ''}`, imported > 0 ? 'success' : 'error');
                 closeYouTubeImportModal();
                 loadAllEpisodes();
@@ -3495,6 +3517,79 @@
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-clock"></i> Fix YT Durations';
             }
+        }
+
+        // ========== YouTube Playlist Auto-Sync ==========
+
+        async function syncAllPlaylists(silent = false) {
+            const btn = document.getElementById('syncPlaylistsBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+            }
+
+            try {
+                const token = localStorage.getItem('admin_token');
+                if (!token) {
+                    if (!silent) showNotification('Not authenticated', 'error');
+                    return;
+                }
+
+                const res = await fetch('/sync-playlists', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({})
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.error || 'Sync failed');
+                }
+
+                if (data.totalNewEpisodes > 0) {
+                    // Build details of what was synced
+                    const details = data.synced
+                        .filter(s => s.newEpisodes > 0)
+                        .map(s => `${s.seriesName}: +${s.newEpisodes}`)
+                        .join(', ');
+
+                    showNotification(`${data.totalNewEpisodes} new episode${data.totalNewEpisodes !== 1 ? 's' : ''} synced! (${details})`, 'success');
+
+                    // Refresh data
+                    loadAllEpisodes();
+                    loadAllSeries();
+                } else if (!silent) {
+                    showNotification('All playlists are up to date', 'success');
+                }
+
+                // Log any errors
+                const errors = data.synced?.filter(s => s.error);
+                if (errors?.length > 0) {
+                    console.warn('Sync errors:', errors);
+                    if (!silent) {
+                        showNotification(`${errors.length} playlist${errors.length !== 1 ? 's' : ''} had errors`, 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Sync playlists error:', error);
+                if (!silent) {
+                    showNotification(error.message || 'Failed to sync playlists', 'error');
+                }
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sync-alt"></i> Sync Playlists';
+                }
+            }
+        }
+
+        async function autoSyncPlaylists() {
+            console.log('🔄 Auto-syncing YouTube playlists...');
+            await syncAllPlaylists(true);
         }
     </script>
 </body>
