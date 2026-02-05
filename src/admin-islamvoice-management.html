@@ -2046,10 +2046,10 @@
             try {
                 console.log('Deleting episode:', id);
 
-                // First verify the episode exists
+                // First fetch the episode details (need video_url and series_id for sync exclusion)
                 const { data: existing, error: checkError } = await supabase
                     .from('islamvoice_episodes')
-                    .select('id')
+                    .select('id, video_url, video_type, series_id')
                     .eq('id', id)
                     .single();
 
@@ -2058,6 +2058,31 @@
                     alert('Episode not found or already deleted');
                     loadAllEpisodes();
                     return;
+                }
+
+                // If YouTube episode in a synced series, add to exclusion list so sync won't re-add it
+                if (existing.video_type === 'youtube' && existing.video_url && existing.series_id) {
+                    try {
+                        const { data: series } = await supabase
+                            .from('islamvoice_series')
+                            .select('youtube_playlist_id, sync_excluded_video_ids')
+                            .eq('id', existing.series_id)
+                            .single();
+
+                        if (series?.youtube_playlist_id) {
+                            const excluded = JSON.parse(series.sync_excluded_video_ids || '[]');
+                            if (!excluded.includes(existing.video_url)) {
+                                excluded.push(existing.video_url);
+                                await supabase
+                                    .from('islamvoice_series')
+                                    .update({ sync_excluded_video_ids: JSON.stringify(excluded) })
+                                    .eq('id', existing.series_id);
+                                console.log('✅ Added to sync exclusion list:', existing.video_url);
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Failed to update sync exclusion list:', e);
+                    }
                 }
 
                 // Now delete it
