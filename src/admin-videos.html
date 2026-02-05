@@ -217,7 +217,7 @@
             if (role === 'super_admin') {
                 css = '.sidebar-nav{visibility:visible}';
             } else if (role === 'analyst') {
-                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="backgrounds"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
             } else if (role === 'editor') {
                 css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
             }
@@ -268,10 +268,6 @@
                     <a href="/admin-islamvoice-management.html" class="nav-item">
                         <i data-lucide="radio"></i>
                         <span class="nav-item-label">IslamVoice</span>
-                    </a>
-                    <a href="/admin-backgrounds.html" class="nav-item">
-                        <i data-lucide="image"></i>
-                        <span class="nav-item-label">Backgrounds</span>
                     </a>
                     <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
                     <a href="/admin-translations.html" class="nav-item">
@@ -373,25 +369,11 @@
 
             <div class="content-area">
                 <div class="page-header">
-                    <h1 class="page-title">Video Management</h1>
+                    <h1 class="page-title">Featured Videos</h1>
                     <div class="page-actions">
-                        <div class="view-toggle">
-                            <button class="view-toggle-btn active">
-                                <i data-lucide="grid"></i>
-                                <span>Grid</span>
-                            </button>
-                            <button class="view-toggle-btn">
-                                <i data-lucide="list"></i>
-                                <span>List</span>
-                            </button>
-                        </div>
-                        <button class="btn btn-secondary">
-                            <i data-lucide="download"></i>
-                            Export
-                        </button>
-                        <button class="btn btn-primary">
-                            <i data-lucide="upload"></i>
-                            Upload Video
+                        <button class="btn btn-primary" onclick="showAddVideoModal()">
+                            <i data-lucide="plus"></i>
+                            Add Video
                         </button>
                     </div>
                 </div>
@@ -420,220 +402,33 @@
                 </div>
 
                 <!-- VIDEO GRID -->
-                <div class="video-grid">
-                    <div class="video-card">
-                        <div class="video-thumbnail">
-                            <div class="video-placeholder">
-                                <i data-lucide="video" style="width: 48px; height: 48px;"></i>
-                            </div>
-                            <div class="video-duration">12:34</div>
-                        </div>
-                        <div class="video-card-body">
-                            <div class="video-card-title">Introduction to Surah Al-Fatiha - Episode 1</div>
-                            <div class="video-card-meta">
-                                <div class="video-card-stat">
-                                    <i data-lucide="eye"></i>
-                                    <span>12.4K</span>
-                                </div>
-                                <div class="video-card-stat">
-                                    <i data-lucide="clock"></i>
-                                    <span>2 days ago</span>
-                                </div>
-                            </div>
-                            <div class="video-card-footer">
-                                <span class="badge badge-success">Published</span>
-                                <div class="video-card-actions">
-                                    <button class="video-card-btn" title="Edit">
-                                        <i data-lucide="edit-2"></i>
-                                    </button>
-                                    <button class="video-card-btn" title="Analytics">
-                                        <i data-lucide="bar-chart"></i>
-                                    </button>
-                                    <button class="video-card-btn" title="Delete">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                <div class="video-grid" id="video-grid">
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-tertiary);">
+                        <div style="width: 40px; height: 40px; border: 3px solid var(--border-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px;"></div>
+                        <p style="font-size: 14px;">Loading videos...</p>
                     </div>
+                </div>
 
-                    <div class="video-card">
-                        <div class="video-thumbnail">
-                            <div class="video-placeholder">
-                                <i data-lucide="video" style="width: 48px; height: 48px;"></i>
-                            </div>
-                            <div class="video-duration">18:22</div>
+                <!-- Add/Edit Modal -->
+                <div class="modal" id="video-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+                    <div style="background:var(--bg-surface); border-radius:12px; padding:24px; width:90%; max-width:480px; border:1px solid var(--border-light);">
+                        <h3 style="margin:0 0 16px; color:var(--text-primary);" id="video-modal-title">Add Video</h3>
+                        <input type="hidden" id="video-edit-id">
+                        <div style="margin-bottom:12px;">
+                            <label style="display:block; font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:4px;">Title</label>
+                            <input type="text" id="video-title-input" placeholder="Video title..." style="width:100%; padding:8px 12px; border:1px solid var(--border-medium); border-radius:6px; background:var(--bg-app); color:var(--text-primary); font-size:14px; box-sizing:border-box;">
                         </div>
-                        <div class="video-card-body">
-                            <div class="video-card-title">Understanding Tawheed - Complete Guide</div>
-                            <div class="video-card-meta">
-                                <div class="video-card-stat">
-                                    <i data-lucide="eye"></i>
-                                    <span>8.7K</span>
-                                </div>
-                                <div class="video-card-stat">
-                                    <i data-lucide="clock"></i>
-                                    <span>5 days ago</span>
-                                </div>
-                            </div>
-                            <div class="video-card-footer">
-                                <span class="badge badge-success">Published</span>
-                                <div class="video-card-actions">
-                                    <button class="video-card-btn" title="Edit">
-                                        <i data-lucide="edit-2"></i>
-                                    </button>
-                                    <button class="video-card-btn" title="Analytics">
-                                        <i data-lucide="bar-chart"></i>
-                                    </button>
-                                    <button class="video-card-btn" title="Delete">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
-                                </div>
-                            </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="display:block; font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:4px;">Video URL (Instagram/YouTube)</label>
+                            <input type="text" id="video-url-input" placeholder="https://www.instagram.com/reel/..." dir="ltr" style="width:100%; padding:8px 12px; border:1px solid var(--border-medium); border-radius:6px; background:var(--bg-app); color:var(--text-primary); font-size:13px; font-family:monospace; box-sizing:border-box;">
                         </div>
-                    </div>
-
-                    <div class="video-card">
-                        <div class="video-thumbnail">
-                            <div class="video-placeholder">
-                                <i data-lucide="video" style="width: 48px; height: 48px;"></i>
-                            </div>
-                            <div class="video-duration">25:15</div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block; font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:4px;">Position</label>
+                            <input type="number" id="video-position-input" placeholder="1" min="1" style="width:80px; padding:8px 12px; border:1px solid var(--border-medium); border-radius:6px; background:var(--bg-app); color:var(--text-primary); font-size:14px;">
                         </div>
-                        <div class="video-card-body">
-                            <div class="video-card-title">Tafsir of Ayat Al-Kursi - In Depth Analysis</div>
-                            <div class="video-card-meta">
-                                <div class="video-card-stat">
-                                    <i data-lucide="eye"></i>
-                                    <span>15.2K</span>
-                                </div>
-                                <div class="video-card-stat">
-                                    <i data-lucide="clock"></i>
-                                    <span>1 week ago</span>
-                                </div>
-                            </div>
-                            <div class="video-card-footer">
-                                <span class="badge badge-success">Published</span>
-                                <div class="video-card-actions">
-                                    <button class="video-card-btn" title="Edit">
-                                        <i data-lucide="edit-2"></i>
-                                    </button>
-                                    <button class="video-card-btn" title="Analytics">
-                                        <i data-lucide="bar-chart"></i>
-                                    </button>
-                                    <button class="video-card-btn" title="Delete">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="video-card">
-                        <div class="video-thumbnail">
-                            <div class="video-placeholder">
-                                <i data-lucide="video" style="width: 48px; height: 48px;"></i>
-                            </div>
-                            <div class="video-duration">--:--</div>
-                        </div>
-                        <div class="video-card-body">
-                            <div class="video-card-title">The Story of Prophet Yusuf - Part 3</div>
-                            <div class="video-card-meta">
-                                <div class="video-card-stat">
-                                    <i data-lucide="eye"></i>
-                                    <span>0</span>
-                                </div>
-                                <div class="video-card-stat">
-                                    <i data-lucide="clock"></i>
-                                    <span>Draft</span>
-                                </div>
-                            </div>
-                            <div class="video-card-footer">
-                                <span class="badge badge-neutral">Draft</span>
-                                <div class="video-card-actions">
-                                    <button class="video-card-btn" title="Edit">
-                                        <i data-lucide="edit-2"></i>
-                                    </button>
-                                    <button class="video-card-btn" title="Analytics">
-                                        <i data-lucide="bar-chart"></i>
-                                    </button>
-                                    <button class="video-card-btn" title="Delete">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="video-card">
-                        <div class="video-thumbnail">
-                            <div class="video-placeholder">
-                                <i data-lucide="video" style="width: 48px; height: 48px;"></i>
-                            </div>
-                            <div class="video-duration">32:08</div>
-                        </div>
-                        <div class="video-card-body">
-                            <div class="video-card-title">Names of Allah - Al-Rahman Al-Rahim</div>
-                            <div class="video-card-meta">
-                                <div class="video-card-stat">
-                                    <i data-lucide="eye"></i>
-                                    <span>21.5K</span>
-                                </div>
-                                <div class="video-card-stat">
-                                    <i data-lucide="clock"></i>
-                                    <span>2 weeks ago</span>
-                                </div>
-                            </div>
-                            <div class="video-card-footer">
-                                <span class="badge badge-success">Published</span>
-                                <div class="video-card-actions">
-                                    <button class="video-card-btn" title="Edit">
-                                        <i data-lucide="edit-2"></i>
-                                    </button>
-                                    <button class="video-card-btn" title="Analytics">
-                                        <i data-lucide="bar-chart"></i>
-                                    </button>
-                                    <button class="video-card-btn" title="Delete">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="video-card">
-                        <div class="video-thumbnail">
-                            <div class="video-placeholder">
-                                <i data-lucide="video" style="width: 48px; height: 48px;"></i>
-                            </div>
-                            <div class="video-duration">14:56</div>
-                        </div>
-                        <div class="video-card-body">
-                            <div class="video-card-title">Daily Dhikr - Morning Remembrance</div>
-                            <div class="video-card-meta">
-                                <div class="video-card-stat">
-                                    <i data-lucide="eye"></i>
-                                    <span>9.3K</span>
-                                </div>
-                                <div class="video-card-stat">
-                                    <i data-lucide="clock"></i>
-                                    <span>3 weeks ago</span>
-                                </div>
-                            </div>
-                            <div class="video-card-footer">
-                                <span class="badge badge-success">Published</span>
-                                <div class="video-card-actions">
-                                    <button class="video-card-btn" title="Edit">
-                                        <i data-lucide="edit-2"></i>
-                                    </button>
-                                    <button class="video-card-btn" title="Analytics">
-                                        <i data-lucide="bar-chart"></i>
-                                    </button>
-                                    <button class="video-card-btn" title="Delete">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
-                                </div>
-                            </div>
+                        <div style="display:flex; gap:8px; justify-content:flex-end;">
+                            <button class="btn btn-secondary" onclick="closeVideoModal()">Cancel</button>
+                            <button class="btn btn-primary" onclick="saveVideo()">Save</button>
                         </div>
                     </div>
                 </div>
@@ -661,64 +456,263 @@
             sidebar.classList.toggle('mobile-open');
         });
 
-        // Load real video statistics from database
-        async function loadVideoStats() {
+        let videosData = [];
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load featured videos from database
+        async function loadFeaturedVideos() {
+            const grid = document.getElementById('video-grid');
             try {
                 const supabase = window.adminAuth.getSupabase();
+                const { data, error } = await supabase
+                    .from('featured_videos')
+                    .select('*')
+                    .order('position', { ascending: true });
 
-                // Get total videos count
-                const { count: totalCount, error: countError } = await supabase
-                    .from('islamvoice_episodes')
-                    .select('*', { count: 'exact', head: true });
+                if (error) throw error;
+                videosData = data || [];
 
-                if (!countError) {
-                    document.getElementById('total-videos').textContent = totalCount || 0;
+                // Update stats
+                document.getElementById('total-videos').textContent = videosData.length;
+                const activeCount = videosData.filter(v => v.is_active !== false).length;
+                document.getElementById('uploaded-today').textContent = activeCount;
+
+                // Clear grid
+                grid.textContent = '';
+
+                if (videosData.length === 0) {
+                    renderEmptyState(grid);
+                    return;
                 }
 
-                // Get videos uploaded today
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const todayISO = today.toISOString();
-
-                const { count: todayCount, error: todayError } = await supabase
-                    .from('islamvoice_episodes')
-                    .select('*', { count: 'exact', head: true })
-                    .gte('created_at', todayISO);
-
-                if (!todayError) {
-                    document.getElementById('uploaded-today').textContent = todayCount || 0;
-                }
-
+                videosData.forEach(v => {
+                    const card = createVideoCard(v);
+                    grid.appendChild(card);
+                });
+                lucide.createIcons();
             } catch (error) {
-                console.error('Error loading video stats:', error);
+                console.error('Error loading videos:', error);
+                grid.textContent = 'Error loading videos';
             }
         }
 
-        // Check authentication and load stats
+        function renderEmptyState(container) {
+            const div = document.createElement('div');
+            div.style.cssText = 'grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-tertiary);';
+
+            const icon = document.createElement('i');
+            icon.setAttribute('data-lucide', 'video-off');
+            icon.style.cssText = 'width: 48px; height: 48px; margin-bottom: 12px;';
+
+            const text = document.createElement('p');
+            text.style.cssText = 'font-size: 14px; margin: 0;';
+            text.textContent = 'No featured videos yet';
+
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-primary';
+            btn.style.marginTop = '16px';
+            btn.onclick = showAddVideoModal;
+            btn.textContent = 'Add First Video';
+
+            div.appendChild(icon);
+            div.appendChild(text);
+            div.appendChild(btn);
+            container.appendChild(div);
+            lucide.createIcons();
+        }
+
+        function createVideoCard(v) {
+            const card = document.createElement('div');
+            card.className = 'video-card';
+
+            // Thumbnail
+            const thumb = document.createElement('div');
+            thumb.className = 'video-thumbnail';
+            const thumbContent = getVideoThumbnail(v.video_url);
+            thumb.appendChild(thumbContent);
+
+            // Body
+            const body = document.createElement('div');
+            body.className = 'video-card-body';
+
+            const title = document.createElement('div');
+            title.className = 'video-card-title';
+            title.textContent = v.title || 'Untitled';
+
+            const meta = document.createElement('div');
+            meta.className = 'video-card-meta';
+
+            const posStat = document.createElement('div');
+            posStat.className = 'video-card-stat';
+            posStat.innerHTML = '<i data-lucide="hash"></i>';
+            const posSpan = document.createElement('span');
+            posSpan.textContent = 'Position ' + v.position;
+            posStat.appendChild(posSpan);
+
+            const platformStat = document.createElement('div');
+            platformStat.className = 'video-card-stat';
+            platformStat.innerHTML = '<i data-lucide="link"></i>';
+            const platSpan = document.createElement('span');
+            platSpan.textContent = getVideoPlatform(v.video_url);
+            platformStat.appendChild(platSpan);
+
+            meta.appendChild(posStat);
+            meta.appendChild(platformStat);
+
+            const footer = document.createElement('div');
+            footer.className = 'video-card-footer';
+
+            const badge = document.createElement('span');
+            badge.className = 'badge ' + (v.is_active !== false ? 'badge-success' : 'badge-neutral');
+            badge.textContent = v.is_active !== false ? 'Active' : 'Inactive';
+
+            const actions = document.createElement('div');
+            actions.className = 'video-card-actions';
+
+            const openBtn = document.createElement('button');
+            openBtn.className = 'video-card-btn';
+            openBtn.title = 'Open';
+            openBtn.innerHTML = '<i data-lucide="external-link"></i>';
+            openBtn.onclick = () => window.open(v.video_url, '_blank');
+
+            const editBtn = document.createElement('button');
+            editBtn.className = 'video-card-btn';
+            editBtn.title = 'Edit';
+            editBtn.innerHTML = '<i data-lucide="edit-2"></i>';
+            editBtn.onclick = () => editVideo(v.id);
+
+            const delBtn = document.createElement('button');
+            delBtn.className = 'video-card-btn';
+            delBtn.title = 'Delete';
+            delBtn.innerHTML = '<i data-lucide="trash-2"></i>';
+            delBtn.onclick = () => deleteVideo(v.id);
+
+            actions.appendChild(openBtn);
+            actions.appendChild(editBtn);
+            actions.appendChild(delBtn);
+
+            footer.appendChild(badge);
+            footer.appendChild(actions);
+
+            body.appendChild(title);
+            body.appendChild(meta);
+            body.appendChild(footer);
+
+            card.appendChild(thumb);
+            card.appendChild(body);
+
+            return card;
+        }
+
+        function getVideoThumbnail(url) {
+            // YouTube thumbnail
+            const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\?]+)/);
+            if (ytMatch) {
+                const img = document.createElement('img');
+                img.src = 'https://img.youtube.com/vi/' + ytMatch[1] + '/hqdefault.jpg';
+                img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+                return img;
+            }
+            // Instagram - show icon placeholder
+            if (url.includes('instagram.com')) {
+                const div = document.createElement('div');
+                div.className = 'video-placeholder';
+                div.style.background = 'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)';
+                div.innerHTML = '<i data-lucide="instagram" style="width:48px;height:48px;color:white;"></i>';
+                return div;
+            }
+            const div = document.createElement('div');
+            div.className = 'video-placeholder';
+            div.innerHTML = '<i data-lucide="video" style="width:48px;height:48px;"></i>';
+            return div;
+        }
+
+        function getVideoPlatform(url) {
+            if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
+            if (url.includes('instagram.com')) return 'Instagram';
+            return 'Video';
+        }
+
+        function showAddVideoModal() {
+            document.getElementById('video-modal-title').textContent = 'Add Video';
+            document.getElementById('video-edit-id').value = '';
+            document.getElementById('video-title-input').value = '';
+            document.getElementById('video-url-input').value = '';
+            document.getElementById('video-position-input').value = videosData.length + 1;
+            document.getElementById('video-modal').style.display = 'flex';
+        }
+
+        function editVideo(id) {
+            const video = videosData.find(v => v.id === id);
+            if (!video) return;
+            document.getElementById('video-modal-title').textContent = 'Edit Video';
+            document.getElementById('video-edit-id').value = id;
+            document.getElementById('video-title-input').value = video.title || '';
+            document.getElementById('video-url-input').value = video.video_url || '';
+            document.getElementById('video-position-input').value = video.position || 1;
+            document.getElementById('video-modal').style.display = 'flex';
+        }
+
+        function closeVideoModal() {
+            document.getElementById('video-modal').style.display = 'none';
+        }
+
+        async function saveVideo() {
+            const id = document.getElementById('video-edit-id').value;
+            const title = document.getElementById('video-title-input').value.trim();
+            const videoUrl = document.getElementById('video-url-input').value.trim();
+            const position = parseInt(document.getElementById('video-position-input').value) || 1;
+
+            if (!videoUrl) {
+                alert('Please enter a video URL');
+                return;
+            }
+
+            const supabase = window.adminAuth.getSupabase();
+            try {
+                if (id) {
+                    await supabase.from('featured_videos').update({ title, video_url: videoUrl, position }).eq('id', id);
+                } else {
+                    await supabase.from('featured_videos').insert({ title: title || 'Featured Video', video_url: videoUrl, position, is_active: true });
+                }
+                closeVideoModal();
+                loadFeaturedVideos();
+            } catch (error) {
+                console.error('Error saving video:', error);
+                alert('Error saving video');
+            }
+        }
+
+        async function deleteVideo(id) {
+            if (!confirm('Delete this video?')) return;
+            const supabase = window.adminAuth.getSupabase();
+            try {
+                await supabase.from('featured_videos').delete().eq('id', id);
+                loadFeaturedVideos();
+            } catch (error) {
+                console.error('Error deleting video:', error);
+                alert('Error deleting video');
+            }
+        }
+
+        // Check authentication and load videos
         (async () => {
             const isAuth = await window.adminAuth.checkAuth();
             if (isAuth) {
-                await loadVideoStats();
+                await loadFeaturedVideos();
             }
         })();
 
-        // Theme toggle
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
-        const savedTheme = localStorage.getItem('admin-theme') || 'light';
-
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            themeIcon.setAttribute('data-lucide', 'sun');
-            lucide.createIcons();
-        }
-
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
-            lucide.createIcons();
+        // Close modal on backdrop click
+        document.getElementById('video-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'video-modal') closeVideoModal();
         });
     </script>
 </body>
