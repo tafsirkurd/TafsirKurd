@@ -232,6 +232,24 @@ async function syncSeries(series, supabaseUrl, supabaseServiceKey, youtubeApiKey
         throw new Error(`Failed to insert episodes: ${errText}`);
     }
 
+    // Update series thumbnail to the latest video's thumbnail
+    const latestVideo = newVideos[newVideos.length - 1];
+    if (latestVideo?.thumbnail) {
+        await fetch(
+            `${supabaseUrl}/rest/v1/islamvoice_series?id=eq.${seriesId}`,
+            {
+                method: 'PATCH',
+                headers: {
+                    'apikey': supabaseServiceKey,
+                    'Authorization': `Bearer ${supabaseServiceKey}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ thumbnail_url: latestVideo.thumbnail })
+            }
+        );
+    }
+
     return {
         seriesId,
         seriesName,
