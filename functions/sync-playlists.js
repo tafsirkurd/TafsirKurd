@@ -182,6 +182,24 @@ async function syncSeries(series, supabaseUrl, supabaseServiceKey, youtubeApiKey
     const existingEpisodes = await existingRes.json();
     const existingVideoIds = new Set(existingEpisodes.map(ep => ep.video_url));
 
+    // Always update series thumbnail to the latest video in the playlist
+    const latestPlaylistVideo = youtubeVideos[youtubeVideos.length - 1];
+    if (latestPlaylistVideo?.thumbnail) {
+        await fetch(
+            `${supabaseUrl}/rest/v1/islamvoice_series?id=eq.${seriesId}`,
+            {
+                method: 'PATCH',
+                headers: {
+                    'apikey': supabaseServiceKey,
+                    'Authorization': `Bearer ${supabaseServiceKey}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ thumbnail_url: latestPlaylistVideo.thumbnail })
+            }
+        );
+    }
+
     // 3. Find new videos (skip existing and manually deleted ones)
     const newVideos = youtubeVideos.filter(v => !existingVideoIds.has(v.videoId) && !excludedSet.has(v.videoId));
     if (newVideos.length === 0) {
@@ -230,24 +248,6 @@ async function syncSeries(series, supabaseUrl, supabaseServiceKey, youtubeApiKey
     if (!insertRes.ok) {
         const errText = await insertRes.text();
         throw new Error(`Failed to insert episodes: ${errText}`);
-    }
-
-    // Update series thumbnail to the latest video's thumbnail
-    const latestVideo = newVideos[newVideos.length - 1];
-    if (latestVideo?.thumbnail) {
-        await fetch(
-            `${supabaseUrl}/rest/v1/islamvoice_series?id=eq.${seriesId}`,
-            {
-                method: 'PATCH',
-                headers: {
-                    'apikey': supabaseServiceKey,
-                    'Authorization': `Bearer ${supabaseServiceKey}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({ thumbnail_url: latestVideo.thumbnail })
-            }
-        );
     }
 
     return {
