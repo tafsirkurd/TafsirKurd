@@ -791,6 +791,19 @@
                         <input type="text" class="form-input" id="series-youtube-playlist" placeholder="https://www.youtube.com/playlist?list=PLxxxxxxx" dir="ltr" style="font-family: monospace; font-size: 13px;">
                         <small style="color: var(--text-tertiary);">Link a YouTube playlist to auto-sync new episodes</small>
                     </div>
+                    <div class="form-group" id="thumbnailSourceGroup">
+                        <label class="form-label"><i data-lucide="image" style="width:14px;height:14px;margin-left:4px;"></i> Thumbnail Source</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <select class="form-input" id="series-thumbnail-source" style="flex: 1;">
+                                <option value="first">First episode (newest)</option>
+                                <option value="last">Last episode (oldest)</option>
+                                <option value="custom">Custom episode number</option>
+                                <option value="manual">Manual upload (above)</option>
+                            </select>
+                            <input type="number" class="form-input" id="series-thumbnail-episode" placeholder="Episode #" min="1" style="width: 100px; display: none;">
+                        </div>
+                        <small style="color: var(--text-tertiary);">Which episode's thumbnail to use for series cover</small>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer" style="justify-content: space-between;">
@@ -1656,6 +1669,17 @@
                         ? `https://www.youtube.com/playlist?list=${data.youtube_playlist_id}`
                         : '';
 
+                    // Set thumbnail source preference
+                    const thumbSource = data.thumbnail_source || 'first';
+                    document.getElementById('series-thumbnail-source').value = thumbSource;
+                    const thumbEpisodeInput = document.getElementById('series-thumbnail-episode');
+                    if (thumbSource === 'custom') {
+                        thumbEpisodeInput.style.display = 'block';
+                        thumbEpisodeInput.value = data.thumbnail_episode_num || '';
+                    } else {
+                        thumbEpisodeInput.style.display = 'none';
+                    }
+
                     // Show existing thumbnail if available
                     if (data.thumbnail_url && data.thumbnail_url !== 'undefined') {
                         thumbnailPlaceholder.style.display = 'none';
@@ -1668,6 +1692,8 @@
                 document.getElementById('series-speaker').value = '';
                 speakerSelect.value = '';
                 document.getElementById('series-youtube-playlist').value = '';
+                document.getElementById('series-thumbnail-source').value = 'first';
+                document.getElementById('series-thumbnail-episode').style.display = 'none';
             }
 
             modal.classList.add('active');
@@ -1742,6 +1768,18 @@
             document.getElementById('series-speaker').value = this.value;
         });
 
+        // Toggle custom episode input based on thumbnail source selection
+        document.getElementById('series-thumbnail-source').addEventListener('change', function() {
+            const episodeInput = document.getElementById('series-thumbnail-episode');
+            if (this.value === 'custom') {
+                episodeInput.style.display = 'block';
+                episodeInput.focus();
+            } else {
+                episodeInput.style.display = 'none';
+                episodeInput.value = '';
+            }
+        });
+
         function closeSeriesModal() {
             document.getElementById('series-modal').classList.remove('active');
         }
@@ -1766,6 +1804,12 @@
                 }
             }
 
+            // Get thumbnail source preference
+            const thumbnailSource = document.getElementById('series-thumbnail-source').value;
+            const thumbnailEpisodeNum = thumbnailSource === 'custom'
+                ? parseInt(document.getElementById('series-thumbnail-episode').value) || null
+                : null;
+
             if (!title) {
                 alert('Please enter a title');
                 return;
@@ -1777,12 +1821,28 @@
                 if (id) {
                     await supabase
                         .from('islamvoice_series')
-                        .update({ name_ku: title, description_ku: description, thumbnail_url: thumbnailUrl, speaker: speaker || null, youtube_playlist_id: youtubePlaylistId })
+                        .update({
+                            name_ku: title,
+                            description_ku: description,
+                            thumbnail_url: thumbnailUrl,
+                            speaker: speaker || null,
+                            youtube_playlist_id: youtubePlaylistId,
+                            thumbnail_source: thumbnailSource,
+                            thumbnail_episode_num: thumbnailEpisodeNum
+                        })
                         .eq('id', id);
                 } else {
                     await supabase
                         .from('islamvoice_series')
-                        .insert({ name_ku: title, description_ku: description, thumbnail_url: thumbnailUrl, speaker: speaker || null, youtube_playlist_id: youtubePlaylistId });
+                        .insert({
+                            name_ku: title,
+                            description_ku: description,
+                            thumbnail_url: thumbnailUrl,
+                            speaker: speaker || null,
+                            youtube_playlist_id: youtubePlaylistId,
+                            thumbnail_source: thumbnailSource,
+                            thumbnail_episode_num: thumbnailEpisodeNum
+                        });
                 }
 
                 closeSeriesModal();

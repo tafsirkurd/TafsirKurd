@@ -83,9 +83,9 @@ export async function onRequest(context) {
         const targetSeriesId = body.seriesId || null;
 
         // Fetch all series with youtube_playlist_id
-        let seriesUrl = `${supabaseUrl}/rest/v1/islamvoice_series?youtube_playlist_id=not.is.null&select=id,name_ku,youtube_playlist_id,sync_excluded_video_ids`;
+        let seriesUrl = `${supabaseUrl}/rest/v1/islamvoice_series?youtube_playlist_id=not.is.null&select=id,name_ku,youtube_playlist_id,sync_excluded_video_ids,thumbnail_source,thumbnail_episode_num`;
         if (targetSeriesId) {
-            seriesUrl = `${supabaseUrl}/rest/v1/islamvoice_series?id=eq.${targetSeriesId}&youtube_playlist_id=not.is.null&select=id,name_ku,youtube_playlist_id,sync_excluded_video_ids`;
+            seriesUrl = `${supabaseUrl}/rest/v1/islamvoice_series?id=eq.${targetSeriesId}&youtube_playlist_id=not.is.null&select=id,name_ku,youtube_playlist_id,sync_excluded_video_ids,thumbnail_source,thumbnail_episode_num`;
         }
 
         const seriesRes = await fetch(seriesUrl, {
@@ -151,7 +151,14 @@ export async function onRequest(context) {
 }
 
 async function syncSeries(series, supabaseUrl, supabaseServiceKey, youtubeApiKey) {
-    const { id: seriesId, name_ku: seriesName, youtube_playlist_id: playlistId, sync_excluded_video_ids } = series;
+    const {
+        id: seriesId,
+        name_ku: seriesName,
+        youtube_playlist_id: playlistId,
+        sync_excluded_video_ids,
+        thumbnail_source,
+        thumbnail_episode_num
+    } = series;
 
     // Parse exclusion list (video IDs that were manually deleted)
     let excludedIds = [];
@@ -182,10 +189,26 @@ async function syncSeries(series, supabaseUrl, supabaseServiceKey, youtubeApiKey
     const existingEpisodes = await existingRes.json();
     const existingVideoIds = new Set(existingEpisodes.map(ep => ep.video_url));
 
-    // Update series thumbnail to the first non-excluded video in the playlist
+    // Update series thumbnail based on thumbnail_source preference
     const validVideos = youtubeVideos.filter(v => !excludedSet.has(v.videoId));
-    const firstValidVideo = validVideos[0];
-    if (firstValidVideo?.thumbnail) {
+    let thumbnailVideo = null;
+
+    // Determine which video to use for thumbnail
+    const source = thumbnail_source || 'first';
+    if (source === 'first' && validVideos.length > 0) {
+        thumbnailVideo = validVideos[0];
+    } else if (source === 'last' && validVideos.length > 0) {
+        thumbnailVideo = validVideos[validVideos.length - 1];
+    } else if (source === 'custom' && thumbnail_episode_num) {
+        // Find the video at that episode position (1-indexed)
+        const episodeIndex = thumbnail_episode_num - 1;
+        if (episodeIndex >= 0 && episodeIndex < validVideos.length) {
+            thumbnailVideo = validVideos[episodeIndex];
+        }
+    }
+    // If source === 'manual', don't update thumbnail (user uploaded custom)
+
+    if (thumbnailVideo?.thumbnail && source !== 'manual') {
         await fetch(
             `${supabaseUrl}/rest/v1/islamvoice_series?id=eq.${seriesId}`,
             {
@@ -196,7 +219,7 @@ async function syncSeries(series, supabaseUrl, supabaseServiceKey, youtubeApiKey
                     'Content-Type': 'application/json',
                     'Prefer': 'return=minimal'
                 },
-                body: JSON.stringify({ thumbnail_url: firstValidVideo.thumbnail })
+                body: JSON.stringify({ thumbnail_url: thumbnailVideo.thumbnail })
             }
         );
     }

@@ -677,14 +677,13 @@
             border-radius: 16px;
             width: 100%;
             max-width: 500px;
-            max-height: 85vh;
-            overflow-y: auto;
-            overflow-x: hidden;
+            max-height: none;
+            overflow: visible;
             position: relative;
             animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
+            flex-shrink: 0;
+            margin: auto 0;
         }
 
         .modal-container::-webkit-scrollbar {
@@ -1888,17 +1887,26 @@
         }
 
         // Setup auto-save listeners
-        document.addEventListener('DOMContentLoaded', () => {
+        function setupAutoSaveListeners() {
             const displayNameInput = document.getElementById('displayName');
             const countrySelect = document.getElementById('country');
 
-            if (displayNameInput) {
+            if (displayNameInput && !displayNameInput._autoSaveAttached) {
                 displayNameInput.addEventListener('input', autoSaveProfile);
+                displayNameInput._autoSaveAttached = true;
             }
-            if (countrySelect) {
+            if (countrySelect && !countrySelect._autoSaveAttached) {
                 countrySelect.addEventListener('change', autoSaveProfile);
+                countrySelect._autoSaveAttached = true;
             }
-        });
+        }
+
+        // Run setup immediately if DOM is ready, otherwise wait
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupAutoSaveListeners);
+        } else {
+            setupAutoSaveListeners();
+        }
 
         // Handle avatar upload
         async function handleAvatarUpload(event) {
