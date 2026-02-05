@@ -363,6 +363,26 @@
                             <input type="file" class="upload-input" id="file-login_hero_islamvoice_image" accept="image/*" onchange="handleUpload('login_hero_islamvoice_image', this)">
                         </div>
                     </div>
+                <h3 class="section-divider">About Page</h3>
+                <div class="images-grid">
+                    <div class="image-card" data-key="tafsir_book_image">
+                        <div class="image-card-preview" id="preview-tafsir_book_image" style="aspect-ratio:3/4;max-width:260px;margin:0 auto;">
+                            <div class="placeholder"><i data-lucide="book-open"></i></div>
+                        </div>
+                        <div class="image-card-body">
+                            <div class="image-card-title">Tafsir Book Image</div>
+                            <div class="image-card-desc">Picture of the tafsir book shown on the About page source section (3:4)</div>
+                            <span class="status-badge empty" id="status-tafsir_book_image">Not Set</span>
+                            <input type="url" class="image-card-url" id="url-tafsir_book_image" placeholder="Paste image URL...">
+                            <div class="image-card-actions">
+                                <button class="btn btn-secondary" onclick="pickFile('tafsir_book_image')">Upload</button>
+                                <button class="btn btn-primary" onclick="saveImage('tafsir_book_image')">Save</button>
+                                <button class="btn btn-danger" onclick="removeImage('tafsir_book_image')" style="flex:0;padding:8px 12px;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                            </div>
+                            <input type="file" class="upload-input" id="file-tafsir_book_image" accept="image/*" onchange="handleUpload('tafsir_book_image', this)">
+                        </div>
+                    </div>
+                </div>
                 </div>
             </div>
         </main>
@@ -390,7 +410,7 @@
     <script>
         lucide.createIcons();
 
-        const IMAGE_KEYS = ['founder_avatar_url', 'hero_card_quran_image', 'hero_card_islamvoice_image', 'login_hero_quran_image', 'login_hero_islamvoice_image'];
+        const IMAGE_KEYS = ['founder_avatar_url', 'hero_card_quran_image', 'hero_card_islamvoice_image', 'login_hero_quran_image', 'login_hero_islamvoice_image', 'tafsir_book_image'];
         let supabase = null;
 
         (async () => {
@@ -450,7 +470,7 @@
                 preview.appendChild(img);
                 if (status) { status.textContent = 'Set'; status.className = 'status-badge set'; }
             } else {
-                const icons = { founder_avatar_url: 'user', hero_card_quran_image: 'book-open', hero_card_islamvoice_image: 'play', login_hero_quran_image: 'book-open', login_hero_islamvoice_image: 'play' };
+                const icons = { founder_avatar_url: 'user', hero_card_quran_image: 'book-open', hero_card_islamvoice_image: 'play', login_hero_quran_image: 'book-open', login_hero_islamvoice_image: 'play', tafsir_book_image: 'book-open' };
                 const placeholder = document.createElement('div');
                 placeholder.className = 'placeholder';
                 const icon = document.createElement('i');
@@ -471,7 +491,8 @@
             hero_card_quran_image: 16 / 9,
             hero_card_islamvoice_image: 16 / 9,
             login_hero_quran_image: 9 / 16,
-            login_hero_islamvoice_image: 9 / 16
+            login_hero_islamvoice_image: 9 / 16,
+            tafsir_book_image: 3 / 4
         };
 
         const CROP_TITLES = {
@@ -479,7 +500,8 @@
             hero_card_quran_image: 'Crop Quran Card (16:9)',
             hero_card_islamvoice_image: 'Crop IslamVoice Card (16:9)',
             login_hero_quran_image: 'Crop Login Hero — Quran (9:16)',
-            login_hero_islamvoice_image: 'Crop Login Hero — IslamVoice (9:16)'
+            login_hero_islamvoice_image: 'Crop Login Hero — IslamVoice (9:16)',
+            tafsir_book_image: 'Crop Tafsir Book (3:4)'
         };
 
         function pickFile(key) {

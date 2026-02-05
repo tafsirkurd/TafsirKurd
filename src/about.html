@@ -254,6 +254,16 @@
       padding: 48px;
       text-align: center;
     }
+    .source-card-image {
+      width: 100%;
+      max-width: 240px;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      border-radius: 16px;
+      margin: 0 auto 24px;
+      display: block;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
     .source-card-icon {
       width: 80px;
       height: 80px;
@@ -696,9 +706,10 @@
       <p>ئەڤ تەفسیرە ب زمانەکێ ڕەوان و ب دوورکەفتن ژ ئاڵۆزی نڤیسراییە، کو بۆ هەمی خواندنەوانان گونجایی و فامکرنا وێ سەناهییە.</p>
     </div>
     <div class="source-card">
-      <div class="source-card-icon">
+      <div class="source-card-icon" id="tafsirBookFallback">
         <i class="fas fa-book-open"></i>
       </div>
+      <img class="source-card-image" id="tafsirBookImage" src="" alt="تەفسیرا ساناهی" style="display:none;">
       <h4>تەفسیرا ساناهی</h4>
       <p class="source-card-subtitle">ماموستا تەحسین ئیبراهیم دۆسکی</p>
       <p>وەرگێڕان و تەفسیرا قورئانا پیرۆز ب زمانێ کوردی (کرمانجی) بۆ هەمی کورد زمانان ل سەرانسەری جیهانێ.</p>
@@ -788,6 +799,32 @@
       navbar.classList.remove('scrolled');
     }
   });
+</script>
+<script>
+(async function(){
+  var img = document.getElementById('tafsirBookImage');
+  var fallback = document.getElementById('tafsirBookFallback');
+  // Try localStorage cache first
+  var cached = localStorage.getItem('tafsir_book_image');
+  if (cached) { img.src = cached; img.style.display = ''; fallback.style.display = 'none'; }
+  // Fetch from DB
+  try {
+    var cfg = await fetch('/config').then(function(r){ return r.json(); });
+    if (!cfg.supabaseUrl || !cfg.supabaseKey) return;
+    var res = await fetch(cfg.supabaseUrl + '/rest/v1/site_settings?key=eq.tafsir_book_image&select=value', {
+      headers: { 'apikey': cfg.supabaseKey, 'Authorization': 'Bearer ' + cfg.supabaseKey }
+    });
+    var rows = await res.json();
+    if (rows && rows[0] && rows[0].value) {
+      img.src = rows[0].value;
+      img.style.display = '';
+      fallback.style.display = 'none';
+      localStorage.setItem('tafsir_book_image', rows[0].value);
+    } else {
+      localStorage.removeItem('tafsir_book_image');
+    }
+  } catch(e) {}
+})();
 </script>
 </body>
 </html>
