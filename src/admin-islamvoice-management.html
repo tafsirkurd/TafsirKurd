@@ -990,6 +990,7 @@
     <script src="/utils/admin-notifications.js"></script>
     <script>
         // Simple toast notification function
+        let _notifOffset = 0;
         function showNotification(message, type = 'info') {
             const toast = document.createElement('div');
             const colors = {
@@ -998,10 +999,12 @@
                 info: '#3b82f6',
                 warning: '#f59e0b'
             };
+            const bottom = 20 + _notifOffset;
             toast.style.cssText = `
                 position: fixed;
-                bottom: 20px;
+                bottom: ${bottom}px;
                 right: 20px;
+                max-width: 500px;
                 padding: 12px 20px;
                 background: ${colors[type] || colors.info};
                 color: white;
@@ -1011,13 +1014,16 @@
                 z-index: 9999;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                 animation: slideIn 0.3s ease;
+                word-break: break-word;
             `;
             toast.textContent = message;
             document.body.appendChild(toast);
+            _notifOffset += 52;
+            const duration = type === 'error' ? 8000 : 3000;
             setTimeout(() => {
                 toast.style.animation = 'fadeOut 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+                setTimeout(() => { toast.remove(); _notifOffset = Math.max(0, _notifOffset - 52); }, 300);
+            }, duration);
         }
 
         let currentView = 'all-series';
@@ -3569,6 +3575,7 @@
                 });
 
                 const data = await res.json();
+                console.log('🔄 Sync response:', JSON.stringify(data, null, 2));
 
                 if (!res.ok) {
                     throw new Error(data.error || 'Sync failed');
