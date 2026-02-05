@@ -3553,7 +3553,7 @@
             }
 
             try {
-                const token = localStorage.getItem('admin_token');
+                const token = sessionStorage.getItem('adminToken');
                 if (!token) {
                     if (!silent) showNotification('Not authenticated', 'error');
                     return;
