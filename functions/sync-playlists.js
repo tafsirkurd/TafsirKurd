@@ -190,38 +190,46 @@ async function syncSeries(series, supabaseUrl, supabaseServiceKey, youtubeApiKey
     const existingVideoIds = new Set(existingEpisodes.map(ep => ep.video_url));
 
     // Update series thumbnail based on thumbnail_source preference
-    const validVideos = youtubeVideos.filter(v => !excludedSet.has(v.videoId));
-    let thumbnailVideo = null;
-
-    // Determine which video to use for thumbnail
     const source = thumbnail_source || 'first';
-    if (source === 'first' && validVideos.length > 0) {
-        thumbnailVideo = validVideos[0];
-    } else if (source === 'last' && validVideos.length > 0) {
-        thumbnailVideo = validVideos[validVideos.length - 1];
-    } else if (source === 'custom' && thumbnail_episode_num) {
-        // Find the video at that episode position (1-indexed)
-        const episodeIndex = thumbnail_episode_num - 1;
-        if (episodeIndex >= 0 && episodeIndex < validVideos.length) {
-            thumbnailVideo = validVideos[episodeIndex];
-        }
-    }
-    // If source === 'manual', don't update thumbnail (user uploaded custom)
 
-    if (thumbnailVideo?.thumbnail && source !== 'manual') {
-        await fetch(
-            `${supabaseUrl}/rest/v1/islamvoice_series?id=eq.${seriesId}`,
-            {
-                method: 'PATCH',
-                headers: {
-                    'apikey': supabaseServiceKey,
-                    'Authorization': `Bearer ${supabaseServiceKey}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({ thumbnail_url: thumbnailVideo.thumbnail })
+    // Skip thumbnail update if manual mode
+    if (source !== 'manual') {
+        // Fetch episode thumbnails from our database (ordered by episode_number)
+        let thumbnailQuery = `${supabaseUrl}/rest/v1/islamvoice_episodes?series_id=eq.${seriesId}&select=episode_number,thumbnail_url&order=episode_number`;
+
+        if (source === 'first') {
+            thumbnailQuery += '.asc&limit=1';
+        } else if (source === 'last') {
+            thumbnailQuery += '.desc&limit=1';
+        } else if (source === 'custom' && thumbnail_episode_num) {
+            thumbnailQuery = `${supabaseUrl}/rest/v1/islamvoice_episodes?series_id=eq.${seriesId}&episode_number=eq.${thumbnail_episode_num}&select=thumbnail_url`;
+        }
+
+        const thumbRes = await fetch(thumbnailQuery, {
+            headers: {
+                'apikey': supabaseServiceKey,
+                'Authorization': `Bearer ${supabaseServiceKey}`
             }
-        );
+        });
+
+        if (thumbRes.ok) {
+            const thumbData = await thumbRes.json();
+            if (thumbData.length > 0 && thumbData[0].thumbnail_url) {
+                await fetch(
+                    `${supabaseUrl}/rest/v1/islamvoice_series?id=eq.${seriesId}`,
+                    {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': supabaseServiceKey,
+                            'Authorization': `Bearer ${supabaseServiceKey}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({ thumbnail_url: thumbData[0].thumbnail_url })
+                    }
+                );
+            }
+        }
     }
 
     // 3. Find new videos (skip existing and manually deleted ones)
