@@ -182,9 +182,11 @@ async function syncSeries(series, supabaseUrl, supabaseServiceKey, youtubeApiKey
     const existingEpisodes = await existingRes.json();
     const existingVideoIds = new Set(existingEpisodes.map(ep => ep.video_url));
 
-    // Always update series thumbnail to the latest video in the playlist
-    const latestPlaylistVideo = youtubeVideos[youtubeVideos.length - 1];
-    if (latestPlaylistVideo?.thumbnail) {
+    // Update series thumbnail to the latest non-excluded video in the playlist
+    // Filter out excluded videos first, then get the last one
+    const validVideos = youtubeVideos.filter(v => !excludedSet.has(v.videoId));
+    const latestValidVideo = validVideos[validVideos.length - 1];
+    if (latestValidVideo?.thumbnail) {
         await fetch(
             `${supabaseUrl}/rest/v1/islamvoice_series?id=eq.${seriesId}`,
             {
@@ -195,7 +197,7 @@ async function syncSeries(series, supabaseUrl, supabaseServiceKey, youtubeApiKey
                     'Content-Type': 'application/json',
                     'Prefer': 'return=minimal'
                 },
-                body: JSON.stringify({ thumbnail_url: latestPlaylistVideo.thumbnail })
+                body: JSON.stringify({ thumbnail_url: latestValidVideo.thumbnail })
             }
         );
     }
