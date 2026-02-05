@@ -39,7 +39,7 @@
                 // Super admin sees everything
                 css = '.sidebar-nav{visibility:visible}#recent-messages-card{display:block}';
             } else if (role === 'analyst') {
-                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="backgrounds"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"],#recent-messages-card{display:none!important}';
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"],#recent-messages-card{display:none!important}';
             } else if (role === 'editor') {
                 css = '.sidebar-nav{visibility:visible}#recent-messages-card{display:block}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
             }
@@ -94,10 +94,6 @@
                     <a href="/admin-islamvoice-management.html" class="nav-item">
                         <i data-lucide="radio"></i>
                         <span class="nav-item-label">IslamVoice</span>
-                    </a>
-                    <a href="/admin-backgrounds.html" class="nav-item">
-                        <i data-lucide="image"></i>
-                        <span class="nav-item-label">Backgrounds</span>
                     </a>
                     <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
                     <a href="/admin-translations.html" class="nav-item">
@@ -264,9 +260,12 @@
                 <div class="content-grid">
                     <!-- Recent Videos -->
                     <div class="card">
-                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                            <h3 class="card-title">Recent Videos</h3>
-                            <a href="/islamvoice.html" style="font-size: 13px; color: var(--text-secondary); text-decoration: none;">View all →</a>
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 14px; margin-bottom: 4px;">
+                            <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                                <span style="width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></span>
+                                Recent Videos
+                            </h3>
+                            <a href="/islamvoice.html" style="font-size: 12px; color: var(--primary); text-decoration: none; padding: 4px 10px; background: var(--bg-active); border-radius: 12px; transition: all 0.2s;">View all →</a>
                         </div>
                         <div class="card-body" id="recentVideosBody">
                             <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -280,9 +279,12 @@
 
                     <!-- Recent Users -->
                     <div class="card">
-                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                            <h3 class="card-title">Recent Users</h3>
-                            <span style="font-size: 13px; color: var(--text-secondary);">Last 5 registered</span>
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 14px; margin-bottom: 4px;">
+                            <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                                <span style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%;"></span>
+                                Recent Users
+                            </h3>
+                            <span style="font-size: 12px; color: var(--text-tertiary); padding: 4px 10px; background: var(--bg-active); border-radius: 12px;">Last 5</span>
                         </div>
                         <div class="card-body" id="recentUsersBody">
                             <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -297,9 +299,12 @@
 
                 <!-- Recent Messages -->
                 <div class="card" id="recent-messages-card">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <h3 class="card-title">Recent Messages</h3>
-                        <a href="/admin-messages.html" style="font-size: 13px; color: var(--text-secondary); text-decoration: none;">View all →</a>
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 14px; margin-bottom: 4px;">
+                        <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></span>
+                            Recent Messages
+                        </h3>
+                        <a href="/admin-messages.html" style="font-size: 12px; color: var(--primary); text-decoration: none; padding: 4px 10px; background: var(--bg-active); border-radius: 12px; transition: all 0.2s;">View all →</a>
                     </div>
                     <div class="table-container">
                         <table>

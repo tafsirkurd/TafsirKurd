@@ -15,6 +15,78 @@
     <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
     <link rel="stylesheet" href="/css/admin-styles.css">
     <style>
+        .action-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .action-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid var(--border-medium);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .action-pill:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border-color: var(--border-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .action-pill:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .action-pill i {
+            font-size: 12px;
+        }
+
+        .action-pill.pill-red {
+            background: rgba(255, 0, 0, 0.08);
+            color: #dc2626;
+            border-color: rgba(255, 0, 0, 0.2);
+        }
+
+        .action-pill.pill-red:hover {
+            background: rgba(255, 0, 0, 0.14);
+            border-color: rgba(255, 0, 0, 0.35);
+        }
+
+        .action-pill.pill-cyan {
+            background: rgba(0, 212, 255, 0.06);
+            color: #0891b2;
+            border-color: rgba(0, 212, 255, 0.2);
+        }
+
+        .action-pill.pill-cyan:hover {
+            background: rgba(0, 212, 255, 0.12);
+            border-color: rgba(0, 212, 255, 0.35);
+        }
+
+        .dark-mode .action-pill.pill-red {
+            color: #f87171;
+        }
+
+        .dark-mode .action-pill.pill-cyan {
+            color: #22d3ee;
+        }
+
         .view-tabs {
             display: flex;
             gap: 8px;
@@ -359,7 +431,7 @@
             if (role === 'super_admin') {
                 css = '.sidebar-nav{visibility:visible}';
             } else if (role === 'analyst') {
-                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="backgrounds"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
             } else if (role === 'editor') {
                 css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
             }
@@ -409,10 +481,6 @@
                     <a href="/admin-islamvoice-management.html" class="nav-item active">
                         <i data-lucide="radio"></i>
                         <span class="nav-item-label">IslamVoice</span>
-                    </a>
-                    <a href="/admin-backgrounds.html" class="nav-item">
-                        <i data-lucide="image"></i>
-                        <span class="nav-item-label">Backgrounds</span>
                     </a>
                     <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
                     <a href="/admin-translations.html" class="nav-item">
@@ -551,18 +619,20 @@
                             Drafts <span id="drafts-count" style="background: var(--accent-orange); color: white; padding: 2px 6px; border-radius: 10px; font-size: 11px; margin-left: 4px;">0</span>
                         </button>
                     </div>
-                    <button class="btn btn-secondary" onclick="recompressAllThumbnails()" id="recompressBtn" style="font-size: 12px; padding: 6px 12px;">
-                        <i class="fas fa-compress-alt"></i> Re-compress Thumbnails
-                    </button>
-                    <button class="btn" onclick="openYouTubeImportModal()" style="font-size: 12px; padding: 6px 12px; background: #ff0000; color: white;">
-                        <i class="fab fa-youtube"></i> YouTube Import
-                    </button>
-                    <button class="btn" onclick="syncAllPlaylists()" id="syncPlaylistsBtn" style="font-size: 12px; padding: 6px 12px; background: #1a1a2e; color: #00d4ff; border: 1px solid #00d4ff;">
-                        <i class="fas fa-sync-alt"></i> Sync Playlists
-                    </button>
-                    <button class="btn btn-secondary" onclick="updateYouTubeDurations()" id="updateDurationsBtn" style="font-size: 12px; padding: 6px 12px;">
-                        <i class="fas fa-clock"></i> Fix YT Durations
-                    </button>
+                    <div class="action-bar">
+                        <button class="action-pill" onclick="recompressAllThumbnails()" id="recompressBtn">
+                            <i class="fas fa-compress-alt"></i> Re-compress
+                        </button>
+                        <button class="action-pill pill-red" onclick="openYouTubeImportModal()">
+                            <i class="fab fa-youtube"></i> YouTube Import
+                        </button>
+                        <button class="action-pill pill-cyan" onclick="syncAllPlaylists()" id="syncPlaylistsBtn">
+                            <i class="fas fa-sync-alt"></i> Sync Playlists
+                        </button>
+                        <button class="action-pill" onclick="updateYouTubeDurations()" id="updateDurationsBtn">
+                            <i class="fas fa-clock"></i> Fix Durations
+                        </button>
+                    </div>
                 </div>
 
                 <!-- ALL SERIES VIEW -->
@@ -3480,7 +3550,7 @@
         async function updateYouTubeDurations() {
             const btn = document.getElementById('updateDurationsBtn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating';
 
             try {
                 // Get config for YouTube API key
@@ -3513,7 +3583,7 @@
                 if (ytEpisodes.length === 0) {
                     showNotification('All YouTube videos already have durations!', 'success');
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-clock"></i> Fix YT Durations';
+                    btn.innerHTML = '<i class="fas fa-clock"></i> Fix Durations';
                     return;
                 }
 
@@ -3570,7 +3640,7 @@
                 showNotification(error.message || 'Failed to update durations', 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-clock"></i> Fix YT Durations';
+                btn.innerHTML = '<i class="fas fa-clock"></i> Fix Durations';
             }
         }
 
@@ -3580,7 +3650,7 @@
             const btn = document.getElementById('syncPlaylistsBtn');
             if (btn) {
                 btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing';
             }
 
             try {
