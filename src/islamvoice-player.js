@@ -182,10 +182,20 @@
         const sidebar = document.getElementById('sidebar');
         const backToTopicsBtn = document.getElementById('backToTopicsBtn');
 
+        // Views that require login
+        const authRequiredViews = ['bookmarks', 'history', 'continue'];
+
         // Sidebar button clicks
         sidebarBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 const view = btn.getAttribute('data-view');
+
+                // Check if this view requires auth
+                if (authRequiredViews.includes(view) && !isUserLoggedIn()) {
+                    showLoginPrompt();
+                    return;
+                }
+
                 switchView(view);
 
                 // Update active state
@@ -4417,6 +4427,51 @@
         if (watchHistory) state.watchHistory = JSON.parse(watchHistory);
         if (seriesProgress) state.seriesProgress = JSON.parse(seriesProgress);
         if (bookmarks) state.bookmarks = JSON.parse(bookmarks);
+    }
+
+    // ===== AUTH GUARD FOR SIDEBAR VIEWS =====
+    function isUserLoggedIn() {
+        // Check multiple sources for auth state
+        if (window.currentUser) return true;
+        if (localStorage.getItem('isAuthenticated') === 'true' && localStorage.getItem('user')) return true;
+        return false;
+    }
+
+    function showLoginPrompt() {
+        // Check if modal already exists
+        let modal = document.getElementById('loginPromptModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'loginPromptModal';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;';
+            modal.innerHTML = `
+                <div style="background:var(--bg-surface,#fff);border-radius:16px;padding:2.5rem 2rem;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);font-family:inherit;direction:rtl;">
+                    <div style="width:64px;height:64px;border-radius:50%;border:2px solid var(--text-primary,#000);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:1.5rem;">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h3 style="margin-bottom:0.5rem;font-size:1.25rem;color:var(--text-primary,#000);">پێویستە بچیتە ژوورەوە</h3>
+                    <p style="color:var(--text-secondary,#666);font-size:0.95rem;line-height:1.7;margin-bottom:1.5rem;">
+                        بۆ بەکارهێنانا خەزنکراو، مێژوو، و بەردەوامکرنی بینین<br>پێویستە سەرەتا بچیتە ژوورەوە.
+                    </p>
+                    <a href="/login.html?redirect=/islamvoice" style="display:block;width:100%;padding:0.875rem;background:var(--text-primary,#000);color:var(--bg-surface,#fff);border:none;border-radius:10px;font-family:inherit;font-size:1rem;font-weight:600;cursor:pointer;text-decoration:none;margin-bottom:0.75rem;">
+                        چوونە ژوورڤە
+                    </a>
+                    <button id="loginPromptClose" style="background:none;border:1px solid var(--border-light,#ddd);border-radius:10px;padding:0.75rem;width:100%;font-family:inherit;font-size:0.95rem;color:var(--text-secondary,#666);cursor:pointer;">
+                        پاشتر
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        modal.style.display = 'flex';
+
+        // Close handlers
+        const closeBtn = modal.querySelector('#loginPromptClose');
+        closeBtn.onclick = () => { modal.style.display = 'none'; };
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        });
     }
 
     // ===== INITIALIZE ON LOAD =====
