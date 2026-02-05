@@ -242,7 +242,9 @@ async function fetchAllPlaylistItems(playlistId, apiKey) {
     do {
         const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}${nextPageToken ? `&pageToken=${nextPageToken}` : ''}`;
 
-        const res = await fetch(url);
+        const res = await fetch(url, {
+            headers: { 'Referer': 'https://tafsirkurd.com/' }
+        });
         if (!res.ok) {
             const errText = await res.text();
             throw new Error(`YouTube API error: ${errText}`);
@@ -282,7 +284,9 @@ async function fetchVideoDurations(videoIds, apiKey) {
         const batchIds = videoIds.slice(i, i + 50).join(',');
         const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${batchIds}&key=${apiKey}`;
 
-        const res = await fetch(url);
+        const res = await fetch(url, {
+            headers: { 'Referer': 'https://tafsirkurd.com/' }
+        });
         if (!res.ok) continue;
 
         const data = await res.json();
