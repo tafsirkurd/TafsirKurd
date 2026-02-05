@@ -326,6 +326,44 @@
                         </div>
                     </div>
                 </div>
+                <h3 class="section-divider">Login Page Hero Images</h3>
+                <div class="images-grid">
+                    <div class="image-card" data-key="login_hero_quran_image">
+                        <div class="image-card-preview" id="preview-login_hero_quran_image">
+                            <div class="placeholder"><i data-lucide="book-open"></i></div>
+                        </div>
+                        <div class="image-card-body">
+                            <div class="image-card-title">Login Hero — Quran</div>
+                            <div class="image-card-desc">Hero image shown on the login page when user comes from Quran</div>
+                            <span class="status-badge empty" id="status-login_hero_quran_image">Not Set</span>
+                            <input type="url" class="image-card-url" id="url-login_hero_quran_image" placeholder="Paste image URL...">
+                            <div class="image-card-actions">
+                                <button class="btn btn-secondary" onclick="pickFile('login_hero_quran_image')">Upload</button>
+                                <button class="btn btn-primary" onclick="saveImage('login_hero_quran_image')">Save</button>
+                                <button class="btn btn-danger" onclick="removeImage('login_hero_quran_image')" style="flex:0;padding:8px 12px;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                            </div>
+                            <input type="file" class="upload-input" id="file-login_hero_quran_image" accept="image/*" onchange="handleUpload('login_hero_quran_image', this)">
+                        </div>
+                    </div>
+
+                    <div class="image-card" data-key="login_hero_islamvoice_image">
+                        <div class="image-card-preview" id="preview-login_hero_islamvoice_image">
+                            <div class="placeholder"><i data-lucide="play"></i></div>
+                        </div>
+                        <div class="image-card-body">
+                            <div class="image-card-title">Login Hero — IslamVoice</div>
+                            <div class="image-card-desc">Hero image shown on the login page when user comes from IslamVoice</div>
+                            <span class="status-badge empty" id="status-login_hero_islamvoice_image">Not Set</span>
+                            <input type="url" class="image-card-url" id="url-login_hero_islamvoice_image" placeholder="Paste image URL...">
+                            <div class="image-card-actions">
+                                <button class="btn btn-secondary" onclick="pickFile('login_hero_islamvoice_image')">Upload</button>
+                                <button class="btn btn-primary" onclick="saveImage('login_hero_islamvoice_image')">Save</button>
+                                <button class="btn btn-danger" onclick="removeImage('login_hero_islamvoice_image')" style="flex:0;padding:8px 12px;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                            </div>
+                            <input type="file" class="upload-input" id="file-login_hero_islamvoice_image" accept="image/*" onchange="handleUpload('login_hero_islamvoice_image', this)">
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
 
@@ -352,7 +390,7 @@
     <script>
         lucide.createIcons();
 
-        const IMAGE_KEYS = ['founder_avatar_url', 'hero_card_quran_image', 'hero_card_islamvoice_image'];
+        const IMAGE_KEYS = ['founder_avatar_url', 'hero_card_quran_image', 'hero_card_islamvoice_image', 'login_hero_quran_image', 'login_hero_islamvoice_image'];
         let supabase = null;
 
         (async () => {
@@ -412,7 +450,7 @@
                 preview.appendChild(img);
                 if (status) { status.textContent = 'Set'; status.className = 'status-badge set'; }
             } else {
-                const icons = { founder_avatar_url: 'user', hero_card_quran_image: 'book-open', hero_card_islamvoice_image: 'play' };
+                const icons = { founder_avatar_url: 'user', hero_card_quran_image: 'book-open', hero_card_islamvoice_image: 'play', login_hero_quran_image: 'book-open', login_hero_islamvoice_image: 'play' };
                 const placeholder = document.createElement('div');
                 placeholder.className = 'placeholder';
                 const icon = document.createElement('i');
@@ -431,13 +469,17 @@
         const ASPECT_RATIOS = {
             founder_avatar_url: 1,
             hero_card_quran_image: 16 / 9,
-            hero_card_islamvoice_image: 16 / 9
+            hero_card_islamvoice_image: 16 / 9,
+            login_hero_quran_image: 9 / 16,
+            login_hero_islamvoice_image: 9 / 16
         };
 
         const CROP_TITLES = {
             founder_avatar_url: 'Crop Founder Avatar (1:1)',
             hero_card_quran_image: 'Crop Quran Card (16:9)',
-            hero_card_islamvoice_image: 'Crop IslamVoice Card (16:9)'
+            hero_card_islamvoice_image: 'Crop IslamVoice Card (16:9)',
+            login_hero_quran_image: 'Crop Login Hero — Quran (9:16)',
+            login_hero_islamvoice_image: 'Crop Login Hero — IslamVoice (9:16)'
         };
 
         function pickFile(key) {

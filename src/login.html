@@ -80,39 +80,113 @@
             background: var(--bg);
             min-height: 100vh;
             color: var(--text);
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* Animated canvas background */
+        #animatedBg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Two-column layout */
+        .login-page {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Hero panel (left side in LTR, right in RTL) */
+        .hero-panel {
+            width: 50%;
+            position: relative;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            background-color: #111;
+        }
+
+        .hero-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.2) 100%);
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 3rem;
+            z-index: 2;
+            color: #fff;
+            text-align: center;
+        }
+
+        .hero-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            display: block;
+            filter: brightness(0) invert(1);
+            opacity: 0;
+            animation: scaleIn 0.6s ease-out 0.4s forwards;
+        }
+
+        .hero-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            opacity: 0;
+            animation: heroTextReveal 0.7s ease-out 0.6s forwards;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            opacity: 0;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.7;
+            animation: heroTextReveal 0.7s ease-out 0.8s forwards;
+        }
+
+        /* Form panel */
+        .form-panel {
+            width: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-            overflow-x: hidden;
+            padding: 2rem;
+            position: relative;
+            z-index: 2;
+            overflow-y: auto;
+            max-height: 100vh;
         }
 
         .auth-container {
             max-width: 450px;
             width: 100%;
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         .auth-header {
             text-align: center;
             margin-bottom: 2rem;
+            opacity: 0;
+            animation: slideUp 0.5s ease-out 0.2s forwards;
         }
 
         .logo {
-            width: 70px;
-            height: 70px;
-            margin: 0 auto 1rem;
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 0.75rem;
+            display: none;
+        }
+
+        .logo.mobile-visible {
             display: block;
         }
 
@@ -121,14 +195,14 @@
         }
 
         .auth-title {
-            font-size: 2rem;
+            font-size: 1.75rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             color: var(--text);
         }
 
         .auth-subtitle {
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: var(--text-muted);
         }
 
@@ -138,6 +212,8 @@
             padding: 2.5rem;
             box-shadow: var(--shadow-lg);
             border: 1px solid var(--border);
+            opacity: 0;
+            animation: slideUp 0.5s ease-out 0.35s forwards;
         }
 
         .tabs {
@@ -177,12 +253,31 @@
             box-shadow: var(--shadow);
         }
 
+        /* Form sections with smooth cross-fade */
         .form-section {
             display: none;
+            opacity: 0;
+            transform: translateY(8px);
         }
 
         .form-section.active {
             display: block;
+            animation: formReveal 0.35s ease-out forwards;
+        }
+
+        .form-section.fading-out {
+            display: block;
+            animation: formFadeOut 0.2s ease-in forwards;
+        }
+
+        @keyframes formReveal {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes formFadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-8px); }
         }
 
         .form-group {
@@ -490,38 +585,7 @@
             cursor: not-allowed;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .auth-card {
-                padding: 2rem 1.5rem;
-            }
-
-            .auth-title {
-                font-size: 1.75rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 15px;
-            }
-
-            .auth-card {
-                padding: 1.75rem 1.25rem;
-            }
-
-            .auth-title {
-                font-size: 1.5rem;
-            }
-
-            .form-input,
-            .auth-button,
-            .google-btn {
-                padding: 0.875rem;
-            }
-        }
-
-        /* Password Strength Meter */
+        /* Password Strength Meter — Monochrome */
         .password-strength-container {
             margin-top: 0.75rem;
             animation: fadeIn 0.3s ease-in;
@@ -543,22 +607,26 @@
 
         .password-strength-fill.weak {
             width: 25%;
-            background: linear-gradient(90deg, #e74c3c, #c0392b);
+            background: var(--text-muted);
+            opacity: 0.4;
         }
 
         .password-strength-fill.fair {
             width: 50%;
-            background: linear-gradient(90deg, #f39c12, #e67e22);
+            background: var(--text-muted);
+            opacity: 0.6;
         }
 
         .password-strength-fill.good {
             width: 75%;
-            background: linear-gradient(90deg, #3498db, #2980b9);
+            background: var(--primary);
+            opacity: 0.75;
         }
 
         .password-strength-fill.strong {
             width: 100%;
-            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            background: var(--primary);
+            opacity: 1;
         }
 
         .password-strength-text {
@@ -566,22 +634,23 @@
             font-weight: 600;
             margin-bottom: 0.75rem;
             text-align: center;
+            color: var(--text-muted);
         }
 
         .password-strength-text.weak {
-            color: #e74c3c;
+            color: var(--text-muted);
         }
 
         .password-strength-text.fair {
-            color: #f39c12;
+            color: var(--text-muted);
         }
 
         .password-strength-text.good {
-            color: #3498db;
+            color: var(--primary);
         }
 
         .password-strength-text.strong {
-            color: #2ecc71;
+            color: var(--primary);
         }
 
         .password-requirements {
@@ -599,31 +668,178 @@
         }
 
         .requirement.met {
-            color: #2ecc71;
+            color: var(--primary);
             font-weight: 600;
         }
 
+        /* Success overlay */
+        .success-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .success-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .success-overlay .check-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            animation: scaleIn 0.4s ease-out;
+        }
+
+        .success-overlay .success-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        /* Keyframe animations */
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.7); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes heroTextReveal {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive: tablet & below — stack vertically */
+        @media (max-width: 1024px) {
+            body {
+                overflow: auto;
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+
+            .login-page {
+                flex-direction: column;
+            }
+
+            .hero-panel {
+                width: 100%;
+                height: 220px;
+                min-height: 180px;
+            }
+
+            .hero-content {
+                padding: 1.5rem;
+            }
+
+            .hero-logo {
+                width: 48px;
+                height: 48px;
+                margin-bottom: 0.75rem;
+            }
+
+            .hero-title {
+                font-size: 1.5rem;
+                margin-bottom: 0.4rem;
+            }
+
+            .hero-subtitle {
+                font-size: 0.9rem;
+            }
+
+            .form-panel {
+                width: 100%;
+                max-height: none;
+                padding: 1.5rem;
+            }
+
+            .logo.mobile-visible {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-panel {
+                height: 180px;
+            }
+
+            .hero-title {
+                font-size: 1.25rem;
+            }
+
+            .hero-subtitle {
+                font-size: 0.8rem;
+            }
+
+            .form-panel {
+                padding: 1rem;
+            }
+
+            .auth-card {
+                padding: 1.75rem 1.25rem;
+            }
+
+            .auth-title {
+                font-size: 1.4rem;
+            }
+
+            .form-input,
+            .auth-button,
+            .google-btn {
+                padding: 0.875rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-header">
-            <img src="assets/images/logo.png" alt="تەفسیر کورد" class="logo">
-            <h1 class="auth-title">تەفسیر کورد</h1>
-            <p class="auth-subtitle">ب خێر بێی بۆ پلاتفۆرما تەفسیرا قورئانێ</p>
+    <canvas id="animatedBg"></canvas>
+
+    <!-- Success overlay (shown after login success) -->
+    <div class="success-overlay" id="successOverlay">
+        <div class="check-icon"><i class="fas fa-check"></i></div>
+        <div class="success-text">سەرکەفتی!</div>
+    </div>
+
+    <div class="login-page">
+        <!-- Hero panel -->
+        <div class="hero-panel" id="heroPanel">
+            <div class="hero-content">
+                <img class="hero-logo" src="/assets/images/logo.png" alt="تەفسیر کورد">
+                <h2 class="hero-title" id="heroTitle">تەفسیر کورد</h2>
+                <p class="hero-subtitle" id="heroSubtitle">بەردەوامبە لە گەڕانا خوە بۆ زانیاری ئایینی</p>
+            </div>
         </div>
 
-        <div class="auth-card">
+        <!-- Form panel -->
+        <div class="form-panel">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="logo mobile-visible">
+                    <h1 class="auth-title">تەفسیر کورد</h1>
+                    <p class="auth-subtitle">ب خێر بێی بۆ پلاتفۆرما تەفسیرا قورئانێ</p>
+                </div>
+
+                <div class="auth-card">
             <div id="messageContainer"></div>
 
             <!-- Tabs (only shown for signin/signup) -->
@@ -850,7 +1066,9 @@
                 </a>
             </div>
         </div>
-    </div>
+    </div><!-- .auth-container -->
+    </div><!-- .form-panel -->
+    </div><!-- .login-page -->
 
     <script>
         // Supabase client (initialized securely)
@@ -1114,13 +1332,13 @@
                 this.submitTime = Date.now();
                 const timeTaken = (this.submitTime - this.formFocusTime) / 1000;
 
-                // Suspicious if too fast (< 2 seconds = likely bot)
-                if (timeTaken < 2) {
+                // Suspicious if too fast (< 0.5 seconds = likely bot) — add to score instead of hard-block
+                if (timeTaken < 0.5) {
                     logSecurityEvent('suspicious_fast_login', {
                         timeTaken: timeTaken.toFixed(2),
                         type: 'too_fast'
                     });
-                    return false;
+                    behaviorTracker.suspiciousScore += 25;
                 }
 
                 // Suspicious if unrealistically slow (> 10 minutes = likely automated)
@@ -1590,8 +1808,9 @@ Press Ctrl+Shift+C to copy this report
                 }
             }
 
-            // Store for later use
+            // Store for later use (both sessionStorage AND localStorage to survive OAuth round-trips)
             sessionStorage.setItem('login_redirect_destination', redirectDestination);
+            localStorage.setItem('login_redirect_destination', redirectDestination);
             console.log('🎯 Login redirect destination set to:', redirectDestination);
 
             // Set fingerprint
@@ -1705,29 +1924,22 @@ Press Ctrl+Shift+C to copy this report
             }
         }
 
-        // Form switching
+        // Form switching — smooth cross-fade transitions
+        let _formSwitching = false;
         function showForm(formName) {
+            if (_formSwitching) return;
             console.log('Switching to form:', formName);
 
-            // Hide all forms
-            document.querySelectorAll('.form-section').forEach(form => {
-                form.classList.remove('active');
-            });
-
-            // Show target form
+            const currentActive = document.querySelector('.form-section.active');
             const targetForm = document.getElementById(formName + 'Form');
-            if (targetForm) {
-                targetForm.classList.add('active');
-            }
+            if (!targetForm || targetForm === currentActive) return;
 
-            // Update tabs (hide tabs for forgot password)
+            // Update tabs (hide tabs for forgot/otp)
             const tabsContainer = document.getElementById('authTabs');
-            if (formName === 'forgot') {
+            if (formName === 'forgot' || formName === 'otp') {
                 tabsContainer.style.display = 'none';
             } else {
                 tabsContainer.style.display = 'flex';
-
-                // Update active tab
                 document.querySelectorAll('.tab').forEach((tab, index) => {
                     tab.classList.remove('active');
                     if ((formName === 'signin' && index === 0) || (formName === 'signup' && index === 1)) {
@@ -1737,6 +1949,29 @@ Press Ctrl+Shift+C to copy this report
             }
 
             clearMessage();
+
+            // Cross-fade: fade out current, then fade in target
+            if (currentActive) {
+                _formSwitching = true;
+                currentActive.classList.remove('active');
+                currentActive.classList.add('fading-out');
+                setTimeout(() => {
+                    currentActive.classList.remove('fading-out');
+                    currentActive.style.display = 'none';
+                    targetForm.style.display = '';
+                    targetForm.classList.add('active');
+                    _formSwitching = false;
+                }, 200);
+            } else {
+                targetForm.classList.add('active');
+            }
+
+            // Update hero panel context if applicable
+            updateHeroForForm(formName);
+        }
+
+        function updateHeroForForm(formName) {
+            // No-op for most forms; hero is set by redirect param
         }
 
         // Toggle password visibility
@@ -1810,7 +2045,7 @@ Press Ctrl+Shift+C to copy this report
                 fill.classList.add('fair');
                 text.classList.add('fair');
                 text.textContent = '🔸 ناڤەند';
-                return false;
+                return true;
             } else if (strength === 4) {
                 fill.classList.add('good');
                 text.classList.add('good');
@@ -1898,11 +2133,8 @@ Press Ctrl+Shift+C to copy this report
                 return false;
             }
 
-            // 🔥 NUCLEAR: Check timing anomalies
-            if (!loginTimingTracker.onSubmit()) {
-                showMessage('⚠️ لۆگینا گەلەک خێرا. تکایە دووبارە هەوڵبدە.', 'error');
-                return false;
-            }
+            // 🔥 NUCLEAR: Check timing anomalies (adds to score, no hard block)
+            loginTimingTracker.onSubmit();
 
             // 🔥 NUCLEAR: Check behavioral score
             const behaviorScore = behaviorTracker.calculateScore();
@@ -1965,8 +2197,12 @@ Press Ctrl+Shift+C to copy this report
                 });
 
                 // Wait for storage to persist and cloud sync to complete
+                // Show success overlay
+                showSuccessOverlay();
+
                 setTimeout(async () => {
-                    const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
+                    const redirectDest = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination') || '/quran.html';
+                    cleanupRedirectStorage();
                     if (window.authRedirect) {
                         await window.authRedirect.handlePostLoginRedirect(redirectDest);
                     } else {
@@ -2096,8 +2332,9 @@ Press Ctrl+Shift+C to copy this report
                     throw new Error(data.message || data.error || 'Failed to send OTP');
                 }
 
-                // Store signup data for later use
+                // Store signup data for later use (memory + sessionStorage for refresh survival)
                 signupData = { name, email, password };
+                sessionStorage.setItem('pending_signup_data', JSON.stringify(signupData));
 
                 // Show OTP form
                 document.getElementById('otpEmail').textContent = email;
@@ -2136,13 +2373,14 @@ Press Ctrl+Shift+C to copy this report
             showMessage('ڤەگوهاستنا تە بۆ Google...', 'info');
 
             try {
-                // Get redirect destination
-                const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
+                // Get redirect destination and encode into OAuth return URL
+                const redirectDest = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination') || '/quran.html';
+                const oauthReturnUrl = window.location.origin + '/login.html?redirect=' + encodeURIComponent(redirectDest);
 
                 const { data, error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + '/login.html',
+                        redirectTo: oauthReturnUrl,
                         queryParams: {
                             access_type: 'offline',
                             prompt: 'consent'
@@ -2318,6 +2556,7 @@ Press Ctrl+Shift+C to copy this report
 
                 // Clear signup data
                 signupData = null;
+                sessionStorage.removeItem('pending_signup_data');
 
                 // Clear OTP inputs
                 document.querySelectorAll('.otp-input').forEach(input => input.value = '');
@@ -2371,7 +2610,8 @@ Press Ctrl+Shift+C to copy this report
                             await new Promise(resolve => setTimeout(resolve, 1500));
 
                             // Redirect to destination
-                            const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
+                            const redirectDest = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination') || '/quran.html';
+                            cleanupRedirectStorage();
                             if (window.authRedirect) {
                                 await window.authRedirect.handlePostLoginRedirect(redirectDest);
                             } else {
@@ -2551,7 +2791,8 @@ Press Ctrl+Shift+C to copy this report
                         return;
                     }
 
-                    const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
+                    const redirectDest = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination') || '/quran.html';
+                    cleanupRedirectStorage();
                     showMessage('تو ژبەر د ژوورڤە دایی. ڤەگوهاستن...', 'info');
                     setTimeout(() => {
                         window.location.href = redirectDest;
@@ -2598,8 +2839,10 @@ Press Ctrl+Shift+C to copy this report
                         console.error('Cloud sync init error:', e);
                     }
 
-                    const redirectDest = sessionStorage.getItem('login_redirect_destination') || '/quran.html';
+                    const redirectDest = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination') || '/quran.html';
+                    cleanupRedirectStorage();
                     showMessage('سەرکەفتی! ڤەگوهاستن...', 'success');
+                    showSuccessOverlay();
 
                     // Wait for storage to persist and cloud sync to complete
                     setTimeout(() => {
@@ -2608,8 +2851,197 @@ Press Ctrl+Shift+C to copy this report
                 }
             });
 
+            // Restore pending signup data from sessionStorage (Bug 2 fix)
+            const pendingSignup = sessionStorage.getItem('pending_signup_data');
+            if (pendingSignup && !signupData) {
+                try {
+                    signupData = JSON.parse(pendingSignup);
+                    if (signupData && signupData.email) {
+                        console.log('🔄 Restored pending signup data for:', signupData.email);
+                        document.getElementById('otpEmail').textContent = signupData.email;
+                        showForm('otp');
+                    }
+                } catch (e) {
+                    sessionStorage.removeItem('pending_signup_data');
+                }
+            }
+
+            // Setup hero panel based on redirect destination
+            setupHeroPanel();
+
             console.log('✅ Login page ready');
         });
+
+        // Cleanup redirect storage after successful redirect
+        function cleanupRedirectStorage() {
+            localStorage.removeItem('login_redirect_destination');
+            // Don't remove sessionStorage one — it gets cleared naturally
+        }
+
+        // Show success overlay animation
+        function showSuccessOverlay() {
+            const overlay = document.getElementById('successOverlay');
+            if (overlay) {
+                overlay.classList.add('visible');
+            }
+        }
+
+        // Context-aware hero panel
+        function setupHeroPanel() {
+            const heroPanel = document.getElementById('heroPanel');
+            const heroTitle = document.getElementById('heroTitle');
+            const heroSubtitle = document.getElementById('heroSubtitle');
+            if (!heroPanel) return;
+
+            const redirectDest = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination') || '';
+
+            if (redirectDest.includes('quran')) {
+                // Try cached image first, then fetch from DB
+                const cached = localStorage.getItem('login_hero_quran_image');
+                if (cached) heroPanel.style.backgroundImage = "url('" + cached + "')";
+                heroTitle.textContent = 'قورئانا پیرۆز';
+                heroSubtitle.textContent = 'بەردەوامکرنا خواندنا قورئانا پیرۆز';
+                fetchHeroImage('login_hero_quran_image', heroPanel, '/assets/images/quran-social-card-v3.jpg');
+            } else if (redirectDest.includes('islamvoice')) {
+                const cached = localStorage.getItem('login_hero_islamvoice_image');
+                if (cached) heroPanel.style.backgroundImage = "url('" + cached + "')";
+                heroTitle.textContent = 'ئیسلام ڤۆیس';
+                heroSubtitle.textContent = 'گوهدارکرنا ئیسلام ڤۆیس';
+                fetchHeroImage('login_hero_islamvoice_image', heroPanel, '/assets/images/social-card-final.jpg');
+            } else {
+                // Default: no background image, just dark panel
+                heroPanel.style.backgroundImage = 'none';
+                heroTitle.textContent = 'تەفسیر کورد';
+                heroSubtitle.textContent = 'بەردەوامبە لە گەڕانا خوە بۆ زانیاری ئایینی';
+            }
+        }
+
+        // Fetch hero image URL from site_settings via Supabase REST API
+        async function fetchHeroImage(settingKey, panel, fallbackUrl) {
+            try {
+                const cfg = await fetch('/config').then(function(r) { return r.json(); });
+                if (!cfg.supabaseUrl || !cfg.supabaseKey) return;
+                const res = await fetch(cfg.supabaseUrl + '/rest/v1/site_settings?key=eq.' + settingKey + '&select=value', {
+                    headers: { 'apikey': cfg.supabaseKey, 'Authorization': 'Bearer ' + cfg.supabaseKey }
+                });
+                const rows = await res.json();
+                if (rows && rows[0] && rows[0].value) {
+                    panel.style.backgroundImage = "url('" + rows[0].value + "')";
+                    localStorage.setItem(settingKey, rows[0].value);
+                } else {
+                    // No admin image set — use fallback
+                    panel.style.backgroundImage = "url('" + fallbackUrl + "')";
+                    localStorage.removeItem(settingKey);
+                }
+            } catch (e) {
+                // On error, use fallback if no cached image is showing
+                if (!panel.style.backgroundImage || panel.style.backgroundImage === 'none') {
+                    panel.style.backgroundImage = "url('" + fallbackUrl + "')";
+                }
+            }
+        }
+
+        // Animated particle background
+        (function initParticles() {
+            const canvas = document.getElementById('animatedBg');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            let animId = null;
+            const isMobile = window.innerWidth < 768;
+            const PARTICLE_COUNT = isMobile ? 30 : 50;
+            const CONNECT_DISTANCE = 120;
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            function getColor() {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                return isDark ? '255,255,255' : '0,0,0';
+            }
+
+            function createParticle() {
+                return {
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4,
+                    r: Math.random() * 2.5 + 1,
+                    opacity: Math.random() * 0.1 + 0.03,
+                    shape: Math.random() > 0.7 ? 'diamond' : 'circle'
+                };
+            }
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(createParticle());
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const c = getColor();
+
+                // Draw connections
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < CONNECT_DISTANCE) {
+                            const alpha = (1 - dist / CONNECT_DISTANCE) * 0.06;
+                            ctx.strokeStyle = `rgba(${c},${alpha})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // Draw particles
+                for (const p of particles) {
+                    ctx.fillStyle = `rgba(${c},${p.opacity})`;
+                    if (p.shape === 'diamond') {
+                        ctx.save();
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate(Math.PI / 4);
+                        ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
+                        ctx.restore();
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Move
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    // Wrap around
+                    if (p.x < -10) p.x = canvas.width + 10;
+                    if (p.x > canvas.width + 10) p.x = -10;
+                    if (p.y < -10) p.y = canvas.height + 10;
+                    if (p.y > canvas.height + 10) p.y = -10;
+                }
+
+                animId = requestAnimationFrame(draw);
+            }
+
+            // Pause when tab hidden
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    cancelAnimationFrame(animId);
+                } else {
+                    draw();
+                }
+            });
+
+            draw();
+        })();
     </script>
 </body>
 </html>
