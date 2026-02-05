@@ -660,9 +660,10 @@
 
         .modal-overlay.show {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            padding: 1rem;
+            padding: 2rem 1rem;
+            overflow-y: auto;
         }
 
         @keyframes fadeInOverlay {
@@ -1346,7 +1347,7 @@
 
                 <div class="success-message" id="profileSuccess">
                     <i class="fas fa-check-circle"></i>
-                    پرۆفایل ب سەرکەفتی نوێکرا!
+                    <span id="profileSuccessText">پرۆفایل ب سەرکەفتی نوێکرا!</span>
                 </div>
 
                 <div class="card">
@@ -1830,6 +1831,10 @@
 
                 // Show success message
                 const successMsg = document.getElementById('profileSuccess');
+                const icon = successMsg.querySelector('i');
+                const textSpan = document.getElementById('profileSuccessText');
+                if (icon) icon.className = 'fas fa-check-circle';
+                if (textSpan) textSpan.textContent = 'پرۆفایل ب سەرکەفتی نوێکرا!';
                 successMsg.classList.add('show');
                 setTimeout(() => successMsg.classList.remove('show'), 3000);
 
@@ -1837,6 +1842,63 @@
                 alert('هەلە: ' + error.message);
             }
         }
+
+        // Auto-save functionality with debounce
+        let autoSaveTimeout = null;
+        function autoSaveProfile() {
+            // Clear previous timeout
+            if (autoSaveTimeout) {
+                clearTimeout(autoSaveTimeout);
+            }
+
+            // Show saving indicator
+            const successMsg = document.getElementById('profileSuccess');
+            const icon = successMsg.querySelector('i');
+            const textSpan = document.getElementById('profileSuccessText');
+
+            if (icon) {
+                icon.className = 'fas fa-spinner fa-spin';
+            }
+            if (textSpan) {
+                textSpan.textContent = 'پارەدەکرێ...';
+            }
+            successMsg.classList.add('show');
+
+            // Debounce - wait 800ms after user stops typing
+            autoSaveTimeout = setTimeout(async () => {
+                try {
+                    await updateProfile();
+                    // Reset icon and text on success
+                    if (icon) {
+                        icon.className = 'fas fa-check-circle';
+                    }
+                    if (textSpan) {
+                        textSpan.textContent = 'پرۆفایل ب سەرکەفتی نوێکرا!';
+                    }
+                } catch (error) {
+                    if (icon) {
+                        icon.className = 'fas fa-exclamation-circle';
+                    }
+                    if (textSpan) {
+                        textSpan.textContent = 'هەڵە!';
+                    }
+                    setTimeout(() => successMsg.classList.remove('show'), 2000);
+                }
+            }, 800);
+        }
+
+        // Setup auto-save listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const displayNameInput = document.getElementById('displayName');
+            const countrySelect = document.getElementById('country');
+
+            if (displayNameInput) {
+                displayNameInput.addEventListener('input', autoSaveProfile);
+            }
+            if (countrySelect) {
+                countrySelect.addEventListener('change', autoSaveProfile);
+            }
+        });
 
         // Handle avatar upload
         async function handleAvatarUpload(event) {
