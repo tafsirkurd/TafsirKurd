@@ -1209,37 +1209,24 @@
 <body>
     <!-- Profile Header -->
     <header class="profile-header">
-        <div class="profile-header-user">
+        <div class="profile-header-user" onclick="toggleHeaderDropdown(event)" style="cursor: pointer; position: relative;">
             <img id="headerAvatar" class="profile-header-avatar" src="" alt="Avatar">
             <div class="profile-header-info">
                 <h2 id="headerName">ناو</h2>
                 <p id="headerEmail">email@example.com</p>
             </div>
-        </div>
-        <div class="profile-header-actions">
-            <!-- Profile Dropdown -->
-            <div class="header-profile-dropdown">
-                <div class="header-user-profile-btn" onclick="toggleHeaderDropdown(event)">
-                    <img id="headerDropdownAvatar" class="header-user-avatar" src="" alt="User">
-                    <span id="headerDropdownName" class="header-user-name"></span>
-                    <i class="fas fa-chevron-down" style="color: var(--text-muted); font-size: 0.8rem;"></i>
+            <i class="fas fa-chevron-down" style="color: var(--text-muted); font-size: 0.8rem; margin-right: 8px;"></i>
 
-                    <!-- Dropdown Menu -->
-                    <div class="header-dropdown" id="headerDropdown" onclick="event.stopPropagation()">
-                        <div class="header-dropdown-header">
-                            <div class="header-dropdown-name" id="dropdownHeaderName"></div>
-                            <div class="header-dropdown-email" id="dropdownHeaderEmail"></div>
-                        </div>
-                        <div class="header-dropdown-item" onclick="openEditModal()">
-                            <i class="fas fa-edit"></i>
-                            دەستکاریکرنا پرۆفایلێ
-                        </div>
-                        <div class="header-dropdown-divider"></div>
-                        <div class="header-dropdown-item logout" onclick="logout()">
-                            <i class="fas fa-sign-out-alt"></i>
-                            دەرچوون
-                        </div>
-                    </div>
+            <!-- Dropdown Menu -->
+            <div class="header-dropdown" id="headerDropdown" onclick="event.stopPropagation()">
+                <div class="header-dropdown-item" onclick="openEditModal()">
+                    <i class="fas fa-edit"></i>
+                    دەستکاریکرنا پرۆفایلێ
+                </div>
+                <div class="header-dropdown-divider"></div>
+                <div class="header-dropdown-item logout" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    دەرچوون
                 </div>
             </div>
         </div>
@@ -1691,11 +1678,7 @@
             document.getElementById('headerName').textContent = currentUser.name;
             document.getElementById('headerEmail').textContent = currentUser.email;
 
-            // Set dropdown header info
-            document.getElementById('headerDropdownAvatar').src = avatar;
-            document.getElementById('headerDropdownName').textContent = currentUser.name;
-            document.getElementById('dropdownHeaderName').textContent = currentUser.name;
-            document.getElementById('dropdownHeaderEmail').textContent = currentUser.email;
+            // Dropdown info is now shown in the main header, no separate dropdown header needed
 
             // Load profile from Supabase
             if (supabaseClient) {
@@ -1731,7 +1714,6 @@
             // Load avatar from Supabase profile (synced across devices)
             const avatar = userProfile?.avatar_url || currentUser.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${currentUser.name}`;
             document.getElementById('headerAvatar').src = avatar;
-            document.getElementById('headerDropdownAvatar').src = avatar;
 
             // Update localStorage with Supabase data for consistency
             if (userProfile?.avatar_url) {
@@ -1740,8 +1722,6 @@
             if (userProfile?.display_name) {
                 currentUser.name = userProfile.display_name;
                 document.getElementById('headerName').textContent = userProfile.display_name;
-                document.getElementById('headerDropdownName').textContent = userProfile.display_name;
-                document.getElementById('dropdownHeaderName').textContent = userProfile.display_name;
             }
             localStorage.setItem('user', JSON.stringify(currentUser));
 
@@ -1919,7 +1899,6 @@
                 // Update UI
                 document.getElementById('modalAvatar').src = avatarUrl;
                 document.getElementById('headerAvatar').src = avatarUrl;
-                document.getElementById('headerDropdownAvatar').src = avatarUrl;
 
                 // Update localStorage
                 currentUser.picture = avatarUrl;
