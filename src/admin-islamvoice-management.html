@@ -3574,28 +3574,29 @@
                     throw new Error(data.error || 'Sync failed');
                 }
 
+                // Check for errors first
+                const errors = data.synced?.filter(s => s.error);
+
                 if (data.totalNewEpisodes > 0) {
-                    // Build details of what was synced
                     const details = data.synced
                         .filter(s => s.newEpisodes > 0)
                         .map(s => `${s.seriesName}: +${s.newEpisodes}`)
                         .join(', ');
 
                     showNotification(`${data.totalNewEpisodes} new episode${data.totalNewEpisodes !== 1 ? 's' : ''} synced! (${details})`, 'success');
-
-                    // Refresh data
                     loadAllEpisodes();
                     loadAllSeries();
+                } else if (errors?.length > 0) {
+                    // Don't say "up to date" if there were errors
                 } else if (!silent) {
                     showNotification('All playlists are up to date', 'success');
                 }
 
-                // Log any errors
-                const errors = data.synced?.filter(s => s.error);
                 if (errors?.length > 0) {
                     console.warn('Sync errors:', errors);
+                    const errorDetails = errors.map(e => `${e.seriesName}: ${e.error}`).join(' | ');
                     if (!silent) {
-                        showNotification(`${errors.length} playlist${errors.length !== 1 ? 's' : ''} had errors`, 'error');
+                        showNotification(`Sync error: ${errorDetails}`, 'error');
                     }
                 }
             } catch (error) {
