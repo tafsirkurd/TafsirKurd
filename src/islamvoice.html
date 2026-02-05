@@ -4567,6 +4567,124 @@
             console.log('Show sign in form');
         }
 
+        // ===== MISSING FUNCTIONS FIX =====
+
+        // Toggle sidebar section (collapse/expand)
+        function toggleSidebarSection(sectionId) {
+            const section = document.getElementById(sectionId + 'Section');
+            const arrow = document.getElementById(sectionId + 'Arrow');
+            if (section) {
+                const isHidden = section.style.display === 'none';
+                section.style.display = isHidden ? 'block' : 'none';
+                if (arrow) {
+                    arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+                }
+            }
+        }
+
+        // Show notification toast
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            if (notification && notificationText) {
+                notificationText.textContent = message;
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        // Cancel auto-play next episode countdown
+        let autoPlayTimer = null;
+        function cancelAutoPlay() {
+            const overlay = document.getElementById('nextEpisodeOverlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+            if (autoPlayTimer) {
+                clearInterval(autoPlayTimer);
+                autoPlayTimer = null;
+            }
+        }
+
+        // Close floating Picture-in-Picture player
+        function closePiP() {
+            const floatingPlayer = document.getElementById('floatingPlayer');
+            if (floatingPlayer) {
+                floatingPlayer.classList.remove('active');
+            }
+            // Exit browser PiP if active
+            if (document.pictureInPictureElement) {
+                document.exitPictureInPicture().catch(() => {});
+            }
+        }
+
+        // Close share modal
+        function closeShareModal() {
+            const modal = document.getElementById('shareModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        // Close playlist modal
+        function closePlaylistModal() {
+            const modal = document.getElementById('playlistModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        // Copy video link to clipboard
+        function copyLink() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                showNotification('لینک هاتە کۆپیکرن!');
+                closeShareModal();
+            }).catch(() => {
+                // Fallback for older browsers
+                const input = document.createElement('input');
+                input.value = url;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                showNotification('لینک هاتە کۆپیکرن!');
+                closeShareModal();
+            });
+        }
+
+        // Share on social platforms
+        function shareOn(platform) {
+            const url = encodeURIComponent(window.location.href);
+            const title = encodeURIComponent(document.title);
+            let shareUrl = '';
+
+            switch (platform) {
+                case 'whatsapp':
+                    shareUrl = `https://wa.me/?text=${title}%20${url}`;
+                    break;
+                case 'telegram':
+                    shareUrl = `https://t.me/share/url?url=${url}&text=${title}`;
+                    break;
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+                    break;
+                case 'twitter':
+                    shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
+                    break;
+                case 'email':
+                    shareUrl = `mailto:?subject=${title}&body=${url}`;
+                    break;
+            }
+
+            if (shareUrl) {
+                window.open(shareUrl, '_blank', 'width=600,height=400');
+                closeShareModal();
+            }
+        }
+
         // ===== THEME TOGGLE =====
         // Global function for theme toggle (called from onclick)
         window.toggleTVTheme = function() {
