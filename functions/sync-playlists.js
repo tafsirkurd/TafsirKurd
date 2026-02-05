@@ -83,9 +83,9 @@ export async function onRequest(context) {
         const targetSeriesId = body.seriesId || null;
 
         // Fetch all series with youtube_playlist_id
-        let seriesUrl = `${supabaseUrl}/rest/v1/islamvoice_series?youtube_playlist_id=not.is.null&select=id,name_ku,youtube_playlist_id`;
+        let seriesUrl = `${supabaseUrl}/rest/v1/islamvoice_series?youtube_playlist_id=not.is.null&select=id,name_ku,youtube_playlist_id,sync_excluded_video_ids`;
         if (targetSeriesId) {
-            seriesUrl = `${supabaseUrl}/rest/v1/islamvoice_series?id=eq.${targetSeriesId}&youtube_playlist_id=not.is.null&select=id,name_ku,youtube_playlist_id`;
+            seriesUrl = `${supabaseUrl}/rest/v1/islamvoice_series?id=eq.${targetSeriesId}&youtube_playlist_id=not.is.null&select=id,name_ku,youtube_playlist_id,sync_excluded_video_ids`;
         }
 
         const seriesRes = await fetch(seriesUrl, {
@@ -151,7 +151,12 @@ export async function onRequest(context) {
 }
 
 async function syncSeries(series, supabaseUrl, supabaseServiceKey, youtubeApiKey) {
-    const { id: seriesId, name_ku: seriesName, youtube_playlist_id: playlistId } = series;
+    const { id: seriesId, name_ku: seriesName, youtube_playlist_id: playlistId, sync_excluded_video_ids } = series;
+
+    // Parse exclusion list (video IDs that were manually deleted)
+    let excludedIds = [];
+    try { excludedIds = JSON.parse(sync_excluded_video_ids || '[]'); } catch (e) { /* ignore */ }
+    const excludedSet = new Set(excludedIds);
 
     // 1. Fetch all YouTube playlist items (paginated)
     const youtubeVideos = await fetchAllPlaylistItems(playlistId, youtubeApiKey);
@@ -177,8 +182,8 @@ async function syncSeries(series, supabaseUrl, supabaseServiceKey, youtubeApiKey
     const existingEpisodes = await existingRes.json();
     const existingVideoIds = new Set(existingEpisodes.map(ep => ep.video_url));
 
-    // 3. Find new videos
-    const newVideos = youtubeVideos.filter(v => !existingVideoIds.has(v.videoId));
+    // 3. Find new videos (skip existing and manually deleted ones)
+    const newVideos = youtubeVideos.filter(v => !existingVideoIds.has(v.videoId) && !excludedSet.has(v.videoId));
     if (newVideos.length === 0) {
         return { seriesId, seriesName, newEpisodes: 0, message: 'Up to date' };
     }
