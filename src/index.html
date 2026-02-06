@@ -3573,11 +3573,11 @@ textarea.form-control {
 
 @keyframes scrollRTL {
     0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+    100% { transform: translateX(-33.333%); }
 }
 
 @keyframes scrollLTR {
-    0% { transform: translateX(-50%); }
+    0% { transform: translateX(-33.333%); }
     100% { transform: translateX(0); }
 }
 
@@ -3635,12 +3635,6 @@ textarea.form-control {
     font-weight: 600;
     font-size: 1rem;
     color: var(--text-primary, #000);
-    margin-bottom: 2px;
-}
-
-.testimonial-date {
-    font-size: 0.8rem;
-    color: var(--text-muted, #999);
 }
 
 .testimonial-content {
@@ -3661,8 +3655,8 @@ textarea.form-control {
     opacity: 0.3;
 }
 
-/* Pause animation on hover */
-.testimonials-track-wrapper:hover .testimonials-track {
+/* Pause animation on card hover */
+.testimonials-track:has(.testimonial-card:hover) {
     animation-play-state: paused;
 }
 
@@ -5060,7 +5054,6 @@ async function loadTestimonials() {
             card.className = 'testimonial-card';
 
             const initials = item.name ? item.name.split(' ').map(n => n[0]).join('').substring(0, 2) : '؟';
-            const date = new Date(item.created_at).toLocaleDateString('ku', { year: 'numeric', month: 'short' });
 
             const quoteIcon = document.createElement('div');
             quoteIcon.className = 'testimonial-quote';
@@ -5080,12 +5073,7 @@ async function loadTestimonials() {
             name.className = 'testimonial-name';
             name.textContent = item.name;
 
-            const dateEl = document.createElement('div');
-            dateEl.className = 'testimonial-date';
-            dateEl.textContent = date;
-
             info.appendChild(name);
-            info.appendChild(dateEl);
             header.appendChild(avatar);
             header.appendChild(info);
 
@@ -5100,13 +5088,13 @@ async function loadTestimonials() {
             return card;
         }
 
-        // Populate row 1 (duplicate for infinite scroll)
-        row1Data.forEach(item => row1.appendChild(createCard(item)));
-        row1Data.forEach(item => row1.appendChild(createCard(item))); // Duplicate
-
-        // Populate row 2 (duplicate for infinite scroll)
-        row2Data.forEach(item => row2.appendChild(createCard(item)));
-        row2Data.forEach(item => row2.appendChild(createCard(item))); // Duplicate
+        // Populate rows (triple for seamless infinite scroll)
+        for (let i = 0; i < 3; i++) {
+            row1Data.forEach(item => row1.appendChild(createCard(item)));
+        }
+        for (let i = 0; i < 3; i++) {
+            row2Data.forEach(item => row2.appendChild(createCard(item)));
+        }
 
     } catch (error) {
         console.error('Error loading testimonials:', error);
