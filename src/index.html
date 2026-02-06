@@ -4796,13 +4796,13 @@ async function loadBackgroundImagesFromDB() {
     }
 }
 
-// Load hero card images from site_images table
+// Load hero card images from site_settings table
 async function loadHeroCardImages() {
     try {
         if (!window.supabase) return;
 
         const { data, error } = await window.supabase
-            .from('site_images')
+            .from('site_settings')
             .select('key, value')
             .in('key', ['hero_card_quran_image', 'hero_card_islamvoice_image']);
 
