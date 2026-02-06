@@ -123,7 +123,7 @@
                 <div class="card">
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>User</th><th>Progress</th><th>Ayahs Read</th><th>Last Activity</th></tr></thead>
+                            <thead><tr><th>User</th><th>Current Position</th><th>Progress</th><th>Ayahs Read</th><th>Streak</th><th>Last Activity</th></tr></thead>
                             <tbody id="table"></tbody>
                         </table>
                     </div>
@@ -137,6 +137,28 @@
     <script>
         lucide.createIcons();
         let chart = null;
+
+        // Surah names for display
+        const surahNames = [
+            '', 'Al-Fatiha', 'Al-Baqarah', 'Aal-Imran', 'An-Nisa', 'Al-Maidah', 'Al-Anam', 'Al-Araf',
+            'Al-Anfal', 'At-Tawbah', 'Yunus', 'Hud', 'Yusuf', 'Ar-Rad', 'Ibrahim', 'Al-Hijr',
+            'An-Nahl', 'Al-Isra', 'Al-Kahf', 'Maryam', 'Ta-Ha', 'Al-Anbiya', 'Al-Hajj', 'Al-Muminun',
+            'An-Nur', 'Al-Furqan', 'Ash-Shuara', 'An-Naml', 'Al-Qasas', 'Al-Ankabut', 'Ar-Rum',
+            'Luqman', 'As-Sajdah', 'Al-Ahzab', 'Saba', 'Fatir', 'Ya-Sin', 'As-Saffat', 'Sad',
+            'Az-Zumar', 'Ghafir', 'Fussilat', 'Ash-Shura', 'Az-Zukhruf', 'Ad-Dukhan', 'Al-Jathiyah',
+            'Al-Ahqaf', 'Muhammad', 'Al-Fath', 'Al-Hujurat', 'Qaf', 'Adh-Dhariyat', 'At-Tur',
+            'An-Najm', 'Al-Qamar', 'Ar-Rahman', 'Al-Waqiah', 'Al-Hadid', 'Al-Mujadila', 'Al-Hashr',
+            'Al-Mumtahanah', 'As-Saff', 'Al-Jumuah', 'Al-Munafiqun', 'At-Taghabun', 'At-Talaq',
+            'At-Tahrim', 'Al-Mulk', 'Al-Qalam', 'Al-Haqqah', 'Al-Maarij', 'Nuh', 'Al-Jinn',
+            'Al-Muzzammil', 'Al-Muddaththir', 'Al-Qiyamah', 'Al-Insan', 'Al-Mursalat', 'An-Naba',
+            'An-Naziat', 'Abasa', 'At-Takwir', 'Al-Infitar', 'Al-Mutaffifin', 'Al-Inshiqaq',
+            'Al-Buruj', 'At-Tariq', 'Al-Ala', 'Al-Ghashiyah', 'Al-Fajr', 'Al-Balad', 'Ash-Shams',
+            'Al-Layl', 'Ad-Duha', 'Ash-Sharh', 'At-Tin', 'Al-Alaq', 'Al-Qadr', 'Al-Bayyinah',
+            'Az-Zalzalah', 'Al-Adiyat', 'Al-Qariah', 'At-Takathur', 'Al-Asr', 'Al-Humazah',
+            'Al-Fil', 'Quraysh', 'Al-Maun', 'Al-Kawthar', 'Al-Kafirun', 'An-Nasr', 'Al-Masad',
+            'Al-Ikhlas', 'Al-Falaq', 'An-Nas'
+        ];
+
         (async () => { const auth = await window.adminAuth.checkAuth(); if (auth) loadStats(); })();
         document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
         document.getElementById('mobile-menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
@@ -222,32 +244,64 @@
             const sortedUsers = [...users].sort((a, b) => b.ayahsRead - a.ayahsRead).slice(0, 20);
             if (sortedUsers.length === 0) {
                 const tr = document.createElement('tr'), td = document.createElement('td');
-                td.colSpan = 4; td.style.textAlign = 'center'; td.style.padding = '40px';
+                td.colSpan = 6; td.style.textAlign = 'center'; td.style.padding = '40px';
                 td.textContent = 'No reading data found';
                 tr.appendChild(td); tbody.appendChild(tr);
                 return;
             }
             sortedUsers.forEach(u => {
                 const tr = document.createElement('tr');
+
+                // User column
                 const tdUser = document.createElement('td');
                 const userContainer = document.createElement('div');
-                userContainer.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
+                userContainer.style.cssText = 'display:flex;align-items:center;gap:10px;';
+                if (u.avatar) {
+                    const avatar = document.createElement('img');
+                    avatar.src = u.avatar;
+                    avatar.style.cssText = 'width:36px;height:36px;border-radius:50%;object-fit:cover;';
+                    avatar.onerror = function() { this.style.display = 'none'; };
+                    userContainer.appendChild(avatar);
+                }
+                const userInfo = document.createElement('div');
                 const userName = document.createElement('div');
                 userName.style.cssText = 'font-weight:600;font-size:14px;';
                 userName.textContent = u.name;
-                userContainer.appendChild(userName);
+                userInfo.appendChild(userName);
                 const userEmail = document.createElement('div');
                 userEmail.style.cssText = 'font-size:12px;color:var(--text-tertiary);';
                 userEmail.textContent = u.email || u.id.toString().substring(0, 8) + '...';
-                userContainer.appendChild(userEmail);
+                userInfo.appendChild(userEmail);
+                userContainer.appendChild(userInfo);
                 tdUser.appendChild(userContainer);
                 tr.appendChild(tdUser);
+
+                // Current Position column
+                const tdPosition = document.createElement('td');
+                if (u.currentSurah > 0) {
+                    const posContainer = document.createElement('div');
+                    const surahName = document.createElement('div');
+                    surahName.style.cssText = 'font-weight:600;font-size:13px;';
+                    surahName.textContent = surahNames[u.currentSurah] || ('Surah ' + u.currentSurah);
+                    posContainer.appendChild(surahName);
+                    const ayahNum = document.createElement('div');
+                    ayahNum.style.cssText = 'font-size:12px;color:var(--text-tertiary);';
+                    ayahNum.textContent = 'Ayah ' + u.currentAyah;
+                    posContainer.appendChild(ayahNum);
+                    tdPosition.appendChild(posContainer);
+                } else {
+                    tdPosition.textContent = '—';
+                    tdPosition.style.color = 'var(--text-tertiary)';
+                }
+                tr.appendChild(tdPosition);
+
+                // Progress column
                 const progress = ((u.ayahsRead / totalAyahsInQuran) * 100).toFixed(1);
                 const tdProgress = document.createElement('td');
                 const progressBar = document.createElement('div');
                 progressBar.style.cssText = 'width:100px;height:6px;background:var(--bg-active);border-radius:3px;overflow:hidden;';
                 const progressFill = document.createElement('div');
-                progressFill.style.cssText = `width:${progress}%;height:100%;background:var(--primary);`;
+                progressFill.style.cssText = 'width:' + Math.min(progress, 100) + '%;height:100%;background:var(--primary);';
                 progressBar.appendChild(progressFill);
                 tdProgress.appendChild(progressBar);
                 const progressText = document.createElement('span');
@@ -255,14 +309,32 @@
                 progressText.textContent = progress + '%';
                 tdProgress.appendChild(progressText);
                 tr.appendChild(tdProgress);
+
+                // Ayahs Read column
                 const tdAyahs = document.createElement('td');
                 tdAyahs.textContent = u.ayahsRead.toLocaleString();
                 tdAyahs.style.fontWeight = '600';
                 tr.appendChild(tdAyahs);
+
+                // Streak column
+                const tdStreak = document.createElement('td');
+                if (u.readingStreak > 0) {
+                    const streakSpan = document.createElement('span');
+                    streakSpan.style.cssText = 'color:var(--success);font-weight:600;';
+                    streakSpan.textContent = '🔥 ' + u.readingStreak;
+                    tdStreak.appendChild(streakSpan);
+                } else {
+                    tdStreak.textContent = '0';
+                    tdStreak.style.color = 'var(--text-tertiary)';
+                }
+                tr.appendChild(tdStreak);
+
+                // Last Activity column
                 const tdLast = document.createElement('td');
                 tdLast.textContent = new Date(u.lastActive).toLocaleDateString();
                 tdLast.style.fontSize = '13px';
                 tr.appendChild(tdLast);
+
                 tbody.appendChild(tr);
             });
             lucide.createIcons();
