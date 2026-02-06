@@ -541,6 +541,16 @@
                 replyBtn.appendChild(replyIcon);
                 actions.appendChild(replyBtn);
 
+                const featureBtn = document.createElement('button');
+                featureBtn.className = 'table-btn' + (msg.is_featured ? ' featured' : '');
+                featureBtn.title = msg.is_featured ? 'Remove from Homepage' : 'Show on Homepage';
+                featureBtn.style.color = msg.is_featured ? '#f59e0b' : '';
+                featureBtn.onclick = () => toggleFeatured(msg.id, !msg.is_featured);
+                const featureIcon = document.createElement('i');
+                featureIcon.setAttribute('data-lucide', msg.is_featured ? 'star' : 'star');
+                featureBtn.appendChild(featureIcon);
+                actions.appendChild(featureBtn);
+
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'table-btn';
                 deleteBtn.title = 'Delete';
@@ -616,6 +626,34 @@
                 updateMessagesBadge();
             } else {
                 alert('Failed to delete message');
+            }
+        }
+
+        // Toggle featured status (show on homepage)
+        async function toggleFeatured(id, featured) {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+
+            const { error } = await supabase
+                .from('contact_messages')
+                .update({ is_featured: featured })
+                .eq('id', id);
+
+            if (!error) {
+                // Update local state
+                const msg = allMessages.find(m => m.id === id);
+                if (msg) msg.is_featured = featured;
+                applyFiltersAndRender();
+
+                // Show notification
+                if (window.adminNotifications) {
+                    window.adminNotifications.show(
+                        featured ? 'Message will show on homepage' : 'Message removed from homepage',
+                        featured ? 'success' : 'info'
+                    );
+                }
+            } else {
+                alert('Failed to update featured status');
             }
         }
 

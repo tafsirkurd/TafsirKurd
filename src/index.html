@@ -3518,6 +3518,174 @@ textarea.form-control {
     }
 }
 
+/* ===== TESTIMONIALS SECTION ===== */
+#testimonials {
+    padding: 80px 0;
+    background: var(--bg-secondary, #f8f8f8);
+    overflow: hidden;
+}
+
+[data-theme="dark"] #testimonials {
+    background: #0a0a0a;
+}
+
+.testimonials-container {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.testimonials-title {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+    color: var(--text-primary, #000);
+}
+
+.testimonials-subtitle {
+    text-align: center;
+    color: var(--text-secondary, #666);
+    font-size: 1rem;
+    margin-bottom: 48px;
+}
+
+.testimonials-track-wrapper {
+    overflow: hidden;
+    padding: 12px 0;
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.testimonials-track {
+    display: flex;
+    gap: 24px;
+    width: max-content;
+}
+
+.testimonials-track.track-rtl {
+    animation: scrollRTL 40s linear infinite;
+}
+
+.testimonials-track.track-ltr {
+    animation: scrollLTR 40s linear infinite;
+}
+
+@keyframes scrollRTL {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+@keyframes scrollLTR {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+}
+
+.testimonial-card {
+    flex-shrink: 0;
+    width: 340px;
+    background: var(--card-bg, #fff);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--border-light, #eee);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+[data-theme="dark"] .testimonial-card {
+    background: #151515;
+    border-color: #222;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.testimonial-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="dark"] .testimonial-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.testimonial-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.testimonial-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.testimonial-info {
+    flex: 1;
+}
+
+.testimonial-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary, #000);
+    margin-bottom: 2px;
+}
+
+.testimonial-date {
+    font-size: 0.8rem;
+    color: var(--text-muted, #999);
+}
+
+.testimonial-content {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--text-secondary, #444);
+}
+
+[data-theme="dark"] .testimonial-content {
+    color: #aaa;
+}
+
+.testimonial-quote {
+    color: var(--accent-color, #667eea);
+    font-size: 2rem;
+    line-height: 1;
+    margin-bottom: 8px;
+    opacity: 0.3;
+}
+
+/* Pause animation on hover */
+.testimonials-track-wrapper:hover .testimonials-track {
+    animation-play-state: paused;
+}
+
+@media (max-width: 768px) {
+    #testimonials {
+        padding: 50px 0;
+    }
+
+    .testimonials-title {
+        font-size: 1.6rem;
+    }
+
+    .testimonial-card {
+        width: 280px;
+        padding: 20px;
+    }
+
+    .testimonials-track.track-rtl,
+    .testimonials-track.track-ltr {
+        animation-duration: 30s;
+    }
+}
+
 .social-links {
     display: flex;
     gap: 20px;
@@ -4680,6 +4848,28 @@ window.addEventListener('error', function(e) {
             </div>
         </div>
     </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials">
+        <div class="testimonials-container">
+            <h2 class="testimonials-title">گوتنێن بەکارھێنەران</h2>
+            <p class="testimonials-subtitle">ڤان گوتنان ژ بەکارھێنەرێن مە ھاتینە</p>
+
+            <!-- Row 1: Right to Left -->
+            <div class="testimonials-track-wrapper">
+                <div class="testimonials-track track-rtl" id="testimonialsRow1">
+                    <!-- Cards injected by JS -->
+                </div>
+            </div>
+
+            <!-- Row 2: Left to Right -->
+            <div class="testimonials-track-wrapper">
+                <div class="testimonials-track track-ltr" id="testimonialsRow2">
+                    <!-- Cards injected by JS -->
+                </div>
+            </div>
+        </div>
+    </section>
 </main>
 
 <footer>
@@ -4834,6 +5024,93 @@ async function loadHeroCardImages() {
         }
     } catch (error) {
         console.error('Error loading hero card images:', error);
+    }
+}
+
+// Load testimonials from featured messages
+async function loadTestimonials() {
+    try {
+        if (!window.supabase) return;
+
+        const { data, error } = await window.supabase
+            .from('contact_messages')
+            .select('id, name, message, created_at')
+            .eq('is_featured', true)
+            .order('created_at', { ascending: false })
+            .limit(12);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            document.getElementById('testimonials').style.display = 'none';
+            return;
+        }
+
+        const row1 = document.getElementById('testimonialsRow1');
+        const row2 = document.getElementById('testimonialsRow2');
+
+        // Split into two rows
+        const half = Math.ceil(data.length / 2);
+        const row1Data = data.slice(0, half);
+        const row2Data = data.slice(half);
+
+        // Helper to create card
+        function createCard(item) {
+            const card = document.createElement('div');
+            card.className = 'testimonial-card';
+
+            const initials = item.name ? item.name.split(' ').map(n => n[0]).join('').substring(0, 2) : '؟';
+            const date = new Date(item.created_at).toLocaleDateString('ku', { year: 'numeric', month: 'short' });
+
+            const quoteIcon = document.createElement('div');
+            quoteIcon.className = 'testimonial-quote';
+            quoteIcon.textContent = '"';
+
+            const header = document.createElement('div');
+            header.className = 'testimonial-header';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'testimonial-avatar';
+            avatar.textContent = initials;
+
+            const info = document.createElement('div');
+            info.className = 'testimonial-info';
+
+            const name = document.createElement('div');
+            name.className = 'testimonial-name';
+            name.textContent = item.name;
+
+            const dateEl = document.createElement('div');
+            dateEl.className = 'testimonial-date';
+            dateEl.textContent = date;
+
+            info.appendChild(name);
+            info.appendChild(dateEl);
+            header.appendChild(avatar);
+            header.appendChild(info);
+
+            const content = document.createElement('div');
+            content.className = 'testimonial-content';
+            content.textContent = item.message.length > 150 ? item.message.substring(0, 150) + '...' : item.message;
+
+            card.appendChild(quoteIcon);
+            card.appendChild(header);
+            card.appendChild(content);
+
+            return card;
+        }
+
+        // Populate row 1 (duplicate for infinite scroll)
+        row1Data.forEach(item => row1.appendChild(createCard(item)));
+        row1Data.forEach(item => row1.appendChild(createCard(item))); // Duplicate
+
+        // Populate row 2 (duplicate for infinite scroll)
+        row2Data.forEach(item => row2.appendChild(createCard(item)));
+        row2Data.forEach(item => row2.appendChild(createCard(item))); // Duplicate
+
+    } catch (error) {
+        console.error('Error loading testimonials:', error);
+        document.getElementById('testimonials').style.display = 'none';
     }
 }
 
@@ -6447,6 +6724,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Load hero card images from database
         await loadHeroCardImages();
+
+        // Load testimonials
+        await loadTestimonials();
 
         // Wait for background image to load, then hide preloader
         await setInitialBackground();
