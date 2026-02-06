@@ -2907,10 +2907,12 @@ Press Ctrl+Shift+C to copy this report
                 heroSubtitle.textContent = 'گوهدارکرنا ئیسلام ڤۆیس';
                 fetchHeroImage('login_hero_islamvoice_image', heroPanel, '/assets/images/social-card-final.jpg');
             } else {
-                // Default: no background image, just dark panel
-                heroPanel.style.backgroundImage = 'none';
+                // Default: show default hero image
+                const cached = localStorage.getItem('login_hero_default_image');
+                if (cached) heroPanel.style.backgroundImage = "url('" + cached + "')";
                 heroTitle.textContent = 'تەفسیر کورد';
                 heroSubtitle.textContent = 'بەردەوامبە لە گەڕانا خوە بۆ زانیاری ئایینی';
+                fetchHeroImage('login_hero_default_image', heroPanel, '/assets/images/social-card-final.jpg');
             }
         }
 
