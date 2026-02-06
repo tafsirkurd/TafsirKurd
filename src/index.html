@@ -5028,7 +5028,7 @@ async function loadTestimonials() {
 
         const { data, error } = await window.supabase
             .from('contact_messages')
-            .select('id, name, message, created_at')
+            .select('id, name, email, message, created_at')
             .eq('is_featured', true)
             .order('created_at', { ascending: false })
             .limit(12);
@@ -5039,6 +5039,28 @@ async function loadTestimonials() {
             document.getElementById('testimonials').style.display = 'none';
             return;
         }
+
+        // Fetch profile avatars for users who have accounts
+        const emails = data.map(d => d.email).filter(Boolean);
+        let profileMap = {};
+        if (emails.length > 0) {
+            const { data: profiles } = await window.supabase
+                .from('profiles')
+                .select('email, avatar_url, display_name')
+                .in('email', emails);
+            if (profiles) {
+                profiles.forEach(p => { profileMap[p.email] = p; });
+            }
+        }
+
+        // Attach profile data to messages
+        data.forEach(item => {
+            const profile = profileMap[item.email];
+            if (profile) {
+                item.avatar_url = profile.avatar_url;
+                if (profile.display_name) item.name = profile.display_name;
+            }
+        });
 
         const row1 = document.getElementById('testimonialsRow1');
         const row2 = document.getElementById('testimonialsRow2');
@@ -5064,7 +5086,15 @@ async function loadTestimonials() {
 
             const avatar = document.createElement('div');
             avatar.className = 'testimonial-avatar';
-            avatar.textContent = initials;
+            if (item.avatar_url) {
+                const img = document.createElement('img');
+                img.src = item.avatar_url;
+                img.alt = item.name;
+                img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 50%;';
+                avatar.appendChild(img);
+            } else {
+                avatar.textContent = initials;
+            }
 
             const info = document.createElement('div');
             info.className = 'testimonial-info';
