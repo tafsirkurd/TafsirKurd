@@ -529,10 +529,10 @@
                     tbody.appendChild(tr);
                 }
 
-                // Load recent videos
+                // Load recent episodes
                 const { data: recentVideos } = await supabase
-                    .from('islamvoice_videos')
-                    .select('id, title, thumbnail_url, view_count, created_at')
+                    .from('islamvoice_episodes')
+                    .select('id, title, thumbnail_url, created_at, series_id')
                     .order('created_at', { ascending: false })
                     .limit(5);
 
@@ -570,7 +570,7 @@
                         const meta = document.createElement('div');
                         meta.style.cssText = 'font-size: 12px; color: var(--text-tertiary); margin-top: 4px;';
                         const timeAgo = getTimeAgo(new Date(video.created_at));
-                        meta.textContent = `${video.view_count || 0} views • ${timeAgo}`;
+                        meta.textContent = timeAgo;
                         info.appendChild(meta);
 
                         item.appendChild(info);
