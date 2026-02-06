@@ -230,7 +230,7 @@
 
                     <div class="metric-card">
                         <div class="metric-value" id="metricVideos">--</div>
-                        <div class="metric-label">Total Videos</div>
+                        <div class="metric-label">Total Episodes</div>
                         <div class="metric-change" id="metricVideosChange" style="opacity: 0;">
                             <i data-lucide="trending-up"></i>
                             <span></span>
@@ -408,9 +408,9 @@
                     if (metricUsers) metricUsers.textContent = '0';
                 }
 
-                // Load video count
+                // Load episode count
                 const { count: videoCount } = await supabase
-                    .from('islamvoice_videos')
+                    .from('islamvoice_episodes')
                     .select('*', { count: 'exact', head: true });
 
                 const metricVideos = document.getElementById('metricVideos');
