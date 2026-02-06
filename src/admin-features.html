@@ -114,13 +114,13 @@
                 </div>
                 <div class="metrics-grid">
                     <div class="metric-card"><div class="metric-value" id="total">0</div><div class="metric-label">Total Features</div></div>
-                    <div class="metric-card"><div class="metric-value" id="kurdish">0</div><div class="metric-label">Kurdish</div></div>
-                    <div class="metric-card"><div class="metric-value" id="arabic">0</div><div class="metric-label">Arabic</div></div>
+                    <div class="metric-card"><div class="metric-value" id="active">0</div><div class="metric-label">Active</div></div>
+                    <div class="metric-card"><div class="metric-value" id="inactive">0</div><div class="metric-label">Inactive</div></div>
                 </div>
                 <div class="card">
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>Icon</th><th>Title KU</th><th>Title AR</th><th>Order</th><th>Created</th><th style="width:100px;"></th></tr></thead>
+                            <thead><tr><th style="width:50px;">Icon</th><th>Title</th><th>Description</th><th style="width:80px;">Order</th><th style="width:80px;">Status</th><th style="width:100px;">Updated</th><th style="width:100px;"></th></tr></thead>
                             <tbody id="table"></tbody>
                         </table>
                     </div>
@@ -136,17 +136,21 @@
             </div>
             <div class="modal-body" style="padding:24px;">
                 <input type="hidden" id="featureId">
-                <div style="margin-bottom:16px;"><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Icon Class</label><input type="text" id="iconClass" class="form-input" placeholder="fa-book or 📖"></div>
-                <div style="margin-bottom:16px;"><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Display Order</label><input type="number" id="displayOrder" class="form-input" value="0"></div>
-                <div style="margin-bottom:16px;padding:16px;background:var(--bg-app);border-radius:6px;">
-                    <div style="font-size:12px;font-weight:600;margin-bottom:12px;color:var(--text-tertiary);">KURDISH</div>
-                    <div style="margin-bottom:12px;"><label style="display:block;font-size:13px;margin-bottom:6px;">Title</label><input type="text" id="titleKu" class="form-input" dir="rtl"></div>
-                    <div><label style="display:block;font-size:13px;margin-bottom:6px;">Description</label><textarea id="descKu" class="form-input" dir="rtl" style="min-height:60px;resize:vertical;"></textarea></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Icon Class</label><input type="text" id="iconClass" class="form-input" placeholder="fas fa-book"></div>
+                    <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Display Order</label><input type="number" id="displayOrder" class="form-input" value="0"></div>
                 </div>
-                <div style="padding:16px;background:var(--bg-app);border-radius:6px;">
-                    <div style="font-size:12px;font-weight:600;margin-bottom:12px;color:var(--text-tertiary);">ARABIC</div>
-                    <div style="margin-bottom:12px;"><label style="display:block;font-size:13px;margin-bottom:6px;">Title</label><input type="text" id="titleAr" class="form-input" dir="rtl"></div>
-                    <div><label style="display:block;font-size:13px;margin-bottom:6px;">Description</label><textarea id="descAr" class="form-input" dir="rtl" style="min-height:60px;resize:vertical;"></textarea></div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Title (Kurdish)</label>
+                    <input type="text" id="featureTitle" class="form-input" dir="rtl" placeholder="سەردێر">
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Description (Kurdish)</label>
+                    <textarea id="featureDesc" class="form-input" dir="rtl" style="min-height:100px;resize:vertical;" placeholder="شرۆڤەکرن..."></textarea>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <input type="checkbox" id="isActive" checked style="width:18px;height:18px;cursor:pointer;">
+                    <label for="isActive" style="font-size:14px;cursor:pointer;">Active (show on website)</label>
                 </div>
             </div>
             <div class="modal-footer" style="padding:16px 24px;border-top:1px solid var(--border-light);display:flex;gap:12px;justify-content:flex-end;">
@@ -182,42 +186,124 @@
             if (error) { console.error(error); return; }
             features = data || [];
             document.getElementById('total').textContent = features.length;
-            document.getElementById('kurdish').textContent = features.filter(f => f.title_ku).length;
-            document.getElementById('arabic').textContent = features.filter(f => f.title_ar).length;
+            document.getElementById('active').textContent = features.filter(f => f.is_active).length;
+            document.getElementById('inactive').textContent = features.filter(f => !f.is_active).length;
             const tbody = document.getElementById('table');
-            tbody.innerHTML = '';
+            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
             if (features.length === 0) {
                 const tr = document.createElement('tr'), td = document.createElement('td');
-                td.colSpan = 6; td.style.textAlign = 'center'; td.style.padding = '40px';
+                td.colSpan = 7; td.style.textAlign = 'center'; td.style.padding = '40px';
                 td.textContent = 'No features found';
                 tr.appendChild(td); tbody.appendChild(tr);
                 return;
             }
             features.forEach(f => {
                 const tr = document.createElement('tr');
-                const tdIcon = document.createElement('td'); tdIcon.textContent = f.icon_class || '—'; tr.appendChild(tdIcon);
-                const tdKu = document.createElement('td'); tdKu.textContent = f.title_ku || '—'; tdKu.dir = 'rtl'; tr.appendChild(tdKu);
-                const tdAr = document.createElement('td'); tdAr.textContent = f.title_ar || '—'; tdAr.dir = 'rtl'; tr.appendChild(tdAr);
-                const tdOrder = document.createElement('td'); tdOrder.textContent = f.display_order; tr.appendChild(tdOrder);
-                const tdDate = document.createElement('td'); tdDate.textContent = new Date(f.created_at).toLocaleDateString(); tr.appendChild(tdDate);
+
+                // Icon column with actual icon
+                const tdIcon = document.createElement('td');
+                tdIcon.style.textAlign = 'center';
+                if (f.icon_class && f.icon_class.startsWith('fa')) {
+                    const icon = document.createElement('i');
+                    icon.className = f.icon_class;
+                    icon.style.fontSize = '18px';
+                    icon.style.color = 'var(--primary)';
+                    tdIcon.appendChild(icon);
+                } else {
+                    tdIcon.textContent = f.icon_class || '—';
+                }
+                tr.appendChild(tdIcon);
+
+                // Title column
+                const tdTitle = document.createElement('td');
+                tdTitle.textContent = f.title || '—';
+                tdTitle.dir = 'rtl';
+                tdTitle.style.fontWeight = '600';
+                tr.appendChild(tdTitle);
+
+                // Description column (truncated)
+                const tdDesc = document.createElement('td');
+                tdDesc.dir = 'rtl';
+                tdDesc.style.fontSize = '13px';
+                tdDesc.style.color = 'var(--text-secondary)';
+                tdDesc.style.maxWidth = '300px';
+                tdDesc.style.overflow = 'hidden';
+                tdDesc.style.textOverflow = 'ellipsis';
+                tdDesc.style.whiteSpace = 'nowrap';
+                tdDesc.textContent = f.description ? (f.description.length > 60 ? f.description.substring(0, 60) + '...' : f.description) : '—';
+                tdDesc.title = f.description || '';
+                tr.appendChild(tdDesc);
+
+                // Order column
+                const tdOrder = document.createElement('td');
+                tdOrder.textContent = f.display_order;
+                tdOrder.style.textAlign = 'center';
+                tr.appendChild(tdOrder);
+
+                // Status column with toggle
+                const tdStatus = document.createElement('td');
+                const statusBadge = document.createElement('span');
+                statusBadge.style.cssText = 'padding:4px 10px;border-radius:12px;font-size:12px;font-weight:500;cursor:pointer;';
+                if (f.is_active) {
+                    statusBadge.style.background = 'rgba(34,197,94,0.1)';
+                    statusBadge.style.color = '#22c55e';
+                    statusBadge.textContent = 'Active';
+                } else {
+                    statusBadge.style.background = 'rgba(239,68,68,0.1)';
+                    statusBadge.style.color = '#ef4444';
+                    statusBadge.textContent = 'Inactive';
+                }
+                statusBadge.onclick = () => toggleStatus(f.id, !f.is_active);
+                statusBadge.title = 'Click to toggle';
+                tdStatus.appendChild(statusBadge);
+                tr.appendChild(tdStatus);
+
+                // Updated date column
+                const tdDate = document.createElement('td');
+                tdDate.textContent = f.updated_at ? new Date(f.updated_at).toLocaleDateString() : new Date(f.created_at).toLocaleDateString();
+                tdDate.style.fontSize = '13px';
+                tdDate.style.color = 'var(--text-tertiary)';
+                tr.appendChild(tdDate);
+
+                // Actions column
                 const tdActions = document.createElement('td');
-                const actionsDiv = document.createElement('div'); actionsDiv.className = 'table-actions';
-                const editBtn = document.createElement('button'); editBtn.className = 'table-btn'; editBtn.onclick = () => edit(f.id);
-                const editIcon = document.createElement('i'); editIcon.setAttribute('data-lucide', 'edit-2'); editBtn.appendChild(editIcon); actionsDiv.appendChild(editBtn);
-                const delBtn = document.createElement('button'); delBtn.className = 'table-btn'; delBtn.onclick = () => del(f.id);
-                const delIcon = document.createElement('i'); delIcon.setAttribute('data-lucide', 'trash-2'); delBtn.appendChild(delIcon); actionsDiv.appendChild(delBtn);
-                tdActions.appendChild(actionsDiv); tr.appendChild(tdActions); tbody.appendChild(tr);
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'table-actions';
+                const editBtn = document.createElement('button');
+                editBtn.className = 'table-btn';
+                editBtn.onclick = () => edit(f.id);
+                const editIcon = document.createElement('i');
+                editIcon.setAttribute('data-lucide', 'edit-2');
+                editBtn.appendChild(editIcon);
+                actionsDiv.appendChild(editBtn);
+                const delBtn = document.createElement('button');
+                delBtn.className = 'table-btn';
+                delBtn.onclick = () => del(f.id);
+                const delIcon = document.createElement('i');
+                delIcon.setAttribute('data-lucide', 'trash-2');
+                delBtn.appendChild(delIcon);
+                actionsDiv.appendChild(delBtn);
+                tdActions.appendChild(actionsDiv);
+                tr.appendChild(tdActions);
+
+                tbody.appendChild(tr);
             });
             lucide.createIcons();
+        }
+
+        async function toggleStatus(id, newStatus) {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+            await supabase.from('features').update({ is_active: newStatus, updated_at: new Date().toISOString() }).eq('id', id);
+            loadFeatures();
         }
         function openModal() {
             document.getElementById('featureId').value = '';
             document.getElementById('iconClass').value = '';
             document.getElementById('displayOrder').value = '0';
-            document.getElementById('titleKu').value = '';
-            document.getElementById('descKu').value = '';
-            document.getElementById('titleAr').value = '';
-            document.getElementById('descAr').value = '';
+            document.getElementById('featureTitle').value = '';
+            document.getElementById('featureDesc').value = '';
+            document.getElementById('isActive').checked = true;
             document.getElementById('modalTitle').textContent = 'Add Feature';
             document.getElementById('modal').style.display = 'flex';
             lucide.createIcons();
@@ -228,11 +314,10 @@
             if (!f) return;
             document.getElementById('featureId').value = f.id;
             document.getElementById('iconClass').value = f.icon_class || '';
-            document.getElementById('displayOrder').value = f.display_order;
-            document.getElementById('titleKu').value = f.title_ku || '';
-            document.getElementById('descKu').value = f.description_ku || '';
-            document.getElementById('titleAr').value = f.title_ar || '';
-            document.getElementById('descAr').value = f.description_ar || '';
+            document.getElementById('displayOrder').value = f.display_order || 0;
+            document.getElementById('featureTitle').value = f.title || '';
+            document.getElementById('featureDesc').value = f.description || '';
+            document.getElementById('isActive').checked = f.is_active !== false;
             document.getElementById('modalTitle').textContent = 'Edit Feature';
             document.getElementById('modal').style.display = 'flex';
             lucide.createIcons();
@@ -240,15 +325,20 @@
         async function save() {
             const id = document.getElementById('featureId').value;
             const data = {
-                icon_class: document.getElementById('iconClass').value,
-                display_order: parseInt(document.getElementById('displayOrder').value),
-                title_ku: document.getElementById('titleKu').value || null,
-                description_ku: document.getElementById('descKu').value || null,
-                title_ar: document.getElementById('titleAr').value || null,
-                description_ar: document.getElementById('descAr').value || null
+                icon_class: document.getElementById('iconClass').value || null,
+                display_order: parseInt(document.getElementById('displayOrder').value) || 0,
+                title: document.getElementById('featureTitle').value || null,
+                description: document.getElementById('featureDesc').value || null,
+                is_active: document.getElementById('isActive').checked,
+                updated_at: new Date().toISOString()
             };
             const supabase = window.adminAuth.getSupabase();
-            if (id) await supabase.from('features').update(data).eq('id', id); else await supabase.from('features').insert(data);
+            if (id) {
+                await supabase.from('features').update(data).eq('id', id);
+            } else {
+                data.created_at = new Date().toISOString();
+                await supabase.from('features').insert(data);
+            }
             closeModal();
             loadFeatures();
         }
