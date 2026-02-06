@@ -646,8 +646,9 @@
                 applyFiltersAndRender();
 
                 // Show notification
-                if (window.adminNotifications) {
-                    window.adminNotifications.show(
+                if (window.adminNotifications && window.adminNotifications.add) {
+                    window.adminNotifications.add(
+                        featured ? 'Featured' : 'Unfeatured',
                         featured ? 'Message will show on homepage' : 'Message removed from homepage',
                         featured ? 'success' : 'info'
                     );
@@ -802,17 +803,23 @@
 
         if (savedTheme === 'dark') {
             document.body.classList.add('dark-mode');
-            themeIcon.setAttribute('data-lucide', 'sun');
-            lucide.createIcons();
+            if (themeIcon) {
+                themeIcon.setAttribute('data-lucide', 'sun');
+                lucide.createIcons();
+            }
         }
 
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
-            lucide.createIcons();
-        });
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                const isDark = document.body.classList.contains('dark-mode');
+                if (themeIcon) {
+                    themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                }
+                localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+                lucide.createIcons();
+            });
+        }
     </script>
 </body>
 </html>
