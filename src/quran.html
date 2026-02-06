@@ -9419,14 +9419,24 @@
             if (!isUserAuthenticated || !currentUser) return;
 
             try {
-                // Cloud backup disabled - localStorage is primary storage
-                // const userKey = 'quran_data_' + currentUser.sub;
-                // const saved = localStorage.getItem(userKey);
-                // if (!saved) return;
-                // Cloud sync temporarily disabled
-                return;
+                const userKey = 'quran_data_' + currentUser.sub;
+                const saved = localStorage.getItem(userKey);
+                if (!saved) return;
+
+                const localData = JSON.parse(saved);
+
+                await fetch('/user-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.sub,
+                        action: 'save',
+                        data: localData
+                    })
+                });
             } catch (error) {
                 // Silent fail - cloud backup is optional, localStorage is primary
+                console.log('Cloud sync skipped:', error.message);
             }
         }
 
@@ -9435,19 +9445,16 @@
             if (!isUserAuthenticated || !currentUser) return null;
 
             try {
-                // Cloud sync temporarily disabled - localStorage is primary storage
-                return null;
-
-                // const response = await fetch('/user-data', {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify({
-                //         userId: currentUser.sub,
-                //         action: 'load'
-                //     })
-                // });
-                // const result = await response.json();
-                // return result.success ? result.data : null;
+                const response = await fetch('/user-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.sub,
+                        action: 'load'
+                    })
+                });
+                const result = await response.json();
+                return result.success ? result.data : null;
             } catch (error) {
                 // Silent fail - cloud backup is optional
                 return null;
