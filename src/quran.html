@@ -370,30 +370,46 @@
         .hamburger-menu {
             display: none;
             flex-direction: column;
-            gap: 5px;
+            gap: 6px;
             cursor: pointer;
             padding: 10px;
             z-index: 1001;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .hamburger-menu:hover {
+            transform: scale(1.08);
+        }
+
+        .hamburger-menu:active {
+            transform: scale(0.95);
         }
 
         .hamburger-menu span {
-            width: 24px;
-            height: 2px;
-            background: var(--text);
-            border-radius: 2px;
-            transition: all 0.3s ease;
+            width: 26px;
+            height: 2.5px;
+            background: var(--primary);
+            border-radius: 4px;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-origin: center;
+        }
+
+        .hamburger-menu span:nth-child(2) {
+            width: 20px;
+            margin-right: auto;
         }
 
         .nav-active .hamburger-menu span:nth-child(1) {
-            transform: rotate(45deg) translate(5px, 5px);
+            transform: rotate(45deg) translate(6px, 6px);
         }
 
         .nav-active .hamburger-menu span:nth-child(2) {
             opacity: 0;
+            transform: scaleX(0);
         }
 
         .nav-active .hamburger-menu span:nth-child(3) {
-            transform: rotate(-45deg) translate(5px, -5px);
+            transform: rotate(-45deg) translate(6px, -6px);
         }
 
         .nav-overlay {
