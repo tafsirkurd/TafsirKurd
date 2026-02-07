@@ -389,83 +389,61 @@
                 <!-- METRICS -->
                 <div class="metrics-grid">
                     <div class="metric-card">
-                        <div class="metric-value">2,458</div>
-                        <div class="metric-label">Total Requests (24h)</div>
+                        <div class="metric-value" id="metricUsers">0</div>
+                        <div class="metric-label">Total Users</div>
                         <div class="metric-change positive">
-                            <i data-lucide="activity"></i>
-                            <span>Normal traffic pattern</span>
+                            <i data-lucide="users"></i>
+                            <span id="metricNewUsers">0 new this week</span>
                         </div>
                     </div>
 
                     <div class="metric-card">
-                        <div class="metric-value">45</div>
-                        <div class="metric-label">Bots Blocked (24h)</div>
+                        <div class="metric-value" id="metricSessions">0</div>
+                        <div class="metric-label">Admin Sessions (24h)</div>
                         <div class="metric-change positive">
                             <i data-lucide="shield"></i>
-                            <span>99.2% legitimate traffic</span>
+                            <span>Authenticated access</span>
                         </div>
                     </div>
 
                     <div class="metric-card">
-                        <div class="metric-value">98.5%</div>
-                        <div class="metric-label">Detection Accuracy</div>
+                        <div class="metric-value" id="metricMessages">0</div>
+                        <div class="metric-label">Contact Messages</div>
                         <div class="metric-change positive">
-                            <i data-lucide="check-circle"></i>
-                            <span>High confidence</span>
+                            <i data-lucide="message-square"></i>
+                            <span id="metricMessages24h">0 today</span>
                         </div>
                     </div>
 
                     <div class="metric-card">
-                        <div class="metric-value">12</div>
-                        <div class="metric-label">Spam Attempts</div>
+                        <div class="metric-value" id="metricEpisodes">0</div>
+                        <div class="metric-label">IslamVoice Episodes</div>
                         <div class="metric-change">
-                            <i data-lucide="alert-circle"></i>
-                            <span>Contact form protection</span>
+                            <i data-lucide="video"></i>
+                            <span>Content protected</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- RECENT DETECTIONS -->
+                <!-- RECENT ADMIN SESSIONS -->
                 <div class="card" style="margin-bottom: 24px;">
                     <div class="card-header">
-                        <h3 class="card-title">Recent Bot Detections</h3>
+                        <h3 class="card-title">Recent Admin Sessions</h3>
                     </div>
                     <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
+                                    <th>Admin</th>
                                     <th>IP Address</th>
-                                    <th>User Agent</th>
-                                    <th>Bot Type</th>
-                                    <th>Score</th>
+                                    <th>Device</th>
                                     <th>Status</th>
-                                    <th>Time</th>
+                                    <th>Last Activity</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="sessionsTable">
                                 <tr>
-                                    <td>185.220.101.45</td>
-                                    <td>python-requests/2.28.0</td>
-                                    <td>Scraper</td>
-                                    <td>95%</td>
-                                    <td><span class="badge badge-danger">Blocked</span></td>
-                                    <td>12 min ago</td>
-                                </tr>
-                                <tr>
-                                    <td>192.168.1.100</td>
-                                    <td>Mozilla/5.0 (compatible; Googlebot/2.1)</td>
-                                    <td>Search Engine</td>
-                                    <td>5%</td>
-                                    <td><span class="badge badge-success">Allowed</span></td>
-                                    <td>45 min ago</td>
-                                </tr>
-                                <tr>
-                                    <td>103.21.244.0</td>
-                                    <td>curl/7.68.0</td>
-                                    <td>Tool</td>
-                                    <td>88%</td>
-                                    <td><span class="badge badge-danger">Blocked</span></td>
-                                    <td>1 hour ago</td>
+                                    <td colspan="5" style="text-align:center;padding:30px;color:var(--text-tertiary);">Loading...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -574,9 +552,10 @@
     <script>
         lucide.createIcons();
 
-        // Check authentication
+        // Check authentication and load data
         (async () => {
-            await window.adminAuth.checkAuth();
+            const auth = await window.adminAuth.checkAuth();
+            if (auth) loadSecurityData();
         })();
 
         const menuToggle = document.getElementById('menu-toggle');
@@ -590,27 +569,121 @@
         mobileMenuToggle.addEventListener('click', () => {
             sidebar.classList.toggle('mobile-open');
         });
-    </script>
-</body>
 
-        // Theme toggle
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
-        const savedTheme = localStorage.getItem('admin-theme') || 'light';
+        async function loadSecurityData() {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
 
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            themeIcon.setAttribute('data-lucide', 'sun');
-            lucide.createIcons();
+            try {
+                // Fetch counts
+                const [profilesRes, messagesRes, episodesRes, sessionsRes] = await Promise.all([
+                    supabase.from('profiles').select('id, created_at', { count: 'exact' }),
+                    supabase.from('contact_messages').select('id, created_at', { count: 'exact' }),
+                    supabase.from('islamvoice_episodes').select('id', { count: 'exact', head: true }),
+                    supabase.from('admin_sessions').select('*, admin_users(email)').order('created_at', { ascending: false }).limit(10)
+                ]);
+
+                // Update metrics
+                const totalUsers = profilesRes.count || 0;
+                const profiles = profilesRes.data || [];
+                const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+                const newUsers = profiles.filter(p => new Date(p.created_at) > weekAgo).length;
+                document.getElementById('metricUsers').textContent = totalUsers;
+                document.getElementById('metricNewUsers').textContent = newUsers + ' new this week';
+
+                const totalMessages = messagesRes.count || 0;
+                const messages = messagesRes.data || [];
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const messagesToday = messages.filter(m => new Date(m.created_at) >= today).length;
+                document.getElementById('metricMessages').textContent = totalMessages;
+                document.getElementById('metricMessages24h').textContent = messagesToday + ' today';
+
+                document.getElementById('metricEpisodes').textContent = episodesRes.count || 0;
+
+                // Sessions
+                const sessions = sessionsRes.data || [];
+                const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+                const sessions24h = sessions.filter(s => new Date(s.created_at) > oneDayAgo).length;
+                document.getElementById('metricSessions').textContent = sessions24h;
+
+                // Render sessions table
+                const tbody = document.getElementById('sessionsTable');
+                while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+                if (sessions.length === 0) {
+                    const tr = document.createElement('tr');
+                    const td = document.createElement('td');
+                    td.colSpan = 5;
+                    td.style.cssText = 'text-align:center;padding:30px;color:var(--text-tertiary);';
+                    td.textContent = 'No sessions found';
+                    tr.appendChild(td);
+                    tbody.appendChild(tr);
+                } else {
+                    sessions.forEach(s => {
+                        const tr = document.createElement('tr');
+
+                        // Admin email
+                        const tdAdmin = document.createElement('td');
+                        tdAdmin.textContent = s.admin_users?.email || 'Unknown';
+                        tdAdmin.style.fontWeight = '500';
+                        tr.appendChild(tdAdmin);
+
+                        // IP
+                        const tdIP = document.createElement('td');
+                        tdIP.textContent = s.ip_address || '—';
+                        tdIP.style.fontFamily = 'monospace';
+                        tdIP.style.fontSize = '12px';
+                        tr.appendChild(tdIP);
+
+                        // Device (parse user agent)
+                        const tdDevice = document.createElement('td');
+                        const ua = s.user_agent || '';
+                        let device = 'Unknown';
+                        if (ua.includes('Windows')) device = 'Windows';
+                        else if (ua.includes('Mac')) device = 'Mac';
+                        else if (ua.includes('Linux')) device = 'Linux';
+                        else if (ua.includes('iPhone')) device = 'iPhone';
+                        else if (ua.includes('Android')) device = 'Android';
+                        tdDevice.textContent = device;
+                        tdDevice.style.fontSize = '13px';
+                        tr.appendChild(tdDevice);
+
+                        // Status
+                        const tdStatus = document.createElement('td');
+                        const badge = document.createElement('span');
+                        const isActive = s.is_active && new Date(s.expires_at) > new Date();
+                        badge.className = 'badge ' + (isActive ? 'badge-success' : 'badge-secondary');
+                        badge.textContent = isActive ? 'Active' : 'Expired';
+                        tdStatus.appendChild(badge);
+                        tr.appendChild(tdStatus);
+
+                        // Last activity
+                        const tdTime = document.createElement('td');
+                        const lastAct = s.last_activity || s.created_at;
+                        tdTime.textContent = getTimeAgo(new Date(lastAct));
+                        tdTime.style.fontSize = '12px';
+                        tdTime.style.color = 'var(--text-tertiary)';
+                        tr.appendChild(tdTime);
+
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading security data:', error);
+            }
         }
 
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
-            lucide.createIcons();
-        });
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'Just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return minutes + ' min ago';
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return hours + 'h ago';
+            const days = Math.floor(hours / 24);
+            return days + 'd ago';
+        }
     </script>
 </body>
 </html>
