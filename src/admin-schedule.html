@@ -110,13 +110,13 @@
                 </div>
                 <div class="metrics-grid">
                     <div class="metric-card"><div class="metric-value" id="total">0</div><div class="metric-label">Total Items</div></div>
-                    <div class="metric-card"><div class="metric-value" id="kurdish">0</div><div class="metric-label">Kurdish</div></div>
-                    <div class="metric-card"><div class="metric-value" id="arabic">0</div><div class="metric-label">Arabic</div></div>
+                    <div class="metric-card"><div class="metric-value" id="active">0</div><div class="metric-label">Active</div></div>
+                    <div class="metric-card"><div class="metric-value" id="inactive">0</div><div class="metric-label">Inactive</div></div>
                 </div>
                 <div class="card">
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>Icon</th><th>Time KU</th><th>Activity KU</th><th>Time AR</th><th>Activity AR</th><th>Order</th><th style="width:100px;"></th></tr></thead>
+                            <thead><tr><th style="width:50px;">Icon</th><th>Day</th><th>Time</th><th>Topic</th><th>Description</th><th style="width:60px;">Order</th><th style="width:80px;">Status</th><th style="width:100px;"></th></tr></thead>
                             <tbody id="table"></tbody>
                         </table>
                     </div>
@@ -132,17 +132,25 @@
             </div>
             <div class="modal-body" style="padding:24px;">
                 <input type="hidden" id="scheduleId">
-                <div style="margin-bottom:16px;"><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Icon Class</label><input type="text" id="iconClass" class="form-input" placeholder="fa-sun or ☀️"></div>
-                <div style="margin-bottom:16px;"><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Display Order</label><input type="number" id="displayOrder" class="form-input" value="0"></div>
-                <div style="margin-bottom:16px;padding:16px;background:var(--bg-app);border-radius:6px;">
-                    <div style="font-size:12px;font-weight:600;margin-bottom:12px;color:var(--text-tertiary);">KURDISH</div>
-                    <div style="margin-bottom:12px;"><label style="display:block;font-size:13px;margin-bottom:6px;">Time</label><input type="text" id="timeKu" class="form-input" dir="rtl" placeholder="٠٥:٠٠"></div>
-                    <div><label style="display:block;font-size:13px;margin-bottom:6px;">Activity</label><input type="text" id="activityKu" class="form-input" dir="rtl" placeholder="نوێژا بەیانێ"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Icon Class</label><input type="text" id="iconClass" class="form-input" placeholder="fas fa-sun"></div>
+                    <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Display Order</label><input type="number" id="displayOrder" class="form-input" value="0"></div>
                 </div>
-                <div style="padding:16px;background:var(--bg-app);border-radius:6px;">
-                    <div style="font-size:12px;font-weight:600;margin-bottom:12px;color:var(--text-tertiary);">ARABIC</div>
-                    <div style="margin-bottom:12px;"><label style="display:block;font-size:13px;margin-bottom:6px;">Time</label><input type="text" id="timeAr" class="form-input" dir="rtl" placeholder="٠٥:٠٠"></div>
-                    <div><label style="display:block;font-size:13px;margin-bottom:6px;">Activity</label><input type="text" id="activityAr" class="form-input" dir="rtl" placeholder="صلاة الفجر"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Day Label</label><input type="text" id="dayLabel" class="form-input" dir="rtl" placeholder="ڕۆژانە"></div>
+                    <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Time Label</label><input type="text" id="timeLabel" class="form-input" dir="rtl" placeholder="سپێدێ"></div>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Topic</label>
+                    <input type="text" id="topic" class="form-input" dir="rtl" placeholder="زکر و ستوری">
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Description</label>
+                    <textarea id="description" class="form-input" dir="rtl" style="min-height:80px;resize:vertical;" placeholder="شرۆڤەکرن..."></textarea>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <input type="checkbox" id="isActive" checked style="width:18px;height:18px;cursor:pointer;">
+                    <label for="isActive" style="font-size:14px;cursor:pointer;">Active</label>
                 </div>
             </div>
             <div class="modal-footer" style="padding:16px 24px;border-top:1px solid var(--border-light);display:flex;gap:12px;justify-content:flex-end;">
@@ -178,43 +186,133 @@
             if (error) { console.error(error); return; }
             schedule = data || [];
             document.getElementById('total').textContent = schedule.length;
-            document.getElementById('kurdish').textContent = schedule.filter(s => s.time_ku || s.activity_ku).length;
-            document.getElementById('arabic').textContent = schedule.filter(s => s.time_ar || s.activity_ar).length;
+            document.getElementById('active').textContent = schedule.filter(s => s.is_active).length;
+            document.getElementById('inactive').textContent = schedule.filter(s => !s.is_active).length;
             const tbody = document.getElementById('table');
-            tbody.innerHTML = '';
+            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
             if (schedule.length === 0) {
                 const tr = document.createElement('tr'), td = document.createElement('td');
-                td.colSpan = 7; td.style.textAlign = 'center'; td.style.padding = '40px';
+                td.colSpan = 8; td.style.textAlign = 'center'; td.style.padding = '40px';
                 td.textContent = 'No schedule items found';
                 tr.appendChild(td); tbody.appendChild(tr);
                 return;
             }
             schedule.forEach(s => {
                 const tr = document.createElement('tr');
-                const tdIcon = document.createElement('td'); tdIcon.textContent = s.icon_class || '—'; tr.appendChild(tdIcon);
-                const tdTimeKu = document.createElement('td'); tdTimeKu.textContent = s.time_ku || '—'; tdTimeKu.dir = 'rtl'; tr.appendChild(tdTimeKu);
-                const tdActKu = document.createElement('td'); tdActKu.textContent = s.activity_ku || '—'; tdActKu.dir = 'rtl'; tr.appendChild(tdActKu);
-                const tdTimeAr = document.createElement('td'); tdTimeAr.textContent = s.time_ar || '—'; tdTimeAr.dir = 'rtl'; tr.appendChild(tdTimeAr);
-                const tdActAr = document.createElement('td'); tdActAr.textContent = s.activity_ar || '—'; tdActAr.dir = 'rtl'; tr.appendChild(tdActAr);
-                const tdOrder = document.createElement('td'); tdOrder.textContent = s.display_order; tr.appendChild(tdOrder);
+
+                // Icon
+                const tdIcon = document.createElement('td');
+                tdIcon.style.textAlign = 'center';
+                if (s.icon_class && s.icon_class.startsWith('fa')) {
+                    const icon = document.createElement('i');
+                    icon.className = s.icon_class;
+                    icon.style.fontSize = '18px';
+                    icon.style.color = 'var(--primary)';
+                    tdIcon.appendChild(icon);
+                } else {
+                    tdIcon.textContent = s.icon_class || '—';
+                }
+                tr.appendChild(tdIcon);
+
+                // Day
+                const tdDay = document.createElement('td');
+                tdDay.textContent = s.day_label || '—';
+                tdDay.dir = 'rtl';
+                tdDay.style.fontWeight = '600';
+                tr.appendChild(tdDay);
+
+                // Time
+                const tdTime = document.createElement('td');
+                tdTime.textContent = s.time_label || '—';
+                tdTime.dir = 'rtl';
+                tdTime.style.fontSize = '13px';
+                tr.appendChild(tdTime);
+
+                // Topic
+                const tdTopic = document.createElement('td');
+                tdTopic.textContent = s.topic || '—';
+                tdTopic.dir = 'rtl';
+                tdTopic.style.fontWeight = '500';
+                tr.appendChild(tdTopic);
+
+                // Description (truncated)
+                const tdDesc = document.createElement('td');
+                tdDesc.dir = 'rtl';
+                tdDesc.style.fontSize = '12px';
+                tdDesc.style.color = 'var(--text-secondary)';
+                tdDesc.style.maxWidth = '200px';
+                tdDesc.style.overflow = 'hidden';
+                tdDesc.style.textOverflow = 'ellipsis';
+                tdDesc.style.whiteSpace = 'nowrap';
+                tdDesc.textContent = s.description ? (s.description.length > 50 ? s.description.substring(0, 50) + '...' : s.description) : '—';
+                tdDesc.title = s.description || '';
+                tr.appendChild(tdDesc);
+
+                // Order
+                const tdOrder = document.createElement('td');
+                tdOrder.textContent = s.display_order;
+                tdOrder.style.textAlign = 'center';
+                tr.appendChild(tdOrder);
+
+                // Status
+                const tdStatus = document.createElement('td');
+                const statusBadge = document.createElement('span');
+                statusBadge.style.cssText = 'padding:4px 8px;border-radius:10px;font-size:11px;font-weight:500;cursor:pointer;';
+                if (s.is_active) {
+                    statusBadge.style.background = 'rgba(34,197,94,0.1)';
+                    statusBadge.style.color = '#22c55e';
+                    statusBadge.textContent = 'Active';
+                } else {
+                    statusBadge.style.background = 'rgba(239,68,68,0.1)';
+                    statusBadge.style.color = '#ef4444';
+                    statusBadge.textContent = 'Inactive';
+                }
+                statusBadge.onclick = () => toggleStatus(s.id, !s.is_active);
+                statusBadge.title = 'Click to toggle';
+                tdStatus.appendChild(statusBadge);
+                tr.appendChild(tdStatus);
+
+                // Actions
                 const tdActions = document.createElement('td');
-                const actionsDiv = document.createElement('div'); actionsDiv.className = 'table-actions';
-                const editBtn = document.createElement('button'); editBtn.className = 'table-btn'; editBtn.onclick = () => edit(s.id);
-                const editIcon = document.createElement('i'); editIcon.setAttribute('data-lucide', 'edit-2'); editBtn.appendChild(editIcon); actionsDiv.appendChild(editBtn);
-                const delBtn = document.createElement('button'); delBtn.className = 'table-btn'; delBtn.onclick = () => del(s.id);
-                const delIcon = document.createElement('i'); delIcon.setAttribute('data-lucide', 'trash-2'); delBtn.appendChild(delIcon); actionsDiv.appendChild(delBtn);
-                tdActions.appendChild(actionsDiv); tr.appendChild(tdActions); tbody.appendChild(tr);
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'table-actions';
+                const editBtn = document.createElement('button');
+                editBtn.className = 'table-btn';
+                editBtn.onclick = () => edit(s.id);
+                const editIcon = document.createElement('i');
+                editIcon.setAttribute('data-lucide', 'edit-2');
+                editBtn.appendChild(editIcon);
+                actionsDiv.appendChild(editBtn);
+                const delBtn = document.createElement('button');
+                delBtn.className = 'table-btn';
+                delBtn.onclick = () => del(s.id);
+                const delIcon = document.createElement('i');
+                delIcon.setAttribute('data-lucide', 'trash-2');
+                delBtn.appendChild(delIcon);
+                actionsDiv.appendChild(delBtn);
+                tdActions.appendChild(actionsDiv);
+                tr.appendChild(tdActions);
+
+                tbody.appendChild(tr);
             });
             lucide.createIcons();
+        }
+
+        async function toggleStatus(id, newStatus) {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+            await supabase.from('schedule').update({ is_active: newStatus, updated_at: new Date().toISOString() }).eq('id', id);
+            loadSchedule();
         }
         function openModal() {
             document.getElementById('scheduleId').value = '';
             document.getElementById('iconClass').value = '';
             document.getElementById('displayOrder').value = '0';
-            document.getElementById('timeKu').value = '';
-            document.getElementById('activityKu').value = '';
-            document.getElementById('timeAr').value = '';
-            document.getElementById('activityAr').value = '';
+            document.getElementById('dayLabel').value = '';
+            document.getElementById('timeLabel').value = '';
+            document.getElementById('topic').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('isActive').checked = true;
             document.getElementById('modalTitle').textContent = 'Add Schedule Item';
             document.getElementById('modal').style.display = 'flex';
             lucide.createIcons();
@@ -225,11 +323,12 @@
             if (!s) return;
             document.getElementById('scheduleId').value = s.id;
             document.getElementById('iconClass').value = s.icon_class || '';
-            document.getElementById('displayOrder').value = s.display_order;
-            document.getElementById('timeKu').value = s.time_ku || '';
-            document.getElementById('activityKu').value = s.activity_ku || '';
-            document.getElementById('timeAr').value = s.time_ar || '';
-            document.getElementById('activityAr').value = s.activity_ar || '';
+            document.getElementById('displayOrder').value = s.display_order || 0;
+            document.getElementById('dayLabel').value = s.day_label || '';
+            document.getElementById('timeLabel').value = s.time_label || '';
+            document.getElementById('topic').value = s.topic || '';
+            document.getElementById('description').value = s.description || '';
+            document.getElementById('isActive').checked = s.is_active !== false;
             document.getElementById('modalTitle').textContent = 'Edit Schedule Item';
             document.getElementById('modal').style.display = 'flex';
             lucide.createIcons();
@@ -238,14 +337,21 @@
             const id = document.getElementById('scheduleId').value;
             const data = {
                 icon_class: document.getElementById('iconClass').value || null,
-                display_order: parseInt(document.getElementById('displayOrder').value),
-                time_ku: document.getElementById('timeKu').value || null,
-                activity_ku: document.getElementById('activityKu').value || null,
-                time_ar: document.getElementById('timeAr').value || null,
-                activity_ar: document.getElementById('activityAr').value || null
+                display_order: parseInt(document.getElementById('displayOrder').value) || 0,
+                day_label: document.getElementById('dayLabel').value || null,
+                time_label: document.getElementById('timeLabel').value || null,
+                topic: document.getElementById('topic').value || null,
+                description: document.getElementById('description').value || null,
+                is_active: document.getElementById('isActive').checked,
+                updated_at: new Date().toISOString()
             };
             const supabase = window.adminAuth.getSupabase();
-            if (id) await supabase.from('schedule').update(data).eq('id', id); else await supabase.from('schedule').insert(data);
+            if (id) {
+                await supabase.from('schedule').update(data).eq('id', id);
+            } else {
+                data.created_at = new Date().toISOString();
+                await supabase.from('schedule').insert(data);
+            }
             closeModal();
             loadSchedule();
         }
