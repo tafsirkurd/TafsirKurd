@@ -431,6 +431,178 @@
             text-align: center;
         }
 
+        /* Sidebar Actions (user profile, notifications, theme, search) */
+        .sidebar-actions {
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            gap: 8px;
+        }
+
+        .sidebar-actions-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-actions .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-actions .icon-btn:hover {
+            background: var(--accent);
+        }
+
+        .sidebar-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-user-profile:hover {
+            background: var(--accent);
+        }
+
+        .sidebar-user-profile .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .sidebar-user-profile .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sidebar-user-profile .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-user-profile .user-email {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-search-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--card-bg);
+            color: var(--text);
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .sidebar-search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .sidebar-login-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: var(--bg);
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .sidebar-login-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* Sidebar Dropdowns */
+        .sidebar-dropdown-container {
+            position: relative;
+        }
+
+        .sidebar-notification-dropdown,
+        .sidebar-profile-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            z-index: 100;
+            margin-top: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .sidebar-notification-dropdown.active,
+        .sidebar-profile-dropdown.active {
+            display: block;
+        }
+
+        .sidebar-profile-dropdown {
+            padding: 8px;
+        }
+
+        .sidebar-profile-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            color: var(--text);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .sidebar-profile-item:hover {
+            background: var(--accent);
+        }
+
+        .sidebar-profile-item.logout {
+            color: #e74c3c;
+        }
+
+        .sidebar-profile-item i {
+            width: 20px;
+            text-align: center;
+        }
+
         [data-theme="dark"] .sidebar-section-header:hover {
             background: rgba(255, 255, 255, 0.05);
         }
@@ -3611,65 +3783,6 @@
                 <span></span>
             </div>
 
-
-            <div class="nav-actions">
-                <!-- Mobile Search Button (visible only on mobile) -->
-                <button class="icon-btn mobile-search-btn" id="mobileSearchBtn" aria-label="گەڕان" title="گەڕان" onclick="openSearchModal()">
-                    <i class="fas fa-search"></i>
-                </button>
-                <div class="nav-search-container">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="nav-search-input" id="navSearchInput" placeholder="بگەڕێ بۆ بەش، زنجیرە، یان بابەت..." autocomplete="off" aria-label="گەڕان">
-                </div>
-                <div class="notification-container" style="position: relative;">
-                    <button class="icon-btn" id="notificationBtn" aria-label="Notifications" title="ئاگادارکرنەوە" onclick="toggleNotificationDropdown(event)">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-badge" id="notificationBadge">0</span>
-                    </button>
-                    <div class="notification-dropdown" id="notificationDropdown">
-                        <div class="notification-dropdown-header">
-                            <span>ئاگادارکرنەوەکان</span>
-                            <button class="mark-all-read" onclick="markAllNotificationsRead(event)">هەموو بخوێنەوە</button>
-                        </div>
-                        <div class="notification-list" id="notificationList">
-                            <!-- Notifications will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-                <button class="icon-btn" id="themeToggle" aria-label="Toggle theme" title="گۆڕینی ڕووناکی">
-                    <i class="fas fa-moon"></i>
-                </button>
-
-                <!-- Login Button (shown when not authenticated) -->
-                <a href="/login.html?source=islamvoice" class="icon-btn" id="loginBtn" aria-label="Login" title="چوونەژوورەوە" style="display: none;">
-                    <i class="fas fa-sign-in-alt"></i>
-                </a>
-
-                <!-- User Profile (shown when authenticated) -->
-                <div class="user-profile-btn" id="userProfileBtn" style="display: none;" onclick="toggleProfileDropdown(event)">
-                    <img id="userAvatar" class="user-avatar" src="" alt="User">
-                    <span id="userName" class="user-name"></span>
-                    <i class="fas fa-chevron-down" style="color: rgba(255,255,255,0.7); font-size: 0.8rem;"></i>
-
-                    <!-- Profile Dropdown -->
-                    <div class="profile-dropdown" id="profileDropdown">
-                        <div class="profile-dropdown-header">
-                            <div class="profile-dropdown-name" id="dropdownName"></div>
-                            <div class="profile-dropdown-email" id="dropdownEmail"></div>
-                        </div>
-                        <a href="/profile.html" class="profile-dropdown-item">
-                            <i class="fas fa-user"></i>
-                            پرۆفایل
-                        </a>
-                        <div class="profile-dropdown-divider"></div>
-                        <div class="profile-dropdown-item logout" onclick="event.stopPropagation(); logoutUser()">
-                            <i class="fas fa-sign-out-alt"></i>
-                            دەرچوون
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div class="nav-overlay" id="navOverlay"></div>
         </div>
     </nav>
@@ -3678,6 +3791,68 @@
     <div class="islamvoice-container">
         <!-- Sidebar Navigation -->
         <aside class="sidebar" id="sidebar">
+            <!-- User Actions Section -->
+            <div class="sidebar-actions">
+                <!-- User Profile (shown when authenticated) -->
+                <div class="sidebar-dropdown-container">
+                    <div class="sidebar-user-profile" id="sidebarUserProfile" style="display: none;" onclick="toggleSidebarProfileDropdown(event)">
+                        <img id="sidebarUserAvatar" class="user-avatar" src="" alt="User">
+                        <div class="user-info">
+                            <div class="user-name" id="sidebarUserName"></div>
+                            <div class="user-email" id="sidebarUserEmail"></div>
+                        </div>
+                        <i class="fas fa-chevron-down" style="color: var(--text-secondary); font-size: 0.8rem;"></i>
+                    </div>
+                    <!-- Profile Dropdown -->
+                    <div class="sidebar-profile-dropdown" id="sidebarProfileDropdown">
+                        <a href="/profile.html" class="sidebar-profile-item">
+                            <i class="fas fa-user"></i>
+                            پرۆفایل
+                        </a>
+                        <a href="/settings.html" class="sidebar-profile-item">
+                            <i class="fas fa-cog"></i>
+                            ڕێکخستنەکان
+                        </a>
+                        <div class="sidebar-profile-item logout" onclick="logoutUser()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            دەرچوون
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Login Button (shown when not authenticated) -->
+                <a href="/login.html?source=islamvoice" class="sidebar-login-btn" id="sidebarLoginBtn" style="display: none;">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>چوونە ژوورڤە</span>
+                </a>
+
+                <!-- Search & Actions Row -->
+                <div class="sidebar-actions-row">
+                    <input type="text" class="sidebar-search-input" id="sidebarSearchInput" placeholder="گەڕان..." autocomplete="off">
+                    <div class="sidebar-dropdown-container" style="position: relative;">
+                        <button class="icon-btn" id="sidebarNotificationBtn" title="ئاگادارکرنەوە" onclick="toggleNotificationDropdown(event)">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge" id="notificationBadge" style="position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; background: #e74c3c; color: white; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center;">0</span>
+                        </button>
+                        <!-- Notification Dropdown -->
+                        <div class="notification-dropdown" id="notificationDropdown" style="position: absolute; top: 100%; left: auto; right: 0; min-width: 280px; margin-top: 8px;">
+                            <div class="notification-dropdown-header">
+                                <span>ئاگادارکرنەوەکان</span>
+                                <button class="mark-all-read" onclick="markAllNotificationsRead(event)">هەموو بخوێنەوە</button>
+                            </div>
+                            <div class="notification-list" id="notificationList">
+                                <!-- Notifications will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                    <button class="icon-btn" id="sidebarThemeToggle" title="گۆڕینی ڕووناکی">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
             <!-- Site Navigation Links -->
             <div class="sidebar-nav-links">
                 <a href="/" class="sidebar-nav-link">
@@ -4257,21 +4432,39 @@
 
         // Display user profile in nav
         function displayUserProfile() {
-            document.getElementById('loginBtn').style.display = 'none';
-            document.getElementById('userProfileBtn').style.display = 'flex';
+            // Update sidebar elements
+            document.getElementById('sidebarLoginBtn').style.display = 'none';
+            document.getElementById('sidebarUserProfile').style.display = 'flex';
 
             const avatar = currentUser.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${currentUser.name}`;
-            document.getElementById('userAvatar').src = avatar;
-            document.getElementById('userName').textContent = currentUser.name;
-            document.getElementById('dropdownName').textContent = currentUser.name;
-            document.getElementById('dropdownEmail').textContent = currentUser.email;
+            document.getElementById('sidebarUserAvatar').src = avatar;
+            document.getElementById('sidebarUserName').textContent = currentUser.name;
+            document.getElementById('sidebarUserEmail').textContent = currentUser.email;
         }
 
         // Display login button
         function displayLoginButton() {
-            document.getElementById('loginBtn').style.display = 'flex';
-            document.getElementById('userProfileBtn').style.display = 'none';
+            document.getElementById('sidebarLoginBtn').style.display = 'flex';
+            document.getElementById('sidebarUserProfile').style.display = 'none';
         }
+
+        // Toggle sidebar profile dropdown
+        function toggleSidebarProfileDropdown(event) {
+            if (event) event.stopPropagation();
+            const dropdown = document.getElementById('sidebarProfileDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('active');
+            }
+        }
+
+        // Close sidebar dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            const profileDropdown = document.getElementById('sidebarProfileDropdown');
+            const userProfile = document.getElementById('sidebarUserProfile');
+            if (profileDropdown && !userProfile.contains(e.target)) {
+                profileDropdown.classList.remove('active');
+            }
+        });
 
         // ===== NOTIFICATION FUNCTIONS =====
         function toggleNotificationDropdown(event) {
@@ -4765,8 +4958,8 @@
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
 
-            // Update icon
-            const btn = document.getElementById('themeToggle');
+            // Update sidebar theme icon
+            const btn = document.getElementById('sidebarThemeToggle');
             if (btn) {
                 const icon = btn.querySelector('i');
                 if (icon) {
@@ -4777,11 +4970,11 @@
             console.log('TV Theme switched to:', newTheme);
         };
 
-        // Initialize icon on page load
+        // Initialize theme icon and add click handler
         (function() {
             function updateThemeIcon() {
                 const theme = document.documentElement.getAttribute('data-theme') || 'light';
-                const btn = document.getElementById('themeToggle');
+                const btn = document.getElementById('sidebarThemeToggle');
                 if (btn) {
                     const icon = btn.querySelector('i');
                     if (icon) {
@@ -4790,10 +4983,44 @@
                 }
             }
 
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', updateThemeIcon);
-            } else {
+            function initThemeToggle() {
                 updateThemeIcon();
+                const btn = document.getElementById('sidebarThemeToggle');
+                if (btn) {
+                    btn.addEventListener('click', function() {
+                        window.toggleTheme();
+                    });
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initThemeToggle);
+            } else {
+                initThemeToggle();
+            }
+        })();
+
+        // Sidebar search - opens search modal and transfers value
+        (function() {
+            function initSidebarSearch() {
+                const sidebarSearch = document.getElementById('sidebarSearchInput');
+                if (sidebarSearch) {
+                    sidebarSearch.addEventListener('focus', function() {
+                        const value = this.value;
+                        openSearchModal();
+                        const modalInput = document.getElementById('searchInput');
+                        if (modalInput && value) {
+                            modalInput.value = value;
+                        }
+                        this.blur();
+                    });
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initSidebarSearch);
+            } else {
+                initSidebarSearch();
             }
         })();
 
