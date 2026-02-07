@@ -397,6 +397,40 @@
             margin: 12px 16px;
         }
 
+        /* Sidebar Navigation Links */
+        .sidebar-nav-links {
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            gap: 4px;
+        }
+
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-nav-link:hover {
+            background: var(--card-bg);
+        }
+
+        .sidebar-nav-link.active {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .sidebar-nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
         [data-theme="dark"] .sidebar-section-header:hover {
             background: rgba(255, 255, 255, 0.05);
         }
@@ -3577,20 +3611,6 @@
                 <span></span>
             </div>
 
-            <div class="nav-links" id="navLinks">
-                <a href="/" class="nav-link">
-                    <i class="fas fa-home"></i>
-                    <span>سەرەکی</span>
-                </a>
-                <a href="/quran" class="nav-link">
-                    <i class="fas fa-book-open"></i>
-                    <span>قورئان</span>
-                </a>
-                <a href="/islamvoice" class="nav-link active">
-                    <i class="fas fa-play-circle"></i>
-                    <span>دەنگێ ئیسلامێ</span>
-                </a>
-            </div>
 
             <div class="nav-actions">
                 <!-- Mobile Search Button (visible only on mobile) -->
@@ -3658,6 +3678,24 @@
     <div class="islamvoice-container">
         <!-- Sidebar Navigation -->
         <aside class="sidebar" id="sidebar">
+            <!-- Site Navigation Links -->
+            <div class="sidebar-nav-links">
+                <a href="/" class="sidebar-nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>سەرەکی</span>
+                </a>
+                <a href="/quran" class="sidebar-nav-link">
+                    <i class="fas fa-book-open"></i>
+                    <span>قورئان</span>
+                </a>
+                <a href="/islamvoice" class="sidebar-nav-link active">
+                    <i class="fas fa-play-circle"></i>
+                    <span>دەنگێ ئیسلامێ</span>
+                </a>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
             <div class="sidebar-header">
                 <h1 class="sidebar-title">دەنگێ ئیسلامێ</h1>
             </div>
@@ -4761,7 +4799,6 @@
 
         // Mobile Menu Toggle - Opens the SIDEBAR
         const hamburgerMenu = document.getElementById('hamburgerMenu');
-        const navLinks = document.getElementById('navLinks');
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.querySelector('.sidebar-overlay');
 
@@ -4769,7 +4806,6 @@
             hamburgerMenu.addEventListener('click', function(e) {
                 e.stopPropagation();
                 this.classList.toggle('active');
-                if (navLinks) navLinks.classList.toggle('active');
                 if (sidebar) sidebar.classList.toggle('active');
                 if (sidebarOverlay) sidebarOverlay.classList.toggle('active');
             });
@@ -4780,7 +4816,6 @@
             sidebar.querySelectorAll('.sidebar-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     if (hamburgerMenu) hamburgerMenu.classList.remove('active');
-                    if (navLinks) navLinks.classList.remove('active');
                     sidebar.classList.remove('active');
                     if (sidebarOverlay) sidebarOverlay.classList.remove('active');
                 });
@@ -4790,7 +4825,6 @@
             document.addEventListener('click', function(event) {
                 if (hamburgerMenu && !hamburgerMenu.contains(event.target) && !sidebar.contains(event.target)) {
                     hamburgerMenu.classList.remove('active');
-                    if (navLinks) navLinks.classList.remove('active');
                     sidebar.classList.remove('active');
                     if (sidebarOverlay) sidebarOverlay.classList.remove('active');
                 }
@@ -4800,7 +4834,6 @@
             if (sidebarOverlay) {
                 sidebarOverlay.addEventListener('click', function() {
                     if (hamburgerMenu) hamburgerMenu.classList.remove('active');
-                    if (navLinks) navLinks.classList.remove('active');
                     sidebar.classList.remove('active');
                     sidebarOverlay.classList.remove('active');
                 });
