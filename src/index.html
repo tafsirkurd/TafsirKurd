@@ -6611,6 +6611,17 @@ function loadFallbackContent() {
     updateVideoSection(fallbackContent.videos);
 }
 
+// Sanitize HTML to prevent XSS - escapes special characters
+function sanitizeHtml(str) {
+    if (!str) return str;
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+}
+
 function setupContactForm() {
     const contactForm = document.getElementById('contactForm');
     if (!contactForm) return;
@@ -6626,10 +6637,11 @@ function setupContactForm() {
 
         try {
             const formData = new FormData(this);
-            const name = formData.get('name');
-            const email = formData.get('email');
-            const subject = formData.get('subject');
-            const message = formData.get('message');
+            // Sanitize all inputs to prevent XSS attacks
+            const name = sanitizeHtml(formData.get('name'));
+            const email = sanitizeHtml(formData.get('email'));
+            const subject = sanitizeHtml(formData.get('subject'));
+            const message = sanitizeHtml(formData.get('message'));
 
             // Check if Supabase is available
             if (!window.supabase) {
