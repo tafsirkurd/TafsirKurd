@@ -47,7 +47,7 @@
 .islamvoice-container {
     display: flex;
     min-height: 100vh;
-    padding-top: 60px; /* Nav height */
+    padding-top: 70px; /* Nav height */
     background: var(--bg);
     width: 100%;
     max-width: 100vw;
@@ -64,7 +64,7 @@
     flex-direction: column;
     position: fixed;
     right: 0;
-    top: 60px;
+    top: 70px;
     bottom: 0;
     z-index: 100;
     transition: transform var(--transition-medium) var(--cubic);
@@ -75,6 +75,7 @@
     scrollbar-color: var(--border) transparent;
     touch-action: pan-y;
     overscroll-behavior: contain;
+    padding-top: 8px;
 }
 
 /* Custom scrollbar for sidebar */
@@ -224,7 +225,7 @@
     inset: 0;
     background: rgba(0, 0, 0, 0.7);
     z-index: 99;
-    top: 60px;
+    top: 70px;
 }
 
 /* ===== MAIN CONTENT AREA ===== */
@@ -1239,7 +1240,7 @@
     }
 
     .sidebar {
-        top: 60px;
+        top: 65px;
         width: 280px;
         transform: translateX(100%);
         visibility: hidden;
