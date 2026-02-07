@@ -56,23 +56,23 @@
   <!-- Key User Features -->
   <url>
     <loc>https://tafsirkurd.com/goals</loc>
-    <lastmod>2026-02-04</lastmod>
+    <lastmod>2026-02-07</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.5</priority>
   </url>
 
   <url>
     <loc>https://tafsirkurd.com/reading-goal</loc>
-    <lastmod>2026-02-04</lastmod>
+    <lastmod>2026-02-07</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.5</priority>
   </url>
 
   <url>
     <loc>https://tafsirkurd.com/bookmarks</loc>
-    <lastmod>2026-02-04</lastmod>
+    <lastmod>2026-02-07</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.5</priority>
   </url>
 
   <!-- User Account Pages -->
