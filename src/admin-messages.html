@@ -581,7 +581,7 @@
             // Mark as read in database
             if (msg.status !== 'read' && token) {
                 try {
-                    const response = await fetch('/admin-messages', {
+                    const response = await fetch('/admin-messages-api', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -630,7 +630,7 @@
             }
 
             try {
-                const response = await fetch('/admin-messages', {
+                const response = await fetch('/admin-messages-api', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -672,7 +672,7 @@
             }
 
             try {
-                const response = await fetch('/admin-messages', {
+                const response = await fetch('/admin-messages-api', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
