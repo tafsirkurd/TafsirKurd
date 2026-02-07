@@ -1385,7 +1385,7 @@
         // Other
         searchBtn: document.getElementById('searchBtn'),
         navSearchInput: document.getElementById('navSearchInput'),
-        themeToggle: document.getElementById('themeToggle'),
+        themeToggle: document.getElementById('sidebarThemeToggle'),
         notificationBtn: document.getElementById('notificationBtn'),
         notification: document.getElementById('notification'),
         notificationText: document.getElementById('notificationText'),
@@ -1541,7 +1541,9 @@
         elements.skipIntroBtn.addEventListener('click', skipIntro);
 
         // Theme toggle
-        elements.themeToggle.addEventListener('click', toggleTheme);
+        if (elements.themeToggle) {
+            elements.themeToggle.addEventListener('click', toggleTheme);
+        }
 
         // Inline Search
         if (elements.navSearchInput) {
@@ -3746,8 +3748,11 @@
     }
 
     function updateThemeIcon(theme) {
+        if (!elements.themeToggle) return;
         const icon = elements.themeToggle.querySelector('i');
-        icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        if (icon) {
+            icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
     }
 
     // ===== NOTIFICATIONS =====
