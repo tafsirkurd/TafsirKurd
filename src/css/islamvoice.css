@@ -73,6 +73,8 @@
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
 }
 
 /* Custom scrollbar for sidebar */
@@ -222,7 +224,7 @@
     inset: 0;
     background: rgba(0, 0, 0, 0.7);
     z-index: 99;
-    top: 70px;
+    top: 60px;
 }
 
 /* ===== MAIN CONTENT AREA ===== */
