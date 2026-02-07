@@ -482,7 +482,16 @@
         }
 
         .sidebar-user-profile:hover {
-            background: var(--accent);
+            background: rgba(0, 0, 0, 0.03);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        [data-theme="dark"] .sidebar-user-profile:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .sidebar-user-profile .user-avatar {
@@ -561,30 +570,22 @@
             position: relative;
         }
 
-        .sidebar-notification-dropdown,
+        /* Profile dropdown - pushes content down with animation */
         .sidebar-profile-dropdown {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
+            max-height: 0;
+            overflow: hidden;
             background: var(--card-bg);
-            border: 1px solid var(--border);
             border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            z-index: 100;
-            margin-top: 8px;
-            max-height: 300px;
-            overflow-y: auto;
+            margin-top: 0;
+            transition: max-height 0.3s ease, margin-top 0.3s ease, padding 0.3s ease;
+            padding: 0 8px;
         }
 
-        .sidebar-notification-dropdown.active,
         .sidebar-profile-dropdown.active {
-            display: block;
-        }
-
-        .sidebar-profile-dropdown {
+            max-height: 200px;
+            margin-top: 8px;
             padding: 8px;
+            border: 1px solid var(--border);
         }
 
         .sidebar-profile-item {
@@ -595,16 +596,25 @@
             color: var(--text);
             text-decoration: none;
             border-radius: 8px;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.2s;
             cursor: pointer;
         }
 
         .sidebar-profile-item:hover {
-            background: var(--accent);
+            background: rgba(0, 0, 0, 0.05);
+            transform: translateX(-4px);
+        }
+
+        [data-theme="dark"] .sidebar-profile-item:hover {
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .sidebar-profile-item.logout {
             color: #e74c3c;
+        }
+
+        .sidebar-profile-item.logout:hover {
+            background: rgba(231, 76, 60, 0.1);
         }
 
         .sidebar-profile-item i {
