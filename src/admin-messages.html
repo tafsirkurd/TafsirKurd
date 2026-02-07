@@ -574,24 +574,35 @@
             tbody.classList.add('fade-in');
         }
 
-        // View message and mark as read
+        // View message and mark as read via API
         async function viewMessage(msg) {
-            const supabase = window.adminAuth.getSupabase();
+            const token = sessionStorage.getItem('adminToken');
 
             // Mark as read in database
-            if (msg.status !== 'read' && supabase) {
-                const { error } = await supabase
-                    .from('contact_messages')
-                    .update({ status: 'read' })
-                    .eq('id', msg.id);
+            if (msg.status !== 'read' && token) {
+                try {
+                    const response = await fetch('/admin-messages', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'update',
+                            token: token,
+                            messageId: msg.id,
+                            data: { status: 'read' }
+                        })
+                    });
 
-                if (!error) {
-                    // Update local data
-                    const msgIndex = allMessages.findIndex(m => m.id === msg.id);
-                    if (msgIndex !== -1) {
-                        allMessages[msgIndex].status = 'read';
+                    const result = await response.json();
+                    if (result.success) {
+                        // Update local data
+                        const msgIndex = allMessages.findIndex(m => m.id === msg.id);
+                        if (msgIndex !== -1) {
+                            allMessages[msgIndex].status = 'read';
+                        }
+                        msg.status = 'read';
                     }
-                    msg.status = 'read';
+                } catch (err) {
+                    console.error('Mark as read error:', err);
                 }
             }
 
@@ -608,38 +619,77 @@
             window.location.href = 'mailto:' + msg.email + '?subject=Re: ' + encodeURIComponent(msg.subject || 'Your message');
         }
 
-        // Delete message
+        // Delete message via API (bypasses RLS)
         async function deleteMessage(id) {
             if (!confirm('Are you sure you want to delete this message?')) return;
 
-            const supabase = window.adminAuth.getSupabase();
-            if (!supabase) return;
+            const token = sessionStorage.getItem('adminToken');
+            if (!token) {
+                alert('Not logged in');
+                return;
+            }
 
-            const { error } = await supabase
-                .from('contact_messages')
-                .delete()
-                .eq('id', id);
+            try {
+                const response = await fetch('/admin-messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'delete',
+                        token: token,
+                        messageId: id
+                    })
+                });
 
-            if (!error) {
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    console.error('Delete error:', result);
+                    alert('Failed to delete: ' + (result.error || result.details || 'Unknown error'));
+                    return;
+                }
+
+                // Success - remove from local array and re-render
                 allMessages = allMessages.filter(m => m.id !== id);
                 applyFiltersAndRender();
                 updateMessagesBadge();
-            } else {
-                alert('Failed to delete message');
+
+                // Show success notification
+                if (window.adminNotifications && window.adminNotifications.add) {
+                    window.adminNotifications.add('Deleted', 'Message deleted successfully', 'success');
+                }
+            } catch (err) {
+                console.error('Delete exception:', err);
+                alert('Error deleting message: ' + err.message);
             }
         }
 
-        // Toggle featured status (show on homepage)
+        // Toggle featured status (show on homepage) via API
         async function toggleFeatured(id, featured) {
-            const supabase = window.adminAuth.getSupabase();
-            if (!supabase) return;
+            const token = sessionStorage.getItem('adminToken');
+            if (!token) {
+                alert('Not logged in');
+                return;
+            }
 
-            const { error } = await supabase
-                .from('contact_messages')
-                .update({ is_featured: featured })
-                .eq('id', id);
+            try {
+                const response = await fetch('/admin-messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'update',
+                        token: token,
+                        messageId: id,
+                        data: { is_featured: featured }
+                    })
+                });
 
-            if (!error) {
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    alert('Failed to update: ' + (result.error || 'Unknown error'));
+                    return;
+                }
+
                 // Update local state
                 const msg = allMessages.find(m => m.id === id);
                 if (msg) msg.is_featured = featured;
@@ -653,7 +703,8 @@
                         featured ? 'success' : 'info'
                     );
                 }
-            } else {
+            } catch (err) {
+                console.error('Toggle featured error:', err);
                 alert('Failed to update featured status');
             }
         }
