@@ -1177,11 +1177,13 @@
     .sidebar {
         transform: translateX(100%);
         visibility: hidden;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.4s;
     }
 
     .sidebar.active {
         transform: translateX(0);
         visibility: visible;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0s;
     }
 
     .sidebar-toggle {
@@ -1246,11 +1248,13 @@
         visibility: hidden;
         box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15);
         padding-bottom: env(safe-area-inset-bottom, 0);
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.4s;
     }
 
     .sidebar.active {
         transform: translateX(0);
         visibility: visible;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0s;
     }
 
     /* Safe area for bottom navigation gesture area */
