@@ -13,8 +13,17 @@ export async function onRequest(context) {
         'Content-Type': 'application/json'
     };
 
+    // Handle CORS preflight
     if (request.method === 'OPTIONS') {
         return new Response(null, { status: 200, headers: corsHeaders });
+    }
+
+    // Only allow POST
+    if (request.method !== 'POST') {
+        return new Response(
+            JSON.stringify({ error: 'Method not allowed' }),
+            { status: 405, headers: corsHeaders }
+        );
     }
 
     // Create Supabase client with SERVICE_ROLE key for admin access
@@ -30,7 +39,17 @@ export async function onRequest(context) {
     );
 
     try {
-        const body = await request.json();
+        // Parse request body with error handling
+        let body;
+        try {
+            const text = await request.text();
+            if (!text || text.trim() === '') {
+                return jsonResponse({ error: 'Empty request body' }, 400, corsHeaders);
+            }
+            body = JSON.parse(text);
+        } catch (parseError) {
+            return jsonResponse({ error: 'Invalid JSON in request body', details: parseError.message }, 400, corsHeaders);
+        }
         const { action, token, messageId, data } = body;
 
         // Verify admin session
