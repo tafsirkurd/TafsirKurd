@@ -5850,6 +5850,11 @@ function setupMobileMenu() {
 
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', (e) => {
+            // Don't close nav when clicking dropdown trigger
+            if (link.classList.contains('nav-dropdown-trigger')) {
+                return;
+            }
+
             const scrollTarget = link.getAttribute('data-scroll');
 
             nav.classList.remove('nav-active');
