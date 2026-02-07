@@ -437,12 +437,18 @@
             flex-direction: column;
             padding: 12px;
             gap: 8px;
+            overflow: hidden;
+            box-sizing: border-box;
+            width: 100%;
         }
 
         .sidebar-actions-row {
             display: flex;
             align-items: center;
             gap: 8px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .sidebar-actions .icon-btn {
@@ -510,6 +516,8 @@
 
         .sidebar-search-input {
             flex: 1;
+            min-width: 0;
+            max-width: 100%;
             padding: 10px 14px;
             border: 1px solid var(--border);
             border-radius: 10px;
@@ -517,6 +525,7 @@
             color: var(--text);
             font-size: 0.9rem;
             font-family: inherit;
+            box-sizing: border-box;
         }
 
         .sidebar-search-input:focus {
