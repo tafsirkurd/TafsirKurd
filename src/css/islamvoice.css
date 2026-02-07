@@ -68,6 +68,8 @@
     bottom: 0;
     z-index: 100;
     transition: transform var(--transition-medium) var(--cubic);
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .sidebar-header {
@@ -1149,10 +1151,12 @@
 
     .sidebar {
         transform: translateX(100%);
+        visibility: hidden;
     }
 
     .sidebar.active {
         transform: translateX(0);
+        visibility: visible;
     }
 
     .sidebar-toggle {
@@ -1214,12 +1218,14 @@
         top: 60px;
         width: 280px;
         transform: translateX(100%);
+        visibility: hidden;
         box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15);
         padding-bottom: env(safe-area-inset-bottom, 0);
     }
 
     .sidebar.active {
         transform: translateX(0);
+        visibility: visible;
     }
 
     /* Safe area for bottom navigation gesture area */
