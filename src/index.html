@@ -6358,7 +6358,8 @@ function renderDailySeries() {
     if (_currentSeries.length === 3) {
         picked = _currentSeries;
     } else {
-        picked = shuffleArray(_seriesCache).slice(0, 3);
+        // Pick 3 unique series
+        picked = pickUniqueSeries(3, []);
         _currentSeries = picked;
         saveDailyState();
     }
@@ -6367,6 +6368,14 @@ function renderDailySeries() {
         const cardIndex = 3 + i; // indices 3,4,5 (ayahs are 0,1,2)
         grid.appendChild(buildSeriesCard(s, cardIndex));
     });
+}
+
+// Helper to pick N unique series, excluding specified IDs
+function pickUniqueSeries(count, excludeIds) {
+    if (!_seriesCache || _seriesCache.length === 0) return [];
+    const available = _seriesCache.filter(s => !excludeIds.includes(s.id));
+    const shuffled = shuffleArray(available);
+    return shuffled.slice(0, Math.min(count, shuffled.length));
 }
 
 function refreshSingleCard(cardIndex) {
@@ -6425,7 +6434,11 @@ function refreshSingleCard(cardIndex) {
                 });
             }
         } else if (!isAyah && _seriesCache && _seriesCache.length > 0) {
-            const s = shuffleArray(_seriesCache)[0];
+            // Exclude currently displayed series to avoid duplicates
+            const currentIds = _currentSeries.map(cs => cs?.id).filter(Boolean);
+            const newPicks = pickUniqueSeries(1, currentIds);
+            if (newPicks.length === 0) return;
+            const s = newPicks[0];
             // Update stored series data
             _currentSeries[localIdx] = s;
             saveDailyState();
