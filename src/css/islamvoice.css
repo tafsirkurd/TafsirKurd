@@ -99,6 +99,7 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+    flex-shrink: 0;
 }
 
 .sidebar-toggle {
@@ -129,7 +130,7 @@
 .sidebar-nav {
     flex: 1;
     padding: 1rem 0;
-    overflow-y: auto;
+    min-height: 0; /* Allow flex item to shrink for scrolling */
 }
 
 .sidebar-btn {
