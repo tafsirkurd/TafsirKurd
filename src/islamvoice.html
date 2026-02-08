@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="ku" dir="rtl">
 <head>
-    <!-- Theme loader must be first to prevent flash -->
-    <script src="/utils/theme-loader.js"></script>
-    <script src="/utils/translations.js?v=202602040012"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Theme loader inline to prevent flash - no network request -->
+    <script>(function(){var t=localStorage.getItem('theme'),p=JSON.parse(localStorage.getItem('userPreferences')||'{}');document.documentElement.setAttribute('data-theme',t||(p.darkMode?'dark':'light'))})();</script>
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2?v=16" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/css/islamvoice.css?v=202601290342" as="style">
+
     <title>دەنگێ ئیسلامێ | TafsirKurd</title>
 
     <!-- SEO Meta Tags -->
@@ -49,19 +54,24 @@
     <!-- Theme Color -->
     <meta name="theme-color" content="#000000">
 
-    <!-- Security Module -->
-    <script src="/utils/security.js"></script>
-
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
 
-    <!-- Fonts -->
-    <link rel="stylesheet" href="/assets/fonts/fonts.css">
-    <link rel="stylesheet" href="/assets/fontawesome/all.min.css">
+    <!-- Critical CSS - layout must load first -->
     <link rel="stylesheet" href="/css/islamvoice.css?v=202601290342">
 
-    <!-- Supabase JS Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Fonts - async load, has font-display: swap -->
+    <link rel="stylesheet" href="/assets/fonts/fonts.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="/assets/fonts/fonts.css"></noscript>
+
+    <!-- FontAwesome - async load -->
+    <link rel="stylesheet" href="/assets/fontawesome/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="/assets/fontawesome/all.min.css"></noscript>
+
+    <!-- Defer non-critical scripts -->
+    <script src="/utils/translations.js?v=202602040012" defer></script>
+    <script src="/utils/security.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 
     <style>
         /* v2.1 - Black/White Theme */
@@ -157,6 +167,65 @@
             margin-top: 20px;
             color: var(--text-muted);
             font-size: 1.1rem;
+        }
+
+        /* Body scroll lock when sidebar is open - allows sidebar to scroll */
+        html.sidebar-open,
+        body.sidebar-open {
+            overflow: hidden !important;
+            height: 100% !important;
+        }
+
+        body.sidebar-open .islamvoice-container {
+            overflow: hidden;
+        }
+
+        /* Skeleton Loading Cards - better LCP */
+        .skeleton-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .skeleton-image {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: linear-gradient(90deg, var(--border) 25%, var(--primary-light) 50%, var(--border) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-shimmer 1.5s infinite;
+        }
+
+        .skeleton-content {
+            padding: 16px;
+        }
+
+        .skeleton-title {
+            height: 20px;
+            background: var(--border);
+            border-radius: 4px;
+            margin-bottom: 12px;
+            width: 80%;
+        }
+
+        .skeleton-text {
+            height: 14px;
+            background: var(--border);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            width: 100%;
+        }
+
+        .skeleton-meta {
+            height: 12px;
+            background: var(--border);
+            border-radius: 4px;
+            width: 50%;
+        }
+
+        @keyframes skeleton-shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
 
         /* Dark mode */
@@ -434,8 +503,9 @@
         }
 
         /* Sidebar Actions (user profile, notifications, theme, search) */
+        /* Hidden on desktop - only shown on mobile via media query */
         .sidebar-actions {
-            display: flex;
+            display: none;
             flex-direction: column;
             padding: 12px;
             gap: 8px;
@@ -443,19 +513,31 @@
             width: 100%;
         }
 
+        /* Sidebar nav-links also hidden on desktop */
+        .sidebar-nav-links {
+            display: none;
+        }
+
+        /* Hide dividers that separate mobile-only sections on desktop */
+        .sidebar-actions + .sidebar-divider,
+        .sidebar-nav-links + .sidebar-divider {
+            display: none;
+        }
+
         .sidebar-actions-row {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
         }
 
         .sidebar-actions .icon-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            border-radius: 12px;
             background: var(--card-bg);
             border: 1px solid var(--border);
             color: var(--text);
@@ -463,11 +545,128 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+            font-size: 1.1rem;
+            position: relative;
         }
 
         .sidebar-actions .icon-btn:hover {
             background: var(--accent);
+            color: var(--primary);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar-actions .icon-btn:active {
+            transform: scale(0.95);
+        }
+
+        [data-theme="dark"] .sidebar-actions .icon-btn:hover {
+            background: var(--accent);
+            color: var(--primary);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Sidebar notification dropdown - full width on mobile */
+        /* Mobile notification dropdown - positioned outside sidebar */
+        .mobile-notification-dropdown {
+            display: none;
+            position: fixed !important;
+            top: auto !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 100% !important;
+            margin: 0 !important;
+            border-radius: 20px 20px 0 0 !important;
+            max-height: 60vh;
+            overflow-y: auto;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+            z-index: 10002;
+            background: var(--card-bg);
+            border: none;
+        }
+
+        .mobile-notification-dropdown.show {
+            display: block;
+            animation: slideUpMobile 0.3s ease-out;
+        }
+
+        @keyframes slideUpMobile {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .mobile-notification-dropdown .notification-dropdown-header {
+            padding: 16px 20px;
+            font-size: 1.1rem;
+            position: sticky;
+            top: 0;
+            background: var(--card-bg);
+            z-index: 1;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mobile-notification-dropdown .notification-list {
+            padding: 8px;
+        }
+
+        .mobile-notification-dropdown .notification-item {
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-bottom: 6px;
+        }
+
+        /* Mobile notification overlay */
+        .notification-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10001;
+            backdrop-filter: blur(2px);
+        }
+
+        .notification-overlay.active {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        /* Sidebar notification badge */
+        .sidebar-actions .icon-btn .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 18px;
+            height: 18px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--card-bg);
+        }
+
+        .sidebar-actions .icon-btn .notification-badge:empty,
+        .sidebar-actions .icon-btn .notification-badge[data-count="0"] {
+            display: none;
         }
 
         .sidebar-user-profile {
@@ -550,8 +749,8 @@
             gap: 10px;
             width: 100%;
             padding: 12px;
-            background: var(--primary);
-            color: var(--bg);
+            background: #1a1a1a;
+            color: #ffffff;
             border: none;
             border-radius: 12px;
             font-weight: 600;
@@ -562,8 +761,17 @@
         }
 
         .sidebar-login-btn:hover {
-            opacity: 0.9;
+            background: #000000;
             transform: translateY(-1px);
+        }
+
+        [data-theme="dark"] .sidebar-login-btn {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        [data-theme="dark"] .sidebar-login-btn:hover {
+            background: #f0f0f0;
         }
 
         /* Sidebar Dropdowns */
@@ -2452,7 +2660,8 @@
             display: block;
         }
 
-        @media (max-width: 968px) {
+        /* Tablet/Mobile breakpoint - aligned with sidebar 1024px breakpoint */
+        @media (max-width: 1024px) {
             .nav-container {
                 padding: 0.75rem 1rem;
                 flex-wrap: nowrap;
@@ -2469,47 +2678,9 @@
                 flex: 0 0 auto;
             }
 
-            .nav-actions {
-                order: 2;
-                flex: 1;
-                justify-content: flex-start;
-            }
-
+            /* Hide nav-links on mobile - use sidebar for navigation */
             .nav-links {
-                position: fixed;
-                top: 60px;
-                right: -100%;
-                width: 280px;
-                height: calc(100vh - 60px);
-                background: var(--bg);
-                border-left: 1px solid var(--border);
-                flex-direction: column;
-                padding: 2rem 0;
-                gap: 0;
-                transition: right 0.3s ease;
-                z-index: 999;
-                overflow-y: auto;
-                display: flex;
-            }
-
-            .nav-links.active {
-                right: 0;
-            }
-
-            .nav-links .nav-link {
-                display: block;
-                padding: 1rem 1.5rem;
-                color: var(--text);
-                border-bottom: 1px solid var(--border);
-                transition: all 0.3s;
-                width: 100%;
-            }
-
-            .nav-links .nav-link:hover,
-            .nav-links .nav-link.active {
-                background: var(--card-bg);
-                opacity: 1;
-                padding-right: 2rem;
+                display: none !important;
             }
 
             /* Hide search input on tablets/mobile, show search button */
@@ -2519,6 +2690,30 @@
 
             .mobile-search-btn {
                 display: flex;
+            }
+
+            /* Hide nav-actions on mobile - use sidebar-actions instead */
+            .nav-actions {
+                display: none !important;
+            }
+
+            /* Show sidebar-actions on mobile */
+            .sidebar-actions {
+                display: flex !important;
+            }
+
+            /* Show sidebar nav-links on mobile */
+            .sidebar-nav-links {
+                display: flex !important;
+                flex-direction: column;
+                padding: 0 12px;
+                gap: 4px;
+            }
+
+            /* Show sidebar dividers on mobile */
+            .sidebar-actions + .sidebar-divider,
+            .sidebar-nav-links + .sidebar-divider {
+                display: block !important;
             }
         }
 
@@ -3888,15 +4083,80 @@
         <div class="nav-container">
             <div class="nav-logo">
                 <a href="/" style="display: flex; align-items: center;">
-                    <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="logo-image">
+                    <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="logo-image" width="40" height="40">
                 </a>
                 <div class="header-title">تەفسیر کورد</div>
             </div>
+
+            <!-- Nav Links (visible on desktop) -->
+            <ul class="nav-links" id="navMenu">
+                <li><a href="/" class="nav-link"><i class="fas fa-home"></i><span>سەرەکی</span></a></li>
+                <li><a href="/quran" class="nav-link"><i class="fas fa-book-open"></i><span>قورئان</span></a></li>
+                <li><a href="/islamvoice" class="nav-link active"><i class="fas fa-play-circle"></i><span>دەنگێ ئیسلامێ</span></a></li>
+            </ul>
 
             <div class="hamburger-menu" id="hamburgerMenu">
                 <span></span>
                 <span></span>
                 <span></span>
+            </div>
+
+            <div class="nav-actions" id="navActions">
+                <!-- Mobile Search Button (visible only on mobile) -->
+                <button class="icon-btn mobile-search-btn" id="mobileSearchBtn" aria-label="گەڕان" title="گەڕان" onclick="openSearchModal()">
+                    <i class="fas fa-search"></i>
+                </button>
+                <div class="nav-search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="nav-search-input" id="navSearchInput" placeholder="بگەڕێ بۆ بەش، زنجیرە، یان بابەت..." autocomplete="off" aria-label="گەڕان">
+                </div>
+                <div class="notification-container" style="position: relative;">
+                    <button class="icon-btn" id="notificationBtn" aria-label="Notifications" title="ئاگادارکرنەوە" onclick="toggleNotificationDropdown(event)">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="navNotificationBadge">0</span>
+                    </button>
+                    <div class="notification-dropdown" id="navNotificationDropdown">
+                        <div class="notification-dropdown-header">
+                            <span>ئاگادارکرنەوەکان</span>
+                            <button class="mark-all-read" onclick="markAllNotificationsRead(event)">هەموو بخوێنەوە</button>
+                        </div>
+                        <div class="notification-list" id="navNotificationList">
+                            <!-- Notifications will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                <button class="icon-btn" id="themeToggle" aria-label="Toggle theme" title="گۆڕینی ڕووناکی">
+                    <i class="fas fa-moon"></i>
+                </button>
+
+                <!-- Login Button (shown when not authenticated) -->
+                <a href="/login.html?source=islamvoice" class="icon-btn" id="loginBtn" aria-label="Login" title="چوونەژوورەوە" style="display: none;">
+                    <i class="fas fa-sign-in-alt"></i>
+                </a>
+
+                <!-- User Profile (shown when authenticated) -->
+                <div class="user-profile-btn" id="userProfileBtn" style="display: none;" onclick="toggleProfileDropdown(event)">
+                    <img id="userAvatar" class="user-avatar" src="" alt="User" width="32" height="32">
+                    <span id="userName" class="user-name"></span>
+                    <i class="fas fa-chevron-down" style="color: rgba(255,255,255,0.7); font-size: 0.8rem;"></i>
+
+                    <!-- Profile Dropdown -->
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="profile-dropdown-header">
+                            <div class="profile-dropdown-name" id="dropdownName"></div>
+                            <div class="profile-dropdown-email" id="dropdownEmail"></div>
+                        </div>
+                        <a href="/profile.html" class="profile-dropdown-item">
+                            <i class="fas fa-user"></i>
+                            پرۆفایل
+                        </a>
+                        <div class="profile-dropdown-divider"></div>
+                        <div class="profile-dropdown-item logout" onclick="event.stopPropagation(); logoutUser()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            دەرچوون
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="nav-overlay" id="navOverlay"></div>
@@ -3912,7 +4172,7 @@
                 <!-- User Profile (shown when authenticated) -->
                 <div class="sidebar-dropdown-container">
                     <div class="sidebar-user-profile" id="sidebarUserProfile" style="display: none;" onclick="toggleSidebarProfileDropdown(event)">
-                        <img id="sidebarUserAvatar" class="user-avatar" src="" alt="User">
+                        <img id="sidebarUserAvatar" class="user-avatar" src="" alt="User" width="40" height="40">
                         <div class="user-info">
                             <div class="user-name" id="sidebarUserName"></div>
                             <div class="user-email" id="sidebarUserEmail"></div>
@@ -3945,22 +4205,10 @@
                 <!-- Search & Actions Row -->
                 <div class="sidebar-actions-row">
                     <input type="text" class="sidebar-search-input" id="sidebarSearchInput" placeholder="گەڕان..." autocomplete="off">
-                    <div class="sidebar-dropdown-container" style="position: relative;">
-                        <button class="icon-btn" id="sidebarNotificationBtn" title="ئاگادارکرنەوە" onclick="toggleNotificationDropdown(event)">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge" id="notificationBadge" style="position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; background: #e74c3c; color: white; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center;">0</span>
-                        </button>
-                        <!-- Notification Dropdown -->
-                        <div class="notification-dropdown" id="notificationDropdown" style="position: absolute; top: 100%; left: auto; right: 0; min-width: 280px; margin-top: 8px;">
-                            <div class="notification-dropdown-header">
-                                <span>ئاگادارکرنەوەکان</span>
-                                <button class="mark-all-read" onclick="markAllNotificationsRead(event)">هەموو بخوێنەوە</button>
-                            </div>
-                            <div class="notification-list" id="notificationList">
-                                <!-- Notifications will be loaded here -->
-                            </div>
-                        </div>
-                    </div>
+                    <button class="icon-btn" id="sidebarNotificationBtn" title="ئاگادارکرنەوە" onclick="toggleNotificationDropdown(event)">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notificationBadge">0</span>
+                    </button>
                     <button class="icon-btn" id="sidebarThemeToggle" title="گۆڕینی ڕووناکی">
                         <i class="fas fa-moon"></i>
                     </button>
@@ -4036,6 +4284,20 @@
 
         <!-- Mobile Sidebar Overlay -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Mobile Notification Overlay -->
+        <div class="notification-overlay" id="notificationOverlay" onclick="event.stopPropagation(); closeNotificationDropdown();"></div>
+
+        <!-- Mobile Notification Dropdown (outside sidebar for proper z-index stacking) -->
+        <div class="notification-dropdown mobile-notification-dropdown" id="notificationDropdown">
+            <div class="notification-dropdown-header">
+                <span>ئاگادارکرنەوەکان</span>
+                <button class="mark-all-read" onclick="markAllNotificationsRead(event)">هەموو بخوێنەوە</button>
+            </div>
+            <div class="notification-list" id="notificationList">
+                <!-- Notifications will be loaded here -->
+            </div>
+        </div>
 
     <!-- Video Player Modal (Fullscreen Overlay) -->
     <div class="player-modal" id="playerModal">
@@ -4237,10 +4499,38 @@
 
                 <!-- Topic Cards Grid -->
                 <div class="topics-grid" id="topicsGrid">
-                    <!-- Loading State -->
-                    <div class="loading-content" id="topicsLoader">
-                        <div class="loading-spinner"></div>
-                        <p>چاڤەڕێبە...</p>
+                    <!-- Skeleton Loading State (Better LCP) -->
+                    <div class="skeleton-card" aria-hidden="true">
+                        <div class="skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton-title"></div>
+                            <div class="skeleton-text"></div>
+                            <div class="skeleton-meta"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card" aria-hidden="true">
+                        <div class="skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton-title"></div>
+                            <div class="skeleton-text"></div>
+                            <div class="skeleton-meta"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card" aria-hidden="true">
+                        <div class="skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton-title"></div>
+                            <div class="skeleton-text"></div>
+                            <div class="skeleton-meta"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card" aria-hidden="true">
+                        <div class="skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton-title"></div>
+                            <div class="skeleton-text"></div>
+                            <div class="skeleton-meta"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -4401,7 +4691,7 @@
                 <!-- Brand Section -->
                 <div class="footer-brand">
                     <div class="footer-brand-header">
-                        <img src="assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image" loading="lazy">
+                        <img src="assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image" loading="lazy" width="50" height="50">
                         <h2 class="footer-brand-name">تەفسیر کورد</h2>
                     </div>
                     <p class="footer-brand-tagline">
@@ -4473,12 +4763,12 @@
     </footer>
 
     <!-- Kurdish Number Utility -->
-    <script src="/utils/kurdish-numbers.js?v=202601290342"></script>
-    <script src="/utils/auto-kurdish-numbers.js?v=202601290342"></script>
+    <script src="/utils/kurdish-numbers.js?v=202601290342" defer></script>
+    <script src="/utils/auto-kurdish-numbers.js?v=202601290342" defer></script>
 
     <!-- JavaScript -->
     <!-- Native HTML5 Video Player (AWS S3) -->
-    <script src="/islamvoice-player.js?v=202602032342"></script>
+    <script src="/islamvoice-player.js?v=202602032342" defer></script>
     <script>
         // Set current year in footer (Kurdish numerals)
         const yearEl = document.getElementById('year');
@@ -4548,11 +4838,26 @@
 
         // Display user profile in nav
         function displayUserProfile() {
-            // Update sidebar elements
+            const avatar = currentUser.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${currentUser.name}`;
+
+            // Update nav elements (desktop)
+            const loginBtn = document.getElementById('loginBtn');
+            const userProfileBtn = document.getElementById('userProfileBtn');
+            const userAvatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
+            const dropdownName = document.getElementById('dropdownName');
+            const dropdownEmail = document.getElementById('dropdownEmail');
+
+            if (loginBtn) loginBtn.style.display = 'none';
+            if (userProfileBtn) userProfileBtn.style.display = 'flex';
+            if (userAvatar) userAvatar.src = avatar;
+            if (userName) userName.textContent = currentUser.name;
+            if (dropdownName) dropdownName.textContent = currentUser.name;
+            if (dropdownEmail) dropdownEmail.textContent = currentUser.email;
+
+            // Update sidebar elements (mobile)
             document.getElementById('sidebarLoginBtn').style.display = 'none';
             document.getElementById('sidebarUserProfile').style.display = 'flex';
-
-            const avatar = currentUser.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${currentUser.name}`;
             document.getElementById('sidebarUserAvatar').src = avatar;
             document.getElementById('sidebarUserName').textContent = currentUser.name;
             document.getElementById('sidebarUserEmail').textContent = currentUser.email;
@@ -4560,6 +4865,13 @@
 
         // Display login button
         function displayLoginButton() {
+            // Update nav elements (desktop)
+            const loginBtn = document.getElementById('loginBtn');
+            const userProfileBtn = document.getElementById('userProfileBtn');
+            if (loginBtn) loginBtn.style.display = 'flex';
+            if (userProfileBtn) userProfileBtn.style.display = 'none';
+
+            // Update sidebar elements (mobile)
             document.getElementById('sidebarLoginBtn').style.display = 'flex';
             document.getElementById('sidebarUserProfile').style.display = 'none';
         }
@@ -4587,20 +4899,55 @@
             if (event) {
                 event.stopPropagation();
             }
-            const dropdown = document.getElementById('notificationDropdown');
+
+            // Determine which dropdown to toggle based on which button was clicked
+            const clickedBtn = event ? event.currentTarget : null;
+            const isNavBtn = clickedBtn && clickedBtn.id === 'notificationBtn';
+
+            // Get elements
+            const navDropdown = document.getElementById('navNotificationDropdown');
+            const sidebarDropdown = document.getElementById('notificationDropdown');
             const profileDropdown = document.getElementById('profileDropdown');
+            const overlay = document.getElementById('notificationOverlay');
 
             // Close profile dropdown if open
             if (profileDropdown) {
                 profileDropdown.classList.remove('show');
             }
 
-            if (dropdown) {
-                dropdown.classList.toggle('show');
-                if (dropdown.classList.contains('show')) {
-                    loadNotifications();
+            // Toggle the appropriate dropdown
+            if (isNavBtn && navDropdown) {
+                // Close sidebar dropdown and overlay
+                if (sidebarDropdown) sidebarDropdown.classList.remove('show');
+                if (overlay) overlay.classList.remove('active');
+                navDropdown.classList.toggle('show');
+                if (navDropdown.classList.contains('show')) {
+                    loadNotifications('nav');
+                }
+            } else if (sidebarDropdown) {
+                // Close nav dropdown
+                if (navDropdown) navDropdown.classList.remove('show');
+                sidebarDropdown.classList.toggle('show');
+                const isOpen = sidebarDropdown.classList.contains('show');
+                // Toggle overlay for mobile
+                if (overlay) {
+                    overlay.classList.toggle('active', isOpen);
+                }
+                if (isOpen) {
+                    loadNotifications('sidebar');
                 }
             }
+        }
+
+        // Close notification dropdown (called from overlay click)
+        function closeNotificationDropdown() {
+            const sidebarDropdown = document.getElementById('notificationDropdown');
+            const navDropdown = document.getElementById('navNotificationDropdown');
+            const overlay = document.getElementById('notificationOverlay');
+
+            if (sidebarDropdown) sidebarDropdown.classList.remove('show');
+            if (navDropdown) navDropdown.classList.remove('show');
+            if (overlay) overlay.classList.remove('active');
         }
 
         // Get read notification IDs from localStorage
@@ -4627,14 +4974,27 @@
             }
         }
 
-        // Update notification badge count
+        // Update notification badge count (both nav and sidebar)
         function updateNotificationBadge() {
-            const badge = document.getElementById('notificationBadge');
+            const sidebarBadge = document.getElementById('notificationBadge');
+            const navBadge = document.getElementById('navNotificationBadge');
             const unreadItems = document.querySelectorAll('.notification-item.unread');
             const count = unreadItems.length;
             const toKu = window.KurdishNumbers ? window.KurdishNumbers.toKurdish : String;
-            badge.textContent = count > 0 ? toKu(count) : '٠';
-            badge.style.display = count > 0 ? 'flex' : 'none';
+            const badgeText = count > 0 ? toKu(count) : '٠';
+            const badgeDisplay = count > 0 ? 'flex' : 'none';
+
+            // Update sidebar badge
+            if (sidebarBadge) {
+                sidebarBadge.textContent = badgeText;
+                sidebarBadge.style.display = badgeDisplay;
+            }
+
+            // Update nav badge
+            if (navBadge) {
+                navBadge.textContent = badgeText;
+                navBadge.style.display = badgeDisplay;
+            }
         }
 
         // Create empty notification message
@@ -4650,15 +5010,40 @@
             return emptyDiv;
         }
 
-        async function loadNotifications() {
-            const notificationList = document.getElementById('notificationList');
-            const badge = document.getElementById('notificationBadge');
+        async function loadNotifications(target) {
+            // Get both notification lists
+            const sidebarList = document.getElementById('notificationList');
+            const navList = document.getElementById('navNotificationList');
+            const sidebarBadge = document.getElementById('notificationBadge');
+            const navBadge = document.getElementById('navNotificationBadge');
+
+            // Determine which list(s) to update
+            const lists = [];
+            if (target === 'nav' && navList) lists.push(navList);
+            else if (target === 'sidebar' && sidebarList) lists.push(sidebarList);
+            else {
+                if (navList) lists.push(navList);
+                if (sidebarList) lists.push(sidebarList);
+            }
+
+            // Helper to update both badges
+            function updateBadges(text, display) {
+                if (sidebarBadge) {
+                    sidebarBadge.textContent = text;
+                    sidebarBadge.style.display = display;
+                }
+                if (navBadge) {
+                    navBadge.textContent = text;
+                    navBadge.style.display = display;
+                }
+            }
 
             if (!supabaseClient) {
-                notificationList.textContent = '';
-                notificationList.appendChild(createEmptyNotification('bell-slash', 'چوونەژوورەوە بکە بۆ دیتنی ئاگادارکرنەوەکان'));
-                badge.textContent = '0';
-                badge.style.display = 'none';
+                lists.forEach(list => {
+                    list.textContent = '';
+                    list.appendChild(createEmptyNotification('bell-slash', 'چوونەژوورەوە بکە بۆ دیتنی ئاگادارکرنەوەکان'));
+                });
+                updateBadges('0', 'none');
                 return;
             }
 
@@ -4672,12 +5057,12 @@
 
                 if (error) throw error;
 
-                notificationList.textContent = '';
+                // Clear all lists
+                lists.forEach(list => list.textContent = '');
 
                 if (!episodes || episodes.length === 0) {
-                    notificationList.appendChild(createEmptyNotification('bell-slash', 'هیچ ئاگادارکرنەوەیەک نییە'));
-                    badge.textContent = '0';
-                    badge.style.display = 'none';
+                    lists.forEach(list => list.appendChild(createEmptyNotification('bell-slash', 'هیچ ئاگادارکرنەوەیەک نییە')));
+                    updateBadges('0', 'none');
                     return;
                 }
 
@@ -4697,46 +5082,51 @@
 
                     if (isUnread) unreadCount++;
 
-                    const item = document.createElement('div');
-                    item.className = 'notification-item' + (isUnread ? ' unread' : '');
-                    item.dataset.episodeId = ep.id;
-                    item.onclick = () => {
-                        markNotificationRead(ep.id);
-                        item.classList.remove('unread');
-                        playEpisodeFromNotification(ep.id);
-                    };
+                    // Create notification item for each list
+                    lists.forEach(list => {
+                        const item = document.createElement('div');
+                        item.className = 'notification-item' + (isUnread ? ' unread' : '');
+                        item.dataset.episodeId = ep.id;
+                        item.onclick = () => {
+                            markNotificationRead(ep.id);
+                            // Remove unread class from all matching items
+                            document.querySelectorAll(`.notification-item[data-episode-id="${ep.id}"]`).forEach(el => el.classList.remove('unread'));
+                            playEpisodeFromNotification(ep.id);
+                        };
 
-                    const iconDiv = document.createElement('div');
-                    iconDiv.className = 'notification-icon new-episode';
-                    const playIcon = document.createElement('i');
-                    playIcon.className = 'fas fa-play-circle';
-                    iconDiv.appendChild(playIcon);
+                        const iconDiv = document.createElement('div');
+                        iconDiv.className = 'notification-icon new-episode';
+                        const playIcon = document.createElement('i');
+                        playIcon.className = 'fas fa-play-circle';
+                        iconDiv.appendChild(playIcon);
 
-                    const contentDiv = document.createElement('div');
-                    contentDiv.className = 'notification-content';
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'notification-content';
 
-                    const titleDiv = document.createElement('div');
-                    titleDiv.className = 'notification-title';
-                    titleDiv.textContent = ep.title;
+                        const titleDiv = document.createElement('div');
+                        titleDiv.className = 'notification-title';
+                        titleDiv.textContent = ep.title;
 
-                    const timeDiv = document.createElement('div');
-                    timeDiv.className = 'notification-time';
-                    timeDiv.textContent = (ep.islamvoice_series?.name_ku || '') + ' • ' + formatTimeAgo(ep.created_at);
+                        const timeDiv = document.createElement('div');
+                        timeDiv.className = 'notification-time';
+                        timeDiv.textContent = (ep.islamvoice_series?.name_ku || '') + ' • ' + formatTimeAgo(ep.created_at);
 
-                    contentDiv.appendChild(titleDiv);
-                    contentDiv.appendChild(timeDiv);
-                    item.appendChild(iconDiv);
-                    item.appendChild(contentDiv);
-                    notificationList.appendChild(item);
+                        contentDiv.appendChild(titleDiv);
+                        contentDiv.appendChild(timeDiv);
+                        item.appendChild(iconDiv);
+                        item.appendChild(contentDiv);
+                        list.appendChild(item);
+                    });
                 });
 
-                badge.textContent = unreadCount > 0 ? unreadCount : '0';
-                badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+                updateBadges(unreadCount > 0 ? String(unreadCount) : '0', unreadCount > 0 ? 'flex' : 'none');
 
             } catch (error) {
                 console.error('Error loading notifications:', error);
-                notificationList.textContent = '';
-                notificationList.appendChild(createEmptyNotification('exclamation-circle', 'هەڵەیەک ڕوویدا'));
+                lists.forEach(list => {
+                    list.textContent = '';
+                    list.appendChild(createEmptyNotification('exclamation-circle', 'هەڵەیەک ڕوویدا'));
+                });
             }
         }
 
@@ -4778,19 +5168,36 @@
             });
             saveReadNotifications(readIds);
 
-            // Hide badge
-            const badge = document.getElementById('notificationBadge');
-            badge.textContent = '٠';
-            badge.style.display = 'none';
+            // Hide both badges (nav and sidebar)
+            const sidebarBadge = document.getElementById('notificationBadge');
+            const navBadge = document.getElementById('navNotificationBadge');
+            if (sidebarBadge) {
+                sidebarBadge.textContent = '٠';
+                sidebarBadge.style.display = 'none';
+            }
+            if (navBadge) {
+                navBadge.textContent = '٠';
+                navBadge.style.display = 'none';
+            }
         }
 
-        // Close notification dropdown when clicking outside
+        // Close notification dropdowns when clicking outside
         document.addEventListener('click', function(event) {
-            const notificationDropdown = document.getElementById('notificationDropdown');
-            const notificationContainer = document.querySelector('.notification-container');
+            const sidebarDropdown = document.getElementById('notificationDropdown');
+            const navDropdown = document.getElementById('navNotificationDropdown');
+            const sidebarBtn = document.getElementById('sidebarNotificationBtn');
+            const navBtn = document.getElementById('notificationBtn');
+            const overlay = document.getElementById('notificationOverlay');
 
-            if (notificationDropdown && notificationContainer && !notificationContainer.contains(event.target)) {
-                notificationDropdown.classList.remove('show');
+            // Close sidebar dropdown if clicking outside
+            if (sidebarDropdown && sidebarBtn && !sidebarBtn.contains(event.target) && !sidebarDropdown.contains(event.target)) {
+                sidebarDropdown.classList.remove('show');
+                if (overlay) overlay.classList.remove('active');
+            }
+
+            // Close nav dropdown if clicking outside
+            if (navDropdown && navBtn && !navBtn.contains(event.target) && !navDropdown.contains(event.target)) {
+                navDropdown.classList.remove('show');
             }
         });
 
@@ -5065,54 +5472,33 @@
         }
 
         // ===== THEME TOGGLE =====
-        // Global function for theme toggle (called from onclick)
-        window.toggleTVTheme = function() {
-            console.log('toggleTVTheme called');
-            const current = document.documentElement.getAttribute('data-theme') || 'light';
-            const newTheme = current === 'dark' ? 'light' : 'dark';
+        // window.toggleTVTheme is defined in <head> for early availability
 
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-
-            // Update sidebar theme icon
-            const btn = document.getElementById('sidebarThemeToggle');
-            if (btn) {
-                const icon = btn.querySelector('i');
-                if (icon) {
-                    icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-                }
-            }
-
-            console.log('TV Theme switched to:', newTheme);
-        };
-
-        // Initialize theme icon and add click handler
+        // Initialize theme icons on page load
         (function() {
-            function updateThemeIcon() {
+            function updateThemeIcons() {
                 const theme = document.documentElement.getAttribute('data-theme') || 'light';
-                const btn = document.getElementById('sidebarThemeToggle');
-                if (btn) {
-                    const icon = btn.querySelector('i');
-                    if (icon) {
-                        icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-                    }
-                }
-            }
+                const iconClass = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
 
-            function initThemeToggle() {
-                updateThemeIcon();
-                const btn = document.getElementById('sidebarThemeToggle');
-                if (btn) {
-                    btn.addEventListener('click', function() {
-                        window.toggleTheme();
-                    });
+                // Update sidebar icon
+                const sidebarBtn = document.getElementById('sidebarThemeToggle');
+                if (sidebarBtn) {
+                    const icon = sidebarBtn.querySelector('i');
+                    if (icon) icon.className = iconClass;
+                }
+
+                // Update nav icon
+                const navBtn = document.getElementById('themeToggle');
+                if (navBtn) {
+                    const icon = navBtn.querySelector('i');
+                    if (icon) icon.className = iconClass;
                 }
             }
 
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initThemeToggle);
+                document.addEventListener('DOMContentLoaded', updateThemeIcons);
             } else {
-                initThemeToggle();
+                updateThemeIcons();
             }
         })();
 
@@ -5145,12 +5531,31 @@
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.querySelector('.sidebar-overlay');
 
+        // Helper to lock/unlock body scroll (mobile-friendly)
+        let scrollPosition = 0;
+        function lockBodyScroll() {
+            scrollPosition = window.pageYOffset;
+            document.body.classList.add('sidebar-open');
+            document.documentElement.classList.add('sidebar-open');
+        }
+        function unlockBodyScroll() {
+            document.body.classList.remove('sidebar-open');
+            document.documentElement.classList.remove('sidebar-open');
+            window.scrollTo(0, scrollPosition);
+        }
+
         if (hamburgerMenu) {
             hamburgerMenu.addEventListener('click', function(e) {
                 e.stopPropagation();
                 this.classList.toggle('active');
                 if (sidebar) sidebar.classList.toggle('active');
                 if (sidebarOverlay) sidebarOverlay.classList.toggle('active');
+                // Lock/unlock body scroll based on sidebar state
+                if (sidebar && sidebar.classList.contains('active')) {
+                    lockBodyScroll();
+                } else {
+                    unlockBodyScroll();
+                }
             });
         }
 
@@ -5161,15 +5566,23 @@
                     if (hamburgerMenu) hamburgerMenu.classList.remove('active');
                     sidebar.classList.remove('active');
                     if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+                    unlockBodyScroll();
                 });
             });
 
-            // Close sidebar when clicking outside
+            // Close sidebar when clicking outside (but not on notification overlay/dropdown)
             document.addEventListener('click', function(event) {
+                const notificationOverlay = document.getElementById('notificationOverlay');
+                const notificationDropdown = document.getElementById('notificationDropdown');
+                // Don't close sidebar if clicking on notification elements
+                if (notificationOverlay && (notificationOverlay.contains(event.target) || event.target === notificationOverlay)) return;
+                if (notificationDropdown && (notificationDropdown.contains(event.target) || event.target === notificationDropdown)) return;
+
                 if (hamburgerMenu && !hamburgerMenu.contains(event.target) && !sidebar.contains(event.target)) {
                     hamburgerMenu.classList.remove('active');
                     sidebar.classList.remove('active');
                     if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+                    unlockBodyScroll();
                 }
             });
 
@@ -5179,6 +5592,7 @@
                     if (hamburgerMenu) hamburgerMenu.classList.remove('active');
                     sidebar.classList.remove('active');
                     sidebarOverlay.classList.remove('active');
+                    unlockBodyScroll();
                 });
             }
         }

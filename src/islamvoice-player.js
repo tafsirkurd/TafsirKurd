@@ -339,7 +339,7 @@
             return `
                 <div class="topic-card" onclick="window.tvApp.showTopic('${topic.id}')">
                     <div class="topic-card-image">
-                        <img src="${topic.thumbnail}" alt="${topic.title}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
+                        <img src="${topic.thumbnail}" alt="${topic.title}" loading="lazy" decoding="async" width="320" height="180" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
                         <div class="topic-fallback-icon"><i class="fas fa-play-circle"></i></div>
                     </div>
                     <div class="topic-card-content">
@@ -460,7 +460,7 @@
                     <div class="episode-number">${toKu(index + 1)}</div>
 
                     <div class="episode-thumbnail">
-                        <img src="${episode.thumbnail || ''}" alt="${episode.title}" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
+                        <img src="${episode.thumbnail || ''}" alt="${episode.title}" loading="lazy" decoding="async" width="240" height="135" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
                         <div class="episode-fallback-icon"><i class="fas fa-film"></i></div>
                         ${locked ? `
                             <div class="locked-badge">
@@ -1385,7 +1385,8 @@
         // Other
         searchBtn: document.getElementById('searchBtn'),
         navSearchInput: document.getElementById('navSearchInput'),
-        themeToggle: document.getElementById('sidebarThemeToggle'),
+        themeToggle: document.getElementById('themeToggle'),
+        sidebarThemeToggle: document.getElementById('sidebarThemeToggle'),
         notificationBtn: document.getElementById('notificationBtn'),
         notification: document.getElementById('notification'),
         notificationText: document.getElementById('notificationText'),
@@ -1540,9 +1541,14 @@
         // Skip intro
         elements.skipIntroBtn.addEventListener('click', skipIntro);
 
-        // Theme toggle
+        // Theme toggle (nav bar for desktop)
         if (elements.themeToggle) {
             elements.themeToggle.addEventListener('click', toggleTheme);
+        }
+
+        // Theme toggle (sidebar for mobile)
+        if (elements.sidebarThemeToggle) {
+            elements.sidebarThemeToggle.addEventListener('click', toggleTheme);
         }
 
         // Inline Search
@@ -2261,7 +2267,7 @@
 
         container.innerHTML = state.playlist.map((ep, index) => `
             <div class="playlist-item ${ep.id === state.currentEpisode ? 'playing' : ''}" onclick="playVideo(${ep.id})">
-                <img src="${ep.thumbnail}" class="playlist-thumb" alt="${ep.title}" loading="lazy" decoding="async">
+                <img src="${ep.thumbnail}" class="playlist-thumb" alt="${ep.title}" loading="lazy" decoding="async" width="80" height="45">
                 <div class="playlist-info">
                     <div class="playlist-title">${index + 1}. ${ep.title}</div>
                     <div class="playlist-duration">${ep.duration}</div>
@@ -3748,10 +3754,22 @@
     }
 
     function updateThemeIcon(theme) {
-        if (!elements.themeToggle) return;
-        const icon = elements.themeToggle.querySelector('i');
-        if (icon) {
-            icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        const iconClass = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+
+        // Update nav theme toggle icon (desktop)
+        if (elements.themeToggle) {
+            const navIcon = elements.themeToggle.querySelector('i');
+            if (navIcon) {
+                navIcon.className = iconClass;
+            }
+        }
+
+        // Update sidebar theme toggle icon (mobile)
+        if (elements.sidebarThemeToggle) {
+            const sidebarIcon = elements.sidebarThemeToggle.querySelector('i');
+            if (sidebarIcon) {
+                sidebarIcon.className = iconClass;
+            }
         }
     }
 

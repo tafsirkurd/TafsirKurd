@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ku">
 <head>
-  <script src="/utils/theme-loader.js"></script>
-  <script src="/utils/translations.js?v=202602040012"></script>
-  <script src="/utils/scroll-position.js"></script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Theme loader inline to prevent flash - no network request -->
+  <script>
+    (function(){var t=localStorage.getItem('theme'),p=JSON.parse(localStorage.getItem('userPreferences')||'{}');document.documentElement.setAttribute('data-theme',t||(p.darkMode?'dark':'light'))})();
+  </script>
+  <!-- Defer non-critical scripts -->
+  <script src="/utils/translations.js?v=202602040012" defer></script>
+  <script src="/utils/scroll-position.js" defer></script>
   <meta name="description" content="TafsirKurd (تەفسیر کورد) - پلاتفۆرمەکا کوردی بۆ خویندن و تەفسیرا قورئانا پیرۆز ب زمانی کوردی. Kurdish Quran Tafsir platform with translation and Islamic video content.">
   <meta name="keywords" content="TafsirKurd, tafsirkurd, Tafsir Kurd, تەفسیر کورد, تەفسیرا قورئانا پیرۆز, تەفسیرا کوردی, تەفسیر بادینی, قورئان ب کوردی, Kurdish Quran, Quran Kurdish translation, tafsir kurdish">
 
@@ -170,11 +174,13 @@
   <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=16" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/hafs.woff2?v=16" as="font" type="font/woff2" crossorigin>
 
-  <!-- Local Fonts - Zero external requests, instant loading -->
-  <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
+  <!-- Local Fonts - Load async, fonts have font-display: swap -->
+  <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/assets/fonts/fonts.css?v=16"></noscript>
 
-  <!-- Local Font Awesome - Zero external requests -->
-  <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
+  <!-- Local Font Awesome - Load async to not block render -->
+  <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16"></noscript>
 
   <!-- Critical CSS - Inline for instant rendering -->
   <style>
@@ -4339,11 +4345,11 @@ footer {
   <link rel="prefetch" href="/profile.html">
 
   <!-- Console Cleaner - Clean console in production -->
-  <script src="utils/console-cleaner.js"></script>
+  <script src="utils/console-cleaner.js" defer></script>
 
     <!-- Kurdish Number Utility - Convert all numbers to Kurdish numerals -->
-    <script src="utils/kurdish-numbers.js"></script>
-    <script src="utils/auto-kurdish-numbers.js"></script>
+    <script src="utils/kurdish-numbers.js" defer></script>
+    <script src="utils/auto-kurdish-numbers.js" defer></script>
 
   <!-- Performance Monitor - Track loading performance -->
   <script src="utils/performance-monitor.js" defer></script>
@@ -4462,7 +4468,7 @@ window.addEventListener('error', function(e) {
         <div class="floating-shape square"></div>
     </div>
     <div class="preloader-content">
-        <img src="assets/images/logo.png" alt="Tafsir Kurd" class="preloader-logo logo-image">
+        <img src="assets/images/logo.png" alt="Tafsir Kurd" class="preloader-logo logo-image" width="80" height="80">
         <h1 class="preloader-title">تەفسیر کورد</h1>
         <p class="preloader-subtitle">چاڤەڕێبە...</p>
         <div class="preloader-dots">
@@ -4496,7 +4502,7 @@ window.addEventListener('error', function(e) {
     <div class="nav-container">
         <div class="nav-logo">
             <a href="#" id="homeLink" style="display: flex; align-items: center;">
-                <img src="assets/images/logo.png" alt="Tafsir Kurd logo" class="logo-image">
+                <img src="assets/images/logo.png" alt="Tafsir Kurd logo" class="logo-image" width="40" height="40">
             </a>
             <div class="header-title">تەفسیر کورد</div>
         </div>
@@ -4529,7 +4535,7 @@ window.addEventListener('error', function(e) {
                 <div class="nav-dropdown-menu">
                     <a href="/about" class="nav-dropdown-item">
                         <div class="nav-dropdown-avatar">
-                            <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="nav-dropdown-img">
+                            <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="nav-dropdown-img" width="32" height="32">
                         </div>
                         <div class="nav-dropdown-info">
                             <span class="nav-dropdown-name">تەفسیر کورد</span>
@@ -4564,7 +4570,7 @@ window.addEventListener('error', function(e) {
     <div class="header-scroll-shimmer"></div>
     <div class="header-edge-bottom"></div>
     <div class="hero-inner">
-        <img src="assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-title hero-logo-static" loading="lazy" style="height: 150px; width: auto; filter: brightness(0) invert(1);">
+        <img src="assets/images/TafsirKurd.png" alt="تەفسیر کورد" class="hero-title hero-logo-static" loading="lazy" width="400" height="150" style="height: 150px; width: auto; filter: brightness(0) invert(1);">
         <p class="hero-sub">بەردەستکرنا شرۆڤەکرنەکا ڕوون و ڕەسەن یا قورئانا پیرۆز ب زمانێ کوردی. ب شێوەیەکێ ڕوون و ب دلسۆزی و ڕێزگرتن، ئەم وانەیان ب شێوازێ ڤیدیویێن کورت و ئاسۆیی و هەروەسا تەفسیرا تەمام دروست دکەین دا کو پەیاما قورئانێ بگەهیتە هەمی ماڵان.</p>
 
         <div class="hero-cards">
@@ -4872,7 +4878,7 @@ window.addEventListener('error', function(e) {
             <!-- Brand Section -->
             <div class="footer-brand">
                 <div class="footer-brand-header">
-                    <img src="assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image" loading="lazy">
+                    <img src="assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image" loading="lazy" width="50" height="50">
                     <h2 class="footer-brand-name">تەفسیر کورد</h2>
                 </div>
                 <p class="footer-brand-tagline">
@@ -5846,6 +5852,16 @@ function setupMobileMenu() {
     navOverlay.addEventListener('click', () => {
         nav.classList.remove('nav-active');
         document.body.classList.remove('no-scroll');
+    });
+
+    // Click outside to close nav
+    document.addEventListener('click', (e) => {
+        if (nav.classList.contains('nav-active')) {
+            if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
+                nav.classList.remove('nav-active');
+                document.body.classList.remove('no-scroll');
+            }
+        }
     });
 
     document.querySelectorAll('.nav-link').forEach(link => {

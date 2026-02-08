@@ -710,6 +710,42 @@
             color: var(--text);
         }
 
+        /* Top back button - positioned on form panel side */
+        .top-back-btn {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 1rem;
+            z-index: 100;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .top-back-btn:hover {
+            background: var(--bg);
+            transform: translateX(-3px);
+        }
+
+        @media (max-width: 1024px) {
+            .top-back-btn {
+                top: 0.75rem;
+                left: 0.75rem;
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+        }
+
         /* Keyframe animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
@@ -820,6 +856,11 @@
     </div>
 
     <div class="login-page">
+        <!-- Top back button -->
+        <a href="#" class="top-back-btn" id="topBackBtn" onclick="goBack(); return false;">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+
         <!-- Hero panel -->
         <div class="hero-panel" id="heroPanel">
             <div class="hero-content">
@@ -1058,7 +1099,7 @@
             </div>
 
             <div class="back-link">
-                <a href="/quran.html">
+                <a href="#" onclick="goBack(); return false;" id="bottomBackLink">
                     <i class="fas fa-arrow-right"></i>
                     گەڕیان ڤە بۆ سەرەکی
                 </a>
@@ -1069,6 +1110,45 @@
     </div><!-- .login-page -->
 
     <script>
+        // Go back to where user came from
+        function goBack() {
+            // Check URL params for redirect source
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect') || urlParams.get('from') || urlParams.get('source');
+
+            // If we have a redirect param, go there
+            if (redirect) {
+                // Handle relative paths
+                if (redirect.startsWith('/')) {
+                    window.location.href = redirect;
+                } else if (redirect === 'islamvoice') {
+                    window.location.href = '/islamvoice.html';
+                } else if (redirect === 'quran') {
+                    window.location.href = '/quran.html';
+                } else {
+                    window.location.href = '/' + redirect + '.html';
+                }
+                return;
+            }
+
+            // Check referrer
+            const referrer = document.referrer;
+            if (referrer && referrer.includes(window.location.host)) {
+                window.location.href = referrer;
+                return;
+            }
+
+            // Check stored redirect destination
+            const storedRedirect = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination');
+            if (storedRedirect) {
+                window.location.href = storedRedirect;
+                return;
+            }
+
+            // Default to home
+            window.location.href = '/';
+        }
+
         // Supabase client (initialized securely)
         let supabaseClient = null;
 
