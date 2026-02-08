@@ -9017,6 +9017,11 @@
                 return;
             }
 
+            // Check if on mobile (for short ayahs only)
+            const isMobile = window.innerWidth <= 768;
+            const storageKey = isMobile ? 'dailyAyahMobile' : 'dailyAyah';
+            const maxAyahLength = 150; // Max characters for mobile ayahs
+
             // Get today's date as string (YYYY-MM-DD) - changes at local midnight (12 AM)
             const today = new Date();
             const year = today.getFullYear();
@@ -9025,7 +9030,7 @@
             const dateStr = `${year}-${month}-${day}`;
 
             // Check if we have ayah for today in localStorage
-            const storedData = localStorage.getItem('dailyAyah');
+            const storedData = localStorage.getItem(storageKey);
             let dailyAyah = null;
 
             if (storedData) {
@@ -9050,7 +9055,7 @@
             // Generate new ayah if we don't have one for today
             if (!dailyAyah) {
                 // Build list of all ayahs
-                const allAyahs = [];
+                let allAyahs = [];
                 for (let surah = 1; surah <= 114; surah++) {
                     const surahData = quranData[surah];
                     if (surahData && surahData.verses) {
@@ -9064,6 +9069,12 @@
                             });
                         }
                     }
+                }
+
+                // On mobile, filter to only short ayahs
+                if (isMobile) {
+                    allAyahs = allAyahs.filter(a => a.text.length <= maxAyahLength);
+                    console.log('[Daily Ayah] Mobile mode: filtered to', allAyahs.length, 'short ayahs');
                 }
 
                 // Use date-based seed so ALL users get the SAME ayah each day
@@ -9082,7 +9093,7 @@
                     text: selectedAyah.text
                 };
 
-                localStorage.setItem('dailyAyah', JSON.stringify(dailyAyah));
+                localStorage.setItem(storageKey, JSON.stringify(dailyAyah));
             }
 
             // Display the ayah
