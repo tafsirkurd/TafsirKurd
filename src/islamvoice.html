@@ -5320,7 +5320,7 @@
         async function logoutUser() {
             try {
                 if (supabaseClient) {
-                    await supabaseClient.auth.signOut();
+                    await supabaseClient.auth.signOut({ scope: 'global' });
                 }
 
                 // Clear localStorage (except Quran data)
@@ -5331,7 +5331,7 @@
                 const keysToRemove = [];
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
-                    if ((key.includes('supabase') || key.includes('sb-')) && !key.includes('quran_data')) {
+                    if (key && (key.includes('supabase') || key.startsWith('sb-')) && !key.includes('quran_data')) {
                         keysToRemove.push(key);
                     }
                 }

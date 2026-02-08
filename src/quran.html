@@ -6321,16 +6321,27 @@
             // Sign out from Supabase if available
             if (supabaseClient) {
                 try {
-                    await supabaseClient.auth.signOut();
+                    await supabaseClient.auth.signOut({ scope: 'global' });
                     console.log('✅ Signed out from Supabase');
                 } catch (error) {
                     console.error('Error signing out from Supabase:', error);
                 }
             }
 
+            // Clear all Supabase session keys from localStorage
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('supabase') || key.startsWith('sb-'))) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+
             // Now logout and clear authentication
             localStorage.removeItem('isAuthenticated');
             localStorage.removeItem('user');
+            sessionStorage.clear();
 
             // Update UI
             document.getElementById('authSection').innerHTML = `
