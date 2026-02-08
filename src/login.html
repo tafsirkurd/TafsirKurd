@@ -2964,23 +2964,26 @@ Press Ctrl+Shift+C to copy this report
             }
         }
 
-        // Context-aware hero panel
+        // Context-aware hero panel - based on URL params only, not stored redirect
         function setupHeroPanel() {
             const heroPanel = document.getElementById('heroPanel');
             const heroTitle = document.getElementById('heroTitle');
             const heroSubtitle = document.getElementById('heroSubtitle');
             if (!heroPanel) return;
 
-            const redirectDest = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination') || '';
+            // Check URL params directly for hero content
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect') || urlParams.get('from') || urlParams.get('source') || '';
 
-            if (redirectDest.includes('quran')) {
-                // Try cached image first, then fetch from DB
+            if (redirect.includes('quran')) {
+                // Quran context
                 const cached = localStorage.getItem('login_hero_quran_image');
                 if (cached) heroPanel.style.backgroundImage = "url('" + cached + "')";
                 heroTitle.textContent = 'قورئانا پیرۆز';
                 heroSubtitle.textContent = 'بەردەوامکرنا خواندنا قورئانا پیرۆز';
                 fetchHeroImage('login_hero_quran_image', heroPanel, '/assets/images/quran-social-card-v3.jpg');
-            } else if (redirectDest.includes('islamvoice')) {
+            } else if (redirect.includes('islamvoice')) {
+                // IslamVoice context
                 const cached = localStorage.getItem('login_hero_islamvoice_image');
                 if (cached) heroPanel.style.backgroundImage = "url('" + cached + "')";
                 heroTitle.textContent = 'دەنگێ ئیسلامێ';
