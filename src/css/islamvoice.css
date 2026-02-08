@@ -149,7 +149,7 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    transition: all var(--transition-fast);
+    transition: color var(--transition-fast), background-color var(--transition-fast);
     position: relative;
     white-space: nowrap;
     overflow: visible;
@@ -342,11 +342,12 @@
     border-radius: var(--card-radius);
     overflow: hidden;
     cursor: pointer;
-    transition: transform var(--transition-medium) var(--cubic), box-shadow var(--transition-medium);
+    transition: transform var(--transition-medium) var(--cubic);
     border: 1px solid var(--border);
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
+    will-change: transform;
 }
 
 .topic-card:hover {
@@ -367,6 +368,7 @@
     height: 100%;
     object-fit: cover;
     transition: transform var(--transition-medium);
+    will-change: transform;
 }
 
 .topic-card:hover .topic-card-image img {
@@ -471,9 +473,10 @@
     display: flex;
     gap: 1.5rem;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: transform var(--transition-fast), border-color var(--transition-fast);
     width: 100%;
     max-width: 100%;
+    will-change: transform;
     box-sizing: border-box;
     overflow: hidden;
 }

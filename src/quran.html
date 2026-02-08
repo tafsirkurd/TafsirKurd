@@ -1,23 +1,20 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ku">
 <head>
-    <!-- Force Cloudflare deployment v506 - 2026-01-19 -->
-    <!-- 🚀 PRODUCTION MODE: Disable console in production for max performance -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <!-- Theme loader inline to prevent flash - no network request -->
+    <script>(function(){var t=localStorage.getItem('theme'),p=JSON.parse(localStorage.getItem('userPreferences')||'{}');document.documentElement.setAttribute('data-theme',t||(p.darkMode?'dark':'light'))})();</script>
+    <!-- Defer all non-critical scripts -->
     <script src="/utils/production-mode.js" defer></script>
-    <!-- Theme loader MUST run immediately to prevent flash -->
-    <script src="/utils/theme-loader.js"></script>
-    <script src="/utils/translations.js?v=202602040012"></script>
-    <!-- Secure Storage System - load early for auth check -->
-    <script src="/utils/secure-storage.js"></script>
-    <!-- Cloud Sync Manager - syncs all data to Supabase -->
-    <script src="/utils/cloud-sync.js"></script>
-    <!-- Quran Page Restoration - 20-minute window -->
-    <script src="/utils/quran-page-restoration.js"></script>
+    <script src="/utils/translations.js?v=202602040012" defer></script>
+    <script src="/utils/secure-storage.js" defer></script>
+    <script src="/utils/cloud-sync.js" defer></script>
+    <!-- Disabled: Auto-restoration removed - always start at homepage -->
+    <!-- <script src="/utils/quran-page-restoration.js" defer></script> -->
     <script src="/utils/security.js" defer></script>
     <script src="/utils/scroll-position.js" defer></script>
     <script src="/utils/bot-detector.js" defer></script>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
 
     <!-- 🔥 ULTRA-FAST Performance Hints -->
     <!-- Preload hero image (LCP element) with highest priority -->
@@ -114,7 +111,7 @@
     <script src="/config/google-config.js" defer></script>
 
     <!-- Supabase for unified profiles - Load early (no defer) to prevent auth-redirect timeout -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 
     <!-- Auth Redirect Handler for profile management -->
     <script src="/utils/auth-redirect.js" defer></script>
@@ -3810,10 +3807,9 @@
 
             /* Continue Reading Card - Mobile Fix & Position */
             #continueReadingCard {
-                padding: 12px 10px !important;
-                min-height: 120px !important;
-                margin-bottom: 0 !important;
-                order: -1 !important; /* Show first on mobile */
+                padding: 12px 14px !important;
+                min-height: auto !important;
+                margin-bottom: 10px !important;
             }
 
             /* Left column cards */
@@ -3833,14 +3829,6 @@
                 font-size: 0.75rem !important;
             }
 
-            #continueReadingCard > div:last-child {
-                margin-top: 8px !important;
-            }
-
-            #continueReadingCard > div:last-child > div:last-child {
-                padding: 4px 10px !important;
-                font-size: 0.7rem !important;
-            }
 
             .hero-chip {
                 font-size: 0.75rem;
@@ -4088,34 +4076,60 @@
                 text-align: center;
             }
 
-            /* Audio Player Mobile */
+            /* Audio Player Mobile - Compact & Clean */
+            .audio-player {
+                border-radius: 16px 16px 0 0;
+                margin: 0 8px;
+                width: calc(100% - 16px);
+                left: 0;
+                box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.2);
+            }
+
             .audio-player-content {
-                padding: 12px 15px;
-                gap: 10px;
+                padding: 12px 16px;
+                gap: 12px;
+                flex-wrap: nowrap;
             }
 
             .audio-player-info {
-                min-width: 100px;
+                min-width: 0;
+                flex: 1;
+                overflow: hidden;
             }
 
             .audio-player-surah {
-                font-size: 0.9rem;
+                font-size: 0.95rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .audio-player-ayah {
-                font-size: 0.75rem;
-            }
-
-            .player-btn {
-                width: 35px;
-                height: 35px;
                 font-size: 0.8rem;
             }
 
+            .audio-player-controls {
+                gap: 8px;
+            }
+
+            .player-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 0.85rem;
+                background: var(--bg);
+            }
+
             .player-btn-main {
-                width: 45px;
-                height: 45px;
-                font-size: 1rem;
+                width: 48px;
+                height: 48px;
+                font-size: 1.1rem;
+                background: var(--primary);
+                color: var(--bg);
+            }
+
+            .audio-player-settings {
+                flex: 0 0 auto;
+                gap: 8px;
             }
 
             .volume-control {
@@ -4124,7 +4138,9 @@
 
             .player-menu {
                 right: 10px;
+                bottom: calc(100% + 10px);
                 min-width: 260px;
+                border-radius: 16px;
             }
 
             /* Make specific cards more compact */
@@ -4134,24 +4150,52 @@
                 margin: 8px 0 !important;
             }
 
-            /* Quick Actions Mobile */
+            /* Quick Actions Mobile - Compact Card */
             #continueReadingCard {
-                padding: 16px 20px !important;
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 12px !important;
+                padding: 12px 14px !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                border-radius: 12px !important;
+                margin-bottom: 10px !important;
+                min-height: auto !important;
             }
 
-            #continueReadingCard > div:first-child {
-                width: 100%;
+            /* Quick Action Buttons Grid - Mobile */
+            div[style*="grid-template-columns: repeat(2, 1fr)"] {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
             }
 
-            #continueReadingCard #continueReadingSurahName {
-                font-size: 2.2rem !important;
+            /* Goals and Bookmarks Cards Mobile */
+            #noGoalsCard,
+            #goalsCardContainer,
+            div[onclick="requireLogin('bookmarks')"] {
+                padding: 14px !important;
+                border-radius: 12px !important;
+                gap: 10px !important;
             }
 
-            #continueReadingCard > div:last-child {
-                align-self: flex-end;
+            #noGoalsCard > div:first-child,
+            #goalsCardContainer > div:first-child,
+            div[onclick="requireLogin('bookmarks')"] > div:first-child {
+                width: 36px !important;
+                height: 36px !important;
+                border-radius: 8px !important;
+            }
+
+            #noGoalsCard > div:first-child i,
+            div[onclick="requireLogin('bookmarks')"] > div:first-child i {
+                font-size: 0.9rem !important;
+            }
+
+            #noGoalsCard > div:last-child > div:first-child,
+            div[onclick="requireLogin('bookmarks')"] > div:last-child > div:first-child {
+                font-size: 0.85rem !important;
+            }
+
+            #noGoalsCard > div:last-child > div:last-child,
+            div[onclick="requireLogin('bookmarks')"] > div:last-child > div:last-child {
+                font-size: 0.7rem !important;
             }
 
             /* Make body padding smaller */
@@ -4192,12 +4236,8 @@
 
             /* Continue Reading Card Mobile Adjustments */
             #continueReadingCard {
-                padding: 30px 20px !important;
-                min-height: 250px !important;
-            }
-
-            #continueReadingSurahName {
-                font-size: clamp(6rem, 20vw, 10rem) !important;
+                padding: 12px 14px !important;
+                min-height: auto !important;
             }
 
             /* Repeat Manager Mobile */
@@ -4303,41 +4343,87 @@
 
         /* Extra Small Mobile - 320px to 480px */
         @media (max-width: 480px) {
+            .audio-player {
+                margin: 0 4px;
+                width: calc(100% - 8px);
+                border-radius: 12px 12px 0 0;
+            }
+
             .audio-player-content {
-                padding: 8px 10px;
-                gap: 8px;
-                flex-wrap: nowrap;
+                padding: 10px 12px;
+                gap: 10px;
             }
 
             .audio-player-info {
-                min-width: 80px;
-                flex: 0 0 auto;
+                min-width: 0;
+                flex: 1;
             }
 
             .audio-player-surah {
-                font-size: 0.8rem;
+                font-size: 0.85rem;
             }
 
             .audio-player-ayah {
                 font-size: 0.7rem;
             }
 
+            .audio-player-controls {
+                gap: 6px;
+            }
+
             .player-btn {
-                width: 32px;
-                height: 32px;
-                font-size: 0.75rem;
+                width: 34px;
+                height: 34px;
+                font-size: 0.8rem;
             }
 
             .player-btn-main {
-                width: 40px;
-                height: 40px;
-                font-size: 0.9rem;
+                width: 44px;
+                height: 44px;
+                font-size: 1rem;
+            }
+
+            .audio-player-settings {
+                gap: 6px;
             }
 
             .player-menu {
                 min-width: 240px;
                 max-height: 400px;
+            }
+
+            /* Quick Action Cards - Extra Small */
+            #continueReadingCard {
+                padding: 10px 12px !important;
+                border-radius: 10px !important;
+                min-height: auto !important;
+            }
+
+            /* Goals/Bookmarks - Extra Small */
+            #noGoalsCard,
+            #goalsCardContainer,
+            div[onclick="requireLogin('bookmarks')"] {
+                padding: 12px !important;
+                gap: 8px !important;
+            }
+
+            #noGoalsCard > div:first-child,
+            #goalsCardContainer > div:first-child,
+            div[onclick="requireLogin('bookmarks')"] > div:first-child {
+                width: 32px !important;
+                height: 32px !important;
+            }
+
+            #noGoalsCard > div:last-child > div:first-child,
+            div[onclick="requireLogin('bookmarks')"] > div:last-child > div:first-child {
+                font-size: 0.8rem !important;
+            }
+
+            #noGoalsCard > div:last-child > div:last-child,
+            div[onclick="requireLogin('bookmarks')"] > div:last-child > div:last-child {
+                font-size: 0.65rem !important;
                 right: 5px;
+                border-radius: 14px;
             }
 
             .ayah {
@@ -4494,19 +4580,12 @@
     <!-- Instant CSS to prevent home page flash -->
     <script>
         // This must run FIRST, before any DOM elements render
+        // Disabled: Always show homepage on load
         (function() {
-            const returningFromSettings = sessionStorage.getItem('returnToQuranReader');
-            const lastViewType = localStorage.getItem('lastViewType');
-            const savedScrollPosition = localStorage.getItem('lastScrollPosition');
-
-            // Hide home page instantly if returning from settings OR restoring scroll position
-            if (returningFromSettings === 'true' || (lastViewType && savedScrollPosition)) {
-                // Inject CSS immediately to hide home page (non-blocking method)
-                const style = document.createElement('style');
-                style.id = 'instant-hide';
-                style.textContent = '#homePage { display: none !important; } #surahReaderPage { display: block !important; }';
-                document.head.appendChild(style);
-            }
+            // Clear any saved state
+            localStorage.removeItem('lastViewType');
+            localStorage.removeItem('lastViewedSurah');
+            localStorage.removeItem('lastViewedJuz');
         })();
     </script>
 
@@ -4858,7 +4937,7 @@
             <div class="nav-container">
                 <div class="nav-logo">
                     <a href="/" onclick="showHomePage(); return false;" style="display: flex; align-items: center;">
-                        <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="logo-image">
+                        <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="logo-image" width="32" height="32">
                     </a>
                     <div class="header-title">تەفسیر کورد</div>
                 </div>
@@ -4894,7 +4973,7 @@
                         </a>
                         <!-- User Profile (shown when authenticated) -->
                         <div class="user-profile-btn" id="userProfileBtn" style="display: none;" onclick="toggleProfileDropdown(event)">
-                            <img id="userAvatar" class="user-avatar" src="/assets/images/default-avatar.png" alt="User">
+                            <img id="userAvatar" class="user-avatar" src="/assets/images/default-avatar.png" alt="User" width="32" height="32">
                             <span id="userName" class="user-name"></span>
                             <i class="fas fa-chevron-down"></i>
                             <div class="profile-dropdown" id="profileDropdown">
@@ -5054,51 +5133,55 @@
             <!-- Quick Actions Bar - Modern 2026 Compact Design -->
             <div style="max-width: 1400px; margin: 24px auto; padding: 0 30px;">
                 <!-- Continue Reading - Compact -->
-                <div id="continueReadingCard" onclick="continueReading()" role="button" tabindex="0" style="background: #000; border-radius: 16px; padding: 20px 28px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s; margin-bottom: 16px;">
-                    <div style="display: flex; align-items: center; gap: 20px;">
-                        <div style="font-family: 'SurahName', serif; font-size: 3rem; color: #fff; line-height: 1;" class="no-kurdish-convert" id="continueReadingSurahName">surah001</div>
+                <div id="continueReadingCard" onclick="continueReading()" role="button" tabindex="0" style="background: #000; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-book-open" style="color: #fff; font-size: 0.9rem;"></i>
+                        </div>
                         <div>
-                            <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 2px;">بەردەوام بکە</div>
-                            <div style="font-size: 1.1rem; font-weight: 600; color: #fff;" id="continueReadingInfo">١. الفاتحة</div>
+                            <div style="font-size: 0.7rem; color: rgba(255,255,255,0.6);">بەردەوام بکە</div>
+                            <div style="font-size: 0.85rem; font-weight: 600; color: #fff;" id="continueReadingInfo">١. الفاتحة</div>
                         </div>
                     </div>
-                    <div style="background: #fff; color: #000; padding: 10px 20px; border-radius: 30px; font-weight: 700; font-size: 0.85rem;">
-                        <i class="fas fa-play" style="margin-left: 6px;"></i> بخوێنە
+                    <div style="background: #fff; color: #000; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 0.7rem;">
+                        <i class="fas fa-play" style="margin-left: 4px; font-size: 0.6rem;"></i> بخوێنە
                     </div>
                 </div>
+                <!-- Hidden surah name for JS compatibility -->
+                <div id="continueReadingSurahName" style="display: none;">surah001</div>
 
                 <!-- Quick Action Buttons Row -->
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
                     <!-- Goals Button -->
-                    <div id="noGoalsCard" onclick="requireLogin('goals')" role="button" tabindex="0" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 40px; height: 40px; background: #000; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-bullseye" style="color: #fff; font-size: 1rem;"></i>
+                    <div id="noGoalsCard" onclick="requireLogin('goals')" role="button" tabindex="0" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 34px; height: 34px; background: #000; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-bullseye" style="color: #fff; font-size: 0.85rem;"></i>
                         </div>
                         <div>
-                            <div style="font-size: 0.95rem; font-weight: 600; color: var(--text);">ئارمانج</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">پێشکەفتنا تە</div>
+                            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text);">ئارمانج</div>
+                            <div style="font-size: 0.65rem; color: var(--text-muted);">پێشکەفتنا تە</div>
                         </div>
                     </div>
 
                     <!-- Goals Card with Streak (hidden by default) -->
-                    <div id="goalsCardContainer" onclick="requireLogin('goals')" role="button" tabindex="0" style="background: #000; border-radius: 12px; padding: 16px 20px; cursor: pointer; transition: all 0.2s; display: none; align-items: center; gap: 12px;">
-                        <div id="streakBadgeContainer" style="display: flex; align-items: center; gap: 12px; width: 100%;">
-                            <div id="streakEmoji" style="font-size: 1.8rem;">🌱</div>
+                    <div id="goalsCardContainer" onclick="requireLogin('goals')" role="button" tabindex="0" style="background: #000; border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.2s; display: none; align-items: center; gap: 10px;">
+                        <div id="streakBadgeContainer" style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                            <div id="streakEmoji" style="font-size: 1.4rem;">🌱</div>
                             <div>
-                                <div style="font-size: 1.2rem; font-weight: 800; color: #fff; line-height: 1;" id="streakDays">٠</div>
-                                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7);">day streak</div>
+                                <div style="font-size: 1rem; font-weight: 800; color: #fff; line-height: 1;" id="streakDays">٠</div>
+                                <div style="font-size: 0.65rem; color: rgba(255,255,255,0.7);">day streak</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Bookmarks Button -->
-                    <div onclick="requireLogin('bookmarks')" role="button" tabindex="0" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 40px; height: 40px; background: #000; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-bookmark" style="color: #fff; font-size: 1rem;"></i>
+                    <div onclick="requireLogin('bookmarks')" role="button" tabindex="0" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 34px; height: 34px; background: #000; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-bookmark" style="color: #fff; font-size: 0.85rem;"></i>
                         </div>
                         <div>
-                            <div style="font-size: 0.95rem; font-weight: 600; color: var(--text);">نیشانەکان</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">پاشکەڤتکرن</div>
+                            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text);">نیشانەکان</div>
+                            <div style="font-size: 0.65rem; color: var(--text-muted);">پاشکەڤتکرن</div>
                         </div>
                     </div>
 
@@ -5969,14 +6052,8 @@
             const surahParam = urlParams.get('surah');
             const ayahParam = urlParams.get('ayah');
 
-            // If no URL parameters, check if we should restore last position (20-minute window)
-            if (!surahParam && window.quranRestoration) {
-                const restored = window.quranRestoration.shouldRestorePosition();
-                if (restored) {
-                    console.log('✅ Restored last Quran reading position');
-                    return; // Position restored, don't continue
-                }
-            }
+            // Disabled: Always start at homepage unless URL has surah parameter
+            // No automatic restoration of last position
 
             if (surahParam) {
                 const surahNum = parseInt(surahParam);
@@ -5990,6 +6067,7 @@
                     }
                 }
             }
+            // If no surah param, stay on homepage (don't restore)
         }
 
         // Background sync with Supabase profile (doesn't block UI)
@@ -7665,10 +7743,10 @@
             localStorage.setItem('lastViewedSurah', surahNum);
             localStorage.setItem('lastViewType', 'surah');
 
-            // Save position for 20-minute restoration window
-            if (window.quranRestoration) {
-                window.quranRestoration.savePosition(surahNum, 1);
-            }
+            // Disabled: No longer saving position for auto-restoration
+            // if (window.quranRestoration) {
+            //     window.quranRestoration.savePosition(surahNum, 1);
+            // }
 
             // Initialize activity tracking for this surah
             if (isUserAuthenticated) {
@@ -7706,10 +7784,10 @@
             const title = `${surahInfo.english} (${surahInfo.arabic}) - ئایەت ${KurdishNumbers.toKurdish(ayahNum)} - تەفسیر کورد`;
             history.pushState({ page: 'surah', surah: surahNum, ayah: ayahNum }, title, `?surah=${surahNum}&ayah=${ayahNum}`);
 
-            // Save position for 20-minute restoration window
-            if (window.quranRestoration) {
-                window.quranRestoration.savePosition(surahNum, ayahNum);
-            }
+            // Disabled: No longer saving position for auto-restoration
+            // if (window.quranRestoration) {
+            //     window.quranRestoration.savePosition(surahNum, ayahNum);
+            // }
 
             // Initialize activity tracking for this surah
             if (isUserAuthenticated) {
@@ -7935,6 +8013,21 @@
             if (instantHideStyle) {
                 instantHideStyle.remove();
             }
+
+            // Stop audio and hide audio player
+            const audio = document.getElementById('quranAudio');
+            const audioPlayer = document.getElementById('audioPlayer');
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+            if (audioPlayer) {
+                audioPlayer.classList.remove('active');
+            }
+            // Remove playing highlights
+            document.querySelectorAll('.ayah.playing').forEach(el => {
+                el.classList.remove('playing');
+            });
 
             // Show home page, hide reader
             document.getElementById('homePage').classList.remove('hidden');
@@ -10369,6 +10462,16 @@
                     }
                 });
             });
+
+            // Close nav when clicking outside
+            document.addEventListener('click', function(e) {
+                if (navContainer && navContainer.classList.contains('nav-active')) {
+                    const navLinksEl = document.getElementById('navLinks');
+                    if (!hamburgerMenu.contains(e.target) && !navLinksEl.contains(e.target)) {
+                        toggleNav();
+                    }
+                }
+            });
         });
 
         // Header hide on scroll down, show on scroll up
@@ -10441,63 +10544,12 @@
             }, 0); // Instant response - no delay
         });
 
-        // Restore last viewed page on refresh
-        const lastViewType = localStorage.getItem('lastViewType');
-        const lastViewedSurah = localStorage.getItem('lastViewedSurah');
-        const lastViewedJuz = localStorage.getItem('lastViewedJuz');
-        const savedScrollPos = localStorage.getItem('lastScrollPosition');
-
-        if (lastViewType === 'surah' && lastViewedSurah) {
-            console.log('📖 Restoring last viewed surah:', lastViewedSurah);
-
-            // Set flag to prevent automatic scroll to top
-            if (savedScrollPos) {
-                window.isRestoringScroll = true;
-            }
-
-            openSurah(parseInt(lastViewedSurah));
-
-            // Restore scroll position after content loads
-            if (savedScrollPos) {
-                // Use requestAnimationFrame for smoother restoration
-                const restoreScroll = () => {
-                    setTimeout(() => {
-                        window.scrollTo({
-                            top: parseInt(savedScrollPos),
-                            behavior: 'auto'
-                        });
-                        console.log('📍 Restored scroll position:', savedScrollPos);
-                        window.isRestoringScroll = false;
-                    }, 600);
-                };
-                requestAnimationFrame(restoreScroll);
-            }
-        } else if (lastViewType === 'juz' && lastViewedJuz) {
-            console.log('📖 Restoring last viewed juz:', lastViewedJuz);
-
-            // Set flag to prevent automatic scroll to top
-            if (savedScrollPos) {
-                window.isRestoringScroll = true;
-            }
-
-            loadJuzContinuous(parseInt(lastViewedJuz));
-
-            // Restore scroll position after content loads
-            if (savedScrollPos) {
-                // Use requestAnimationFrame for smoother restoration
-                const restoreScroll = () => {
-                    setTimeout(() => {
-                        window.scrollTo({
-                            top: parseInt(savedScrollPos),
-                            behavior: 'auto'
-                        });
-                        console.log('📍 Restored scroll position:', savedScrollPos);
-                        window.isRestoringScroll = false;
-                    }, 600);
-                };
-                requestAnimationFrame(restoreScroll);
-            }
-        }
+        // Disabled: Always start at homepage instead of restoring last view
+        // Clear any saved state on page load
+        localStorage.removeItem('lastViewType');
+        localStorage.removeItem('lastViewedSurah');
+        localStorage.removeItem('lastViewedJuz');
+        localStorage.removeItem('lastScrollPosition');
 
         /* ==========================================
            AUDIO PLAYER FUNCTIONALITY
@@ -11580,6 +11632,6 @@
     </script>
 
     <!-- Simple Location Tracker -->
-    <script src="/utils/simple-location-tracker.js"></script>
+    <script src="/utils/simple-location-tracker.js" defer></script>
 </body>
 </html>
