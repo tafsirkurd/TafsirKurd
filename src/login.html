@@ -864,8 +864,8 @@
         <!-- Hero panel -->
         <div class="hero-panel" id="heroPanel">
             <div class="hero-content">
-                <h2 class="hero-title" id="heroTitle">تەفسیر کورد</h2>
-                <p class="hero-subtitle" id="heroSubtitle">بەردەوامبە لە گەڕانا خوە بۆ زانیاری ئایینی</p>
+                <h2 class="hero-title" id="heroTitle">قورئانا پیرۆز</h2>
+                <p class="hero-subtitle" id="heroSubtitle">بەردەوامکرنا خواندنا قورئانا پیرۆز</p>
             </div>
         </div>
 
@@ -2987,12 +2987,12 @@ Press Ctrl+Shift+C to copy this report
                 heroSubtitle.textContent = 'گوهدارکرنا دەنگێ ئیسلامێ';
                 fetchHeroImage('login_hero_islamvoice_image', heroPanel, '/assets/images/social-card-final.jpg');
             } else {
-                // Default: show default hero image
-                const cached = localStorage.getItem('login_hero_default_image');
+                // Default: show Quran hero (since default redirect is /quran.html)
+                const cached = localStorage.getItem('login_hero_quran_image');
                 if (cached) heroPanel.style.backgroundImage = "url('" + cached + "')";
-                heroTitle.textContent = 'تەفسیر کورد';
-                heroSubtitle.textContent = 'بەردەوامبە لە گەڕانا خوە بۆ زانیاری ئایینی';
-                fetchHeroImage('login_hero_default_image', heroPanel, '/assets/images/social-card-final.jpg');
+                heroTitle.textContent = 'قورئانا پیرۆز';
+                heroSubtitle.textContent = 'بەردەوامکرنا خواندنا قورئانا پیرۆز';
+                fetchHeroImage('login_hero_quran_image', heroPanel, '/assets/images/quran-social-card-v3.jpg');
             }
         }
 
