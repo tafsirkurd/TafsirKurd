@@ -88,7 +88,7 @@
                 })(),
                 hasTouch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
                 screenDepth: window.screen && window.screen.colorDepth > 0,
-                timezoneOffset: new Date().getTimezoneOffset() !== 0 || true,
+                timezoneOffset: new Date().getTimezoneOffset() !== 0,
                 hasLocalStorage: (() => {
                     try {
                         return typeof localStorage !== 'undefined';

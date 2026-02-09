@@ -213,9 +213,15 @@
 
             console.log('Signup marked as completed');
 
-            // Redirect to stored destination or default
-            const redirectUrl = sessionStorage.getItem('post_signup_redirect') || '/quran.html';
+            // Redirect to stored destination or default (with validation to prevent open redirect)
+            var storedRedirect = sessionStorage.getItem('post_signup_redirect') || '/quran.html';
             sessionStorage.removeItem('post_signup_redirect');
+
+            // Validate redirect URL - only allow relative paths starting with /
+            var redirectUrl = '/quran.html';
+            if (storedRedirect && storedRedirect.startsWith('/') && !storedRedirect.startsWith('//')) {
+                redirectUrl = storedRedirect;
+            }
             window.location.href = redirectUrl;
 
             return true;
