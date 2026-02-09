@@ -535,19 +535,19 @@
             .months-grid { grid-template-columns: 1fr; }
 
             .manual-form {
-                flex-direction: column;
+                flex-wrap: wrap;
                 gap: 10px;
             }
-            .form-input {
-                min-width: 100%;
-                padding: 14px 16px;
+            .manual-form .form-input {
+                flex: 1 1 calc(50% - 5px);
+                min-width: 0;
+                padding: 14px 12px;
                 font-size: 16px;
             }
             .manual-form .btn {
-                width: 100%;
+                flex: 1 1 100%;
                 justify-content: center;
                 padding: 14px 20px;
-                margin-top: 4px;
             }
 
             .btn { width: 100%; justify-content: center; }
