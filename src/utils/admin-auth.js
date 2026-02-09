@@ -1,7 +1,7 @@
 // Enhanced Admin Authentication Utilities with Device Locking
 // Includes device fingerprinting and permission checks
 // Version 2.0 - RBAC sidebar permissions
-console.log('🔐 Admin-auth.js v2.0 loaded');
+// Admin-auth.js v2.0 loaded
 
 let supabaseClient = null;
 let adminPermissions = [];
@@ -74,7 +74,7 @@ async function initSupabase() {
             }
         });
 
-        console.log('✅ Supabase initialized');
+        // console.log('✅ Supabase initialized');
         window.supabaseClient = supabaseClient;
         return true;
     } catch (error) {
@@ -154,7 +154,7 @@ async function checkAuth() {
             }
 
             // Hide sidebar items based on role
-            console.log('Auth success - applying sidebar permissions for role:', data.role);
+            // console.log('Auth success - applying sidebar permissions for role:', data.role);
             applySidebarPermissions(data.role);
 
             return data;
@@ -201,7 +201,7 @@ async function login(email, password) {
             // Set session start time for 20-minute auto-logout
             sessionStorage.setItem('adminSessionStart', new Date().toISOString());
 
-            console.log('✅ Login successful');
+            // console.log('✅ Login successful');
 
             // Start heartbeat with 20-minute timeout
             if (window.adminHeartbeat) {
@@ -283,10 +283,10 @@ function getRolePages() {
 // Hide sidebar items based on role
 function applySidebarPermissions(overrideRole) {
     const role = overrideRole || sessionStorage.getItem('adminRole');
-    console.log('applySidebarPermissions - Role:', role);
+    // console.log('applySidebarPermissions - Role:', role);
 
     if (!role) {
-        console.log('No role found, skipping sidebar permissions');
+        // console.log('No role found, skipping sidebar permissions');
         return;
     }
 
@@ -297,27 +297,27 @@ function applySidebarPermissions(overrideRole) {
 
     const roleConfig = ROLE_PERMISSIONS[role];
     if (!roleConfig) {
-        console.log('No config for role:', role);
+        // console.log('No config for role:', role);
         return;
     }
 
     // Super admin sees everything
     if (roleConfig.pages === '*') {
-        console.log('Super admin - showing all');
+        // console.log('Super admin - showing all');
         // Reveal sidebar for super admin
         revealSidebar(role);
         return;
     }
 
     const allowedPages = roleConfig.pages;
-    console.log('Allowed pages:', allowedPages);
+    // console.log('Allowed pages:', allowedPages);
 
     // Find all sidebar nav items
     const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
-    console.log('Found nav items:', navItems.length);
+    // console.log('Found nav items:', navItems.length);
 
     if (navItems.length === 0) {
-        console.log('No nav items found - sidebar may not be loaded yet');
+        // console.log('No nav items found - sidebar may not be loaded yet');
         return;
     }
 
@@ -334,14 +334,14 @@ function applySidebarPermissions(overrideRole) {
 
         // Hide if not in allowed pages
         if (!allowedPages.includes(pageSlug)) {
-            console.log('Hiding:', pageSlug);
+            // console.log('Hiding:', pageSlug);
             item.style.display = 'none';
             item.setAttribute('data-hidden-by-role', 'true');
             hiddenCount++;
         }
     });
 
-    console.log('Hidden', hiddenCount, 'nav items');
+    // console.log('Hidden', hiddenCount, 'nav items');
 
     // Hide nav sections that have no visible items
     const navSections = document.querySelectorAll('.sidebar-nav .nav-section');
@@ -457,7 +457,7 @@ window.adminAuth = {
 
 // Handle session expired event
 window.addEventListener('admin:session-expired', function() {
-    console.log('Session expired, logging out');
+    // console.log('Session expired, logging out');
     logout();
 });
 
@@ -465,24 +465,24 @@ window.addEventListener('admin:session-expired', function() {
 // This prevents the flash of all sidebar items for returning users
 (function() {
     const storedRole = sessionStorage.getItem('adminRole');
-    console.log('Admin-auth init - stored role:', storedRole);
+    // console.log('Admin-auth init - stored role:', storedRole);
 
     if (storedRole) {
         // Set data-role on body immediately for CSS-based hiding
         if (document.body) {
             document.body.setAttribute('data-role', storedRole);
-            console.log('Set data-role on body:', storedRole);
+            // console.log('Set data-role on body:', storedRole);
         }
 
         if (storedRole !== 'super_admin') {
             // Apply immediately if DOM is ready, otherwise wait
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', function() {
-                    console.log('DOMContentLoaded - applying sidebar permissions');
+                    // console.log('DOMContentLoaded - applying sidebar permissions');
                     applySidebarPermissions(storedRole);
                 });
             } else {
-                console.log('DOM ready - applying sidebar permissions immediately');
+                // console.log('DOM ready - applying sidebar permissions immediately');
                 applySidebarPermissions(storedRole);
             }
         }
@@ -492,7 +492,7 @@ window.addEventListener('admin:session-expired', function() {
     window.addEventListener('load', function() {
         const role = sessionStorage.getItem('adminRole');
         if (role && role !== 'super_admin') {
-            console.log('Window load - reapplying sidebar permissions');
+            // console.log('Window load - reapplying sidebar permissions');
             applySidebarPermissions(role);
         }
     });

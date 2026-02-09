@@ -6,7 +6,20 @@ class NotificationScheduler {
         this.permission = 'default';
         this.userId = null;
         this.settings = this.loadSettings();
+        this.dailyCheckInterval = null;
+        this.lateReminderTimeout = null;
+        this.fridayReminderTimeout = null;
         this.init();
+    }
+
+    // Safe JSON parse helper
+    safeJsonParse(str, fallback) {
+        if (!str) return fallback;
+        try {
+            return JSON.parse(str);
+        } catch (e) {
+            return fallback;
+        }
     }
 
     init() {
@@ -18,9 +31,9 @@ class NotificationScheduler {
 
         this.permission = Notification.permission;
 
-        // Get user ID
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        this.userId = user.sub;
+        // Get user ID safely
+        var user = this.safeJsonParse(localStorage.getItem('user'), {});
+        this.userId = user.sub || null;
 
         // Set up daily check
         this.scheduleDailyCheck();
@@ -33,9 +46,21 @@ class NotificationScheduler {
     }
 
     loadSettings() {
-        const saved = localStorage.getItem('notificationSettings');
+        var saved = this.safeJsonParse ?
+            this.safeJsonParse(localStorage.getItem('notificationSettings'), null) :
+            null;
+
+        if (!saved) {
+            try {
+                var savedStr = localStorage.getItem('notificationSettings');
+                if (savedStr) saved = JSON.parse(savedStr);
+            } catch (e) {
+                saved = null;
+            }
+        }
+
         if (saved) {
-            return JSON.parse(saved);
+            return saved;
         }
 
         // Default settings
@@ -45,14 +70,18 @@ class NotificationScheduler {
             streakReminder: true,
             goalReminder: true,
             fridayReminder: true,
-            reminderTime: '20:00', // 8 PM default
-            lateReminderTime: '22:00' // 10 PM late reminder
+            reminderTime: '20:00',
+            lateReminderTime: '22:00'
         };
     }
 
     saveSettings(settings) {
-        this.settings = { ...this.settings, ...settings };
-        localStorage.setItem('notificationSettings', JSON.stringify(this.settings));
+        this.settings = Object.assign({}, this.settings, settings);
+        try {
+            localStorage.setItem('notificationSettings', JSON.stringify(this.settings));
+        } catch (e) {
+            console.warn('Failed to save notification settings:', e);
+        }
     }
 
     async requestPermission() {
@@ -68,60 +97,73 @@ class NotificationScheduler {
         }
 
         if (Notification.permission !== 'denied') {
-            const permission = await Notification.requestPermission();
-            this.permission = permission;
+            try {
+                var permission = await Notification.requestPermission();
+                this.permission = permission;
 
-            if (permission === 'granted') {
-                this.settings.enabled = true;
-                this.saveSettings(this.settings);
+                if (permission === 'granted') {
+                    this.settings.enabled = true;
+                    this.saveSettings(this.settings);
 
-                // Show welcome notification
-                this.showNotification({
-                    title: 'Notifications Enabled ✅',
-                    body: "You'll receive daily reminders to continue your Qur'an journey.",
-                    icon: '/assets/images/logo.png'
-                });
+                    this.showNotification({
+                        title: 'Notifications Enabled',
+                        body: "You'll receive daily reminders to continue your Qur'an journey.",
+                        icon: '/assets/images/logo.png'
+                    });
 
-                return true;
+                    return true;
+                }
+            } catch (e) {
+                console.warn('Failed to request notification permission:', e);
             }
         }
 
         return false;
     }
 
-    showNotification({ title, body, icon, tag, data }) {
+    showNotification(options) {
         if (!this.settings.enabled || Notification.permission !== 'granted') {
-            return;
+            return null;
         }
 
-        const notification = new Notification(title, {
-            body,
-            icon: icon || '/assets/images/logo.png',
-            badge: '/assets/images/logo.png',
-            tag: tag || 'tafsirkurd-notification',
-            requireInteraction: false,
-            silent: false,
-            data: data || {}
-        });
+        try {
+            var notification = new Notification(options.title, {
+                body: options.body,
+                icon: options.icon || '/assets/images/logo.png',
+                badge: '/assets/images/logo.png',
+                tag: options.tag || 'tafsirkurd-notification',
+                requireInteraction: false,
+                silent: false,
+                data: options.data || {}
+            });
 
-        notification.onclick = () => {
-            window.focus();
-            if (data && data.url) {
-                window.location.href = data.url;
-            } else {
-                window.location.href = '/quran';
-            }
-            notification.close();
-        };
+            notification.onclick = function() {
+                window.focus();
+                if (options.data && options.data.url) {
+                    window.location.href = options.data.url;
+                } else {
+                    window.location.href = '/quran';
+                }
+                notification.close();
+            };
 
-        return notification;
+            return notification;
+        } catch (e) {
+            console.warn('Failed to show notification:', e);
+            return null;
+        }
     }
 
     scheduleDailyCheck() {
+        // Clear existing interval
+        if (this.dailyCheckInterval) {
+            clearInterval(this.dailyCheckInterval);
+        }
+
         // Check every hour if we should send daily reminder
-        setInterval(() => {
+        this.dailyCheckInterval = setInterval(function() {
             this.checkDailyReminder();
-        }, 60 * 60 * 1000); // Every hour
+        }.bind(this), 60 * 60 * 1000);
 
         // Also check on load
         this.checkDailyReminder();
@@ -132,10 +174,10 @@ class NotificationScheduler {
             return;
         }
 
-        const now = new Date();
-        const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        var now = new Date();
+        var currentTime = now.getHours().toString().padStart(2, '0') + ':' +
+                         now.getMinutes().toString().padStart(2, '0');
 
-        // Check if it's time for daily reminder
         if (currentTime === this.settings.reminderTime) {
             this.checkTodayProgress();
         }
@@ -144,27 +186,28 @@ class NotificationScheduler {
     checkTodayProgress() {
         if (!this.userId) return;
 
-        const userKey = 'quran_data_' + this.userId;
-        const data = JSON.parse(localStorage.getItem(userKey) || '{}');
+        var userKey = 'quran_data_' + this.userId;
+        var data = this.safeJsonParse(localStorage.getItem(userKey), {});
 
-        const today = new Date().toDateString();
-        const lastRead = data.lastReadDate ? new Date(data.lastReadDate).toDateString() : null;
+        var today = new Date().toDateString();
+        var lastRead = data.lastReadDate ? new Date(data.lastReadDate).toDateString() : null;
 
         if (lastRead !== today) {
-            // User hasn't read today
-            const streak = data.stats?.streak || 0;
+            var streak = (data.stats && data.stats.streak) ? data.stats.streak : 0;
+            var message;
 
-            let message;
             if (streak > 0) {
-                message = window.NotificationMessages?.dailyProgress?.streakGlowing ||
-                         "Your streak is glowing — don't let it fade. Read just one ayah today 🌸.";
+                message = (window.NotificationMessages && window.NotificationMessages.dailyProgress &&
+                          window.NotificationMessages.dailyProgress.streakGlowing) ||
+                         "Your streak is glowing - don't let it fade. Read just one ayah today.";
             } else {
-                message = window.NotificationMessages?.dailyProgress?.oneVerseReminder ||
+                message = (window.NotificationMessages && window.NotificationMessages.dailyProgress &&
+                          window.NotificationMessages.dailyProgress.oneVerseReminder) ||
                          "Reminder: even one verse brings you closer to Allah. Continue your streak now.";
             }
 
             this.showNotification({
-                title: 'Daily Qur\'an Reminder 📖',
+                title: 'Daily Quran Reminder',
                 body: message,
                 tag: 'daily-reminder',
                 data: { url: '/quran' }
@@ -177,32 +220,41 @@ class NotificationScheduler {
             return;
         }
 
-        const now = new Date();
-        const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        var now = new Date();
+        var currentTime = now.getHours().toString().padStart(2, '0') + ':' +
+                         now.getMinutes().toString().padStart(2, '0');
 
         if (currentTime === this.settings.lateReminderTime) {
             this.sendLateReminder();
         }
 
+        // Clear existing timeout
+        if (this.lateReminderTimeout) {
+            clearTimeout(this.lateReminderTimeout);
+        }
+
         // Schedule next check
-        setTimeout(() => this.checkLateReminder(), 60 * 1000); // Check every minute
+        this.lateReminderTimeout = setTimeout(function() {
+            this.checkLateReminder();
+        }.bind(this), 60 * 1000);
     }
 
     sendLateReminder() {
         if (!this.userId) return;
 
-        const userKey = 'quran_data_' + this.userId;
-        const data = JSON.parse(localStorage.getItem(userKey) || '{}');
+        var userKey = 'quran_data_' + this.userId;
+        var data = this.safeJsonParse(localStorage.getItem(userKey), {});
 
-        const today = new Date().toDateString();
-        const lastRead = data.lastReadDate ? new Date(data.lastReadDate).toDateString() : null;
+        var today = new Date().toDateString();
+        var lastRead = data.lastReadDate ? new Date(data.lastReadDate).toDateString() : null;
 
         if (lastRead !== today) {
-            const message = window.NotificationMessages?.missedReminder?.endOfDay ||
-                           "It's almost the end of the day! Read one ayah to keep your streak unbroken 🌖.";
+            var message = (window.NotificationMessages && window.NotificationMessages.missedReminder &&
+                          window.NotificationMessages.missedReminder.endOfDay) ||
+                         "It's almost the end of the day! Read one ayah to keep your streak unbroken.";
 
             this.showNotification({
-                title: 'Late Reminder 🌙',
+                title: 'Late Reminder',
                 body: message,
                 tag: 'late-reminder',
                 data: { url: '/quran' }
@@ -211,14 +263,15 @@ class NotificationScheduler {
     }
 
     checkFridayReminder() {
-        const now = new Date();
-        if (now.getDay() === 5) { // Friday
+        var now = new Date();
+        if (now.getDay() === 5) {
             if (this.settings.enabled && this.settings.fridayReminder) {
-                const message = window.NotificationMessages?.inspirational?.friday ||
-                               "Friday reminder: increase your Qur'an recitation — it's the best dhikr on Jumu'ah 🌸.";
+                var message = (window.NotificationMessages && window.NotificationMessages.inspirational &&
+                              window.NotificationMessages.inspirational.friday) ||
+                             "Friday reminder: increase your Quran recitation - it's the best dhikr on Jumuah.";
 
                 this.showNotification({
-                    title: 'Jumu\'ah Mubarak 🌙',
+                    title: 'Jumuah Mubarak',
                     body: message,
                     tag: 'friday-reminder',
                     data: { url: '/quran' }
@@ -226,64 +279,108 @@ class NotificationScheduler {
             }
         }
 
-        // Schedule next Friday check
-        const nextFriday = new Date();
-        nextFriday.setDate(now.getDate() + ((5 - now.getDay() + 7) % 7));
-        nextFriday.setHours(10, 0, 0, 0); // 10 AM on Friday
+        // Clear existing timeout
+        if (this.fridayReminderTimeout) {
+            clearTimeout(this.fridayReminderTimeout);
+        }
 
-        const timeUntilFriday = nextFriday - now;
-        setTimeout(() => this.checkFridayReminder(), timeUntilFriday);
+        // Schedule next Friday check
+        var nextFriday = new Date();
+        nextFriday.setDate(now.getDate() + ((5 - now.getDay() + 7) % 7));
+        nextFriday.setHours(10, 0, 0, 0);
+
+        var timeUntilFriday = nextFriday - now;
+        if (timeUntilFriday > 0) {
+            this.fridayReminderTimeout = setTimeout(function() {
+                this.checkFridayReminder();
+            }.bind(this), timeUntilFriday);
+        }
     }
 
-    // Called when user completes daily goal
     notifyDailyComplete(dayCount) {
         if (!this.settings.enabled) return;
 
-        const message = window.NotificationMessages?.dailyProgress?.journeyDay(dayCount) ||
-                       `You're on day ${dayCount} of your Qur'an journey. Keep the light alive!`;
+        var message;
+        if (window.NotificationMessages && window.NotificationMessages.dailyProgress &&
+            typeof window.NotificationMessages.dailyProgress.journeyDay === 'function') {
+            message = window.NotificationMessages.dailyProgress.journeyDay(dayCount);
+        } else {
+            message = "You're on day " + dayCount + " of your Quran journey. Keep the light alive!";
+        }
 
         this.showNotification({
-            title: 'Daily Goal Complete! 🎉',
+            title: 'Daily Goal Complete!',
             body: message,
             tag: 'goal-complete',
             data: { url: '/quran' }
         });
     }
 
-    // Called when user reaches milestone
     notifyMilestone(verseCount) {
         if (!this.settings.enabled) return;
 
-        const message = window.NotificationMessages?.specialEvents?.milestone(verseCount) ||
-                       `Alhamdulillah! You've reached ${verseCount} verses — keep it going 🌿.`;
+        var message;
+        if (window.NotificationMessages && window.NotificationMessages.specialEvents &&
+            typeof window.NotificationMessages.specialEvents.milestone === 'function') {
+            message = window.NotificationMessages.specialEvents.milestone(verseCount);
+        } else {
+            message = "Alhamdulillah! You've reached " + verseCount + " verses - keep it going.";
+        }
 
         this.showNotification({
-            title: 'Milestone Reached! 🌟',
+            title: 'Milestone Reached!',
             body: message,
             tag: 'milestone',
             data: { url: '/quran' }
         });
     }
 
-    // Called when goal is reached
     notifyGoalReached(goalName) {
         if (!this.settings.enabled) return;
 
-        const message = window.NotificationMessages?.goalAchievement?.goalReached(goalName) ||
-                       `Goal reached! You completed ${goalName} — may Allah reward your effort 🤍.`;
+        var message;
+        if (window.NotificationMessages && window.NotificationMessages.goalAchievement &&
+            typeof window.NotificationMessages.goalAchievement.goalReached === 'function') {
+            message = window.NotificationMessages.goalAchievement.goalReached(goalName);
+        } else {
+            message = "Goal reached! You completed " + goalName + " - may Allah reward your effort.";
+        }
 
         this.showNotification({
-            title: 'Goal Achieved! 🏆',
+            title: 'Goal Achieved!',
             body: message,
             tag: 'goal-reached',
             data: { url: '/goals' }
         });
+    }
+
+    // Cleanup method
+    destroy() {
+        if (this.dailyCheckInterval) {
+            clearInterval(this.dailyCheckInterval);
+            this.dailyCheckInterval = null;
+        }
+        if (this.lateReminderTimeout) {
+            clearTimeout(this.lateReminderTimeout);
+            this.lateReminderTimeout = null;
+        }
+        if (this.fridayReminderTimeout) {
+            clearTimeout(this.fridayReminderTimeout);
+            this.fridayReminderTimeout = null;
+        }
     }
 }
 
 // Initialize globally
 if (typeof window !== 'undefined') {
     window.notificationScheduler = new NotificationScheduler();
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        if (window.notificationScheduler && typeof window.notificationScheduler.destroy === 'function') {
+            window.notificationScheduler.destroy();
+        }
+    });
 }
 
 // Export for module systems
