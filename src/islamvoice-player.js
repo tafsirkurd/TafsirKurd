@@ -3812,7 +3812,7 @@
                         if (parsed && parsed.access_token) {
                             return true;
                         }
-                    } catch (e) {}
+                    } catch (e) { /* Silently ignore - malformed JSON is treated as not authenticated */ }
                 }
             }
         }

@@ -6,444 +6,400 @@
     <script src="/utils/security.js"></script>
     <script src="/utils/scroll-position.js"></script>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
     <title>ئارمانجێن خویندنێ | TafsirKurd</title>
 
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="ئارمانجێن خویندنا قورئانێ دیاربکە و پلانێن خویندنێ یێن تایبەت دروستبکە. پشتگیریا ئارمانجێن روژانە و مانگانە.">
-    <meta name="keywords" content="ئارمانجا خویندنا قورئانێ, پلانێن خویندنێ, ئارمانجێن قورئانێ, خویندنا روژانە, تەفسیر کورد">
-    <meta name="author" content="Tafsir Kurd - Saman Abdulrahman">
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
-    <meta name="googlebot" content="index, follow">
+    <!-- SEO -->
+    <meta name="description" content="ئارمانجێن خویندنا قورئانێ دیاربکە و پلانێن خویندنێ یێن تایبەت دروستبکە.">
     <link rel="canonical" href="https://tafsirkurd.com/goals.html">
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://tafsirkurd.com/goals.html">
-    <meta property="og:title" content="ئارمانجا خویندنا قورئانێ – پلانێن خویندنێ">
-    <meta property="og:description" content="ئارمانجێن خویندنا قورئانێ دیاربکە و پلانێن خویندنێ یێن تایبەت دروستبکە. پشتگیریا ئارمانجێن روژانە و مانگانە.">
-    <meta property="og:image" content="https://tafsirkurd.com/assets/images/homepage-social.jpg">
-    <meta property="og:image:type" content="image/jpeg">
-    <meta property="og:image:alt" content="Reading Goals - Tafsir Kurd">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:locale" content="ku_IQ">
-    <meta property="og:locale:alternate" content="en_US">
-    <meta property="og:site_name" content="Tafsir Kurd">
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:site" content="@tafsirkurd">
-    <meta name="twitter:creator" content="@tafsirkurd">
-    <meta name="twitter:title" content="ئارمانجا خویندنا قورئانێ – پلانێن خویندنێ">
-    <meta name="twitter:description" content="ئارمانجێن خویندنا قورئانێ دیاربکە و پلانێن خویندنێ یێن تایبەت دروستبکە. پشتگیریا ئارمانجێن روژانە و مانگانە.">
-    <meta name="twitter:image" content="https://tafsirkurd.com/assets/images/homepage-social.jpg">
-    <meta name="twitter:image:src" content="https://tafsirkurd.com/assets/images/homepage-social.jpg">
-    <meta name="twitter:image:alt" content="Reading Goals - Tafsir Kurd">
-    <meta name="twitter:image:width" content="1200">
-    <meta name="twitter:image:height" content="630">
-
-    <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
 
-    <!-- Console Cleaner - Clean console in production -->
+    <!-- Scripts -->
     <script src="/utils/console-cleaner.js"></script>
-
-    <!-- Kurdish Number Utility - Convert all numbers to Kurdish numerals -->
     <script src="/utils/kurdish-numbers.js"></script>
     <script src="/utils/auto-kurdish-numbers.js"></script>
 
-    <!-- Critical Font Preloading - Instant font display, zero FOIT/FOUT -->
+    <!-- Fonts -->
     <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=16" as="font" type="font/woff2" crossorigin>
-
-    <!-- Local Fonts - Zero external requests, instant loading -->
     <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
-
-    <!-- Local Font Awesome - Zero external requests -->
     <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
+
     <style>
         :root {
-            --primary: #000000;
-            --accent: #ffffff;
-            --bg: #fafafa;
-            --card-bg: #ffffff;
+            --bg: #ffffff;
+            --bg-secondary: #f8f8f8;
+            --bg-tertiary: #f0f0f0;
             --text: #000000;
             --text-muted: #666666;
-            --border: #e8e8e8;
-            --success: #2ecc71;
-            --warning: #f39c12;
-            --danger: #e74c3c;
-            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
-            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
-            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --border: #e0e0e0;
+            --accent: #000000;
+            --success: #22c55e;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 2px 20px rgba(0,0,0,0.06);
+            --shadow-hover: 0 8px 30px rgba(0,0,0,0.12);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         [data-theme="dark"] {
-            --primary: #ffffff;
-            --accent: #000000;
             --bg: #0a0a0a;
-            --card-bg: #1a1a1a;
+            --bg-secondary: #141414;
+            --bg-tertiary: #1a1a1a;
             --text: #ffffff;
-            --text-muted: #b0b0b0;
-            --border: #2a2a2a;
-            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.5);
+            --text-muted: #999999;
+            --border: #252525;
+            --accent: #ffffff;
+            --shadow: 0 2px 20px rgba(0,0,0,0.3);
+            --shadow-hover: 0 8px 30px rgba(0,0,0,0.5);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
 
         body {
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
 
+        /* Header */
         .header {
-            background: var(--card-bg);
-            padding: 20px 0;
-            box-shadow: var(--shadow-sm);
             position: sticky;
             top: 0;
             z-index: 100;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(20px);
         }
 
-        .header-container {
-            max-width: 1200px;
+        .header-inner {
+            max-width: 900px;
             margin: 0 auto;
-            padding: 0 30px;
+            padding: 16px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 12px;
         }
 
         .header-title {
-            font-size: 1.8rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            color: var(--primary);
         }
 
-        .back-btn {
-            padding: 10px 20px;
-            background: var(--primary);
-            color: var(--accent);
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all var(--transition);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
+        .header-actions {
+            display: flex;
             gap: 10px;
         }
 
-        .back-btn:hover {
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: var(--accent);
+            color: var(--bg);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .btn:hover {
             transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-hover);
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 30px;
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
         }
 
-        /* Progress Section */
-        .progress-section {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: var(--shadow-md);
+        .btn-outline:hover {
+            border-color: var(--accent);
+            background: var(--bg-secondary);
         }
 
-        .section-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 30px;
+        /* Main */
+        .main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px 20px 100px;
+        }
+
+        /* Streak Hero */
+        .streak-hero {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+            margin-bottom: 24px;
             display: flex;
             align-items: center;
-            gap: 15px;
-        }
-
-        /* Streak Container */
-        .streak-container {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 30px;
-            margin-bottom: 40px;
-            align-items: center;
-        }
-
-        .streak-left {
-            text-align: center;
+            gap: 32px;
         }
 
         .streak-number {
-            font-size: 5rem;
-            font-weight: 700;
-            color: var(--primary);
+            font-size: 4rem;
+            font-weight: 800;
             line-height: 1;
         }
 
         .streak-label {
-            font-size: 1.2rem;
+            font-size: 1rem;
             color: var(--text-muted);
-            margin-top: 10px;
+            margin-top: 4px;
         }
 
-        .streak-right h3 {
-            font-size: 1.3rem;
-            margin-bottom: 20px;
-            color: var(--text);
+        .streak-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 16px;
         }
 
-        /* Week Progress - Like the image */
-        .week-progress {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-            position: relative;
+        /* Week Progress */
+        .week-grid {
+            display: flex;
+            gap: 8px;
         }
 
-        .week-progress::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--border);
-            z-index: 0;
-        }
-
-        .day-card {
-            position: relative;
-            z-index: 1;
+        .day-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .day-name {
-            font-size: 0.85rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
-            font-weight: 500;
+            text-transform: uppercase;
         }
 
         .day-circle {
-            width: 60px;
-            height: 60px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
-            background: var(--border);
-            border: 4px solid var(--bg);
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            transition: all var(--transition);
+            font-size: 1rem;
+            transition: var(--transition);
         }
 
-        .day-card.completed .day-circle {
+        .day-item.completed .day-circle {
             background: var(--success);
-            color: white;
+            border-color: var(--success);
+            color: #fff;
         }
 
-        .day-card.today .day-circle {
-            border-color: var(--primary);
-            border-width: 6px;
+        .day-item.today .day-circle {
+            border-color: var(--accent);
+            border-width: 3px;
             transform: scale(1.1);
         }
 
-        /* Goal Details Card */
-        .goal-details-card {
-            background: linear-gradient(135deg, var(--primary) 0%, #333 100%);
-            color: var(--accent);
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
+        /* Goal Card */
+        .goal-card {
+            background: var(--accent);
+            color: var(--bg);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 24px;
             position: relative;
             overflow: hidden;
         }
 
-        .goal-details-card::before {
+        .goal-card::before {
             content: '';
             position: absolute;
             top: -50%;
-            right: -10%;
+            left: -20%;
             width: 200px;
             height: 200px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255,255,255,0.05);
             border-radius: 50%;
-        }
-
-        .goal-details-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .goal-details-title {
-            font-size: 1.6rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .goal-details-description {
-            font-size: 0.95rem;
-            opacity: 0.9;
-        }
-
-        .goal-details-icon {
-            font-size: 3rem;
-            opacity: 0.3;
-        }
-
-        .goal-details-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .goal-detail-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .goal-detail-label {
-            font-size: 0.85rem;
-            opacity: 0.8;
-            margin-bottom: 5px;
-        }
-
-        .goal-detail-value {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        /* Goal Progress */
-        .goal-section {
-            margin-bottom: 40px;
         }
 
         .goal-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 20px;
-        }
-
-        .goal-text {
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-
-        .goal-percentage {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .progress-bar-container {
-            width: 100%;
-            height: 40px;
-            background: var(--bg);
-            border-radius: 20px;
-            overflow: hidden;
             position: relative;
         }
 
-        .progress-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--success), #27ae60);
-            transition: width 0.5s ease;
+        .goal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .goal-desc {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .goal-icon {
+            font-size: 2rem;
+            opacity: 0.3;
+        }
+
+        .goal-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            position: relative;
+        }
+
+        .goal-detail {
+            background: rgba(255,255,255,0.1);
+            padding: 14px;
+            border-radius: var(--radius-sm);
+        }
+
+        .goal-detail-label {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+
+        .goal-detail-value {
+            font-weight: 600;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
-            padding: 0 20px;
-            color: white;
+            gap: 10px;
+        }
+
+        .section-title i {
+            opacity: 0.5;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .progress-text {
+            font-size: 0.95rem;
+        }
+
+        .progress-percent {
+            font-size: 1.5rem;
             font-weight: 700;
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--success);
+            border-radius: 20px;
+            transition: width 0.5s ease;
         }
 
         /* Calendar Section */
         .calendar-section {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: var(--shadow-md);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
         }
 
-        .year-selector {
+        .year-nav {
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
         }
 
         .year-btn {
-            padding: 10px 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             background: var(--bg);
-            border: 2px solid var(--border);
-            border-radius: 10px;
+            border: 1px solid var(--border);
             cursor: pointer;
-            font-weight: 600;
-            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            color: var(--text);
         }
 
         .year-btn:hover {
-            background: var(--primary);
-            color: var(--accent);
-            border-color: var(--primary);
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent);
         }
 
-        .current-year {
-            font-size: 1.5rem;
+        .year-display {
+            font-size: 1.2rem;
             font-weight: 700;
         }
 
         .months-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
         }
 
         .month-card {
             background: var(--bg);
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px solid var(--border);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
         }
 
         .month-name {
-            font-size: 1.3rem;
             font-weight: 700;
-            margin-bottom: 15px;
             text-align: center;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
         }
 
         .days-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
+            gap: 4px;
         }
 
         .day-cell {
@@ -451,1047 +407,345 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
+            font-size: 0.75rem;
+            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: var(--transition);
         }
 
         .day-cell:hover:not(.empty) {
-            transform: scale(1.1);
+            transform: scale(1.2);
         }
 
-        .day-cell.empty {
-            background: transparent;
-        }
-
-        .day-cell.read {
-            background: var(--success);
-            color: white;
-        }
-
-        .day-cell.partial {
-            background: var(--warning);
-            color: white;
-        }
-
-        .day-cell.unread {
-            background: var(--border);
-        }
+        .day-cell.empty { background: transparent; }
+        .day-cell.unread { background: var(--bg-tertiary); }
+        .day-cell.partial { background: #fbbf24; color: #000; }
+        .day-cell.read { background: var(--success); color: #fff; }
 
         /* Manual Entry */
         .manual-entry {
             background: var(--bg);
-            padding: 25px;
-            border-radius: 15px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px;
             margin-top: 20px;
         }
 
-        .manual-entry-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-bottom: 15px;
+        .manual-title {
+            font-weight: 600;
+            margin-bottom: 14px;
         }
 
-        .manual-entry-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr auto;
-            gap: 15px;
+        .manual-form {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         .form-input {
-            padding: 12px;
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            background: var(--bg-secondary);
+            color: var(--text);
+            transition: var(--transition);
         }
 
         .form-input:focus {
             outline: none;
-            border-color: var(--primary);
+            border-color: var(--accent);
         }
 
-        .add-btn {
-            padding: 12px 30px;
-            background: var(--primary);
-            color: var(--accent);
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
+        /* Actions */
+        .actions-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+        }
+
+        .danger-btn {
+            background: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .danger-btn:hover {
+            background: #c82333;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--accent);
+            color: var(--bg);
+            padding: 14px 28px;
+            border-radius: 50px;
             font-weight: 600;
-            transition: all var(--transition);
+            box-shadow: var(--shadow-hover);
+            z-index: 9999;
+            opacity: 0;
+            transition: var(--transition);
         }
 
-        .add-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
         }
 
-        /* Goal Management */
-        .goal-management {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: var(--shadow-md);
-        }
+        /* Mobile */
+        @media (max-width: 640px) {
+            .header-inner { padding: 14px 16px; }
+            .header-title { font-size: 1.2rem; }
+            .btn { padding: 8px 14px; font-size: 0.85rem; }
+            .header-actions { flex-wrap: wrap; }
 
-        .goal-actions {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
+            .main { padding: 16px; }
 
-        .goal-btn {
-            padding: 15px 30px;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all var(--transition);
-            background: var(--bg);
-        }
-
-        .goal-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .goal-btn.delete {
-            background: var(--danger);
-            color: white;
-            border-color: var(--danger);
-        }
-
-
-        @media (max-width: 768px) {
-            .week-progress {
-                grid-template-columns: repeat(7, 1fr);
-                gap: 5px;
-            }
-
-            .months-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            .manual-entry-form {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-
-            .streak-container {
-                grid-template-columns: 1fr;
+            .streak-hero {
+                flex-direction: column;
                 text-align: center;
+                padding: 24px;
                 gap: 20px;
             }
 
-            .progress-section,
-            .calendar-section,
-            .goal-management {
-                padding: 20px;
+            .streak-number { font-size: 3rem; }
+
+            .week-grid {
+                justify-content: center;
+                flex-wrap: wrap;
             }
 
-            .section-title {
-                font-size: 1.5rem;
-            }
+            .day-circle { width: 36px; height: 36px; font-size: 0.9rem; }
 
-            .streak-number {
-                font-size: 3rem;
-            }
+            .goal-card { padding: 20px; }
+            .goal-title { font-size: 1.1rem; }
+            .goal-details { grid-template-columns: repeat(2, 1fr); }
+            .goal-detail { padding: 12px; }
 
-            .goal-details-card {
-                padding: 20px;
-            }
-
-            .goal-details-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-            }
-
-            .stat-card {
-                padding: 12px;
-            }
-
-            .stat-value {
-                font-size: 1.8rem;
-            }
-
-            input, select, button {
-                padding: 12px;
-                font-size: 1rem;
-            }
-        }
-
-        /* Footer Styles */
-        footer {
-            background: var(--card-bg);
-            border-top: 1px solid var(--border);
-            margin-top: 80px;
-            padding: 60px 20px 30px;
-            text-align: right;
-        }
-
-        .footer-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            direction: rtl;
-        }
-
-        .footer-main {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr 1fr 1fr;
-            gap: 40px;
-            margin-bottom: 40px;
-        }
-
-        .footer-brand {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .footer-brand-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .footer-logo-img {
-            width: 45px;
-            height: 45px;
-            object-fit: contain;
-        }
-
-        .footer-brand-name {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .footer-brand-tagline {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: var(--text-muted);
-        }
-
-        .footer-social-icons {
-            display: flex;
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .footer-social-icons a {
-            color: var(--text-muted);
-            font-size: 1.3rem;
-            transition: all 0.4s;
-        }
-
-        .footer-social-icons a:hover {
-            color: var(--primary);
-            transform: translateY(-3px);
-        }
-
-        .footer-section {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .footer-section-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text);
-        }
-
-        .footer-links {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .footer-contact-text {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            line-height: 1.6;
-        }
-
-        .footer-link {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: all 0.4s;
-        }
-
-        .footer-link:hover {
-            color: var(--primary);
-            transform: translateX(-5px);
-        }
-
-        .footer-bottom {
-            border-top: 1px solid var(--border);
-            padding-top: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .footer-copyright {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        .footer-meta-links {
-            display: flex;
-            gap: 20px;
-        }
-
-        .footer-meta-link {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.85rem;
-        }
-
-        .footer-meta-link:hover {
-            color: var(--primary);
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 25px 20px;
-                margin: 30px auto;
-            }
-
-            .header-container {
-                padding: 0 20px;
-            }
-
-            .header-title {
-                font-size: 1.5rem;
-            }
-
-            .section-title {
-                font-size: 1.6rem;
-                margin-bottom: 25px;
-            }
-
-            .streak-number {
-                font-size: 3.5rem;
-            }
-
-            .goal-details-card {
-                padding: 25px;
-                margin-bottom: 25px;
-            }
-
-            .progress-section,
-            .calendar-section,
-            .goal-management {
-                padding: 30px 20px;
-                margin-bottom: 25px;
-            }
-
-            .footer-main {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .day-circle {
-                width: 50px;
-                height: 50px;
-                font-size: 1.3rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 20px 15px;
-                margin: 25px auto;
-            }
-
-            .header {
-                padding: 15px 0;
-            }
-
-            .header-container {
-                padding: 0 15px;
-            }
-
-            .header-title {
-                font-size: 1.4rem;
-            }
-
-            .header-container > div {
-                gap: 10px;
-            }
-
-            .back-btn {
-                padding: 10px 20px;
-                font-size: 0.95rem;
-            }
-
-            .section-title {
-                font-size: 1.4rem;
-                margin-bottom: 20px;
-            }
-
-            .progress-section,
-            .calendar-section,
-            .goal-management {
-                padding: 25px 18px;
-                border-radius: 15px;
-                margin-bottom: 20px;
-            }
-
-            .streak-container {
-                gap: 25px;
-                margin-bottom: 30px;
-            }
-
-            .streak-number {
-                font-size: 3.5rem;
-            }
-
-            .streak-label {
-                font-size: 1.1rem;
-            }
-
-            .streak-right h3 {
-                font-size: 1.1rem;
-                margin-bottom: 15px;
-            }
-
-            .week-progress {
-                gap: 4px;
-            }
-
-            .week-progress::before {
-                height: 3px;
-            }
-
-            .day-circle {
-                width: 40px;
-                height: 40px;
-                font-size: 1.1rem;
-                border-width: 3px;
-            }
-
-            .day-card.today .day-circle {
-                border-width: 4px;
-            }
-
-            .day-name {
-                font-size: 0.7rem;
-            }
-
-            .goal-details-card {
-                padding: 20px;
-                margin-bottom: 25px;
-            }
-
-            .goal-details-title {
-                font-size: 1.4rem;
-            }
-
-            .goal-details-description {
-                font-size: 0.9rem;
-            }
-
-            .goal-details-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-
-            .goal-detail-item {
-                padding: 15px;
-            }
-
-            .goal-detail-label {
-                font-size: 0.8rem;
-            }
-
-            .goal-detail-value {
-                font-size: 1rem;
-            }
-
-            .goal-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-                margin-bottom: 15px;
-            }
-
-            .goal-text {
-                font-size: 1rem;
-            }
-
-            .goal-percentage {
-                font-size: 1.8rem;
-            }
-
-            .progress-bar-container {
-                height: 35px;
-            }
-
-            .month-card {
+            .progress-section, .calendar-section, .actions-section {
                 padding: 18px;
             }
 
-            .month-name {
-                font-size: 1.2rem;
-                margin-bottom: 12px;
-            }
+            .months-grid { grid-template-columns: 1fr; }
 
-            .day-cell {
-                font-size: 0.8rem;
-            }
+            .manual-form { flex-direction: column; }
+            .form-input { min-width: 100%; }
 
-            .manual-entry {
-                padding: 20px;
-                margin-top: 20px;
-            }
-
-            .manual-entry-title {
-                font-size: 1.1rem;
-                margin-bottom: 12px;
-            }
-
-            .form-input {
-                padding: 12px;
-                font-size: 1rem;
-            }
-
-            .add-btn {
-                padding: 12px 25px;
-                font-size: 1rem;
-            }
-
-            .goal-actions {
-                gap: 12px;
-            }
-
-            .goal-btn {
-                padding: 14px 24px;
-                font-size: 1rem;
-                width: 100%;
-            }
-
-            .footer-main {
-                grid-template-columns: 1fr;
-                gap: 30px;
-            }
-
-            .footer-brand {
-                text-align: center;
-            }
-
-            .footer-social-icons {
-                justify-content: center;
-            }
-
-            .footer-bottom {
-                flex-direction: column;
-                text-align: center;
-            }
+            .btn { width: 100%; justify-content: center; }
         }
 
-        /* Extra small devices (very small phones) */
-        @media (max-width: 360px) {
-            .container {
-                padding: 15px 12px;
-            }
+        @media (max-width: 380px) {
+            .streak-number { font-size: 2.5rem; }
+            .day-circle { width: 32px; height: 32px; font-size: 0.8rem; }
+            .goal-details { grid-template-columns: 1fr; }
+        }
 
-            .header-container {
-                padding: 0 12px;
-            }
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-            .header-title {
-                font-size: 1.3rem;
-            }
-
-            .back-btn {
-                padding: 10px 16px;
-                font-size: 0.9rem;
-            }
-
-            .progress-section,
-            .calendar-section,
-            .goal-management {
-                padding: 20px 15px;
-            }
-
-            .section-title {
-                font-size: 1.3rem;
-                gap: 10px;
-            }
-
-            .streak-number {
-                font-size: 3rem;
-            }
-
-            .streak-label {
-                font-size: 1rem;
-            }
-
-            .day-circle {
-                width: 35px;
-                height: 35px;
-                font-size: 1rem;
-            }
-
-            .day-name {
-                font-size: 0.65rem;
-            }
-
-            .goal-details-card {
-                padding: 16px;
-            }
-
-            .goal-details-title {
-                font-size: 1.2rem;
-            }
-
-            .goal-detail-item {
-                padding: 12px;
-            }
-
-            .goal-detail-label {
-                font-size: 0.75rem;
-            }
-
-            .goal-detail-value {
-                font-size: 0.95rem;
-            }
-
-            .goal-text {
-                font-size: 0.95rem;
-            }
-
-            .goal-percentage {
-                font-size: 1.6rem;
-            }
-
-            .progress-bar-container {
-                height: 30px;
-            }
-
-            .month-name {
-                font-size: 1.1rem;
-            }
-
-            .day-cell {
-                font-size: 0.75rem;
-            }
+        .streak-hero, .goal-card, .progress-section, .calendar-section, .actions-section {
+            animation: fadeIn 0.4s ease forwards;
         }
     </style>
-  <!-- Text Highlighter for Admin Panel -->
 </head>
 <body>
     <header class="header">
-        <div class="header-container">
+        <div class="header-inner">
             <h1 class="header-title">ئارمانج</h1>
-            <div style="display: flex; gap: 12px; align-items: center;">
-                <a href="/reading-goal" class="back-btn" style="background: var(--primary); color: var(--accent); border-color: var(--primary);">
+            <div class="header-actions">
+                <a href="/reading-goal" class="btn">
                     <i class="fas fa-plus"></i>
                     ئارمانجەکا نوی
                 </a>
-                <a href="/quran" class="back-btn">
+                <a href="/quran" class="btn btn-outline">
                     <i class="fas fa-arrow-right"></i>
-                    گەڕیان ڤە
+                    گەڕانەڤە
                 </a>
             </div>
         </div>
     </header>
 
-    <div class="container">
-        <!-- Progress Section -->
-        <div class="progress-section">
-            <h2 class="section-title">
-                <i class="fas fa-chart-line"></i>
-                پێشکەفتن
-            </h2>
-
-            <!-- Goal Details Card -->
-            <div class="goal-details-card" id="goalDetailsCard" style="display: none;">
-                <div class="goal-details-header">
-                    <div>
-                        <div class="goal-details-title" id="goalDetailsTitle">ئارمانجا تە</div>
-                        <div class="goal-details-description" id="goalDetailsDescription"></div>
-                    </div>
-                    <div class="goal-details-icon">🎯</div>
-                </div>
-                <div class="goal-details-grid" id="goalDetailsGrid">
-                    <!-- Dynamically populated -->
-                </div>
+    <main class="main">
+        <!-- Streak Hero -->
+        <div class="streak-hero">
+            <div class="streak-left">
+                <div class="streak-number" id="streakNumber">0</div>
+                <div class="streak-label">رۆژ</div>
             </div>
-
-            <div class="streak-container">
-                <div class="streak-left">
-                    <div class="streak-number" id="streakNumber">0</div>
-                    <div class="streak-label">رۆژ</div>
-                </div>
-                <div class="streak-right">
-                    <h3>پێشکەفتنا ڤێ هەفتییێ</h3>
-                    <div class="week-progress" id="weekProgress">
-                        <!-- Days will be populated by JavaScript -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Today's Goal -->
-            <div class="goal-section">
-                <div class="goal-header">
-                    <div class="goal-text" id="goalText">ئارمانجا ئەڤرۆ: ١٠ خولەک خواندن</div>
-                    <div class="goal-percentage" id="goalPercent">0%</div>
-                </div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
-                </div>
+            <div class="streak-info">
+                <h3>پێشکەفتنا ڤێ هەفتییێ</h3>
+                <div class="week-grid" id="weekProgress"></div>
             </div>
         </div>
 
-        <!-- Calendar Section -->
+        <!-- Goal Card -->
+        <div class="goal-card" id="goalCard" style="display: none;">
+            <div class="goal-header">
+                <div>
+                    <div class="goal-title" id="goalTitle">ئارمانجا تە</div>
+                    <div class="goal-desc" id="goalDesc"></div>
+                </div>
+                <div class="goal-icon">🎯</div>
+            </div>
+            <div class="goal-details" id="goalDetails"></div>
+        </div>
+
+        <!-- Today's Progress -->
+        <div class="progress-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                پێشکەفتنا ئەڤڕۆ
+            </h2>
+            <div class="progress-header">
+                <span class="progress-text" id="goalText">ئارمانجا ئەڤڕۆ</span>
+                <span class="progress-percent" id="goalPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Calendar -->
         <div class="calendar-section">
             <h2 class="section-title">
                 <i class="fas fa-calendar-alt"></i>
                 رۆژژمێرا پێشکەفتنێ
             </h2>
 
-            <div class="year-selector">
+            <div class="year-nav">
                 <button class="year-btn" onclick="changeYear(-1)">
                     <i class="fas fa-chevron-right"></i>
                 </button>
-                <div class="current-year" id="currentYear">2025</div>
+                <span class="year-display" id="currentYear">2026</span>
                 <button class="year-btn" onclick="changeYear(1)">
                     <i class="fas fa-chevron-left"></i>
                 </button>
             </div>
 
-            <div class="months-grid" id="monthsGrid">
-                <!-- Months will be populated by JavaScript -->
-            </div>
+            <div class="months-grid" id="monthsGrid"></div>
 
-            <!-- Manual Entry -->
             <div class="manual-entry">
-                <div class="manual-entry-title">زێدەکرنا خولەکان ب دەستی</div>
-                <div class="manual-entry-form">
+                <div class="manual-title">زێدەکرنا خولەکان ب دەستی</div>
+                <div class="manual-form">
                     <input type="date" class="form-input" id="manualDate">
-                    <input type="number" class="form-input" id="manualMinutes" placeholder="خولەک (ب خولەک)">
-                    <button class="add-btn" onclick="addManualEntry()">
-                        <i class="fas fa-plus"></i> زێدەکرن
+                    <input type="number" class="form-input" id="manualMinutes" placeholder="خولەک">
+                    <button class="btn" onclick="addManualEntry()">
+                        <i class="fas fa-plus"></i>
+                        زێدەکرن
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Goal Management -->
-        <div class="goal-management">
+        <!-- Actions -->
+        <div class="actions-section">
             <h2 class="section-title">
                 <i class="fas fa-cog"></i>
-                رێڤەبرنا ئارمانجێ
+                رێڤەبرن
             </h2>
-
-            <div class="goal-actions">
-                <button class="goal-btn delete" onclick="deleteGoal()">
-                    <i class="fas fa-trash"></i> سڕینەڤەیا هەمی زانیاریان
-                </button>
-            </div>
+            <button class="btn danger-btn" onclick="deleteGoal()">
+                <i class="fas fa-trash"></i>
+                سڕینەڤەیا هەمی زانیاریان
+            </button>
         </div>
-    </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
 
     <script>
+        // All DOM manipulation uses safe methods (createElement, textContent)
+        // No user-generated content is rendered without escaping
+
         let currentYear = new Date().getFullYear();
         let readingData = {};
         let dailyGoalMinutes = 10;
-        let streakDays = 0;
         let currentUser = null;
-        let currentGoal = null; // Store the full goal object
+        let currentGoal = null;
 
-        const daysOfWeek = ['یەکشەمبی', 'دووشەمبی', 'سێشەمبی', 'چوارشەمبی', 'پێنجشەمبی', 'ئەینی', 'شەمبی'];
+        const daysOfWeek = ['یەک', 'دوو', 'سێ', 'چوار', 'پێنج', 'ئەی', 'شەم'];
         const monthNames = ['کانوونا دوویێ', 'شوبات', 'ئازار', 'نیسان', 'ئایار', 'حوزەیران', 'تەممووز', 'ئاب', 'ئەیلول', 'تشرینا ئێکێ', 'تشرینا دوویێ', 'کانوونا ئێکێ'];
 
-        window.addEventListener('load', () => {
-            // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
-            if (window.TafsirKurdSecurity) {
-                window.TafsirKurdSecurity.init({
-                    criticalElements: [],
-                    protectedFields: [],
-                    validateSession: true,
-                    securityLevel: 'nuclear'
-                });
-            }
-
-            // Check if user is authenticated
-            const user = localStorage.getItem('user');
-            if (!user) {
-                window.location.href = '/login';
-                return;
-            }
-            currentUser = JSON.parse(user);
-
-            // Check if user has set up a reading goal
-            const readingGoal = localStorage.getItem('readingGoal');
-            if (!readingGoal) {
-                // No goal set, redirect to reading goal setup
-                window.location.href = '/reading-goal';
-                return;
-            }
-
-            // Auth check passed - show the page
-            document.body.classList.add('ready');
-
-            // Load goal settings from reading-goal setup
-            currentGoal = JSON.parse(readingGoal);
-
-            // Convert goal to minutes based on criteria
-            let goalMinutes = 10;
-            if (currentGoal.criteria === 'time') {
-                goalMinutes = currentGoal.target || 10;
-            } else if (currentGoal.criteria === 'pages') {
-                // Estimate: 1 page ≈ 3 minutes
-                goalMinutes = (currentGoal.target || 10) * 3;
-            } else {
-                // For ayahs/surahs, use a default estimation
-                goalMinutes = currentGoal.target || 10;
-            }
-
-            loadData();
-
-            // Apply goal settings (override what was loaded from quran_data)
-            dailyGoalMinutes = goalMinutes;
-
-            // Render goal details card
-            renderGoalDetails();
-
-            renderWeekProgress();
-            renderCalendar();
-            updateStreak();
-            updateTodayProgress();
-            document.getElementById('currentYear').textContent = KurdishNumbers.toKurdish(currentYear);
-            document.getElementById('manualDate').valueAsDate = new Date();
-        });
-
-        function renderGoalDetails() {
-            if (!currentGoal) return;
-
-            const card = document.getElementById('goalDetailsCard');
-            const title = document.getElementById('goalDetailsTitle');
-            const description = document.getElementById('goalDetailsDescription');
-            const grid = document.getElementById('goalDetailsGrid');
-
-            // Show the card
-            card.style.display = 'block';
-
-            // Set title and description
-            title.textContent = currentGoal.name || 'ئارمانجا تە';
-            description.textContent = currentGoal.description || '';
-
-            // Build details grid
-            grid.innerHTML = '';
-
-            // Add goal type detail
-            addDetailItem(grid, 'جۆرێ ئارمانجێ', getGoalTypeLabel(currentGoal.type));
-
-            // Add criteria detail
-            addDetailItem(grid, 'پیڤەر', getCriteriaLabel(currentGoal.criteria));
-
-            // Add target detail
-            addDetailItem(grid, 'ئارمانجا رۆژانە', `${currentGoal.target} ${getCriteriaUnit(currentGoal.criteria)}`);
-
-            // Add frequency detail
-            addDetailItem(grid, 'دووبارەبوون', getFrequencyLabel(currentGoal.frequency));
-
-            // Add flow details if available
-            if (currentGoal.flow) {
-                if (currentGoal.flow.step2) {
-                    addDetailItem(grid, 'هەلبژاردنا ١', getFlowLabel(currentGoal.type, 'step2', currentGoal.flow.step2));
-                }
-                if (currentGoal.flow.step3) {
-                    addDetailItem(grid, 'هەلبژاردنا ٢', getFlowLabel(currentGoal.type, 'step3', currentGoal.flow.step3));
-                }
-                if (currentGoal.flow.step4) {
-                    addDetailItem(grid, 'هەلبژاردنا ٣', getFlowLabel(currentGoal.type, 'step4', currentGoal.flow.step4));
-                }
-            }
-
-            // Add start date
-            const startDate = new Date(currentGoal.startDate);
-            addDetailItem(grid, 'دەستپێکرن', startDate.toLocaleDateString('ku'));
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(function() { toast.classList.remove('show'); }, 3000);
         }
 
-        function addDetailItem(container, label, value) {
-            const item = document.createElement('div');
-            item.className = 'goal-detail-item';
-            item.innerHTML = `
-                <div class="goal-detail-label">${label}</div>
-                <div class="goal-detail-value">${value}</div>
-            `;
-            container.appendChild(item);
-        }
-
-        function getGoalTypeLabel(type) {
-            const labels = {
-                '10min': 'خواندنا ١٠ خولەکان',
-                '30days': 'قورئانا ٣٠ رۆژان',
-                '1year': 'قورئانا ساڵەکێ',
-                'custom': 'تایبەت'
-            };
-            return labels[type] || type;
-        }
-
-        function getCriteriaLabel(criteria) {
-            const labels = {
-                'time': 'دەم',
-                'pages': 'لاپەڕ',
-                'ayahs': 'ئایەت',
-                'surahs': 'سوورە',
-                'juz': 'جوز',
-                'verses': 'ئایەت'
-            };
-            return labels[criteria] || criteria;
-        }
-
-        function getCriteriaUnit(criteria) {
-            const units = {
-                'time': 'خولەک',
-                'pages': 'لاپەڕ',
-                'ayahs': 'ئایەت',
-                'surahs': 'سوورە',
-                'juz': 'جوز',
-                'verses': 'ئایەت'
-            };
-            return units[criteria] || '';
-        }
-
-        function getFrequencyLabel(frequency) {
-            const labels = {
-                'daily': 'رۆژانە',
-                'weekly': 'هەفتانە',
-                'monthly': 'مەهانە',
-                '5days': '٥ رۆژ/هەفتە',
-                '3days': '٣ رۆژ/هەفتە'
-            };
-            return labels[frequency] || frequency;
-        }
-
-        function getFlowLabel(goalType, step, value) {
-            // Return Kurdish labels based on goal type and step
-            const flowLabels = {
-                '1year': {
-                    step2: {
-                        '1time': 'جارەکێ د سالێ',
-                        '2times': 'دوو جاران د سالێ',
-                        '3times': 'سێ جاران د سالێ'
-                    },
-                    step3: {
-                        'none': 'هەر رۆژێ بخوینە',
-                        'friday': 'ئەینی بەتاڵ',
-                        'weekend': 'دوماهییا هەفتییێ بەتاڵ'
-                    },
-                    step4: {
-                        'weekly': 'پێداچوونەڤەیا هەفتانە',
-                        'monthly': 'پێداچوونەڤەیا مەهانە',
-                        'quarterly': 'پێداچوونەڤەیا سێ مەهان'
-                    }
-                },
-                '30days': {
-                    step2: {
-                        'standard': '١ جوز/رۆژ',
-                        'intensive': '٢ جوز/رۆژ',
-                        'relaxed': '١ جوز/٢ رۆژ'
-                    },
-                    step3: {
-                        'tajweed': 'ب تەجویدێ',
-                        'understanding': 'ب تەفسیرێ',
-                        'memorization': 'حیفزکرن',
-                        'both': 'تەجوید و تەفسیر'
-                    },
-                    step4: {
-                        'juz1': 'ل جوزا ١',
-                        'juz30': 'ل جوزا ٣٠',
-                        'juz29': 'ل جوزا ٢٩'
-                    }
-                },
-                '10min': {
-                    step2: {
-                        'daily': 'هەر رۆژێ',
-                        '5days': '٥ رۆژ/هەفتە',
-                        '3days': '٣ رۆژ/هەفتە'
-                    },
-                    step3: {
-                        'morning': 'سپێدێ',
-                        'afternoon': 'پێشڤانێ',
-                        'evening': 'ئێڤارێ',
-                        'flexible': 'دەمەکێ نەدیاری'
-                    }
-                }
-            };
-
-            if (flowLabels[goalType] && flowLabels[goalType][step] && flowLabels[goalType][step][value]) {
-                return flowLabels[goalType][step][value];
-            }
-
-            return value;
+        function formatDate(date) {
+            return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
         }
 
         function loadData() {
-            // Load REAL data from user's quran_data
             const userKey = 'quran_data_' + currentUser.sub;
             const saved = localStorage.getItem(userKey);
-
             if (saved) {
                 const data = JSON.parse(saved);
-
-                // Convert dailyActivity to readingData format
                 readingData = {};
                 if (data.dailyActivity) {
-                    Object.keys(data.dailyActivity).forEach(date => {
+                    Object.keys(data.dailyActivity).forEach(function(date) {
                         readingData[date] = data.dailyActivity[date].minutes || 0;
                     });
                 }
-
-                // Get daily goal (default 10 minutes)
                 dailyGoalMinutes = data.dailyGoalMinutes || 10;
-
-                // Calculate streak from real data
-                streakDays = calculateStreak();
             }
         }
 
         function saveData() {
-            // Save to the main quran_data structure
             const userKey = 'quran_data_' + currentUser.sub;
-            const saved = localStorage.getItem(userKey);
-            const data = saved ? JSON.parse(saved) : {};
+            const saved = localStorage.getItem(userKey) || '{}';
+            const data = JSON.parse(saved);
 
-            // Update dailyActivity from readingData
             if (!data.dailyActivity) data.dailyActivity = {};
-
-            Object.keys(readingData).forEach(date => {
+            Object.keys(readingData).forEach(function(date) {
                 if (!data.dailyActivity[date]) {
                     data.dailyActivity[date] = { minutes: 0, ayahs: 0, surahs: [] };
                 }
                 data.dailyActivity[date].minutes = readingData[date];
             });
 
-            // Save daily goal to quran_data
             data.dailyGoalMinutes = dailyGoalMinutes;
-
             localStorage.setItem(userKey, JSON.stringify(data));
+        }
 
-            // Also update the readingGoal to keep it in sync
-            const readingGoal = localStorage.getItem('readingGoal');
-            if (readingGoal) {
-                const goal = JSON.parse(readingGoal);
-                goal.target = dailyGoalMinutes;
-                localStorage.setItem('readingGoal', JSON.stringify(goal));
+        function calculateStreak() {
+            const today = new Date();
+            const todayKey = formatDate(today);
+            let streak = 0;
+            const checkDate = new Date(today);
+
+            while (true) {
+                const dateKey = formatDate(checkDate);
+                const minutesRead = readingData[dateKey] || 0;
+
+                if (minutesRead >= dailyGoalMinutes) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else {
+                    if (dateKey === todayKey) {
+                        checkDate.setDate(checkDate.getDate() - 1);
+                        continue;
+                    }
+                    break;
+                }
             }
+            return streak;
         }
 
         function renderWeekProgress() {
             const container = document.getElementById('weekProgress');
-            container.innerHTML = '';
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
 
             const today = new Date();
             const dayOfWeek = today.getDay();
@@ -1505,30 +759,115 @@
                 const isToday = i === dayOfWeek;
                 const hasReading = readingData[dateKey] && readingData[dateKey] >= dailyGoalMinutes;
 
-                const dayCard = document.createElement('div');
-                dayCard.className = `day-card ${hasReading ? 'completed' : ''} ${isToday ? 'today' : ''}`;
-                dayCard.innerHTML = `
-                    <div class="day-name">${daysOfWeek[i]}</div>
-                    <div class="day-circle">${hasReading ? '✓' : '○'}</div>
-                `;
-                container.appendChild(dayCard);
+                const dayItem = document.createElement('div');
+                dayItem.className = 'day-item' + (hasReading ? ' completed' : '') + (isToday ? ' today' : '');
+
+                const dayName = document.createElement('div');
+                dayName.className = 'day-name';
+                dayName.textContent = daysOfWeek[i];
+
+                const dayCircle = document.createElement('div');
+                dayCircle.className = 'day-circle';
+                dayCircle.textContent = hasReading ? '✓' : '○';
+
+                dayItem.appendChild(dayName);
+                dayItem.appendChild(dayCircle);
+                container.appendChild(dayItem);
             }
+        }
+
+        function renderGoalCard() {
+            if (!currentGoal) return;
+
+            const card = document.getElementById('goalCard');
+            card.style.display = 'block';
+
+            document.getElementById('goalTitle').textContent = currentGoal.name || 'ئارمانجا تە';
+            document.getElementById('goalDesc').textContent = currentGoal.description || '';
+
+            const grid = document.getElementById('goalDetails');
+            while (grid.firstChild) {
+                grid.removeChild(grid.firstChild);
+            }
+
+            const details = [
+                { label: 'جۆر', value: getGoalTypeLabel(currentGoal.type) },
+                { label: 'پێوەر', value: getCriteriaLabel(currentGoal.criteria) },
+                { label: 'ئارمانج', value: currentGoal.target + ' ' + getCriteriaUnit(currentGoal.criteria) },
+                { label: 'دووبارەبوون', value: getFrequencyLabel(currentGoal.frequency) }
+            ];
+
+            details.forEach(function(d) {
+                const item = document.createElement('div');
+                item.className = 'goal-detail';
+                const label = document.createElement('div');
+                label.className = 'goal-detail-label';
+                label.textContent = d.label;
+                const value = document.createElement('div');
+                value.className = 'goal-detail-value';
+                value.textContent = d.value;
+                item.appendChild(label);
+                item.appendChild(value);
+                grid.appendChild(item);
+            });
+        }
+
+        function getGoalTypeLabel(type) {
+            const labels = { '10min': '١٠ خولەک', '30days': '٣٠ رۆژ', '1year': 'سالەک', 'custom': 'تایبەت' };
+            return labels[type] || type;
+        }
+
+        function getCriteriaLabel(c) {
+            const labels = { 'time': 'دەم', 'pages': 'لاپەڕ', 'ayahs': 'ئایەت', 'surahs': 'سوورە', 'juz': 'جوز' };
+            return labels[c] || c;
+        }
+
+        function getCriteriaUnit(c) {
+            const units = { 'time': 'خولەک', 'pages': 'لاپەڕ', 'ayahs': 'ئایەت', 'surahs': 'سوورە', 'juz': 'جوز' };
+            return units[c] || '';
+        }
+
+        function getFrequencyLabel(f) {
+            const labels = { 'daily': 'رۆژانە', 'weekly': 'هەفتانە', 'monthly': 'مەهانە' };
+            return labels[f] || f;
+        }
+
+        function updateTodayProgress() {
+            const today = formatDate(new Date());
+            const todayMinutes = readingData[today] || 0;
+            const percent = Math.min(100, Math.round((todayMinutes / dailyGoalMinutes) * 100));
+
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('goalPercent').textContent = percent + '%';
+
+            const targetMinutes = currentGoal ? currentGoal.target : dailyGoalMinutes;
+            document.getElementById('goalText').textContent = 'ئارمانجا ئەڤڕۆ: ' + targetMinutes + ' خولەک (' + todayMinutes + ' تمام)';
         }
 
         function renderCalendar() {
             const container = document.getElementById('monthsGrid');
-            container.innerHTML = '';
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
 
             for (let month = 0; month < 12; month++) {
                 const monthCard = document.createElement('div');
                 monthCard.className = 'month-card';
 
+                const monthName = document.createElement('div');
+                monthName.className = 'month-name';
+                monthName.textContent = monthNames[month];
+
+                const daysGrid = document.createElement('div');
+                daysGrid.className = 'days-grid';
+
                 const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
                 const firstDay = new Date(currentYear, month, 1).getDay();
 
-                let daysHTML = '';
                 for (let i = 0; i < firstDay; i++) {
-                    daysHTML += '<div class="day-cell empty"></div>';
+                    const empty = document.createElement('div');
+                    empty.className = 'day-cell empty';
+                    daysGrid.appendChild(empty);
                 }
 
                 for (let day = 1; day <= daysInMonth; day++) {
@@ -1536,27 +875,29 @@
                     const dateKey = formatDate(date);
                     const reading = readingData[dateKey] || 0;
 
-                    let className = 'day-cell unread';
+                    const cell = document.createElement('div');
+                    cell.className = 'day-cell';
                     if (reading >= dailyGoalMinutes) {
-                        className = 'day-cell read';
+                        cell.classList.add('read');
                     } else if (reading > 0) {
-                        className = 'day-cell partial';
+                        cell.classList.add('partial');
+                    } else {
+                        cell.classList.add('unread');
                     }
-
-                    daysHTML += `<div class="${className}" title="${reading} خولەک">${day}</div>`;
+                    cell.textContent = day;
+                    cell.title = reading + ' خولەک';
+                    daysGrid.appendChild(cell);
                 }
 
-                monthCard.innerHTML = `
-                    <div class="month-name">${monthNames[month]}</div>
-                    <div class="days-grid">${daysHTML}</div>
-                `;
+                monthCard.appendChild(monthName);
+                monthCard.appendChild(daysGrid);
                 container.appendChild(monthCard);
             }
         }
 
         function changeYear(delta) {
             currentYear += delta;
-            document.getElementById('currentYear').textContent = KurdishNumbers.toKurdish(currentYear);
+            document.getElementById('currentYear').textContent = currentYear;
             renderCalendar();
         }
 
@@ -1565,12 +906,12 @@
             const minutesInput = document.getElementById('manualMinutes');
 
             if (!dateInput.value || !minutesInput.value) {
-                alert('تکایە هەردوو خانە پڕ بکە');
+                showToast('تکایە هەردوو خانە پڕ بکە');
                 return;
             }
 
             const date = new Date(dateInput.value);
-            const minutes = parseInt(minutesInput.value);
+            const minutes = parseInt(minutesInput.value, 10);
             const dateKey = formatDate(date);
 
             readingData[dateKey] = (readingData[dateKey] || 0) + minutes;
@@ -1581,213 +922,79 @@
             updateTodayProgress();
 
             minutesInput.value = '';
-            alert('زانیاریەک هاتە زێدەکرن');
-        }
-
-        function calculateStreak() {
-            const today = new Date();
-            const todayKey = formatDate(today);
-            let streak = 0;
-            let checkDate = new Date(today);
-
-            // Start checking from today
-            while (true) {
-                const dateKey = formatDate(checkDate);
-                const minutesRead = readingData[dateKey] || 0;
-
-                // Check if this day met the goal
-                if (minutesRead >= dailyGoalMinutes) {
-                    streak++;
-                    checkDate.setDate(checkDate.getDate() - 1);
-                } else {
-                    // Special case: If this is TODAY and hasn't been completed yet
-                    // Don't break the streak - give until midnight
-                    if (dateKey === todayKey) {
-                        // Today is incomplete but streak continues from yesterday
-                        checkDate.setDate(checkDate.getDate() - 1);
-                        continue;
-                    }
-                    // For any past day that didn't meet goal, break streak
-                    break;
-                }
-            }
-
-            return streak;
+            showToast('زانیاری هاتە زێدەکرن');
         }
 
         function updateStreak() {
-            streakDays = calculateStreak();
-            document.getElementById('streakNumber').textContent = KurdishNumbers.toKurdish(streakDays);
+            const streak = calculateStreak();
+            document.getElementById('streakNumber').textContent = streak;
         }
-
-        function updateTodayProgress() {
-            const today = formatDate(new Date());
-            const todayMinutes = readingData[today] || 0;
-            const percent = Math.min(100, Math.round((todayMinutes / dailyGoalMinutes) * 100));
-
-            document.getElementById('progressFill').style.width = percent + '%';
-            document.getElementById('goalPercent').textContent = KurdishNumbers.toKurdish(percent) + '%';
-
-            // Display goal based on criteria from reading-goal
-            let goalText = '';
-            if (currentGoal && currentGoal.criteria === 'pages') {
-                const pagesRead = Math.floor(todayMinutes / 3); // Estimate: 1 page ≈ 3 minutes
-                goalText = `ئامانجی ئەمڕۆ: ${KurdishNumbers.toKurdish(currentGoal.target)} لاپەڕ خوێندنەوە (${KurdishNumbers.toKurdish(pagesRead)} لاپەڕ تەواوکراوە)`;
-            } else if (currentGoal && currentGoal.criteria === 'juz') {
-                const juzRead = Math.floor(todayMinutes / 60); // Estimate: 1 juz ≈ 60 minutes
-                goalText = `ئامانجی ئەمڕۆ: ${KurdishNumbers.toKurdish(currentGoal.target)} جوز خوێندنەوە (${KurdishNumbers.toKurdish(juzRead)} جوز تەواوکراوە)`;
-            } else if (currentGoal && currentGoal.criteria === 'verses') {
-                goalText = `ئامانجی ئەمڕۆ: ${KurdishNumbers.toKurdish(currentGoal.target)} ئایەت خوێندنەوە (${KurdishNumbers.toKurdish(todayMinutes)} خولەک تەواوکراوە)`;
-            } else if (currentGoal && currentGoal.criteria === 'ayahs') {
-                goalText = `ئامانجی ئەمڕۆ: ${KurdishNumbers.toKurdish(currentGoal.target)} ئایەت خوێندنەوە (${KurdishNumbers.toKurdish(todayMinutes)} خولەک تەواوکراوە)`;
-            } else if (currentGoal && currentGoal.criteria === 'surahs') {
-                const surahsRead = Math.floor(todayMinutes / 10); // Estimate
-                goalText = `ئامانجی ئەمڕۆ: ${KurdishNumbers.toKurdish(currentGoal.target)} سوورە خوێندنەوە (${KurdishNumbers.toKurdish(surahsRead)} سوورە تەواوکراوە)`;
-            } else {
-                // Default to time-based (minutes)
-                const targetMinutes = currentGoal ? currentGoal.target : dailyGoalMinutes;
-                goalText = `ئارمانجا ئەڤڕو: ${KurdishNumbers.toKurdish(targetMinutes)} خولەک خیندن (${KurdishNumbers.toKurdish(todayMinutes)} خولەک تمامکرینە)`;
-            }
-
-            document.getElementById('goalText').textContent = goalText;
-        }
-
 
         function deleteGoal() {
-            if (confirm('ئایا دڵنیایت لە سڕینەڤەیا هەمی زانیاریان و دەستپێکرنەوە؟')) {
-                // Clear reading data but keep other user data
+            if (confirm('ئایا دڵنیایت لە سڕینەڤەیا هەمی زانیاریان؟')) {
                 const userKey = 'quran_data_' + currentUser.sub;
                 const saved = localStorage.getItem(userKey);
                 const data = saved ? JSON.parse(saved) : {};
 
-                // Clear activity-related data only
                 data.dailyActivity = {};
                 data.sessions = [];
-                data.stats = {
-                    daysActive: 0,
-                    surahsCompleted: 0,
-                    ayahsRead: 0,
-                    totalActiveMinutes: 0,
-                    streak: 0,
-                    level: 1
-                };
+                data.stats = { daysActive: 0, surahsCompleted: 0, ayahsRead: 0, totalActiveMinutes: 0, streak: 0, level: 1 };
 
                 localStorage.setItem(userKey, JSON.stringify(data));
-
-                // Clear reading goal
                 localStorage.removeItem('readingGoal');
 
-                // Reset local data
                 readingData = {};
                 dailyGoalMinutes = 10;
-                streakDays = 0;
                 currentGoal = null;
 
                 renderCalendar();
                 renderWeekProgress();
                 updateStreak();
                 updateTodayProgress();
-                alert('هەمی زانیاری هاتنە سڕینەڤە');
+                document.getElementById('goalCard').style.display = 'none';
+
+                showToast('هەمی زانیاری هاتنە سڕینەڤە');
             }
         }
 
-        function formatDate(date) {
-            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-        }
+        // Init
+        window.addEventListener('load', function() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                window.location.href = '/login';
+                return;
+            }
+            currentUser = JSON.parse(user);
 
-        // Register Service Worker for offline support
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js?v=506')
-                .then(registration => {
-                    console.log('✅ Service Worker registered successfully:', registration.scope);
-                })
-                .catch(error => {
-                    console.log('❌ Service Worker registration failed:', error);
-                });
-        }
-    </script>
-    <!-- Footer -->
-    <footer>
-        <div class="footer-container">
-            <div class="footer-main">
-                <!-- Brand Section -->
-                <div class="footer-brand">
-                    <div class="footer-brand-header">
-                        <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image" loading="lazy" width="45" height="45">
-                        <h2 class="footer-brand-name">تەفسیر کورد</h2>
-                    </div>
-                    <p class="footer-brand-tagline">
-                        پلاتفۆرمەکا ئارام بۆ خواندنێ، گەڕیان و رامان ل سەر قورئانا پیرۆز ب زمانێ کوردی (بادینی). قورئان بگەهیتە دەستێ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
-                    </p>
-                    <div class="footer-social-icons">
-                        <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <a href="https://www.youtube.com/@tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-                            <i class="fab fa-youtube"></i>
-                        </a>
-                        <a href="https://t.me/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
-                            <i class="fab fa-telegram"></i>
-                        </a>
-                        <a href="https://www.pinterest.com/tafsirkurd/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest">
-                            <i class="fab fa-pinterest"></i>
-                        </a>
-                    </div>
-                </div>
+            const readingGoal = localStorage.getItem('readingGoal');
+            if (!readingGoal) {
+                window.location.href = '/reading-goal';
+                return;
+            }
 
-                <!-- Navigate Section -->
-                <div class="footer-section">
-                    <h3 class="footer-section-title">گەڕیان</h3>
-                    <div class="footer-links">
-                        <a href="/profile" class="footer-link">پرۆفایل</a>
-                        <a href="/goals" class="footer-link">ئارمانج</a>
-                        <a href="/bookmarks" class="footer-link">نیشانەکری</a>
-                        <a href="/settings" class="footer-link">رێکخستن</a>
-                    </div>
-                </div>
+            currentGoal = JSON.parse(readingGoal);
 
-                <!-- Resources Section -->
-                <div class="footer-section">
-                    <h3 class="footer-section-title">رۆژپەڕێن دی</h3>
-                    <div class="footer-links">
-                        <a href="/" class="footer-link">مالپەڕێ سەرەکی</a>
-                        <a href="/quran" class="footer-link">قورئانا پیرۆز</a>
-                        <a href="/#features" class="footer-link">تایبەتمەندی</a>
-                        <a href="/#about" class="footer-link">دەربارەی مە</a>
-                    </div>
-                </div>
+            let goalMinutes = 10;
+            if (currentGoal.criteria === 'time') {
+                goalMinutes = currentGoal.target || 10;
+            } else if (currentGoal.criteria === 'pages') {
+                goalMinutes = (currentGoal.target || 10) * 3;
+            } else {
+                goalMinutes = currentGoal.target || 10;
+            }
 
-                <!-- Connect Section -->
-                <div class="footer-section">
-                    <h3 class="footer-section-title">پەیوەندی</h3>
-                    <div class="footer-links">
-                        <p class="footer-contact-text">ئەگەر تە پرسیارەک یان پێشنیارەک هەبیت، پەیوەندییێ ب مە بکە و ب زووترین دەم دێ بەرسڤا تە هێتە دان!</p>
-                        <a href="mailto:info@tafsirkurd.com" class="footer-link">
-                            <i class="fas fa-envelope"></i> info@tafsirkurd.com
-                        </a>
-                        <a href="/#contact" class="footer-link">
-                            <i class="fas fa-paper-plane"></i> فۆرما پڕبکە
-                        </a>
-                    </div>
-                </div>
-            </div>
+            loadData();
+            dailyGoalMinutes = goalMinutes;
 
-            <!-- Footer Bottom -->
-            <div class="footer-bottom">
-                <p class="footer-copyright">
-                    &copy; <span id="footer-year"></span> تەفسیر کورد. هەمی ماف د پاراستینە. خودایێ مەزن بەرەکەتێ بێخیتە هەوڵ و ماندیبوونا مە.
-                </p>
-                <div class="footer-meta-links">
-                    <a href="/privacy-policy" class="footer-meta-link">پارێزراوی تایبەتمەندی</a>
-                    <a href="/terms-and-conditions" class="footer-meta-link">مەرج و ڕێسا</a>
-                </div>
-            </div>
-        </div>
-    </footer>
+            renderGoalCard();
+            renderWeekProgress();
+            renderCalendar();
+            updateStreak();
+            updateTodayProgress();
 
-    <script>
-        // Set current year
-        document.getElementById('footer-year').textContent = new Date().getFullYear();
+            document.getElementById('currentYear').textContent = currentYear;
+            document.getElementById('manualDate').valueAsDate = new Date();
+        });
     </script>
 </body>
 </html>

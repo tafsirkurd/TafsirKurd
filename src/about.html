@@ -823,7 +823,7 @@
     } else {
       localStorage.removeItem('tafsir_book_image');
     }
-  } catch(e) {}
+  } catch(e) { /* Silently ignore - image loading is optional */ }
 })();
 </script>
 </body>
