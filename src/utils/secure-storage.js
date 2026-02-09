@@ -18,13 +18,29 @@ class SecureStorage {
         // Initialize IndexedDB for permanent storage
         this.dbName = 'TafsirKurdDB';
         this.dbVersion = 1;
+        this.db = null;
+        this.syncInterval = null;
         this.initIndexedDB();
 
         // Auto-recovery check on load
         this.recoverIfNeeded();
 
-        // Periodic backup every 30 seconds
-        setInterval(() => this.syncAll(), 30000);
+        // Periodic backup every 30 seconds (with reference for cleanup)
+        this.syncInterval = setInterval(() => this.syncAll(), 30000);
+    }
+
+    /**
+     * Cleanup resources (call on page unload or when no longer needed)
+     */
+    destroy() {
+        if (this.syncInterval) {
+            clearInterval(this.syncInterval);
+            this.syncInterval = null;
+        }
+        if (this.db) {
+            this.db.close();
+            this.db = null;
+        }
     }
 
     /**

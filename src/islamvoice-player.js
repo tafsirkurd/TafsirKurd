@@ -9,6 +9,17 @@
         return window.KurdishNumbers ? window.KurdishNumbers.toKurdish(val) : String(val);
     }
 
+    // Safe JSON parse helper - prevents crashes from invalid JSON
+    function safeJsonParse(str, fallback) {
+        if (fallback === undefined) fallback = null;
+        if (!str) return fallback;
+        try {
+            return JSON.parse(str);
+        } catch (e) {
+            return fallback;
+        }
+    }
+
     // ===== THUMBNAIL CACHE =====
     const thumbnailCache = {};
 
@@ -1430,17 +1441,17 @@
 
         const savedProgress = localStorage.getItem('watchProgress');
         if (savedProgress) {
-            state.watchProgress = JSON.parse(savedProgress);
+            state.watchProgress = safeJsonParse(savedProgress, {});
         }
 
         const savedWatchlist = localStorage.getItem('watchlist');
         if (savedWatchlist) {
-            state.watchlist = JSON.parse(savedWatchlist);
+            state.watchlist = safeJsonParse(savedWatchlist, []);
         }
 
         const savedLiked = localStorage.getItem('likedEpisodes');
         if (savedLiked) {
-            state.likedEpisodes = JSON.parse(savedLiked);
+            state.likedEpisodes = safeJsonParse(savedLiked, []);
         }
 
         const savedVolume = localStorage.getItem('volume');
@@ -1475,11 +1486,11 @@
         const seriesProgress = localStorage.getItem('seriesProgress');
         const bookmarks = localStorage.getItem('bookmarks');
 
-        if (continueWatching) state.continueWatching = JSON.parse(continueWatching);
-        if (watchHistory) state.watchHistory = JSON.parse(watchHistory);
-        if (watchedVideos) state.watchedVideos = JSON.parse(watchedVideos);
-        if (seriesProgress) state.seriesProgress = JSON.parse(seriesProgress);
-        if (bookmarks) state.bookmarks = JSON.parse(bookmarks);
+        if (continueWatching) state.continueWatching = safeJsonParse(continueWatching, []);
+        if (watchHistory) state.watchHistory = safeJsonParse(watchHistory, []);
+        if (watchedVideos) state.watchedVideos = safeJsonParse(watchedVideos, []);
+        if (seriesProgress) state.seriesProgress = safeJsonParse(seriesProgress, {});
+        if (bookmarks) state.bookmarks = safeJsonParse(bookmarks, []);
 
         // Update badge counts after loading
         updateBadgeCounts();
@@ -2302,7 +2313,7 @@
         }
 
         // Also check legacy localStorage
-        const localVideos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
+        const localVideos = safeJsonParse(localStorage.getItem('tvEpisodes'), []);
         if (localVideos.length > 0 && allVideos.length === 0) {
             allVideos = [...localVideos];
             state.playlist = allVideos;
@@ -3461,7 +3472,7 @@
 
     // Track video view
     function trackVideoView(episodeId) {
-        const videos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
+        const videos = safeJsonParse(localStorage.getItem('tvEpisodes'), []);
         const video = videos.find(v => v.id === episodeId);
 
         if (video) {
@@ -3485,7 +3496,7 @@
 
         try {
             // 1. Delete from localStorage
-            let videos = JSON.parse(localStorage.getItem('tvEpisodes') || '[]');
+            let videos = safeJsonParse(localStorage.getItem('tvEpisodes'), []);
             const initialCount = videos.length;
             videos = videos.filter(v => v.id !== videoId);
             const newCount = videos.length;
@@ -4385,7 +4396,7 @@
     async function syncToSupabase(dataType, data) {
         if (typeof supabase === 'undefined' || !supabase || typeof supabase.from !== 'function') return;
 
-        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        const user = safeJsonParse(localStorage.getItem('user'), null);
         if (!user) return;
 
         try {
@@ -4409,7 +4420,7 @@
     async function loadUserDataFromSupabase() {
         if (typeof supabase === 'undefined') return;
 
-        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        const user = safeJsonParse(localStorage.getItem('user'), null);
         if (!user) return;
 
         try {
@@ -4446,10 +4457,10 @@
         const seriesProgress = localStorage.getItem('seriesProgress');
         const bookmarks = localStorage.getItem('bookmarks');
 
-        if (continueWatching) state.continueWatching = JSON.parse(continueWatching);
-        if (watchHistory) state.watchHistory = JSON.parse(watchHistory);
-        if (seriesProgress) state.seriesProgress = JSON.parse(seriesProgress);
-        if (bookmarks) state.bookmarks = JSON.parse(bookmarks);
+        if (continueWatching) state.continueWatching = safeJsonParse(continueWatching, []);
+        if (watchHistory) state.watchHistory = safeJsonParse(watchHistory, []);
+        if (seriesProgress) state.seriesProgress = safeJsonParse(seriesProgress, {});
+        if (bookmarks) state.bookmarks = safeJsonParse(bookmarks, []);
     }
 
     // ===== AUTH GUARD FOR SIDEBAR VIEWS =====
