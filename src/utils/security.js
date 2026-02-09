@@ -739,7 +739,7 @@ function initNuclearSecurity(options = {}) {
         features: getEnabledFeatures(securityLevel)
     });
 
-    console.log(`Nuclear Security: ${securityLevel.toUpperCase()} level activated`);
+    // Debug log removed for production
 }
 
 function getEnabledFeatures(level) {
@@ -793,4 +793,4 @@ window.TafsirKurdSecurity = {
     getTabAwayCount: () => tabAwayCount
 };
 
-console.log('Nuclear Security Module Loaded');
+// Security module loaded silently in production

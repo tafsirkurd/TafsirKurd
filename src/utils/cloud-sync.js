@@ -62,17 +62,37 @@ class CloudSyncManager {
     }
 
     /**
+     * Safe JSON parse with fallback
+     */
+    safeJsonParse(str, fallback = []) {
+        if (!str) return fallback;
+        try {
+            return JSON.parse(str);
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+    /**
      * Sync ALL user data to cloud
      */
     async syncAllToCloud() {
+        // Prevent overlapping syncs and enforce minimum interval
+        const now = Date.now();
+        const MIN_SYNC_INTERVAL = 5000; // 5 seconds minimum between syncs
+
         if (!this.supabase || !this.userId || this.isSyncing) {
             return;
+        }
+
+        if (now - this.lastSyncTime < MIN_SYNC_INTERVAL) {
+            return; // Too soon since last sync
         }
 
         try {
             this.isSyncing = true;
 
-            // Gather all data from localStorage
+            // Gather all data from localStorage with safe JSON parsing
             const userData = {
                 user_id: this.userId,
 
@@ -83,17 +103,17 @@ class CloudSyncManager {
                 last_read_time: new Date().toISOString(),
 
                 // Bookmarks
-                bookmarks: JSON.parse(localStorage.getItem('bookmarks') || '[]'),
+                bookmarks: this.safeJsonParse(localStorage.getItem('bookmarks'), []),
 
                 // Reading goals
                 daily_goal: parseInt(localStorage.getItem('dailyGoal')) || 0,
                 monthly_goal: parseInt(localStorage.getItem('monthlyGoal')) || 0,
                 reading_streak: parseInt(localStorage.getItem('readingStreak')) || 0,
                 total_ayahs_read: parseInt(localStorage.getItem('totalAyahsRead')) || 0,
-                completed_surahs: JSON.parse(localStorage.getItem('completedSurahs') || '[]'),
+                completed_surahs: this.safeJsonParse(localStorage.getItem('completedSurahs'), []),
 
                 // Reading history
-                reading_history: JSON.parse(localStorage.getItem('readingHistory') || '[]'),
+                reading_history: this.safeJsonParse(localStorage.getItem('readingHistory'), []),
 
                 // Settings
                 theme: localStorage.getItem('theme') || 'light',
@@ -105,7 +125,7 @@ class CloudSyncManager {
 
                 // Notifications
                 notifications_enabled: localStorage.getItem('notificationsEnabled') === 'true',
-                reminder_times: JSON.parse(localStorage.getItem('reminderTimes') || '[]'),
+                reminder_times: this.safeJsonParse(localStorage.getItem('reminderTimes'), []),
 
                 // Last updated timestamp
                 updated_at: new Date().toISOString()
