@@ -19,9 +19,9 @@ dist/
 build/
 out/
 
-# Netlify
-.netlify/
-...netlify/
+# Cloudflare
+.wrangler/
+wrangler.toml
 
 # OS files
 .DS_Store

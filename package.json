@@ -4,11 +4,9 @@
     "description": "Modern, fast, and offline-capable Quran platform with Kurdish Tafsir - قورئانا پیرۆز ب تەفسیرا کوردی",
     "main": "index.js",
     "scripts": {
-        "dev": "netlify dev",
+        "dev": "npx serve src",
         "build": "node scripts/bump-sw-version.js",
         "build:prod": "node scripts/bump-sw-version.js production-deploy",
-        "deploy": "npm run build && netlify deploy",
-        "deploy:prod": "npm run build:prod && netlify deploy --prod",
         "test": "echo 'No tests configured yet'",
         "lint": "echo 'Linting...'",
         "format": "echo 'Formatting code...'"
@@ -44,9 +42,7 @@
         "jsonwebtoken": "^9.0.2",
         "tweetnacl": "^1.0.3"
     },
-    "devDependencies": {
-        "netlify-cli": "^17.0.0"
-    },
+    "devDependencies": {},
     "engines": {
         "node": ">=16.0.0",
         "npm": ">=8.0.0"
