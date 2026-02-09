@@ -60,9 +60,9 @@
     <!-- Apply theme immediately -->
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('theme');
-            const userPrefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
-            const theme = savedTheme || (userPrefs.darkMode ? 'dark' : 'light');
+            var savedTheme = localStorage.getItem('theme');
+            var userPrefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+            var theme = savedTheme || (userPrefs.darkMode ? 'dark' : 'light');
             document.documentElement.setAttribute('data-theme', theme);
         })();
     </script>
@@ -82,28 +82,32 @@
 
     <style>
         :root {
-            --primary: #000000;
-            --accent: #ffffff;
-            --bg: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
-            --card-bg: #ffffff;
+            --bg: #ffffff;
+            --bg-secondary: #f8f8f8;
             --text: #000000;
             --text-muted: #666666;
-            --border: #e8e8e8;
-            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
-            --transition: 0.3s ease;
+            --border: #e0e0e0;
+            --accent: #000000;
+            --accent-soft: rgba(0,0,0,0.05);
+            --card-bg: #ffffff;
+            --radius: 16px;
+            --radius-sm: 12px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
         }
 
         [data-theme="dark"] {
-            --primary: #ffffff;
-            --accent: #000000;
-            --bg: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-            --card-bg: #141414;
+            --bg: #0a0a0a;
+            --bg-secondary: #141414;
             --text: #ffffff;
-            --text-muted: #999999;
+            --text-muted: #888888;
             --border: #2a2a2a;
+            --accent: #ffffff;
+            --accent-soft: rgba(255,255,255,0.08);
+            --card-bg: #141414;
             --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
         }
 
         * {
@@ -119,84 +123,156 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            line-height: 1.6;
         }
 
-        .container {
-            max-width: 1400px;
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 20px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .header-content {
+            max-width: 800px;
             margin: 0 auto;
-            padding: 40px 20px;
-            flex: 1;
             display: flex;
-            gap: 60px;
             align-items: center;
-            overflow: hidden;
+            justify-content: space-between;
         }
 
-        .left-section {
-            flex: 1;
-            max-width: 500px;
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 10px 16px;
+            border-radius: 50px;
+            background: var(--accent-soft);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            cursor: pointer;
         }
 
-        .right-section {
+        .back-btn:hover {
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent);
+        }
+
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Main Container */
+        .main-container {
             flex: 1;
-            max-width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px 20px 100px;
             width: 100%;
         }
 
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            font-weight: 700;
+        /* Step Container */
+        .step-container {
+            display: none;
+            animation: fadeIn 0.4s ease;
         }
 
-        .subtitle {
-            font-size: 1.1rem;
-            color: var(--text-muted);
-            line-height: 1.6;
+        .step-container.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Progress Bar */
+        .progress-section {
             margin-bottom: 40px;
         }
 
         .progress-bar-container {
             width: 100%;
-            height: 8px;
-            background: var(--card-bg);
+            height: 6px;
+            background: var(--border);
             border-radius: 10px;
             overflow: hidden;
-            margin-bottom: 60px;
         }
 
         .progress-bar {
             height: 100%;
-            background: var(--primary);
+            background: var(--accent);
             width: 0%;
-            transition: width 0.5s ease;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 10px;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Step Header */
+        .step-header {
+            margin-bottom: 32px;
+        }
+
+        .step-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .step-header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        /* Goal Cards */
+        .goal-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 32px;
         }
 
         .goal-card {
             background: var(--card-bg);
-            border: 2px solid transparent;
-            border-radius: 16px;
-            padding: 28px;
-            margin-bottom: 20px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
             cursor: pointer;
-            transition: all var(--transition);
+            transition: var(--transition);
             display: flex;
             align-items: flex-start;
-            gap: 20px;
+            gap: 18px;
             position: relative;
-            width: 100%;
-            box-sizing: border-box;
-            overflow: visible;
         }
 
         .goal-card:hover {
-            border-color: var(--primary);
-            transform: translateX(-5px);
+            border-color: var(--accent);
+            transform: translateX(-4px);
         }
 
         .goal-card.selected {
-            border-color: var(--primary);
-            background: var(--bg);
+            border-color: var(--accent);
+            background: var(--accent-soft);
         }
 
         .goal-card.recommended::before {
@@ -204,62 +280,60 @@
             position: absolute;
             top: -10px;
             left: 20px;
-            background: var(--primary);
-            color: var(--accent);
-            padding: 4px 12px;
+            background: var(--accent);
+            color: var(--bg);
+            padding: 4px 14px;
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
-            z-index: 10;
         }
 
         .goal-icon {
-            width: 50px;
-            height: 50px;
-            background: var(--bg);
-            border-radius: 12px;
+            width: 52px;
+            height: 52px;
+            background: var(--accent-soft);
+            border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
             flex-shrink: 0;
+            transition: var(--transition);
         }
 
         .goal-card.selected .goal-icon {
-            background: var(--primary);
-            color: var(--accent);
+            background: var(--accent);
+        }
+
+        .goal-card.selected .goal-icon-text {
+            filter: invert(1);
+        }
+
+        [data-theme="dark"] .goal-card.selected .goal-icon-text {
+            filter: invert(0);
         }
 
         .goal-content {
-            flex: 1 1 auto;
+            flex: 1;
             min-width: 0;
-            max-width: 100%;
-            overflow: visible;
-            width: 100%;
         }
 
         .goal-title {
-            font-size: 1.3rem;
+            font-size: 1.15rem;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             line-height: 1.4;
         }
 
         .goal-description {
             color: var(--text-muted);
             font-size: 0.9rem;
-            line-height: 1.7;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
-            display: block;
-            width: 100%;
-            white-space: normal;
-            hyphens: auto;
+            line-height: 1.6;
         }
 
+        /* Input Group */
         .input-group {
-            margin-bottom: 30px;
+            margin-bottom: 32px;
         }
 
         .input-label {
@@ -275,71 +349,32 @@
             padding: 16px 20px;
             background: var(--card-bg);
             border: 2px solid var(--border);
-            border-radius: 12px;
+            border-radius: var(--radius-sm);
             color: var(--text);
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-family: inherit;
-            transition: all var(--transition);
+            transition: var(--transition);
         }
 
         .input-field:focus {
             outline: none;
-            border-color: var(--cyan);
+            border-color: var(--accent);
         }
 
-        .buttons {
-            display: flex;
-            gap: 16px;
-            margin-top: 40px;
-        }
-
-        .btn {
-            padding: 16px 32px;
-            border-radius: 12px;
-            border: none;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all var(--transition);
-            font-family: inherit;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: var(--accent);
-            flex: 1;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: var(--text);
-            border: 2px solid var(--border);
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--primary);
-            background: var(--bg);
-        }
-
+        /* Schedule Preview */
         .schedule-preview {
             background: var(--card-bg);
-            border-radius: 16px;
-            padding: 30px;
-            margin-top: 30px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
         }
 
         .schedule-title {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
         }
 
         .timeline {
@@ -353,36 +388,40 @@
             right: 8px;
             top: 0;
             bottom: 0;
-            width: 3px;
+            width: 2px;
             background: var(--border);
         }
 
         .timeline-item {
             position: relative;
-            padding-bottom: 30px;
+            padding-bottom: 24px;
             display: flex;
             align-items: center;
             gap: 20px;
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
         }
 
         .timeline-item::before {
             content: '';
             position: absolute;
             right: 0;
-            top: 8px;
-            width: 19px;
-            height: 19px;
-            background: var(--primary);
+            top: 6px;
+            width: 18px;
+            height: 18px;
+            background: var(--accent);
             border-radius: 50%;
-            border: 3px solid var(--card-bg);
+            border: 3px solid var(--bg);
             z-index: 1;
         }
 
         .timeline-day {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
-            min-width: 120px;
-            padding-right: 30px;
+            min-width: 100px;
+            padding-right: 24px;
         }
 
         .timeline-task {
@@ -391,170 +430,94 @@
             flex: 1;
         }
 
-        .step-indicator {
+        /* Fixed Bottom Navigation */
+        .bottom-nav {
             position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            padding: 16px 20px;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .bottom-nav-content {
+            max-width: 800px;
+            margin: 0 auto;
             display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border-radius: 50px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             gap: 8px;
-            background: var(--card-bg);
-            padding: 12px 20px;
-            border-radius: 30px;
-            border: 1px solid var(--border);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg);
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            border: 2px solid var(--border);
+            padding: 12px 24px;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+        }
+
+        /* Step Indicator */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
         }
 
         .step-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: var(--border);
-            transition: all var(--transition);
+            transition: var(--transition);
         }
 
         .step-dot.active {
-            background: var(--primary);
-            width: 30px;
-            border-radius: 5px;
+            background: var(--accent);
+            width: 24px;
+            border-radius: 4px;
         }
 
-        .hidden {
-            display: none !important;
+        .step-dot.completed {
+            background: var(--accent);
         }
 
-        @media (max-width: 968px) {
-            .container {
-                flex-direction: column;
-                gap: 30px;
-                padding: 20px 15px;
-                overflow: visible;
-            }
-
-            .left-section, .right-section {
-                max-width: 100%;
-                width: 100%;
-            }
-
-            h1 {
-                font-size: 1.8rem;
-                line-height: 1.3;
-            }
-
-            .subtitle {
-                font-size: 1rem;
-                margin-bottom: 30px;
-            }
-
-            .goal-card {
-                padding: 24px;
-                flex-direction: row;
-                text-align: right;
-                gap: 18px;
-                align-items: flex-start;
-            }
-
-            .goal-icon {
-                width: 60px;
-                height: 60px;
-                font-size: 1.8rem;
-            }
-
-            .goal-title {
-                font-size: 1.2rem;
-            }
-
-            .goal-description {
-                font-size: 0.9rem;
-            }
-
-            .buttons {
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            .btn {
-                width: 100%;
-                justify-content: center;
-                padding: 14px 24px;
-            }
-
-            .schedule-preview {
-                padding: 20px;
-                margin-top: 20px;
-            }
-
-            .input-field {
-                padding: 14px 16px;
-                font-size: 0.95rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 15px 10px;
-                overflow: visible;
-            }
-
-            .right-section {
-                width: 100%;
-                padding: 0;
-            }
-
-            h1 {
-                font-size: 1.4rem;
-                line-height: 1.3;
-            }
-
-            .subtitle {
-                font-size: 0.85rem;
-                margin-bottom: 20px;
-            }
-
-            .goal-card {
-                padding: 16px;
-                margin-bottom: 14px;
-                gap: 12px;
-            }
-
-            .goal-icon {
-                width: 40px;
-                height: 40px;
-                font-size: 1.2rem;
-            }
-
-            .goal-title {
-                font-size: 1rem;
-                line-height: 1.4;
-            }
-
-            .goal-description {
-                font-size: 0.8rem;
-                line-height: 1.6;
-            }
-
-            .goal-card.recommended::before {
-                font-size: 0.65rem;
-                padding: 3px 10px;
-                top: -8px;
-            }
-
-            .btn {
-                padding: 12px 20px;
-                font-size: 0.95rem;
-            }
-
-            .schedule-preview {
-                padding: 16px;
-            }
-
-            .progress-bar-container {
-                margin-bottom: 40px;
-            }
-        }
-
-        /* Footer Styles */
+        /* Footer */
         footer {
-            background: var(--card-bg);
+            background: var(--bg-secondary);
             border-top: 1px solid var(--border);
             margin-top: 80px;
             padding: 60px 20px 30px;
@@ -617,7 +580,7 @@
         }
 
         .footer-social-icons a:hover {
-            color: var(--primary);
+            color: var(--accent);
             transform: translateY(-3px);
         }
 
@@ -653,7 +616,7 @@
         }
 
         .footer-link:hover {
-            color: var(--primary);
+            color: var(--accent);
             transform: translateX(-5px);
         }
 
@@ -684,215 +647,348 @@
         }
 
         .footer-meta-link:hover {
-            color: var(--primary);
+            color: var(--accent);
         }
 
+        /* Mobile Responsive */
         @media (max-width: 768px) {
+            .header-content {
+                padding: 0;
+            }
+
+            .header-title {
+                font-size: 1rem;
+            }
+
+            .main-container {
+                padding: 24px 16px 120px;
+            }
+
+            .step-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .step-header p {
+                font-size: 0.95rem;
+            }
+
+            .goal-card {
+                padding: 20px;
+                gap: 14px;
+            }
+
+            .goal-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1.3rem;
+            }
+
+            .goal-title {
+                font-size: 1.05rem;
+            }
+
+            .goal-description {
+                font-size: 0.85rem;
+            }
+
+            .goal-card.recommended::before {
+                font-size: 0.7rem;
+                padding: 3px 10px;
+            }
+
+            .timeline-day {
+                min-width: 80px;
+                font-size: 0.9rem;
+            }
+
+            .timeline-task {
+                font-size: 0.9rem;
+            }
+
+            .bottom-nav-content {
+                flex-direction: column;
+            }
+
+            .btn-secondary {
+                order: 2;
+            }
+
+            .btn-primary {
+                order: 1;
+            }
+
             .footer-main {
                 grid-template-columns: 1fr 1fr;
             }
         }
 
         @media (max-width: 480px) {
+            .header {
+                padding: 12px 16px;
+            }
+
+            .back-btn {
+                padding: 8px 14px;
+                font-size: 0.9rem;
+            }
+
+            .main-container {
+                padding: 20px 14px 130px;
+            }
+
+            .progress-section {
+                margin-bottom: 30px;
+            }
+
+            .step-header {
+                margin-bottom: 24px;
+            }
+
+            .step-header h1 {
+                font-size: 1.3rem;
+            }
+
+            .step-header p {
+                font-size: 0.9rem;
+            }
+
+            .goal-card {
+                padding: 16px;
+                gap: 12px;
+            }
+
+            .goal-icon {
+                width: 42px;
+                height: 42px;
+                font-size: 1.2rem;
+            }
+
+            .goal-title {
+                font-size: 1rem;
+            }
+
+            .schedule-preview {
+                padding: 20px;
+            }
+
+            .schedule-title {
+                font-size: 1.1rem;
+            }
+
+            .timeline {
+                padding-right: 24px;
+            }
+
+            .btn {
+                padding: 12px 20px;
+                font-size: 0.95rem;
+            }
+
             .footer-main {
                 grid-template-columns: 1fr;
             }
+
             .footer-brand {
                 text-align: center;
             }
+
             .footer-bottom {
                 flex-direction: column;
                 text-align: center;
             }
         }
+
+        .hidden {
+            display: none !important;
+        }
     </style>
-  <!-- Text Highlighter for Admin Panel -->
 </head>
 <body>
 
-    <!-- Step 1: Choose Preset Goal -->
-    <div class="container" id="step1">
-        <div class="left-section">
-            <h1>ئارمانجەکا پێشکەفتین هەلبژێرە یان ئارمانجا خۆ دروست بکە</h1>
-            <p class="subtitle">ل ڤێرێ لیستەکا ئارمانجێن باوەرپێکری هەیە. تو دشێی ئارمانجا خۆ ژی دروست بکەی.</p>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/goals" class="back-btn">
+                <i class="fas fa-arrow-right"></i>
+                <span>پاشڤە</span>
+            </a>
+            <span class="header-title">دروستکرنا ئارمانجێ نوی</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+
+        <!-- Step 1: Choose Preset Goal -->
+        <div class="step-container active" id="step1">
+            <div class="progress-section">
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar1"></div>
+                </div>
+                <div class="progress-text">
+                    <span>گەڕان ١ ل ٥</span>
+                    <span id="progressPercent1">٢٠٪</span>
+                </div>
+            </div>
+
+            <div class="step-header">
+                <h1>ئارمانجەکا پێشکەفتین هەلبژێرە یان ئارمانجا خۆ دروست بکە</h1>
+                <p>ل ڤێرێ لیستەکا ئارمانجێن باوەرپێکری هەیە. تو دشێی ئارمانجا خۆ ژی دروست بکەی.</p>
+            </div>
+
+            <div class="goal-cards" id="step1Cards">
+                <div class="goal-card recommended" data-goal="10min">
+                    <div class="goal-icon"><span class="goal-icon-text">⏰</span></div>
+                    <div class="goal-content">
+                        <div class="goal-title">خواندنا ١٠ خولەکان</div>
+                        <div class="goal-description">ئارمانجەکا سادە</div>
+                    </div>
+                </div>
+
+                <div class="goal-card" data-goal="30days">
+                    <div class="goal-icon"><span class="goal-icon-text">📖</span></div>
+                    <div class="goal-content">
+                        <div class="goal-title">قورئان د ٣٠ رۆژان دا</div>
+                        <div class="goal-description">١ جوزئ هەر رۆژەکێ</div>
+                    </div>
+                </div>
+
+                <div class="goal-card" data-goal="1year">
+                    <div class="goal-icon"><span class="goal-icon-text">📅</span></div>
+                    <div class="goal-content">
+                        <div class="goal-title">قورئان د سالەکێدا</div>
+                        <div class="goal-description">ب لەزیا خۆ</div>
+                    </div>
+                </div>
+
+                <div class="goal-card" data-goal="custom">
+                    <div class="goal-icon"><span class="goal-icon-text">⚙️</span></div>
+                    <div class="goal-content">
+                        <div class="goal-title">تایبەت</div>
+                        <div class="goal-description">دروست بکە</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-indicator">
+                <div class="step-dot active" data-step="1"></div>
+                <div class="step-dot" data-step="2"></div>
+                <div class="step-dot" data-step="3"></div>
+                <div class="step-dot" data-step="4"></div>
+                <div class="step-dot" data-step="5"></div>
+            </div>
         </div>
 
-        <div class="right-section">
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-
-            <div class="goal-card recommended" data-goal="10min">
-                <div class="goal-icon">⏰</div>
-                <div class="goal-content">
-                    <div class="goal-title">خواندنا ١٠ خولەکان</div>
-                    <div class="goal-description">ئارمانجەکا سادە</div>
+        <!-- Step 2: Dynamic options -->
+        <div class="step-container" id="step2">
+            <div class="progress-section">
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar2"></div>
+                </div>
+                <div class="progress-text">
+                    <span>گەڕان ٢ ل ٥</span>
+                    <span id="progressPercent2">٤٠٪</span>
                 </div>
             </div>
 
-            <div class="goal-card" data-goal="30days">
-                <div class="goal-icon">📖</div>
-                <div class="goal-content">
-                    <div class="goal-title">قورئان د ٣٠ رۆژان دا</div>
-                    <div class="goal-description">١ جوزئ هەر رۆژەکێ</div>
-                </div>
+            <div class="step-header">
+                <h1 id="step2Title">دووبارەبوونەکێ بۆ ئارمانجا خۆ هەلبژێرە</h1>
+                <p id="step2Subtitle">ئارمانجا تە دڤێت هەر رۆژەکێ نوکە بیت یان ژمارەیەکا رۆژان؟</p>
             </div>
 
-            <div class="goal-card" data-goal="1year">
-                <div class="goal-icon">📅</div>
-                <div class="goal-content">
-                    <div class="goal-title">قورئان د سالەکێدا</div>
-                    <div class="goal-description">ب لەزیا خۆ</div>
-                </div>
+            <div class="goal-cards" id="step2Cards">
+                <!-- Dynamic content -->
             </div>
 
-            <div class="goal-card" data-goal="custom">
-                <div class="goal-icon">⚙️</div>
-                <div class="goal-content">
-                    <div class="goal-title">تایبەت</div>
-                    <div class="goal-description">دروست بکە</div>
-                </div>
-            </div>
-
-            <div class="buttons">
-                <button class="btn btn-primary" onclick="goToStep2()">
-                    <span>پێشڤە</span>
-                    <i class="fas fa-arrow-left"></i>
-                </button>
+            <div class="step-indicator">
+                <div class="step-dot completed" data-step="1"></div>
+                <div class="step-dot active" data-step="2"></div>
+                <div class="step-dot" data-step="3"></div>
+                <div class="step-dot" data-step="4"></div>
+                <div class="step-dot" data-step="5"></div>
             </div>
         </div>
-    </div>
 
-    <!-- Step 2: Choose Frequency -->
-    <div class="container hidden" id="step2">
-        <div class="left-section">
-            <h1>دووبارەبوونەکێ بۆ ئارمانجا خۆ هەلبژێرە</h1>
-            <p class="subtitle">ئارمانجا تە دڤێت هەر رۆژەکێ نوکە بیت یان ژمارەیەکا رۆژان؟ نە گران بە، ئەم پێشکەفتنا تە چاڤدێری دکەین بێ گومان کو کام دووبارەبوونێ هەلبژێری.</p>
-        </div>
-
-        <div class="right-section">
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="progressBar2"></div>
-            </div>
-
-            <div class="goal-card" data-frequency="daily">
-                <div class="goal-icon">🔄</div>
-                <div class="goal-content">
-                    <div class="goal-title">رۆژانە</div>
-                    <div class="goal-description">هەر رۆژەکێ</div>
+        <!-- Step 3: Dynamic options -->
+        <div class="step-container" id="step3">
+            <div class="progress-section">
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar3"></div>
+                </div>
+                <div class="progress-text">
+                    <span>گەڕان ٣ ل ٥</span>
+                    <span id="progressPercent3">٦٠٪</span>
                 </div>
             </div>
 
-            <div class="goal-card" data-frequency="duration">
-                <div class="goal-icon">📅</div>
-                <div class="goal-content">
-                    <div class="goal-title">ماوەیەک</div>
-                    <div class="goal-description">ل سەر ماوەیەکێ رۆژان</div>
+            <div class="step-header">
+                <h1 id="step3Title">پێوەرەکێ بۆ ئارمانجا خۆ هەلبژێرە</h1>
+                <p id="step3Subtitle">ئارمانجا تە دڤێت ل سەر دەمی، لاپەڕان، یان رێزەکا تایبەت بهێتە دیارکرن؟</p>
+            </div>
+
+            <div class="goal-cards" id="step3Cards">
+                <!-- Dynamic content -->
+            </div>
+
+            <div class="step-indicator">
+                <div class="step-dot completed" data-step="1"></div>
+                <div class="step-dot completed" data-step="2"></div>
+                <div class="step-dot active" data-step="3"></div>
+                <div class="step-dot" data-step="4"></div>
+                <div class="step-dot" data-step="5"></div>
+            </div>
+        </div>
+
+        <!-- Step 4: Set Target -->
+        <div class="step-container" id="step4">
+            <div class="progress-section">
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar4"></div>
+                </div>
+                <div class="progress-text">
+                    <span>گەڕان ٤ ل ٥</span>
+                    <span id="progressPercent4">٨٠٪</span>
                 </div>
             </div>
 
-            <div class="buttons">
-                <button class="btn btn-secondary" onclick="goToStep1()">
-                    <i class="fas fa-arrow-right"></i>
-                    <span>پاشڤە</span>
-                </button>
-                <button class="btn btn-primary" onclick="goToStep3()">
-                    <span>پێشڤە</span>
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Step 3: Choose Criteria -->
-    <div class="container hidden" id="step3">
-        <div class="left-section">
-            <h1>پێوەرەکێ بۆ ئارمانجا خۆ هەلبژێرە</h1>
-            <p class="subtitle">ئارمانجا تە دڤێت ل سەر دەمی، لاپەڕان، یان رێزەکا تایبەت بهێتە دیارکرن (وەکو، ٣ جوزئێن قورئانێ)؟</p>
-        </div>
-
-        <div class="right-section">
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="progressBar3"></div>
+            <div class="step-header">
+                <h1 id="step4Title">ئارمانجەکێ بۆ خۆ دیار بکە</h1>
+                <p id="step4Subtitle">چەند دەم، لاپەڕ، یان ئایەت دڤێی بخوینی بۆ تەمامکرنا ئارمانجا خۆ؟</p>
             </div>
 
-            <div class="goal-card" data-criteria="time">
-                <div class="goal-icon">⏰</div>
-                <div class="goal-content">
-                    <div class="goal-title">دەم</div>
-                    <div class="goal-description">ب خولەک</div>
-                </div>
+            <div class="goal-cards" id="step4Cards">
+                <!-- Dynamic content for step 4 options if any -->
             </div>
 
-            <div class="goal-card selected" data-criteria="pages">
-                <div class="goal-icon">📄</div>
-                <div class="goal-content">
-                    <div class="goal-title">لاپەڕ</div>
-                    <div class="goal-description">ژمارا لاپەڕان</div>
-                </div>
-            </div>
-
-            <div class="goal-card" data-criteria="custom">
-                <div class="goal-icon">⚙️</div>
-                <div class="goal-content">
-                    <div class="goal-title">رێزا تایبەت</div>
-                    <div class="goal-description">سوورەت، جوزئ یان ئایەت</div>
-                </div>
-            </div>
-
-            <div class="buttons">
-                <button class="btn btn-secondary" onclick="goToStep2()">
-                    <i class="fas fa-arrow-right"></i>
-                    <span>پاشڤە</span>
-                </button>
-                <button class="btn btn-primary" onclick="goToStep4()">
-                    <span>پێشڤە</span>
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Step 4: Set Target -->
-    <div class="container hidden" id="step4">
-        <div class="left-section">
-            <h1>ئارمانجەکێ بۆ خۆ دیار بکە</h1>
-            <p class="subtitle">چەند دەم، لاپەڕ، یان ئایەت دڤێی بخوینی بۆ تەمامکرنا ئارمانجا خۆ؟</p>
-        </div>
-
-        <div class="right-section">
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="progressBar4"></div>
-            </div>
-
-            <div class="input-group">
+            <div class="input-group" id="step4Input">
                 <label class="input-label" id="targetLabel">لاپەڕ</label>
                 <input type="number" class="input-field" id="targetInput" value="1" min="1" placeholder="ژمارەکێ بنڤیسە">
             </div>
 
-            <div class="buttons">
-                <button class="btn btn-secondary" onclick="goToStep3()">
-                    <i class="fas fa-arrow-right"></i>
-                    <span>پاشڤە</span>
-                </button>
-                <button class="btn btn-primary" onclick="goToStep5()">
-                    <span>پێشڤە</span>
-                    <i class="fas fa-arrow-left"></i>
-                </button>
+            <div class="step-indicator">
+                <div class="step-dot completed" data-step="1"></div>
+                <div class="step-dot completed" data-step="2"></div>
+                <div class="step-dot completed" data-step="3"></div>
+                <div class="step-dot active" data-step="4"></div>
+                <div class="step-dot" data-step="5"></div>
             </div>
         </div>
-    </div>
 
-    <!-- Step 5: Preview Schedule -->
-    <div class="container hidden" id="step5">
-        <div class="left-section">
-            <h1>پێشبینیەکا خشتەیا تە ل ڤێرێ</h1>
-            <p class="subtitle">ئەڤ چەوا ئارمانجا تە دێ نڤیسیت. تو دشێی هەردەم پاشێ بگوهۆری.</p>
-        </div>
+        <!-- Step 5: Preview Schedule -->
+        <div class="step-container" id="step5">
+            <div class="progress-section">
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar5"></div>
+                </div>
+                <div class="progress-text">
+                    <span>گەڕان ٥ ل ٥</span>
+                    <span id="progressPercent5">١٠٠٪</span>
+                </div>
+            </div>
 
-        <div class="right-section">
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="progressBar5"></div>
+            <div class="step-header">
+                <h1>پێشبینیەکا خشتەیا تە ل ڤێرێ</h1>
+                <p>ئەڤ چەوا ئارمانجا تە دێ نڤیسیت. تو دشێی هەردەم پاشێ بگوهۆری.</p>
             </div>
 
             <div class="schedule-preview">
@@ -902,412 +998,26 @@
                 </div>
             </div>
 
-            <div class="buttons">
-                <button class="btn btn-primary" onclick="startJourney()" style="width: 100%;">
-                    <span>دەستپێکرنا رێڤینگیا خۆ!</span>
-                    <i class="fas fa-rocket"></i>
-                </button>
+            <div class="step-indicator">
+                <div class="step-dot completed" data-step="1"></div>
+                <div class="step-dot completed" data-step="2"></div>
+                <div class="step-dot completed" data-step="3"></div>
+                <div class="step-dot completed" data-step="4"></div>
+                <div class="step-dot active" data-step="5"></div>
             </div>
         </div>
-    </div>
 
-    <!-- Step Indicator -->
-    <div class="step-indicator">
-        <div class="step-dot active" data-step="1"></div>
-        <div class="step-dot" data-step="2"></div>
-        <div class="step-dot" data-step="3"></div>
-        <div class="step-dot" data-step="4"></div>
-        <div class="step-dot" data-step="5"></div>
-    </div>
+    </main>
 
-    <script>
-        // Authentication check - Prevent unauthorized access
-        (function() {
-            const user = localStorage.getItem('user');
-            if (!user) {
-                window.location.href = '/login';
-                return;
-            }
-        })();
-
-        // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
-        if (window.TafsirKurdSecurity) {
-            window.TafsirKurdSecurity.init({
-                criticalElements: [],
-                protectedFields: [],
-                validateSession: true,
-                securityLevel: 'nuclear'
-            });
-        }
-
-        let currentStep = 1;
-        let selectedGoal = null;
-        let selectedFrequency = 'daily';
-        let selectedCriteria = 'pages';
-        let targetValue = 1;
-        let goalDetails = {}; // Store all goal-specific details
-
-        // Kurdish day names
-        const kurdishDays = ['یەکشەممە', 'دووشەممە', 'سێشەممە', 'چوارشەممە', 'پێنجشەممە', 'هەینی', 'شەممە'];
-
-        // Define specific flows for each goal type
-        const goalFlows = {
-            '10min': {
-                name: 'خواندنا ١٠ خولەکان رۆژانە',
-                description: 'ئارمانجا سادە بۆ دەستپێکەران',
-                defaultCriteria: 'time',
-                defaultTarget: 10,
-                defaultFrequency: 'daily',
-                steps: {
-                    step2: {
-                        title: 'ژمارا رۆژێن هەفتییێ دیار بکە',
-                        subtitle: 'د هەفتییێ دا چەند رۆژ دێ بخوینی؟',
-                        options: [
-                            { value: 'daily', label: 'هەر رۆژێ (٧ رۆژ)', description: 'بێ بهاربوونێ' },
-                            { value: '5days', label: '٥ رۆژ د هەفتییێ', description: 'بەرنامەکا بێ فشارێ' },
-                            { value: '3days', label: '٣ رۆژ د هەفتییێ', description: 'بۆ کار یان قوتابیێن بەرگریدار' }
-                        ]
-                    },
-                    step3: {
-                        title: 'دەما خواندنا خۆ دیار بکە',
-                        subtitle: 'کەنگێ ئێدی بخوینی؟',
-                        options: [
-                            { value: 'morning', label: 'سپێدێ (پاش نڤێژا بەرێ)', description: 'دەمەکێ دێک و خاش' },
-                            { value: 'afternoon', label: 'پێشڤانێ', description: 'پاش کارێ یان درسێ' },
-                            { value: 'evening', label: 'ئێڤارێ (پێش نڤێژا عیشایێ)', description: 'پێش خۆ بەر دان' },
-                            { value: 'flexible', label: 'نە دیار', description: 'ل دەمێ کو پێت بخوازە' }
-                        ]
-                    }
-                }
-            },
-            '30days': {
-                name: 'خواندنا قورئانێ د ٣٠ رۆژان دا',
-                description: 'ئارمانجا کلاسیکی - خواندنا ١ جوزئێ هەر رۆژەکێ',
-                defaultCriteria: 'juz',
-                defaultTarget: 1,
-                defaultFrequency: 'daily',
-                steps: {
-                    step2: {
-                        title: 'رێکا خواندنێ هەلبژێرە',
-                        subtitle: 'تو چاوا دێت قورئانێ بخوێنی؟',
-                        options: [
-                            { value: 'standard', label: '١ جوز هەر رۆژێ', description: '٣٠ رۆژ = قورئانا تەواو' },
-                            { value: 'intensive', label: '٢ جوز هەر رۆژێ', description: '١٥ رۆژ = قورئانا تەواو' },
-                            { value: 'relaxed', label: '١ جوز هەر ٢ رۆژان', description: '٦٠ رۆژ = قورئانا تەواو' }
-                        ]
-                    },
-                    step3: {
-                        title: 'چۆنیەتیا خواندنێ',
-                        subtitle: 'تو دێت قورئانێ چ رەنگ بخوێنی؟',
-                        options: [
-                            { value: 'tajweed', label: 'ب تەجویدێ', description: 'خواندنا دروست و سلیم' },
-                            { value: 'understanding', label: 'ب تەفسیرێ', description: 'خواندن و تێگەهشتن' },
-                            { value: 'memorization', label: 'حیڤز کرن', description: 'خواندن و بیردارین' },
-                            { value: 'both', label: 'تەجوید و تەفسیر', description: 'خواندنا باش و تێگەهشتن' }
-                        ]
-                    },
-                    step4: {
-                        title: 'ئێکەم جوز دیار بکە',
-                        subtitle: 'تو دێ ل کێڤێ دەست پێبکەی؟',
-                        options: [
-                            { value: 'juz1', label: 'جوزا ١ (الفاتحة)', description: 'دەستپێکا ئاسایی' },
-                            { value: 'juz30', label: 'جوزا ٣٠ (عم)', description: 'سوورەتێن کورت و سادە' },
-                            { value: 'juz29', label: 'جوزا ٢٩ (تبارك)', description: 'سوورەتێن هەرە باو' }
-                        ]
-                    }
-                }
-            },
-            '1year': {
-                name: 'خواندنا قورئانێ د سالەکێدا',
-                description: 'بەرنامەکا دورگەهێ بۆ خواندنا تژ و بێ فشار',
-                defaultCriteria: 'pages',
-                defaultTarget: 2,
-                defaultFrequency: 'daily',
-                steps: {
-                    step2: {
-                        title: 'ئارمانجا سالانە دیار بکە',
-                        subtitle: 'تو دێت د ساڵەکێدا چەند جار قورئانێ بخوێنی؟',
-                        options: [
-                            { value: '1time', label: 'جارەکێ (٢ لاپەڕ رۆژانە)', description: 'بەرنامەکا سادە و بێ فشار' },
-                            { value: '2times', label: 'دوو جاران (٤ لاپەڕ رۆژانە)', description: 'بەرنامەکا مامناوەند' },
-                            { value: '3times', label: 'سێ جاران (٦ لاپەڕ رۆژانە)', description: 'بەرنامەکا قورس' }
-                        ]
-                    },
-                    step3: {
-                        title: 'رۆژێن بەتاڵ',
-                        subtitle: 'ئایا دێ رۆژەکێ د هەفتییێ دا بەتاڵ هێلی؟',
-                        options: [
-                            { value: 'none', label: 'هەر رۆژێ بخێنە', description: 'بەرنامەکا بەردەوام' },
-                            { value: 'friday', label: 'هەینی بەتاڵ', description: 'بۆ کار یان قوتابیێن بەرگریدار' },
-                            { value: 'weekend', label: 'ئەینی و شەمبی بەتاڵ', description: 'تەنێ ٥ رۆژ د هەفتییێ' }
-                        ]
-                    },
-                    step4: {
-                        title: 'رێبەریا پێشڤەچوونێ',
-                        subtitle: 'تو دێ چاوا پێشڤەچوونا خۆ چاڤێ بگری؟',
-                        options: [
-                            { value: 'weekly', label: 'هەفتانە', description: 'پێداچوونەوەیا هەفتانە' },
-                            { value: 'monthly', label: 'مەهانە', description: 'راپۆرتێن مەهانە' },
-                            { value: 'quarterly', label: 'سێ مەهان جارەکێ', description: 'پێداچوونەڤەیا دورگەه' }
-                        ]
-                    }
-                }
-            },
-            'custom': {
-                name: 'ئارمانجا تایبەت',
-                description: 'ئارمانجەکا تایبەت دروست بکە کو دگەل تە بگونجیت',
-                defaultCriteria: 'pages',
-                defaultTarget: 5,
-                defaultFrequency: 'daily',
-                steps: {
-                    step2: {
-                        title: 'جۆرا پێوەرێ هەلبژێرە',
-                        subtitle: 'تو دێ پێشڤەچوونا خۆ چاوا پێڤەی؟',
-                        options: [
-                            { value: 'time', label: 'دەم (خولەک)', description: 'چەندێ دەمێ دێ بخوینی' },
-                            { value: 'pages', label: 'لاپەڕ', description: 'ژمارا لاپەڕان' },
-                            { value: 'ayahs', label: 'ئایەت', description: 'ژمارا ئایەتان' },
-                            { value: 'surahs', label: 'سوورە', description: 'ژمارا سوورەتان' },
-                            { value: 'juz', label: 'جوز', description: 'ژمارا جوزان' }
-                        ]
-                    },
-                    step3: {
-                        title: 'دووبارەبوونا ئارمانجێ',
-                        subtitle: 'ئەڤ ئارمانج چەندێ جار دووبارە ببە؟',
-                        options: [
-                            { value: 'daily', label: 'رۆژانە', description: 'هەر رۆژێ' },
-                            { value: 'weekly', label: 'هەفتانە', description: 'هەر هەفتییێ' },
-                            { value: 'monthly', label: 'مەهانە', description: 'هەر مەهەکێ' },
-                            { value: 'custom-days', label: 'ژمارەیەکا دیارکری', description: 'هەر X رۆژان' }
-                        ]
-                    }
-                }
-            }
-        };
-
-        // Setup goal card selection
-        document.querySelectorAll('.goal-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const parent = this.closest('.right-section');
-                parent.querySelectorAll('.goal-card').forEach(c => c.classList.remove('selected'));
-                this.classList.add('selected');
-
-                // Store selection based on step
-                if (currentStep === 1) {
-                    selectedGoal = this.dataset.goal;
-                } else if (currentStep === 2) {
-                    selectedFrequency = this.dataset.frequency;
-                } else if (currentStep === 3) {
-                    selectedCriteria = this.dataset.criteria;
-                    updateTargetLabel();
-                }
-            });
-        });
-
-        function updateProgress(step) {
-            const progress = (step / 5) * 100;
-            document.querySelectorAll('.progress-bar').forEach(bar => {
-                bar.style.width = progress + '%';
-            });
-
-            // Update step indicator
-            document.querySelectorAll('.step-dot').forEach((dot, index) => {
-                if (index < step) {
-                    dot.classList.add('active');
-                } else {
-                    dot.classList.remove('active');
-                }
-            });
-        }
-
-        function goToStep1() {
-            document.getElementById('step2').classList.add('hidden');
-            document.getElementById('step1').classList.remove('hidden');
-            currentStep = 1;
-            updateProgress(1);
-        }
-
-        function goToStep2() {
-            if (!selectedGoal) {
-                alert('تکایە ئارمانجەکێ هەلبژێرە');
-                return;
-            }
-
-            // Load goal-specific flow and apply defaults
-            const flow = goalFlows[selectedGoal];
-            if (flow) {
-                selectedCriteria = flow.defaultCriteria;
-                targetValue = flow.defaultTarget;
-                selectedFrequency = flow.defaultFrequency;
-
-                // Dynamically update step 2 content
-                renderDynamicStep(2, flow.steps.step2);
-            }
-
-            document.getElementById('step1').classList.add('hidden');
-            document.getElementById('step3').classList.add('hidden');
-            document.getElementById('step2').classList.remove('hidden');
-            currentStep = 2;
-            updateProgress(2);
-        }
-
-        function renderDynamicStep(stepNum, stepData) {
-            if (!stepData) return;
-
-            const stepEl = document.getElementById(`step${stepNum}`);
-            const titleEl = stepEl.querySelector('.left-section h1');
-            const subtitleEl = stepEl.querySelector('.left-section .subtitle');
-            const rightSection = stepEl.querySelector('.right-section');
-
-            // Update title and subtitle
-            if (titleEl) titleEl.textContent = stepData.title;
-            if (subtitleEl) subtitleEl.textContent = stepData.subtitle;
-
-            // Clear existing cards and rebuild
-            const existingCards = rightSection.querySelectorAll('.goal-card');
-            existingCards.forEach(card => card.remove());
-
-            // Insert new cards before buttons
-            const buttonsDiv = rightSection.querySelector('.buttons');
-            stepData.options.forEach(option => {
-                const card = document.createElement('div');
-                card.className = 'goal-card';
-                card.dataset.value = option.value;
-                card.innerHTML = `
-                    <div class="goal-icon">${option.icon || '✓'}</div>
-                    <div class="goal-content">
-                        <div class="goal-title">${option.label}</div>
-                        <div class="goal-description">${option.description}</div>
-                    </div>
-                `;
-                card.addEventListener('click', function() {
-                    rightSection.querySelectorAll('.goal-card').forEach(c => c.classList.remove('selected'));
-                    this.classList.add('selected');
-                    goalDetails[`step${stepNum}`] = option.value;
-                });
-                rightSection.insertBefore(card, buttonsDiv);
-            });
-        }
-
-        function goToStep3() {
-            if (!goalDetails.step2) {
-                alert('تکایە هەلبژێرەکا خۆ بکە');
-                return;
-            }
-
-            // Load goal-specific flow for step 3
-            const flow = goalFlows[selectedGoal];
-            if (flow && flow.steps.step3) {
-                renderDynamicStep(3, flow.steps.step3);
-            }
-
-            document.getElementById('step2').classList.add('hidden');
-            document.getElementById('step4').classList.add('hidden');
-            document.getElementById('step3').classList.remove('hidden');
-            currentStep = 3;
-            updateProgress(3);
-        }
-
-        function goToStep4() {
-            if (!goalDetails.step3) {
-                alert('تکایە هەلبژێرەکا خۆ بکە');
-                return;
-            }
-
-            // Load goal-specific flow for step 4
-            const flow = goalFlows[selectedGoal];
-            if (flow && flow.steps.step4) {
-                renderDynamicStep(4, flow.steps.step4);
-            }
-
-            document.getElementById('step3').classList.add('hidden');
-            document.getElementById('step5').classList.add('hidden');
-            document.getElementById('step4').classList.remove('hidden');
-            currentStep = 4;
-            updateProgress(4);
-            updateTargetLabel();
-        }
-
-        function goToStep5() {
-            targetValue = parseInt(document.getElementById('targetInput').value) || 1;
-            if (targetValue < 1) {
-                alert('تکایە ژمارەیەکا دروست بنڤیسە');
-                return;
-            }
-            document.getElementById('step4').classList.add('hidden');
-            document.getElementById('step5').classList.remove('hidden');
-            currentStep = 5;
-            updateProgress(5);
-            generateSchedule();
-        }
-
-        function updateTargetLabel() {
-            const label = document.getElementById('targetLabel');
-            if (selectedCriteria === 'time') {
-                label.textContent = 'خولەک';
-            } else if (selectedCriteria === 'pages') {
-                label.textContent = 'لاپەڕ';
-            } else {
-                label.textContent = 'ئایەت / سوورەت / جوز';
-            }
-        }
-
-        function generateSchedule() {
-            const timeline = document.getElementById('scheduleTimeline');
-            timeline.innerHTML = '';
-
-            const today = new Date();
-            const numDays = 7; // Show 7 days preview
-
-            for (let i = 0; i < numDays; i++) {
-                const date = new Date(today);
-                date.setDate(today.getDate() + i);
-                const dayName = kurdishDays[date.getDay()];
-
-                const item = document.createElement('div');
-                item.className = 'timeline-item';
-                item.innerHTML = `
-                    <div class="timeline-day">${dayName}</div>
-                    <div class="timeline-task">خواندنا ${targetValue} ${selectedCriteria === 'pages' ? 'لاپەڕ' : selectedCriteria === 'time' ? 'خولەک' : 'ئایەت'}</div>
-                `;
-                timeline.appendChild(item);
-            }
-        }
-
-        function startJourney() {
-            // Get the goal flow information
-            const flow = goalFlows[selectedGoal];
-
-            // Save comprehensive goal data to localStorage
-            const goalData = {
-                type: selectedGoal,
-                name: flow ? flow.name : selectedGoal,
-                description: flow ? flow.description : '',
-                frequency: selectedFrequency,
-                criteria: selectedCriteria,
-                target: targetValue,
-                startDate: new Date().toISOString(),
-                completed: false,
-                details: goalDetails, // Save all the step-by-step choices
-                flow: {
-                    step2: goalDetails.step2 || null,
-                    step3: goalDetails.step3 || null,
-                    step4: goalDetails.step4 || null
-                }
-            };
-
-            localStorage.setItem('readingGoal', JSON.stringify(goalData));
-
-            // Show success message
-            alert('ئارمانجا تە هاتە تۆمارکرن! رێڤیا خۆ دەستپێبکە 🎉');
-
-            // Redirect to goals page
-            window.location.href = '/goals';
-        }
-
-        // Initialize
-        updateProgress(1);
-    </script>
+    <!-- Fixed Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-content" id="bottomNavContent">
+            <button class="btn btn-primary" id="nextBtn">
+                <span>پێشڤە</span>
+                <i class="fas fa-arrow-left"></i>
+            </button>
+        </div>
+    </nav>
 
     <!-- Footer -->
     <footer>
@@ -1389,8 +1099,468 @@
     </footer>
 
     <script>
+        // Authentication check - Prevent unauthorized access
+        (function() {
+            var user = localStorage.getItem('user');
+            if (!user) {
+                window.location.href = '/login';
+                return;
+            }
+        })();
+
+        // Initialize security system
+        if (window.TafsirKurdSecurity) {
+            window.TafsirKurdSecurity.init({
+                criticalElements: [],
+                protectedFields: [],
+                validateSession: true,
+                securityLevel: 'nuclear'
+            });
+        }
+
+        var currentStep = 1;
+        var selectedGoal = null;
+        var selectedFrequency = 'daily';
+        var selectedCriteria = 'pages';
+        var targetValue = 1;
+        var goalDetails = {};
+
+        // Kurdish day names
+        var kurdishDays = ['یەکشەممە', 'دووشەممە', 'سێشەممە', 'چوارشەممە', 'پێنجشەممە', 'هەینی', 'شەممە'];
+
+        // Define specific flows for each goal type
+        var goalFlows = {
+            '10min': {
+                name: 'خواندنا ١٠ خولەکان رۆژانە',
+                description: 'ئارمانجا سادە بۆ دەستپێکەران',
+                defaultCriteria: 'time',
+                defaultTarget: 10,
+                defaultFrequency: 'daily',
+                steps: {
+                    step2: {
+                        title: 'ژمارا رۆژێن هەفتییێ دیار بکە',
+                        subtitle: 'د هەفتییێ دا چەند رۆژ دێ بخوینی؟',
+                        options: [
+                            { value: 'daily', icon: '🔄', label: 'هەر رۆژێ (٧ رۆژ)', description: 'بێ بهاربوونێ' },
+                            { value: '5days', icon: '📆', label: '٥ رۆژ د هەفتییێ', description: 'بەرنامەکا بێ فشارێ' },
+                            { value: '3days', icon: '📅', label: '٣ رۆژ د هەفتییێ', description: 'بۆ کار یان قوتابیێن بەرگریدار' }
+                        ]
+                    },
+                    step3: {
+                        title: 'دەما خواندنا خۆ دیار بکە',
+                        subtitle: 'کەنگێ ئێدی بخوینی؟',
+                        options: [
+                            { value: 'morning', icon: '🌅', label: 'سپێدێ (پاش نڤێژا بەرێ)', description: 'دەمەکێ دێک و خاش' },
+                            { value: 'afternoon', icon: '☀️', label: 'پێشڤانێ', description: 'پاش کارێ یان درسێ' },
+                            { value: 'evening', icon: '🌙', label: 'ئێڤارێ (پێش نڤێژا عیشایێ)', description: 'پێش خۆ بەر دان' },
+                            { value: 'flexible', icon: '⏳', label: 'نە دیار', description: 'ل دەمێ کو پێت بخوازە' }
+                        ]
+                    }
+                }
+            },
+            '30days': {
+                name: 'خواندنا قورئانێ د ٣٠ رۆژان دا',
+                description: 'ئارمانجا کلاسیکی - خواندنا ١ جوزئێ هەر رۆژەکێ',
+                defaultCriteria: 'juz',
+                defaultTarget: 1,
+                defaultFrequency: 'daily',
+                steps: {
+                    step2: {
+                        title: 'رێکا خواندنێ هەلبژێرە',
+                        subtitle: 'تو چاوا دێت قورئانێ بخوێنی؟',
+                        options: [
+                            { value: 'standard', icon: '📖', label: '١ جوز هەر رۆژێ', description: '٣٠ رۆژ = قورئانا تەواو' },
+                            { value: 'intensive', icon: '🚀', label: '٢ جوز هەر رۆژێ', description: '١٥ رۆژ = قورئانا تەواو' },
+                            { value: 'relaxed', icon: '🌿', label: '١ جوز هەر ٢ رۆژان', description: '٦٠ رۆژ = قورئانا تەواو' }
+                        ]
+                    },
+                    step3: {
+                        title: 'چۆنیەتیا خواندنێ',
+                        subtitle: 'تو دێت قورئانێ چ رەنگ بخوێنی؟',
+                        options: [
+                            { value: 'tajweed', icon: '🎯', label: 'ب تەجویدێ', description: 'خواندنا دروست و سلیم' },
+                            { value: 'understanding', icon: '💡', label: 'ب تەفسیرێ', description: 'خواندن و تێگەهشتن' },
+                            { value: 'memorization', icon: '🧠', label: 'حیڤز کرن', description: 'خواندن و بیردارین' },
+                            { value: 'both', icon: '⭐', label: 'تەجوید و تەفسیر', description: 'خواندنا باش و تێگەهشتن' }
+                        ]
+                    },
+                    step4: {
+                        title: 'ئێکەم جوز دیار بکە',
+                        subtitle: 'تو دێ ل کێڤێ دەست پێبکەی؟',
+                        options: [
+                            { value: 'juz1', icon: '1️⃣', label: 'جوزا ١ (الفاتحة)', description: 'دەستپێکا ئاسایی' },
+                            { value: 'juz30', icon: '3️⃣', label: 'جوزا ٣٠ (عم)', description: 'سوورەتێن کورت و سادە' },
+                            { value: 'juz29', icon: '2️⃣', label: 'جوزا ٢٩ (تبارك)', description: 'سوورەتێن هەرە باو' }
+                        ]
+                    }
+                }
+            },
+            '1year': {
+                name: 'خواندنا قورئانێ د سالەکێدا',
+                description: 'بەرنامەکا دورگەهێ بۆ خواندنا تژ و بێ فشار',
+                defaultCriteria: 'pages',
+                defaultTarget: 2,
+                defaultFrequency: 'daily',
+                steps: {
+                    step2: {
+                        title: 'ئارمانجا سالانە دیار بکە',
+                        subtitle: 'تو دێت د ساڵەکێدا چەند جار قورئانێ بخوێنی؟',
+                        options: [
+                            { value: '1time', icon: '1️⃣', label: 'جارەکێ (٢ لاپەڕ رۆژانە)', description: 'بەرنامەکا سادە و بێ فشار' },
+                            { value: '2times', icon: '2️⃣', label: 'دوو جاران (٤ لاپەڕ رۆژانە)', description: 'بەرنامەکا مامناوەند' },
+                            { value: '3times', icon: '3️⃣', label: 'سێ جاران (٦ لاپەڕ رۆژانە)', description: 'بەرنامەکا قورس' }
+                        ]
+                    },
+                    step3: {
+                        title: 'رۆژێن بەتاڵ',
+                        subtitle: 'ئایا دێ رۆژەکێ د هەفتییێ دا بەتاڵ هێلی؟',
+                        options: [
+                            { value: 'none', icon: '🔄', label: 'هەر رۆژێ بخێنە', description: 'بەرنامەکا بەردەوام' },
+                            { value: 'friday', icon: '🕌', label: 'هەینی بەتاڵ', description: 'بۆ کار یان قوتابیێن بەرگریدار' },
+                            { value: 'weekend', icon: '📅', label: 'ئەینی و شەمبی بەتاڵ', description: 'تەنێ ٥ رۆژ د هەفتییێ' }
+                        ]
+                    },
+                    step4: {
+                        title: 'رێبەریا پێشڤەچوونێ',
+                        subtitle: 'تو دێ چاوا پێشڤەچوونا خۆ چاڤێ بگری؟',
+                        options: [
+                            { value: 'weekly', icon: '📊', label: 'هەفتانە', description: 'پێداچوونەوەیا هەفتانە' },
+                            { value: 'monthly', icon: '📈', label: 'مەهانە', description: 'راپۆرتێن مەهانە' },
+                            { value: 'quarterly', icon: '📅', label: 'سێ مەهان جارەکێ', description: 'پێداچوونەڤەیا دورگەه' }
+                        ]
+                    }
+                }
+            },
+            'custom': {
+                name: 'ئارمانجا تایبەت',
+                description: 'ئارمانجەکا تایبەت دروست بکە کو دگەل تە بگونجیت',
+                defaultCriteria: 'pages',
+                defaultTarget: 5,
+                defaultFrequency: 'daily',
+                steps: {
+                    step2: {
+                        title: 'جۆرا پێوەرێ هەلبژێرە',
+                        subtitle: 'تو دێ پێشڤەچوونا خۆ چاوا پێڤەی؟',
+                        options: [
+                            { value: 'time', icon: '⏰', label: 'دەم (خولەک)', description: 'چەندێ دەمێ دێ بخوینی' },
+                            { value: 'pages', icon: '📄', label: 'لاپەڕ', description: 'ژمارا لاپەڕان' },
+                            { value: 'ayahs', icon: '📜', label: 'ئایەت', description: 'ژمارا ئایەتان' },
+                            { value: 'surahs', icon: '📖', label: 'سوورە', description: 'ژمارا سوورەتان' }
+                        ]
+                    },
+                    step3: {
+                        title: 'دووبارەبوونا ئارمانجێ',
+                        subtitle: 'ئەڤ ئارمانج چەندێ جار دووبارە ببە؟',
+                        options: [
+                            { value: 'daily', icon: '🔄', label: 'رۆژانە', description: 'هەر رۆژێ' },
+                            { value: 'weekly', icon: '📆', label: 'هەفتانە', description: 'هەر هەفتییێ' },
+                            { value: 'monthly', icon: '📅', label: 'مەهانە', description: 'هەر مەهەکێ' }
+                        ]
+                    }
+                }
+            }
+        };
+
+        // Helper function to create card safely
+        function createGoalCard(option, stepNum) {
+            var card = document.createElement('div');
+            card.className = 'goal-card';
+            card.dataset.value = option.value;
+
+            var iconDiv = document.createElement('div');
+            iconDiv.className = 'goal-icon';
+            var iconSpan = document.createElement('span');
+            iconSpan.className = 'goal-icon-text';
+            iconSpan.textContent = option.icon || '✓';
+            iconDiv.appendChild(iconSpan);
+
+            var contentDiv = document.createElement('div');
+            contentDiv.className = 'goal-content';
+
+            var titleDiv = document.createElement('div');
+            titleDiv.className = 'goal-title';
+            titleDiv.textContent = option.label;
+
+            var descDiv = document.createElement('div');
+            descDiv.className = 'goal-description';
+            descDiv.textContent = option.description;
+
+            contentDiv.appendChild(titleDiv);
+            contentDiv.appendChild(descDiv);
+
+            card.appendChild(iconDiv);
+            card.appendChild(contentDiv);
+
+            card.addEventListener('click', function() {
+                var container = this.closest('.goal-cards');
+                var cards = container.querySelectorAll('.goal-card');
+                for (var i = 0; i < cards.length; i++) {
+                    cards[i].classList.remove('selected');
+                }
+                this.classList.add('selected');
+                goalDetails['step' + stepNum] = option.value;
+            });
+
+            return card;
+        }
+
+        // Helper function to clear container safely
+        function clearContainer(container) {
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+        }
+
+        // Setup goal card selection for step 1
+        var step1Cards = document.querySelectorAll('#step1Cards .goal-card');
+        for (var i = 0; i < step1Cards.length; i++) {
+            step1Cards[i].addEventListener('click', function() {
+                var cards = document.querySelectorAll('#step1Cards .goal-card');
+                for (var j = 0; j < cards.length; j++) {
+                    cards[j].classList.remove('selected');
+                }
+                this.classList.add('selected');
+                selectedGoal = this.dataset.goal;
+            });
+        }
+
+        function updateProgress(step) {
+            var progress = (step / 5) * 100;
+            for (var i = 1; i <= 5; i++) {
+                var bar = document.getElementById('progressBar' + i);
+                if (bar) {
+                    bar.style.width = progress + '%';
+                }
+            }
+        }
+
+        function showStep(stepNum) {
+            var steps = document.querySelectorAll('.step-container');
+            for (var i = 0; i < steps.length; i++) {
+                steps[i].classList.remove('active');
+            }
+            var targetStep = document.getElementById('step' + stepNum);
+            if (targetStep) {
+                targetStep.classList.add('active');
+            }
+            currentStep = stepNum;
+            updateProgress(stepNum);
+            updateBottomNav();
+        }
+
+        function updateBottomNav() {
+            var navContent = document.getElementById('bottomNavContent');
+            clearContainer(navContent);
+
+            if (currentStep > 1) {
+                var backBtn = document.createElement('button');
+                backBtn.className = 'btn btn-secondary';
+                var backIcon = document.createElement('i');
+                backIcon.className = 'fas fa-arrow-right';
+                var backSpan = document.createElement('span');
+                backSpan.textContent = 'پاشڤە';
+                backBtn.appendChild(backIcon);
+                backBtn.appendChild(backSpan);
+                backBtn.addEventListener('click', goBack);
+                navContent.appendChild(backBtn);
+            }
+
+            var nextBtn = document.createElement('button');
+            nextBtn.className = 'btn btn-primary';
+            nextBtn.id = 'nextBtn';
+
+            if (currentStep === 5) {
+                var rocketIcon = document.createElement('i');
+                rocketIcon.className = 'fas fa-rocket';
+                var startSpan = document.createElement('span');
+                startSpan.textContent = 'دەستپێکرنا رێڤینگیا خۆ!';
+                nextBtn.appendChild(startSpan);
+                nextBtn.appendChild(rocketIcon);
+                nextBtn.addEventListener('click', startJourney);
+            } else {
+                var nextSpan = document.createElement('span');
+                nextSpan.textContent = 'پێشڤە';
+                var nextIcon = document.createElement('i');
+                nextIcon.className = 'fas fa-arrow-left';
+                nextBtn.appendChild(nextSpan);
+                nextBtn.appendChild(nextIcon);
+                nextBtn.addEventListener('click', goNext);
+            }
+
+            navContent.appendChild(nextBtn);
+        }
+
+        function goBack() {
+            if (currentStep > 1) {
+                showStep(currentStep - 1);
+            }
+        }
+
+        function goNext() {
+            if (currentStep === 1) {
+                if (!selectedGoal) {
+                    alert('تکایە ئارمانجەکێ هەلبژێرە');
+                    return;
+                }
+                var flow = goalFlows[selectedGoal];
+                if (flow) {
+                    selectedCriteria = flow.defaultCriteria;
+                    targetValue = flow.defaultTarget;
+                    selectedFrequency = flow.defaultFrequency;
+                    renderDynamicStep(2, flow.steps.step2);
+                }
+                showStep(2);
+            } else if (currentStep === 2) {
+                if (!goalDetails.step2) {
+                    alert('تکایە هەلبژێرەکا خۆ بکە');
+                    return;
+                }
+                var flow = goalFlows[selectedGoal];
+                if (flow && flow.steps.step3) {
+                    renderDynamicStep(3, flow.steps.step3);
+                }
+                showStep(3);
+            } else if (currentStep === 3) {
+                if (!goalDetails.step3) {
+                    alert('تکایە هەلبژێرەکا خۆ بکە');
+                    return;
+                }
+                var flow = goalFlows[selectedGoal];
+                if (flow && flow.steps.step4) {
+                    renderDynamicStep(4, flow.steps.step4);
+                    document.getElementById('step4Input').classList.add('hidden');
+                } else {
+                    document.getElementById('step4Cards').classList.add('hidden');
+                    document.getElementById('step4Input').classList.remove('hidden');
+                    updateTargetLabel();
+                }
+                showStep(4);
+            } else if (currentStep === 4) {
+                var flow = goalFlows[selectedGoal];
+                if (flow && flow.steps.step4) {
+                    if (!goalDetails.step4) {
+                        alert('تکایە هەلبژێرەکا خۆ بکە');
+                        return;
+                    }
+                } else {
+                    targetValue = parseInt(document.getElementById('targetInput').value) || 1;
+                    if (targetValue < 1) {
+                        alert('تکایە ژمارەیەکا دروست بنڤیسە');
+                        return;
+                    }
+                }
+                generateSchedule();
+                showStep(5);
+            }
+        }
+
+        function renderDynamicStep(stepNum, stepData) {
+            if (!stepData) return;
+
+            var titleEl = document.getElementById('step' + stepNum + 'Title');
+            var subtitleEl = document.getElementById('step' + stepNum + 'Subtitle');
+            var cardsContainer = document.getElementById('step' + stepNum + 'Cards');
+
+            if (titleEl) titleEl.textContent = stepData.title;
+            if (subtitleEl) subtitleEl.textContent = stepData.subtitle;
+
+            clearContainer(cardsContainer);
+
+            for (var i = 0; i < stepData.options.length; i++) {
+                var card = createGoalCard(stepData.options[i], stepNum);
+                cardsContainer.appendChild(card);
+            }
+        }
+
+        function updateTargetLabel() {
+            var label = document.getElementById('targetLabel');
+            if (selectedCriteria === 'time') {
+                label.textContent = 'خولەک';
+            } else if (selectedCriteria === 'pages') {
+                label.textContent = 'لاپەڕ';
+            } else if (selectedCriteria === 'ayahs') {
+                label.textContent = 'ئایەت';
+            } else if (selectedCriteria === 'surahs') {
+                label.textContent = 'سوورە';
+            } else {
+                label.textContent = 'ژمارە';
+            }
+        }
+
+        function generateSchedule() {
+            var timeline = document.getElementById('scheduleTimeline');
+            clearContainer(timeline);
+
+            var today = new Date();
+            var numDays = 7;
+
+            var criteriaText = 'لاپەڕ';
+            if (selectedCriteria === 'time') {
+                criteriaText = 'خولەک';
+            } else if (selectedCriteria === 'ayahs') {
+                criteriaText = 'ئایەت';
+            } else if (selectedCriteria === 'surahs') {
+                criteriaText = 'سوورە';
+            } else if (selectedCriteria === 'juz') {
+                criteriaText = 'جوز';
+            }
+
+            for (var i = 0; i < numDays; i++) {
+                var date = new Date(today);
+                date.setDate(today.getDate() + i);
+                var dayName = kurdishDays[date.getDay()];
+
+                var item = document.createElement('div');
+                item.className = 'timeline-item';
+
+                var dayDiv = document.createElement('div');
+                dayDiv.className = 'timeline-day';
+                dayDiv.textContent = dayName;
+
+                var taskDiv = document.createElement('div');
+                taskDiv.className = 'timeline-task';
+                taskDiv.textContent = 'خواندنا ' + targetValue + ' ' + criteriaText;
+
+                item.appendChild(dayDiv);
+                item.appendChild(taskDiv);
+                timeline.appendChild(item);
+            }
+        }
+
+        function startJourney() {
+            var flow = goalFlows[selectedGoal];
+
+            var goalData = {
+                type: selectedGoal,
+                name: flow ? flow.name : selectedGoal,
+                description: flow ? flow.description : '',
+                frequency: selectedFrequency,
+                criteria: selectedCriteria,
+                target: targetValue,
+                startDate: new Date().toISOString(),
+                completed: false,
+                details: goalDetails,
+                flow: {
+                    step2: goalDetails.step2 || null,
+                    step3: goalDetails.step3 || null,
+                    step4: goalDetails.step4 || null
+                }
+            };
+
+            localStorage.setItem('readingGoal', JSON.stringify(goalData));
+
+            alert('ئارمانجا تە هاتە تۆمارکرن! رێڤیا خۆ دەستپێبکە');
+
+            window.location.href = '/goals';
+        }
+
+        // Initialize
+        updateProgress(1);
+        updateBottomNav();
+
         // Set current year
         document.getElementById('footer-year').textContent = new Date().getFullYear();
     </script>
+
 </body>
 </html>

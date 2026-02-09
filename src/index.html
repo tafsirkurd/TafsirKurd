@@ -6326,7 +6326,7 @@ function isUserLoggedIn() {
         }
         // Check common auth keys
         if (localStorage.getItem('auth_token') || localStorage.getItem('user')) return true;
-    } catch (e) {}
+    } catch (e) { /* Silently ignore - localStorage may be unavailable */ }
     return false;
 }
 

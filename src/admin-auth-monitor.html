@@ -535,7 +535,13 @@
             return action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
         }
 
-        setInterval(loadAllData, 30000);
+        // Store interval reference for cleanup
+        const refreshInterval = setInterval(loadAllData, 30000);
+
+        // Clean up on page unload to prevent memory leaks
+        window.addEventListener('beforeunload', function() {
+            clearInterval(refreshInterval);
+        });
     </script>
 </body>
 </html>
