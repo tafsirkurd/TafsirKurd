@@ -169,7 +169,7 @@
         .main {
             max-width: 600px;
             margin: 0 auto;
-            padding: 32px 20px 160px;
+            padding: 32px 20px 60px;
         }
 
         /* Step */
@@ -404,24 +404,11 @@
             font-size: 14px;
         }
 
-        /* Bottom Bar */
-        .bottom-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--bg);
-            border-top: 1px solid var(--border);
-            padding: 16px 20px;
-            padding-bottom: max(16px, env(safe-area-inset-bottom));
-            z-index: 100;
-        }
-
-        .bottom-inner {
-            max-width: 600px;
-            margin: 0 auto;
+        /* Buttons */
+        .buttons {
             display: flex;
             gap: 12px;
+            margin-top: 32px;
         }
 
         .btn {
@@ -543,7 +530,7 @@
                 font-size: 13px;
             }
 
-            .bottom-inner {
+            .buttons {
                 flex-direction: column;
             }
 
@@ -622,6 +609,8 @@
                     <div class="card-check"></div>
                 </div>
             </div>
+
+            <div class="buttons" id="buttons1"></div>
         </div>
 
         <!-- Step 2 -->
@@ -629,6 +618,7 @@
             <h1 class="step-title" id="step2Title">دووبارەبوونێ هەلبژێرە</h1>
             <p class="step-desc" id="step2Subtitle">د هەفتییێ دا چەند رۆژ دێ بخوینی؟</p>
             <div class="cards" id="step2Cards"></div>
+            <div class="buttons" id="buttons2"></div>
         </div>
 
         <!-- Step 3 -->
@@ -636,6 +626,7 @@
             <h1 class="step-title" id="step3Title">پێوەرەکێ هەلبژێرە</h1>
             <p class="step-desc" id="step3Subtitle">ئارمانجا تە چاوا بهێتە پێڤان؟</p>
             <div class="cards" id="step3Cards"></div>
+            <div class="buttons" id="buttons3"></div>
         </div>
 
         <!-- Step 4 -->
@@ -647,6 +638,7 @@
                 <label class="input-label" id="targetLabel">ژمارا لاپەڕان</label>
                 <input type="number" class="input-field" id="targetInput" value="1" min="1">
             </div>
+            <div class="buttons" id="buttons4"></div>
         </div>
 
         <!-- Step 5 -->
@@ -660,19 +652,11 @@
                 </div>
                 <div class="schedule-list" id="scheduleList"></div>
             </div>
+            <div class="buttons" id="buttons5"></div>
         </div>
 
     </main>
 
-    <!-- Bottom Bar -->
-    <div class="bottom-bar">
-        <div class="bottom-inner" id="bottomBar">
-            <button class="btn btn-primary" id="nextBtn" onclick="goNext()">
-                <span>پێشڤە</span>
-                <i class="fas fa-arrow-left"></i>
-            </button>
-        </div>
-    </div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -858,24 +842,44 @@
             for (var i = 0; i < steps.length; i++) steps[i].classList.remove('active');
             document.getElementById('step' + currentStep).classList.add('active');
 
-            var bar = document.getElementById('bottomBar');
-            clearEl(bar);
+            // Update buttons for current step
+            for (var s = 1; s <= 5; s++) {
+                var bar = document.getElementById('buttons' + s);
+                if (bar) clearEl(bar);
+            }
+
+            var bar = document.getElementById('buttons' + currentStep);
+            if (!bar) return;
 
             if (currentStep > 1) {
                 var back = document.createElement('button');
                 back.className = 'btn btn-secondary';
-                back.innerHTML = '<i class="fas fa-arrow-right"></i> <span>پاشڤە</span>';
+                var backIcon = document.createElement('i');
+                backIcon.className = 'fas fa-arrow-right';
+                var backText = document.createElement('span');
+                backText.textContent = 'پاشڤە';
+                back.appendChild(backIcon);
+                back.appendChild(backText);
                 back.onclick = goBack;
                 bar.appendChild(back);
             }
 
             var next = document.createElement('button');
             next.className = 'btn btn-primary';
+            var nextText = document.createElement('span');
+            var nextIcon = document.createElement('i');
+
             if (currentStep === 5) {
-                next.innerHTML = '<span>دەستپێکە!</span> <i class="fas fa-rocket"></i>';
+                nextText.textContent = 'دەستپێکە!';
+                nextIcon.className = 'fas fa-rocket';
+                next.appendChild(nextText);
+                next.appendChild(nextIcon);
                 next.onclick = finish;
             } else {
-                next.innerHTML = '<span>پێشڤە</span> <i class="fas fa-arrow-left"></i>';
+                nextText.textContent = 'پێشڤە';
+                nextIcon.className = 'fas fa-arrow-left';
+                next.appendChild(nextText);
+                next.appendChild(nextIcon);
                 next.onclick = goNext;
             }
             bar.appendChild(next);
