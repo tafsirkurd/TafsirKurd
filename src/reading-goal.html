@@ -136,6 +136,11 @@
             scroll-behavior: smooth;
         }
 
+        html, body {
+            height: auto;
+            min-height: 100%;
+        }
+
         body {
             font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif;
             background: var(--bg);
@@ -143,6 +148,7 @@
             min-height: 100vh;
             line-height: 1.6;
             overflow-x: hidden;
+            overflow-y: auto;
         }
 
         /* Geometric background pattern */
@@ -154,7 +160,7 @@
             bottom: 0;
             pointer-events: none;
             opacity: 0.4;
-            z-index: 0;
+            z-index: -1;
         }
 
         .bg-pattern::before {
@@ -189,8 +195,7 @@
             position: relative;
             z-index: 1;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            display: block;
         }
 
         /* Header */
