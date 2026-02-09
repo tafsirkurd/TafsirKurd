@@ -4,6 +4,14 @@
 (function() {
     'use strict';
 
+    // Escape HTML to prevent XSS
+    function escapeHtml(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
     const BotDetector = {
         // Known bot user agents
         botPatterns: [
@@ -238,7 +246,7 @@
                             font-size: 14px;
                             color: #666;
                         ">
-                            <strong>هۆکار:</strong> ${reason}
+                            <strong>هۆکار:</strong> ${escapeHtml(reason)}
                         </div>
                         <p style="color: #999; font-size: 13px; margin-top: 20px;">
                             ئەگەر تۆ بەکارهێنەرێکی مرۆڤی، پەیوەندیمان پێوە بکە.
