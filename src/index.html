@@ -6377,7 +6377,19 @@ function renderDailySeries() {
     // Use saved series if available, otherwise pick new random ones
     let picked;
     if (_currentSeries.length === 3) {
-        picked = _currentSeries;
+        // Validate saved series - check for duplicate names
+        const names = _currentSeries.map(s => (s?.name_ku || '').toLowerCase().trim());
+        const uniqueNames = new Set(names.filter(n => n));
+        const hasDuplicates = uniqueNames.size < names.filter(n => n).length;
+
+        if (hasDuplicates) {
+            // Re-pick to avoid duplicate series names
+            picked = pickUniqueSeries(3, []);
+            _currentSeries = picked;
+            saveDailyState();
+        } else {
+            picked = _currentSeries;
+        }
     } else {
         // Pick 3 unique series
         picked = pickUniqueSeries(3, []);
@@ -6391,12 +6403,27 @@ function renderDailySeries() {
     });
 }
 
-// Helper to pick N unique series, excluding specified IDs
+// Helper to pick N unique series, excluding specified IDs and ensuring different series names
 function pickUniqueSeries(count, excludeIds) {
     if (!_seriesCache || _seriesCache.length === 0) return [];
     const available = _seriesCache.filter(s => !excludeIds.includes(s.id));
     const shuffled = shuffleArray(available);
-    return shuffled.slice(0, Math.min(count, shuffled.length));
+
+    // Pick series ensuring each has a different name_ku (series name)
+    const picked = [];
+    const usedNames = new Set();
+
+    for (const series of shuffled) {
+        if (picked.length >= count) break;
+        // Skip if we already have a series with this name
+        const seriesName = (series.name_ku || series.id).toLowerCase().trim();
+        if (usedNames.has(seriesName)) continue;
+
+        picked.push(series);
+        usedNames.add(seriesName);
+    }
+
+    return picked;
 }
 
 function refreshSingleCard(cardIndex) {
@@ -6455,11 +6482,21 @@ function refreshSingleCard(cardIndex) {
                 });
             }
         } else if (!isAyah && _seriesCache && _seriesCache.length > 0) {
-            // Exclude currently displayed series to avoid duplicates
+            // Exclude currently displayed series to avoid duplicates (by ID and name)
             const currentIds = _currentSeries.map(cs => cs?.id).filter(Boolean);
-            const newPicks = pickUniqueSeries(1, currentIds);
-            if (newPicks.length === 0) return;
-            const s = newPicks[0];
+            const currentNames = _currentSeries
+                .filter((cs, idx) => idx !== localIdx) // Exclude the one being replaced
+                .map(cs => (cs?.name_ku || '').toLowerCase().trim())
+                .filter(Boolean);
+
+            // Find a series that's not already displayed (different ID and name)
+            const available = _seriesCache.filter(s =>
+                !currentIds.includes(s.id) &&
+                !currentNames.includes((s.name_ku || '').toLowerCase().trim())
+            );
+            const shuffled = shuffleArray(available);
+            if (shuffled.length === 0) return;
+            const s = shuffled[0];
             // Update stored series data
             _currentSeries[localIdx] = s;
             saveDailyState();
