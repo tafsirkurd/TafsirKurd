@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>سڕینەوەی هەژمار | TafsirKurd - Delete Your Account</title>
-  <meta name="description" content="داواکاری سڕینەوەی هەژمارا خۆ ل TafsirKurd. Request deletion of your TafsirKurd account and all associated data.">
+  <title>Delete Your TafsirKurd Account | سڕینەوەی هەژمار</title>
+  <meta name="description" content="داواکاری سڕینەوەی هەژمارا خۆ ل ئەپلیکەیشنا TafsirKurd. Request deletion of your TafsirKurd account and all associated data. Google Play account deletion compliance.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://tafsirkurd.com/delete-account">
   <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
@@ -12,8 +12,8 @@
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://tafsirkurd.com/delete-account">
-  <meta property="og:title" content="سڕینەوەی هەژمار | TafsirKurd">
-  <meta property="og:description" content="داواکاری سڕینەوەی هەژمارا خۆ ل TafsirKurd.">
+  <meta property="og:title" content="Delete Your TafsirKurd Account | سڕینەوەی هەژمار">
+  <meta property="og:description" content="داواکاری سڕینەوەی هەژمارا خۆ ل ئەپلیکەیشنا TafsirKurd. Request account and data deletion.">
   <meta property="og:locale" content="ku_IQ">
 
   <style>
@@ -34,19 +34,25 @@
     header {
       background: #000;
       color: #fff;
-      padding: 24px 20px;
+      padding: 32px 20px;
       text-align: center;
     }
 
     header h1 {
       font-size: 22px;
       font-weight: 600;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
     header p {
       font-size: 13px;
       opacity: 0.7;
+    }
+
+    header .subtitle {
+      font-size: 14px;
+      opacity: 0.85;
+      margin-top: 4px;
     }
 
     main {
@@ -55,18 +61,25 @@
       padding: 32px 20px 64px;
     }
 
+    .intro {
+      font-size: 15px;
+      color: #444;
+      margin-bottom: 28px;
+      line-height: 1.9;
+    }
+
     section {
       background: #fff;
       border: 1px solid #e8e8e8;
       border-radius: 8px;
       padding: 24px;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
 
     h2 {
       font-size: 17px;
       font-weight: 600;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       color: #000;
     }
 
@@ -95,7 +108,7 @@
     }
 
     ol li {
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .email-link {
@@ -104,26 +117,83 @@
       display: inline;
     }
 
+    .step-num {
+      display: inline-block;
+      background: #000;
+      color: #fff;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .steps-list {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0 0;
+    }
+
+    .steps-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .steps-list li:last-child {
+      border-bottom: none;
+    }
+
+    .steps-list .step-content {
+      flex: 1;
+    }
+
+    .steps-list .step-label {
+      font-weight: 600;
+      font-size: 14px;
+      color: #000;
+      display: block;
+    }
+
+    .steps-list .step-detail {
+      font-size: 13px;
+      color: #666;
+      margin-top: 2px;
+      display: block;
+    }
+
+    .ltr-text {
+      direction: ltr;
+      unicode-bidi: embed;
+    }
+
     .mailto-btn {
       display: inline-block;
       background: #000;
       color: #fff;
       text-decoration: none;
-      padding: 12px 32px;
+      padding: 14px 40px;
       border-radius: 6px;
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 600;
-      margin-top: 16px;
-      transition: opacity 0.2s;
+      margin-top: 20px;
+      transition: opacity 0.2s, transform 0.2s;
+      letter-spacing: 0.3px;
     }
 
     .mailto-btn:hover {
       opacity: 0.85;
+      transform: translateY(-1px);
     }
 
     .btn-wrap {
       text-align: center;
-      margin-top: 8px;
+      margin: 8px 0 24px;
     }
 
     .warning {
@@ -135,21 +205,86 @@
       color: #b45309;
     }
 
-    .notice {
+    .data-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 14px 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .data-list li {
+      font-size: 14px;
+      padding: 8px 12px;
+      background: #fff5eb;
+      border-radius: 4px;
+    }
+
+    .data-list li::before {
+      content: "✕ ";
+      color: #b45309;
+      font-weight: 700;
+    }
+
+    .notice-box {
       background: #f5f5f5;
       border: none;
-      padding: 16px 24px;
-      text-align: center;
-      font-size: 14px;
+      padding: 16px 20px;
+      border-radius: 6px;
+      margin-top: 16px;
+    }
+
+    .notice-box p {
+      font-size: 13px;
       color: #666;
+      margin-bottom: 4px;
+    }
+
+    .notice-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    .info-section {
+      background: #f9f9f9;
+      border-color: #eee;
+    }
+
+    .divider {
+      height: 1px;
+      background: #e8e8e8;
+      margin: 28px 0;
+      border: none;
+    }
+
+    .privacy-section {
+      background: #fafafa;
+      border: 1px solid #eee;
+    }
+
+    .privacy-section ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .privacy-section li {
+      padding: 6px 0;
+      font-size: 14px;
+      color: #444;
+    }
+
+    .privacy-section li::before {
+      content: "— ";
+      color: #999;
     }
 
     footer {
       text-align: center;
       padding: 24px 20px;
-      font-size: 13px;
+      font-size: 12px;
       color: #999;
       border-top: 1px solid #e8e8e8;
+      line-height: 1.8;
     }
 
     footer a {
@@ -157,14 +292,21 @@
       font-weight: 400;
     }
 
+    footer .dev {
+      display: block;
+      margin-top: 4px;
+    }
+
     @media (max-width: 480px) {
       header h1 { font-size: 19px; }
       section { padding: 20px 16px; }
       main { padding: 20px 12px 48px; }
+      .data-list { grid-template-columns: 1fr; }
+      .mailto-btn { padding: 14px 28px; font-size: 15px; }
     }
   </style>
 
-  <!-- Local font fallback -->
+  <!-- Local font -->
   <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=16" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
@@ -174,64 +316,116 @@
 <header>
   <h1>سڕینەوەی هەژمارا TafsirKurd</h1>
   <p>Delete Your TafsirKurd Account</p>
+  <p class="subtitle" aria-label="Developer name">دەڤەلۆپەر: سامان عبدالرحمن</p>
 </header>
 
 <main>
 
-  <!-- How to request -->
+  <!-- Intro -->
+  <p class="intro">
+    ئەڤ لاپەڕە تایبەت ە بۆ داواکاریا سڕینەوەی هەژمار ل ئەپلیکەیشنا <strong>TafsirKurd</strong> (ئەندرۆید و ئای‌ئۆ‌ئێس)،
+    کو ژ لایەن <strong>سامان عبدالرحمن</strong> هاتیە پەرەپێدان.
+    ئەڤ لاپەڕە ب پابەندبوونا مەرجێن <span class="ltr-text">Google Play</span> بۆ سڕینەوەی هەژمار هاتیە دروستکرن.
+  </p>
+
+  <!-- Steps -->
   <section>
     <h2>چۆن داواکاری سڕینەوەی هەژمار بکەی؟</h2>
-    <p>بۆ سڕینەوەی هەژمارا خۆ، ئیمەیلەک بنێرە بۆ:</p>
-    <p style="text-align:center; margin: 12px 0;">
-      <a href="mailto:info@tafsirkurd.com?subject=Delete My Account" class="email-link">info@tafsirkurd.com</a>
-    </p>
-
-    <h2>ڕێنمایی:</h2>
-    <ol>
-      <li>ئیمەیلەکە ژ هەژمارا تۆمارکری بنێرە</li>
-      <li>بابەتا ئیمەیلەکە بنووسە: <strong style="direction:ltr;unicode-bidi:embed;">"Delete My Account"</strong></li>
-      <li>ناونیشانا ئیمەیلا تۆمارکری تێدا بنووسە</li>
-    </ol>
+    <ul class="steps-list" role="list" aria-label="Steps to delete account">
+      <li>
+        <span class="step-num" aria-hidden="true">١</span>
+        <div class="step-content">
+          <span class="step-label">ئیمەیلەک بنێرە بۆ</span>
+          <span class="step-detail"><a href="mailto:info@tafsirkurd.com?subject=Delete%20My%20Account%20%E2%80%93%20TafsirKurd" class="email-link">info@tafsirkurd.com</a></span>
+        </div>
+      </li>
+      <li>
+        <span class="step-num" aria-hidden="true">٢</span>
+        <div class="step-content">
+          <span class="step-label">بابەتا ئیمەیلەکە</span>
+          <span class="step-detail ltr-text">"Delete My Account – TafsirKurd"</span>
+        </div>
+      </li>
+      <li>
+        <span class="step-num" aria-hidden="true">٣</span>
+        <div class="step-content">
+          <span class="step-label">ناونیشانا ئیمەیلا تۆمارکری تێدا بنووسە</span>
+          <span class="step-detail">ئەو ئیمەیلەی کو ب وی هەژمارا خۆ دروست کریە</span>
+        </div>
+      </li>
+      <li>
+        <span class="step-num" aria-hidden="true">٤</span>
+        <div class="step-content">
+          <span class="step-label">وردەکاریێن زێدە (ئارەزوومەندانە)</span>
+          <span class="step-detail">هەر زانیاریەکا دیتر کو دبێ ئێمە بزانین</span>
+        </div>
+      </li>
+    </ul>
   </section>
 
-  <!-- What gets deleted -->
+  <!-- CTA Button -->
+  <div class="btn-wrap">
+    <a href="mailto:info@tafsirkurd.com?subject=Delete%20My%20Account%20%E2%80%93%20TafsirKurd" class="mailto-btn" role="button" aria-label="Send account deletion email">
+      داواکاری سڕینەوەی هەژمار بکە
+    </a>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Data deletion -->
   <section class="warning">
-    <h2>کام داتایان دسڕێنەوە؟</h2>
+    <h2>کام داتایان بۆ هەمیشەیی دسڕێنەوە؟</h2>
     <p>دەما هەژمار هاتە سڕین، ئەڤ داتایانە بۆ هەمیشەیی دسڕێنەوە:</p>
-    <ul>
+    <ul class="data-list" role="list">
       <li>ناونیشانا ئیمەیلەکە</li>
       <li>پێشکەوتنا خویندنەکە</li>
       <li>بووکمارکەکان</li>
       <li>ئامانجەکان</li>
       <li>مێژووا خویندنەکە</li>
       <li>هەڵبژاردنەکان</li>
-      <li>داتایا هەورا سینک کری (Supabase)</li>
+      <li lang="en">Supabase synced data</li>
     </ul>
+
+    <div class="notice-box">
+      <p>ئەگەر تۆ هەژمارت نەکریبە (بەکارهێنەری لۆکاڵ)، تەنها ئەپلیکەیشنەکە بسڕەوە بۆ سڕینەوەی داتایا لۆکاڵ.</p>
+      <p>بەکئەپ بۆ ماوەیەکا کورت بۆ ئامانجێن ئەمنی و پاراستن ژ فێڵکاری دشێ بمینن.</p>
+    </div>
   </section>
 
   <!-- Processing time -->
-  <section>
+  <section class="info-section">
     <h2>کاتا پرۆسێسکرنەکە</h2>
-    <p>هەژمار و هەموو داتایێن پەیوەندیدار دناڤ <strong>٧ رۆژان</strong> دا بۆ هەمیشەیی دسڕێنەوە.</p>
+    <ul style="list-style:none;padding:0;">
+      <li style="padding:6px 0;">هەژمار و هەموو داتایێن پەیوەندیدار دناڤ <strong>٧ رۆژان</strong> دا بۆ هەمیشەیی دسڕێنەوە.</li>
+      <li style="padding:6px 0;">پاش تەواوبوونا پرۆسەکە، ئیمەیلەکا پشتڕاستکرنەوە دنێرین.</li>
+      <li style="padding:6px 0;"><strong>ئاگاداری:</strong> پاش سڕینەوەکە، ناکرێ داتا بگەڕێنرێنەوە.</li>
+    </ul>
   </section>
 
-  <!-- Privacy -->
-  <section class="notice">
-    <p>ئێمە هیچ داتایەکا کەسی پاش سڕینەوەکە ناپارێزین.</p>
-    <p style="margin-top:4px;direction:ltr;unicode-bidi:embed;font-style:italic;">We do not retain personal data after deletion.</p>
-  </section>
+  <hr class="divider">
 
-  <!-- CTA -->
-  <div class="btn-wrap">
-    <a href="mailto:info@tafsirkurd.com?subject=Delete%20My%20Account" class="mailto-btn">
-      داواکاری سڕینەوەی هەژمار بکە
-    </a>
-  </div>
+  <!-- Privacy & Security -->
+  <section class="privacy-section">
+    <h2>تایبەتمەندی و ئەمنی</h2>
+    <ul>
+      <li>ئێمە داتایا بەکارهێنەران نافرۆشین.</li>
+      <li>تەنها ئەو داتایانە دپارێزین کو بۆ کارکردنا ئەپلیکەیشنەکە پێدڤی ن.</li>
+      <li>ئێمە هیچ داتایەکا کەسی پاش سڕینەوەکە ناپارێزین.</li>
+      <li style="margin-top:8px;">
+        <a href="https://tafsirkurd.com/privacy-policy" target="_blank" rel="noopener">
+          سیاسەتا تایبەتمەندیێ بخوینە
+        </a>
+      </li>
+    </ul>
+  </section>
 
 </main>
 
 <footer>
   <a href="https://tafsirkurd.com">tafsirkurd.com</a>
+  <span class="dev">
+    <span class="ltr-text">TafsirKurd</span> — دەڤەلۆپەر: سامان عبدالرحمن
+  </span>
 </footer>
 
 </body>
