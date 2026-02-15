@@ -245,7 +245,15 @@
         // Check if already logged in
         const adminToken = sessionStorage.getItem('adminToken');
         if (adminToken) {
-            window.location.href = '/admin-dashboard.html';
+            var storedRole = sessionStorage.getItem('adminRole');
+            var storedPerms = [];
+            try { storedPerms = JSON.parse(sessionStorage.getItem('adminPermissions') || '[]'); } catch(e) {}
+            var landing = '/admin-dashboard.html';
+            if (storedRole === 'custom' && storedPerms.length > 0) {
+                var fp = storedPerms.find(function(p) { return p.can_view; });
+                if (fp) landing = '/admin-' + fp.page_slug + '.html';
+            }
+            window.location.href = landing;
         }
 
         const loginForm = document.getElementById('loginForm');
