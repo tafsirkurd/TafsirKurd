@@ -25,7 +25,7 @@
         }
 
         // Calculate elapsed and remaining time
-        const SESSION_TIMEOUT = 20 * 60 * 1000; // 20 minutes
+        const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 hour
         const startTime = new Date(sessionStart).getTime();
         const elapsed = Date.now() - startTime;
         const remaining = Math.max(0, SESSION_TIMEOUT - elapsed);
