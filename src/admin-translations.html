@@ -167,6 +167,87 @@
             letter-spacing: 0.5px;
             color: var(--text-secondary);
         }
+
+        /* ===== Mobile Responsive ===== */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+            .stat-card {
+                padding: 14px 12px;
+                text-align: center;
+            }
+            .stat-value { font-size: 22px; }
+            .stat-label { font-size: 10px; }
+
+            .filter-bar {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .filter-input, .filter-select {
+                min-width: unset;
+                width: 100%;
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            /* Hide table, show cards */
+            .table-container table thead { display: none; }
+            .table-container table,
+            .table-container table tbody,
+            .table-container table tr,
+            .table-container table td {
+                display: block;
+                width: 100%;
+            }
+            .table-container table tr {
+                border-bottom: 1px solid var(--border-light);
+                padding: 14px 0;
+            }
+            .table-container table tr:last-child { border-bottom: none; }
+            .table-container table td {
+                padding: 3px 16px;
+                text-align: left;
+                font-size: 13px;
+            }
+            .table-container table td:before {
+                content: attr(data-label);
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-tertiary);
+                display: block;
+                margin-bottom: 2px;
+            }
+            .table-container table td:first-child {
+                padding-top: 0;
+                font-weight: 600;
+                font-size: 14px;
+                color: var(--text-primary);
+            }
+            .table-container table td:last-child {
+                padding-top: 8px;
+                padding-bottom: 0;
+            }
+
+            .action-buttons { justify-content: flex-start; }
+
+            .modal-content {
+                width: 96%;
+                padding: 20px 16px;
+                margin: 8px;
+                max-height: 95vh;
+            }
+            .modal-title { font-size: 17px; }
+            .form-input, .form-textarea { font-size: 14px; padding: 10px; }
+            .form-actions { flex-direction: column; }
+            .form-actions .btn { width: 100%; justify-content: center; }
+
+            .page-header .page-actions { gap: 8px; }
+            .page-header .page-actions .btn { font-size: 12px; padding: 8px 12px; }
+        }
     </style>
 
     <style id="early-sidebar-hide">
@@ -549,30 +630,36 @@
                 const tr = document.createElement('tr');
 
                 const tdKey = document.createElement('td');
+                tdKey.setAttribute('data-label', 'Key');
                 tdKey.textContent = translation.key_id;
                 tr.appendChild(tdKey);
 
                 const tdText = document.createElement('td');
+                tdText.setAttribute('data-label', 'Kurdish Text');
                 tdText.textContent = translation.kurdish_text.length > 50
                     ? translation.kurdish_text.substring(0, 50) + '...'
                     : translation.kurdish_text;
                 tr.appendChild(tdText);
 
                 const tdCategory = document.createElement('td');
+                tdCategory.setAttribute('data-label', 'Category');
                 tdCategory.textContent = translation.category || 'general';
                 tr.appendChild(tdCategory);
 
                 const tdPage = document.createElement('td');
+                tdPage.setAttribute('data-label', 'Page');
                 tdPage.textContent = translation.page || 'all';
                 tr.appendChild(tdPage);
 
                 const tdContext = document.createElement('td');
+                tdContext.setAttribute('data-label', 'Context');
                 tdContext.textContent = translation.context
                     ? (translation.context.length > 30 ? translation.context.substring(0, 30) + '...' : translation.context)
                     : '—';
                 tr.appendChild(tdContext);
 
                 const tdActions = document.createElement('td');
+                tdActions.setAttribute('data-label', '');
                 const actionsDiv = document.createElement('div');
                 actionsDiv.className = 'action-buttons';
 
