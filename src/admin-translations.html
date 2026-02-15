@@ -247,6 +247,148 @@
 
             .page-header .page-actions { gap: 8px; }
             .page-header .page-actions .btn { font-size: 12px; padding: 8px 12px; }
+
+            /* Hide desktop add button, show FAB on mobile */
+            #addBtn { display: none; }
+            .fab { display: flex; }
+        }
+
+        /* ===== Pagination ===== */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+            padding: 12px 0;
+        }
+        .pagination-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pagination-btn:hover:not(:disabled) { background: var(--bg-hover); }
+        .pagination-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .pagination-info {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 80px;
+            text-align: center;
+        }
+        .pagination-total {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        /* ===== Floating Action Button ===== */
+        .fab {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary, #000);
+            color: #fff;
+            border: none;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+            cursor: pointer;
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .fab:active { transform: scale(0.92); }
+        .fab svg { width: 24px; height: 24px; }
+
+        /* ===== Enhanced Mobile (< 768px) ===== */
+        @media (max-width: 768px) {
+            .pagination { gap: 8px; margin-top: 8px; }
+            .pagination-btn { width: 44px; height: 44px; }
+
+            /* Translation cards: bigger touch targets */
+            .table-container table tr {
+                position: relative;
+                padding: 16px 0;
+            }
+            .table-container table td:first-child {
+                font-size: 15px;
+                word-break: break-all;
+            }
+            .action-buttons {
+                gap: 12px;
+            }
+            .btn-icon {
+                width: 42px;
+                height: 42px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 8px;
+            }
+
+            /* Modal as bottom sheet */
+            .modal {
+                align-items: flex-end;
+            }
+            .modal-content {
+                position: relative;
+                width: 100%;
+                margin: 0;
+                border-radius: 20px 20px 0 0;
+                max-height: 92vh;
+                padding: 24px 20px 32px;
+                animation: slideUp 0.25s ease-out;
+            }
+            @keyframes slideUp {
+                from { transform: translateY(100%); }
+                to { transform: translateY(0); }
+            }
+            .modal-header {
+                margin-bottom: 20px;
+                padding-bottom: 16px;
+                border-bottom: 1px solid var(--border-light);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .modal-header::after {
+                content: '';
+                position: absolute;
+                top: 8px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 40px;
+                height: 4px;
+                background: var(--border-light);
+                border-radius: 4px;
+            }
+            .form-input, .form-textarea {
+                font-size: 16px !important;
+                padding: 14px !important;
+            }
+            .form-actions {
+                position: sticky;
+                bottom: 0;
+                background: var(--bg-surface);
+                padding: 16px 0 0;
+                margin-top: 16px;
+                border-top: 1px solid var(--border-light);
+            }
+
+            /* Stats compact */
+            .stat-card { padding: 12px 8px; }
+            .stat-value { font-size: 20px; }
         }
     </style>
 
@@ -345,8 +487,8 @@
                 <div class="page-header">
                     <h1 class="page-title">Kurdish Translations</h1>
                     <div class="page-actions">
-                        <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn"><i data-lucide="download"></i>Import All (1087)</button>
-                        <button class="btn btn-primary" onclick="openAddModal()"><i data-lucide="plus"></i>Add Translation</button>
+                        <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn"><i data-lucide="download"></i><span>Import All</span></button>
+                        <button class="btn btn-primary" onclick="openAddModal()" id="addBtn"><i data-lucide="plus"></i><span>Add Translation</span></button>
                     </div>
                 </div>
 
@@ -396,12 +538,21 @@
                         </table>
                     </div>
                 </div>
+
+                <div class="pagination" id="pagination">
+                    <button class="pagination-btn" id="prevPage" onclick="changePage(-1)"><i data-lucide="chevron-left"></i></button>
+                    <span class="pagination-info" id="pageInfo">Page 1</span>
+                    <button class="pagination-btn" id="nextPage" onclick="changePage(1)"><i data-lucide="chevron-right"></i></button>
+                    <span class="pagination-total" id="pageTotal"></span>
+                </div>
             </div>
         </main>
     </div>
 
-    <div class="modal" id="translationModal">
-        <div class="modal-content">
+    <button class="fab" id="fab" onclick="openAddModal()"><i data-lucide="plus"></i></button>
+
+    <div class="modal" id="translationModal" onclick="if(event.target===this)closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
                 <h2 class="modal-title" id="modalTitle">Add Translation</h2>
             </div>
@@ -442,12 +593,20 @@
         lucide.createIcons();
 
         let allTranslations = [];
+        let filteredList = [];
         let supabase = null;
+        let currentPage = 1;
+        const ITEMS_PER_PAGE = 50;
+        let canEdit = true;
+        let canDelete = true;
 
         (async () => {
             const auth = await window.adminAuth.checkAuth();
             if (auth) {
                 supabase = window.adminAuth.getSupabase();
+                // Check permissions for this page
+                canEdit = window.adminAuth.hasPermission('translations', 'edit');
+                canDelete = window.adminAuth.hasPermission('translations', 'delete');
                 loadTranslations();
             }
         })();
@@ -478,6 +637,11 @@
             localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
         });
 
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
         document.getElementById('searchInput').addEventListener('keyup', filterTranslations);
 
         async function loadTranslations() {
@@ -492,7 +656,9 @@
                 allTranslations = data || [];
                 updateStats();
                 populateFilters();
-                renderTranslations(allTranslations);
+                currentPage = 1;
+                filteredList = allTranslations;
+                renderPage();
             } catch (error) {
                 console.error('Error loading translations:', error);
                 alert('Failed to load translations');
@@ -527,7 +693,6 @@
                 categoryFilter.appendChild(option);
             });
 
-            // Normalize page names (remove .html suffix, lowercase) and deduplicate
             const rawPages = allTranslations.map(t => t.page);
             const normalizedPages = [...new Set(rawPages.map(p => normalizePage(p)))].sort();
             const pageFilter = document.getElementById('pageFilter');
@@ -543,43 +708,32 @@
                 pageFilter.appendChild(option);
             });
 
-            // Check for duplicates and offer cleanup
+            // Auto-cleanup inconsistent page names
             const needsCleanup = rawPages.some(p => p && (p.endsWith('.html') || p !== p.toLowerCase()));
             if (needsCleanup) {
-                console.log('Inconsistent page names detected. Running cleanup...');
                 cleanupPageNames();
             }
         }
 
-        // Normalize page name: lowercase, remove .html
         function normalizePage(page) {
             if (!page) return 'all';
             return page.toLowerCase().replace(/\.html$/i, '');
         }
 
-        // Cleanup function to normalize page names in database
         async function cleanupPageNames() {
             try {
-                // Find all records that need normalization (has .html or not lowercase)
                 const toUpdate = allTranslations.filter(t => {
                     if (!t.page) return false;
-                    const normalized = normalizePage(t.page);
-                    return t.page !== normalized;
+                    return t.page !== normalizePage(t.page);
                 });
-
                 if (toUpdate.length === 0) return;
 
-                console.log(`Cleaning up ${toUpdate.length} records with inconsistent page names...`);
-
                 for (const record of toUpdate) {
-                    const normalizedPage = normalizePage(record.page);
                     await supabase
                         .from('kurdish_translations')
-                        .update({ page: normalizedPage })
+                        .update({ page: normalizePage(record.page) })
                         .eq('id', record.id);
                 }
-
-                console.log('Cleanup complete. Reloading...');
                 loadTranslations();
             } catch (error) {
                 console.error('Cleanup failed:', error);
@@ -592,21 +746,52 @@
             const categoryFilter = document.getElementById('categoryFilter').value;
             const pageFilter = document.getElementById('pageFilter').value;
 
-            const filtered = allTranslations.filter(t => {
+            filteredList = allTranslations.filter(t => {
                 const matchesSearch = !searchTerm ||
                     t.key_id.toLowerCase().includes(searchTerm) ||
                     t.kurdish_text.toLowerCase().includes(searchTerm);
-
                 const matchesKey = !keyFilter || t.key_id.toLowerCase().includes(keyFilter);
                 const matchesCategory = !categoryFilter || t.category === categoryFilter;
-
-                // Normalize page comparison (handle "quran", "Quran", "quran.html", etc.)
                 const matchesPage = !pageFilter || normalizePage(t.page) === pageFilter;
-
                 return matchesSearch && matchesKey && matchesCategory && matchesPage;
             });
 
-            renderTranslations(filtered);
+            currentPage = 1;
+            renderPage();
+        }
+
+        // Pagination
+        function renderPage() {
+            const totalPages = Math.max(1, Math.ceil(filteredList.length / ITEMS_PER_PAGE));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const start = (currentPage - 1) * ITEMS_PER_PAGE;
+            const pageItems = filteredList.slice(start, start + ITEMS_PER_PAGE);
+
+            renderTranslations(pageItems);
+            updatePagination(totalPages);
+        }
+
+        function updatePagination(totalPages) {
+            var info = document.getElementById('pageInfo');
+            var total = document.getElementById('pageTotal');
+            var prev = document.getElementById('prevPage');
+            var next = document.getElementById('nextPage');
+
+            info.textContent = 'Page ' + currentPage + ' / ' + totalPages;
+            total.textContent = filteredList.length + ' items';
+            prev.disabled = currentPage <= 1;
+            next.disabled = currentPage >= totalPages;
+        }
+
+        function changePage(delta) {
+            var totalPages = Math.max(1, Math.ceil(filteredList.length / ITEMS_PER_PAGE));
+            var newPage = currentPage + delta;
+            if (newPage < 1 || newPage > totalPages) return;
+            currentPage = newPage;
+            renderPage();
+            // Scroll to top of content area
+            document.querySelector('.content-area').scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function renderTranslations(translations) {
@@ -638,8 +823,9 @@
 
                 const tdText = document.createElement('td');
                 tdText.setAttribute('data-label', 'Kurdish Text');
-                tdText.textContent = translation.kurdish_text.length > 50
-                    ? translation.kurdish_text.substring(0, 50) + '...'
+                tdText.setAttribute('dir', 'rtl');
+                tdText.textContent = translation.kurdish_text.length > 60
+                    ? translation.kurdish_text.substring(0, 60) + '...'
                     : translation.kurdish_text;
                 tr.appendChild(tdText);
 
@@ -657,7 +843,7 @@
                 tdContext.setAttribute('data-label', 'Context');
                 tdContext.textContent = translation.context
                     ? (translation.context.length > 30 ? translation.context.substring(0, 30) + '...' : translation.context)
-                    : '—';
+                    : '';
                 tr.appendChild(tdContext);
 
                 const tdActions = document.createElement('td');
@@ -665,21 +851,27 @@
                 const actionsDiv = document.createElement('div');
                 actionsDiv.className = 'action-buttons';
 
-                const editBtn = document.createElement('button');
-                editBtn.className = 'btn-icon';
-                editBtn.onclick = () => openEditModal(translation);
-                const editIcon = document.createElement('i');
-                editIcon.setAttribute('data-lucide', 'edit-2');
-                editBtn.appendChild(editIcon);
-                actionsDiv.appendChild(editBtn);
+                if (canEdit) {
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'btn-icon';
+                    editBtn.title = 'Edit';
+                    editBtn.onclick = () => openEditModal(translation);
+                    const editIcon = document.createElement('i');
+                    editIcon.setAttribute('data-lucide', 'edit-2');
+                    editBtn.appendChild(editIcon);
+                    actionsDiv.appendChild(editBtn);
+                }
 
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'btn-icon delete';
-                deleteBtn.onclick = () => deleteTranslation(translation.id);
-                const deleteIcon = document.createElement('i');
-                deleteIcon.setAttribute('data-lucide', 'trash-2');
-                deleteBtn.appendChild(deleteIcon);
-                actionsDiv.appendChild(deleteBtn);
+                if (canDelete) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'btn-icon delete';
+                    deleteBtn.title = 'Delete';
+                    deleteBtn.onclick = () => deleteTranslation(translation.id);
+                    const deleteIcon = document.createElement('i');
+                    deleteIcon.setAttribute('data-lucide', 'trash-2');
+                    deleteBtn.appendChild(deleteIcon);
+                    actionsDiv.appendChild(deleteBtn);
+                }
 
                 tdActions.appendChild(actionsDiv);
                 tr.appendChild(tdActions);
@@ -691,6 +883,7 @@
         }
 
         function openAddModal() {
+            if (!canEdit) { alert('You do not have edit permission.'); return; }
             document.getElementById('modalTitle').textContent = 'Add Translation';
             document.getElementById('translationForm').reset();
             document.getElementById('translationId').value = '';
@@ -700,6 +893,7 @@
         }
 
         function openEditModal(translation) {
+            if (!canEdit) { alert('You do not have edit permission.'); return; }
             document.getElementById('modalTitle').textContent = 'Edit Translation';
             document.getElementById('translationId').value = translation.id;
             document.getElementById('keyId').value = translation.key_id;
@@ -732,13 +926,11 @@
                         .from('kurdish_translations')
                         .update(translationData)
                         .eq('id', id);
-
                     if (error) throw error;
                 } else {
                     const { error } = await supabase
                         .from('kurdish_translations')
                         .insert([translationData]);
-
                     if (error) throw error;
                 }
 
@@ -746,21 +938,20 @@
                 loadTranslations();
             } catch (error) {
                 console.error('Error saving translation:', error);
-                alert('Failed to save translation: ' + error.message);
+                alert('Failed to save: ' + error.message);
             }
         }
 
         async function deleteTranslation(id) {
-            if (!confirm('Are you sure you want to delete this translation?')) return;
+            if (!canDelete) { alert('You do not have delete permission.'); return; }
+            if (!confirm('Delete this translation?')) return;
 
             try {
                 const { error } = await supabase
                     .from('kurdish_translations')
                     .delete()
                     .eq('id', id);
-
                 if (error) throw error;
-
                 loadTranslations();
             } catch (error) {
                 console.error('Error deleting translation:', error);
@@ -768,23 +959,26 @@
             }
         }
 
-        // Bulk import all translations
+        // Bulk import
         async function importAllTranslations() {
-            if (!confirm('This will import 400+ translations from all pages. Existing entries will be skipped. Continue?')) return;
+            if (!canEdit) { alert('You do not have edit permission.'); return; }
+            if (!confirm('This will import translations from all pages. Existing entries will be skipped. Continue?')) return;
 
             const btn = document.getElementById('importBtn');
-            const btnLabel = btn.querySelector('span') || btn;
+            const btnLabel = btn.querySelector('span');
             btn.disabled = true;
             btnLabel.textContent = 'Importing...';
 
             try {
-                // Load the bulk translations script
-                const script = document.createElement('script');
-                script.src = '/utils/bulk-translations.js?v=' + Date.now();
-                document.head.appendChild(script);
-
-                // Wait for script to load
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Load bulk translations script
+                await new Promise((resolve, reject) => {
+                    if (window.BULK_TRANSLATIONS) { resolve(); return; }
+                    const script = document.createElement('script');
+                    script.src = '/utils/bulk-translations.js?v=' + Date.now();
+                    script.onload = resolve;
+                    script.onerror = () => reject(new Error('Failed to load translations data'));
+                    document.head.appendChild(script);
+                });
 
                 if (!window.BULK_TRANSLATIONS) {
                     throw new Error('Failed to load translations data');
@@ -795,32 +989,22 @@
 
                 for (let i = 0; i < total; i++) {
                     const t = window.BULK_TRANSLATIONS[i];
-                    btnLabel.textContent = 'Importing ' + (i + 1) + '/' + total + '...';
+                    btnLabel.textContent = (i + 1) + '/' + total + '...';
 
                     try {
-                        // Check if exists
                         const { data: existing } = await supabase
                             .from('kurdish_translations')
                             .select('id')
                             .eq('key_id', t.key_id)
                             .maybeSingle();
 
-                        if (existing) {
-                            skipped++;
-                            continue;
-                        }
+                        if (existing) { skipped++; continue; }
 
-                        // Insert new
                         const { error } = await supabase
                             .from('kurdish_translations')
                             .insert(t);
 
-                        if (error) {
-                            console.error('Error: ' + t.key_id, error);
-                            errors++;
-                        } else {
-                            added++;
-                        }
+                        if (error) { errors++; } else { added++; }
                     } catch (e) {
                         errors++;
                     }
@@ -832,7 +1016,7 @@
                 console.error('Import failed:', error);
                 alert('Import failed: ' + error.message);
             } finally {
-                btnLabel.textContent = 'Import All (1087)';
+                btnLabel.textContent = 'Import All';
                 btn.disabled = false;
             }
         }
