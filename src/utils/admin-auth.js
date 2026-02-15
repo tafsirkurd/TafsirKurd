@@ -148,7 +148,7 @@ async function checkAuth() {
 
             // Check page permission FIRST before showing anything
             const currentPage = getCurrentPageSlug();
-            if (currentPage && currentPage !== 'dashboard' && !hasPagePermission(currentPage, 'view')) {
+            if (currentPage && !hasPagePermission(currentPage, 'view')) {
                 showAccessDenied();
                 return false;
             }
@@ -247,21 +247,33 @@ function hasPagePermission(pageSlug, permissionType = 'view') {
 
     if (!role) return false;
 
-    // Get role configuration
-    const roleConfig = ROLE_PERMISSIONS[role];
-    if (!roleConfig) return false;
+    // Super admin has all permissions
+    if (role === 'super_admin') return true;
 
-    // Super admin has all permissions (pages = '*')
-    if (roleConfig.pages === '*') {
-        return true;
+    // Check DB permissions first (custom role or any role with DB overrides)
+    var dbPerms = adminPermissions;
+    if ((!dbPerms || dbPerms.length === 0) && sessionStorage.getItem('adminPermissions')) {
+        try { dbPerms = JSON.parse(sessionStorage.getItem('adminPermissions')); } catch(e) { dbPerms = []; }
     }
 
-    // Check if page is in role's allowed pages
+    if (dbPerms && dbPerms.length > 0) {
+        var perm = dbPerms.find(function(p) { return p.page_slug === pageSlug; });
+        if (!perm) return false;
+        if (permissionType === 'view') return !!perm.can_view;
+        if (permissionType === 'edit') return !!perm.can_edit;
+        if (permissionType === 'delete') return !!perm.can_delete;
+        return false;
+    }
+
+    // Fallback to hardcoded role config
+    const roleConfig = ROLE_PERMISSIONS[role];
+    if (!roleConfig) return false;
+    if (roleConfig.pages === '*') return true;
+
     const canAccessPage = roleConfig.pages.includes(pageSlug);
     if (!canAccessPage) return false;
 
-    // Check permission type
-    if (permissionType === 'view') return true; // Can view if page is in list
+    if (permissionType === 'view') return true;
     if (permissionType === 'edit') return roleConfig.canEdit;
     if (permissionType === 'delete') return roleConfig.canDelete;
 
@@ -283,76 +295,74 @@ function getRolePages() {
 // Hide sidebar items based on role
 function applySidebarPermissions(overrideRole) {
     const role = overrideRole || sessionStorage.getItem('adminRole');
-    // console.log('applySidebarPermissions - Role:', role);
 
-    if (!role) {
-        // console.log('No role found, skipping sidebar permissions');
-        return;
-    }
+    if (!role) return;
 
-    // Set data-role on body for CSS fallback
     if (document.body) {
         document.body.setAttribute('data-role', role);
     }
 
-    const roleConfig = ROLE_PERMISSIONS[role];
-    if (!roleConfig) {
-        // console.log('No config for role:', role);
-        return;
-    }
-
     // Super admin sees everything
-    if (roleConfig.pages === '*') {
-        // console.log('Super admin - showing all');
-        // Reveal sidebar for super admin
+    if (role === 'super_admin') {
         revealSidebar(role);
         return;
     }
 
-    const allowedPages = roleConfig.pages;
-    // console.log('Allowed pages:', allowedPages);
-
-    // Find all sidebar nav items
-    const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
-    // console.log('Found nav items:', navItems.length);
-
-    if (navItems.length === 0) {
-        // console.log('No nav items found - sidebar may not be loaded yet');
-        return;
+    // Build allowed pages list from DB permissions or hardcoded config
+    var allowedPages = [];
+    var dbPerms = adminPermissions;
+    if ((!dbPerms || dbPerms.length === 0) && sessionStorage.getItem('adminPermissions')) {
+        try { dbPerms = JSON.parse(sessionStorage.getItem('adminPermissions')); } catch(e) { dbPerms = []; }
     }
 
-    let hiddenCount = 0;
-    navItems.forEach(item => {
-        const href = item.getAttribute('href');
+    if (dbPerms && dbPerms.length > 0) {
+        // Use DB permissions
+        dbPerms.forEach(function(p) {
+            if (p.can_view) allowedPages.push(p.page_slug);
+        });
+    } else {
+        // Fallback to hardcoded role config
+        var roleConfig = ROLE_PERMISSIONS[role];
+        if (roleConfig && roleConfig.pages !== '*') {
+            allowedPages = roleConfig.pages.slice();
+        } else if (roleConfig && roleConfig.pages === '*') {
+            revealSidebar(role);
+            return;
+        }
+    }
+
+    // Always allow dashboard for non-custom roles
+    if (role !== 'custom' && allowedPages.indexOf('dashboard') === -1) {
+        allowedPages.push('dashboard');
+    }
+
+    var navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+    if (navItems.length === 0) return;
+
+    navItems.forEach(function(item) {
+        var href = item.getAttribute('href');
         if (!href) return;
 
-        // Extract page slug from href (e.g., /admin-analytics.html -> analytics)
-        const match = href.match(/\/admin-([^.]+)\.html/);
+        var match = href.match(/\/admin-([^.]+)\.html/);
         if (!match) return;
 
-        const pageSlug = match[1];
+        var pageSlug = match[1];
 
-        // Hide if not in allowed pages
-        if (!allowedPages.includes(pageSlug)) {
-            // console.log('Hiding:', pageSlug);
+        if (allowedPages.indexOf(pageSlug) === -1) {
             item.style.display = 'none';
             item.setAttribute('data-hidden-by-role', 'true');
-            hiddenCount++;
         }
     });
 
-    // console.log('Hidden', hiddenCount, 'nav items');
-
     // Hide nav sections that have no visible items
-    const navSections = document.querySelectorAll('.sidebar-nav .nav-section');
-    navSections.forEach(section => {
-        const visibleItems = section.querySelectorAll('.nav-item:not([data-hidden-by-role])');
+    var navSections = document.querySelectorAll('.sidebar-nav .nav-section');
+    navSections.forEach(function(section) {
+        var visibleItems = section.querySelectorAll('.nav-item:not([data-hidden-by-role])');
         if (visibleItems.length === 0) {
             section.style.display = 'none';
         }
     });
 
-    // Reveal sidebar after permissions applied
     revealSidebar(role);
 }
 
@@ -413,11 +423,20 @@ function showAccessDenied() {
     message.style.cssText = 'color: #4a5568; margin-bottom: 24px;';
     message.textContent = "You don't have permission to access this page.";
 
+    // Find first allowed page to redirect to
+    var redirectPage = '/admin-dashboard.html';
+    var dbPerms = [];
+    try { dbPerms = JSON.parse(sessionStorage.getItem('adminPermissions') || '[]'); } catch(e) {}
+    if (dbPerms.length > 0) {
+        var firstAllowed = dbPerms.find(function(p) { return p.can_view; });
+        if (firstAllowed) redirectPage = '/admin-' + firstAllowed.page_slug + '.html';
+    }
+
     const button = document.createElement('button');
-    button.style.cssText = 'padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600;';
-    button.textContent = 'Go to Dashboard';
+    button.style.cssText = 'padding: 12px 24px; background: #000; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600;';
+    button.textContent = 'Go to Allowed Page';
     button.onclick = function() {
-        window.location.href = '/admin-dashboard.html';
+        window.location.href = redirectPage;
     };
 
     card.appendChild(icon);

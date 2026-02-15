@@ -282,10 +282,18 @@
 
                 if (data.success) {
                     sessionStorage.setItem('adminToken', data.token);
-                    // Set session start time for 20-minute timeout
                     sessionStorage.setItem('adminSessionStart', new Date().toISOString());
-                    console.log('✅ Login successful' + (data.deviceLocked ? ' (Device locked)' : ''));
-                    window.location.href = '/admin-dashboard.html';
+                    if (data.user) {
+                        sessionStorage.setItem('adminRole', data.user.role);
+                        sessionStorage.setItem('adminPermissions', JSON.stringify(data.permissions || []));
+                    }
+                    // Redirect to first allowed page for custom roles
+                    var landingPage = '/admin-dashboard.html';
+                    if (data.user && data.user.role === 'custom' && data.permissions && data.permissions.length > 0) {
+                        var first = data.permissions.find(function(p) { return p.can_view; });
+                        if (first) landingPage = '/admin-' + first.page_slug + '.html';
+                    }
+                    window.location.href = landingPage;
                 } else {
                     // Show error with attempts remaining
                     let errorMsg = data.error || 'Invalid credentials';
