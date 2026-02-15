@@ -5,9 +5,18 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <!-- Theme loader inline to prevent flash - no network request -->
     <script>(function(){var t=localStorage.getItem('theme'),p=JSON.parse(localStorage.getItem('userPreferences')||'{}');document.documentElement.setAttribute('data-theme',t||(p.darkMode?'dark':'light'))})();</script>
+    <script src="/utils/platform.js"></script>
+    <script>
+      if (window.isNativePlatform && window.Capacitor.Plugins.StatusBar) {
+        var StatusBar = window.Capacitor.Plugins.StatusBar;
+        var theme = localStorage.getItem('theme') || 'light';
+        StatusBar.setStyle({ style: theme === 'dark' ? 'DARK' : 'LIGHT' });
+        StatusBar.setBackgroundColor({ color: '#000000' });
+      }
+    </script>
     <!-- Defer all non-critical scripts -->
     <script src="/utils/production-mode.js" defer></script>
-    <script src="/utils/translations.js?v=202602040012" defer></script>
+    <script src="/utils/translations.js?v=202602150001" defer></script>
     <script src="/utils/secure-storage.js" defer></script>
     <script src="/utils/cloud-sync.js" defer></script>
     <!-- Disabled: Auto-restoration removed - always start at homepage -->
