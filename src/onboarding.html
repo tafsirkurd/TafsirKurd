@@ -2,7 +2,8 @@
 <html dir="rtl" lang="ku">
 <head>
     <script src="/utils/theme-loader.js"></script>
-    <script src="/utils/translations.js?v=202602040012"></script>
+    <script src="/i18n/i18n.js?v=20260213"></script>
+    <script src="/utils/translations.js?v=202602150001"></script>
     <script src="/utils/scroll-position.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -421,11 +422,11 @@
                     <i class="fas fa-heart"></i>
                 </div>
                 <div class="slide-content">
-                    <h1 class="slide-title">سوپاس بۆ باوەرکرنا تە ب مە!</h1>
-                    <p class="slide-subtitle">
+                    <h1 class="slide-title" data-i18n="onboarding.slide1.title">سوپاس بۆ باوەرکرنا تە ب مە!</h1>
+                    <p class="slide-subtitle" data-i18n="onboarding.slide1.subtitle">
                         تو نها بەشەکی ی ژ کومەلگەهەکا تایبەت
                     </p>
-                    <p class="slide-description">
+                    <p class="slide-description" data-i18n="onboarding.slide1.desc">
                         ئەم گەلەک دلخوشین کو تە بریار دا بەشدار بی د گەشەکرنا ئێکەم پلاتفۆرمێ کوردی بۆ خواندن و تێگەهشتنا قورئانا پیرۆز. بەشداریکرنا تە گەلەک رامان هەیە بۆ مە و بۆ هەمی کومەلگەها کوردی.
                     </p>
                 </div>
@@ -437,8 +438,8 @@
                     <i class="fas fa-flag"></i>
                 </div>
                 <div class="slide-content">
-                    <h1 class="slide-title">ئارمانجا مە</h1>
-                    <p class="slide-subtitle">
+                    <h1 class="slide-title" data-i18n="onboarding.slide2.title">ئارمانجا مە</h1>
+                    <p class="slide-subtitle" data-i18n="onboarding.slide2.subtitle">
                         دروستکرنا پرەکێ د ناڤبەرا خەلکێ کورد و قورئانا پیرۆز دا
                     </p>
                     <p class="slide-description">
@@ -453,26 +454,26 @@
                     <i class="fas fa-star"></i>
                 </div>
                 <div class="slide-content">
-                    <h1 class="slide-title">چاڤەرێ چ دکەی؟</h1>
-                    <p class="slide-subtitle">
+                    <h1 class="slide-title" data-i18n="onboarding.slide3.title">چاڤەرێ چ دکەی؟</h1>
+                    <p class="slide-subtitle" data-i18n="onboarding.slide3.subtitle">
                         تایبەتمەندییەک کو ژیانا تە یا رۆحی دگوهۆڕیت
                     </p>
                     <div class="feature-list">
                         <div class="feature-list-item">
                             <i class="fas fa-check-circle"></i>
-                            <span>تەفسیرەکا تەمام ب زمانێ کوردی</span>
+                            <span data-i18n="onboarding.slide3.feature1">تەفسیرەکا تەمام ب زمانێ کوردی</span>
                         </div>
                         <div class="feature-list-item">
                             <i class="fas fa-check-circle"></i>
-                            <span>تێبینیێن تایبەت و نیشانەکرن</span>
+                            <span data-i18n="onboarding.slide3.feature2">تێبینیێن تایبەت و نیشانەکرن</span>
                         </div>
                         <div class="feature-list-item">
                             <i class="fas fa-check-circle"></i>
-                            <span>گوهداریکرن ب دەنگەکێ جوان</span>
+                            <span data-i18n="onboarding.slide3.feature3">گوهداریکرن ب دەنگەکێ جوان</span>
                         </div>
                         <div class="feature-list-item">
                             <i class="fas fa-check-circle"></i>
-                            <span>خواندن بێ ئینتەرنێت</span>
+                            <span data-i18n="onboarding.slide3.feature4">خواندن بێ ئینتەرنێت</span>
                         </div>
                     </div>
                 </div>
@@ -484,8 +485,8 @@
                     <i class="fas fa-users"></i>
                 </div>
                 <div class="slide-content">
-                    <h1 class="slide-title">کومەلگەهەکا مەزن</h1>
-                    <p class="slide-subtitle">
+                    <h1 class="slide-title" data-i18n="onboarding.slide4.title">کومەلگەهەکا مەزن</h1>
+                    <p class="slide-subtitle" data-i18n="onboarding.slide4.subtitle">
                         هەڤبەشکرنا زانیاری و ئەزموونێ دگەل برایێن تە
                     </p>
                     <p class="slide-description">
@@ -500,8 +501,8 @@
                     <i class="fas fa-rocket"></i>
                 </div>
                 <div class="slide-content">
-                    <h1 class="slide-title">ئامادەی بۆ دەستپێکرنێ؟</h1>
-                    <p class="slide-subtitle">
+                    <h1 class="slide-title" data-i18n="onboarding.slide5.title">ئامادەی بۆ دەستپێکرنێ؟</h1>
+                    <p class="slide-subtitle" data-i18n="onboarding.slide5.subtitle">
                         گەشتەکا تە یا رۆحی ژ ڤێرێ دەستپێدکەت
                     </p>
                     <p class="slide-description">
@@ -523,16 +524,16 @@
             <div class="navigation">
                 <button class="nav-btn" id="prevBtn" onclick="previousSlide()" disabled>
                     <i class="fas fa-arrow-right"></i>
-                    <span>پێشین</span>
+                    <span data-i18n="onboarding.btn_prev">پێشین</span>
                 </button>
                 <button class="nav-btn primary" id="nextBtn" onclick="nextSlide()">
-                    <span id="nextBtnText">پاشین</span>
+                    <span id="nextBtnText" data-i18n="onboarding.btn_next">پاشین</span>
                     <i class="fas fa-arrow-left"></i>
                 </button>
             </div>
 
             <div class="skip-btn">
-                <a class="skip-link" onclick="skipOnboarding()">راکێشان و دەستپێکرن</a>
+                <a class="skip-link" onclick="skipOnboarding()" data-i18n="onboarding.skip">راکێشان و دەستپێکرن</a>
             </div>
         </div>
     </div>
@@ -605,7 +606,7 @@
             notif.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.2)';
             notif.style.zIndex = '10000';
             notif.style.animation = 'slideInDown 0.5s ease-out';
-            notif.textContent = `ب خێر بێی ${name.split(' ')[0]}! 🎉`;
+            notif.textContent = (typeof t === 'function' ? t('onboarding.welcome', {name: name.split(' ')[0]}) : 'ب خێر بێی ' + name.split(' ')[0]) + '!';
 
             document.body.appendChild(notif);
 
@@ -634,9 +635,9 @@
             prevBtn.disabled = index === 0;
 
             if (index === totalSlides - 1) {
-                nextBtnText.textContent = 'دەستپێکرن';
+                nextBtnText.textContent = typeof t === 'function' ? t('onboarding.btn_start') : 'دەستپێکرن';
             } else {
-                nextBtnText.textContent = 'پاشین';
+                nextBtnText.textContent = typeof t === 'function' ? t('onboarding.btn_next') : 'پاشین';
             }
         }
 

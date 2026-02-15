@@ -7,8 +7,22 @@
   <script>
     (function(){var t=localStorage.getItem('theme'),p=JSON.parse(localStorage.getItem('userPreferences')||'{}');document.documentElement.setAttribute('data-theme',t||(p.darkMode?'dark':'light'))})();
   </script>
+  <script src="/utils/platform.js"></script>
+  <script>
+    if (window.isNativePlatform) {
+      if (window.Capacitor.Plugins.StatusBar) {
+        var StatusBar = window.Capacitor.Plugins.StatusBar;
+        var theme = localStorage.getItem('theme') || 'light';
+        StatusBar.setStyle({ style: theme === 'dark' ? 'DARK' : 'LIGHT' });
+        StatusBar.setBackgroundColor({ color: '#ffffff' });
+      }
+      if (window.location.pathname.indexOf('/app/') === -1) {
+        window.location.replace('/app/index.html');
+      }
+    }
+  </script>
   <!-- Defer non-critical scripts -->
-  <script src="/utils/translations.js?v=202602040012" defer></script>
+  <script src="/utils/translations.js?v=202602150001" defer></script>
   <script src="/utils/scroll-position.js" defer></script>
   <meta name="description" content="TafsirKurd (تەفسیر کورد) - پلاتفۆرمەکا کوردی بۆ خویندن و تەفسیرا قورئانا پیرۆز ب زمانی کوردی. Kurdish Quran Tafsir platform with translation and Islamic video content.">
   <meta name="keywords" content="TafsirKurd, tafsirkurd, Tafsir Kurd, تەفسیر کورد, تەفسیرا قورئانا پیرۆز, تەفسیرا کوردی, تەفسیر بادینی, قورئان ب کوردی, Kurdish Quran, Quran Kurdish translation, tafsir kurdish">

@@ -2,6 +2,14 @@
  * TafsirKurd Dynamic Translations
  * Auto-fetches from Supabase and replaces text across the site
  * Managed via Admin Panel at /admin-translations.html
+ *
+ * How it works:
+ * 1. Fetches key_id → kurdish_text from Supabase
+ * 2. Scans DOM for text that matches any translation value
+ * 3. Replaces matched text with the current DB value
+ * 4. Stores a "previous values" snapshot so that when the admin
+ *    CHANGES a translation, the old text in the HTML still maps
+ *    to the correct key and gets replaced with the new value.
  */
 
 (function() {
@@ -10,6 +18,7 @@
     // Cache settings
     const CACHE_KEY = 'tafsirkurd_translations';
     const CACHE_EXPIRY_KEY = 'tafsirkurd_translations_expiry';
+    const PREV_KEY = 'tafsirkurd_translations_prev';
     const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
     // Supabase config (loaded from /config endpoint)
@@ -17,11 +26,59 @@
     let SUPABASE_ANON_KEY = null;
 
     // Storage
-    let translations = {};       // key_id -> kurdish_text
-    let textToKey = {};          // kurdish_text -> key_id (reverse lookup)
+    let translations = {};       // key_id -> kurdish_text (current)
+    let textToKey = {};          // kurdish_text -> key_id (reverse lookup, includes previous values)
     let isLoaded = false;
     let loadPromise = null;
     let configLoaded = false;
+
+    /**
+     * Load previous translations snapshot (for detecting changes)
+     */
+    function loadPrevious() {
+        try {
+            const prev = localStorage.getItem(PREV_KEY);
+            if (prev) return JSON.parse(prev);
+        } catch (e) { /* ignore */ }
+        return {};
+    }
+
+    /**
+     * Save current translations as the "previous" snapshot
+     * Called after autoApply so next time we can detect changes
+     */
+    function savePrevious() {
+        try {
+            localStorage.setItem(PREV_KEY, JSON.stringify(translations));
+        } catch (e) { /* ignore */ }
+    }
+
+    /**
+     * Build the reverse lookup (text → key) from current + previous translations
+     * This ensures that even if the admin changed a translation,
+     * the OLD text still maps to the correct key.
+     */
+    function buildTextToKey() {
+        textToKey = {};
+
+        // First: add previous values (old text → key)
+        const prev = loadPrevious();
+        Object.keys(prev).forEach(key => {
+            const text = prev[key];
+            if (text && text.trim()) {
+                textToKey[text.trim()] = key;
+            }
+        });
+
+        // Then: add current values (overwrites if same key has new text)
+        // Both old and new text will map to the same key
+        Object.keys(translations).forEach(key => {
+            const text = translations[key];
+            if (text && text.trim()) {
+                textToKey[text.trim()] = key;
+            }
+        });
+    }
 
     /**
      * Load from localStorage cache
@@ -33,7 +90,7 @@
             if (cached && expiry && Date.now() < parseInt(expiry)) {
                 const data = JSON.parse(cached);
                 translations = data.translations || {};
-                textToKey = data.textToKey || {};
+                buildTextToKey();
                 return true;
             }
         } catch (e) {
@@ -47,7 +104,7 @@
      */
     function saveToCache() {
         try {
-            localStorage.setItem(CACHE_KEY, JSON.stringify({ translations, textToKey }));
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ translations }));
             localStorage.setItem(CACHE_EXPIRY_KEY, (Date.now() + CACHE_DURATION).toString());
         } catch (e) {
             console.warn('Cache save failed:', e);
@@ -75,10 +132,10 @@
 
     /**
      * Fetch translations from Supabase
+     * Returns true if data changed (new or updated translations)
      */
     async function fetchFromSupabase() {
         try {
-            // Load config first
             if (!configLoaded) {
                 const loaded = await loadConfig();
                 if (!loaded) throw new Error('Could not load Supabase config');
@@ -99,24 +156,31 @@
 
             const data = await response.json();
 
-            translations = {};
-            textToKey = {};
-
+            // Check if anything changed
+            const oldCount = Object.keys(translations).length;
+            const newTranslations = {};
             data.forEach(row => {
-                const key = row.key_id;
-                const text = row.kurdish_text;
-                translations[key] = text;
-                // Build reverse lookup (text -> key)
-                // Normalize text for matching
-                const normalizedText = text.trim();
-                if (normalizedText) {
-                    textToKey[normalizedText] = key;
-                }
+                newTranslations[row.key_id] = row.kurdish_text;
             });
 
+            let changed = oldCount !== data.length;
+            if (!changed) {
+                for (const key of Object.keys(newTranslations)) {
+                    if (translations[key] !== newTranslations[key]) {
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+
+            translations = newTranslations;
+            buildTextToKey();
             saveToCache();
-            console.log(`✓ Loaded ${data.length} translations from Supabase`);
-            return true;
+
+            if (changed) {
+                console.log(`✓ Loaded ${data.length} translations from Supabase (changed)`);
+            }
+            return changed;
         } catch (e) {
             console.warn('Supabase fetch failed:', e);
             return false;
@@ -134,8 +198,11 @@
             // Try cache first
             if (loadFromCache()) {
                 isLoaded = true;
-                // Refresh in background
-                setTimeout(() => fetchFromSupabase(), 1000);
+                // Refresh in background and re-apply if changed
+                setTimeout(async () => {
+                    const changed = await fetchFromSupabase();
+                    if (changed) autoApply();
+                }, 1000);
                 return translations;
             }
 
@@ -184,7 +251,11 @@
 
     /**
      * Auto-apply translations to the page
-     * Replaces text content that matches translations in database
+     *
+     * Works in two modes:
+     * 1. Text matching: scans DOM for text that matches any translation
+     *    value (current or previous) and replaces with the current value.
+     * 2. Key-based: elements with data-t="key_id" get translated directly.
      */
     function autoApply() {
         if (Object.keys(translations).length === 0) return;
@@ -249,7 +320,6 @@
         selectors.forEach(selector => {
             try {
                 document.querySelectorAll(selector).forEach(el => {
-                    // For elements with no children, replace entire text
                     if (el.children.length === 0) {
                         const text = el.textContent.trim();
                         const newText = tryReplace(text);
@@ -258,7 +328,6 @@
                             replacements++;
                         }
                     } else {
-                        // For elements with children, check direct text nodes
                         el.childNodes.forEach(node => {
                             if (node.nodeType === Node.TEXT_NODE) {
                                 const text = node.textContent.trim();
@@ -283,10 +352,11 @@
             try {
                 document.querySelectorAll(selector).forEach(el => {
                     const text = el.getAttribute(attr);
-                    if (text && textToKey[text.trim()]) {
-                        const newText = translations[textToKey[text.trim()]];
-                        if (newText && newText !== text) {
-                            el.setAttribute(attr, newText);
+                    if (text) {
+                        const trimmed = text.trim();
+                        const key = textToKey[trimmed] || textToKey[normalizeText(trimmed)] || normalizedLookup[normalizeText(trimmed)];
+                        if (key && translations[key] && translations[key] !== text) {
+                            el.setAttribute(attr, translations[key]);
                             replacements++;
                         }
                     }
@@ -296,7 +366,7 @@
             }
         });
 
-        // Also apply to elements with data-t attribute (explicit translations)
+        // Key-based: elements with data-t attribute
         document.querySelectorAll('[data-t]').forEach(el => {
             const key = el.getAttribute('data-t');
             if (translations[key]) {
@@ -321,6 +391,10 @@
             }
         });
 
+        // Save current translations as "previous" snapshot after applying
+        // Next time, if admin changed a value, the old text still matches via previous
+        savePrevious();
+
         const elapsed = (performance.now() - startTime).toFixed(1);
         if (replacements > 0) {
             console.log(`✓ Applied ${replacements} translations in ${elapsed}ms`);
@@ -328,7 +402,7 @@
     }
 
     /**
-     * Force refresh from Supabase
+     * Force refresh from Supabase (clears all caches)
      */
     async function refresh() {
         localStorage.removeItem(CACHE_KEY);
@@ -358,8 +432,7 @@
         init().then(() => {
             autoApply();
 
-            // Re-apply after dynamic content loads (e.g., after AJAX)
-            // Use MutationObserver for dynamic content
+            // MutationObserver for dynamic content
             const observer = new MutationObserver((mutations) => {
                 let shouldReapply = false;
                 mutations.forEach(mutation => {
@@ -368,7 +441,6 @@
                     }
                 });
                 if (shouldReapply) {
-                    // Debounce
                     clearTimeout(window._translationReapplyTimeout);
                     window._translationReapplyTimeout = setTimeout(autoApply, 100);
                 }
