@@ -1,6 +1,6 @@
 // Admin Management API - Force Logout, Device Reset, Permissions
 import { createClient } from '@supabase/supabase-js';
-import bcrypt from 'bcryptjs';
+import { hash } from 'bcrypt-ts';
 
 export async function onRequest(context) {
     const { request, env } = context;
@@ -78,7 +78,7 @@ export async function onRequest(context) {
             }
 
             // Hash password using bcrypt (same as admin-auth.js)
-            const password_hash = await bcrypt.hash(password, 10);
+            const password_hash = await hash(password, 10);
 
             // Create new admin user
             const { data: newUser, error: insertError } = await supabase
@@ -154,7 +154,7 @@ export async function onRequest(context) {
 
             // If password is provided, hash it with bcrypt
             if (password) {
-                updateData.password_hash = await bcrypt.hash(password, 10);
+                updateData.password_hash = await hash(password, 10);
             }
 
             // Update admin user
