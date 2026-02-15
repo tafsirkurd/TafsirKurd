@@ -13,8 +13,8 @@
     <style>
         .role-badge {
             display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
@@ -23,6 +23,7 @@
         .role-super_admin { background: rgba(99, 102, 241, 0.1); color: rgb(99, 102, 241); }
         .role-editor { background: rgba(34, 197, 94, 0.1); color: rgb(34, 197, 94); }
         .role-analyst { background: rgba(234, 179, 8, 0.1); color: rgb(234, 179, 8); }
+        .role-custom { background: rgba(168, 85, 247, 0.1); color: rgb(168, 85, 247); }
         .status-active { color: var(--success); }
         .status-inactive { color: var(--text-tertiary); }
         .status-locked { color: var(--error); }
@@ -38,6 +39,192 @@
             align-items: center;
             gap: 12px;
         }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: var(--bg-surface, #fff);
+            border-radius: 16px;
+            max-width: 620px;
+            width: 94%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            animation: modalIn 0.2s ease-out;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-hdr {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-light, #e5e7eb);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-hdr h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0;
+        }
+        .modal-close-btn {
+            background: var(--bg-active, #f3f4f6);
+            border: none;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary, #6b7280);
+            transition: all 0.15s;
+        }
+        .modal-close-btn:hover { background: var(--border-light, #e5e7eb); }
+        .modal-bdy { padding: 24px; }
+        .modal-ftr {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-light, #e5e7eb);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        /* Form fields */
+        .field { margin-bottom: 18px; }
+        .field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            color: var(--text-secondary, #6b7280);
+        }
+        .field .hint {
+            font-size: 11px;
+            color: var(--text-tertiary, #9ca3af);
+            margin-top: 4px;
+        }
+        .field-row {
+            display: flex;
+            gap: 12px;
+        }
+        .field-row .field { flex: 1; }
+        .toggle-field {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: var(--bg-active, #f9fafb);
+            border: 1px solid var(--border-light, #e5e7eb);
+            transition: all 0.15s;
+        }
+        .toggle-field:hover { border-color: var(--text-tertiary, #9ca3af); }
+        .toggle-field span { font-size: 13px; font-weight: 500; }
+
+        /* Permissions grid */
+        .perms-section {
+            margin-top: 20px;
+            border-top: 1px solid var(--border-light, #e5e7eb);
+            padding-top: 18px;
+        }
+        .perms-hdr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .perms-hdr h4 {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary, #6b7280);
+            margin: 0;
+        }
+        .perms-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .perms-actions button {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-light, #e5e7eb);
+            background: var(--bg-active, #f9fafb);
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-secondary, #6b7280);
+            transition: all 0.15s;
+        }
+        .perms-actions button:hover {
+            background: var(--bg-surface, #fff);
+            border-color: var(--text-tertiary, #9ca3af);
+        }
+        .perms-grid {
+            border: 1px solid var(--border-light, #e5e7eb);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .perms-grid-hdr {
+            display: grid;
+            grid-template-columns: 1fr 60px 60px 60px;
+            gap: 0;
+            padding: 8px 14px;
+            background: var(--bg-active, #f3f4f6);
+            border-bottom: 1px solid var(--border-light, #e5e7eb);
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-tertiary, #9ca3af);
+        }
+        .perms-grid-hdr span:not(:first-child) { text-align: center; }
+        .perm-row {
+            display: grid;
+            grid-template-columns: 1fr 60px 60px 60px;
+            gap: 0;
+            padding: 7px 14px;
+            border-bottom: 1px solid var(--border-light, #e5e7eb);
+            align-items: center;
+            transition: background 0.1s;
+        }
+        .perm-row:last-child { border-bottom: none; }
+        .perm-row:hover { background: var(--bg-active, #f9fafb); }
+        .perm-row .page-name {
+            font-size: 12.5px;
+            font-weight: 500;
+        }
+        .perm-row .perm-check {
+            text-align: center;
+        }
+        .perm-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: rgb(99, 102, 241);
+        }
+        .perms-note {
+            font-size: 11px;
+            color: var(--text-tertiary, #9ca3af);
+            margin-top: 8px;
+            font-style: italic;
+        }
+        .perms-hidden { display: none; }
     </style>
 
     <style id="early-sidebar-hide">
@@ -172,43 +359,68 @@
             </div>
         </main>
     </div>
-    <div class="modal" id="accountModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
-        <div class="modal-content" style="background:var(--bg-surface);border-radius:12px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto;">
-            <div class="modal-header" style="padding:20px 24px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;">
-                <h3 class="modal-title" id="modalTitle">Create Admin Account</h3>
-                <button class="modal-close" onclick="closeModal()" style="background:transparent;border:none;cursor:pointer;"><i data-lucide="x"></i></button>
+    <div class="modal-overlay" id="accountModal">
+        <div class="modal-box">
+            <div class="modal-hdr">
+                <h3 id="modalTitle">Create Admin Account</h3>
+                <button class="modal-close-btn" onclick="closeModal()"><i data-lucide="x"></i></button>
             </div>
-            <div class="modal-body" style="padding:24px;">
+            <div class="modal-bdy">
                 <input type="hidden" id="accountId">
-                <div style="margin-bottom:16px;">
-                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Email</label>
-                    <input type="email" id="accountEmail" class="form-input" placeholder="admin@example.com" required>
+                <div class="field-row">
+                    <div class="field">
+                        <label>Email</label>
+                        <input type="email" id="accountEmail" class="form-input" placeholder="admin@example.com" required>
+                    </div>
+                    <div class="field">
+                        <label>Full Name</label>
+                        <input type="text" id="accountFullName" class="form-input" placeholder="John Doe">
+                    </div>
                 </div>
-                <div style="margin-bottom:16px;">
-                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Full Name</label>
-                    <input type="text" id="accountFullName" class="form-input" placeholder="John Doe">
-                </div>
-                <div style="margin-bottom:16px;" id="passwordGroup">
-                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Password</label>
+                <div class="field" id="passwordGroup">
+                    <label>Password</label>
                     <input type="password" id="accountPassword" class="form-input" placeholder="Min 8 characters">
-                    <div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;">Leave empty to keep current password</div>
+                    <div class="hint">Leave empty to keep current password</div>
                 </div>
-                <div style="margin-bottom:16px;">
-                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Role</label>
-                    <select id="accountRole" class="form-input" style="cursor:pointer;">
-                        <option value="editor">Editor</option>
-                        <option value="analyst">Analyst</option>
-                        <option value="super_admin">Super Admin</option>
-                    </select>
+                <div class="field-row">
+                    <div class="field">
+                        <label>Role</label>
+                        <select id="accountRole" class="form-input" onchange="onRoleChange()">
+                            <option value="super_admin">Super Admin</option>
+                            <option value="editor">Editor</option>
+                            <option value="analyst">Analyst</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>&nbsp;</label>
+                        <label class="toggle-field">
+                            <input type="checkbox" id="accountActive" checked>
+                            <span>Account Active</span>
+                        </label>
+                    </div>
                 </div>
-                <div style="margin-bottom:16px;">
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                        <input type="checkbox" id="accountActive" checked>
-                        <span style="font-size:13px;font-weight:500;">Account Active</span>
-                    </label>
+                <div class="perms-section perms-hidden" id="permsSection">
+                    <div class="perms-hdr">
+                        <h4>Page Permissions</h4>
+                        <div class="perms-actions">
+                            <button onclick="permsCheckAll(true)">Select All</button>
+                            <button onclick="permsCheckAll(false)">Deselect All</button>
+                        </div>
+                    </div>
+                    <div class="perms-grid">
+                        <div class="perms-grid-hdr">
+                            <span>Page</span>
+                            <span>View</span>
+                            <span>Edit</span>
+                            <span>Delete</span>
+                        </div>
+                        <div id="permsRows"></div>
+                    </div>
+                    <div class="perms-note">Permissions override role defaults. Super Admin always has full access.</div>
                 </div>
             </div>
-            <div class="modal-footer" style="padding:16px 24px;border-top:1px solid var(--border-light);display:flex;gap:12px;justify-content:flex-end;">
+            <div class="modal-ftr">
                 <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                 <button class="btn btn-primary" onclick="saveAccount()">Save Account</button>
             </div>
@@ -220,7 +432,145 @@
     <script>
         lucide.createIcons();
         let accounts = [];
+        let allAccounts = [];
         let currentUser = null;
+
+        var ADMIN_PAGES = [
+            { slug: 'dashboard', label: 'Dashboard' },
+            { slug: 'analytics', label: 'Analytics' },
+            { slug: 'messages', label: 'Messages' },
+            { slug: 'videos', label: 'Videos' },
+            { slug: 'islamvoice', label: 'IslamVoice' },
+            { slug: 'images', label: 'Site Images' },
+            { slug: 'translations', label: 'Translations' },
+            { slug: 'users', label: 'Users' },
+            { slug: 'reading-stats', label: 'Reading Stats' },
+            { slug: 'account-management', label: 'Admin Accounts' },
+            { slug: 'features', label: 'Features' },
+            { slug: 'schedule', label: 'Schedule' },
+            { slug: 'social-stats', label: 'Social Stats' },
+            { slug: 'bot-protection', label: 'Bot Protection' },
+            { slug: 'database', label: 'Database' },
+            { slug: 'search-console', label: 'Search Console' },
+            { slug: 'email-templates', label: 'Email Templates' },
+            { slug: 'activity-feed', label: 'Activity Feed' }
+        ];
+
+        var ROLE_PRESETS = {
+            super_admin: function() {
+                var p = {};
+                ADMIN_PAGES.forEach(function(pg) { p[pg.slug] = { can_view: true, can_edit: true, can_delete: true }; });
+                return p;
+            },
+            editor: function() {
+                var view = ['dashboard','messages','videos','islamvoice','images','translations','schedule'];
+                var edit = ['messages','videos','islamvoice','images','translations','schedule'];
+                var p = {};
+                ADMIN_PAGES.forEach(function(pg) {
+                    p[pg.slug] = {
+                        can_view: view.indexOf(pg.slug) !== -1,
+                        can_edit: edit.indexOf(pg.slug) !== -1,
+                        can_delete: false
+                    };
+                });
+                return p;
+            },
+            analyst: function() {
+                var view = ['dashboard','analytics','users','reading-stats','social-stats','images'];
+                var p = {};
+                ADMIN_PAGES.forEach(function(pg) {
+                    p[pg.slug] = {
+                        can_view: view.indexOf(pg.slug) !== -1,
+                        can_edit: false,
+                        can_delete: false
+                    };
+                });
+                return p;
+            },
+            custom: function() {
+                var p = {};
+                ADMIN_PAGES.forEach(function(pg) { p[pg.slug] = { can_view: false, can_edit: false, can_delete: false }; });
+                return p;
+            }
+        };
+
+        function buildPermsGrid() {
+            var container = document.getElementById('permsRows');
+            container.textContent = '';
+            ADMIN_PAGES.forEach(function(page) {
+                var row = document.createElement('div');
+                row.className = 'perm-row';
+                row.setAttribute('data-slug', page.slug);
+
+                var nameSpan = document.createElement('span');
+                nameSpan.className = 'page-name';
+                nameSpan.textContent = page.label;
+                row.appendChild(nameSpan);
+
+                ['can_view', 'can_edit', 'can_delete'].forEach(function(perm) {
+                    var cell = document.createElement('span');
+                    cell.className = 'perm-check';
+                    var cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.setAttribute('data-slug', page.slug);
+                    cb.setAttribute('data-perm', perm);
+                    cell.appendChild(cb);
+                    row.appendChild(cell);
+                });
+
+                container.appendChild(row);
+            });
+        }
+
+        function onRoleChange() {
+            var role = document.getElementById('accountRole').value;
+            var section = document.getElementById('permsSection');
+            if (role === 'super_admin') {
+                section.classList.add('perms-hidden');
+            } else {
+                section.classList.remove('perms-hidden');
+                applyPreset(role);
+            }
+        }
+
+        function applyPreset(role) {
+            var presetFn = ROLE_PRESETS[role] || ROLE_PRESETS.custom;
+            setPermissionsInGrid(presetFn());
+        }
+
+        function getPermissionsFromGrid() {
+            var perms = [];
+            ADMIN_PAGES.forEach(function(page) {
+                var vw = document.querySelector('input[data-slug="' + page.slug + '"][data-perm="can_view"]');
+                var ed = document.querySelector('input[data-slug="' + page.slug + '"][data-perm="can_edit"]');
+                var dl = document.querySelector('input[data-slug="' + page.slug + '"][data-perm="can_delete"]');
+                perms.push({
+                    page_slug: page.slug,
+                    can_view: vw ? vw.checked : false,
+                    can_edit: ed ? ed.checked : false,
+                    can_delete: dl ? dl.checked : false
+                });
+            });
+            return perms;
+        }
+
+        function setPermissionsInGrid(permsMap) {
+            ADMIN_PAGES.forEach(function(page) {
+                var p = permsMap[page.slug] || { can_view: false, can_edit: false, can_delete: false };
+                var vw = document.querySelector('input[data-slug="' + page.slug + '"][data-perm="can_view"]');
+                var ed = document.querySelector('input[data-slug="' + page.slug + '"][data-perm="can_edit"]');
+                var dl = document.querySelector('input[data-slug="' + page.slug + '"][data-perm="can_delete"]');
+                if (vw) vw.checked = !!p.can_view;
+                if (ed) ed.checked = !!p.can_edit;
+                if (dl) dl.checked = !!p.can_delete;
+            });
+        }
+
+        function permsCheckAll(state) {
+            var checkboxes = document.querySelectorAll('#permsRows input[type="checkbox"]');
+            checkboxes.forEach(function(cb) { cb.checked = state; });
+        }
+
         (async () => { const auth = await window.adminAuth.checkAuth(); if (auth) await loadAccounts(); })();
         document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
         document.getElementById('mobile-menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
@@ -235,6 +585,9 @@
             lucide.createIcons();
             localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
         });
+
+        buildPermsGrid();
+
         async function loadAccounts() {
             const supabase = window.adminAuth.getSupabase();
             if (!supabase) return;
@@ -254,7 +607,8 @@
             }
             const { data, error } = await supabase.from('admin_users').select('*').order('created_at', { ascending: false });
             if (error) { console.error(error); alert('Error loading accounts'); return; }
-            accounts = data || [];
+            allAccounts = data || [];
+            accounts = allAccounts.slice();
             document.getElementById('totalAdmins').textContent = accounts.length;
             document.getElementById('activeAdmins').textContent = accounts.filter(a => a.is_active).length;
             document.getElementById('lockedAdmins').textContent = accounts.filter(a => a.is_locked).length;
@@ -298,15 +652,15 @@
                 if (liveStatus === 'online') {
                     liveStatusBadge.style.background = 'rgba(34,197,94,0.1)';
                     liveStatusBadge.style.color = 'rgb(34,197,94)';
-                    liveStatusBadge.textContent = '🟢 Online';
+                    liveStatusBadge.textContent = 'Online';
                 } else if (liveStatus === 'idle') {
                     liveStatusBadge.style.background = 'rgba(234,179,8,0.1)';
                     liveStatusBadge.style.color = 'rgb(234,179,8)';
-                    liveStatusBadge.textContent = '🟡 Idle';
+                    liveStatusBadge.textContent = 'Idle';
                 } else {
                     liveStatusBadge.style.background = 'rgba(156,163,175,0.1)';
                     liveStatusBadge.style.color = 'rgb(156,163,175)';
-                    liveStatusBadge.textContent = '⚫ Offline';
+                    liveStatusBadge.textContent = 'Offline';
                 }
                 tdLiveStatus.appendChild(liveStatusBadge);
                 tr.appendChild(tdLiveStatus);
@@ -314,14 +668,14 @@
                 if (account.device_fingerprint) {
                     const deviceBadge = document.createElement('span');
                     deviceBadge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;font-size:11px;';
-                    deviceBadge.textContent = '🔒 Locked';
+                    deviceBadge.textContent = 'Locked';
                     deviceBadge.title = 'Device: ' + (account.device_user_agent || 'Unknown');
                     tdDevice.appendChild(deviceBadge);
                 } else {
                     const unlockedSpan = document.createElement('span');
                     unlockedSpan.style.color = 'var(--text-tertiary)';
                     unlockedSpan.style.fontSize = '11px';
-                    unlockedSpan.textContent = '🔓 Unlocked';
+                    unlockedSpan.textContent = 'Unlocked';
                     tdDevice.appendChild(unlockedSpan);
                 }
                 tr.appendChild(tdDevice);
@@ -394,11 +748,12 @@
             document.getElementById('accountRole').value = 'editor';
             document.getElementById('accountActive').checked = true;
             document.getElementById('modalTitle').textContent = 'Create Admin Account';
-            document.getElementById('passwordGroup').style.display = 'block';
-            document.getElementById('accountModal').style.display = 'flex';
+            document.getElementById('passwordGroup').style.display = '';
+            onRoleChange();
+            document.getElementById('accountModal').classList.add('open');
             lucide.createIcons();
         }
-        function editAccount(id) {
+        async function editAccount(id) {
             const account = accounts.find(a => a.id === id);
             if (!account) return;
             document.getElementById('accountId').value = account.id;
@@ -408,10 +763,27 @@
             document.getElementById('accountRole').value = account.role;
             document.getElementById('accountActive').checked = account.is_active;
             document.getElementById('modalTitle').textContent = 'Edit Admin Account';
-            document.getElementById('accountModal').style.display = 'flex';
+            onRoleChange();
+            // Load existing permissions from DB
+            try {
+                var supabase = window.adminAuth.getSupabase();
+                if (supabase) {
+                    var res = await supabase.from('admin_permissions').select('page_slug,can_view,can_edit,can_delete').eq('user_id', account.id);
+                    if (res.data && res.data.length > 0) {
+                        var permsMap = {};
+                        res.data.forEach(function(r) { permsMap[r.page_slug] = r; });
+                        setPermissionsInGrid(permsMap);
+                        // If they have custom permissions, switch to custom role view
+                        if (account.role !== 'super_admin') {
+                            document.getElementById('permsSection').classList.remove('perms-hidden');
+                        }
+                    }
+                }
+            } catch (e) { console.error('Load permissions error:', e); }
+            document.getElementById('accountModal').classList.add('open');
             lucide.createIcons();
         }
-        function closeModal() { document.getElementById('accountModal').style.display = 'none'; }
+        function closeModal() { document.getElementById('accountModal').classList.remove('open'); }
         async function saveAccount() {
             const id = document.getElementById('accountId').value;
             const email = document.getElementById('accountEmail').value;
@@ -436,15 +808,8 @@
                     is_active: isActive
                 };
 
-                // Add password only if provided
-                if (password) {
-                    body.password = password;
-                }
-
-                // Add targetUserId for updates
-                if (id) {
-                    body.targetUserId = id;
-                }
+                if (password) { body.password = password; }
+                if (id) { body.targetUserId = id; }
 
                 const response = await fetch('/admin-management', {
                     method: 'POST',
@@ -455,15 +820,32 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert('✅ ' + data.message);
+                    // Save permissions if not super_admin
+                    var userId = id || (data.user && data.user.id ? data.user.id : null);
+                    if (role !== 'super_admin' && userId) {
+                        try {
+                            var perms = getPermissionsFromGrid();
+                            await fetch('/admin-management', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    action: 'update_permissions',
+                                    token: token,
+                                    targetUserId: userId,
+                                    permissions: perms
+                                })
+                            });
+                        } catch (pe) { console.error('Save permissions error:', pe); }
+                    }
+                    alert(data.message);
                     closeModal();
                     loadAccounts();
                 } else {
-                    alert('❌ Error: ' + data.error);
+                    alert('Error: ' + data.error);
                 }
             } catch (error) {
                 console.error('Save account error:', error);
-                alert('❌ Connection error');
+                alert('Connection error');
             }
         }
         async function forceLogout(id, email) {
@@ -481,14 +863,14 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    alert('✅ ' + data.message);
+                    alert(data.message);
                     loadAccounts();
                 } else {
-                    alert('❌ Error: ' + data.error);
+                    alert('Error: ' + data.error);
                 }
             } catch (error) {
                 console.error('Force logout error:', error);
-                alert('❌ Connection error');
+                alert('Connection error');
             }
         }
         async function resetDevice(id, email) {
@@ -506,14 +888,14 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    alert('✅ ' + data.message);
+                    alert(data.message);
                     loadAccounts();
                 } else {
-                    alert('❌ Error: ' + data.error);
+                    alert('Error: ' + data.error);
                 }
             } catch (error) {
                 console.error('Reset device error:', error);
-                alert('❌ Connection error');
+                alert('Connection error');
             }
         }
         async function unlockAccount(id) {
@@ -532,10 +914,12 @@
         }
         function filterAdmins() {
             const query = document.getElementById('search-input').value.toLowerCase();
-            const filteredAccounts = accounts.filter(a => a.email.toLowerCase().includes(query) || (a.full_name && a.full_name.toLowerCase().includes(query)));
-            accounts = filteredAccounts;
+            if (!query) {
+                accounts = allAccounts.slice();
+            } else {
+                accounts = allAccounts.filter(a => a.email.toLowerCase().includes(query) || (a.full_name && a.full_name.toLowerCase().includes(query)));
+            }
             renderAccountsTable();
-            if (!query) loadAccounts();
         }
     </script>
 </body>
