@@ -799,12 +799,15 @@
 
             try {
                 const action = id ? 'update_account' : 'create_account';
+                // DB constraint only allows super_admin/editor/analyst
+                // 'custom' is UI-only — store as 'editor' in DB, permissions override
+                var dbRole = role === 'custom' ? 'editor' : role;
                 const body = {
                     action,
                     token,
                     email: email.toLowerCase(),
                     full_name: fullName || null,
-                    role,
+                    role: dbRole,
                     is_active: isActive
                 };
 
