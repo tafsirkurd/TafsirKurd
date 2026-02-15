@@ -441,7 +441,7 @@ export async function onRequest(context) {
 
     } catch (error) {
         console.error('Admin management error:', error);
-        return jsonResponse({ error: 'Internal server error' }, 500, corsHeaders);
+        return jsonResponse({ error: 'Internal server error: ' + (error.message || String(error)) }, 500, corsHeaders);
     }
 }
 
