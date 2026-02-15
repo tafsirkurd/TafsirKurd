@@ -19,7 +19,7 @@
     const CACHE_KEY = 'tafsirkurd_translations';
     const CACHE_EXPIRY_KEY = 'tafsirkurd_translations_expiry';
     const PREV_KEY = 'tafsirkurd_translations_prev';
-    const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+    const CACHE_DURATION = 0; // No cache - always fetch fresh so admin changes are instant
 
     // Supabase config (loaded from /config endpoint)
     let SUPABASE_URL = null;
