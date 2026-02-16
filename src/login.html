@@ -852,7 +852,7 @@
     <!-- Success overlay (shown after login success) -->
     <div class="success-overlay" id="successOverlay">
         <div class="check-icon"><i class="fas fa-check"></i></div>
-        <div class="success-text">سەرکەفتی!</div>
+        <div class="success-text" data-t="login_success_text">سەرکەفتی!</div>
     </div>
 
     <div class="login-page">
@@ -864,8 +864,8 @@
         <!-- Hero panel -->
         <div class="hero-panel" id="heroPanel">
             <div class="hero-content">
-                <h2 class="hero-title" id="heroTitle">تەفسیر کورد</h2>
-                <p class="hero-subtitle" id="heroSubtitle">بەردەوام بە بو لێگەڕیانا زانیاریێن ئایینی</p>
+                <h2 class="hero-title" id="heroTitle" data-t="login_hero_title">تەفسیر کورد</h2>
+                <p class="hero-subtitle" id="heroSubtitle" data-t="login_hero_subtitle">بەردەوام بە بو لێگەڕیانا زانیاریێن ئایینی</p>
             </div>
         </div>
 
@@ -874,8 +874,8 @@
             <div class="auth-container">
                 <div class="auth-header">
                     <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="logo mobile-visible">
-                    <h1 class="auth-title">تەفسیر کورد</h1>
-                    <p class="auth-subtitle">ب خێر بێی بۆ پلاتفۆرما تەفسیرا قورئانێ</p>
+                    <h1 class="auth-title" data-t="login_auth_title">تەفسیر کورد</h1>
+                    <p class="auth-subtitle" data-t="login_auth_subtitle">ب خێر بێی بۆ پلاتفۆرما تەفسیرا قورئانێ</p>
                 </div>
 
                 <div class="auth-card">
@@ -883,33 +883,35 @@
 
             <!-- Tabs (only shown for signin/signup) -->
             <div class="tabs" id="authTabs">
-                <button class="tab active" onclick="showForm('signin')">چوونە ژوورڤە</button>
-                <button class="tab" onclick="showForm('signup')">حسابێ نوی</button>
+                <button class="tab active" onclick="showForm('signin')" data-t="login_tab_signin">چوونە ژوورڤە</button>
+                <button class="tab" onclick="showForm('signup')" data-t="login_tab_signup">حسابێ نوی</button>
             </div>
 
             <!-- Sign In Form -->
             <div class="form-section active" id="signinForm">
                 <form onsubmit="return handleEmailSignIn(event)">
                     <div class="form-group">
-                        <label class="form-label">ئیمەیل</label>
+                        <label class="form-label" data-t="login_email_label">ئیمەیل</label>
                         <input
                             type="email"
                             class="form-input"
                             id="signInEmail"
                             placeholder="ئیمەیلا خوە بنڤیسە"
+                            data-t-placeholder="login_email_placeholder"
                             autocomplete="email"
                             required
                         >
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">پاسوۆرد</label>
+                        <label class="form-label" data-t="login_password_label">پاسوۆرد</label>
                         <div class="password-toggle">
                             <input
                                 type="password"
                                 class="form-input"
                                 id="signInPassword"
                                 placeholder="پاسوۆردا خوە بنڤیسە"
+                                data-t-placeholder="login_password_placeholder"
                                 autocomplete="current-password"
                                 required
                             >
@@ -920,16 +922,16 @@
                     </div>
 
                     <div class="forgot-password">
-                        <a onclick="showForm('forgot')">پاسوۆردا خوە ژبیرکری؟</a>
+                        <a onclick="showForm('forgot')" data-t="login_forgot_password">پاسوۆردا خوە ژبیرکری؟</a>
                     </div>
 
                     <button type="submit" class="auth-button" id="signInBtn">
                         <span class="spinner"></span>
-                        <span>چوونە ژوورڤە</span>
+                        <span data-t="login_signin_btn">چوونە ژوورڤە</span>
                     </button>
                 </form>
 
-                <div class="divider">یان</div>
+                <div class="divider" data-t="login_divider_or">یان</div>
 
                 <button class="google-btn" onclick="signInWithGoogle()">
                     <svg class="google-icon" viewBox="0 0 24 24">
@@ -938,7 +940,7 @@
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                     </svg>
-                    <span>چوونە ژوورڤە ب Google</span>
+                    <span data-t="login_signin_google_btn">چوونە ژوورڤە ب Google</span>
                 </button>
             </div>
 
@@ -946,24 +948,26 @@
             <div class="form-section" id="signupForm">
                 <form onsubmit="return handleEmailSignUp(event)">
                     <div class="form-group">
-                        <label class="form-label">ناڤ</label>
+                        <label class="form-label" data-t="login_name_label">ناڤ</label>
                         <input
                             type="text"
                             class="form-input"
                             id="signUpName"
                             placeholder="ناڤا خوە بنڤیسە"
+                            data-t-placeholder="login_name_placeholder"
                             autocomplete="name"
                             required
                         >
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">ئیمەیل</label>
+                        <label class="form-label" data-t="login_signup_email_label">ئیمەیل</label>
                         <input
                             type="email"
                             class="form-input"
                             id="signUpEmail"
                             placeholder="ئیمەیلا خوە بنڤیسە"
+                            data-t-placeholder="login_signup_email_placeholder"
                             autocomplete="email"
                             required
                         >
@@ -975,13 +979,14 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">پاسوۆرد</label>
+                        <label class="form-label" data-t="login_signup_password_label">پاسوۆرد</label>
                         <div class="password-toggle">
                             <input
                                 type="password"
                                 class="form-input"
                                 id="signUpPassword"
                                 placeholder="پاسوۆردێ بهێز دروستکە (کەمتر ٦ پیت)"
+                                data-t-placeholder="login_signup_password_placeholder"
                                 autocomplete="new-password"
                                 minlength="6"
                                 required
@@ -997,22 +1002,22 @@
                             </div>
                             <div class="password-strength-text" id="passwordStrengthText"></div>
                             <div class="password-requirements">
-                                <div class="requirement" id="req-length">✗ کەمتر ٨ پیت</div>
-                                <div class="requirement" id="req-uppercase">✗ پیتێن گەورە (A-Z)</div>
-                                <div class="requirement" id="req-lowercase">✗ پیتێن بچوک (a-z)</div>
-                                <div class="requirement" id="req-number">✗ ژمارە (0-9)</div>
-                                <div class="requirement" id="req-special">✗ پیتێن تایبەت (!@#$%)</div>
+                                <div class="requirement" id="req-length" data-t="login_req_length">✗ کەمتر ٨ پیت</div>
+                                <div class="requirement" id="req-uppercase" data-t="login_req_uppercase">✗ پیتێن گەورە (A-Z)</div>
+                                <div class="requirement" id="req-lowercase" data-t="login_req_lowercase">✗ پیتێن بچوک (a-z)</div>
+                                <div class="requirement" id="req-number" data-t="login_req_number">✗ ژمارە (0-9)</div>
+                                <div class="requirement" id="req-special" data-t="login_req_special">✗ پیتێن تایبەت (!@#$%)</div>
                             </div>
                         </div>
                     </div>
 
                     <button type="submit" class="auth-button" id="signUpBtn">
                         <span class="spinner"></span>
-                        <span>دروستکرنا حساب</span>
+                        <span data-t="login_signup_btn">دروستکرنا حساب</span>
                     </button>
                 </form>
 
-                <div class="divider">یان</div>
+                <div class="divider" data-t="login_signup_divider_or">یان</div>
 
                 <button class="google-btn" onclick="signInWithGoogle()">
                     <svg class="google-icon" viewBox="0 0 24 24">
@@ -1021,19 +1026,19 @@
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                     </svg>
-                    <span>دروستکرنا حساب ب Google</span>
+                    <span data-t="login_signup_google_btn">دروستکرنا حساب ب Google</span>
                 </button>
 
                 <div class="back-link">
-                    <a onclick="showForm('signin')">ژبەر حساب هەیە؟ چوونە ژوورڤە</a>
+                    <a onclick="showForm('signin')" data-t="login_have_account">ژبەر حساب هەیە؟ چوونە ژوورڤە</a>
                 </div>
             </div>
 
             <!-- OTP Verification Form -->
             <div class="form-section" id="otpForm">
                 <div class="otp-header">
-                    <h3>پشتڕاستکردنەوەی ئیمەیل</h3>
-                    <p>کۆدی ٦ ژمارەیی کە نێردراوە بۆ <strong id="otpEmail"></strong> بنووسە</p>
+                    <h3 data-t="login_otp_title">پشتڕاستکردنەوەی ئیمەیل</h3>
+                    <p><span data-t="login_otp_instruction">کۆدی ٦ ژمارەیی کە نێردراوە بۆ</span> <strong id="otpEmail"></strong> <span data-t="login_otp_instruction_suffix">بنووسە</span></p>
                 </div>
 
                 <form onsubmit="return handleOTPVerification(event)">
@@ -1050,14 +1055,14 @@
 
                     <button type="submit" class="auth-button" id="verifyOtpBtn">
                         <span class="spinner"></span>
-                        <span>پشتڕاستکردنەوە</span>
+                        <span data-t="login_verify_otp_btn">پشتڕاستکردنەوە</span>
                     </button>
                 </form>
 
                 <div class="resend-container">
-                    <p>کۆدەکەت وەرنەگرت؟</p>
+                    <p data-t="login_otp_not_received">کۆدەکەت وەرنەگرت؟</p>
                     <button class="resend-btn" id="resendOtpBtn" onclick="resendOTP()">
-                        <span id="resendText">نێردنەوەی کۆد</span>
+                        <span id="resendText" data-t="login_resend_otp">نێردنەوەی کۆد</span>
                         <span id="resendTimer" style="display:none;"></span>
                     </button>
                 </div>
@@ -1065,7 +1070,7 @@
                 <div class="back-link">
                     <a onclick="showForm('signup')">
                         <i class="fas fa-arrow-right"></i>
-                        گەڕانەوە
+                        <span data-t="login_back_to_signup">گەڕانەوە</span>
                     </a>
                 </div>
             </div>
@@ -1074,26 +1079,27 @@
             <div class="form-section" id="forgotForm">
                 <form onsubmit="return handleForgotPassword(event)">
                     <div class="form-group">
-                        <label class="form-label">ئیمەیل</label>
+                        <label class="form-label" data-t="login_forgot_email_label">ئیمەیل</label>
                         <input
                             type="email"
                             class="form-input"
                             id="forgotEmail"
                             placeholder="ئیمەیلا خوە بنڤیسە"
+                            data-t-placeholder="login_forgot_email_placeholder"
                             required
                         >
                     </div>
 
                     <button type="submit" class="auth-button" id="forgotBtn">
                         <span class="spinner"></span>
-                        <span>شاندنا لینکا ڤەگەهاندن</span>
+                        <span data-t="login_send_reset_link_btn">شاندنا لینکا ڤەگەهاندن</span>
                     </button>
                 </form>
 
                 <div class="back-link">
                     <a onclick="showForm('signin')">
                         <i class="fas fa-arrow-right"></i>
-                        گەڕیان ڤە بۆ چوونە ژوورڤە
+                        <span data-t="login_back_to_signin">گەڕیان ڤە بۆ چوونە ژوورڤە</span>
                     </a>
                 </div>
             </div>
@@ -1101,7 +1107,7 @@
             <div class="back-link">
                 <a href="#" onclick="goBack(); return false;" id="bottomBackLink">
                     <i class="fas fa-arrow-right"></i>
-                    گەڕیان ڤە بۆ سەرەکی
+                    <span data-t="login_back_to_home">گەڕیان ڤە بۆ سەرەکی</span>
                 </a>
             </div>
         </div>

@@ -604,11 +604,11 @@
         <div class="header-container">
             <h1 class="header-title">
                 <i class="fas fa-cog"></i>
-                رێکخستن
+                <span data-t="settings_page_title">رێکخستن</span>
             </h1>
             <a href="/quran" class="back-btn">
                 <i class="fas fa-arrow-right"></i>
-                گەڕیان ڤە
+                <span data-t="settings_back_btn">گەڕیان ڤە</span>
             </a>
         </div>
     </header>
@@ -619,15 +619,15 @@
             <div class="settings-card">
                 <h2 class="settings-card-title">
                     <i class="fas fa-palette"></i>
-                    رۆکار
+                    <span data-t="settings_display_title">رۆکار</span>
                 </h2>
                 <div class="setting-item">
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-moon"></i>
-                            رەوشا تاریک
+                            <span data-t="settings_dark_mode_label">رەوشا تاریک</span>
                         </div>
-                        <div class="setting-description">گوهۆڕین بۆ رەوشا تاریک بۆ خواندنا ئاسانتر</div>
+                        <div class="setting-description" data-t="settings_dark_mode_desc">گوهۆڕین بۆ رەوشا تاریک بۆ خواندنا ئاسانتر</div>
                     </div>
                     <div class="setting-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
                         <div class="setting-toggle-knob"></div>
@@ -639,16 +639,16 @@
             <div class="settings-card">
                 <h2 class="settings-card-title">
                     <i class="fas fa-font"></i>
-                    فۆنتا عەرەبی
+                    <span data-t="settings_arabic_font_title">فۆنتا عەرەبی</span>
                 </h2>
                 
                 <div class="setting-item">
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-text-height"></i>
-                            جۆرێ فۆنتێ
+                            <span data-t="settings_arabic_font_type_label">جۆرێ فۆنتێ</span>
                         </div>
-                        <div class="setting-description">دەستکاریکرنا فۆنتا تێکستێ عەرەبی</div>
+                        <div class="setting-description" data-t="settings_arabic_font_type_desc">دەستکاریکرنا فۆنتا تێکستێ عەرەبی</div>
                     </div>
                     <select class="setting-select" id="arabicFontSelect" onchange="changeArabicFont()">
                         <option value="KFGQPC Hafs">KFGQPC Hafs (حەفس)</option>
@@ -661,9 +661,9 @@
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-text-width"></i>
-                            قەبارەیا فۆنتێ
+                            <span data-t="settings_arabic_font_size_label">قەبارەیا فۆنتێ</span>
                         </div>
-                        <div class="setting-description">مەزن یان بچووککرنا تێکستێ عەرەبی</div>
+                        <div class="setting-description" data-t="settings_arabic_font_size_desc">مەزن یان بچووککرنا تێکستێ عەرەبی</div>
                     </div>
                     <div class="setting-slider-container">
                         <input type="range" class="setting-slider" id="arabicSizeSlider"
@@ -674,7 +674,7 @@
                 </div>
 
                 <div class="font-preview">
-                    <div class="font-preview-label">پێشبینیا فۆنتێ</div>
+                    <div class="font-preview-label" data-t="settings_arabic_preview_label">پێشبینیا فۆنتێ</div>
                     <div class="font-preview-text arabic-preview" id="arabicPreview">
                         بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
                     </div>
@@ -685,16 +685,16 @@
             <div class="settings-card">
                 <h2 class="settings-card-title">
                     <i class="fas fa-book-open"></i>
-                    فۆنتا تەفسیرێ
+                    <span data-t="settings_tafsir_font_title">فۆنتا تەفسیرێ</span>
                 </h2>
                 
                 <div class="setting-item">
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-text-height"></i>
-                            جۆرێ فۆنتێ
+                            <span data-t="settings_tafsir_font_type_label">جۆرێ فۆنتێ</span>
                         </div>
-                        <div class="setting-description">دەستکاریکرنا فۆنتا تەفسیرێیا کوردی</div>
+                        <div class="setting-description" data-t="settings_tafsir_font_type_desc">دەستکاریکرنا فۆنتا تەفسیرێیا کوردی</div>
                     </div>
                     <select class="setting-select" id="tafsirFontSelect" onchange="changeTafsirFont()">
                         <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
@@ -707,9 +707,9 @@
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-text-width"></i>
-                            قەبارەیا فۆنتێ
+                            <span data-t="settings_tafsir_font_size_label">قەبارەیا فۆنتێ</span>
                         </div>
-                        <div class="setting-description">مەزن یان بچووککرنا تێکستێ تەفسیرێ</div>
+                        <div class="setting-description" data-t="settings_tafsir_font_size_desc">مەزن یان بچووککرنا تێکستێ تەفسیرێ</div>
                     </div>
                     <div class="setting-slider-container">
                         <input type="range" class="setting-slider" id="tafsirSizeSlider"
@@ -720,7 +720,7 @@
                 </div>
 
                 <div class="font-preview">
-                    <div class="font-preview-label">پێشبینیا فۆنتێ</div>
+                    <div class="font-preview-label" data-t="settings_tafsir_preview_label">پێشبینیا فۆنتێ</div>
                     <div class="font-preview-text tafsir-preview" id="tafsirPreview">
                         ب ناڤێ خودێ ئه‌ز خواندنا قورئانێ ده‌ست پێ دكه‌م
                     </div>
@@ -731,16 +731,16 @@
             <div class="settings-card">
                 <h2 class="settings-card-title">
                     <i class="fas fa-book-reader"></i>
-                    خواندن
+                    <span data-t="settings_reading_title">خواندن</span>
                 </h2>
                 
                 <div class="setting-item">
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-eye"></i>
-                            نیشاندان و ڤەدیتنا تەفسیرێ
+                            <span data-t="settings_show_tafsir_label">نیشاندان و ڤەدیتنا تەفسیرێ</span>
                         </div>
-                        <div class="setting-description">نیشاندان یان ڤەشارتنا تەفسیرێ کوردی</div>
+                        <div class="setting-description" data-t="settings_show_tafsir_desc">نیشاندان یان ڤەشارتنا تەفسیرێ کوردی</div>
                     </div>
                     <div class="setting-toggle active" id="tafsirToggle" onclick="toggleTafsir()">
                         <div class="setting-toggle-knob"></div>
@@ -751,9 +751,9 @@
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-scroll"></i>
-                            زڤراندنا خۆکار
+                            <span data-t="settings_auto_scroll_label">زڤراندنا خۆکار</span>
                         </div>
-                        <div class="setting-description">زڤراندنا خۆکارا پەڕەیێ د دەما خواندنێدا</div>
+                        <div class="setting-description" data-t="settings_auto_scroll_desc">زڤراندنا خۆکارا پەڕەیێ د دەما خواندنێدا</div>
                     </div>
                     <div class="setting-toggle" id="autoScrollToggle" onclick="toggleAutoScroll()">
                         <div class="setting-toggle-knob"></div>
@@ -764,9 +764,9 @@
                     <div class="setting-info">
                         <div class="setting-label">
                             <i class="fas fa-gauge-high"></i>
-                            خێرایا زڤراندنێ
+                            <span data-t="settings_scroll_speed_label">خێرایا زڤراندنێ</span>
                         </div>
-                        <div class="setting-description">دیارکرنا خێرایا زڤراندنا خۆکار (١٠ ئاست)</div>
+                        <div class="setting-description" data-t="settings_scroll_speed_desc">دیارکرنا خێرایا زڤراندنا خۆکار (١٠ ئاست)</div>
                     </div>
                     <div class="setting-slider-container">
                         <input type="range" class="setting-slider" id="autoScrollSpeedSlider"

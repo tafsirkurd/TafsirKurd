@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#000000">
-    <title>پرۆفایل | TafsirKurd</title>
+    <title data-t="profile_page_title">پرۆفایل | TafsirKurd</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
@@ -1221,12 +1221,12 @@
             <div class="header-dropdown" id="headerDropdown" onclick="event.stopPropagation()">
                 <div class="header-dropdown-item" onclick="openEditModal()">
                     <i class="fas fa-edit"></i>
-                    دەستکاریکرنا پرۆفایلێ
+                    <span data-t="profile_edit_btn">دەستکاریکرنا پرۆفایلێ</span>
                 </div>
                 <div class="header-dropdown-divider"></div>
                 <div class="header-dropdown-item logout" onclick="logout()">
                     <i class="fas fa-sign-out-alt"></i>
-                    دەرچوون
+                    <span data-t="profile_logout_btn">دەرچوون</span>
                 </div>
             </div>
         </div>
@@ -1243,41 +1243,41 @@
                 <div class="modal-avatar">
                     <img id="modalAvatar" src="" alt="Avatar">
                 </div>
-                <h2 class="modal-title">دەستکاریکرنا پرۆفایلێ</h2>
+                <h2 class="modal-title" data-t="profile_modal_title">دەستکاریکرنا پرۆفایلێ</h2>
             </div>
 
             <div class="modal-body">
                 <!-- Profile Picture Upload -->
                 <div class="modal-form-group">
-                    <label class="modal-label">وێنا پرۆفایلێ</label>
+                    <label class="modal-label" data-t="profile_avatar_label">وێنا پرۆفایلێ</label>
                     <div style="display: flex; align-items: center; gap: 1rem;">
                         <input type="file" id="avatarUpload" accept="image/*" style="display: none;" onchange="handleAvatarUpload(event)">
                         <button type="button" class="modal-btn modal-btn-upload" onclick="document.getElementById('avatarUpload').click()">
-                            <i class="fas fa-camera"></i> گۆڕینا وێنێ
+                            <i class="fas fa-camera"></i> <span data-t="profile_change_photo_btn">گۆڕینا وێنێ</span>
                         </button>
                         <span id="uploadStatus" style="font-size: 0.85rem; color: var(--text-muted);"></span>
                     </div>
                 </div>
 
                 <div class="modal-form-group">
-                    <label class="modal-label">ناڤێ یەکەم</label>
-                    <input type="text" class="modal-input" id="modalFirstName" placeholder="ناڤێ یەکەم">
+                    <label class="modal-label" data-t="profile_first_name_label">ناڤێ یەکەم</label>
+                    <input type="text" class="modal-input" id="modalFirstName" placeholder="ناڤێ یەکەم" data-t-placeholder="profile_first_name_placeholder">
                 </div>
 
                 <div class="modal-form-group">
-                    <label class="modal-label">ناڤێ دووەم</label>
-                    <input type="text" class="modal-input" id="modalLastName" placeholder="ناڤێ دووەم">
+                    <label class="modal-label" data-t="profile_last_name_label">ناڤێ دووەم</label>
+                    <input type="text" class="modal-input" id="modalLastName" placeholder="ناڤێ دووەم" data-t-placeholder="profile_last_name_placeholder">
                 </div>
 
                 <div class="modal-form-group">
-                    <label class="modal-label">ناڤنیشان</label>
-                    <input type="text" class="modal-input" id="modalAddress" placeholder="ناڤنیشان">
+                    <label class="modal-label" data-t="profile_address_label">ناڤنیشان</label>
+                    <input type="text" class="modal-input" id="modalAddress" placeholder="ناڤنیشان" data-t-placeholder="profile_address_placeholder">
                 </div>
 
                 <div class="modal-form-group">
-                    <label class="modal-label">وەلات</label>
+                    <label class="modal-label" data-t="profile_country_label">وەلات</label>
                     <select class="modal-input" id="modalCountry">
-                        <option value="">وەلاتەکا خوە هەلبژێرە</option>
+                        <option value="" data-t="profile_country_placeholder">وەلاتەکا خوە هەلبژێرە</option>
                         <option value="KRD">کوردستان</option>
                         <option value="DE">ئەڵمانیا</option>
                         <option value="SE">سوید</option>
@@ -1304,10 +1304,10 @@
             </div>
 
             <div class="modal-footer">
-                <button class="modal-btn modal-btn-save" onclick="saveProfile()">
+                <button class="modal-btn modal-btn-save" onclick="saveProfile()" data-t="profile_modal_save_btn">
                     پارەبکە
                 </button>
-                <button class="modal-btn modal-btn-cancel" onclick="closeEditModal()">
+                <button class="modal-btn modal-btn-cancel" onclick="closeEditModal()" data-t="profile_modal_cancel_btn">
                     پاشگەزبوونەکە
                 </button>
             </div>
@@ -1320,19 +1320,19 @@
             <nav class="sidebar-nav">
                 <div class="sidebar-item active" data-section="profile">
                     <i class="fas fa-user"></i>
-                    <span>پرۆفایل</span>
+                    <span data-t="profile_sidebar_profile">پرۆفایل</span>
                 </div>
                 <div class="sidebar-item" data-section="settings">
                     <i class="fas fa-cog"></i>
-                    <span>رێکخستن</span>
+                    <span data-t="profile_sidebar_settings">رێکخستن</span>
                 </div>
                 <div class="sidebar-item" data-section="quran">
                     <i class="fas fa-book-quran"></i>
-                    <span>پێشکەفتنا قورئانێ</span>
+                    <span data-t="profile_sidebar_quran">پێشکەفتنا قورئانێ</span>
                 </div>
                 <div class="sidebar-item" data-section="help">
                     <i class="fas fa-question-circle"></i>
-                    <span>یارمەتی</span>
+                    <span data-t="profile_sidebar_help">یارمەتی</span>
                 </div>
             </nav>
         </aside>
@@ -1341,32 +1341,32 @@
         <main class="profile-main">
             <!-- Profile Section -->
             <section id="profile-section" class="content-section active">
-                <h1 class="section-title">پرۆفایلا مە</h1>
-                <p class="section-description">زانیاریێن خوە نوێبکە و دەستکاری بکە</p>
+                <h1 class="section-title" data-t="profile_section_title">پرۆفایلا مە</h1>
+                <p class="section-description" data-t="profile_section_desc">زانیاریێن خوە نوێبکە و دەستکاری بکە</p>
 
                 <div class="success-message" id="profileSuccess">
                     <i class="fas fa-check-circle"></i>
-                    <span id="profileSuccessText">پرۆفایل ب سەرکەفتی نوێکرا!</span>
+                    <span id="profileSuccessText" data-t="profile_success_msg">پرۆفایل ب سەرکەفتی نوێکرا!</span>
                 </div>
 
                 <div class="card">
                     <h3 class="card-title">
                         <i class="fas fa-id-card"></i>
-                        زانیاریێن شەخسی
+                        <span data-t="profile_personal_info_title">زانیاریێن شەخسی</span>
                     </h3>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label">ناڤ</label>
-                            <input type="text" class="form-input" id="displayName" placeholder="ناڤێ خوە بنڤیسە">
+                            <label class="form-label" data-t="profile_name_label">ناڤ</label>
+                            <input type="text" class="form-input" id="displayName" placeholder="ناڤێ خوە بنڤیسە" data-t-placeholder="profile_name_placeholder">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">ئیمەیل</label>
+                            <label class="form-label" data-t="profile_email_label">ئیمەیل</label>
                             <input type="email" class="form-input" id="email" disabled>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">وەلات</label>
+                            <label class="form-label" data-t="profile_country_form_label">وەلات</label>
                             <select class="form-select" id="country">
-                                <option value="">وەلاتەکا خوە هەلبژێرە</option>
+                                <option value="" data-t="profile_country_placeholder">وەلاتەکا خوە هەلبژێرە</option>
                                 <option value="KRD">کوردستان</option>
                                 <option value="DE">ئەڵمانیا</option>
                                 <option value="SE">سوید</option>
@@ -1391,52 +1391,52 @@
                             </select>
                         </div>
                         <div class="form-group" id="registrationSourceGroup">
-                            <label class="form-label">جوڕا تۆمارکرنێ</label>
+                            <label class="form-label" data-t="profile_reg_source_label">جوڕا تۆمارکرنێ</label>
                             <input type="text" class="form-input" id="registrationSource" disabled>
                         </div>
                     </div>
                     <button class="btn btn-primary" onclick="updateProfile()">
                         <i class="fas fa-save"></i>
-                        پارەبکە گوهارتنا
+                        <span data-t="profile_save_changes_btn">پارەبکە گوهارتنا</span>
                     </button>
                 </div>
 
                 <div class="card" id="passwordCard">
                     <h3 class="card-title">
                         <i class="fas fa-lock"></i>
-                        گوهارتنا پاسوۆردێ
+                        <span data-t="profile_password_title">گوهارتنا پاسوۆردێ</span>
                     </h3>
                     <div class="form-grid">
                         <div class="form-group full-width">
-                            <label class="form-label">پاسوۆردا نوێ</label>
-                            <input type="password" class="form-input" id="newPassword" placeholder="پاسوۆردا نوێ">
+                            <label class="form-label" data-t="profile_new_password_label">پاسوۆردا نوێ</label>
+                            <input type="password" class="form-input" id="newPassword" placeholder="پاسوۆردا نوێ" data-t-placeholder="profile_new_password_placeholder">
                         </div>
                         <div class="form-group full-width">
-                            <label class="form-label">پشتڕاستکرنا پاسوۆردێ</label>
-                            <input type="password" class="form-input" id="confirmPassword" placeholder="پاسوۆرد دوبارە بنڤیسە">
+                            <label class="form-label" data-t="profile_confirm_password_label">پشتڕاستکرنا پاسوۆردێ</label>
+                            <input type="password" class="form-input" id="confirmPassword" placeholder="پاسوۆرد دوبارە بنڤیسە" data-t-placeholder="profile_confirm_password_placeholder">
                         </div>
                     </div>
                     <button class="btn btn-primary" onclick="changePassword()">
                         <i class="fas fa-key"></i>
-                        گوهارتنا پاسوۆردێ
+                        <span data-t="profile_change_password_btn">گوهارتنا پاسوۆردێ</span>
                     </button>
                 </div>
             </section>
 
             <!-- Settings Section -->
             <section id="settings-section" class="content-section">
-                <h1 class="section-title">رێکخستن</h1>
-                <p class="section-description">رێکخستنێن خوێندنا قورئانێ و ئاگاداریێن</p>
+                <h1 class="section-title" data-t="profile_settings_title">رێکخستن</h1>
+                <p class="section-description" data-t="profile_settings_desc">رێکخستنێن خوێندنا قورئانێ و ئاگاداریێن</p>
 
                 <div class="card">
                     <h3 class="card-title">
                         <i class="fas fa-bell"></i>
-                        ئاگاداری
+                        <span data-t="profile_notifications_title">ئاگاداری</span>
                     </h3>
                     <div class="toggle-group">
                         <div class="toggle-info">
-                            <div class="toggle-title">ئاگاداریێن ڤەبێ رێ بکە</div>
-                            <div class="toggle-description">وەرگرتنا ئاگاداریێن رۆژانە بۆ خوێندنا قورئانێ</div>
+                            <div class="toggle-title" data-t="profile_notifications_toggle_title">ئاگاداریێن ڤەبێ رێ بکە</div>
+                            <div class="toggle-description" data-t="profile_notifications_toggle_desc">وەرگرتنا ئاگاداریێن رۆژانە بۆ خوێندنا قورئانێ</div>
                         </div>
                         <div class="toggle-switch" id="notificationToggle" onclick="toggleNotifications()"></div>
                     </div>
@@ -1445,12 +1445,12 @@
                 <div class="card">
                     <h3 class="card-title">
                         <i class="fas fa-palette"></i>
-                        رووکار
+                        <span data-t="profile_appearance_title">رووکار</span>
                     </h3>
                     <div class="toggle-group">
                         <div class="toggle-info">
-                            <div class="toggle-title">مۆدا تاری</div>
-                            <div class="toggle-description">گوهارتنا رووکارێ یێ سەرێکانێ</div>
+                            <div class="toggle-title" data-t="profile_dark_mode_toggle_title">مۆدا تاری</div>
+                            <div class="toggle-description" data-t="profile_dark_mode_toggle_desc">گوهارتنا رووکارێ یێ سەرێکانێ</div>
                         </div>
                         <div class="toggle-switch" id="themeToggle" onclick="toggleTheme()"></div>
                     </div>
@@ -1459,10 +1459,10 @@
                 <div class="card">
                     <h3 class="card-title">
                         <i class="fas fa-clock"></i>
-                        دەمژمێرا کاتی
+                        <span data-t="profile_timezone_title">دەمژمێرا کاتی</span>
                     </h3>
                     <div class="form-group">
-                        <label class="form-label">دەمژمێرا کاتی یا خوە هەلبژێرە</label>
+                        <label class="form-label" data-t="profile_timezone_label">دەمژمێرا کاتی یا خوە هەلبژێرە</label>
                         <select class="form-select" id="timezone">
                             <option value="Asia/Baghdad">(UTC+03:00) بەغداد</option>
                             <option value="Asia/Damascus">(UTC+03:00) دمشق</option>
@@ -1475,7 +1475,7 @@
                 <div class="card">
                     <h3 class="card-title">
                         <i class="fas fa-laptop"></i>
-                        ئامێرێن چالاک
+                        <span data-t="profile_devices_title">ئامێرێن چالاک</span>
                     </h3>
                     <div class="device-item">
                         <div class="device-info">
@@ -1488,42 +1488,42 @@
                                 <p id="currentDeviceLocation">Location: Iraq</p>
                             </div>
                         </div>
-                        <span class="device-badge">ئامێرا ئێستا</span>
+                        <span class="device-badge" data-t="profile_current_device_badge">ئامێرا ئێستا</span>
                     </div>
                 </div>
             </section>
 
             <!-- Quran Progress Section -->
             <section id="quran-section" class="content-section">
-                <h1 class="section-title">پێشکەفتنا قورئانێ</h1>
-                <p class="section-description">ئامارێن خوێندنا قورئانا تە</p>
+                <h1 class="section-title" data-t="profile_quran_title">پێشکەفتنا قورئانێ</h1>
+                <p class="section-description" data-t="profile_quran_desc">ئامارێن خوێندنا قورئانا تە</p>
 
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon">📖</div>
                         <div class="stat-value" id="totalAyahs">0</div>
-                        <div class="stat-label">ئایەتێن خوێندی</div>
+                        <div class="stat-label" data-t="profile_stat_ayahs_read">ئایەتێن خوێندی</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">✅</div>
                         <div class="stat-value" id="totalSurahs">0</div>
-                        <div class="stat-label">سوورەتێن تەمامکری</div>
+                        <div class="stat-label" data-t="profile_stat_surahs_completed">سوورەتێن تەمامکری</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">🔥</div>
                         <div class="stat-value" id="streak">0</div>
-                        <div class="stat-label">رۆژێن بەردەوام</div>
+                        <div class="stat-label" data-t="profile_stat_streak_days">رۆژێن بەردەوام</div>
                     </div>
                 </div>
 
                 <div class="card">
                     <h3 class="card-title">
                         <i class="fas fa-chart-line"></i>
-                        پێشکەفتنا گشتی
+                        <span data-t="profile_overall_progress_title">پێشکەفتنا گشتی</span>
                     </h3>
                     <div class="progress-item">
                         <div class="progress-header">
-                            <span>خوێندنا قورئانا تەواو</span>
+                            <span data-t="profile_quran_reading_complete">خوێندنا قورئانا تەواو</span>
                             <strong id="quranProgressPercent">0%</strong>
                         </div>
                         <div class="progress-bar-container">
@@ -1532,7 +1532,7 @@
                     </div>
                     <div class="progress-item">
                         <div class="progress-header">
-                            <span>ئارمانجا مەھانە</span>
+                            <span data-t="profile_monthly_goal">ئارمانجا مەھانە</span>
                             <strong id="monthlyProgressPercent">0%</strong>
                         </div>
                         <div class="progress-bar-container">
@@ -1544,10 +1544,10 @@
                 <div class="card">
                     <h3 class="card-title">
                         <i class="fas fa-bookmark"></i>
-                        نیشانە کریێن دوماھی
+                        <span data-t="profile_recent_bookmarks_title">نیشانە کریێن دوماھی</span>
                     </h3>
                     <div id="bookmarksList">
-                        <p style="color: var(--text-muted); text-align: center; padding: 2rem;">
+                        <p style="color: var(--text-muted); text-align: center; padding: 2rem;" data-t="profile_no_bookmarks">
                             تو ھێج نیشانەکرنەکا خوە نینە
                         </p>
                     </div>
@@ -1556,15 +1556,15 @@
 
             <!-- Help Section -->
             <section id="help-section" class="content-section">
-                <h1 class="section-title">یارمەتی</h1>
-                <p class="section-description">یارمەتی و پشتگری</p>
+                <h1 class="section-title" data-t="profile_help_title">یارمەتی</h1>
+                <p class="section-description" data-t="profile_help_desc">یارمەتی و پشتگری</p>
 
                 <div class="card">
                     <h3 class="card-title">
                         <i class="fas fa-envelope"></i>
-                        پەیوەندی
+                        <span data-t="profile_contact_title">پەیوەندی</span>
                     </h3>
-                    <p style="margin-bottom: 1rem; color: var(--text-muted);">
+                    <p style="margin-bottom: 1rem; color: var(--text-muted);" data-t="profile_contact_text">
                         ھەر پرسیارەکا خوە ھەیە؟ ب مە ڤە بگەھێژە:
                     </p>
                     <p>
@@ -1575,9 +1575,9 @@
                 <div class="card">
                     <h3 class="card-title">
                         <i class="fas fa-book"></i>
-                        دەربارەی
+                        <span data-t="profile_about_title">دەربارەی</span>
                     </h3>
-                    <p style="color: var(--text-muted); line-height: 1.8;">
+                    <p style="color: var(--text-muted); line-height: 1.8;" data-t="profile_about_text">
                         تەفسیر کورد - پلاتفۆرمەکا ئەلێکترۆنی یا بەلاش یە بۆ خوێندن و گوھدارتنا قورئانا پیرۆز ب زمانێ کوردی.
                     </p>
                 </div>
@@ -1590,19 +1590,19 @@
         <nav>
             <button class="mobile-tab-item active" data-section="profile">
                 <i class="fas fa-user"></i>
-                <span>پرۆفایل</span>
+                <span data-t="profile_tab_profile">پرۆفایل</span>
             </button>
             <button class="mobile-tab-item" data-section="settings">
                 <i class="fas fa-cog"></i>
-                <span>رێکخستن</span>
+                <span data-t="profile_tab_settings">رێکخستن</span>
             </button>
             <button class="mobile-tab-item" data-section="quran">
                 <i class="fas fa-book-quran"></i>
-                <span>قورئان</span>
+                <span data-t="profile_tab_quran">قورئان</span>
             </button>
             <button class="mobile-tab-item" data-section="help">
                 <i class="fas fa-question-circle"></i>
-                <span>یارمەتی</span>
+                <span data-t="profile_tab_help">یارمەتی</span>
             </button>
         </nav>
     </div>

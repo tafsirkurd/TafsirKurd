@@ -629,8 +629,8 @@
             </div>
 
             <div class="welcome-header">
-                <h1 class="welcome-title">سەرکەفتی بوو!</h1>
-                <p class="welcome-subtitle">
+                <h1 class="welcome-title" data-t="signup_success_title">سەرکەفتی بوو!</h1>
+                <p class="welcome-subtitle" data-t="signup_success_subtitle">
                     ب سەرکەفتی چویە ژوورڤە. بلا ئەزموونا تە رێکێخین
                 </p>
             </div>
@@ -640,12 +640,12 @@
             </div>
 
             <div class="preferences-section">
-                <h2 class="preferences-title">هەلبژارتنێن تە</h2>
+                <h2 class="preferences-title" data-t="signup_preferences_title">هەلبژارتنێن تە</h2>
 
                 <div class="preference-item" onclick="togglePreference(this, 'notifications')">
                     <div class="preference-label">
                         <i class="fas fa-bell preference-icon"></i>
-                        <span>ئاگەهدارکرنا رۆژانە</span>
+                        <span data-t="signup_daily_notification">ئاگەهدارکرنا رۆژانە</span>
                     </div>
                     <div class="toggle-switch active" data-pref="notifications"></div>
                 </div>
@@ -653,7 +653,7 @@
                 <div class="preference-item" onclick="togglePreference(this, 'darkMode')">
                     <div class="preference-label">
                         <i class="fas fa-moon preference-icon"></i>
-                        <span>رەوشا تاریک</span>
+                        <span data-t="signup_dark_mode">رەوشا تاریک</span>
                     </div>
                     <div class="toggle-switch" data-pref="darkMode"></div>
                 </div>
@@ -661,7 +661,7 @@
                 <div class="preference-item" onclick="togglePreference(this, 'autoSave')">
                     <div class="preference-label">
                         <i class="fas fa-save preference-icon"></i>
-                        <span>هەلگرتنا خۆکار</span>
+                        <span data-t="signup_auto_save">هەلگرتنا خۆکار</span>
                     </div>
                     <div class="toggle-switch active" data-pref="autoSave"></div>
                 </div>
@@ -669,12 +669,12 @@
 
             <button class="continue-btn" id="continueBtn" onclick="completeSignup()">
                 <div class="loading-spinner"></div>
-                <span>دەستپێکرن</span>
+                <span data-t="signup_continue_btn">دەستپێکرن</span>
                 <i class="fas fa-arrow-left"></i>
             </button>
 
             <div class="skip-link">
-                <a class="skip-btn" onclick="skipToMain()">راکێشان و چوونە سەرەتا</a>
+                <a class="skip-btn" data-t="signup_skip_link" onclick="skipToMain()">راکێشان و چوونە سەرەتا</a>
             </div>
         </div>
     </div>
