@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v506';
+const CACHE_NAME = 'tafsir-kurd-v510';
 const urlsToCache = [
   // HTML files removed - they use NETWORK FIRST strategy and cache naturally
   // This prevents caching stale HTML during service worker installation
@@ -30,7 +30,9 @@ const urlsToCache = [
   '/assets/fontawesome/webfonts/fa-brands-400.woff2',
   '/assets/images/logo.png',
   '/assets/images/TafsirKurd.png',
-  '/manifest.json'
+  '/manifest.json',
+  '/i18n/i18n.js',
+  '/i18n/kmr.json'
 ];
 
 // Install event - FAST cache installation with immediate activation
