@@ -18,7 +18,15 @@ export async function onRequest(context) {
 
     if (!isCronTrigger && authHeader !== `Bearer ${cronSecret}`) {
         return new Response(
-            JSON.stringify({ error: 'Unauthorized' }),
+            JSON.stringify({
+                error: 'Unauthorized',
+                debug: {
+                    hasSecret: !!cronSecret,
+                    secretLength: cronSecret ? cronSecret.length : 0,
+                    headerPresent: !!authHeader,
+                    headerLength: authHeader.length
+                }
+            }),
             { status: 401, headers: corsHeaders }
         );
     }
