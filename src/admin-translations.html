@@ -100,24 +100,16 @@
 
         /* ===== Page Chips ===== */
         .page-chips-wrap {
-            max-width: 100%;
-            overflow: hidden;
             margin-bottom: 18px;
         }
         .page-chips {
             display: flex;
+            flex-wrap: wrap;
             gap: 6px;
-            overflow-x: auto;
-            padding-bottom: 6px;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            -webkit-overflow-scrolling: touch;
         }
-        .page-chips::-webkit-scrollbar { display: none; }
         .page-chip {
-            flex-shrink: 0;
-            padding: 7px 14px;
-            border-radius: 20px;
+            padding: 6px 12px;
+            border-radius: 8px;
             border: 1px solid var(--border-light);
             background: var(--bg-surface);
             color: var(--text-secondary);
@@ -125,7 +117,7 @@
             font-weight: 600;
             font-family: inherit;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.15s;
             white-space: nowrap;
         }
         .page-chip:hover {
@@ -139,10 +131,10 @@
         }
         .page-chip .chip-count {
             display: inline-block;
-            margin-left: 4px;
+            margin-left: 3px;
             font-size: 10px;
             font-weight: 700;
-            opacity: 0.6;
+            opacity: 0.5;
         }
 
         /* ===== Context line ===== */
@@ -530,18 +522,17 @@
             .filter-search svg { left: 16px; width: 18px; height: 18px; }
             .filter-clear { right: 12px; width: 28px; height: 28px; font-size: 16px; }
 
-            /* Page chips - scrollable row */
+            /* Page chips - wrap to new lines */
             .page-chips-wrap {
                 margin-bottom: 12px;
             }
             .page-chips {
-                gap: 7px;
-                padding: 2px 2px 8px;
+                gap: 6px;
             }
             .page-chip {
-                padding: 9px 16px;
-                font-size: 13px;
-                border-radius: 22px;
+                padding: 8px 14px;
+                font-size: 12px;
+                border-radius: 8px;
             }
 
             /* Cards */
