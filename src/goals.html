@@ -573,13 +573,13 @@
 <body>
     <header class="header">
         <div class="header-inner">
-            <h1 class="header-title">ئارمانج</h1>
+            <h1 class="header-title" data-t="goals_page_title">ئارمانج</h1>
             <div class="header-actions">
-                <a href="/reading-goal" class="btn">
+                <a href="/reading-goal" class="btn" data-t="goals_new_goal_btn">
                     <i class="fas fa-plus"></i>
                     ئارمانجەکا نوی
                 </a>
-                <a href="/quran" class="btn btn-outline">
+                <a href="/quran" class="btn btn-outline" data-t="goals_back_btn">
                     <i class="fas fa-arrow-right"></i>
                     گەڕانەڤە
                 </a>
@@ -592,10 +592,10 @@
         <div class="streak-hero">
             <div class="streak-left">
                 <div class="streak-number" id="streakNumber">0</div>
-                <div class="streak-label">رۆژ</div>
+                <div class="streak-label" data-t="goals_streak_days">رۆژ</div>
             </div>
             <div class="streak-info">
-                <h3>پێشکەفتنا ڤێ هەفتییێ</h3>
+                <h3 data-t="goals_week_progress">پێشکەفتنا ڤێ هەفتییێ</h3>
                 <div class="week-grid" id="weekProgress"></div>
             </div>
         </div>
@@ -604,7 +604,7 @@
         <div class="goal-card" id="goalCard" style="display: none;">
             <div class="goal-header">
                 <div>
-                    <div class="goal-title" id="goalTitle">ئارمانجا تە</div>
+                    <div class="goal-title" id="goalTitle" data-t="goals_your_goal">ئارمانجا تە</div>
                     <div class="goal-desc" id="goalDesc"></div>
                 </div>
                 <div class="goal-icon">🎯</div>
@@ -614,7 +614,7 @@
 
         <!-- Today's Progress -->
         <div class="progress-section">
-            <h2 class="section-title">
+            <h2 class="section-title" data-t="goals_today_progress">
                 <i class="fas fa-chart-line"></i>
                 پێشکەفتنا ئەڤڕۆ
             </h2>
@@ -629,7 +629,7 @@
 
         <!-- Calendar -->
         <div class="calendar-section">
-            <h2 class="section-title">
+            <h2 class="section-title" data-t="goals_calendar_title">
                 <i class="fas fa-calendar-alt"></i>
                 رۆژژمێرا پێشکەفتنێ
             </h2>
@@ -647,11 +647,11 @@
             <div class="months-grid" id="monthsGrid"></div>
 
             <div class="manual-entry">
-                <div class="manual-title">زێدەکرنا خولەکان ب دەستی</div>
+                <div class="manual-title" data-t="goals_manual_title">زێدەکرنا خولەکان ب دەستی</div>
                 <div class="manual-form">
                     <input type="date" class="form-input" id="manualDate">
-                    <input type="number" class="form-input" id="manualMinutes" placeholder="خولەک">
-                    <button class="btn" onclick="addManualEntry()">
+                    <input type="number" class="form-input" id="manualMinutes" placeholder="خولەک" data-t-placeholder="goals_minutes_placeholder">
+                    <button class="btn" onclick="addManualEntry()" data-t="goals_add_btn">
                         <i class="fas fa-plus"></i>
                         زێدەکرن
                     </button>
@@ -661,7 +661,7 @@
 
         <!-- Actions -->
         <div class="actions-section">
-            <h2 class="section-title">
+            <h2 class="section-title" data-t="goals_manage_title">
                 <i class="fas fa-cog"></i>
                 رێڤەبرن
             </h2>

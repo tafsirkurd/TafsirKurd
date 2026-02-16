@@ -512,11 +512,11 @@
         <div class="header-inner">
             <h1 class="header-title">
                 <i class="fas fa-bookmark"></i>
-                نیشانەکری
+                <span data-t="bookmarks_title">نیشانەکری</span>
             </h1>
             <a href="/quran" class="back-btn">
                 <i class="fas fa-arrow-right"></i>
-                گەڕانەڤە
+                <span data-t="bookmarks_back_btn">گەڕانەڤە</span>
             </a>
         </div>
     </header>
@@ -526,25 +526,25 @@
         <div class="stats-grid" id="statsGrid" style="display: none;">
             <div class="stat-card">
                 <div class="stat-value" id="totalBookmarks">0</div>
-                <div class="stat-label">نیشانەکری</div>
+                <div class="stat-label" data-t="bookmarks_stat_bookmarks">نیشانەکری</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="totalNotes">0</div>
-                <div class="stat-label">تێبینی</div>
+                <div class="stat-label" data-t="bookmarks_stat_notes">تێبینی</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="totalSurahs">0</div>
-                <div class="stat-label">سوورەت</div>
+                <div class="stat-label" data-t="bookmarks_stat_surahs">سوورەت</div>
             </div>
         </div>
 
         <!-- Controls -->
         <div class="controls" id="controlsBar" style="display: none;">
-            <input type="text" class="search-input" placeholder="گەڕیان..." id="searchInput">
+            <input type="text" class="search-input" placeholder="گەڕیان..." data-t-placeholder="bookmarks_search_placeholder" id="searchInput">
             <select class="sort-select" id="sortSelect">
-                <option value="newest">نووترین</option>
-                <option value="oldest">کەڤنترین</option>
-                <option value="surah">ب سوورەت</option>
+                <option value="newest" data-t="bookmarks_sort_newest">نووترین</option>
+                <option value="oldest" data-t="bookmarks_sort_oldest">کەڤنترین</option>
+                <option value="surah" data-t="bookmarks_sort_surah">ب سوورەت</option>
             </select>
         </div>
 
@@ -754,10 +754,10 @@
             const hrs = Math.floor(diff / 3600000);
             const days = Math.floor(diff / 86400000);
 
-            if (mins < 1) return 'نها';
-            if (mins < 60) return 'پێش ' + mins + ' خولەک';
-            if (hrs < 24) return 'پێش ' + hrs + ' کاتژمێر';
-            if (days < 7) return 'پێش ' + days + ' ڕۆژ';
+            if (mins < 1) return window.__t?.('bookmarks_time_now') || 'نها';
+            if (mins < 60) return (window.__t?.('bookmarks_time_ago') || 'پێش') + ' ' + mins + ' ' + (window.__t?.('bookmarks_time_minutes') || 'خولەک');
+            if (hrs < 24) return (window.__t?.('bookmarks_time_ago') || 'پێش') + ' ' + hrs + ' ' + (window.__t?.('bookmarks_time_hours') || 'کاتژمێر');
+            if (days < 7) return (window.__t?.('bookmarks_time_ago') || 'پێش') + ' ' + days + ' ' + (window.__t?.('bookmarks_time_days') || 'ڕۆژ');
             return new Date(ts).toLocaleDateString('ku');
         }
 
@@ -785,15 +785,17 @@
                 emptyState.appendChild(emptyIcon);
 
                 const emptyTitle = createEl('div', 'empty-title', 'هێشتا تە چ ئایەت نیشانە نەکریە');
+                emptyTitle.dataset.t = 'bookmarks_empty_title';
                 emptyState.appendChild(emptyTitle);
 
                 const emptyDesc = createEl('div', 'empty-desc');
+                emptyDesc.dataset.t = 'bookmarks_empty_desc';
                 emptyDesc.innerHTML = 'دەما تو ئایەتەکێ نیشانە دکەی، ل ڤێرێ دێ بینی.<br>تو دشێی تێبینی و بیرهاتنێن خۆ ژی تۆمار بکەی.';
                 emptyState.appendChild(emptyDesc);
 
                 const btn = createEl('a', 'back-btn');
                 btn.href = '/quran';
-                btn.innerHTML = '<i class="fas fa-book-open"></i> دەستپێبکە ب خواندنێ';
+                btn.innerHTML = '<i class="fas fa-book-open"></i> <span data-t="bookmarks_start_reading">دەستپێبکە ب خواندنێ</span>';
                 emptyState.appendChild(btn);
 
                 container.innerHTML = '';
@@ -847,7 +849,9 @@
                 const icon = createEl('div', 'empty-icon');
                 icon.innerHTML = '<i class="fas fa-search"></i>';
                 noResults.appendChild(icon);
-                noResults.appendChild(createEl('div', 'empty-title', 'چ ئەنجامەک نەهاتە دیتن'));
+                const noResultsTitle = createEl('div', 'empty-title', 'چ ئەنجامەک نەهاتە دیتن');
+                noResultsTitle.dataset.t = 'bookmarks_no_results';
+                noResults.appendChild(noResultsTitle);
                 container.innerHTML = '';
                 container.appendChild(noResults);
                 return;
@@ -874,7 +878,7 @@
                 const infoDiv = createEl('div', 'bookmark-info');
                 const surahDiv = createEl('div', 'bookmark-surah', surah + '. ' + info.english);
                 const metaDiv = createEl('div', 'bookmark-meta');
-                metaDiv.innerHTML = '<span>' + escapeHtml(info.arabic) + '</span><span>•</span><span>ئایەتا ' + ayah + '</span>';
+                metaDiv.innerHTML = '<span>' + escapeHtml(info.arabic) + '</span><span>•</span><span data-t="bookmarks_ayah_label">ئایەتا</span> ' + ayah;
                 infoDiv.appendChild(surahDiv);
                 infoDiv.appendChild(metaDiv);
 
@@ -882,16 +886,19 @@
 
                 const goBtn = createEl('button', 'action-btn');
                 goBtn.title = 'بچە بۆ ئایەتێ';
+                goBtn.setAttribute('data-t-title', 'bookmarks_go_to_ayah');
                 goBtn.innerHTML = '<i class="fas fa-external-link-alt"></i>';
                 goBtn.onclick = () => goToAyah(surah, ayah);
 
                 const editBtn = createEl('button', 'action-btn');
                 editBtn.title = 'تێبینی';
+                editBtn.setAttribute('data-t-title', 'bookmarks_note_btn');
                 editBtn.innerHTML = '<i class="fas fa-edit"></i>';
                 editBtn.onclick = () => toggleNote(key);
 
                 const delBtn = createEl('button', 'action-btn delete');
                 delBtn.title = 'سڕینەڤە';
+                delBtn.setAttribute('data-t-title', 'bookmarks_delete_btn');
                 delBtn.innerHTML = '<i class="fas fa-trash"></i>';
                 delBtn.onclick = () => removeBookmark(key);
 
@@ -916,7 +923,7 @@
                 if (note) {
                     const noteDiv = createEl('div', 'ayah-note');
                     const noteLabel = createEl('div', 'note-label');
-                    noteLabel.innerHTML = '<i class="fas fa-sticky-note"></i> تێبینی:';
+                    noteLabel.innerHTML = '<i class="fas fa-sticky-note"></i> <span data-t="bookmarks_note_label">تێبینی:</span>';
                     const noteText = createEl('div', 'note-text', note);
                     noteDiv.appendChild(noteLabel);
                     noteDiv.appendChild(noteText);
@@ -929,9 +936,10 @@
                 const textarea = createEl('textarea', 'note-input');
                 textarea.id = 'note-input-' + key;
                 textarea.placeholder = 'تێبینییا خۆ ل ڤێرێ بنڤیسە...';
+                textarea.setAttribute('data-t-placeholder', 'bookmarks_note_placeholder');
                 textarea.value = note;
                 const saveBtn = createEl('button', 'save-note-btn');
-                saveBtn.innerHTML = '<i class="fas fa-save"></i> پاشکەفتکرن';
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> <span data-t="bookmarks_save_note">پاشکەفتکرن</span>';
                 saveBtn.onclick = () => saveNote(key);
                 editor.appendChild(textarea);
                 editor.appendChild(saveBtn);
@@ -964,12 +972,12 @@
                 ayahNotes[key] = input.value;
                 saveBookmarks();
                 renderBookmarks(document.getElementById('searchInput').value, document.getElementById('sortSelect').value);
-                showToast('تێبینییا پاشکەفتکری');
+                showToast(window.__t?.('bookmarks_toast_note_saved') || 'تێبینییا پاشکەفتکری');
             }
         }
 
         function removeBookmark(key) {
-            if (confirm('ئایا دڵنیای ژ سڕینەڤەیا ڤێ نیشانەیێ؟')) {
+            if (confirm(window.__t?.('bookmarks_confirm_delete') || 'ئایا دڵنیای ژ سڕینەڤەیا ڤێ نیشانەیێ؟')) {
                 const card = document.querySelector('.bookmark-card[data-key="' + key + '"]');
                 if (card) {
                     card.classList.add('removing');
@@ -981,7 +989,7 @@
                     delete ayahTimestamps[key];
                     saveBookmarks();
                     renderBookmarks(document.getElementById('searchInput').value, document.getElementById('sortSelect').value);
-                    showToast('نیشانە هاتە سڕینەڤە');
+                    showToast(window.__t?.('bookmarks_toast_removed') || 'نیشانە هاتە سڕینەڤە');
                 }, 300);
             }
         }

@@ -551,7 +551,7 @@
         <div class="header-inner">
             <a href="/goals" class="back-link">
                 <i class="fas fa-arrow-right"></i>
-                <span>پاشڤە</span>
+                <span data-t="reading_goal_back">پاشڤە</span>
             </a>
             <span class="step-counter" id="stepCounter">١ / ٥</span>
         </div>
@@ -569,15 +569,15 @@
 
         <!-- Step 1 -->
         <div class="step active" id="step1">
-            <h1 class="step-title">ئارمانجەکا خۆ هەلبژێرە</h1>
-            <p class="step-desc">ئارمانجێن ئامادەکری یان ئارمانجەکا تایبەت دروست بکە.</p>
+            <h1 class="step-title" data-t="reading_goal_choose_title">ئارمانجەکا خۆ هەلبژێرە</h1>
+            <p class="step-desc" data-t="reading_goal_choose_desc">ئارمانجێن ئامادەکری یان ئارمانجەکا تایبەت دروست بکە.</p>
 
             <div class="cards" id="step1Cards">
                 <div class="card recommended" data-goal="10min">
                     <div class="card-icon"><span>⏰</span></div>
                     <div class="card-body">
-                        <div class="card-title">خواندنا ١٠ خولەکان</div>
-                        <div class="card-desc">ئارمانجەکا سادە بۆ دەستپێکەران</div>
+                        <div class="card-title" data-t="reading_goal_10min_title">خواندنا ١٠ خولەکان</div>
+                        <div class="card-desc" data-t="reading_goal_10min_desc">ئارمانجەکا سادە بۆ دەستپێکەران</div>
                     </div>
                     <div class="card-check"></div>
                 </div>
@@ -585,8 +585,8 @@
                 <div class="card" data-goal="30days">
                     <div class="card-icon"><span>📖</span></div>
                     <div class="card-body">
-                        <div class="card-title">قورئان د ٣٠ رۆژان دا</div>
-                        <div class="card-desc">١ جوزئ هەر رۆژەکێ</div>
+                        <div class="card-title" data-t="reading_goal_30days_title">قورئان د ٣٠ رۆژان دا</div>
+                        <div class="card-desc" data-t="reading_goal_30days_desc">١ جوزئ هەر رۆژەکێ</div>
                     </div>
                     <div class="card-check"></div>
                 </div>
@@ -594,8 +594,8 @@
                 <div class="card" data-goal="1year">
                     <div class="card-icon"><span>📅</span></div>
                     <div class="card-body">
-                        <div class="card-title">قورئان د سالەکێدا</div>
-                        <div class="card-desc">بەرنامەکا دورگەه و بێ فشار</div>
+                        <div class="card-title" data-t="reading_goal_1year_title">قورئان د سالەکێدا</div>
+                        <div class="card-desc" data-t="reading_goal_1year_desc">بەرنامەکا دورگەه و بێ فشار</div>
                     </div>
                     <div class="card-check"></div>
                 </div>
@@ -603,8 +603,8 @@
                 <div class="card" data-goal="custom">
                     <div class="card-icon"><span>✨</span></div>
                     <div class="card-body">
-                        <div class="card-title">ئارمانجا تایبەت</div>
-                        <div class="card-desc">ئارمانجەکا تایبەت دروست بکە</div>
+                        <div class="card-title" data-t="reading_goal_custom_title">ئارمانجا تایبەت</div>
+                        <div class="card-desc" data-t="reading_goal_custom_desc">ئارمانجەکا تایبەت دروست بکە</div>
                     </div>
                     <div class="card-check"></div>
                 </div>
@@ -615,27 +615,27 @@
 
         <!-- Step 2 -->
         <div class="step" id="step2">
-            <h1 class="step-title" id="step2Title">دووبارەبوونێ هەلبژێرە</h1>
-            <p class="step-desc" id="step2Subtitle">د هەفتییێ دا چەند رۆژ دێ بخوینی؟</p>
+            <h1 class="step-title" id="step2Title" data-t="reading_goal_frequency_title">دووبارەبوونێ هەلبژێرە</h1>
+            <p class="step-desc" id="step2Subtitle" data-t="reading_goal_frequency_desc">د هەفتییێ دا چەند رۆژ دێ بخوینی؟</p>
             <div class="cards" id="step2Cards"></div>
             <div class="buttons" id="buttons2"></div>
         </div>
 
         <!-- Step 3 -->
         <div class="step" id="step3">
-            <h1 class="step-title" id="step3Title">پێوەرەکێ هەلبژێرە</h1>
-            <p class="step-desc" id="step3Subtitle">ئارمانجا تە چاوا بهێتە پێڤان؟</p>
+            <h1 class="step-title" id="step3Title" data-t="reading_goal_criteria_title">پێوەرەکێ هەلبژێرە</h1>
+            <p class="step-desc" id="step3Subtitle" data-t="reading_goal_criteria_desc">ئارمانجا تە چاوا بهێتە پێڤان؟</p>
             <div class="cards" id="step3Cards"></div>
             <div class="buttons" id="buttons3"></div>
         </div>
 
         <!-- Step 4 -->
         <div class="step" id="step4">
-            <h1 class="step-title" id="step4Title">ئارمانجەکێ دیار بکە</h1>
-            <p class="step-desc" id="step4Subtitle">چەند لاپەڕ، خولەک یان ئایەت؟</p>
+            <h1 class="step-title" id="step4Title" data-t="reading_goal_target_title">ئارمانجەکێ دیار بکە</h1>
+            <p class="step-desc" id="step4Subtitle" data-t="reading_goal_target_desc">چەند لاپەڕ، خولەک یان ئایەت؟</p>
             <div class="cards hidden" id="step4Cards"></div>
             <div class="input-section" id="step4Input">
-                <label class="input-label" id="targetLabel">ژمارا لاپەڕان</label>
+                <label class="input-label" id="targetLabel" data-t="reading_goal_pages_label">ژمارا لاپەڕان</label>
                 <input type="number" class="input-field" id="targetInput" value="1" min="1">
             </div>
             <div class="buttons" id="buttons4"></div>
@@ -643,12 +643,12 @@
 
         <!-- Step 5 -->
         <div class="step" id="step5">
-            <h1 class="step-title">خشتەیا تە ئامادەیە!</h1>
-            <p class="step-desc">ئەڤ پێشبینییەک ل سەر ٧ رۆژێن داهاتوو.</p>
+            <h1 class="step-title" data-t="reading_goal_schedule_title">خشتەیا تە ئامادەیە!</h1>
+            <p class="step-desc" data-t="reading_goal_schedule_desc">ئەڤ پێشبینییەک ل سەر ٧ رۆژێن داهاتوو.</p>
             <div class="schedule">
                 <div class="schedule-header">
-                    <span class="schedule-title">خشتەیا خواندنێ</span>
-                    <span class="schedule-badge">٧ رۆژ</span>
+                    <span class="schedule-title" data-t="reading_goal_schedule_label">خشتەیا خواندنێ</span>
+                    <span class="schedule-badge" data-t="reading_goal_schedule_badge">٧ رۆژ</span>
                 </div>
                 <div class="schedule-list" id="scheduleList"></div>
             </div>
@@ -663,14 +663,14 @@
         <div class="footer-inner">
             <div class="footer-logo">
                 <img src="/assets/images/logo.png" alt="TafsirKurd">
-                <span>تەفسیر کورد</span>
+                <span data-t="reading_goal_footer_logo">تەفسیر کورد</span>
             </div>
-            <p class="footer-text">قورئان بگەهیتە دەستێ هەر کەسەکی</p>
+            <p class="footer-text" data-t="reading_goal_footer_text">قورئان بگەهیتە دەستێ هەر کەسەکی</p>
             <div class="footer-links">
-                <a href="/" class="footer-link">سەرەکی</a>
-                <a href="/quran" class="footer-link">قورئان</a>
-                <a href="/goals" class="footer-link">ئارمانج</a>
-                <a href="/privacy-policy" class="footer-link">تایبەتمەندی</a>
+                <a href="/" class="footer-link" data-t="reading_goal_footer_home">سەرەکی</a>
+                <a href="/quran" class="footer-link" data-t="reading_goal_footer_quran">قورئان</a>
+                <a href="/goals" class="footer-link" data-t="reading_goal_footer_goals">ئارمانج</a>
+                <a href="/privacy-policy" class="footer-link" data-t="reading_goal_footer_privacy">تایبەتمەندی</a>
             </div>
         </div>
     </footer>

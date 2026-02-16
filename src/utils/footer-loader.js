@@ -10,9 +10,9 @@
                 <div class="footer-brand">
                     <div class="footer-brand-header">
                         <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image">
-                        <h2 class="footer-brand-name">تەفسیر کورد</h2>
+                        <h2 class="footer-brand-name" data-t="footer_brand_name">تەفسیر کورد</h2>
                     </div>
-                    <p class="footer-brand-tagline">
+                    <p class="footer-brand-tagline" data-t="footer_tagline">
                         پلاتفۆرمەکا ئارام بۆ خواندنێ، گەڕیان و رامان ل سەر قورئانا پیرۆز ب زمانێ کوردی (بادینی). قورئان بگەهیتە دەستێ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
                     </p>
                     <div class="footer-social-icons">
@@ -33,35 +33,35 @@
 
                 <!-- Navigate Section -->
                 <div class="footer-section">
-                    <h3 class="footer-section-title">گەڕیان</h3>
+                    <h3 class="footer-section-title" data-t="footer_nav_title">گەڕیان</h3>
                     <div class="footer-links">
-                        <a href="/profile" class="footer-link">پرۆفایل</a>
-                        <a href="/goals" class="footer-link">ئارمانج</a>
-                        <a href="/bookmarks" class="footer-link">نیشانەکری</a>
-                        <a href="/settings" class="footer-link">رێکخستن</a>
+                        <a href="/profile" class="footer-link" data-t="footer_link_profile">پرۆفایل</a>
+                        <a href="/goals" class="footer-link" data-t="footer_link_goals">ئارمانج</a>
+                        <a href="/bookmarks" class="footer-link" data-t="footer_link_bookmarks">نیشانەکری</a>
+                        <a href="/settings" class="footer-link" data-t="footer_link_settings">رێکخستن</a>
                     </div>
                 </div>
 
                 <!-- Resources Section -->
                 <div class="footer-section">
-                    <h3 class="footer-section-title">رۆژپەڕێن دی</h3>
+                    <h3 class="footer-section-title" data-t="footer_other_pages_title">رۆژپەڕێن دی</h3>
                     <div class="footer-links">
-                        <a href="/" class="footer-link">مالپەڕێ سەرەکی</a>
-                        <a href="/quran" class="footer-link">قورئانا پیرۆز</a>
-                        <a href="/#features" class="footer-link">تایبەتمەندی</a>
-                        <a href="/about" class="footer-link">دەربارەی مە</a>
+                        <a href="/" class="footer-link" data-t="footer_link_home">مالپەڕێ سەرەکی</a>
+                        <a href="/quran" class="footer-link" data-t="footer_link_quran">قورئانا پیرۆز</a>
+                        <a href="/#features" class="footer-link" data-t="footer_link_features">تایبەتمەندی</a>
+                        <a href="/about" class="footer-link" data-t="footer_link_about">دەربارەی مە</a>
                     </div>
                 </div>
 
                 <!-- Connect Section -->
                 <div class="footer-section">
-                    <h3 class="footer-section-title">پەیوەندی</h3>
+                    <h3 class="footer-section-title" data-t="footer_connect_title">پەیوەندی</h3>
                     <div class="footer-links">
-                        <p class="footer-contact-text">ئەگەر تە پرسیارەک یان پێشنیارەک هەبیت، پەیوەندییێ ب مە بکە و ب زووترین دەم دێ بەرسڤا تە هێتە دان!</p>
+                        <p class="footer-contact-text" data-t="footer_connect_desc">ئەگەر تە پرسیارەک یان پێشنیارەک هەبیت، پەیوەندییێ ب مە بکە و ب زووترین دەم دێ بەرسڤا تە هێتە دان!</p>
                         <a href="mailto:info@tafsirkurd.com" class="footer-link">
                             <i class="fas fa-envelope"></i> info@tafsirkurd.com
                         </a>
-                        <a href="/#contact" class="footer-link">
+                        <a href="/#contact" class="footer-link" data-t="footer_link_form">
                             <i class="fas fa-paper-plane"></i> فۆرمێ پڕ بکە
                         </a>
                     </div>
@@ -74,8 +74,8 @@
                     &copy; <span id="footer-year"></span> تەفسیر کورد. هەمی ماف پاراستی نە. خودایێ مەزن بەرەکەتێ بێخیتە هەول و ماندبوونا مە.
                 </p>
                 <div class="footer-meta-links">
-                    <a href="/privacy-policy" class="footer-meta-link">پاراستنا تایبەتمەندیێ</a>
-                    <a href="/terms-and-conditions" class="footer-meta-link">مەرج و رێسایان</a>
+                    <a href="/privacy-policy" class="footer-meta-link" data-t="footer_link_privacy">پاراستنا تایبەتمەندیێ</a>
+                    <a href="/terms-and-conditions" class="footer-meta-link" data-t="footer_link_terms">مەرج و رێسایان</a>
                 </div>
             </div>
         </div>
