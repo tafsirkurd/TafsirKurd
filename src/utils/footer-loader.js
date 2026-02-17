@@ -71,7 +71,7 @@
             <!-- Footer Bottom -->
             <div class="footer-bottom">
                 <p class="footer-copyright">
-                    &copy; <span id="footer-year"></span> تەفسیر کورد. هەمی ماف پاراستی نە. خودایێ مەزن بەرەکەتێ بێخیتە هەول و ماندبوونا مە.
+                    &copy; <span id="footer-year"></span> <span data-t="footer_copyright">تەفسیر کورد. هەمی ماف پاراستی نە. خودایێ مەزن بەرەکەتێ بێخیتە هەول و ماندبوونا مە.</span>
                 </p>
                 <div class="footer-meta-links">
                     <a href="/privacy-policy" class="footer-meta-link" data-t="footer_link_privacy">پاراستنا تایبەتمەندیێ</a>

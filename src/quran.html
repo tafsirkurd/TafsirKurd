@@ -4610,8 +4610,8 @@
         </div>
         <div class="preloader-content">
             <img src="/assets/images/logo.png" alt="Tafsir Kurd" class="preloader-logo logo-image" width="120" height="120">
-            <h1 class="preloader-title">تەفسیر کورد</h1>
-            <p class="preloader-subtitle">چاڤەرێ بە...</p>
+            <h1 class="preloader-title" data-t="quran_preloader_title">تەفسیر کورد</h1>
+            <p class="preloader-subtitle" data-t="quran_preloader_loading">چاڤەرێ بە...</p>
             <div class="preloader-dots">
                 <div class="preloader-dot"></div>
                 <div class="preloader-dot"></div>
@@ -4673,7 +4673,7 @@
     <div class="settings-modal" id="settingsModal" onclick="if(event.target === this) closeSettings()">
         <div class="settings-content" onclick="event.stopPropagation()">
             <div class="settings-header">
-                <h2 class="settings-title">رێکخستن</h2>
+                <h2 class="settings-title" data-t="quran_settings_title">رێکخستن</h2>
                 <button class="settings-close" onclick="closeSettings()" aria-label="داخستنا ڕێکخستنان">
                     <i class="fas fa-times"></i>
                 </button>
@@ -4686,7 +4686,7 @@
                     رۆکار
                 </h3>
                 <div class="setting-item">
-                    <span class="setting-label">رەوشا تاریک</span>
+                    <span class="setting-label" data-t="quran_dark_mode">رەوشا تاریک</span>
                     <div class="setting-toggle" id="darkModeToggle" onclick="toggleDarkMode()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDarkMode();}" role="button" tabindex="0" aria-label="گۆڕینا رەوشا تاریک">
                         <div class="setting-toggle-knob"></div>
                     </div>
@@ -4702,7 +4702,7 @@
 
                 <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <span class="setting-label">جۆرێ فۆنتا عەرەبی</span>
+                        <span class="setting-label" data-t="quran_arabic_font_label">جۆرێ فۆنتا عەرەبی</span>
                         <select class="setting-select" id="arabicFontSelect" aria-label="هەلبژاردنا فۆنتا عەرەبی" onchange="changeArabicFont()">
                             <option value="KFGQPC Hafs">KFGQPC Hafs (حەفس)</option>
                             <option value="Scheherazade New">Scheherazade New</option>
@@ -4716,7 +4716,7 @@
 
                 <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <span class="setting-label">قەبارەیا فۆنتا عەرەبی</span>
+                        <span class="setting-label" data-t="quran_arabic_font_size">قەبارەیا فۆنتا عەرەبی</span>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <input type="range" class="setting-slider" id="arabicSizeSlider" aria-label="قەبارەیا فۆنتا عەرەبی"
                                    min="1.5" max="3.5" step="0.1" value="2.2"
@@ -4728,7 +4728,7 @@
 
                 <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <span class="setting-label">جۆرێ فۆنتا تەفسیرێ</span>
+                        <span class="setting-label" data-t="quran_tafsir_font_label">جۆرێ فۆنتا تەفسیرێ</span>
                         <select class="setting-select" id="tafsirFontSelect" aria-label="هەلبژاردنا فۆنتا تەفسیرێ" onchange="changeTafsirFont()">
                             <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
                             <option value="Scheherazade New">Scheherazade New</option>
@@ -4742,7 +4742,7 @@
 
                 <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <span class="setting-label">قەبارەیا فۆنتا تەفسیرێ</span>
+                        <span class="setting-label" data-t="quran_tafsir_font_size">قەبارەیا فۆنتا تەفسیرێ</span>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <input type="range" class="setting-slider" id="tafsirSizeSlider" aria-label="قەبارەیا فۆنتا تەفسیرێ"
                                    min="0.9" max="1.8" step="0.05" value="1.1"
@@ -4753,14 +4753,14 @@
                 </div>
 
                 <div class="setting-item">
-                    <span class="setting-label">نیشاندان و ڤەدیتنا تەفسیرێ</span>
+                    <span class="setting-label" data-t="quran_show_tafsir">نیشاندان و ڤەدیتنا تەفسیرێ</span>
                     <div class="setting-toggle active" id="tafsirToggle">
                         <div class="setting-toggle-knob"></div>
                     </div>
                 </div>
 
                 <div class="setting-item">
-                    <span class="setting-label">زڤراندنا خۆکار</span>
+                    <span class="setting-label" data-t="quran_auto_scroll">زڤراندنا خۆکار</span>
                     <div class="setting-toggle" id="autoScrollToggle">
                         <div class="setting-toggle-knob"></div>
                     </div>
@@ -4779,22 +4779,22 @@
     <!-- Copy Modal -->
     <div class="copy-modal" id="copyModal">
         <div class="copy-modal-content">
-            <h3 class="copy-modal-title">کۆپیکرنا ئایەتێ</h3>
+            <h3 class="copy-modal-title" data-t="quran_copy_title">کۆپیکرنا ئایەتێ</h3>
             <div class="copy-options">
                 <button class="copy-option-btn" onclick="copyAyahWithTafsir()">
                     <i class="fas fa-copy"></i>
-                    <span>کۆپی دگەل تەفسیرێ</span>
+                    <span data-t="quran_copy_with_tafsir">کۆپی دگەل تەفسیرێ</span>
                 </button>
                 <button class="copy-option-btn" onclick="copyAyahWithoutTafsir()">
                     <i class="fas fa-file-alt"></i>
-                    <span>کۆپی بێ تەفسیر</span>
+                    <span data-t="quran_copy_without">کۆپی بێ تەفسیر</span>
                 </button>
                 <button class="copy-option-btn" onclick="copyJustTafsir()">
                     <i class="fas fa-language"></i>
-                    <span>کۆپی ب تنێ تەفسیر</span>
+                    <span data-t="quran_copy_tafsir_only">کۆپی ب تنێ تەفسیر</span>
                 </button>
             </div>
-            <button class="copy-cancel-btn" onclick="closeCopyModal()">زڤڕین</button>
+            <button class="copy-cancel-btn" onclick="closeCopyModal()" data-t="quran_copy_cancel">زڤڕین</button>
         </div>
     </div>
 
@@ -4804,7 +4804,7 @@
             <div class="login-required-icon">
                 <i class="fas fa-lock"></i>
             </div>
-            <h2 class="login-required-title">چوونە ژوورڤە پێتڤییە</h2>
+            <h2 class="login-required-title" data-t="quran_login_required">چوونە ژوورڤە پێتڤییە</h2>
             <p class="login-required-text">
                 ژ بۆ بکارئینانا ڤێ تایبەتمەندییێ، تکایە چوونە ژوورڤە بکە یان هەژمارەکا نوو دروست بکە.
             </p>
@@ -4827,18 +4827,18 @@
         <div class="sidebar-header">
             <div class="sidebar-logo" onclick="showHomePage()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showHomePage();}" role="button" tabindex="0" aria-label="گەڕانەوە بۆ پەڕەیا سەرەکی">
                 <img src="/assets/images/logo.png" alt="Tafsir Kurd" class="logo-image" width="40" height="40">
-                <div class="sidebar-title">قورئان</div>
+                <div class="sidebar-title" data-t="quran_sidebar_title">قورئان</div>
             </div>
 
             <!-- Tabs for Surah and Juz -->
             <div class="sidebar-tabs">
                 <button class="sidebar-tab active" onclick="switchSidebarTab('surah')" id="surahTab">
                     <i class="fas fa-book"></i>
-                    <span>سوڕەت</span>
+                    <span data-t="quran_tab_surah">سوڕەت</span>
                 </button>
                 <button class="sidebar-tab" onclick="switchSidebarTab('juz')" id="juzTab">
                     <i class="fas fa-layer-group"></i>
-                    <span>جوز</span>
+                    <span data-t="quran_tab_juz">جوز</span>
                 </button>
             </div>
         </div>
@@ -4854,7 +4854,7 @@
     <!-- Feather Overlay -->
     <div class="feather-overlay" id="featherOverlay">
         <div class="feather-overlay-header">
-            <h2 class="feather-overlay-title">مێنیویا بکارئینەری</h2>
+            <h2 class="feather-overlay-title" data-t="quran_user_menu_title">مێنیویا بکارئینەری</h2>
             <button class="feather-close-btn" onclick="closeFeatherOverlay()" aria-label="داخستنا مێنیویا بکارئینەری">
                 <i class="fas fa-times"></i>
             </button>
@@ -4865,7 +4865,7 @@
             <div class="profile-section" onclick="window.location.href='/profile'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href='/profile';}" role="button" tabindex="0" aria-label="چوونە پرۆفایل">
                 <img src="" alt="وێنەیا بکارئینەری" class="profile-avatar-large" id="profileAvatar" width="80" height="80">
                 <div class="profile-info">
-                    <div class="profile-name" id="profileName">ناڤ</div>
+                    <div class="profile-name" id="profileName" data-t="quran_default_name">ناڤ</div>
                     <div class="profile-email" id="profileEmail">email@gmail.com</div>
                 </div>
             </div>
@@ -4876,23 +4876,23 @@
             <div class="nav-menu">
                 <a href="/profile" class="nav-menu-item">
                     <i class="fas fa-user"></i>
-                    <span>پرۆفایل</span>
+                    <span data-t="quran_menu_profile">پرۆفایل</span>
                 </a>
                 <a href="/bookmarks" class="nav-menu-item">
                     <i class="fas fa-bookmark"></i>
-                    <span>نیشانەکری</span>
+                    <span data-t="quran_menu_bookmarks">نیشانەکری</span>
                 </a>
                 <a href="/goals" class="nav-menu-item">
                     <i class="fas fa-bullseye"></i>
-                    <span>ئارمانج</span>
+                    <span data-t="quran_menu_goals">ئارمانج</span>
                 </a>
                 <a href="/settings" class="nav-menu-item" onclick="saveStateBeforeSettings(event)">
                     <i class="fas fa-cog"></i>
-                    <span>رێکخستن</span>
+                    <span data-t="quran_menu_settings">رێکخستن</span>
                 </a>
                 <div class="nav-menu-item" onclick="signOut()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();signOut();}" role="button" tabindex="0">
                     <i class="fas fa-sign-out-alt"></i>
-                    <span>دەرکەفتن</span>
+                    <span data-t="quran_menu_logout">دەرکەفتن</span>
                 </div>
             </div>
         </div>
@@ -4906,34 +4906,34 @@
             <div class="stat-grid">
                 <div class="stat-card">
                     <div class="stat-value" id="statDays">0</div>
-                    <div class="stat-label">رۆژا چالاک</div>
+                    <div class="stat-label" data-t="quran_stat_active">رۆژا چالاک</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statSurahs">0</div>
-                    <div class="stat-label">سوورەت تەمام</div>
+                    <div class="stat-label" data-t="quran_stat_surahs">سوورەت تەمام</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statAyahs">0</div>
-                    <div class="stat-label">ئایەتا هاتیە خواندن</div>
+                    <div class="stat-label" data-t="quran_stat_ayahs">ئایەتا هاتیە خواندن</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statStreak">0</div>
-                    <div class="stat-label">🔥 بەردەوامبە</div>
+                    <div class="stat-label" data-t="quran_stat_streak">بەردەوامبە</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statTime">0</div>
-                    <div class="stat-label">خولەکێن خواندنێ</div>
+                    <div class="stat-label" data-t="quran_stat_minutes">خولەکێن خواندنێ</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="statLevel">1</div>
-                    <div class="stat-label">ئاست</div>
+                    <div class="stat-label" data-t="quran_stat_level">ئاست</div>
                 </div>
             </div>
 
             <!-- Reset Reading Progress Button -->
             <button onclick="resetReadingProgress()" style="width: 100%; margin-top: 20px; padding: 14px 20px; background: var(--bg); border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: all var(--transition); font-family: 'IBM Plex Sans Arabic', sans-serif; font-size: 1rem; font-weight: 600; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 10px;">
                 <i class="fas fa-redo"></i>
-                <span>دەستپێکرن ڤە ژ دەستپێکێ</span>
+                <span data-t="quran_restart">دەستپێکرن ڤە ژ دەستپێکێ</span>
             </button>
         </div>
     </div>
@@ -4948,7 +4948,7 @@
                     <a href="/" onclick="showHomePage(); return false;" style="display: flex; align-items: center;">
                         <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="logo-image" width="32" height="32">
                     </a>
-                    <div class="header-title">تەفسیر کورد</div>
+                    <div class="header-title" data-t="quran_header_title">تەفسیر کورد</div>
                 </div>
 
                 <div class="hamburger-menu" id="hamburgerMenu">
@@ -4960,25 +4960,25 @@
                 <div class="nav-links" id="navLinks">
                     <a href="/" class="nav-link">
                         <i class="fas fa-home"></i>
-                        <span>سەرەکی</span>
+                        <span data-t="quran_nav_home">سەرەکی</span>
                     </a>
                     <a href="/quran" class="nav-link active">
                         <i class="fas fa-book-open"></i>
-                        <span>قورئان</span>
+                        <span data-t="quran_nav_quran">قورئان</span>
                     </a>
                     <a href="/islamvoice" class="nav-link">
                         <i class="fas fa-play-circle"></i>
-                        <span>دەنگێ ئیسلامێ</span>
+                        <span data-t="quran_nav_iv">دەنگێ ئیسلامێ</span>
                     </a>
                     <a href="/settings" class="nav-link" onclick="saveStateBeforeSettings(event)">
                         <i class="fas fa-cog"></i>
-                        <span>رێکخستن</span>
+                        <span data-t="quran_nav_settings">رێکخستن</span>
                     </a>
                     <div id="authSection" style="opacity: 0; transition: opacity 0.3s;">
                         <!-- Login link (shown when not authenticated) -->
                         <a href="/login" class="nav-link" id="loginLink" onclick="goToLogin(); return false;">
                             <i class="fas fa-user"></i>
-                            <span>چوونە ژوورڤە</span>
+                            <span data-t="quran_nav_login">چوونە ژوورڤە</span>
                         </a>
                         <!-- User Profile (shown when authenticated) -->
                         <div class="user-profile-btn" id="userProfileBtn" style="display: none;" onclick="toggleProfileDropdown(event)">
@@ -5048,7 +5048,7 @@
                         <div style="background: var(--card-bg); border-radius: 20px; padding: 12px; box-shadow: var(--shadow-lg); border: 2px solid var(--border); box-sizing: border-box;">
                             <div style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
                                 <i class="fas fa-fire"></i>
-                                <span>گەڕیانێن بناڤودەنگ</span>
+                                <span data-t="quran_popular_searches">گەڕیانێن بناڤودەنگ</span>
                             </div>
 
                             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
@@ -5115,7 +5115,7 @@
                             <div style="width: 32px; height: 32px; background: #000; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
                                 <i class="fas fa-star" style="color: #fff; font-size: 0.8rem;"></i>
                             </div>
-                            <span style="font-size: 0.95rem; font-weight: 600; color: var(--text);">ئایەتا رۆژانە</span>
+                            <span style="font-size: 0.95rem; font-weight: 600; color: var(--text);" data-t="quran_daily_ayah">ئایەتا رۆژانە</span>
                         </div>
                         <div style="font-size: 0.8rem; color: var(--text-muted); font-variant-numeric: tabular-nums;" id="randomTimer">--:--:--</div>
                     </div>
@@ -5204,11 +5204,11 @@
                     <div class="filter-group">
                         <button class="filter-btn active" data-filter="surah" onclick="changeFilter('surah')">
                             <i class="fas fa-book"></i>
-                            <span>سوڕەت</span>
+                            <span data-t="quran_tab_surah2">سوڕەت</span>
                         </button>
                         <button class="filter-btn" data-filter="juz" onclick="changeFilter('juz')">
                             <i class="fas fa-bookmark"></i>
-                            <span>جوز</span>
+                            <span data-t="quran_tab_juz2">جوز</span>
                         </button>
                     </div>
                     <div class="sort-group">
@@ -5217,8 +5217,8 @@
                             رێزکرن ب گۆرەی:
                         </label>
                         <select class="sort-select" id="sortOrder" aria-label="رێزکرنا سوورەتان" onchange="changeSortOrder()">
-                            <option value="asc">ژ کێمی بۆ زێدە (1→114)</option>
-                            <option value="desc">ژ زێدەیی بۆ کێم (114→1)</option>
+                            <option value="asc" data-t="quran_sort_asc">ژ کێمی بۆ زێدە (1→114)</option>
+                            <option value="desc" data-t="quran_sort_desc">ژ زێدەیی بۆ کێم (114→1)</option>
                         </select>
                     </div>
                 </div>
@@ -5247,11 +5247,11 @@
             <div class="surah-navigation">
                 <button class="nav-btn" id="prevSurahBtn" onclick="navigateSurah('prev')">
                     <i class="fas fa-arrow-right"></i>
-                    <span id="prevSurahName">سوورەتا پێشوو</span>
+                    <span id="prevSurahName" data-t="quran_prev_surah">سوورەتا پێشوو</span>
                 </button>
 
                 <button class="nav-btn" id="nextSurahBtn" onclick="navigateSurah('next')">
-                    <span id="nextSurahName">سوورەتا دواتر</span>
+                    <span id="nextSurahName" data-t="quran_next_surah">سوورەتا دواتر</span>
                     <i class="fas fa-arrow-left"></i>
                 </button>
             </div>
