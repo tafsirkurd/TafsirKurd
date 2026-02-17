@@ -943,6 +943,10 @@
                 var p = normalizePage(t.page);
                 pageCounts[p] = (pageCounts[p] || 0) + 1;
             });
+            // Merge KNOWN_PAGES so android/ios chips always show
+            KNOWN_PAGES.forEach(function(p) {
+                if (p !== 'all' && !(p in pageCounts)) pageCounts[p] = 0;
+            });
             var pages = Object.keys(pageCounts).sort();
 
             var container = document.getElementById('pageChips');
