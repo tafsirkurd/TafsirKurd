@@ -1085,7 +1085,7 @@
             allChip.textContent = 'All';
             var allCount = document.createElement('span');
             allCount.className = 'chip-count';
-            allCount.textContent = allTranslations.length;
+            allCount.textContent = platformData.length;
             allChip.appendChild(allCount);
             allChip.addEventListener('click', function() { setPageFilter(''); });
             container.appendChild(allChip);
