@@ -1466,7 +1466,7 @@
             try {
                 var result = await supabase
                     .from('kurdish_translations')
-                    .update({ key_id: keyVal, kurdish_text: textVal, page: pageVal, context: ctxVal || null })
+                    .update({ key_id: keyVal, kurdish_text: textVal, page: pageVal, context: ctxVal || '' })
                     .eq('id', id);
 
                 if (result.error) throw result.error;
@@ -1517,7 +1517,7 @@
             try {
                 var result = await supabase
                     .from('kurdish_translations')
-                    .insert([{ key_id: keyVal, kurdish_text: textVal, page: pageVal, category: 'general', context: ctxVal || null }]);
+                    .insert([{ key_id: keyVal, kurdish_text: textVal, page: pageVal, category: 'general', context: ctxVal || '' }]);
 
                 if (result.error) throw result.error;
 
@@ -1605,7 +1605,7 @@
 
                 // 4. Format entries for insert
                 var rows = newEntries.map(function(t) {
-                    return { key_id: t.key_id, kurdish_text: t.kurdish_text, page: t.page, category: t.category || 'general', context: t.context || null };
+                    return { key_id: t.key_id, kurdish_text: t.kurdish_text, page: t.page, category: t.category || 'general', context: t.context || '' };
                 });
 
                 // 5. Batch insert (50 at a time)
