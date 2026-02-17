@@ -11,6 +11,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
     <link rel="stylesheet" href="/css/admin-styles.css">
     <style>
+        /* ===== No horizontal scroll ===== */
+        .main-content { overflow-x: hidden; }
+        .content-area { overflow-x: hidden; }
+
         /* ===== Stats ===== */
         .stats-row {
             display: flex;
@@ -197,6 +201,8 @@
             border: 1px solid var(--border-light);
             border-radius: 12px;
             transition: all 0.2s;
+            overflow: hidden;
+            min-width: 0;
         }
         .t-row:hover {
             border-color: var(--border-medium);
@@ -217,6 +223,7 @@
         .t-key {
             font-size: 12.5px;
             font-weight: 600;
+            min-width: 0;
             color: var(--text-primary);
             font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
             word-break: break-all;
@@ -231,6 +238,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            min-width: 0;
         }
         .t-page-badge {
             font-size: 10px;
@@ -1447,9 +1455,9 @@
 
                         var ins = await supabase
                             .from('kurdish_translations')
-                            .insert({ ...t, context: t.context || '' });
+                            .insert([{ key_id: t.key_id, kurdish_text: t.kurdish_text, page: t.page, category: t.category || 'general', context: t.context || null }]);
 
-                        if (ins.error) { errors++; } else { added++; }
+                        if (ins.error) { console.error('Insert fail:', t.key_id, ins.error); errors++; } else { added++; }
                     } catch (e) { errors++; }
                 }
 

@@ -1792,10 +1792,10 @@ async function importAllTranslations() {
                 continue;
             }
 
-            // Insert new (context is NOT NULL in DB, default to empty string)
+            // Insert new - match exact schema: key_id, kurdish_text, page, category, context
             const { error } = await supabase
                 .from('kurdish_translations')
-                .insert({ ...t, context: t.context || '' });
+                .insert([{ key_id: t.key_id, kurdish_text: t.kurdish_text, page: t.page, category: t.category || 'general', context: t.context || null }]);
 
             if (error) {
                 console.error(`Error: ${t.key_id}`, error);
