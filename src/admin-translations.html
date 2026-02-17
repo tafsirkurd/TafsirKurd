@@ -1591,41 +1591,53 @@
                     offset += 1000;
                 }
 
-                // 3. Filter out existing entries
-                var newEntries = window.BULK_TRANSLATIONS.filter(function(t) {
+                // 3. Deduplicate BULK_TRANSLATIONS by key_id (keep first occurrence)
+                var seenKeys = {};
+                var uniqueEntries = [];
+                window.BULK_TRANSLATIONS.forEach(function(t) {
+                    if (!seenKeys[t.key_id]) {
+                        seenKeys[t.key_id] = true;
+                        uniqueEntries.push(t);
+                    }
+                });
+                var dupes = window.BULK_TRANSLATIONS.length - uniqueEntries.length;
+
+                // 4. Filter out existing entries
+                var newEntries = uniqueEntries.filter(function(t) {
                     return !existingKeys.has(t.key_id);
                 });
-                var skipped = window.BULK_TRANSLATIONS.length - newEntries.length;
+                var skipped = uniqueEntries.length - newEntries.length;
+                console.log('[Import] Total:', window.BULK_TRANSLATIONS.length, 'Unique:', uniqueEntries.length, 'Dupes:', dupes, 'Existing:', skipped, 'New:', newEntries.length);
 
                 if (newEntries.length === 0) {
-                    showToast('All ' + skipped + ' entries already exist');
-                    loadTranslations();
+                    showToast('All ' + skipped + ' already exist' + (dupes ? ', ' + dupes + ' duplicates removed' : ''));
+                    await loadTranslations();
                     return;
                 }
 
-                // 4. Format entries for insert
+                // 5. Format entries for insert
                 var rows = newEntries.map(function(t) {
                     return { key_id: t.key_id, kurdish_text: t.kurdish_text, page: t.page, category: t.category || 'general', context: t.context || '' };
                 });
 
-                // 5. Batch insert (50 at a time)
+                // 6. Batch insert (50 at a time)
                 var added = 0, errors = 0;
                 var BATCH = 50;
                 for (var i = 0; i < rows.length; i += BATCH) {
                     var batch = rows.slice(i, i + BATCH);
-                    btnLabel.textContent = Math.min(i + BATCH, rows.length) + '/' + rows.length;
+                    btnLabel.textContent = Math.min(i + BATCH, rows.length) + '/' + rows.length + ' new';
 
                     var ins = await supabase
                         .from('kurdish_translations')
                         .insert(batch);
 
                     if (ins.error) {
-                        console.error('Batch fail at ' + i + ':', ins.error);
+                        console.error('[Import] Batch fail at ' + i + ':', ins.error);
                         // Fallback: try one-by-one for this batch
                         for (var j = 0; j < batch.length; j++) {
                             var single = await supabase.from('kurdish_translations').insert([batch[j]]);
                             if (single.error) {
-                                console.error('Insert fail:', batch[j].key_id, single.error);
+                                console.error('[Import] Fail:', batch[j].key_id, single.error.message);
                                 errors++;
                             } else { added++; }
                         }
@@ -1634,7 +1646,9 @@
                     }
                 }
 
-                showToast('Imported ' + added + ' new, ' + skipped + ' skipped' + (errors ? ', ' + errors + ' errors' : ''));
+                var msg = 'Added ' + added + ', Skipped ' + skipped + (dupes ? ', Dupes ' + dupes : '') + (errors ? ', ERRORS ' + errors : '');
+                console.log('[Import] Done:', msg);
+                showToast(msg);
                 await loadTranslations();
             } catch (error) {
                 console.error('Import failed:', error);
