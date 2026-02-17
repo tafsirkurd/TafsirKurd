@@ -1446,7 +1446,7 @@
 
                         var ins = await supabase
                             .from('kurdish_translations')
-                            .insert(t);
+                            .insert({ ...t, context: t.context || '' });
 
                         if (ins.error) { errors++; } else { added++; }
                     } catch (e) { errors++; }
