@@ -1554,7 +1554,7 @@
             }
         }
 
-        // ===== Bulk Import =====
+        // ===== Bulk Import (Fast Batch) =====
         async function importAllTranslations() {
             if (!canEdit) { showToast('No edit permission'); return; }
             if (!confirm('Import translations from all pages. Existing entries will be skipped. Continue?')) return;
@@ -1562,9 +1562,10 @@
             var btn = document.getElementById('importBtn');
             var btnLabel = btn.querySelector('span');
             btn.disabled = true;
-            btnLabel.textContent = 'Importing...';
+            btnLabel.textContent = 'Loading...';
 
             try {
+                // 1. Load bulk translations script
                 await new Promise(function(resolve, reject) {
                     if (window.BULK_TRANSLATIONS) { resolve(); return; }
                     var script = document.createElement('script');
@@ -1573,35 +1574,68 @@
                     script.onerror = function() { reject(new Error('Failed to load')); };
                     document.head.appendChild(script);
                 });
-
                 if (!window.BULK_TRANSLATIONS) throw new Error('No data');
 
-                var added = 0, skipped = 0, errors = 0;
-                var total = window.BULK_TRANSLATIONS.length;
-
-                for (var i = 0; i < total; i++) {
-                    var t = window.BULK_TRANSLATIONS[i];
-                    btnLabel.textContent = (i + 1) + '/' + total;
-
-                    try {
-                        var check = await supabase
-                            .from('kurdish_translations')
-                            .select('id')
-                            .eq('key_id', t.key_id)
-                            .maybeSingle();
-
-                        if (check.data) { skipped++; continue; }
-
-                        var ins = await supabase
-                            .from('kurdish_translations')
-                            .insert([{ key_id: t.key_id, kurdish_text: t.kurdish_text, page: t.page, category: t.category || 'general', context: t.context || null }]);
-
-                        if (ins.error) { console.error('Insert fail:', t.key_id, ins.error); errors++; } else { added++; }
-                    } catch (e) { errors++; }
+                // 2. Fetch ALL existing key_ids in one query
+                btnLabel.textContent = 'Checking...';
+                var existingKeys = new Set();
+                var offset = 0;
+                while (true) {
+                    var res = await supabase
+                        .from('kurdish_translations')
+                        .select('key_id')
+                        .range(offset, offset + 999);
+                    if (res.error) throw res.error;
+                    res.data.forEach(function(r) { existingKeys.add(r.key_id); });
+                    if (res.data.length < 1000) break;
+                    offset += 1000;
                 }
 
-                showToast('Imported ' + added + ' new, ' + skipped + ' skipped');
-                loadTranslations();
+                // 3. Filter out existing entries
+                var newEntries = window.BULK_TRANSLATIONS.filter(function(t) {
+                    return !existingKeys.has(t.key_id);
+                });
+                var skipped = window.BULK_TRANSLATIONS.length - newEntries.length;
+
+                if (newEntries.length === 0) {
+                    showToast('All ' + skipped + ' entries already exist');
+                    loadTranslations();
+                    return;
+                }
+
+                // 4. Format entries for insert
+                var rows = newEntries.map(function(t) {
+                    return { key_id: t.key_id, kurdish_text: t.kurdish_text, page: t.page, category: t.category || 'general', context: t.context || null };
+                });
+
+                // 5. Batch insert (50 at a time)
+                var added = 0, errors = 0;
+                var BATCH = 50;
+                for (var i = 0; i < rows.length; i += BATCH) {
+                    var batch = rows.slice(i, i + BATCH);
+                    btnLabel.textContent = Math.min(i + BATCH, rows.length) + '/' + rows.length;
+
+                    var ins = await supabase
+                        .from('kurdish_translations')
+                        .insert(batch);
+
+                    if (ins.error) {
+                        console.error('Batch fail at ' + i + ':', ins.error);
+                        // Fallback: try one-by-one for this batch
+                        for (var j = 0; j < batch.length; j++) {
+                            var single = await supabase.from('kurdish_translations').insert([batch[j]]);
+                            if (single.error) {
+                                console.error('Insert fail:', batch[j].key_id, single.error);
+                                errors++;
+                            } else { added++; }
+                        }
+                    } else {
+                        added += batch.length;
+                    }
+                }
+
+                showToast('Imported ' + added + ' new, ' + skipped + ' skipped' + (errors ? ', ' + errors + ' errors' : ''));
+                await loadTranslations();
             } catch (error) {
                 console.error('Import failed:', error);
                 showToast('Import failed: ' + error.message);
