@@ -4091,14 +4091,14 @@
                 <a href="/" style="display: flex; align-items: center;">
                     <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="logo-image" width="40" height="40">
                 </a>
-                <div class="header-title">تەفسیر کورد</div>
+                <div class="header-title" data-t="iv_header_title">تەفسیر کورد</div>
             </div>
 
             <!-- Nav Links (visible on desktop) -->
             <ul class="nav-links" id="navMenu">
-                <li><a href="/" class="nav-link"><i class="fas fa-home"></i><span>سەرەکی</span></a></li>
-                <li><a href="/quran" class="nav-link"><i class="fas fa-book-open"></i><span>قورئان</span></a></li>
-                <li><a href="/islamvoice" class="nav-link active"><i class="fas fa-play-circle"></i><span>دەنگێ ئیسلامێ</span></a></li>
+                <li><a href="/" class="nav-link"><i class="fas fa-home"></i><span data-t="iv_nav_home">سەرەکی</span></a></li>
+                <li><a href="/quran" class="nav-link"><i class="fas fa-book-open"></i><span data-t="iv_nav_quran">قورئان</span></a></li>
+                <li><a href="/islamvoice" class="nav-link active"><i class="fas fa-play-circle"></i><span data-t="iv_nav_islamvoice">دەنگێ ئیسلامێ</span></a></li>
             </ul>
 
             <div class="hamburger-menu" id="hamburgerMenu">
@@ -4123,8 +4123,8 @@
                     </button>
                     <div class="notification-dropdown" id="navNotificationDropdown">
                         <div class="notification-dropdown-header">
-                            <span>ئاگادارکرنەوەکان</span>
-                            <button class="mark-all-read" onclick="markAllNotificationsRead(event)">هەموو بخوێنەوە</button>
+                            <span data-t="iv_notifications_title">ئاگادارکرنەوەکان</span>
+                            <button class="mark-all-read" onclick="markAllNotificationsRead(event)" data-t="iv_mark_all_read">هەموو بخوێنەوە</button>
                         </div>
                         <div class="notification-list" id="navNotificationList">
                             <!-- Notifications will be loaded here -->
@@ -4205,7 +4205,7 @@
                 <!-- Login Button (shown when not authenticated) -->
                 <a href="/login.html?source=islamvoice" class="sidebar-login-btn" id="sidebarLoginBtn" style="display: none;">
                     <i class="fas fa-sign-in-alt"></i>
-                    <span>چوونە ژوورڤە</span>
+                    <span data-t="iv_login_btn">چوونە ژوورڤە</span>
                 </a>
 
                 <!-- Search & Actions Row -->
@@ -4227,36 +4227,36 @@
             <div class="sidebar-nav-links">
                 <a href="/" class="sidebar-nav-link">
                     <i class="fas fa-home"></i>
-                    <span>سەرەکی</span>
+                    <span data-t="iv_sb_home">سەرەکی</span>
                 </a>
                 <a href="/quran" class="sidebar-nav-link">
                     <i class="fas fa-book-open"></i>
-                    <span>قورئان</span>
+                    <span data-t="iv_sb_quran">قورئان</span>
                 </a>
                 <a href="/islamvoice" class="sidebar-nav-link active">
                     <i class="fas fa-play-circle"></i>
-                    <span>دەنگێ ئیسلامێ</span>
+                    <span data-t="iv_sb_islamvoice">دەنگێ ئیسلامێ</span>
                 </a>
             </div>
 
             <div class="sidebar-divider"></div>
 
             <div class="sidebar-header">
-                <h1 class="sidebar-title">دەنگێ ئیسلامێ</h1>
+                <h1 class="sidebar-title" data-t="iv_sb_title">دەنگێ ئیسلامێ</h1>
             </div>
 
             <nav class="sidebar-nav">
                 <!-- All Series -->
                 <button class="sidebar-btn active" data-view="topics">
                     <i class="fas fa-tv"></i>
-                    <span>هەموو زنجیرەکان</span>
+                    <span data-t="iv_all_series">هەموو زنجیرەکان</span>
                 </button>
 
                 <!-- Teachers/Speakers Filter -->
                 <div class="sidebar-section">
                     <button class="sidebar-section-header" onclick="toggleSidebarSection('sheikhs')">
                         <i class="fas fa-user-tie"></i>
-                        <span>ماموستا</span>
+                        <span data-t="iv_teacher">ماموستا</span>
                         <i class="fas fa-chevron-down section-arrow" id="sheikhsArrow"></i>
                     </button>
                     <div class="sidebar-section-content" id="sheikhsSection" style="display:none;">
@@ -4271,17 +4271,17 @@
                 <!-- Other nav items -->
                 <button class="sidebar-btn" data-view="bookmarks">
                     <i class="fas fa-bookmark"></i>
-                    <span>خەزنکراو</span>
+                    <span data-t="iv_saved">خەزنکراو</span>
                     <span class="badge" id="bookmarkCount" style="display:none;"></span>
                 </button>
                 <button class="sidebar-btn" data-view="history">
                     <i class="fas fa-history"></i>
-                    <span>مێژوو</span>
+                    <span data-t="iv_history">مێژوو</span>
                     <span class="badge" id="historyCount" style="display:none;"></span>
                 </button>
                 <button class="sidebar-btn" data-view="continue">
                     <i class="fas fa-play-circle"></i>
-                    <span>بەردەوام ببە</span>
+                    <span data-t="iv_continue">بەردەوام ببە</span>
                     <span class="badge" id="continueCount" style="display:none;"></span>
                 </button>
             </nav>
@@ -4297,8 +4297,8 @@
         <!-- Mobile Notification Dropdown (outside sidebar for proper z-index stacking) -->
         <div class="notification-dropdown mobile-notification-dropdown" id="notificationDropdown">
             <div class="notification-dropdown-header">
-                <span>ئاگادارکرنەوەکان</span>
-                <button class="mark-all-read" onclick="markAllNotificationsRead(event)">هەموو بخوێنەوە</button>
+                <span data-t="iv_notifications_title">ئاگادارکرنەوەکان</span>
+                <button class="mark-all-read" onclick="markAllNotificationsRead(event)" data-t="iv_mark_all_read">هەموو بخوێنەوە</button>
             </div>
             <div class="notification-list" id="notificationList">
                 <!-- Notifications will be loaded here -->
@@ -4317,7 +4317,7 @@
             <!-- Video Loading Spinner -->
             <div class="video-loading" id="videoLoading">
                 <div class="video-spinner"></div>
-                <p>چاڤەڕێبە...</p>
+                <p data-t="iv_loading">چاڤەڕێبە...</p>
             </div>
 
             <div class="video-wrapper">
@@ -4335,8 +4335,8 @@
                     <i class="fas fa-headphones"></i>
                 </div>
                 <div class="audio-only-text">
-                    <h2>دەنگ تەنێ</h2>
-                    <p>گوهدارکرن ب تەنێ - ڤیدیۆ ڤەمرا یە</p>
+                    <h2 data-t="iv_audio_only">دەنگ تەنێ</h2>
+                    <p data-t="iv_audio_desc">گوهدارکرن ب تەنێ - ڤیدیۆ ڤەمرا یە</p>
                 </div>
             </div>
 
@@ -4348,9 +4348,9 @@
 
             <!-- Next Episode Countdown -->
             <div class="next-episode-overlay" id="nextEpisodeOverlay">
-                <h2>بەشا داهاتی دەستپێدکەت د</h2>
+                <h2 data-t="iv_next_starts">بەشا داهاتی دەستپێدکەت د</h2>
                 <div class="countdown" id="countdown">5</div>
-                <button class="action-btn" onclick="cancelAutoPlay()">بەتاڵکرن</button>
+                <button class="action-btn" onclick="cancelAutoPlay()" data-t="iv_cancel">بەتاڵکرن</button>
             </div>
 
             <div class="player-overlay" id="playerOverlay">
@@ -4458,7 +4458,7 @@
                                 <div class="dropdown-item" data-quality="720">720p HD</div>
                                 <div class="dropdown-item active" data-quality="1080">1080p Full HD</div>
                                 <div class="dropdown-item" data-quality="2160">4K Ultra HD</div>
-                                <div class="dropdown-item" data-quality="auto">خودکار</div>
+                                <div class="dropdown-item" data-quality="auto" data-t="iv_quality_auto">خودکار</div>
                             </div>
                         </div>
 
@@ -4468,10 +4468,10 @@
                                 <i class="fas fa-closed-captioning"></i>
                             </button>
                             <div class="dropdown-menu" id="subtitleMenu">
-                                <div class="dropdown-item active" data-subtitle="off">داگرتی</div>
-                                <div class="dropdown-item" data-subtitle="ku">کوردی</div>
-                                <div class="dropdown-item" data-subtitle="ar">عربی</div>
-                                <div class="dropdown-item" data-subtitle="en">ئینگلیزی</div>
+                                <div class="dropdown-item active" data-subtitle="off" data-t="iv_sub_off">داگرتی</div>
+                                <div class="dropdown-item" data-subtitle="ku" data-t="iv_sub_ku">کوردی</div>
+                                <div class="dropdown-item" data-subtitle="ar" data-t="iv_sub_ar">عربی</div>
+                                <div class="dropdown-item" data-subtitle="en" data-t="iv_sub_en">ئینگلیزی</div>
                             </div>
                         </div>
                     </div>
@@ -4499,8 +4499,8 @@
             <!-- Topics View (Default) -->
             <div class="view-container active" id="topicsView">
                 <div class="view-header">
-                    <h2>بابەت</h2>
-                    <p>ھەڵبژێرە بابەتەکێ بۆ ببینینا ڤیدیۆیان</p>
+                    <h2 data-t="iv_topics">بابەت</h2>
+                    <p data-t="iv_topics_desc">ھەڵبژێرە بابەتەکێ بۆ ببینینا ڤیدیۆیان</p>
                 </div>
 
                 <!-- Topic Cards Grid -->
@@ -4549,8 +4549,8 @@
                         ڤەگەڕە بۆ بابەت
                     </button>
                     <div>
-                        <h2 id="topicTitle">بابەتا ھەڵبژارتی</h2>
-                        <p id="topicDescription">ھەڵبژێرە بەشەکێ بۆ بینینێ</p>
+                        <h2 id="topicTitle" data-t="iv_selected_topic">بابەتا ھەڵبژارتی</h2>
+                        <p id="topicDescription" data-t="iv_select_part">ھەڵبژێرە بەشەکێ بۆ بینینێ</p>
                     </div>
                 </div>
 
@@ -4567,8 +4567,8 @@
             <!-- Bookmarks View -->
             <div class="view-container" id="bookmarksView">
                 <div class="view-header">
-                    <h2>خەزنکراو</h2>
-                    <p>ڤیدیۆیێن کو تو خەزنکرینە بۆ بینینا پاشێ</p>
+                    <h2 data-t="iv_saved_title">خەزنکراو</h2>
+                    <p data-t="iv_saved_desc">ڤیدیۆیێن کو تو خەزنکرینە بۆ بینینا پاشێ</p>
                 </div>
 
                 <div class="episodes-list" id="bookmarksListContainer">
@@ -4580,8 +4580,8 @@
             <div class="view-container" id="historyView">
                 <div class="view-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                        <h2>مێژوو</h2>
-                        <p>ھەمی ڤیدیۆیێن کو تو دیتینە</p>
+                        <h2 data-t="iv_history_title">مێژوو</h2>
+                        <p data-t="iv_history_desc">ھەمی ڤیدیۆیێن کو تو دیتینە</p>
                     </div>
                     <button onclick="window.tvApp.clearAllHistory()" style="background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-family: inherit; white-space: nowrap;">
                         <i class="fas fa-trash-alt"></i> پاککرنەوە
@@ -4597,8 +4597,8 @@
             <div class="view-container" id="continueView">
                 <div class="view-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                        <h2>بەردەوام ببە ل بینینێ</h2>
-                        <p>ڤیدیۆیێن کو تو نیڤ تەواھیکرینە</p>
+                        <h2 data-t="iv_continue_title">بەردەوام ببە ل بینینێ</h2>
+                        <p data-t="iv_continue_desc">ڤیدیۆیێن کو تو نیڤ تەواھیکرینە</p>
                     </div>
                     <button onclick="window.tvApp.clearAllContinue()" style="background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-family: inherit; white-space: nowrap;">
                         <i class="fas fa-trash-alt"></i> پاککرنەوە
@@ -4631,7 +4631,7 @@
     <div class="modal" id="shareModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">پارڤەبکە</h2>
+                <h2 class="modal-title" data-t="iv_share">پارڤەبکە</h2>
                 <button class="close-btn" onclick="closeShareModal()" aria-label="داخستن">
                     <i class="fas fa-times"></i>
                 </button>
@@ -4656,11 +4656,11 @@
                 </button>
                 <button class="share-btn" onclick="copyLink()">
                     <i class="fas fa-link"></i>
-                    <span>کۆپیکرنا لینکێ</span>
+                    <span data-t="iv_copy_link">کۆپیکرنا لینکێ</span>
                 </button>
                 <button class="share-btn" onclick="shareOn('email')">
                     <i class="fas fa-envelope"></i>
-                    <span>ئیمەیل</span>
+                    <span data-t="iv_email">ئیمەیل</span>
                 </button>
             </div>
         </div>
@@ -4670,7 +4670,7 @@
     <div class="modal" id="playlistModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">لیستا لێدانێ</h2>
+                <h2 class="modal-title" data-t="iv_playlist">لیستا لێدانێ</h2>
                 <button class="close-btn" onclick="closePlaylistModal()" aria-label="داخستن">
                     <i class="fas fa-times"></i>
                 </button>
@@ -4687,7 +4687,7 @@
     <!-- Notification Toast -->
     <div class="notification" id="notification">
         <i class="fas fa-check-circle notification-icon" style="color: #2ecc71;"></i>
-        <span id="notificationText">زێدەکری بۆ لیستا تە!</span>
+        <span id="notificationText" data-t="iv_added_msg">زێدەکری بۆ لیستا تە!</span>
     </div>
 
     <!-- Footer -->

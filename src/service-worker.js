@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v510';
+const CACHE_NAME = 'tafsir-kurd-v511';
 const urlsToCache = [
   // HTML files removed - they use NETWORK FIRST strategy and cache naturally
   // This prevents caching stale HTML during service worker installation

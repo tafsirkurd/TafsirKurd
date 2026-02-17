@@ -4483,8 +4483,8 @@ window.addEventListener('error', function(e) {
     </div>
     <div class="preloader-content">
         <img src="assets/images/logo.png" alt="Tafsir Kurd" class="preloader-logo logo-image" width="80" height="80">
-        <h1 class="preloader-title">تەفسیر کورد</h1>
-        <p class="preloader-subtitle">چاڤەڕێبە...</p>
+        <h1 class="preloader-title" data-t="preloader_title">تەفسیر کورد</h1>
+        <p class="preloader-subtitle" data-t="preloader_loading">چاڤەڕێبە...</p>
         <div class="preloader-dots">
             <div class="preloader-dot"></div>
             <div class="preloader-dot"></div>
@@ -4518,7 +4518,7 @@ window.addEventListener('error', function(e) {
             <a href="#" id="homeLink" style="display: flex; align-items: center;">
                 <img src="assets/images/logo.png" alt="Tafsir Kurd logo" class="logo-image" width="40" height="40">
             </a>
-            <div class="header-title">تەفسیر کورد</div>
+            <div class="header-title" data-t="header_brand_name">تەفسیر کورد</div>
         </div>
 
         <div class="hamburger-menu" id="hamburgerMenu">
@@ -4530,20 +4530,20 @@ window.addEventListener('error', function(e) {
         <div class="nav-links" id="navLinks">
             <a href="#home" class="nav-link active" id="navHome" data-scroll="home">
                 <i class="fas fa-home"></i>
-                <span>لاپەڕا سەرەکی </span>
+                <span data-t="nav_home_page">لاپەڕا سەرەکی </span>
             </a>
             <a href="/quran" class="nav-link">
                 <i class="fas fa-book-open"></i>
-                <span>قورئان</span>
+                <span data-t="nav_quran_link">قورئان</span>
             </a>
             <a href="/islamvoice" class="nav-link">
                 <i class="fas fa-play-circle"></i>
-                <span>دەنگێ ئیسلامێ</span>
+                <span data-t="nav_islamvoice_link">دەنگێ ئیسلامێ</span>
             </a>
             <div class="nav-dropdown">
                 <a href="#" class="nav-link nav-dropdown-trigger" onclick="return false;">
                     <i class="fas fa-info-circle"></i>
-                    <span>دەربارەی</span>
+                    <span data-t="nav_about_link">دەربارەی</span>
                     <i class="fas fa-chevron-down nav-dropdown-arrow"></i>
                 </a>
                 <div class="nav-dropdown-menu">
@@ -4552,8 +4552,8 @@ window.addEventListener('error', function(e) {
                             <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="nav-dropdown-img" width="32" height="32">
                         </div>
                         <div class="nav-dropdown-info">
-                            <span class="nav-dropdown-name">تەفسیر کورد</span>
-                            <span class="nav-dropdown-role">دەربارەی پڕۆژە</span>
+                            <span class="nav-dropdown-name" data-t="nav_dropdown_project">تەفسیر کورد</span>
+                            <span class="nav-dropdown-role" data-t="nav_dropdown_about_project">دەربارەی پڕۆژە</span>
                         </div>
                     </a>
                     <a href="/founder" class="nav-dropdown-item">
@@ -4561,8 +4561,8 @@ window.addEventListener('error', function(e) {
                             <i class="fas fa-user"></i>
                         </div>
                         <div class="nav-dropdown-info">
-                            <span class="nav-dropdown-name">سامان عبدالرحمن</span>
-                            <span class="nav-dropdown-role">دامەزرێنەر</span>
+                            <span class="nav-dropdown-name" data-t="nav_dropdown_founder">سامان عبدالرحمن</span>
+                            <span class="nav-dropdown-role" data-t="nav_dropdown_founder_role">دامەزرێنەر</span>
                         </div>
                     </a>
                     <script>(function(){var u=localStorage.getItem('founder_avatar_url');if(u){var a=document.getElementById('founderNavAvatar');var i=document.createElement('img');i.src=u;i.alt='سامان عبدالرحمن';i.className='nav-dropdown-img';while(a.firstChild)a.removeChild(a.firstChild);a.appendChild(i);}})()</script>
@@ -4570,7 +4570,7 @@ window.addEventListener('error', function(e) {
             </div>
             <a href="#contact" class="nav-link" data-scroll="contact">
                 <i class="fas fa-envelope"></i>
-                <span>پەیوەندی</span>
+                <span data-t="nav_contact_link">پەیوەندی</span>
             </a>
         </div>
 
@@ -4596,9 +4596,9 @@ window.addEventListener('error', function(e) {
                     </div>
                 </div>
                 <div class="hero-card-body">
-                    <h3 class="hero-card-title">قورئانا پیرۆز</h3>
-                    <p class="hero-card-desc">قورئانا پیرۆز ب تەفسیرا کوردی بخوینە</p>
-                    <span class="hero-card-cta">
+                    <h3 class="hero-card-title" data-t="hero_card_quran_title">قورئانا پیرۆز</h3>
+                    <p class="hero-card-desc" data-t="hero_card_quran_desc">قورئانا پیرۆز ب تەفسیرا کوردی بخوینە</p>
+                    <span class="hero-card-cta" data-t="hero_card_quran_cta">
                         دەست پێبکە <i class="fas fa-arrow-left"></i>
                     </span>
                 </div>
@@ -4611,9 +4611,9 @@ window.addEventListener('error', function(e) {
                     </div>
                 </div>
                 <div class="hero-card-body">
-                    <h3 class="hero-card-title">دەنگێ ئیسلامێ</h3>
-                    <p class="hero-card-desc">ڤیدیۆیێن ئیسلامی ب کوردی تەماشە بکە</p>
-                    <span class="hero-card-cta">
+                    <h3 class="hero-card-title" data-t="hero_card_iv_title">دەنگێ ئیسلامێ</h3>
+                    <p class="hero-card-desc" data-t="hero_card_iv_desc">ڤیدیۆیێن ئیسلامی ب کوردی تەماشە بکە</p>
+                    <span class="hero-card-cta" data-t="hero_card_iv_cta">
                         تەماشا بکە <i class="fas fa-arrow-left"></i>
                     </span>
                 </div>
@@ -4649,8 +4649,8 @@ window.addEventListener('error', function(e) {
                         <div class="feature-icon">
                             <i class="fas fa-play-circle"></i>
                         </div>
-                        <h3 class="feature-title">دەنگێ ئیسلامێ</h3>
-                        <p class="feature-desc">ڤیدیۆیێن ئیسلامی ب زمانێ کوردی تەماشا بکە. ناڤەڕۆکەکا دەنگی و دیاری بۆ فێربوون و ئیلهام.</p>
+                        <h3 class="feature-title" data-t="feature_islamvoice_title">دەنگێ ئیسلامێ</h3>
+                        <p class="feature-desc" data-t="feature_islamvoice_desc">ڤیدیۆیێن ئیسلامی ب زمانێ کوردی تەماشا بکە. ناڤەڕۆکەکا دەنگی و دیاری بۆ فێربوون و ئیلهام.</p>
                         <span class="feature-card-arrow"><i class="fas fa-arrow-left"></i></span>
                     </a>
                     <!-- Feature cards (3, 4, 5, 6) -->
@@ -4748,12 +4748,12 @@ window.addEventListener('error', function(e) {
                         <p class="plan-desc" data-t="plan_complete_tafsir_desc">ئێک ژ مەبەستێن پڕۆژێ مە بەردەستکرنا تەفسیرا هەمی قورئانێیە ب زمانێ کوردی د پلاتفورما یوتیوبی دا.
 گەشتەکا هەمەلایەنییە بۆ دوماهی وەحیا خودایی.</p>
                         <ul class="plan-features">
-                            <li><i class="fas fa-check"></i> وەرگێڕانا قورئانێ ب تەمامی بۆ زمانێ کوردی</li>
-                            <li><i class="fas fa-check"></i> دەنگێ قورئان خوین یاسر الدوسری</li>
-                            <li><i class="fas fa-check"></i> شروڤەکرنەکا کویر بۆ هەمی ئایەتان</li>
-                            <li><i class="fas fa-check"></i> ژێدەرێن خواندنێ یێن کلاسیک</li>
-                            <li><i class="fas fa-check"></i> دروستکرنا ڤیدیویێن کواڵتی بلند</li>
-                            <li><i class="fas fa-check"></i> بەردەستبوون ل یوتیوبی، ل نێزیک</li>
+                            <li data-t="plan_item_1"><i class="fas fa-check"></i> وەرگێڕانا قورئانێ ب تەمامی بۆ زمانێ کوردی</li>
+                            <li data-t="plan_item_2"><i class="fas fa-check"></i> دەنگێ قورئان خوین یاسر الدوسری</li>
+                            <li data-t="plan_item_3"><i class="fas fa-check"></i> شروڤەکرنەکا کویر بۆ هەمی ئایەتان</li>
+                            <li data-t="plan_item_4"><i class="fas fa-check"></i> ژێدەرێن خواندنێ یێن کلاسیک</li>
+                            <li data-t="plan_item_5"><i class="fas fa-check"></i> دروستکرنا ڤیدیویێن کواڵتی بلند</li>
+                            <li data-t="plan_item_6"><i class="fas fa-check"></i> بەردەستبوون ل یوتیوبی، ل نێزیک</li>
                         </ul>
                     </div>
                 </div>
@@ -4769,11 +4769,11 @@ window.addEventListener('error', function(e) {
     <div class="vid-edge vid-edge-top"></div>
     <div class="vid-edge vid-edge-bottom"></div>
     <section id="videos" class="show">
-        <h2 class="section-title videos-title">ڤیدیویێن تایبەت</h2>
+        <h2 class="section-title videos-title" data-t="videos_title">ڤیدیویێن تایبەت</h2>
         <div class="videos-grid" id="dynamic-videos">
             <div class="loading-content">
                 <div class="spinner"></div>
-                <p>چاڤەڕێبە...</p>
+                <p data-t="loading_text">چاڤەڕێبە...</p>
             </div>
         </div>
     </section>
@@ -4785,22 +4785,22 @@ window.addEventListener('error', function(e) {
                 <h2 class="section-title" data-t="schedule_heading">خشتەیێ ڕۆژانە</h2>
                 <div class="schedule-grid" id="schedule-container">
                     <div class="schedule-card">
-                        <div class="schedule-day">
+                        <div class="schedule-day" data-t="schedule_daily">
                             <i class="fas fa-calendar-day"></i>
                             ڕۆژانە
                         </div>
-                        <div class="schedule-time">ژ دەمژمێر ٥ ی ئێڤاری هەتا ١٢ ی شەڤ</div>
-                        <div class="schedule-topic">پارڤەکرنا ناڤەڕۆکا ڕۆژانە</div>
-                        <div class="schedule-desc">ڤیدیو و چیڕۆک و ناڤەڕۆکا ئیسلامی یێن نوی کو ڕۆژانە ل ئێڤارییان دهێنە بەڵاڤکرن. خوراکەکێ ڕۆحی یێ بەردەوام بۆ ڕۆحا تە.</div>
+                        <div class="schedule-time" data-t="schedule_daily_time">ژ دەمژمێر ٥ ی ئێڤاری هەتا ١٢ ی شەڤ</div>
+                        <div class="schedule-topic" data-t="schedule_daily_topic">پارڤەکرنا ناڤەڕۆکا ڕۆژانە</div>
+                        <div class="schedule-desc" data-t="schedule_daily_desc">ڤیدیو و چیڕۆک و ناڤەڕۆکا ئیسلامی یێن نوی کو ڕۆژانە ل ئێڤارییان دهێنە بەڵاڤکرن. خوراکەکێ ڕۆحی یێ بەردەوام بۆ ڕۆحا تە.</div>
                     </div>
                     <div class="schedule-card">
-                        <div class="schedule-day">
+                        <div class="schedule-day" data-t="schedule_thursday">
                             <i class="fas fa-star"></i>
                             تایبەت ل ڕۆژا پێنجشەمبێ
                         </div>
-                        <div class="schedule-time">پێنجشەمب</div>
-                        <div class="schedule-topic">سەلەوات و سورەتا (الکهف)</div>
-                        <div class="schedule-desc">ناڤەڕۆکەکا تایبەت یا سەلەواتان، ڕیلزێن سورەتا الکهف، کو دبیتە بیرئینان بۆ خواندنا وێ - (سونەت)
+                        <div class="schedule-time" data-t="schedule_thursday_time">پێنجشەمب</div>
+                        <div class="schedule-topic" data-t="schedule_thursday_topic">سەلەوات و سورەتا (الکهف)</div>
+                        <div class="schedule-desc" data-t="schedule_thursday_desc">ناڤەڕۆکەکا تایبەت یا سەلەواتان، ڕیلزێن سورەتا الکهف، کو دبیتە بیرئینان بۆ خواندنا وێ - (سونەت)
 نەریتێن پیرۆز یێن پێنجشەمبێ.</div>
                     </div>
                 </div>
@@ -4833,7 +4833,7 @@ window.addEventListener('error', function(e) {
 
             <!-- Right side: form -->
             <div class="contact-form-panel">
-                <h3 class="contact-form-heading">نامەیەکێ بنووسە</h3>
+                <h3 class="contact-form-heading" data-t="contact_form_heading">نامەیەکێ بنووسە</h3>
                 <form id="contactForm" class="contact-form">
                     <div class="form-row">
                         <div class="form-group">
@@ -4893,7 +4893,7 @@ window.addEventListener('error', function(e) {
             <div class="footer-brand">
                 <div class="footer-brand-header">
                     <img src="assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image" loading="lazy" width="50" height="50">
-                    <h2 class="footer-brand-name">تەفسیر کورد</h2>
+                    <h2 class="footer-brand-name" data-t="footer_brand_name">تەفسیر کورد</h2>
                 </div>
                 <p class="footer-brand-tagline">
                     پلاتفۆرمەکا ئارام بۆ خواندنێ، گەڕیان و رامان ل سەر قورئانا پیرۆز ب زمانێ کوردی (بادینی). قورئان بگەهیتە دەستێ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
@@ -4956,7 +4956,7 @@ window.addEventListener('error', function(e) {
             <p class="footer-copyright">
                 &copy; <span id="year"></span> تەفسیر کورد. هەمی ماف د پاراستینە. خودایێ مەزن بەرەکەتێ بێخیتە هەوڵ و ماندیبوونا مە.
             </p>
-            <p class="footer-brand-seo" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; opacity: 0.7;">
+            <p class="footer-brand-seo" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; opacity: 0.7;" data-t="footer_seo_text">
                 تەفسیر کورد – تەفسیرا قورئانا پیرۆز ب زمانی کوردی (بادینی)
             </p>
             <div class="footer-meta-links">
