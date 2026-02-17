@@ -15,6 +15,53 @@
         .main-content { overflow-x: hidden; }
         .content-area { overflow-x: hidden; }
 
+        /* ===== Platform Tabs ===== */
+        .platform-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border-light);
+        }
+        .platform-tab {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            color: var(--text-tertiary);
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .platform-tab:hover {
+            color: var(--text-primary);
+        }
+        .platform-tab.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--text-primary);
+        }
+        .platform-tab .tab-count {
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .platform-tab.active .tab-count {
+            background: var(--text-primary);
+            color: var(--bg-app);
+        }
+        @media (max-width: 768px) {
+            .platform-tabs { margin-bottom: 16px; }
+            .platform-tab { padding: 10px 16px; font-size: 13px; }
+        }
+
         /* ===== Stats ===== */
         .stats-row {
             display: flex;
@@ -772,9 +819,21 @@
                     </div>
                 </div>
 
+                <div class="platform-tabs" id="platformTabs">
+                    <button class="platform-tab active" onclick="setPlatform('web')">
+                        <i data-lucide="globe" style="width:16px;height:16px"></i> Web <span class="tab-count" id="webCount">--</span>
+                    </button>
+                    <button class="platform-tab" onclick="setPlatform('android')">
+                        <i data-lucide="smartphone" style="width:16px;height:16px"></i> Android <span class="tab-count" id="androidCount">--</span>
+                    </button>
+                    <button class="platform-tab" onclick="setPlatform('ios')">
+                        <i data-lucide="tablet" style="width:16px;height:16px"></i> iOS <span class="tab-count" id="iosCount">--</span>
+                    </button>
+                </div>
+
                 <div class="stats-row">
                     <div class="stat-pill"><strong id="totalTranslations">--</strong> translations</div>
-                    <div class="stat-pill"><strong id="totalPages">--</strong> pages</div>
+                    <div class="stat-pill"><strong id="totalPages">--</strong> <span id="pagesLabel">pages</span></div>
                 </div>
 
                 <div class="filters">
@@ -835,13 +894,14 @@
     <script>
         lucide.createIcons();
 
-        const KNOWN_PAGES = [
+        const WEB_PAGES = [
             'all','index','quran','about','founder','islamvoice',
             'onboarding','login','profile','settings','goals',
             'bookmarks','reading-goal','complete-signup',
-            'privacy-policy','terms-and-conditions','delete-account','footer',
-            'android','ios'
+            'privacy-policy','terms-and-conditions','delete-account','footer'
         ];
+        // For dropdowns (Add New / Edit)
+        const KNOWN_PAGES = WEB_PAGES.concat(['android','ios']);
 
         let allTranslations = [];
         let filteredList = [];
@@ -851,6 +911,7 @@
         let canEdit = true;
         let canDelete = true;
         let editingId = null;
+        let activePlatform = 'web';
 
         (async () => {
             const auth = await window.adminAuth.checkAuth();
@@ -893,6 +954,50 @@
             }
         });
 
+        function setPlatform(platform) {
+            activePlatform = platform;
+            activePageFilter = '';
+            currentPage = 1;
+
+            // Update tab UI
+            document.querySelectorAll('.platform-tab').forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            updateStats();
+            populatePageFilter();
+            filterTranslations();
+            lucide.createIcons();
+        }
+
+        function getPlatformData() {
+            if (activePlatform === 'android') {
+                return allTranslations.filter(function(t) { return normalizePage(t.page) === 'android'; });
+            } else if (activePlatform === 'ios') {
+                return allTranslations.filter(function(t) { return normalizePage(t.page) === 'ios'; });
+            } else {
+                // Web = everything except android and ios
+                return allTranslations.filter(function(t) {
+                    var p = normalizePage(t.page);
+                    return p !== 'android' && p !== 'ios';
+                });
+            }
+        }
+
+        function updatePlatformCounts() {
+            var webCount = 0, androidCount = 0, iosCount = 0;
+            allTranslations.forEach(function(t) {
+                var p = normalizePage(t.page);
+                if (p === 'android') androidCount++;
+                else if (p === 'ios') iosCount++;
+                else webCount++;
+            });
+            document.getElementById('webCount').textContent = webCount;
+            document.getElementById('androidCount').textContent = androidCount;
+            document.getElementById('iosCount').textContent = iosCount;
+        }
+
         function populatePageDropdowns() {
             var sel = document.getElementById('newPage');
             sel.textContent = '';
@@ -916,8 +1021,7 @@
                 allTranslations = result.data || [];
                 updateStats();
                 populatePageFilter();
-                filteredList = allTranslations;
-                renderPage();
+                filterTranslations();
             } catch (error) {
                 console.error('Error:', error);
                 showToast('Failed to load translations');
@@ -925,28 +1029,51 @@
         }
 
         function updateStats() {
-            document.getElementById('totalTranslations').textContent = allTranslations.length;
-            var pages = [];
-            allTranslations.forEach(function(t) {
-                var p = normalizePage(t.page);
-                if (pages.indexOf(p) === -1) pages.push(p);
-            });
-            document.getElementById('totalPages').textContent = pages.length;
+            var platformData = getPlatformData();
+            document.getElementById('totalTranslations').textContent = platformData.length;
+            document.getElementById('pagesLabel').textContent = (activePlatform === 'android' || activePlatform === 'ios') ? 'categories' : 'pages';
+            if (activePlatform === 'android' || activePlatform === 'ios') {
+                // For app platforms, count categories
+                var cats = [];
+                platformData.forEach(function(t) {
+                    var c = t.category || 'general';
+                    if (cats.indexOf(c) === -1) cats.push(c);
+                });
+                document.getElementById('totalPages').textContent = cats.length;
+            } else {
+                var pages = [];
+                platformData.forEach(function(t) {
+                    var p = normalizePage(t.page);
+                    if (pages.indexOf(p) === -1) pages.push(p);
+                });
+                document.getElementById('totalPages').textContent = pages.length;
+            }
+            updatePlatformCounts();
         }
 
         var activePageFilter = '';
 
         function populatePageFilter() {
-            // Count per page
+            var platformData = getPlatformData();
             var pageCounts = {};
-            allTranslations.forEach(function(t) {
-                var p = normalizePage(t.page);
-                pageCounts[p] = (pageCounts[p] || 0) + 1;
-            });
-            // Merge KNOWN_PAGES so android/ios chips always show
-            KNOWN_PAGES.forEach(function(p) {
-                if (p !== 'all' && !(p in pageCounts)) pageCounts[p] = 0;
-            });
+
+            if (activePlatform === 'android' || activePlatform === 'ios') {
+                // For app platforms, use category as filter chips
+                platformData.forEach(function(t) {
+                    var c = t.category || 'general';
+                    pageCounts[c] = (pageCounts[c] || 0) + 1;
+                });
+            } else {
+                // For web, use page as filter chips
+                platformData.forEach(function(t) {
+                    var p = normalizePage(t.page);
+                    pageCounts[p] = (pageCounts[p] || 0) + 1;
+                });
+                // Merge known web pages
+                WEB_PAGES.forEach(function(p) {
+                    if (p !== 'all' && !(p in pageCounts)) pageCounts[p] = 0;
+                });
+            }
             var pages = Object.keys(pageCounts).sort();
 
             var container = document.getElementById('pageChips');
@@ -1002,15 +1129,23 @@
 
         function filterTranslations() {
             var search = document.getElementById('searchInput').value.toLowerCase().trim();
+            var platformData = getPlatformData();
 
-            // Filter
-            var matches = allTranslations.filter(function(t) {
+            // Filter within active platform
+            var matches = platformData.filter(function(t) {
                 var matchSearch = !search ||
                     t.key_id.toLowerCase().indexOf(search) !== -1 ||
                     t.kurdish_text.toLowerCase().indexOf(search) !== -1 ||
                     (t.context && t.context.toLowerCase().indexOf(search) !== -1);
-                var matchPage = !activePageFilter || normalizePage(t.page) === activePageFilter;
-                return matchSearch && matchPage;
+
+                var matchChip;
+                if (activePlatform === 'android' || activePlatform === 'ios') {
+                    // For app platforms, filter by category
+                    matchChip = !activePageFilter || (t.category || 'general') === activePageFilter;
+                } else {
+                    matchChip = !activePageFilter || normalizePage(t.page) === activePageFilter;
+                }
+                return matchSearch && matchChip;
             });
 
             // Smart rank when searching
@@ -1138,7 +1273,7 @@
             // Page badge
             var pageDiv = document.createElement('div');
             pageDiv.className = 't-page-badge';
-            pageDiv.textContent = normalizePage(t.page);
+            pageDiv.textContent = (activePlatform === 'android' || activePlatform === 'ios') ? (t.category || 'general') : normalizePage(t.page);
             row.appendChild(pageDiv);
 
             // Actions
@@ -1362,7 +1497,7 @@
             if (form.classList.contains('active')) {
                 document.getElementById('newKeyId').value = '';
                 document.getElementById('newKurdishText').value = '';
-                document.getElementById('newPage').value = 'all';
+                document.getElementById('newPage').value = activePlatform === 'web' ? 'all' : activePlatform;
                 document.getElementById('newContext').value = '';
                 document.getElementById('newKeyId').focus();
             }
