@@ -1576,22 +1576,22 @@
                 });
                 if (!window.BULK_TRANSLATIONS) throw new Error('No data');
 
-                // 2. Fetch ALL existing key_ids in one query
+                // 2. Fetch ALL existing entries with key_id + page
                 btnLabel.textContent = 'Checking...';
-                var existingKeys = new Set();
+                var existingMap = {};
                 var offset = 0;
                 while (true) {
                     var res = await supabase
                         .from('kurdish_translations')
-                        .select('key_id')
+                        .select('key_id,page')
                         .range(offset, offset + 999);
                     if (res.error) throw res.error;
-                    res.data.forEach(function(r) { existingKeys.add(r.key_id); });
+                    res.data.forEach(function(r) { existingMap[r.key_id] = r.page; });
                     if (res.data.length < 1000) break;
                     offset += 1000;
                 }
 
-                // 3. Deduplicate BULK_TRANSLATIONS by key_id (keep first occurrence)
+                // 3. Deduplicate BULK_TRANSLATIONS by key_id
                 var seenKeys = {};
                 var uniqueEntries = [];
                 window.BULK_TRANSLATIONS.forEach(function(t) {
@@ -1602,17 +1602,20 @@
                 });
                 var dupes = window.BULK_TRANSLATIONS.length - uniqueEntries.length;
 
-                // 4. Split into new entries and existing entries that need updating
+                // 4. Split: new entries, entries needing page fix, already correct
                 var newEntries = [];
-                var updateEntries = [];
+                var fixEntries = [];
+                var skipped = 0;
                 uniqueEntries.forEach(function(t) {
-                    if (existingKeys.has(t.key_id)) {
-                        updateEntries.push(t);
-                    } else {
+                    if (!(t.key_id in existingMap)) {
                         newEntries.push(t);
+                    } else if (existingMap[t.key_id] !== t.page) {
+                        fixEntries.push(t);
+                    } else {
+                        skipped++;
                     }
                 });
-                console.log('[Import] Total:', window.BULK_TRANSLATIONS.length, 'Unique:', uniqueEntries.length, 'Dupes:', dupes, 'New:', newEntries.length, 'Update:', updateEntries.length);
+                console.log('[Import] New:', newEntries.length, 'Fix page:', fixEntries.length, 'OK:', skipped, 'Dupes:', dupes);
 
                 var added = 0, updated = 0, errors = 0;
 
@@ -1621,35 +1624,36 @@
                     var rows = newEntries.map(function(t) {
                         return { key_id: t.key_id, kurdish_text: t.kurdish_text, page: t.page, category: t.category || 'general', context: t.context || '' };
                     });
-                    var BATCH = 50;
-                    for (var i = 0; i < rows.length; i += BATCH) {
-                        var batch = rows.slice(i, i + BATCH);
-                        btnLabel.textContent = 'Adding ' + Math.min(i + BATCH, rows.length) + '/' + rows.length;
+                    for (var i = 0; i < rows.length; i += 50) {
+                        var batch = rows.slice(i, i + 50);
+                        btnLabel.textContent = 'Adding ' + Math.min(i + 50, rows.length) + '/' + rows.length;
                         var ins = await supabase.from('kurdish_translations').insert(batch);
                         if (ins.error) {
-                            console.error('[Import] Batch insert fail:', ins.error);
                             for (var j = 0; j < batch.length; j++) {
                                 var single = await supabase.from('kurdish_translations').insert([batch[j]]);
-                                if (single.error) { console.error('[Import] Fail:', batch[j].key_id, single.error.message); errors++; }
-                                else { added++; }
+                                if (single.error) { errors++; } else { added++; }
                             }
                         } else { added += batch.length; }
                     }
                 }
 
-                // 6. Update existing entries (fix page + category)
-                if (updateEntries.length > 0) {
-                    for (var i = 0; i < updateEntries.length; i++) {
-                        var t = updateEntries[i];
-                        if (i % 50 === 0) btnLabel.textContent = 'Updating ' + (i + 1) + '/' + updateEntries.length;
-                        var upd = await supabase.from('kurdish_translations')
-                            .update({ page: t.page, category: t.category || 'general', kurdish_text: t.kurdish_text })
-                            .eq('key_id', t.key_id);
-                        if (upd.error) { errors++; } else { updated++; }
+                // 6. Fix page names — run 10 updates in parallel
+                if (fixEntries.length > 0) {
+                    for (var i = 0; i < fixEntries.length; i += 10) {
+                        var chunk = fixEntries.slice(i, i + 10);
+                        btnLabel.textContent = 'Fixing ' + Math.min(i + 10, fixEntries.length) + '/' + fixEntries.length;
+                        var results = await Promise.all(chunk.map(function(t) {
+                            return supabase.from('kurdish_translations')
+                                .update({ page: t.page, category: t.category || 'general' })
+                                .eq('key_id', t.key_id);
+                        }));
+                        results.forEach(function(r) {
+                            if (r.error) errors++; else updated++;
+                        });
                     }
                 }
 
-                var msg = 'Added ' + added + ', Updated ' + updated + (dupes ? ', Dupes ' + dupes : '') + (errors ? ', ERRORS ' + errors : '');
+                var msg = 'Added ' + added + ', Fixed ' + updated + ', OK ' + skipped + (errors ? ', ERRORS ' + errors : '');
                 console.log('[Import] Done:', msg);
                 showToast(msg);
                 await loadTranslations();
