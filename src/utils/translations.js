@@ -54,14 +54,25 @@
     }
 
     /**
-     * Build the reverse lookup (text → key) from current + previous translations
-     * This ensures that even if the admin changed a translation,
-     * the OLD text still maps to the correct key.
+     * Build the reverse lookup (text → key) from bulk originals + previous + current
+     * Priority (lowest→highest): bulk originals → prev snapshot → current DB values
+     * This ensures ALL users (new or returning) can match original HTML text to keys,
+     * even after an admin has changed a translation in the DB.
      */
     function buildTextToKey() {
         textToKey = {};
 
-        // First: add previous values (old text → key)
+        // 1. Seed from BULK_TRANSLATIONS (original hardcoded HTML texts → key)
+        //    This is the base layer — covers new users who have no prev snapshot
+        if (window.BULK_TRANSLATIONS && Array.isArray(window.BULK_TRANSLATIONS)) {
+            window.BULK_TRANSLATIONS.forEach(function(entry) {
+                if (entry.key_id && entry.kurdish_text && entry.kurdish_text.trim()) {
+                    textToKey[entry.kurdish_text.trim()] = entry.key_id;
+                }
+            });
+        }
+
+        // 2. Previous snapshot (old text → key, covers multi-step admin changes)
         const prev = loadPrevious();
         Object.keys(prev).forEach(key => {
             const text = prev[key];
@@ -70,13 +81,30 @@
             }
         });
 
-        // Then: add current values (overwrites if same key has new text)
-        // Both old and new text will map to the same key
+        // 3. Current DB values (highest priority — new text also maps to key)
         Object.keys(translations).forEach(key => {
             const text = translations[key];
             if (text && text.trim()) {
                 textToKey[text.trim()] = key;
             }
+        });
+    }
+
+    /**
+     * Lazy-load bulk-translations.js to seed the original HTML text → key mapping.
+     * Cached by service worker after first load so subsequent visits are instant.
+     */
+    function loadBulkTranslations() {
+        if (window.BULK_TRANSLATIONS) {
+            buildTextToKey();
+            return Promise.resolve();
+        }
+        return new Promise(function(resolve) {
+            var script = document.createElement('script');
+            script.src = '/utils/bulk-translations.js';
+            script.onload = function() { buildTextToKey(); resolve(); };
+            script.onerror = resolve;
+            document.head.appendChild(script);
         });
     }
 
@@ -200,14 +228,17 @@
                 isLoaded = true;
                 // Refresh in background and re-apply if changed
                 setTimeout(async () => {
+                    await loadBulkTranslations();
                     const changed = await fetchFromSupabase();
                     if (changed) autoApply();
+                    else autoApply(); // re-apply with bulk originals seeded
                 }, 1000);
                 return translations;
             }
 
             // Fetch fresh
             await fetchFromSupabase();
+            await loadBulkTranslations();
             isLoaded = true;
             return translations;
         })();
