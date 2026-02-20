@@ -448,6 +448,99 @@
             text-align: center;
         }
 
+        /* ===== History Panel ===== */
+        .history-panel {
+            margin-top: 32px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .history-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        .history-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .history-empty {
+            padding: 32px;
+            text-align: center;
+            color: var(--text-tertiary);
+            font-size: 14px;
+        }
+        .history-item {
+            display: flex;
+            gap: 14px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-light);
+            align-items: flex-start;
+            font-size: 13px;
+        }
+        .history-item:last-child { border-bottom: none; }
+        .history-badge {
+            flex-shrink: 0;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .history-badge.edit   { background: #dbeafe; color: #1d4ed8; }
+        .history-badge.add    { background: #dcfce7; color: #15803d; }
+        .history-badge.delete { background: #fee2e2; color: #b91c1c; }
+        body.dark-mode .history-badge.edit   { background: #1e3a5f; color: #93c5fd; }
+        body.dark-mode .history-badge.add    { background: #14532d; color: #86efac; }
+        body.dark-mode .history-badge.delete { background: #450a0a; color: #fca5a5; }
+        .history-meta {
+            flex: 1;
+            min-width: 0;
+        }
+        .history-key {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: monospace;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        .history-diff {
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        .history-diff .old-text {
+            color: #b91c1c;
+            text-decoration: line-through;
+            word-break: break-word;
+        }
+        .history-diff .new-text {
+            color: #15803d;
+            word-break: break-word;
+        }
+        body.dark-mode .history-diff .old-text { color: #fca5a5; }
+        body.dark-mode .history-diff .new-text  { color: #86efac; }
+        .history-time {
+            flex-shrink: 0;
+            font-size: 11px;
+            color: var(--text-tertiary);
+            white-space: nowrap;
+        }
+        .history-email {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+        }
+
         /* ===== Toast ===== */
         .toast {
             position: fixed;
@@ -815,6 +908,7 @@
                     <h1 class="page-title">Translations</h1>
                     <div class="page-actions">
                         <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn"><i data-lucide="download"></i><span>Import All</span></button>
+                        <button class="btn btn-secondary" onclick="toggleHistory()" id="historyBtn"><i data-lucide="history"></i><span>History</span></button>
                         <button class="btn btn-primary" onclick="toggleAddForm()" id="addBtn"><i data-lucide="plus"></i><span>Add New</span></button>
                     </div>
                 </div>
@@ -880,6 +974,16 @@
                     <button class="pagination-btn" id="prevPage" onclick="changePage(-1)"><i data-lucide="chevron-left"></i></button>
                     <span class="pagination-info" id="pageInfo">Page 1</span>
                     <button class="pagination-btn" id="nextPage" onclick="changePage(1)"><i data-lucide="chevron-right"></i></button>
+                </div>
+
+                <div class="history-panel" id="historyPanel" style="display:none;">
+                    <div class="history-header">
+                        <h2 class="history-title"><i data-lucide="history" style="width:18px;height:18px;vertical-align:middle;margin-left:6px"></i> تاریخچەی گۆڕانکاریەکان</h2>
+                        <button class="btn btn-secondary" onclick="loadHistory()" id="historyRefreshBtn" style="font-size:13px;padding:8px 14px"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i><span>نوێکردنەوە</span></button>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <div class="history-empty">کلیک بکە لە سەر نوێکردنەوە بۆ بارکردنی تاریخچە</div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -1464,12 +1568,18 @@
             btn.appendChild(document.createTextNode(' Saving...'));
 
             try {
+                var oldItem = allTranslations.find(function(t) { return t.id === id; });
+                var oldText = oldItem ? oldItem.kurdish_text : '';
+                var oldKey  = oldItem ? oldItem.key_id : '';
+
                 var result = await supabase
                     .from('kurdish_translations')
                     .update({ key_id: keyVal, kurdish_text: textVal, page: pageVal, context: ctxVal || '' })
                     .eq('id', id);
 
                 if (result.error) throw result.error;
+
+                logChange('edit', { key_id: keyVal, old_key: oldKey !== keyVal ? oldKey : undefined, old_text: oldText, new_text: textVal, page: pageVal });
 
                 var item = allTranslations.find(function(t) { return t.id === id; });
                 if (item) {
@@ -1521,6 +1631,8 @@
 
                 if (result.error) throw result.error;
 
+                logChange('add', { key_id: keyVal, new_text: textVal, page: pageVal });
+
                 toggleAddForm();
                 await loadTranslations();
                 showToast('Translation added');
@@ -1536,12 +1648,16 @@
             if (!confirm('Delete this translation?')) return;
 
             try {
+                var delItem = allTranslations.find(function(t) { return t.id === id; });
+
                 var result = await supabase
                     .from('kurdish_translations')
                     .delete()
                     .eq('id', id);
 
                 if (result.error) throw result.error;
+
+                if (delItem) logChange('delete', { key_id: delItem.key_id, old_text: delItem.kurdish_text, page: delItem.page });
 
                 allTranslations = allTranslations.filter(function(t) { return t.id !== id; });
                 filteredList = filteredList.filter(function(t) { return t.id !== id; });
@@ -1664,6 +1780,149 @@
                 btnLabel.textContent = 'Import All';
                 btn.disabled = false;
             }
+        }
+
+        // ===== History =====
+        function toggleHistory() {
+            var panel = document.getElementById('historyPanel');
+            var isHidden = panel.style.display === 'none';
+            panel.style.display = isHidden ? 'block' : 'none';
+            if (isHidden) {
+                lucide.createIcons();
+                loadHistory();
+            }
+        }
+
+        async function logChange(action, details) {
+            try {
+                var email = sessionStorage.getItem('adminEmail') || '';
+                await supabase.from('admin_audit_logs').insert([{
+                    email: email,
+                    action: 'translation_' + action,
+                    details: details,
+                    page_slug: 'admin-translations',
+                    resource_type: 'translation',
+                    severity: action === 'delete' ? 'warning' : 'info'
+                }]);
+            } catch (e) {
+                // Non-blocking — ignore log errors
+            }
+        }
+
+        async function loadHistory() {
+            var listEl = document.getElementById('historyList');
+            var btn = document.getElementById('historyRefreshBtn');
+            listEl.textContent = '';
+            var loadingDiv = document.createElement('div');
+            loadingDiv.className = 'history-empty';
+            loadingDiv.textContent = 'بارکردن...';
+            listEl.appendChild(loadingDiv);
+            btn.disabled = true;
+
+            try {
+                var result = await supabase
+                    .from('admin_audit_logs')
+                    .select('*')
+                    .eq('page_slug', 'admin-translations')
+                    .order('created_at', { ascending: false })
+                    .limit(100);
+
+                if (result.error) throw result.error;
+                renderHistory(result.data || []);
+            } catch (e) {
+                listEl.textContent = '';
+                var errDiv = document.createElement('div');
+                errDiv.className = 'history-empty';
+                errDiv.textContent = 'نەتوانرا بارکرێت: ' + e.message;
+                listEl.appendChild(errDiv);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function makeEl(tag, cls, text) {
+            var el = document.createElement(tag);
+            if (cls) el.className = cls;
+            if (text !== undefined) el.textContent = text;
+            return el;
+        }
+
+        function renderHistory(rows) {
+            var listEl = document.getElementById('historyList');
+            listEl.textContent = '';
+
+            if (!rows.length) {
+                listEl.appendChild(makeEl('div', 'history-empty', 'هیچ تۆمارێک نییە'));
+                return;
+            }
+
+            rows.forEach(function(row) {
+                var action = (row.action || '').replace('translation_', '');
+                var details = row.details || {};
+                var badgeClass = action === 'add' ? 'add' : action === 'delete' ? 'delete' : 'edit';
+                var badgeLabel = action === 'add' ? 'زیادکرا' : action === 'delete' ? 'سڕایەوە' : 'گۆڕدرا';
+
+                var item = makeEl('div', 'history-item');
+
+                // Badge
+                item.appendChild(makeEl('span', 'history-badge ' + badgeClass, badgeLabel));
+
+                // Meta block
+                var meta = makeEl('div', 'history-meta');
+
+                // Key + page
+                var keyDiv = makeEl('div', 'history-key', (details.key_id || ''));
+                if (details.page) {
+                    var pageSpan = makeEl('span', '', ' (' + details.page + ')');
+                    pageSpan.style.fontWeight = '400';
+                    pageSpan.style.color = 'var(--text-tertiary)';
+                    keyDiv.appendChild(pageSpan);
+                }
+                meta.appendChild(keyDiv);
+
+                // Diff block
+                var diff = makeEl('div', 'history-diff');
+                if (action === 'edit') {
+                    if (details.old_key && details.old_key !== details.key_id) {
+                        var keyRow = makeEl('div');
+                        keyRow.textContent = 'کلیل: ';
+                        var oldK = makeEl('span', 'old-text', details.old_key);
+                        var arrow = makeEl('span', '', ' ← ');
+                        var newK = makeEl('span', 'new-text', details.key_id);
+                        keyRow.appendChild(oldK);
+                        keyRow.appendChild(arrow);
+                        keyRow.appendChild(newK);
+                        diff.appendChild(keyRow);
+                    }
+                    if ((details.old_text || '') !== (details.new_text || '')) {
+                        diff.appendChild(makeEl('div', 'old-text', details.old_text || ''));
+                        var arrowDiv = makeEl('div', '', '↓');
+                        arrowDiv.style.color = 'var(--text-tertiary)';
+                        arrowDiv.style.fontSize = '11px';
+                        diff.appendChild(arrowDiv);
+                        diff.appendChild(makeEl('div', 'new-text', details.new_text || ''));
+                    }
+                } else if (action === 'add') {
+                    diff.appendChild(makeEl('div', 'new-text', details.new_text || ''));
+                } else if (action === 'delete') {
+                    diff.appendChild(makeEl('div', 'old-text', details.old_text || ''));
+                }
+                meta.appendChild(diff);
+
+                // Email
+                if (row.email) meta.appendChild(makeEl('div', 'history-email', row.email));
+                item.appendChild(meta);
+
+                // Time
+                var timeStr = '';
+                if (row.created_at) {
+                    var d = new Date(row.created_at);
+                    timeStr = d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                }
+                item.appendChild(makeEl('div', 'history-time', timeStr));
+
+                listEl.appendChild(item);
+            });
         }
 
         // ===== Toast =====

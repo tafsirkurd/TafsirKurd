@@ -415,7 +415,6 @@ const BULK_TRANSLATIONS = [
     { key_id: "founder_name", kurdish_text: "سامان عبدالرحمن", category: "content", page: "founder" },
     { key_id: "founder_title", kurdish_text: "دامەزرێنەرێ تەفسیر کورد", category: "content", page: "founder" },
     { key_id: "founder_story", kurdish_text: "چیرۆک", category: "content", page: "founder" },
-    { key_id: "founder_who", kurdish_text: "کیمە ئەز", category: "content", page: "founder" },
     { key_id: "founder_intro", kurdish_text: "ئەز سامان عبدالرحمن، بەندەیەکێ خودایێ مەزن", category: "content", page: "founder" },
     { key_id: "founder_platform", kurdish_text: "ئەڤ پلاتفۆرمە ب ڤیانا مەزن و ب باوەرییەکا قوی دامەزراند", category: "content", page: "founder" },
     { key_id: "founder_quote", kurdish_text: "إِنْ أُرِيدُ إِلَّا الْإِصْلَاحَ مَا اسْتَطَعْتُ", category: "content", page: "founder" },
