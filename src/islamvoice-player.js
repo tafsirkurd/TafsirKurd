@@ -310,24 +310,24 @@
                     title: episode.seriesTitle || episode.categoryTitle || 'عام',
                     description: episode.seriesDescription || '',
                     episodes: [],
-                    // Use series thumbnail first, then episode thumbnail as fallback
                     thumbnail: episode.seriesThumbnail || episode.thumbnail || '',
-                    // Track series order and created date for sorting
                     displayOrder: episode.seriesDisplayOrder ?? 999,
-                    createdAt: episode.seriesCreatedAt || episode.created_at || ''
+                    createdAt: episode.seriesCreatedAt || episode.created_at || '',
+                    latestEpisodeAt: episode.createdAt || ''
                 };
+            }
+            // Track the most recent episode date for this series
+            if (episode.createdAt && episode.createdAt > topics[topicKey].latestEpisodeAt) {
+                topics[topicKey].latestEpisodeAt = episode.createdAt;
             }
             topics[topicKey].episodes.push(episode);
         });
 
-        // Sort topics by display_order first, then by createdAt
+        // Sort by latest episode first — series with newest episodes appear at top
         const sortedTopics = Object.values(topics).sort((a, b) => {
-            // First sort by display_order (lower = first)
-            if (a.displayOrder !== b.displayOrder) {
-                return a.displayOrder - b.displayOrder;
-            }
-            // Then by createdAt (newest first)
-            return new Date(b.createdAt) - new Date(a.createdAt);
+            const aLatest = a.latestEpisodeAt || a.createdAt || '';
+            const bLatest = b.latestEpisodeAt || b.createdAt || '';
+            return new Date(bLatest) - new Date(aLatest);
         });
 
         // Show active filter indicator
@@ -1276,6 +1276,23 @@
     function playYouTubeVideo(videoId, title, episodeId) {
         console.log('🎬 Playing YouTube video:', videoId, title, episodeId);
 
+        // On native app (Android/iOS), use Chrome Custom Tab (in-app overlay, shares Chrome cookies)
+        const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+        if (isNative) {
+            trackVideoView(episodeId);
+            addToWatchHistory(episodeId, false);
+            updateBadgeCounts();
+            const ytUrl = `https://www.youtube.com/watch?v=${videoId}`;
+            const Browser = window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+            if (Browser && Browser.open) {
+                Browser.open({ url: ytUrl, presentationStyle: 'fullscreen' });
+            } else {
+                // Fallback: open in YouTube app
+                window.open(ytUrl, '_system');
+            }
+            return;
+        }
+
         // Track view
         trackVideoView(episodeId);
         addToWatchHistory(episodeId, false);
@@ -1324,10 +1341,11 @@
 
         // Simple iframe
         const iframe = document.createElement('iframe');
-        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&origin=https://tafsirkurd.com&widget_referrer=https://tafsirkurd.com`;
         iframe.style.cssText = 'width:100%; height:100%; border:none;';
-        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen';
         iframe.allowFullscreen = true;
+        iframe.referrerPolicy = 'no-referrer-when-downgrade';
         wrapper.appendChild(iframe);
 
         // Close button
@@ -2388,7 +2406,7 @@
                             episodeNumber: v.episode_number || 0,
                             duration: v.duration || null,
                             thumbnail: v.thumbnail_url || (isS3 ? null : `https://img.youtube.com/vi/${v.video_url}/maxresdefault.jpg`),
-                            embedUrl: isS3 ? v.video_url : `https://www.youtube.com/embed/${v.video_url}`,
+                            embedUrl: isS3 ? v.video_url : `https://www.youtube-nocookie.com/embed/${v.video_url}`,
                             viewCount: v.view_count || 0,
                             views: v.view_count || 0,
                             shareCount: v.share_count || 0,
