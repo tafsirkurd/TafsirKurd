@@ -19,7 +19,7 @@
     const CACHE_KEY = 'tafsirkurd_translations';
     const CACHE_EXPIRY_KEY = 'tafsirkurd_translations_expiry';
     const PREV_KEY = 'tafsirkurd_translations_prev';
-    const CACHE_DURATION = 0; // No cache - always fetch fresh so admin changes are instant
+    const CACHE_DURATION = 30000; // 30s cache — serve instantly from cache, refresh in background
 
     // Supabase config (loaded from /config endpoint)
     let SUPABASE_URL = null;
@@ -220,30 +220,9 @@
      */
     async function init() {
         if (isLoaded) return translations;
-        if (loadPromise) return loadPromise;
-
-        loadPromise = (async () => {
-            // Try cache first
-            if (loadFromCache()) {
-                isLoaded = true;
-                // Refresh in background and re-apply if changed
-                setTimeout(async () => {
-                    await loadBulkTranslations();
-                    const changed = await fetchFromSupabase();
-                    if (changed) autoApply();
-                    else autoApply(); // re-apply with bulk originals seeded
-                }, 1000);
-                return translations;
-            }
-
-            // Fetch fresh
-            await fetchFromSupabase();
-            await loadBulkTranslations();
-            isLoaded = true;
-            return translations;
-        })();
-
-        return loadPromise;
+        // Wait for the eager fetch that started at script load time
+        await _eagerPromise;
+        return translations;
     }
 
     /**
@@ -401,18 +380,47 @@
         return isLoaded;
     }
 
+    // ── Eager fetch: start loading config + translations immediately,
+    //    before DOMContentLoaded, so data is ready by the time DOM renders.
+    const _eagerPromise = (async function() {
+        try {
+            await loadConfig();
+            // Apply cache instantly if available (serves page in <5ms)
+            if (loadFromCache()) {
+                isLoaded = true;
+                // Fire background refresh so stale cache gets updated
+                fetchFromSupabase().then(function(changed) {
+                    if (changed) autoApply();
+                });
+                return;
+            }
+            await fetchFromSupabase();
+            await loadBulkTranslations();
+            isLoaded = true;
+        } catch (e) {
+            // Non-blocking — page still renders with original text
+        }
+    })();
+
     // Auto-initialize on DOM ready
     function onReady() {
-        init().then(() => {
+        _eagerPromise.then(function() {
             autoApply();
+
+            // Live polling: re-fetch every 5s when tab is visible
+            // so admin changes appear without any page refresh
+            setInterval(function() {
+                if (document.visibilityState !== 'visible') return;
+                fetchFromSupabase().then(function(changed) {
+                    if (changed) autoApply();
+                });
+            }, 5000);
 
             // MutationObserver for dynamic content
             const observer = new MutationObserver((mutations) => {
                 let shouldReapply = false;
                 mutations.forEach(mutation => {
-                    if (mutation.addedNodes.length > 0) {
-                        shouldReapply = true;
-                    }
+                    if (mutation.addedNodes.length > 0) shouldReapply = true;
                 });
                 if (shouldReapply) {
                     clearTimeout(window._translationReapplyTimeout);
@@ -420,10 +428,7 @@
                 }
             });
 
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
+            observer.observe(document.body, { childList: true, subtree: true });
         });
     }
 
