@@ -9,7 +9,10 @@
         "build:prod": "node scripts/bump-sw-version.js production-deploy",
         "test": "echo 'No tests configured yet'",
         "lint": "echo 'Linting...'",
-        "format": "echo 'Formatting code...'"
+        "format": "echo 'Formatting code...'",
+        "cap:sync": "npx cap sync && node scripts/verify-assets.js",
+        "cap:ios": "npx cap open ios",
+        "cap:android": "npx cap open android"
     },
     "repository": {
         "type": "git",
@@ -31,6 +34,17 @@
     },
     "homepage": "https://tafsirkurd.com",
     "dependencies": {
+        "@capacitor/android": "^8.0.2",
+        "@capacitor/app": "^8.0.1",
+        "@capacitor/browser": "^8.0.0",
+        "@capacitor/cli": "^8.0.2",
+        "@capacitor/core": "^8.0.2",
+        "@capacitor/filesystem": "^8.1.0",
+        "@capacitor/ios": "^8.0.2",
+        "@capacitor/preferences": "^8.0.0",
+        "@capacitor/push-notifications": "^8.0.0",
+        "@capacitor/splash-screen": "^8.0.0",
+        "@capacitor/status-bar": "^8.0.0",
         "@supabase/supabase-js": "^2.55.0",
         "@upstash/redis": "^1.35.8",
         "bcrypt": "^6.0.0",
@@ -40,11 +54,15 @@
         "googleapis": "^140.0.0",
         "isomorphic-dompurify": "^2.34.0",
         "jsonwebtoken": "^9.0.2",
+        "sharp": "^0.34.5",
         "tweetnacl": "^1.0.3"
     },
-    "devDependencies": {},
     "engines": {
         "node": ">=16.0.0",
         "npm": ">=8.0.0"
+    },
+    "devDependencies": {
+        "jsdom": "^28.1.0",
+        "typescript": "^5.9.3"
     }
 }

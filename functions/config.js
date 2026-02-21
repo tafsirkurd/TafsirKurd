@@ -13,10 +13,14 @@ export async function onRequest(context) {
         origin.includes(domain) || referer.includes(domain)
     );
 
+    // Allow Capacitor mobile app (origin: capacitor://localhost or https://localhost)
+    const isCapacitor = origin === 'capacitor://localhost' || origin === 'https://localhost';
+
     // Block direct browser access (no origin/referer = someone typing URL directly)
+    // But allow Capacitor WebView which may send no referer
     const isDirectAccess = !origin && !referer;
 
-    if (!isAllowed || isDirectAccess) {
+    if ((!isAllowed && !isCapacitor) || (isDirectAccess && !isCapacitor)) {
         return new Response(
             JSON.stringify({ error: 'Access denied' }),
             { status: 403, headers: { 'Content-Type': 'application/json' } }
