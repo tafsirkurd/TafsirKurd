@@ -101,7 +101,7 @@
         }
         return new Promise(function(resolve) {
             var script = document.createElement('script');
-            script.src = '/utils/bulk-translations.js';
+            script.src = '/utils/bulk-translations.js?v=20260221';
             script.onload = function() { buildTextToKey(); resolve(); };
             script.onerror = resolve;
             document.head.appendChild(script);
@@ -300,135 +300,78 @@
             normalizedLookup[normalizeText(text)] = textToKey[text];
         });
 
-        // Elements to check for text replacement
-        const selectors = [
-            'button',
-            'a',
-            'label',
-            'span',
-            'p',
-            'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-            'li',
-            'th', 'td',
-            'option',
-            'div.btn',
-            '.nav-item-label',
-            '.form-label',
-            '.modal-label',
-            '.section-title',
-            '.card-title',
-            '.stat-label',
-            '.metric-label',
-            '.hero-title',
-            '.hero-sub',
-            '.feature-title',
-            '.feature-desc',
-            '.card-text',
-            '.description',
-            '.subtitle',
-            '.info-text'
-        ];
-
-        // Attributes to check
-        const attributeChecks = [
-            { attr: 'placeholder', selector: 'input[placeholder], textarea[placeholder]' },
-            { attr: 'title', selector: '[title]' },
-            { attr: 'aria-label', selector: '[aria-label]' },
-            { attr: 'alt', selector: 'img[alt]' }
-        ];
-
-        // Helper to find and replace text
         function tryReplace(text) {
             const normalized = normalizeText(text);
             const key = textToKey[text] || textToKey[normalized] || normalizedLookup[normalized];
-            if (key && translations[key]) {
-                return translations[key];
-            }
+            if (key && translations[key]) return translations[key];
             return null;
         }
 
-        // Replace text content in elements
-        selectors.forEach(selector => {
-            try {
-                document.querySelectorAll(selector).forEach(el => {
-                    if (el.children.length === 0) {
-                        const text = el.textContent.trim();
-                        const newText = tryReplace(text);
-                        if (newText && newText !== text) {
-                            el.textContent = newText;
-                            replacements++;
-                        }
-                    } else {
-                        el.childNodes.forEach(node => {
-                            if (node.nodeType === Node.TEXT_NODE) {
-                                const text = node.textContent.trim();
-                                if (text) {
-                                    const newText = tryReplace(text);
-                                    if (newText && newText !== text) {
-                                        node.textContent = newText;
-                                        replacements++;
-                                    }
-                                }
-                            }
-                        });
+        // 1. Walk EVERY text node in the document (no missed elements)
+        const skipTags = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, TEXTAREA: 1 };
+        const walker = document.createTreeWalker(
+            document.body,
+            NodeFilter.SHOW_TEXT,
+            {
+                acceptNode: function(node) {
+                    if (skipTags[node.parentElement && node.parentElement.tagName]) {
+                        return NodeFilter.FILTER_REJECT;
                     }
-                });
-            } catch (e) {
-                // Ignore selector errors
+                    return NodeFilter.FILTER_ACCEPT;
+                }
+            }
+        );
+        const textNodes = [];
+        let node;
+        while ((node = walker.nextNode())) textNodes.push(node);
+
+        textNodes.forEach(function(node) {
+            const text = node.textContent.trim();
+            if (!text) return;
+            const newText = tryReplace(text);
+            if (newText && newText !== text) {
+                node.textContent = node.textContent.replace(text, newText);
+                replacements++;
             }
         });
 
-        // Replace attributes
-        attributeChecks.forEach(({ attr, selector }) => {
-            try {
-                document.querySelectorAll(selector).forEach(el => {
-                    const text = el.getAttribute(attr);
-                    if (text) {
-                        const trimmed = text.trim();
-                        const key = textToKey[trimmed] || textToKey[normalizeText(trimmed)] || normalizedLookup[normalizeText(trimmed)];
-                        if (key && translations[key] && translations[key] !== text) {
-                            el.setAttribute(attr, translations[key]);
-                            replacements++;
-                        }
-                    }
-                });
-            } catch (e) {
-                // Ignore errors
-            }
+        // 2. Replace translatable attributes everywhere
+        const attrMap = { placeholder: 1, title: 1, 'aria-label': 1, alt: 1, value: 1 };
+        document.querySelectorAll('[placeholder],[title],[aria-label],[alt]').forEach(function(el) {
+            Object.keys(attrMap).forEach(function(attr) {
+                const text = el.getAttribute(attr);
+                if (!text) return;
+                const trimmed = text.trim();
+                const key = textToKey[trimmed] || normalizedLookup[normalizeText(trimmed)];
+                if (key && translations[key] && translations[key] !== text) {
+                    el.setAttribute(attr, translations[key]);
+                    replacements++;
+                }
+            });
         });
 
-        // Key-based: elements with data-t attribute
-        document.querySelectorAll('[data-t]').forEach(el => {
+        // 3. data-t key-based (most reliable — always wins)
+        document.querySelectorAll('[data-t]').forEach(function(el) {
             const key = el.getAttribute('data-t');
-            if (translations[key]) {
+            if (translations[key] !== undefined) {
                 el.textContent = translations[key];
                 replacements++;
             }
         });
-
-        document.querySelectorAll('[data-t-placeholder]').forEach(el => {
+        document.querySelectorAll('[data-t-placeholder]').forEach(function(el) {
             const key = el.getAttribute('data-t-placeholder');
-            if (translations[key]) {
-                el.placeholder = translations[key];
-                replacements++;
-            }
+            if (translations[key]) { el.placeholder = translations[key]; replacements++; }
         });
-
-        document.querySelectorAll('[data-t-title]').forEach(el => {
+        document.querySelectorAll('[data-t-title]').forEach(function(el) {
             const key = el.getAttribute('data-t-title');
-            if (translations[key]) {
-                el.title = translations[key];
-                replacements++;
-            }
+            if (translations[key]) { el.title = translations[key]; replacements++; }
         });
 
-        // Save current translations as "previous" snapshot after applying
-        // Next time, if admin changed a value, the old text still matches via previous
         savePrevious();
 
         const elapsed = (performance.now() - startTime).toFixed(1);
         if (replacements > 0) {
-            console.log(`✓ Applied ${replacements} translations in ${elapsed}ms`);
+            console.log('✓ Applied ' + replacements + ' translations in ' + elapsed + 'ms');
         }
     }
 
