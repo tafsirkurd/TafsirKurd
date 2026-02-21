@@ -41,7 +41,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="/manifest.json">
-    <title>قورئانا پیرۆز | TafsirKurd</title>
+    <title data-t="quran_title_1">قورئانا پیرۆز | TafsirKurd</title>
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -4704,12 +4704,12 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <span class="setting-label" data-t="quran_arabic_font_label">جۆرێ فۆنتا عەرەبی</span>
                         <select class="setting-select" id="arabicFontSelect" aria-label="هەلبژاردنا فۆنتا عەرەبی" onchange="changeArabicFont()">
-                            <option value="KFGQPC Hafs">KFGQPC Hafs (حەفس)</option>
+                            <option value="KFGQPC Hafs" data-t="quran_option_4">KFGQPC Hafs (حەفس)</option>
                             <option value="Scheherazade New">Scheherazade New</option>
                             <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
                         </select>
                     </div>
-                    <div id="arabicPreview" style="width: 100%; padding: 15px; background: var(--bg); border-radius: 8px; text-align: center; font-size: 2.2rem; color: var(--text); border: 2px solid var(--border);">
+                    <div id="arabicPreview" style="width: 100%; padding: 15px; background: var(--bg); border-radius: 8px; text-align: center; font-size: 2.2rem; color: var(--text); border: 2px solid var(--border);" data-t="quran_div_5">
                         بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
                     </div>
                 </div>
@@ -4732,10 +4732,10 @@
                         <select class="setting-select" id="tafsirFontSelect" aria-label="هەلبژاردنا فۆنتا تەفسیرێ" onchange="changeTafsirFont()">
                             <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
                             <option value="Scheherazade New">Scheherazade New</option>
-                            <option value="KFGQPC Hafs">KFGQPC Hafs (حەفس)</option>
+                            <option value="KFGQPC Hafs" data-t="quran_option_6">KFGQPC Hafs (حەفس)</option>
                         </select>
                     </div>
-                    <div id="tafsirPreview" style="width: 100%; padding: 15px; background: var(--bg); border-radius: 8px; text-align: right; font-size: 1.1rem; color: var(--text); border: 2px solid var(--border); direction: rtl;">
+                    <div id="tafsirPreview" style="width: 100%; padding: 15px; background: var(--bg); border-radius: 8px; text-align: right; font-size: 1.1rem; color: var(--text); border: 2px solid var(--border); direction: rtl;" data-t="quran_div_7">
                         ب ناڤێ خودایێ دلۆڤان و دلوڤین، هەمی سوپاس و ستایش بۆ خودایێ مەزن یێ کو خودانێ هەمی جیهان و گەردوونێ یە.
                     </div>
                 </div>
@@ -4805,14 +4805,14 @@
                 <i class="fas fa-lock"></i>
             </div>
             <h2 class="login-required-title" data-t="quran_login_required">چوونە ژوورڤە پێتڤییە</h2>
-            <p class="login-required-text">
+            <p class="login-required-text" data-t="quran_p_9">
                 ژ بۆ بکارئینانا ڤێ تایبەتمەندییێ، تکایە چوونە ژوورڤە بکە یان هەژمارەکا نوو دروست بکە.
             </p>
             <div class="login-required-buttons">
                 <button class="login-required-btn" onclick="goToLogin()">
                     <i class="fas fa-sign-in-alt"></i> چوونە ژوورڤە
                 </button>
-                <button class="login-required-btn secondary" onclick="closeLoginRequired()">
+                <button class="login-required-btn secondary" onclick="closeLoginRequired()" data-t="quran_button_11">
                     زڤڕین
                 </button>
             </div>
@@ -5017,10 +5017,10 @@
                         <div class="progress-bar-sticky">
                             <div class="progress-fill-sticky" id="progressFillSticky"></div>
                         </div>
-                        <span class="progress-percentage" id="progressPercentage">٠٪</span>
+                        <span class="progress-percentage" id="progressPercentage" data-t="quran_span_15">٠٪</span>
                     </div>
                     <div class="sticky-progress-right">
-                        <span class="sticky-ayah-count" id="stickyAyahCount">٠ / ٧ ئایەت</span>
+                        <span class="sticky-ayah-count" id="stickyAyahCount" data-t="quran_span_16">٠ / ٧ ئایەت</span>
                     </div>
                 </div>
             </div>
@@ -5057,7 +5057,7 @@
                                     <i class="fas fa-bookmark" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">67. Al-Mulk</div>
-                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەتا المُلک</div>
+                                        <div style="font-size: 0.9rem; color: var(--text-muted);" data-t="quran_div_17">سوورەتا المُلک</div>
                                     </div>
                                 </button>
 
@@ -5065,7 +5065,7 @@
                                     <i class="fas fa-bookmark" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">18. Al-Kahf</div>
-                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەتا الکهف</div>
+                                        <div style="font-size: 0.9rem; color: var(--text-muted);" data-t="quran_div_18">سوورەتا الکهف</div>
                                     </div>
                                 </button>
 
@@ -5073,7 +5073,7 @@
                                     <i class="fas fa-bookmark" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">36. Ya-Sin</div>
-                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەتا یسین</div>
+                                        <div style="font-size: 0.9rem; color: var(--text-muted);" data-t="quran_div_19">سوورەتا یسین</div>
                                     </div>
                                 </button>
 
@@ -5081,7 +5081,7 @@
                                     <i class="fas fa-star" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">Ayatul Kursi</div>
-                                        <div style="font-size: 0.9rem; color: var(--text-muted);">البقرة 255</div>
+                                        <div style="font-size: 0.9rem; color: var(--text-muted);" data-t="quran_div_20">البقرة 255</div>
                                     </div>
                                 </button>
 
@@ -5089,7 +5089,7 @@
                                     <i class="fas fa-moon" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">Last Verses</div>
-                                        <div style="font-size: 0.9rem; color: var(--text-muted);">البقرة 285-286</div>
+                                        <div style="font-size: 0.9rem; color: var(--text-muted);" data-t="quran_div_21">البقرة 285-286</div>
                                     </div>
                                 </button>
 
@@ -5097,7 +5097,7 @@
                                     <i class="fas fa-heart" style="color: var(--primary); font-size: 1.2rem;"></i>
                                     <div style="text-align: right; flex: 1;">
                                         <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">55. Ar-Rahman</div>
-                                        <div style="font-size: 0.9rem; color: var(--text-muted);">سوورەتا الرحمٰن</div>
+                                        <div style="font-size: 0.9rem; color: var(--text-muted);" data-t="quran_div_22">سوورەتا الرحمٰن</div>
                                     </div>
                                 </button>
                             </div>
@@ -5148,8 +5148,8 @@
                             <i class="fas fa-book-open" style="color: #fff; font-size: 0.9rem;"></i>
                         </div>
                         <div>
-                            <div style="font-size: 0.7rem; color: rgba(255,255,255,0.6);">بەردەوام بکە</div>
-                            <div style="font-size: 0.85rem; font-weight: 600; color: #fff;" id="continueReadingInfo">١. الفاتحة</div>
+                            <div style="font-size: 0.7rem; color: rgba(255,255,255,0.6);" data-t="quran_div_24">بەردەوام بکە</div>
+                            <div style="font-size: 0.85rem; font-weight: 600; color: #fff;" id="continueReadingInfo" data-t="quran_div_25">١. الفاتحة</div>
                         </div>
                     </div>
                     <div style="background: #fff; color: #000; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 0.7rem;">
@@ -5167,8 +5167,8 @@
                             <i class="fas fa-bullseye" style="color: #fff; font-size: 0.85rem;"></i>
                         </div>
                         <div>
-                            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text);">ئارمانج</div>
-                            <div style="font-size: 0.65rem; color: var(--text-muted);">پێشکەفتنا تە</div>
+                            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text);" data-t="quran_div_27">ئارمانج</div>
+                            <div style="font-size: 0.65rem; color: var(--text-muted);" data-t="quran_div_28">پێشکەفتنا تە</div>
                         </div>
                     </div>
 
@@ -5189,8 +5189,8 @@
                             <i class="fas fa-bookmark" style="color: #fff; font-size: 0.85rem;"></i>
                         </div>
                         <div>
-                            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text);">نیشانەکان</div>
-                            <div style="font-size: 0.65rem; color: var(--text-muted);">پاشکەڤتکرن</div>
+                            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text);" data-t="quran_div_29">نیشانەکان</div>
+                            <div style="font-size: 0.65rem; color: var(--text-muted);" data-t="quran_div_30">پاشکەڤتکرن</div>
                         </div>
                     </div>
 
@@ -5236,8 +5236,8 @@
 
             <div class="reader-header">
                 <div class="surah-card-arabic no-kurdish-convert" id="readerSurahIcon" style="margin-bottom: 15px;">surah001</div>
-                <h2 class="reader-surah-name" id="readerSurahName">Al-Fatihah (الفاتحة)</h2>
-                <p class="reader-surah-info" id="readerSurahInfo">٧ ئایەت</p>
+                <h2 class="reader-surah-name" id="readerSurahName" data-t="quran_h2_33">Al-Fatihah (الفاتحة)</h2>
+                <p class="reader-surah-info" id="readerSurahInfo" data-t="quran_p_34">٧ ئایەت</p>
             </div>
 
             <div class="ayah-container" id="ayahContainer">
@@ -5294,9 +5294,9 @@
                     <div class="footer-brand">
                         <div class="footer-brand-header">
                             <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image" width="40" height="40" loading="lazy">
-                            <h2 class="footer-brand-name">تەفسیر کورد</h2>
+                            <h2 class="footer-brand-name" data-t="quran_h2_35">تەفسیر کورد</h2>
                         </div>
-                        <p class="footer-brand-tagline">
+                        <p class="footer-brand-tagline" data-t="quran_p_36">
                             پلاتفۆرمەکا ئارام بۆ خواندنێ، گەڕیان و رامان ل سەر قورئانا پیرۆز ب زمانێ کوردی (بادینی). قورئان بگەهیتە دەستێ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
                         </p>
                         <div class="footer-social-icons">
@@ -5317,31 +5317,31 @@
 
                     <!-- Navigate Section -->
                     <div class="footer-section">
-                        <h3 class="footer-section-title">گەڕیان</h3>
+                        <h3 class="footer-section-title" data-t="quran_h3_37">گەڕیان</h3>
                         <div class="footer-links">
-                            <a href="/profile" class="footer-link">پرۆفایل</a>
-                            <a href="/goals" class="footer-link">ئارمانج</a>
-                            <a href="/bookmarks" class="footer-link">نیشانەکری</a>
-                            <a href="/settings" class="footer-link">رێکخستن</a>
+                            <a href="/profile" class="footer-link" data-t="quran_a_13">پرۆفایل</a>
+                            <a href="/goals" class="footer-link" data-t="quran_a_39">ئارمانج</a>
+                            <a href="/bookmarks" class="footer-link" data-t="quran_a_40">نیشانەکری</a>
+                            <a href="/settings" class="footer-link" data-t="quran_a_41">رێکخستن</a>
                         </div>
                     </div>
 
                     <!-- Resources Section -->
                     <div class="footer-section">
-                        <h3 class="footer-section-title">رۆژپەڕێن دی</h3>
+                        <h3 class="footer-section-title" data-t="quran_h3_42">رۆژپەڕێن دی</h3>
                         <div class="footer-links">
-                            <a href="/" class="footer-link">مالپەڕێ سەرەکی</a>
-                            <a href="/quran" class="footer-link">قورئانا پیرۆز</a>
-                            <a href="/#features" class="footer-link">تایبەتمەندی</a>
-                            <a href="/#about" class="footer-link">دەربارەی مە</a>
+                            <a href="/" class="footer-link" data-t="quran_a_43">مالپەڕێ سەرەکی</a>
+                            <a href="/quran" class="footer-link" data-t="quran_a_44">قورئانا پیرۆز</a>
+                            <a href="/#features" class="footer-link" data-t="quran_a_45">تایبەتمەندی</a>
+                            <a href="/#about" class="footer-link" data-t="quran_a_46">دەربارەی مە</a>
                         </div>
                     </div>
 
                     <!-- Connect Section -->
                     <div class="footer-section">
-                        <h3 class="footer-section-title">پەیوەندی</h3>
+                        <h3 class="footer-section-title" data-t="quran_h3_47">پەیوەندی</h3>
                         <div class="footer-links">
-                            <p class="footer-contact-text">ئەگەر تە پرسیارەک یان پێشنیارەک هەبیت، پەیوەندییێ ب مە بکە و ب زووترین دەم دێ بەرسڤا تە هێتە دان!</p>
+                            <p class="footer-contact-text" data-t="quran_p_48">ئەگەر تە پرسیارەک یان پێشنیارەک هەبیت، پەیوەندییێ ب مە بکە و ب زووترین دەم دێ بەرسڤا تە هێتە دان!</p>
                             <a href="mailto:info@tafsirkurd.com" class="footer-link">
                                 <i class="fas fa-envelope"></i> info@tafsirkurd.com
                             </a>
@@ -5357,12 +5357,12 @@
                     <p class="footer-copyright">
                         &copy; <span id="year"></span> تەفسیر کورد. هەمی ماف پاراستی نە. خودایێ مەزن بەرەکەتێ بێخیتە هەول و ماندبوونا مە.
                     </p>
-                    <p class="footer-brand-seo" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
+                    <p class="footer-brand-seo" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;" data-t="quran_p_51">
                         تەفسیر کورد – تەفسیرا قورئانا پیرۆز ب زمانی کوردی (بادینی)
                     </p>
                     <div class="footer-meta-links">
-                        <a href="/privacy-policy" class="footer-meta-link">پاراستنا تایبەتمەندیێ</a>
-                        <a href="/terms-and-conditions" class="footer-meta-link">مەرج و رێسایان</a>
+                        <a href="/privacy-policy" class="footer-meta-link" data-t="quran_a_52">پاراستنا تایبەتمەندیێ</a>
+                        <a href="/terms-and-conditions" class="footer-meta-link" data-t="quran_a_53">مەرج و رێسایان</a>
                     </div>
                 </div>
             </div>
@@ -7652,7 +7652,7 @@
                                         <button class="ayah-menu-item"
                                                 onclick="openRepeatManager()">
                                             <i class="fas fa-redo-alt"></i>
-                                            <span>بەڕێڤەبەرا دووبارەکرنێ</span>
+                                            <span data-t="quran_span_57">بەڕێڤەبەرا دووبارەکرنێ</span>
                                         </button>
                                     </div>
                                 </div>
@@ -11457,8 +11457,8 @@
         <div class="audio-player-content">
             <!-- Current Ayah Info -->
             <div class="audio-player-info">
-                <div class="audio-player-surah" id="playerSurahName">سوورەت</div>
-                <div class="audio-player-ayah" id="playerAyahNumber">ئایەت ١</div>
+                <div class="audio-player-surah" id="playerSurahName" data-t="quran_div_54">سوورەت</div>
+                <div class="audio-player-ayah" id="playerAyahNumber" data-t="quran_div_55">ئایەت ١</div>
             </div>
 
             <!-- Playback Controls -->
@@ -11515,7 +11515,7 @@
             <!-- Download Option -->
             <div class="player-menu-item" onclick="downloadCurrentAyah()">
                 <i class="fas fa-download"></i>
-                <span>دابەزینا ئایەتێ</span>
+                <span data-t="quran_span_56">دابەزینا ئایەتێ</span>
             </div>
 
             <!-- Repeat Manager -->
@@ -11527,13 +11527,13 @@
             <!-- Repeat Mode -->
             <div class="player-menu-item" onclick="cycleRepeatMode()">
                 <i class="fas fa-repeat" id="repeatIcon"></i>
-                <span id="repeatText">دووبارەکرن: نەخێر</span>
+                <span id="repeatText" data-t="quran_span_58">دووبارەکرن: نەخێر</span>
             </div>
 
             <!-- Speed Control -->
             <div class="player-menu-item player-menu-submenu" onclick="toggleSpeedOptions(event)">
                 <i class="fas fa-tachometer-alt"></i>
-                <span>خێرایی</span>
+                <span data-t="quran_span_59">خێرایی</span>
                 <i class="fas fa-chevron-down submenu-arrow"></i>
             </div>
             <div class="speed-options" id="speedOptions">
@@ -11548,7 +11548,7 @@
             <!-- Reciter Selection -->
             <div class="player-menu-item player-menu-submenu" onclick="toggleReciterOptions(event)">
                 <i class="fas fa-user"></i>
-                <span>قاری</span>
+                <span data-t="quran_span_60">قاری</span>
                 <i class="fas fa-chevron-down submenu-arrow"></i>
             </div>
             <div class="reciter-options" id="reciterOptions">
@@ -11561,7 +11561,7 @@
     <div class="repeat-manager-modal" id="repeatManagerModal">
         <div class="repeat-manager-content">
             <div class="repeat-manager-header">
-                <h3>بەڕێڤەبەرا دووبارەکرنێ</h3>
+                <h3 data-t="quran_h3_61">بەڕێڤەبەرا دووبارەکرنێ</h3>
                 <button class="close-repeat-btn" onclick="closeRepeatManager()" aria-label="داخستنا بەڕێڤەبەرا دووبارەکرنێ">
                     <i class="fas fa-times"></i>
                 </button>
@@ -11570,20 +11570,20 @@
             <!-- Mode Tabs -->
             <div class="repeat-mode-tabs">
                 <button class="repeat-tab active" data-mode="single" onclick="switchRepeatMode('single')">
-                    <span>ئایەتێ تاک</span>
+                    <span data-t="quran_span_62">ئایەتێ تاک</span>
                 </button>
                 <button class="repeat-tab" data-mode="range" onclick="switchRepeatMode('range')">
-                    <span>مەودایێ ئایەتان</span>
+                    <span data-t="quran_span_63">مەودایێ ئایەتان</span>
                 </button>
                 <button class="repeat-tab" data-mode="surah" onclick="switchRepeatMode('surah')">
-                    <span>تەڤاهیا سوورەتێ</span>
+                    <span data-t="quran_span_64">تەڤاهیا سوورەتێ</span>
                 </button>
             </div>
 
             <!-- Single Verse Mode -->
             <div class="repeat-mode-content" id="singleMode">
                 <div class="verse-input-group">
-                    <label for="singleVerseInput">ئایەتا ئێکێ:</label>
+                    <label for="singleVerseInput" data-t="quran_label_65">ئایەتا ئێکێ:</label>
                     <input type="text" id="singleVerseInput" aria-label="ئایەتا یەکێ" placeholder="1:1" value="" readonly>
                 </div>
             </div>
@@ -11591,11 +11591,11 @@
             <!-- Range Mode -->
             <div class="repeat-mode-content hidden" id="rangeMode">
                 <div class="verse-input-group">
-                    <label for="rangeStartInput">ژ ئایەتێ:</label>
+                    <label for="rangeStartInput" data-t="quran_label_66">ژ ئایەتێ:</label>
                     <input type="text" id="rangeStartInput" aria-label="دەستپێکا مەودایێ" placeholder="1:1" value="">
                 </div>
                 <div class="verse-input-group">
-                    <label for="rangeEndInput">هەتا ئایەتێ:</label>
+                    <label for="rangeEndInput" data-t="quran_label_67">هەتا ئایەتێ:</label>
                     <input type="text" id="rangeEndInput" aria-label="کۆتایا مەودایێ" placeholder="1:7" value="">
                 </div>
             </div>
@@ -11603,7 +11603,7 @@
             <!-- Surah Mode -->
             <div class="repeat-mode-content hidden" id="surahMode">
                 <div class="verse-input-group">
-                    <label for="surahSelect">سوورەت:</label>
+                    <label for="surahSelect" data-t="quran_label_68">سوورەت:</label>
                     <select id="surahSelect" class="surah-select" aria-label="هەلبژاردنا سوورەتێ">
                         <!-- Populated dynamically -->
                     </select>
@@ -11614,42 +11614,42 @@
             <div class="repeat-controls">
                 <!-- Play Range Times -->
                 <div class="repeat-control-item">
-                    <span>ژمارا لیستانێ</span>
+                    <span data-t="quran_span_69">ژمارا لیستانێ</span>
                     <div class="counter-controls">
                         <button onclick="decrementCounter('playRange')" aria-label="کەمکرنا ژمارا دووبارەکرنێ"><i class="fas fa-minus"></i></button>
                         <span id="playRangeCount">2</span>
                         <button onclick="incrementCounter('playRange')" aria-label="زێدەکرنا ژمارا دووبارەکرنێ"><i class="fas fa-plus"></i></button>
-                        <span class="times-label">جار</span>
+                        <span class="times-label" data-t="quran_span_70">جار</span>
                     </div>
                 </div>
 
                 <!-- Repeat Each Verse -->
                 <div class="repeat-control-item">
-                    <span>دووبارەکرنا هەر ئایەتێ</span>
+                    <span data-t="quran_span_71">دووبارەکرنا هەر ئایەتێ</span>
                     <div class="counter-controls">
                         <button onclick="decrementCounter('repeatVerse')" aria-label="کەمکرنا دووبارەکرنا ئایەتێ"><i class="fas fa-minus"></i></button>
                         <span id="repeatVerseCount">1</span>
                         <button onclick="incrementCounter('repeatVerse')" aria-label="زێدەکرنا دووبارەکرنا ئایەتێ"><i class="fas fa-plus"></i></button>
-                        <span class="times-label">جار</span>
+                        <span class="times-label" data-t="quran_span_72">جار</span>
                     </div>
                 </div>
 
                 <!-- Delay Between Verses -->
                 <div class="repeat-control-item">
-                    <span>دیرەنگیا نێوان ئایەتان</span>
+                    <span data-t="quran_span_73">دیرەنگیا نێوان ئایەتان</span>
                     <div class="counter-controls">
                         <button onclick="decrementCounter('delay')" aria-label="کەمکرنا دیرەنگیێ"><i class="fas fa-minus"></i></button>
                         <span id="delayCount">0</span>
                         <button onclick="incrementCounter('delay')" aria-label="زێدەکرنا دیرەنگیێ"><i class="fas fa-plus"></i></button>
-                        <span class="times-label">چرکە</span>
+                        <span class="times-label" data-t="quran_span_74">چرکە</span>
                     </div>
                 </div>
             </div>
 
             <!-- Action Buttons -->
             <div class="repeat-action-buttons">
-                <button class="repeat-cancel-btn" onclick="closeRepeatManager()">پاشڤەکرن</button>
-                <button class="repeat-start-btn" onclick="startRepeatPlayback()">دەستپێکرن</button>
+                <button class="repeat-cancel-btn" onclick="closeRepeatManager()" data-t="quran_button_75">پاشڤەکرن</button>
+                <button class="repeat-start-btn" onclick="startRepeatPlayback()" data-t="quran_button_76">دەستپێکرن</button>
             </div>
         </div>
     </div>
