@@ -2018,6 +2018,10 @@
             if (isHidden) {
                 lucide.createIcons();
                 loadHistory();
+                // Scroll panel into view so admin doesn't have to hunt for it
+                setTimeout(function() {
+                    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
             }
         }
 
@@ -2025,7 +2029,7 @@
             try {
                 var email = sessionStorage.getItem('adminEmail') || '';
                 var platform = getPlatform(details.key_id);
-                await supabase.from('admin_audit_logs').insert([{
+                var result = await supabase.from('admin_audit_logs').insert([{
                     email: email,
                     action: 'translation_' + action,
                     details: Object.assign({}, details, { platform: platform }),
@@ -2033,8 +2037,11 @@
                     resource_type: 'translation',
                     severity: action === 'delete' ? 'warning' : 'info'
                 }]);
+                if (result.error) {
+                    console.error('[History] logChange failed:', result.error.message, result.error);
+                }
             } catch (e) {
-                // Non-blocking — ignore log errors
+                console.error('[History] logChange exception:', e.message);
             }
         }
 
