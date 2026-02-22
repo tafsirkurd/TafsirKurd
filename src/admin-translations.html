@@ -469,8 +469,53 @@
             color: var(--text-primary);
             margin: 0;
         }
+        .history-filters {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: var(--bg-primary);
+        }
+        .history-search {
+            flex: 1;
+            min-width: 180px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+            font-family: inherit;
+        }
+        .history-search:focus { border-color: var(--accent-primary); }
+        .history-tabs { display: flex; gap: 4px; flex-shrink: 0; }
+        .history-tab {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+        .history-tab:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
+        .history-tab.active { background: var(--accent-primary); color: #fff; border-color: var(--accent-primary); }
+        .history-stats {
+            padding: 7px 20px;
+            font-size: 12px;
+            color: var(--text-tertiary);
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-primary);
+            min-height: 32px;
+        }
         .history-list {
-            max-height: 500px;
+            max-height: 560px;
             overflow-y: auto;
         }
         .history-empty {
@@ -488,14 +533,21 @@
             font-size: 13px;
         }
         .history-item:last-child { border-bottom: none; }
-        .history-badge {
+        .history-badges {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
             flex-shrink: 0;
+            align-items: flex-start;
+        }
+        .history-badge {
             padding: 3px 10px;
             border-radius: 20px;
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            white-space: nowrap;
         }
         .history-badge.edit   { background: #dbeafe; color: #1d4ed8; }
         .history-badge.add    { background: #dcfce7; color: #15803d; }
@@ -503,6 +555,21 @@
         body.dark-mode .history-badge.edit   { background: #1e3a5f; color: #93c5fd; }
         body.dark-mode .history-badge.add    { background: #14532d; color: #86efac; }
         body.dark-mode .history-badge.delete { background: #450a0a; color: #fca5a5; }
+        .history-platform {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+        }
+        .history-platform.web     { background: #f0f9ff; color: #0369a1; }
+        .history-platform.android { background: #f0fdf4; color: #166534; }
+        .history-platform.ios     { background: #fdf4ff; color: #7e22ce; }
+        body.dark-mode .history-platform.web     { background: #0c1a2e; color: #7dd3fc; }
+        body.dark-mode .history-platform.android { background: #052e16; color: #86efac; }
+        body.dark-mode .history-platform.ios     { background: #2e1065; color: #d8b4fe; }
         .history-meta {
             flex: 1;
             min-width: 0;
@@ -512,11 +579,21 @@
             color: var(--text-primary);
             font-family: monospace;
             font-size: 12px;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
-        .history-diff {
-            color: var(--text-secondary);
-            line-height: 1.5;
+        .history-diff { color: var(--text-secondary); line-height: 1.6; }
+        .diff-row {
+            display: flex;
+            gap: 8px;
+            align-items: baseline;
+            margin-bottom: 3px;
+        }
+        .diff-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-tertiary);
+            flex-shrink: 0;
+            min-width: 44px;
         }
         .history-diff .old-text {
             color: #b91c1c;
@@ -529,8 +606,18 @@
         }
         body.dark-mode .history-diff .old-text { color: #fca5a5; }
         body.dark-mode .history-diff .new-text  { color: #86efac; }
-        .history-time {
+        .history-time-col {
             flex-shrink: 0;
+            text-align: left;
+            min-width: 70px;
+        }
+        .history-date {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .history-time {
             font-size: 11px;
             color: var(--text-tertiary);
             white-space: nowrap;
@@ -538,7 +625,7 @@
         .history-email {
             font-size: 11px;
             color: var(--text-tertiary);
-            margin-top: 2px;
+            margin-top: 4px;
         }
 
         /* ===== Toast ===== */
@@ -981,6 +1068,16 @@
                         <h2 class="history-title"><i data-lucide="history" style="width:18px;height:18px;vertical-align:middle;margin-left:6px"></i> تاریخچەی گۆڕانکاریەکان</h2>
                         <button class="btn btn-secondary" onclick="loadHistory()" id="historyRefreshBtn" style="font-size:13px;padding:8px 14px"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i><span>نوێکردنەوە</span></button>
                     </div>
+                    <div class="history-filters">
+                        <input type="search" class="history-search" id="historySearch" placeholder="گەڕان بە کلیل، دەق، ئیمەیل..." oninput="filterHistory()">
+                        <div class="history-tabs">
+                            <button class="history-tab active" onclick="setHistoryTab('all', this)">هەموو</button>
+                            <button class="history-tab" onclick="setHistoryTab('web', this)">🌐 Web</button>
+                            <button class="history-tab" onclick="setHistoryTab('android', this)">🤖 Android</button>
+                            <button class="history-tab" onclick="setHistoryTab('ios', this)">🍎 iOS</button>
+                        </div>
+                    </div>
+                    <div class="history-stats" id="historyStats"></div>
                     <div class="history-list" id="historyList">
                         <div class="history-empty">کلیک بکە لە سەر نوێکردنەوە بۆ بارکردنی تاریخچە</div>
                     </div>
@@ -1783,6 +1880,17 @@
         }
 
         // ===== History =====
+        var _historyAllRows = [];
+        var _historyTab = 'all';
+
+        function getPlatform(keyId) {
+            if (!keyId) return 'web';
+            var k = keyId.toLowerCase();
+            if (k.startsWith('android_') || k.startsWith('app_')) return 'android';
+            if (k.startsWith('ios_')) return 'ios';
+            return 'web';
+        }
+
         function toggleHistory() {
             var panel = document.getElementById('historyPanel');
             var isHidden = panel.style.display === 'none';
@@ -1796,10 +1904,11 @@
         async function logChange(action, details) {
             try {
                 var email = sessionStorage.getItem('adminEmail') || '';
+                var platform = getPlatform(details.key_id);
                 await supabase.from('admin_audit_logs').insert([{
                     email: email,
                     action: 'translation_' + action,
-                    details: details,
+                    details: Object.assign({}, details, { platform: platform }),
                     page_slug: 'admin-translations',
                     resource_type: 'translation',
                     severity: action === 'delete' ? 'warning' : 'info'
@@ -1811,12 +1920,10 @@
 
         async function loadHistory() {
             var listEl = document.getElementById('historyList');
+            var statsEl = document.getElementById('historyStats');
             var btn = document.getElementById('historyRefreshBtn');
             listEl.textContent = '';
-            var loadingDiv = document.createElement('div');
-            loadingDiv.className = 'history-empty';
-            loadingDiv.textContent = 'بارکردن...';
-            listEl.appendChild(loadingDiv);
+            statsEl.textContent = 'بارکردن...';
             btn.disabled = true;
 
             try {
@@ -1825,12 +1932,14 @@
                     .select('*')
                     .eq('page_slug', 'admin-translations')
                     .order('created_at', { ascending: false })
-                    .limit(100);
+                    .limit(500);
 
                 if (result.error) throw result.error;
-                renderHistory(result.data || []);
+                _historyAllRows = result.data || [];
+                filterHistory();
             } catch (e) {
                 listEl.textContent = '';
+                statsEl.textContent = '';
                 var errDiv = document.createElement('div');
                 errDiv.className = 'history-empty';
                 errDiv.textContent = 'نەتوانرا بارکرێت: ' + e.message;
@@ -1838,6 +1947,51 @@
             } finally {
                 btn.disabled = false;
             }
+        }
+
+        function setHistoryTab(tab, btn) {
+            _historyTab = tab;
+            document.querySelectorAll('.history-tab').forEach(function(t) { t.classList.remove('active'); });
+            btn.classList.add('active');
+            filterHistory();
+        }
+
+        function filterHistory() {
+            var search = (document.getElementById('historySearch').value || '').toLowerCase().trim();
+            var rows = _historyAllRows;
+
+            // Filter by platform tab
+            if (_historyTab !== 'all') {
+                rows = rows.filter(function(row) {
+                    var details = row.details || {};
+                    var p = details.platform || getPlatform(details.key_id);
+                    return p === _historyTab;
+                });
+            }
+
+            // Filter by search text
+            if (search) {
+                rows = rows.filter(function(row) {
+                    var d = row.details || {};
+                    var haystack = [d.key_id || '', d.old_text || '', d.new_text || '', row.email || '', d.page || ''].join(' ').toLowerCase();
+                    return haystack.includes(search);
+                });
+            }
+
+            // Update stats bar
+            var statsEl = document.getElementById('historyStats');
+            if (_historyAllRows.length > 0) {
+                var total = _historyAllRows.length;
+                var shown = rows.length;
+                var edits = rows.filter(function(r){ return r.action === 'translation_edit'; }).length;
+                var adds  = rows.filter(function(r){ return r.action === 'translation_add'; }).length;
+                var dels  = rows.filter(function(r){ return r.action === 'translation_delete'; }).length;
+                statsEl.textContent = (shown < total ? shown + ' لە ' + total : total) + ' گۆڕانکاری — ' + edits + ' گۆڕدرا · ' + adds + ' زیادکرا · ' + dels + ' سڕایەوە';
+            } else {
+                statsEl.textContent = '';
+            }
+
+            renderHistory(rows);
         }
 
         function makeEl(tag, cls, text) {
@@ -1861,13 +2015,18 @@
                 var details = row.details || {};
                 var badgeClass = action === 'add' ? 'add' : action === 'delete' ? 'delete' : 'edit';
                 var badgeLabel = action === 'add' ? 'زیادکرا' : action === 'delete' ? 'سڕایەوە' : 'گۆڕدرا';
+                var platform = details.platform || getPlatform(details.key_id);
+                var platformLabel = platform === 'android' ? 'Android' : platform === 'ios' ? 'iOS' : 'Web';
 
                 var item = makeEl('div', 'history-item');
 
-                // Badge
-                item.appendChild(makeEl('span', 'history-badge ' + badgeClass, badgeLabel));
+                // Left: stacked badges (action + platform)
+                var badges = makeEl('div', 'history-badges');
+                badges.appendChild(makeEl('span', 'history-badge ' + badgeClass, badgeLabel));
+                badges.appendChild(makeEl('span', 'history-platform ' + platform, platformLabel));
+                item.appendChild(badges);
 
-                // Meta block
+                // Center: meta
                 var meta = makeEl('div', 'history-meta');
 
                 // Key + page
@@ -1880,46 +2039,54 @@
                 }
                 meta.appendChild(keyDiv);
 
-                // Diff block
+                // Diff block — always shows before/after with labels
                 var diff = makeEl('div', 'history-diff');
                 if (action === 'edit') {
                     if (details.old_key && details.old_key !== details.key_id) {
-                        var keyRow = makeEl('div');
-                        keyRow.textContent = 'کلیل: ';
+                        var keyRow = makeEl('div', 'diff-row');
+                        keyRow.appendChild(makeEl('span', 'diff-label', 'کلیل:'));
                         var oldK = makeEl('span', 'old-text', details.old_key);
-                        var arrow = makeEl('span', '', ' ← ');
-                        var newK = makeEl('span', 'new-text', details.key_id);
+                        var arr = makeEl('span', '', ' → ');
+                        arr.style.color = 'var(--text-tertiary)';
                         keyRow.appendChild(oldK);
-                        keyRow.appendChild(arrow);
-                        keyRow.appendChild(newK);
+                        keyRow.appendChild(arr);
+                        keyRow.appendChild(makeEl('span', 'new-text', details.key_id));
                         diff.appendChild(keyRow);
                     }
                     if ((details.old_text || '') !== (details.new_text || '')) {
-                        diff.appendChild(makeEl('div', 'old-text', details.old_text || ''));
-                        var arrowDiv = makeEl('div', '', '↓');
-                        arrowDiv.style.color = 'var(--text-tertiary)';
-                        arrowDiv.style.fontSize = '11px';
-                        diff.appendChild(arrowDiv);
-                        diff.appendChild(makeEl('div', 'new-text', details.new_text || ''));
+                        var beforeRow = makeEl('div', 'diff-row');
+                        beforeRow.appendChild(makeEl('span', 'diff-label', 'پێشتر:'));
+                        beforeRow.appendChild(makeEl('span', 'old-text', details.old_text || '(بەتال)'));
+                        diff.appendChild(beforeRow);
+                        var afterRow = makeEl('div', 'diff-row');
+                        afterRow.appendChild(makeEl('span', 'diff-label', 'ئێستا:'));
+                        afterRow.appendChild(makeEl('span', 'new-text', details.new_text || '(بەتال)'));
+                        diff.appendChild(afterRow);
                     }
                 } else if (action === 'add') {
-                    diff.appendChild(makeEl('div', 'new-text', details.new_text || ''));
+                    var addRow = makeEl('div', 'diff-row');
+                    addRow.appendChild(makeEl('span', 'diff-label', 'دەق:'));
+                    addRow.appendChild(makeEl('span', 'new-text', details.new_text || ''));
+                    diff.appendChild(addRow);
                 } else if (action === 'delete') {
-                    diff.appendChild(makeEl('div', 'old-text', details.old_text || ''));
+                    var delRow = makeEl('div', 'diff-row');
+                    delRow.appendChild(makeEl('span', 'diff-label', 'دەق:'));
+                    delRow.appendChild(makeEl('span', 'old-text', details.old_text || ''));
+                    diff.appendChild(delRow);
                 }
                 meta.appendChild(diff);
 
-                // Email
-                if (row.email) meta.appendChild(makeEl('div', 'history-email', row.email));
+                if (row.email) meta.appendChild(makeEl('div', 'history-email', '👤 ' + row.email));
                 item.appendChild(meta);
 
-                // Time
-                var timeStr = '';
+                // Right: date + time column
+                var timeCol = makeEl('div', 'history-time-col');
                 if (row.created_at) {
                     var d = new Date(row.created_at);
-                    timeStr = d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                    timeCol.appendChild(makeEl('div', 'history-date', d.toLocaleDateString('en-GB')));
+                    timeCol.appendChild(makeEl('div', 'history-time', d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })));
                 }
-                item.appendChild(makeEl('div', 'history-time', timeStr));
+                item.appendChild(timeCol);
 
                 listEl.appendChild(item);
             });
