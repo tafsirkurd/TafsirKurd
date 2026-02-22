@@ -627,6 +627,104 @@
             color: var(--text-tertiary);
             margin-top: 4px;
         }
+        /* Marked tab special color */
+        .history-tab.marked-tab.active { background: #f59e0b; border-color: #f59e0b; }
+        .history-tab.marked-tab:hover:not(.active) { border-color: #f59e0b; color: #d97706; }
+        /* Marked item highlight */
+        .history-item.is-marked {
+            background: #fffbeb;
+            border-left: 3px solid #f59e0b;
+        }
+        body.dark-mode .history-item.is-marked { background: #1c1500; border-left-color: #d97706; }
+        /* Mark button on each item */
+        .history-mark-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
+            padding: 3px 10px;
+            background: none;
+            border: 1px dashed var(--border-light);
+            border-radius: 6px;
+            font-size: 11px;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+        .history-mark-btn:hover { border-color: #f59e0b; color: #d97706; border-style: solid; }
+        /* Mark indicator (when already marked) */
+        .history-mark-indicator {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            margin-top: 8px;
+            padding: 8px 10px;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+        body.dark-mode .history-mark-indicator { background: #1c1500; border-color: #78350f; }
+        .history-mark-note-text { color: var(--text-primary); font-style: italic; flex: 1; }
+        .history-mark-by { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+        .history-mark-remove {
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            font-size: 11px;
+            padding: 0 2px;
+            font-family: inherit;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .history-mark-remove:hover { color: #b91c1c; }
+        /* Inline mark form */
+        .mark-form {
+            margin-top: 8px;
+            padding: 10px;
+            background: var(--bg-primary);
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+        }
+        .mark-form textarea {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            font-size: 12px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 56px;
+            box-sizing: border-box;
+        }
+        .mark-form textarea:focus { outline: none; border-color: #f59e0b; }
+        .mark-form-actions { display: flex; gap: 6px; margin-top: 7px; justify-content: flex-end; }
+        .mark-btn-save {
+            padding: 5px 14px;
+            background: #f59e0b;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .mark-btn-save:hover { background: #d97706; }
+        .mark-btn-cancel {
+            padding: 5px 14px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+        }
 
         /* ===== Toast ===== */
         .toast {
@@ -902,6 +1000,27 @@
             .t-key { font-size: 11px; }
             .t-text { font-size: 15px; }
         }
+
+        /* ===== History panel — mobile ===== */
+        @media (max-width: 768px) {
+            .history-filters { flex-direction: column; align-items: stretch; gap: 8px; }
+            .history-search { min-width: unset; width: 100%; font-size: 16px; height: 44px; }
+            .history-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; flex-wrap: nowrap; }
+            .history-tab { white-space: nowrap; flex-shrink: 0; padding: 7px 14px; }
+            .history-item { flex-wrap: wrap; gap: 10px; padding: 12px 14px; }
+            .history-badges { flex-direction: row; align-items: center; flex-wrap: wrap; }
+            .history-time-col { order: -1; width: 100%; display: flex; gap: 6px; align-items: center; }
+            .history-date, .history-time { white-space: nowrap; }
+            .history-time::before { content: '·'; margin-left: 4px; color: var(--text-tertiary); }
+            .history-meta { width: 100%; min-width: 0; }
+            .history-list { max-height: 70vh; }
+            .mark-form textarea { font-size: 16px; }
+        }
+        @media (max-width: 480px) {
+            .history-header { padding: 12px 14px; }
+            .history-title { font-size: 14px; }
+            .history-stats { padding: 6px 14px; font-size: 11px; }
+        }
     </style>
 
     <style id="early-sidebar-hide">
@@ -1075,6 +1194,7 @@
                             <button class="history-tab" onclick="setHistoryTab('web', this)">🌐 Web</button>
                             <button class="history-tab" onclick="setHistoryTab('android', this)">🤖 Android</button>
                             <button class="history-tab" onclick="setHistoryTab('ios', this)">🍎 iOS</button>
+                            <button class="history-tab marked-tab" onclick="setHistoryTab('marked', this)">🔖 مارک کراو</button>
                         </div>
                     </div>
                     <div class="history-stats" id="historyStats"></div>
@@ -1960,8 +2080,10 @@
             var search = (document.getElementById('historySearch').value || '').toLowerCase().trim();
             var rows = _historyAllRows;
 
-            // Filter by platform tab
-            if (_historyTab !== 'all') {
+            // Filter by tab
+            if (_historyTab === 'marked') {
+                rows = rows.filter(function(row) { return (row.details || {}).marked === true; });
+            } else if (_historyTab !== 'all') {
                 rows = rows.filter(function(row) {
                     var details = row.details || {};
                     var p = details.platform || getPlatform(details.key_id);
@@ -2077,6 +2199,60 @@
                 meta.appendChild(diff);
 
                 if (row.email) meta.appendChild(makeEl('div', 'history-email', '👤 ' + row.email));
+
+                // Mark section
+                (function(rowId, rowDetails) {
+                    if (rowDetails.marked) {
+                        // Show mark indicator
+                        item.classList.add('is-marked');
+                        var ind = makeEl('div', 'history-mark-indicator');
+                        ind.appendChild(makeEl('span', '', '🔖'));
+                        var indContent = makeEl('div', '');
+                        indContent.style.flex = '1';
+                        indContent.appendChild(makeEl('div', 'history-mark-note-text', '"' + (rowDetails.mark_note || 'مارک کراوە') + '"'));
+                        if (rowDetails.marked_by) {
+                            indContent.appendChild(makeEl('div', 'history-mark-by', '👤 ' + rowDetails.marked_by + (rowDetails.marked_at ? ' · ' + new Date(rowDetails.marked_at).toLocaleDateString('en-GB') : '')));
+                        }
+                        ind.appendChild(indContent);
+                        var removeBtn = makeEl('button', 'history-mark-remove', '× لابردن');
+                        removeBtn.title = 'لابردنی مارک';
+                        removeBtn.onclick = function() { removeMark(rowId); };
+                        ind.appendChild(removeBtn);
+                        meta.appendChild(ind);
+                    } else {
+                        // Show mark button + hidden inline form
+                        var markBtn = makeEl('button', 'history-mark-btn', '🔖 مارک بکە');
+                        var formId = 'mf-' + rowId;
+                        markBtn.onclick = function() {
+                            var f = document.getElementById(formId);
+                            if (!f) return;
+                            var hidden = f.style.display === 'none';
+                            f.style.display = hidden ? 'block' : 'none';
+                            if (hidden) f.querySelector('textarea').focus();
+                        };
+                        meta.appendChild(markBtn);
+
+                        var form = document.createElement('div');
+                        form.className = 'mark-form';
+                        form.id = formId;
+                        form.style.display = 'none';
+                        var ta = document.createElement('textarea');
+                        ta.placeholder = 'بۆچی مارک دەکەی؟ (ئۆپشنەل)';
+                        form.appendChild(ta);
+                        var actions = makeEl('div', 'mark-form-actions');
+                        var cancelBtn = makeEl('button', 'mark-btn-cancel', 'پاشگەزبوونەوە');
+                        cancelBtn.type = 'button';
+                        cancelBtn.onclick = function() { form.style.display = 'none'; };
+                        var saveBtn = makeEl('button', 'mark-btn-save', '✓ مارک کردن');
+                        saveBtn.type = 'button';
+                        saveBtn.onclick = function() { saveMark(rowId, ta.value.trim()); };
+                        actions.appendChild(cancelBtn);
+                        actions.appendChild(saveBtn);
+                        form.appendChild(actions);
+                        meta.appendChild(form);
+                    }
+                })(row.id, details);
+
                 item.appendChild(meta);
 
                 // Right: date + time column
@@ -2090,6 +2266,46 @@
 
                 listEl.appendChild(item);
             });
+        }
+
+        async function saveMark(rowId, note) {
+            var row = _historyAllRows.find(function(r) { return r.id === rowId; });
+            if (!row) return;
+            var email = sessionStorage.getItem('adminEmail') || '';
+            var newDetails = Object.assign({}, row.details || {}, {
+                marked: true,
+                mark_note: note,
+                marked_by: email,
+                marked_at: new Date().toISOString()
+            });
+            try {
+                var result = await supabase.from('admin_audit_logs').update({ details: newDetails }).eq('id', rowId);
+                if (result.error) throw result.error;
+                row.details = newDetails;
+                filterHistory();
+                showToast('🔖 مارک کرا');
+            } catch(e) {
+                showToast('نەتوانرا مارک بکرێت');
+            }
+        }
+
+        async function removeMark(rowId) {
+            var row = _historyAllRows.find(function(r) { return r.id === rowId; });
+            if (!row) return;
+            var newDetails = Object.assign({}, row.details || {});
+            delete newDetails.marked;
+            delete newDetails.mark_note;
+            delete newDetails.marked_by;
+            delete newDetails.marked_at;
+            try {
+                var result = await supabase.from('admin_audit_logs').update({ details: newDetails }).eq('id', rowId);
+                if (result.error) throw result.error;
+                row.details = newDetails;
+                filterHistory();
+                showToast('مارک لابرا');
+            } catch(e) {
+                showToast('نەتوانرا مارک لابردرێت');
+            }
         }
 
         // ===== Toast =====
