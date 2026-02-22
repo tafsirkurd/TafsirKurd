@@ -380,6 +380,29 @@
         return isLoaded;
     }
 
+    // ── Sync cache apply: runs during DOMContentLoaded (before first paint)
+    //    so returning visitors see translated text with zero flash.
+    (function syncApplyCache() {
+        try {
+            var raw = localStorage.getItem(CACHE_KEY);
+            if (!raw) return;
+            var cached = JSON.parse(raw);
+            var map = cached && cached.translations;
+            if (!map) return;
+            function applySync() {
+                document.querySelectorAll('[data-t]').forEach(function(el) {
+                    var v = map[el.getAttribute('data-t')];
+                    if (v !== undefined) el.textContent = v;
+                });
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', applySync, { once: true });
+            } else {
+                applySync();
+            }
+        } catch (e) { /* silent */ }
+    })();
+
     // ── Eager fetch: start loading config + translations immediately,
     //    before DOMContentLoaded, so data is ready by the time DOM renders.
     const _eagerPromise = (async function() {
@@ -388,9 +411,10 @@
             // Apply cache instantly if available (serves page in <5ms)
             if (loadFromCache()) {
                 isLoaded = true;
-                // Fire background refresh so stale cache gets updated
-                fetchFromSupabase().then(function(changed) {
-                    if (changed) autoApply();
+                // Always re-apply after background refresh, not just on change,
+                // to ensure data-t elements pick up any admin edits reliably.
+                fetchFromSupabase().then(function() {
+                    autoApply();
                 });
                 return;
             }
@@ -407,12 +431,13 @@
         _eagerPromise.then(function() {
             autoApply();
 
-            // Live polling: re-fetch every 5s when tab is visible
-            // so admin changes appear without any page refresh
+            // Live polling: re-fetch every 5s when tab is visible.
+            // Always run autoApply after fetch — not just on detected change —
+            // so data-t elements are guaranteed to show latest admin edits.
             setInterval(function() {
                 if (document.visibilityState !== 'visible') return;
-                fetchFromSupabase().then(function(changed) {
-                    if (changed) autoApply();
+                fetchFromSupabase().then(function() {
+                    autoApply();
                 });
             }, 5000);
 
