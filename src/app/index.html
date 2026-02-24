@@ -45,7 +45,7 @@ img{display:block;max-width:100%}
   --shadow-l:0 12px 32px rgba(0,0,0,.12);
   --font-ar:'KFGQPC Hafs','Scheherazade New',serif;
   --font-su:'SurahName',serif;
-  --ar-size:2.0rem;--tf-size:1.0rem;
+  --ar-size:2.0rem;--tf-size:1.0rem;--line-h:2.2;
   --tab-h:60px;--hdr-h:52px;
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-t:env(safe-area-inset-top,0px);
@@ -153,7 +153,7 @@ body{background:var(--bg);color:var(--text)}
 .ayah-act{width:36px;height:36px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;color:var(--text2);transition:background .1s,color .1s}
 .ayah-act:active{background:var(--surface-h)}
 .ayah-act.active{color:var(--accent)}
-.ayah-arabic{font-family:var(--font-ar);font-size:var(--ar-size);line-height:2.2;text-align:center;margin-bottom:14px;direction:rtl;user-select:text;word-spacing:4px}
+.ayah-arabic{font-family:var(--font-ar);font-size:var(--ar-size);line-height:var(--line-h);text-align:center;margin-bottom:14px;direction:rtl;user-select:text;word-spacing:4px}
 .ayah-tafsir{font-size:var(--tf-size);line-height:1.9;color:var(--text2);user-select:text;display:block}
 .ayah-tafsir.hide{display:none}
 
@@ -236,6 +236,7 @@ body{background:var(--bg);color:var(--text)}
 .bm-card-title{font-weight:700;font-size:.9rem}
 .bm-card-verse{font-size:.75rem;color:var(--text3)}
 .bm-card-text{font-family:var(--font-ar);font-size:1.3rem;line-height:2;margin-bottom:10px;user-select:text}
+.bm-card-arabic{font-family:var(--font-ar);font-size:1.4rem;line-height:2.1;margin-bottom:10px;user-select:text;direction:rtl;text-align:right;color:var(--text1)}
 .bm-card-note{font-size:.85rem;color:var(--text2);padding:10px;background:var(--bg3);border-radius:var(--r-m);margin-bottom:10px}
 .bm-card-actions{display:flex;gap:8px}
 .bm-card-btn{height:34px;padding:0 12px;border-radius:var(--r-m);font-size:.8rem;display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--bg3);transition:transform .1s}
@@ -470,6 +471,20 @@ body{background:var(--bg);color:var(--text)}
 .about-ver{font-size:.75rem;color:var(--text3);margin-top:2px}
 .about-desc{font-size:.85rem;color:var(--text2);margin-top:6px}
 
+/* Settings extras */
+.setting-label-wrap{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.setting-sub{font-size:.75rem;color:var(--text3)}
+.reminder-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.reminder-time-input{border:1px solid var(--border);background:var(--surface);color:var(--text1);border-radius:8px;padding:4px 8px;font-size:.85rem;outline:none}
+.danger-btn{color:#ef4444!important}
+/* Stats card */
+.stats-card{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:16px 8px;margin-bottom:20px}
+.stats-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 4px}
+.stats-col+.stats-col{border-right:1px solid var(--border)}
+.stats-icon{font-size:1.1rem;color:var(--accent)}
+.stats-num{font-size:1.5rem;font-weight:800;line-height:1}
+.stats-lbl{font-size:.7rem;color:var(--text3);text-align:center}
+
 /* Profile Page Panel */
 .profile-panel{position:fixed;inset:0;z-index:500;background:var(--bg);display:none;flex-direction:column;overflow-y:auto;padding-top:var(--safe-t)}
 .profile-panel.on{display:flex;animation:slideUp .3s var(--ease)}
@@ -578,7 +593,49 @@ body{background:var(--bg);color:var(--text)}
 .iv-refresh{width:100%;height:40px;border-radius:var(--r-m);background:var(--surface);border:1px solid var(--border);font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px}
 .iv-refresh:active{transform:scale(.97)}
 
+/* ===== READER QUICK SETTINGS ===== */
+.qs-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:310;display:none}
+.qs-overlay.on{display:block}
+.qs-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:var(--r-xl) var(--r-xl) 0 0;z-index:311;padding:0 0 calc(var(--safe-b) + 8px);transform:translateY(100%);transition:transform .3s var(--ease)}
+.qs-sheet.on{transform:translateY(0)}
+.qs-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 12px;border-bottom:1px solid var(--border)}
+.qs-hdr span{font-weight:700;font-size:.95rem}
+.qs-close-btn{background:none;border:none;color:var(--text2);font-size:1rem;cursor:pointer;padding:6px;border-radius:var(--r-m)}
+.qs-row{display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);gap:12px}
+.qs-row:last-child{border-bottom:none}
+.qs-row-label{font-size:.9rem;font-weight:500;color:var(--text1);min-width:100px;flex-shrink:0}
+.qs-slider-wrap{flex:1;display:flex;align-items:center;gap:10px}
+.qs-val{font-size:.85rem;color:var(--accent);font-weight:700;min-width:30px;text-align:center}
+.qs-row-info{display:flex;flex-direction:column;gap:2px}
+.qs-row-sub{font-size:.72rem;color:var(--text3);margin-top:1px}
+.qs-section-title{font-size:.7rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:14px 20px 4px}
+.qs-reciter-list{display:flex;gap:8px;overflow-x:auto;padding:10px 20px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-bottom:1px solid var(--border)}
+.qs-reciter-list::-webkit-scrollbar{display:none}
+.qs-reciter-chip{flex-shrink:0;padding:7px 14px;border-radius:var(--r-full);background:var(--bg3);font-size:.8rem;cursor:pointer;border:2px solid transparent;transition:all .15s;white-space:nowrap}
+.qs-reciter-chip.on{background:var(--accent);color:var(--accent-t)}
+.qs-jump-row{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--border)}
+.qs-jump-input{width:70px;height:36px;border-radius:var(--r-m);border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:.9rem;text-align:center;padding:0 8px}
+.qs-jump-btn{height:36px;padding:0 18px;border-radius:var(--r-m);background:var(--accent);color:var(--accent-t);font-size:.85rem;font-weight:600;cursor:pointer;flex-shrink:0}
+.qs-action-btn{width:calc(100% - 40px);margin:10px 20px 4px;height:42px;border-radius:var(--r-l);background:var(--bg3);border:1px solid var(--border);font-size:.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--text)}
+
 /* ===== REPEAT MANAGER MODAL ===== */
+.copy-modal{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center}
+.copy-modal.on{display:flex}
+.copy-sheet{background:var(--bg);width:100%;border-radius:var(--r-xl) var(--r-xl) 0 0;animation:slideUp .3s var(--ease);padding-bottom:calc(16px + var(--safe-b))}
+.copy-sheet-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.copy-sheet-hdr span{font-size:1rem;font-weight:700;color:var(--text)}
+.copy-sheet-hdr button{background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px 8px}
+.copy-opt-btn{display:flex;align-items:center;gap:14px;width:100%;padding:15px 20px;background:none;border:none;border-bottom:1px solid var(--border);font-size:.95rem;color:var(--text);cursor:pointer;text-align:right;font-family:inherit}
+.copy-opt-btn:active{background:var(--surface)}
+.copy-opt-btn i{width:22px;color:var(--accent);font-size:1rem;flex-shrink:0}
+.copy-range-row{display:flex;align-items:center;gap:10px;padding:10px 20px}
+.copy-range-row label{color:var(--muted);font-size:.9rem;white-space:nowrap;min-width:80px}
+.copy-range-row input{flex:1;padding:9px;border:1px solid var(--border);border-radius:var(--r-s);background:var(--surface);color:var(--text);font-size:1rem;text-align:center;font-family:inherit}
+.copy-range-fmt{display:flex;gap:8px;padding:4px 20px 12px}
+.copy-fmt-btn{flex:1;padding:9px 6px;border:1px solid var(--border);border-radius:var(--r-s);background:none;color:var(--text);font-size:.8rem;cursor:pointer;font-family:inherit;font-weight:500}
+.copy-fmt-btn.on{background:var(--accent);color:var(--accent-t);border-color:var(--accent)}
+.copy-range-copy-btn{display:block;width:calc(100% - 40px);margin:8px 20px 6px;padding:13px;background:var(--accent);color:var(--accent-t);border:none;border-radius:var(--r-m);font-size:.95rem;cursor:pointer;font-weight:700;font-family:inherit}
+.copy-back-btn{display:block;width:calc(100% - 40px);margin:0 20px;padding:10px;background:none;color:var(--muted);border:1px solid var(--border);border-radius:var(--r-m);font-size:.85rem;cursor:pointer;font-family:inherit}
 .repeat-modal{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center}
 .repeat-modal.on{display:flex}
 .repeat-modal-content{background:var(--bg);width:100%;max-height:85vh;border-radius:var(--r-xl) var(--r-xl) 0 0;overflow-y:auto;animation:slideUp .3s var(--ease);padding-bottom:calc(16px + var(--safe-b))}
@@ -650,7 +707,7 @@ body{background:var(--bg);color:var(--text)}
     <div class="reader-hdr">
       <button class="back-btn" onclick="App.backToList()"><i class="fas fa-arrow-right"></i></button>
       <div class="reader-title"><span class="surah-label" id="readerName"></span></div>
-      <button class="hdr-btn" onclick="App.openSidebar()"><i class="fas fa-list"></i></button>
+      <button class="hdr-btn" onclick="App.openReaderSettings()"><i class="fas fa-cog"></i></button>
     </div>
     <div class="sticky-progress">
       <div class="sticky-progress-bar"><div class="sticky-progress-fill" id="readerProgressFill"></div></div>
@@ -724,6 +781,16 @@ body{background:var(--bg);color:var(--text)}
   <div class="sidebar-list" id="sidebarList"></div>
 </div>
 
+<!-- READER QUICK SETTINGS -->
+<div class="qs-overlay" id="qsOverlay" onclick="App.closeReaderSettings()"></div>
+<div class="qs-sheet" id="qsSheet">
+  <div class="qs-hdr">
+    <span data-i18n="settings.appearance">ڕووکار</span>
+    <button class="qs-close-btn" onclick="App.closeReaderSettings()"><i class="fas fa-times"></i></button>
+  </div>
+  <div id="qsBody"></div>
+</div>
+
 <!-- AUDIO BAR -->
 <div class="audio-bar" id="audioBar">
   <div class="audio-info">
@@ -777,6 +844,39 @@ body{background:var(--bg);color:var(--text)}
   <button class="tab-item" data-tab="bookmarks" onclick="App.tab('bookmarks')"><i class="fas fa-bookmark"></i><span data-i18n="tabs.bookmarks" data-t="android_span_15">نیشانەکری</span></button>
   <button class="tab-item" data-tab="settings" onclick="App.tab('settings')"><i class="fas fa-cog"></i><span data-i18n="tabs.settings" data-t="android_span_16">ڕێکخستن</span></button>
 </nav>
+
+<!-- COPY MODAL -->
+<div class="copy-modal" id="copyModal" onclick="if(event.target===this)App.closeCopyModal()">
+  <div class="copy-sheet">
+    <div class="copy-sheet-hdr">
+      <span id="copyModalTitle">کۆپیکرن</span>
+      <button onclick="App.closeCopyModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="copyMainOpts">
+      <button class="copy-opt-btn" onclick="App.copyDo('both')"><i class="fas fa-layer-group"></i><span>قورئان + تەفسیر</span></button>
+      <button class="copy-opt-btn" onclick="App.copyDo('quran')"><i class="fas fa-book"></i><span>قورئان تەنها</span></button>
+      <button class="copy-opt-btn" onclick="App.copyDo('tafsir')"><i class="fas fa-book-open"></i><span>تەفسیر تەنها</span></button>
+      <button class="copy-opt-btn" onclick="App.copyShowRange()"><i class="fas fa-list-ol"></i><span>مەودای ئایەتەکان</span></button>
+    </div>
+    <div id="copyRangeOpts" style="display:none">
+      <div class="copy-range-row">
+        <label>لە ئایەت:</label>
+        <input type="number" id="copyFrom" min="1" value="1">
+      </div>
+      <div class="copy-range-row">
+        <label>بۆ ئایەت:</label>
+        <input type="number" id="copyTo" min="1" value="3">
+      </div>
+      <div class="copy-range-fmt">
+        <button class="copy-fmt-btn on" onclick="App.copyFmtSelect(this,'both')">قورئان + تەفسیر</button>
+        <button class="copy-fmt-btn" onclick="App.copyFmtSelect(this,'quran')">قورئان</button>
+        <button class="copy-fmt-btn" onclick="App.copyFmtSelect(this,'tafsir')">تەفسیر</button>
+      </div>
+      <button class="copy-range-copy-btn" onclick="App.copyRangeDo()"><i class="fas fa-copy"></i> کۆپیکرن</button>
+      <button class="copy-back-btn" onclick="App.copyBackToMain()"><i class="fas fa-arrow-right"></i> گەڕانەڤە</button>
+    </div>
+  </div>
+</div>
 
 <!-- REPEAT MANAGER MODAL -->
 <div class="repeat-modal" id="repeatModal">
@@ -869,11 +969,11 @@ body{background:var(--bg);color:var(--text)}
 <div class="toast" id="toast"></div>
 </div>
 
-<audio id="audioEl"></audio>
+<audio id="audioEl" preload="auto"></audio>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/i18n/i18n.js?v=20260213"></script>
-<script src="/app/app.js?v=20260213"></script>
+<script src="/i18n/i18n.js?v=20260224"></script>
+<script src="/app/app.js?v=20260223"></script>
 <script>
 /* Failsafe: hide splash after 3s even if app.js fails */
 setTimeout(function(){

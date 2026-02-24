@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tafsir-kurd-v524';
+const CACHE_NAME = 'tafsir-kurd-v525';
 const urlsToCache = [
   // HTML files removed - they use NETWORK FIRST strategy and cache naturally
   // This prevents caching stale HTML during service worker installation
@@ -37,7 +37,7 @@ const urlsToCache = [
 
 // Install event - FAST cache installation with immediate activation
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v506 - HTML files no longer pre-cached');
+  console.log('[ServiceWorker] Installing v525 - translation system fixes');
   event.waitUntil(
     // Delete old caches FIRST for instant updates
     caches.keys().then(cacheNames => {
