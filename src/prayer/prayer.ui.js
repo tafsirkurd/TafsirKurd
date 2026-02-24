@@ -12,6 +12,7 @@
   var _countdownInterval = null;
   var _currentTimings   = null;
   var _currentDateISO   = null;
+  var _currentData      = null;
   var _tomorrowTimings  = null;
   var _tomorrowDateISO  = null;
 
@@ -31,17 +32,19 @@
   };
 
   function getCity()    { return (window.S && S.prayerCity)   || localStorage.getItem('prayerCity')   || 'Duhok'; }
-  function getMethod()  { return (window.S ? S.prayerMethod   : null) || parseInt(localStorage.getItem('prayerMethod') || '3'); }
+  function getMethod()  { return (window.S ? S.prayerMethod   : null) || parseInt(localStorage.getItem('prayerMethod') || '13'); }
   function getAthan()   { return window.S ? S.prayerAthanEnabled : localStorage.getItem('prayerAthanEnabled') === 'true'; }
   function getToggles() {
     if (window.S && S.prayerToggles) return S.prayerToggles;
     try { return JSON.parse(localStorage.getItem('prayerToggles') || '{}'); } catch(e) { return {}; }
   }
+  function getFormat()  { return localStorage.getItem('prayerTimeFormat') || '24'; }
 
   function setCity(v)    { if (window.S) S.prayerCity = v;           localStorage.setItem('prayerCity', v); }
   function setMethod(v)  { if (window.S) S.prayerMethod = v;         localStorage.setItem('prayerMethod', String(v)); }
   function setAthan(v)   { if (window.S) S.prayerAthanEnabled = v;   localStorage.setItem('prayerAthanEnabled', String(v)); }
   function setToggles(v) { if (window.S) S.prayerToggles = v;        localStorage.setItem('prayerToggles', JSON.stringify(v)); }
+  function setFormat(v)  { localStorage.setItem('prayerTimeFormat', v); }
 
   function clearEl(el) {
     while (el.firstChild) el.removeChild(el.firstChild);
@@ -99,19 +102,9 @@
   async function fetchTomorrow() {
     if (_tomorrowTimings) return;
     var city    = getCity();
-    var method  = getMethod();
-    var pl      = window.PrayerLogic;
-    var dateISO = pl.tomorrowBaghdad();
-    var ckey    = window.PrayerCache.key(city, method, dateISO);
-    var cached  = window.PrayerCache.read(ckey);
-    if (cached) {
-      _tomorrowTimings = cached.timings;
-      _tomorrowDateISO = dateISO;
-      return;
-    }
+    var dateISO = window.PrayerLogic.tomorrowBaghdad();
     try {
-      var data = await window.PrayerAPI.fetchPrayerTimes(city, dateISO, method);
-      window.PrayerCache.write(ckey, data);
+      var data = await window.PrayerAPI.fetchPrayerTimes(city, dateISO);
       _tomorrowTimings = data.timings;
       _tomorrowDateISO = dateISO;
     } catch(e) {}
@@ -123,61 +116,51 @@
     var container = document.getElementById('prayerContent');
     if (!container) return;
 
-    var city   = getCity();
-    var method = getMethod();
-    var pl     = window.PrayerLogic;
-    var today  = pl.todayBaghdad();
-    var ckey   = window.PrayerCache.key(city, method, today);
-    var cached = window.PrayerCache.read(ckey);
+    var city  = getCity();
+    var today = window.PrayerLogic.todayBaghdad();
 
-    if (cached) {
-      _currentTimings = cached.timings;
-      _currentDateISO = today;
-      buildPanel(container, cached, city, method, today);
-      startCountdown();
-      fetchAndUpdate(container, city, method, today, ckey);
-    } else {
-      buildLoading(container);
-      try {
-        var data = await window.PrayerAPI.fetchPrayerTimes(city, today, method);
-        window.PrayerCache.write(ckey, data);
-        _currentTimings = data.timings;
-        _currentDateISO = today;
-        buildPanel(container, data, city, method, today);
-        startCountdown();
-      } catch(e) {
-        buildError(container);
-      }
-    }
-  }
+    // Show instantly if monthly cache already has today's data
+    var parts   = today.split('-').map(Number);
+    var mkey    = window.PrayerCache.monthKey(city, parts[0], parts[1]);
+    var monthly = window.PrayerCache.read(mkey);
+    var hasDay  = monthly && monthly.days &&
+                  (monthly.days[parts[2]] || monthly.days[String(parts[2])]);
 
-  async function fetchAndUpdate(container, city, method, today, ckey) {
+    if (!hasDay) buildLoading(container);
+
     try {
-      var data = await window.PrayerAPI.fetchPrayerTimes(city, today, method);
-      window.PrayerCache.write(ckey, data);
+      var data = await window.PrayerAPI.fetchPrayerTimes(city, today);
       _currentTimings = data.timings;
-      buildPanel(container, data, city, method, today);
+      _currentDateISO = today;
+      _currentData    = data;
+      buildPanel(container, data, city, today);
       startCountdown();
-    } catch(e) {}
+    } catch(e) {
+      if (!hasDay) buildError(container);
+    }
   }
 
   async function refresh() {
     var container = document.getElementById('prayerContent');
     if (!container) return;
-    var city   = getCity();
-    var method = getMethod();
-    var today  = window.PrayerLogic.todayBaghdad();
-    var ckey   = window.PrayerCache.key(city, method, today);
+    var city  = getCity();
+    var today = window.PrayerLogic.todayBaghdad();
+
+    // Clear monthly cache so fresh data is fetched
+    var parts = today.split('-').map(Number);
+    window.PrayerCache.clear(window.PrayerCache.monthKey(city, parts[0], parts[1]));
+
     buildLoading(container);
     stopCountdown();
     _currentTimings  = null;
     _tomorrowTimings = null;
+
     try {
-      var data = await window.PrayerAPI.fetchPrayerTimes(city, today, method);
-      window.PrayerCache.write(ckey, data);
+      var data = await window.PrayerAPI.fetchPrayerTimes(city, today);
       _currentTimings = data.timings;
       _currentDateISO = today;
-      buildPanel(container, data, city, method, today);
+      _currentData    = data;
+      buildPanel(container, data, city, today);
       startCountdown();
     } catch(e) {
       buildError(container);
@@ -210,7 +193,7 @@
     container.appendChild(d);
   }
 
-  function buildPanel(container, data, city, method, today) {
+  function buildPanel(container, data, city, today) {
     clearEl(container);
     var timings  = data.timings;
     var dateInfo = data.date;
@@ -226,38 +209,47 @@
     });
     selWrap.appendChild(seg);
 
-    // ── Method selector ──
-    var methodSel = cel('select', 'prayer-method-sel');
-    var opt3 = document.createElement('option');
-    opt3.value = '3';
-    opt3.textContent = tStr('prayer.method_mwl');
-    if (method === 3) opt3.selected = true;
-    var opt4 = document.createElement('option');
-    opt4.value = '4';
-    opt4.textContent = tStr('prayer.method_uaq');
-    if (method === 4) opt4.selected = true;
-    methodSel.appendChild(opt3);
-    methodSel.appendChild(opt4);
-    methodSel.onchange = function() { onMethodChange(parseInt(this.value, 10)); };
-    selWrap.appendChild(methodSel);
+    // ── 12h / 24h format toggle ──
+    var fmt = getFormat();
+    var fmtRow = cel('div', 'prayer-fmt-row');
+    var fmtSeg = cel('div', 'prayer-city-seg prayer-fmt-seg');
+    ['24', '12'].forEach(function(f) {
+      var btn = cel('button', 'prayer-city-btn' + (f === fmt ? ' on' : ''));
+      btn.textContent = f === '24' ? '24h' : '12h';
+      btn.onclick = function() { onFormatChange(f); };
+      fmtSeg.appendChild(btn);
+    });
+    fmtRow.appendChild(fmtSeg);
+    selWrap.appendChild(fmtRow);
+
     container.appendChild(selWrap);
 
     // ── Dates row ──
     var datesRow = cel('div', 'prayer-dates');
     var greg = cel('div', 'prayer-date-greg');
     if (dateInfo && dateInfo.gregorian) {
+      // Aladhan fallback: full gregorian object
       greg.textContent = dateInfo.gregorian.weekday.en + ', ' +
                          dateInfo.gregorian.day + ' ' +
                          dateInfo.gregorian.month.en + ' ' +
                          dateInfo.gregorian.year;
     } else {
-      greg.textContent = today;
+      // amozhgary source: derive from dateISO
+      var gregDate = new Date(today + 'T12:00:00+03:00');
+      greg.textContent = gregDate.toLocaleDateString('en-US', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+        timeZone: 'Asia/Baghdad'
+      });
     }
     var hijri = cel('div', 'prayer-date-hijri');
     if (dateInfo && dateInfo.hijri) {
+      // Aladhan fallback format
       hijri.textContent = dateInfo.hijri.day + ' ' +
                           dateInfo.hijri.month.en + ' ' +
                           dateInfo.hijri.year + ' هـ';
+    } else if (dateInfo && dateInfo.hijriStr) {
+      // amozhgary format: raw Kurdish string e.g. "25ی شعبان 1447"
+      hijri.textContent = dateInfo.hijriStr;
     }
     datesRow.appendChild(greg);
     datesRow.appendChild(hijri);
@@ -279,9 +271,10 @@
 
     // ── Prayer list ──
     var list = cel('div', 'prayer-list');
+    var use12h = getFormat() === '12';
     pl.PRAYER_ORDER.forEach(function(name) {
       var raw         = timings[name] || '';
-      var timeDisplay = raw.split(' ')[0];
+      var timeDisplay = pl.formatTime(raw, use12h);
       var isNext      = next && next.name === name;
 
       var row = cel('div', 'prayer-item' + (isNext ? ' prayer-item--next' : ''));
@@ -341,6 +334,17 @@
   }
 
   // ─── Event handlers ──────────────────────────────────────────────────────────
+
+  function onFormatChange(fmt) {
+    setFormat(fmt);
+    if (_currentData && _currentDateISO) {
+      var container = document.getElementById('prayerContent');
+      if (container) {
+        buildPanel(container, _currentData, getCity(), _currentDateISO);
+        startCountdown();
+      }
+    }
+  }
 
   async function onCityChange(city) {
     setCity(city);
@@ -410,21 +414,13 @@
     var today = window.PrayerLogic.todayBaghdad();
     if (localStorage.getItem('prayerLastScheduleDate') === today) return;
 
-    var city   = getCity();
-    var method = getMethod();
-    var ckey   = window.PrayerCache.key(city, method, today);
-    var data   = window.PrayerCache.read(ckey);
-
-    if (!data) {
-      try {
-        data = await window.PrayerAPI.fetchPrayerTimes(city, today, method);
-        window.PrayerCache.write(ckey, data);
-      } catch(e) { return; }
-    }
-
-    await window.PrayerNotifications.scheduleAthanNotifications(
-      data.timings, city, getToggles(), today, true
-    );
+    var city = getCity();
+    try {
+      var data = await window.PrayerAPI.fetchPrayerTimes(city, today);
+      await window.PrayerNotifications.scheduleAthanNotifications(
+        data.timings, city, getToggles(), today, true
+      );
+    } catch(e) {}
   }
 
   // ─── Export ──────────────────────────────────────────────────────────────────

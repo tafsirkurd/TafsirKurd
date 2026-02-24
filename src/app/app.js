@@ -142,7 +142,7 @@ var S={
   dailyReminder:localStorage.getItem('dailyReminder')==='true',
   reminderTime:localStorage.getItem('reminderTime')||'08:00',
   prayerCity:localStorage.getItem('prayerCity')||'Duhok',
-  prayerMethod:parseInt(localStorage.getItem('prayerMethod')||'3'),
+  prayerMethod:parseInt(localStorage.getItem('prayerMethod')||'13'),
   prayerAthanEnabled:localStorage.getItem('prayerAthanEnabled')==='true',
   prayerToggles:(function(){try{return JSON.parse(localStorage.getItem('prayerToggles')||'{}')}catch(e){return {}}}()),
   theme:localStorage.getItem('theme')||(JSON.parse(localStorage.getItem('userPreferences')||'{}').darkMode?'dark':'light'),
