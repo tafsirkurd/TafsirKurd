@@ -671,6 +671,34 @@ body{background:var(--bg);color:var(--text)}
 .repeat-status.on{display:flex}
 .repeat-status-text{flex:1;font-size:.8rem;font-weight:600}
 .repeat-status-stop{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem}
+
+/* ===== PRAYER TIMES ===== */
+.prayer-selectors{padding:12px 16px 0;display:flex;flex-direction:column;gap:10px}
+.prayer-city-seg{display:flex;border:1px solid var(--border2);border-radius:var(--r-m);overflow:hidden}
+.prayer-city-btn{flex:1;padding:8px 0;font-size:.7rem;text-align:center;background:none;color:var(--text2);border:none;cursor:pointer;transition:background .2s,color .2s;font-family:inherit}
+.prayer-city-btn.on{background:var(--accent);color:var(--accent-t)}
+.prayer-method-sel{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-m);background:var(--bg2);color:var(--text);font-size:.85rem;font-family:inherit;outline:none}
+.prayer-dates{padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
+.prayer-date-greg{font-size:.82rem;color:var(--text2)}
+.prayer-date-hijri{font-size:.82rem;color:var(--text3)}
+.prayer-next-card{margin:0 16px 8px;background:var(--accent);color:var(--accent-t);border-radius:var(--r-l);padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
+.prayer-next-name{font-size:1rem;font-weight:600}
+.prayer-next-countdown{font-size:1.3rem;font-weight:700;letter-spacing:.04em;font-variant-numeric:tabular-nums;direction:ltr}
+.prayer-list{padding:0 16px;display:flex;flex-direction:column;gap:2px;margin-bottom:4px}
+.prayer-item{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-radius:var(--r-m);background:var(--bg2)}
+.prayer-item--next{background:var(--surface-h);border:1px solid var(--border2)}
+.prayer-item-name{font-size:.95rem;color:var(--text)}
+.prayer-item-time{font-size:.95rem;color:var(--text2);font-variant-numeric:tabular-nums;direction:ltr}
+.prayer-item--next .prayer-item-name,.prayer-item--next .prayer-item-time{color:var(--text);font-weight:600}
+.prayer-notif-section{padding:8px 16px 32px}
+.prayer-notif-title{font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 6px}
+.prayer-per-toggles{transition:opacity .2s}
+.prayer-per-toggles--dim{opacity:.4;pointer-events:none}
+.prayer-toggle-row{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-radius:var(--r-m);background:var(--bg2);margin-bottom:2px}
+.prayer-toggle-label{font-size:.9rem;color:var(--text)}
+.prayer-status{padding:60px 16px;text-align:center;color:var(--text3);font-size:.95rem}
+.prayer-error{color:var(--danger)}
+.prayer-retry-btn{margin-top:16px;padding:10px 24px;border-radius:var(--r-full);background:var(--accent);color:var(--accent-t);border:none;font-size:.9rem;cursor:pointer;font-family:inherit}
 </style>
 </head>
 <body>
@@ -771,6 +799,15 @@ body{background:var(--bg);color:var(--text)}
   <div class="settings-content" id="settingsContent"></div>
 </section>
 
+<!-- TAB: PRAYER TIMES -->
+<section class="panel" id="panelPrayer" data-tab="prayer">
+  <div class="hdr">
+    <div class="hdr-title"><i class="fas fa-mosque"></i> <span data-i18n="header.prayer">کاتا نوێژ</span></div>
+    <button class="hdr-btn" onclick="PrayerUI.refresh()" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+  </div>
+  <div id="prayerContent" class="panel-scroll"></div>
+</section>
+
 <!-- SIDEBAR -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="App.closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
@@ -843,6 +880,7 @@ body{background:var(--bg);color:var(--text)}
   <button class="tab-item" data-tab="goals" onclick="App.tab('goals')"><i class="fas fa-bullseye"></i><span data-i18n="tabs.goals" data-t="android_span_14">ئارمانج</span></button>
   <button class="tab-item" data-tab="bookmarks" onclick="App.tab('bookmarks')"><i class="fas fa-bookmark"></i><span data-i18n="tabs.bookmarks" data-t="android_span_15">نیشانەکری</span></button>
   <button class="tab-item" data-tab="settings" onclick="App.tab('settings')"><i class="fas fa-cog"></i><span data-i18n="tabs.settings" data-t="android_span_16">ڕێکخستن</span></button>
+  <button class="tab-item" data-tab="prayer" onclick="App.tab('prayer')"><i class="fas fa-mosque"></i><span data-i18n="tabs.prayer">نوێژ</span></button>
 </nav>
 
 <!-- COPY MODAL -->
@@ -973,6 +1011,11 @@ body{background:var(--bg);color:var(--text)}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/i18n/i18n.js?v=20260224"></script>
+<script src="/prayer/prayer.cache.js?v=20260224"></script>
+<script src="/prayer/prayer.api.js?v=20260224"></script>
+<script src="/prayer/prayer.logic.js?v=20260224"></script>
+<script src="/prayer/prayer.notifications.android.js?v=20260224"></script>
+<script src="/prayer/prayer.ui.js?v=20260224"></script>
 <script src="/app/app.js?v=20260223"></script>
 <script>
 /* Failsafe: hide splash after 3s even if app.js fails */

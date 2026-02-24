@@ -28,6 +28,27 @@ const config: CapacitorConfig = {
       splashImmersive: true,
       backgroundColor: '#ffffff',
     },
+    LocalNotifications: {
+      smallIcon: 'ic_notification',
+      iconColor: '#000000',
+      channels: [
+        {
+          id: 'athan',
+          name: 'Athan',
+          description: 'Prayer time athan alerts',
+          importance: 5,
+          vibration: true,
+          lights: true,
+          lightColor: '#000000',
+        },
+        {
+          id: 'reminder',
+          name: 'Daily Reminder',
+          description: 'Daily Quran reading reminder',
+          importance: 3,
+        },
+      ],
+    },
   },
 };
 
