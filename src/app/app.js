@@ -82,6 +82,47 @@ var RECITERS=[
 ];
 var RECITER=localStorage.getItem('app_reciter')||'Alafasy_128kbps';
 
+/* ===== AUDIO HELPERS ===== */
+function audioUrl(surah,ayah){
+  return 'https://everyayah.com/data/'+RECITER+'/'+String(surah).padStart(3,'0')+String(ayah).padStart(3,'0')+'.mp3';
+}
+
+// Prefetch next ayah as a blob so playback is instant with zero gap
+var _pf={url:'',blob:null,xhr:null};
+var _blobToRevoke=null; // deferred blob revocation — revoke only after audio confirms playing
+function prefetchAyahBlob(surah,ayah){
+  var s=SURAHS[surah-1];if(!s)return;
+  var ns=surah,na=ayah+1;
+  if(na>s.a){ns=surah+1;na=1;}
+  if(ns>114)return;
+  var url=audioUrl(ns,na);
+  if(_pf.url===url)return; // already fetching/fetched this one
+  clearPrefetch();
+  _pf.url=url;
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',url,true);
+  xhr.responseType='blob';
+  xhr.onload=function(){
+    if(xhr.status===200&&_pf.url===url){
+      _pf.blob=URL.createObjectURL(xhr.response);
+    }
+  };
+  xhr.onerror=function(){};
+  _pf.xhr=xhr;
+  xhr.send();
+}
+function clearPrefetch(){
+  if(_pf.xhr){_pf.xhr.abort();_pf.xhr=null;}
+  if(_pf.blob){URL.revokeObjectURL(_pf.blob);_pf.blob=null;}
+  _pf.url='';
+}
+
+// Update play/pause/loading icon
+function setAudioIcon(state){
+  var ic=$('audioPlayIcon');if(!ic)return;
+  ic.className=state==='loading'?'fas fa-spinner fa-spin':state==='pause'?'fas fa-pause':'fas fa-play';
+}
+
 /* ===== STATE ===== */
 var S={
   tab:'quran',tabHistory:[],
@@ -94,14 +135,27 @@ var S={
   goalYear:new Date().getFullYear(),
   wizardStep:0,wizardData:{},
   bgAudio:localStorage.getItem('bgAudio')==='true',
+  keepAwake:localStorage.getItem('keepAwake')==='true',
+  autoAdvance:localStorage.getItem('autoAdvance')==='true',
+  scrollFollowsAudio:localStorage.getItem('scrollFollowsAudio')!=='false',
+  hapticFeedback:localStorage.getItem('hapticFeedback')!=='false',
+  dailyReminder:localStorage.getItem('dailyReminder')==='true',
+  reminderTime:localStorage.getItem('reminderTime')||'08:00',
+  prayerCity:localStorage.getItem('prayerCity')||'Duhok',
+  prayerMethod:parseInt(localStorage.getItem('prayerMethod')||'3'),
+  prayerAthanEnabled:localStorage.getItem('prayerAthanEnabled')==='true',
+  prayerToggles:(function(){try{return JSON.parse(localStorage.getItem('prayerToggles')||'{}')}catch(e){return {}}}()),
   theme:localStorage.getItem('theme')||(JSON.parse(localStorage.getItem('userPreferences')||'{}').darkMode?'dark':'light'),
   arSize:parseFloat(localStorage.getItem('app_arSize'))||2.0,
   tfSize:parseFloat(localStorage.getItem('app_tfSize'))||1.0,
+  lineH:parseFloat(localStorage.getItem('app_lineH'))||2.2,
   ivSupabase:null,ivSeries:null,ivEpisodes:null,ivCurrentSeries:null,ivLoading:false,ivInited:false,ivSearchQuery:'',
   rm:{mode:'single',playCount:2,verseRepeat:1,delay:0,isPlaying:false,currentPlay:0},
   readSession:null,
   todayVerses:null,
-  supabase:null,user:null,syncInterval:null,isSyncing:false,lastSyncTime:0
+  supabase:null,user:null,syncInterval:null,isSyncing:false,lastSyncTime:0,realtimeChannel:null,
+  renderedAyahs:[],renderedTafsirs:{},
+  copy:{surah:0,ayah:0,rangeFmt:'both'}
 };
 
 /* ===== INIT ===== */
@@ -121,10 +175,20 @@ function init(){
 
     S.audio.el=$('audioEl');
     on(S.audio.el,'ended',function(){App.audioNext()});
-    on(S.audio.el,'error',function(){toast(t('error.audio_load'))});
+    on(S.audio.el,'error',function(){
+      if(_blobToRevoke){URL.revokeObjectURL(_blobToRevoke);_blobToRevoke=null;}
+      if(S.audio.surah)toast(t('error.audio_load'));
+    });
+    on(S.audio.el,'waiting',function(){if(S.audio.playing)setAudioIcon('loading')});
+    on(S.audio.el,'playing',function(){
+      setAudioIcon('pause');
+      if(_blobToRevoke){URL.revokeObjectURL(_blobToRevoke);_blobToRevoke=null;}
+    });
+    on(S.audio.el,'pause',function(){if(!S.audio.playing)setAudioIcon('play')});
 
     applyTheme();
     applySizes();
+    applyKeepAwake();
     initTodayVerses();
     renderSurahGrid();
     renderContinue();
@@ -162,6 +226,9 @@ function init(){
             }
             // Sync data when app goes to background
             if(S.user)syncToCloud();
+          } else {
+            // App came to foreground — reschedule athan if it's a new day
+            if(window.PrayerUI)PrayerUI.initScheduleOnStart();
           }
         });
       }
@@ -173,9 +240,10 @@ function init(){
         window.Capacitor.Plugins.App.addListener('backButton',function(){
           if($('profilePanel')&&$('profilePanel').classList.contains('on')){App.closeProfile();return}
           if($('authPanel')&&$('authPanel').classList.contains('on')){App.closeLogin();return}
-          if($('goalConfirmOverlay').classList.contains('on')){App.closeDeleteConfirm();return}
+          if($('goalConfirmOverlay')&&$('goalConfirmOverlay').classList.contains('on')){App.closeDeleteConfirm();return}
           if($('repeatModal').classList.contains('on')){App.closeRepeat();return}
           if($('audioSettingsPanel').classList.contains('on')){App.closeAudioSettings();return}
+          if($('qsSheet')&&$('qsSheet').classList.contains('on')){App.closeReaderSettings();return}
           if(S.sidebar){App.closeSidebar();return}
           if($('wizard').classList.contains('on')){App.closeWizard();return}
           if(S.ivCurrentSeries){App.ivBack();return}
@@ -244,6 +312,9 @@ function init(){
   }catch(e){
     console.error('App init error:',e);
   }
+
+  // Schedule athan on startup (in case it's a new day)
+  if(window.PrayerUI)PrayerUI.initScheduleOnStart();
 
   // Hide splash (always runs even if init errors above)
   setTimeout(function(){
@@ -347,6 +418,14 @@ function applyTheme(){
 function applySizes(){
   document.documentElement.style.setProperty('--ar-size',S.arSize+'rem');
   document.documentElement.style.setProperty('--tf-size',S.tfSize+'rem');
+  document.documentElement.style.setProperty('--line-h',String(S.lineH));
+}
+function applyKeepAwake(){
+  try{
+    var KA=window.Capacitor&&window.Capacitor.Plugins.KeepAwake;
+    if(!KA)return;
+    if(S.keepAwake)KA.keepAwake();else KA.allowSleep();
+  }catch(e){}
 }
 
 /* ===== TAB SWITCHING ===== */
@@ -367,6 +446,7 @@ App.tab=function(name){
   if(name==='goals')renderGoals();
   if(name==='islamvoice')renderIslamVoice();
   if(name==='settings')renderSettings();
+  if(name==='prayer'){if(window.PrayerUI)PrayerUI.render();}
 };
 
 /* ===== TOAST ===== */
@@ -375,6 +455,36 @@ function toast(msg){
   t.textContent=msg;
   t.classList.add('on');
   setTimeout(function(){t.classList.remove('on')},2000);
+}
+
+/* ===== HAPTIC ===== */
+function haptic(pattern){
+  if(!S.hapticFeedback)return;
+  try{navigator.vibrate(pattern||[30])}catch(e){}
+}
+
+/* ===== DAILY REMINDER ===== */
+function scheduleReminder(enabled,time){
+  if(!window.Capacitor||!window.Capacitor.Plugins||!window.Capacitor.Plugins.LocalNotifications)return;
+  var LN=window.Capacitor.Plugins.LocalNotifications;
+  LN.cancel({notifications:[{id:1}]}).catch(function(){});
+  if(!enabled)return;
+  var parts=(time||'08:00').split(':');
+  var h=parseInt(parts[0])||8;
+  var m=parseInt(parts[1])||0;
+  var now=new Date();
+  var next=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m,0,0);
+  if(next<=now)next.setDate(next.getDate()+1);
+  LN.requestPermissions().then(function(){
+    LN.schedule({notifications:[{
+      id:1,
+      title:'Tafsir Kurd',
+      body:t('notif.reminder_body'),
+      schedule:{at:next,repeats:true,every:'day'},
+      smallIcon:'ic_notification',
+      channelId:'reminder'
+    }]});
+  }).catch(function(){});
 }
 
 /* ===== SEARCH ===== */
@@ -451,13 +561,6 @@ App.openSurah=function(num,scrollTo){
   $('quranReader').classList.add('on');
   renderAyahs(num,scrollTo);
   try{localStorage.setItem('lastRead',JSON.stringify({surah:num,ayah:scrollTo||1}))}catch(e){}
-  // Restore scroll position if no specific ayah requested
-  if(!scrollTo){
-    var savedScroll=localStorage.getItem('surah_scroll_'+num);
-    if(savedScroll){
-      setTimeout(function(){$('panelQuran').scrollTop=parseInt(savedScroll)},200);
-    }
-  }
 };
 
 App.backToList=function(){
@@ -507,6 +610,10 @@ function renderAyahs(surahNum,scrollTo){
     }
   }
 
+  // Store for copy modal
+  S.renderedAyahs=ayahs;
+  S.renderedTafsirs=tafsirs;
+
   var bms=getBookmarks();
   var bmSet={};
   bms.forEach(function(b){if(b.surah===surahNum)bmSet[b.ayah]=true});
@@ -538,10 +645,7 @@ function renderAyahs(surahNum,scrollTo){
       // copy btn
       var copyBtn=el('button','ayah-act');
       copyBtn.appendChild(icon('fas fa-copy'));
-      on(copyBtn,'click',function(){
-        var text=(ayahs[ayahNum-1]?ayahs[ayahNum-1].text||ayahs[ayahNum-1]:'')+'';
-        if(navigator.clipboard)navigator.clipboard.writeText(text).then(function(){toast(t('toast.copied'))});
-      });
+      on(copyBtn,'click',function(){App.openCopyModal(surahNum,ayahNum)});
       actions.appendChild(copyBtn);
 
       head.appendChild(actions);
@@ -736,6 +840,171 @@ App.closeSidebar=function(){
   $('sidebarOverlay').classList.remove('on');
   $('sidebar').classList.remove('on');
 };
+
+/* ===== READER QUICK SETTINGS ===== */
+App.openReaderSettings=function(){
+  $('qsOverlay').classList.add('on');
+  $('qsSheet').classList.add('on');
+  renderReaderSettings();
+};
+App.closeReaderSettings=function(){
+  $('qsOverlay').classList.remove('on');
+  $('qsSheet').classList.remove('on');
+};
+function applyShowTafsir(){
+  document.querySelectorAll('.ayah-tafsir').forEach(function(el){
+    el.classList.toggle('hide',!S.showTafsir);
+  });
+}
+function renderReaderSettings(){
+  var body=$('qsBody');
+  clear(body);
+
+  /* ---- READING ---- */
+  body.appendChild(el('div','qs-section-title',t('settings.reading')||'خوێندن'));
+
+  // Show tafsir
+  var tafRow=el('div','qs-row');
+  tafRow.appendChild(el('div','qs-row-label',t('settings.show_tafsir')));
+  var tafToggle=el('div','toggle'+(S.showTafsir?' on':''));
+  tafToggle.appendChild(el('div','toggle-knob'));
+  on(tafToggle,'click',function(){
+    S.showTafsir=!S.showTafsir;
+    localStorage.setItem('showTafsir',String(S.showTafsir));
+    tafToggle.classList.toggle('on',S.showTafsir);
+    applyShowTafsir();
+  });
+  tafRow.appendChild(tafToggle);
+  body.appendChild(tafRow);
+
+  // Dark mode
+  var darkRow=el('div','qs-row');
+  darkRow.appendChild(el('div','qs-row-label',t('settings.dark_mode')));
+  var darkToggle=el('div','toggle'+(S.theme==='dark'?' on':''));
+  darkToggle.appendChild(el('div','toggle-knob'));
+  on(darkToggle,'click',function(){
+    S.theme=S.theme==='dark'?'light':'dark';
+    applyTheme();
+    darkToggle.classList.toggle('on',S.theme==='dark');
+  });
+  darkRow.appendChild(darkToggle);
+  body.appendChild(darkRow);
+
+  // Keep screen awake
+  var kaRow=el('div','qs-row');
+  kaRow.appendChild(el('div','qs-row-label','ڕووماندنی شاشە'));
+  var kaToggle=el('div','toggle'+(S.keepAwake?' on':''));
+  kaToggle.appendChild(el('div','toggle-knob'));
+  on(kaToggle,'click',function(){
+    S.keepAwake=!S.keepAwake;
+    localStorage.setItem('keepAwake',String(S.keepAwake));
+    kaToggle.classList.toggle('on',S.keepAwake);
+    applyKeepAwake();
+  });
+  kaRow.appendChild(kaToggle);
+  body.appendChild(kaRow);
+
+  // Background audio
+  var bgRow=el('div','qs-row');
+  bgRow.appendChild(el('div','qs-row-label',t('settings.bg_audio')));
+  var bgToggle=el('div','toggle'+(S.bgAudio?' on':''));
+  bgToggle.appendChild(el('div','toggle-knob'));
+  on(bgToggle,'click',function(){
+    S.bgAudio=!S.bgAudio;
+    localStorage.setItem('bgAudio',String(S.bgAudio));
+    bgToggle.classList.toggle('on',S.bgAudio);
+  });
+  bgRow.appendChild(bgToggle);
+  body.appendChild(bgRow);
+
+  /* ---- TEXT SIZE ---- */
+  body.appendChild(el('div','qs-section-title','قەبارەی نووسین'));
+
+  // Arabic font size
+  var arRow=el('div','qs-row');
+  arRow.appendChild(el('div','qs-row-label',t('settings.arabic_size')));
+  var arWrap=el('div','qs-slider-wrap');
+  var arSlider=document.createElement('input');
+  arSlider.type='range';arSlider.className='slider';arSlider.min='1.0';arSlider.max='3.5';arSlider.step='0.1';arSlider.value=String(S.arSize);
+  var arVal=el('span','qs-val',S.arSize.toFixed(1));
+  on(arSlider,'input',function(){S.arSize=parseFloat(this.value);arVal.textContent=S.arSize.toFixed(1);applySizes();});
+  on(arSlider,'change',function(){localStorage.setItem('app_arSize',String(S.arSize));});
+  arWrap.appendChild(arSlider);arWrap.appendChild(arVal);
+  arRow.appendChild(arWrap);
+  body.appendChild(arRow);
+
+  // Tafsir font size
+  var tfRow=el('div','qs-row');
+  tfRow.appendChild(el('div','qs-row-label',t('settings.tafsir_size')));
+  var tfWrap=el('div','qs-slider-wrap');
+  var tfSlider=document.createElement('input');
+  tfSlider.type='range';tfSlider.className='slider';tfSlider.min='0.5';tfSlider.max='2.0';tfSlider.step='0.1';tfSlider.value=String(S.tfSize);
+  var tfVal=el('span','qs-val',S.tfSize.toFixed(1));
+  on(tfSlider,'input',function(){S.tfSize=parseFloat(this.value);tfVal.textContent=S.tfSize.toFixed(1);applySizes();});
+  on(tfSlider,'change',function(){localStorage.setItem('app_tfSize',String(S.tfSize));});
+  tfWrap.appendChild(tfSlider);tfWrap.appendChild(tfVal);
+  tfRow.appendChild(tfWrap);
+  body.appendChild(tfRow);
+
+  // Line spacing
+  var lhRow=el('div','qs-row');
+  lhRow.appendChild(el('div','qs-row-label','مەودای ڕیزەکان'));
+  var lhWrap=el('div','qs-slider-wrap');
+  var lhSlider=document.createElement('input');
+  lhSlider.type='range';lhSlider.className='slider';lhSlider.min='1.4';lhSlider.max='3.5';lhSlider.step='0.1';lhSlider.value=String(S.lineH);
+  var lhVal=el('span','qs-val',S.lineH.toFixed(1));
+  on(lhSlider,'input',function(){S.lineH=parseFloat(this.value);lhVal.textContent=S.lineH.toFixed(1);applySizes();});
+  on(lhSlider,'change',function(){localStorage.setItem('app_lineH',String(S.lineH));});
+  lhWrap.appendChild(lhSlider);lhWrap.appendChild(lhVal);
+  lhRow.appendChild(lhWrap);
+  body.appendChild(lhRow);
+
+  /* ---- RECITER ---- */
+  body.appendChild(el('div','qs-section-title',t('audio.reciter')||'خوێنەر'));
+  var recList=el('div','qs-reciter-list');
+  RECITERS.forEach(function(r){
+    var chip=el('div','qs-reciter-chip'+(RECITER===r.id?' on':''),r.name);
+    on(chip,'click',function(){
+      RECITER=r.id;
+      localStorage.setItem('app_reciter',r.id);
+      clearPrefetch();
+      if(S.audio.playing)playAyah(S.audio.surah,S.audio.ayah);
+      renderReaderSettings();
+    });
+    recList.appendChild(chip);
+  });
+  body.appendChild(recList);
+
+  /* ---- ACTIONS ---- */
+  body.appendChild(el('div','qs-section-title','چالاکییەکان'));
+
+  // Jump to ayah (only when surah open)
+  if(S.surah){
+    var s=SURAHS[S.surah-1];
+    var jumpRow=el('div','qs-jump-row');
+    jumpRow.appendChild(el('div','qs-row-label','ببڕە بۆ ئایەت'));
+    var jumpInput=document.createElement('input');
+    jumpInput.type='number';jumpInput.className='qs-jump-input';
+    jumpInput.min='1';jumpInput.max=s?String(s.a):'286';jumpInput.placeholder='١';
+    var jumpBtn=el('button','qs-jump-btn','برۆ');
+    on(jumpBtn,'click',function(){
+      var n=parseInt(jumpInput.value);
+      if(n>=1&&(!s||n<=s.a)){App.closeReaderSettings();scrollToAyah(n);}
+    });
+    on(jumpInput,'keydown',function(e){if(e.key==='Enter')jumpBtn.click();});
+    jumpRow.appendChild(jumpInput);jumpRow.appendChild(jumpBtn);
+    body.appendChild(jumpRow);
+  }
+
+  // Scroll to playing ayah (only when audio playing in current surah)
+  if(S.audio.playing&&S.audio.surah===S.surah){
+    var scrollBtn=el('button','qs-action-btn');
+    scrollBtn.appendChild(icon('fas fa-headphones'));
+    scrollBtn.appendChild(document.createTextNode(' ببڕە بۆ ئایەتی دەنگ'));
+    on(scrollBtn,'click',function(){App.closeReaderSettings();scrollToAyah(S.audio.ayah);});
+    body.appendChild(scrollBtn);
+  }
+}
 App.sidebarTab=function(mode){
   S.sidebarMode=mode;
   document.querySelectorAll('.sidebar-tab').forEach(function(t){
@@ -782,17 +1051,30 @@ function scrollToAyah(ayahNum){
 }
 
 function playAyah(surah,ayah){
-  var sStr=String(surah).padStart(3,'0');
-  var aStr=String(ayah).padStart(3,'0');
-  var url='https://everyayah.com/data/'+RECITER+'/'+sStr+aStr+'.mp3';
+  var url=audioUrl(surah,ayah);
+  // Use prefetched blob if ready — zero-gap playback
+  var src;
+  if(_pf.blob&&_pf.url===url){
+    // Use prefetched blob — clear slot WITHOUT revoking (revoke deferred to playing/error event)
+    src=_pf.blob;
+    if(_blobToRevoke)URL.revokeObjectURL(_blobToRevoke); // safe to revoke previous now
+    _blobToRevoke=src;
+    _pf.blob=null;_pf.url='';
+    if(_pf.xhr){_pf.xhr.abort();_pf.xhr=null;}
+  } else {
+    src=url;
+    clearPrefetch();
+  }
   S.audio.surah=surah;S.audio.ayah=ayah;
-  S.audio.el.src=url;
+  S.audio.el.src=src;
   S.audio.el.playbackRate=S.audio.speed;
   S.audio.el.play().catch(function(){});
   S.audio.playing=true;
   showAudioBar();
-  // Auto-scroll if same surah is open
-  if(S.surah===surah)scrollToAyah(ayah);
+  // Auto-scroll if same surah is open and scroll-follows-audio is on
+  if(S.surah===surah&&S.scrollFollowsAudio)scrollToAyah(ayah);
+  // Start prefetching next ayah in background
+  prefetchAyahBlob(surah,ayah);
 }
 
 function getReciterName(){
@@ -806,15 +1088,12 @@ function showAudioBar(){
   var s=SURAHS[S.audio.surah-1];
   $('audioTitle').textContent=s?s.en+' - '+t('reader.ayah')+' '+S.audio.ayah:'';
   $('audioSub').textContent=getReciterName();
-  var ic=$('audioPlayIcon');
-  ic.className=S.audio.playing?'fas fa-pause':'fas fa-play';
+  setAudioIcon(S.audio.playing?'pause':'play');
 }
 
 App.audioToggle=function(){
-  if(S.audio.playing){S.audio.el.pause();S.audio.playing=false}
-  else{S.audio.el.play().catch(function(){});S.audio.playing=true}
-  var ic=$('audioPlayIcon');
-  ic.className=S.audio.playing?'fas fa-pause':'fas fa-play';
+  if(S.audio.playing){S.audio.el.pause();S.audio.playing=false;setAudioIcon('play');}
+  else{S.audio.el.play().catch(function(){});S.audio.playing=true;setAudioIcon('pause');}
 };
 
 App.audioNext=function(){
@@ -836,7 +1115,8 @@ App.audioNext=function(){
     S.audio.currentRepeat=0;
   }
   if(S.audio.ayah<s.a){playAyah(S.audio.surah,S.audio.ayah+1)}
-  else if(S.audio.surah<114){playAyah(S.audio.surah+1,1)}
+  else if(S.autoAdvance&&S.audio.surah<114){playAyah(S.audio.surah+1,1)}
+  else{App.audioClose()}
 };
 
 App.audioPrev=function(){
@@ -849,10 +1129,61 @@ App.audioClose=function(){
   S.audio.el.pause();S.audio.el.src='';
   S.audio.playing=false;S.audio.surah=0;S.audio.ayah=0;
   S.audio.currentRepeat=0;
+  clearPrefetch();
   $('audioBar').classList.remove('on');
   // Remove playing highlight
   var cards=document.querySelectorAll('.ayah-card.playing');
   cards.forEach(function(c){c.classList.remove('playing')});
+};
+
+/* ===== COPY MODAL ===== */
+App.openCopyModal=function(surah,ayah){
+  S.copy.surah=surah;S.copy.ayah=ayah;
+  var s=SURAHS[surah-1];
+  $('copyModalTitle').textContent=(s?s.en+' — ':'')+t('reader.ayah')+' '+ayah;
+  $('copyMainOpts').style.display='';
+  $('copyRangeOpts').style.display='none';
+  var maxAyah=s?s.a:1;
+  $('copyFrom').max=maxAyah;$('copyFrom').value=ayah;
+  $('copyTo').max=maxAyah;$('copyTo').value=Math.min(ayah+2,maxAyah);
+  $('copyModal').classList.add('on');
+};
+App.closeCopyModal=function(){$('copyModal').classList.remove('on')};
+App.copyShowRange=function(){$('copyMainOpts').style.display='none';$('copyRangeOpts').style.display=''};
+App.copyBackToMain=function(){$('copyMainOpts').style.display='';$('copyRangeOpts').style.display='none'};
+App.copyFmtSelect=function(btn,fmt){
+  S.copy.rangeFmt=fmt;
+  document.querySelectorAll('.copy-fmt-btn').forEach(function(b){b.classList.remove('on')});
+  btn.classList.add('on');
+};
+function buildCopyText(surah,ayahNum,mode){
+  var raw=S.renderedAyahs[ayahNum-1];
+  var arabic=raw?(raw.text||raw):'';
+  var tafsir=S.renderedTafsirs[ayahNum]||'';
+  var lines=[];
+  if((mode==='both'||mode==='quran')&&arabic)lines.push(String(ayahNum)+' ﴿ '+arabic+' ﴾');
+  if((mode==='both'||mode==='tafsir')&&tafsir)lines.push(tafsir);
+  return lines.join('\n');
+}
+var COPY_FOOTER='\n\nTafsirKurd\nhttps://tafsirkurd.com';
+App.copyDo=function(mode){
+  var text=buildCopyText(S.copy.surah,S.copy.ayah,mode);
+  if(!text)return;
+  navigator.clipboard&&navigator.clipboard.writeText(text+COPY_FOOTER).then(function(){
+    toast(t('toast.copied'));App.closeCopyModal();
+  });
+};
+App.copyRangeDo=function(){
+  var s=SURAHS[S.copy.surah-1];if(!s)return;
+  var from=Math.max(1,Math.min(parseInt($('copyFrom').value)||1,s.a));
+  var to=Math.max(from,Math.min(parseInt($('copyTo').value)||from,s.a));
+  var mode=S.copy.rangeFmt;
+  var parts=[];
+  for(var i=from;i<=to;i++){var txt=buildCopyText(S.copy.surah,i,mode);if(txt)parts.push(txt);}
+  if(!parts.length)return;
+  navigator.clipboard&&navigator.clipboard.writeText(parts.join('\n\n')+COPY_FOOTER).then(function(){
+    toast(t('toast.copied'));App.closeCopyModal();
+  });
 };
 
 App.openAudioSettings=function(){
@@ -876,6 +1207,7 @@ function renderAudioSettings(){
     on(item,'click',function(){
       RECITER=r.id;
       localStorage.setItem('app_reciter',r.id);
+      clearPrefetch();
       renderAudioSettings();
       if(S.audio.playing)playAyah(S.audio.surah,S.audio.ayah);
       else showAudioBar();
@@ -1112,6 +1444,13 @@ function renderBookmarks(){
   renderBmList(bms);
 }
 
+function getAyahArabicText(surah,ayah){
+  if(!S.quranData)return'';
+  var sd=S.quranData[String(surah)];if(!sd)return'';
+  var vv=sd.verses||sd;if(!Array.isArray(vv))return'';
+  var v=vv[ayah-1];return v?(v.text||v):'';
+}
+
 function renderBmList(bms){
   var list=$('bmList');
   clear(list);
@@ -1145,6 +1484,12 @@ function renderBmList(bms){
     hdr.appendChild(el('div','bm-card-title',s.en+' - '+s.ar));
     hdr.appendChild(el('div','bm-card-verse',t('reader.ayah')+' '+bm.ayah));
     card.appendChild(hdr);
+
+    // Arabic ayah text
+    var arabicText=getAyahArabicText(bm.surah,bm.ayah);
+    if(arabicText){
+      card.appendChild(el('div','bm-card-arabic',arabicText));
+    }
 
     if(bm.note){
       card.appendChild(el('div','bm-card-note',bm.note));
@@ -1768,11 +2113,34 @@ function renderWizardStep(){
 }
 
 /* ===== SETTINGS ===== */
+function mkToggleRow(labelText,isOn,onToggle,subText){
+  var row=el('div','setting-row');
+  var left=el('div','setting-label-wrap');
+  left.appendChild(el('div','setting-label',labelText));
+  if(subText){left.appendChild(el('div','setting-sub',subText));}
+  row.appendChild(left);
+  var toggle=el('div','toggle'+(isOn?' on':''));
+  toggle.appendChild(el('div','toggle-knob'));
+  on(toggle,'click',onToggle);
+  row.appendChild(toggle);
+  return row;
+}
+function mkBtnRow(labelText,btnLabel,btnIcon,onClick,danger){
+  var row=el('div','setting-row');
+  row.appendChild(el('div','setting-label',labelText));
+  var btn=el('button','hdr-text-btn'+(danger?' danger-btn':''));
+  if(btnIcon){btn.appendChild(icon(btnIcon));btn.appendChild(document.createTextNode(' '));}
+  btn.appendChild(document.createTextNode(btnLabel));
+  on(btn,'click',onClick);
+  row.appendChild(btn);
+  return row;
+}
+
 function renderSettings(){
   var content=$('settingsContent');
   clear(content);
 
-  // Profile
+  // ── Profile ──────────────────────────────────
   var profile=el('div','profile-card');
   if(S.user){
     var avatarEl;
@@ -1784,7 +2152,7 @@ function renderSettings(){
     }else{
       avatarEl=el('div','profile-avatar');
       avatarEl.appendChild(icon('fas fa-user'));
-      avatarEl.style.display='flex';avatarEl.style.alignItems='center';avatarEl.style.justifyContent='center';avatarEl.style.fontSize='1.3rem';avatarEl.style.color='var(--text3)';
+      avatarEl.style.cssText='display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:var(--text3)';
     }
     profile.appendChild(avatarEl);
     var pInfo=el('div','profile-info');
@@ -1801,107 +2169,160 @@ function renderSettings(){
     profile.style.cursor='pointer';
     on(profile,'click',function(){App.openProfile()});
   }else{
-    var avatarEl=el('div','profile-avatar');
-    avatarEl.appendChild(icon('fas fa-user'));
-    avatarEl.style.display='flex';avatarEl.style.alignItems='center';avatarEl.style.justifyContent='center';avatarEl.style.fontSize='1.3rem';avatarEl.style.color='var(--text3)';
-    profile.appendChild(avatarEl);
-    var pInfo=el('div','profile-info');
-    pInfo.appendChild(el('div','profile-name',t('profile.guest')));
-    pInfo.appendChild(el('div','profile-email',t('profile.login_prompt')));
-    profile.appendChild(pInfo);
+    var avatarEl2=el('div','profile-avatar');
+    avatarEl2.appendChild(icon('fas fa-user'));
+    avatarEl2.style.cssText='display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:var(--text3)';
+    profile.appendChild(avatarEl2);
+    var pInfo2=el('div','profile-info');
+    pInfo2.appendChild(el('div','profile-name',t('profile.guest')));
+    pInfo2.appendChild(el('div','profile-email',t('profile.login_prompt')));
+    profile.appendChild(pInfo2);
     var loginBtn=el('button','profile-login-btn',t('profile.login'));
     on(loginBtn,'click',function(){App.openLogin()});
     profile.appendChild(loginBtn);
   }
   content.appendChild(profile);
 
-  // Appearance
-  var g1Title=el('div','settings-group-title',t('settings.appearance'));
-  var g1=el('div','settings-group');
-  g1.appendChild(g1Title);
+  // ── (1) Reading Stats Card ────────────────────
+  var log=getReadLog();
+  var bms=getBookmarks();
+  var totalRead=calcTotalRead(log);
+  var streak=calcStreak(log);
+  var statsCard=el('div','stats-card');
+  [[icon('fas fa-quran'),totalRead,t('settings.stats_ayahs')],
+   [icon('fas fa-fire'),streak,t('settings.stats_streak')],
+   [icon('fas fa-bookmark'),bms.length,t('settings.stats_bookmarks')]
+  ].forEach(function(item){
+    var col=el('div','stats-col');
+    var ic=item[0];ic.className+=' stats-icon';
+    col.appendChild(ic);
+    col.appendChild(el('div','stats-num',String(item[1])));
+    col.appendChild(el('div','stats-lbl',item[2]));
+    statsCard.appendChild(col);
+  });
+  content.appendChild(statsCard);
 
-  // Dark mode
-  var darkRow=el('div','setting-row');
-  darkRow.appendChild(el('div','setting-label',t('settings.dark_mode')));
-  var darkToggle=el('div','toggle'+(S.theme==='dark'?' on':''));
-  darkToggle.appendChild(el('div','toggle-knob'));
-  on(darkToggle,'click',function(){
+  // ── Appearance ───────────────────────────────
+  var g1=el('div','settings-group');
+  g1.appendChild(el('div','settings-group-title',t('settings.appearance')));
+  g1.appendChild(mkToggleRow(t('settings.dark_mode'),S.theme==='dark',function(){
     S.theme=S.theme==='dark'?'light':'dark';
     applyTheme();renderSettings();
-  });
-  darkRow.appendChild(darkToggle);
-  g1.appendChild(darkRow);
-
-  // Arabic font size (default 2.0rem)
-  var arRow=el('div','setting-row');
-  arRow.appendChild(el('div','setting-label',t('settings.arabic_size')));
-  var arWrap=el('div','slider-wrap');
-  var arSlider=document.createElement('input');
-  arSlider.type='range';arSlider.className='slider';arSlider.min='1.0';arSlider.max='3.5';arSlider.step='0.1';arSlider.value=String(S.arSize);
-  var arVal=el('span','slider-val',S.arSize.toFixed(1));
-  on(arSlider,'input',function(){S.arSize=parseFloat(this.value);arVal.textContent=S.arSize.toFixed(1);applySizes();localStorage.setItem('app_arSize',String(S.arSize))});
-  arWrap.appendChild(arSlider);arWrap.appendChild(arVal);
-  arRow.appendChild(arWrap);
-  g1.appendChild(arRow);
-
-  // Tafsir font size (default 1.0rem)
-  var tfRow=el('div','setting-row');
-  tfRow.appendChild(el('div','setting-label',t('settings.tafsir_size')));
-  var tfWrap=el('div','slider-wrap');
-  var tfSlider=document.createElement('input');
-  tfSlider.type='range';tfSlider.className='slider';tfSlider.min='0.5';tfSlider.max='2.0';tfSlider.step='0.1';tfSlider.value=String(S.tfSize);
-  var tfVal=el('span','slider-val',S.tfSize.toFixed(1));
-  on(tfSlider,'input',function(){S.tfSize=parseFloat(this.value);tfVal.textContent=S.tfSize.toFixed(1);applySizes();localStorage.setItem('app_tfSize',String(S.tfSize))});
-  tfWrap.appendChild(tfSlider);tfWrap.appendChild(tfVal);
-  tfRow.appendChild(tfWrap);
-  g1.appendChild(tfRow);
-
+  }));
   content.appendChild(g1);
 
-  // Reading
-  var g2Title=el('div','settings-group-title',t('settings.reading'));
+  // ── Reading ──────────────────────────────────
   var g2=el('div','settings-group');
-  g2.appendChild(g2Title);
-
-  // Show tafsir
-  var tafRow=el('div','setting-row');
-  tafRow.appendChild(el('div','setting-label',t('settings.show_tafsir')));
-  var tafToggle=el('div','toggle'+(S.showTafsir?' on':''));
-  tafToggle.appendChild(el('div','toggle-knob'));
-  on(tafToggle,'click',function(){
+  g2.appendChild(el('div','settings-group-title',t('settings.reading')));
+  g2.appendChild(mkToggleRow(t('settings.show_tafsir'),S.showTafsir,function(){
     S.showTafsir=!S.showTafsir;
     localStorage.setItem('showTafsir',String(S.showTafsir));
+    applyShowTafsir();renderSettings();
+  }));
+  // (2) Auto-advance surah
+  g2.appendChild(mkToggleRow(t('settings.auto_advance'),S.autoAdvance,function(){
+    S.autoAdvance=!S.autoAdvance;
+    localStorage.setItem('autoAdvance',String(S.autoAdvance));
     renderSettings();
-  });
-  tafRow.appendChild(tafToggle);
-  g2.appendChild(tafRow);
-
-  // Background audio
-  var bgRow=el('div','setting-row');
-  bgRow.appendChild(el('div','setting-label',t('settings.bg_audio')));
-  var bgToggle=el('div','toggle'+(S.bgAudio?' on':''));
-  bgToggle.appendChild(el('div','toggle-knob'));
-  on(bgToggle,'click',function(){
-    S.bgAudio=!S.bgAudio;
-    localStorage.setItem('bgAudio',String(S.bgAudio));
+  },t('settings.auto_advance_sub')));
+  // (3) Scroll follows audio
+  g2.appendChild(mkToggleRow(t('settings.scroll_follows'),S.scrollFollowsAudio,function(){
+    S.scrollFollowsAudio=!S.scrollFollowsAudio;
+    localStorage.setItem('scrollFollowsAudio',String(S.scrollFollowsAudio));
     renderSettings();
-  });
-  bgRow.appendChild(bgToggle);
-  g2.appendChild(bgRow);
-
+  },t('settings.scroll_follows_sub')));
   content.appendChild(g2);
 
-  // Data
-  var g3Title=el('div','settings-group-title',t('settings.data'));
+  // ── Notifications & Haptics ──────────────────
   var g3=el('div','settings-group');
-  g3.appendChild(g3Title);
+  g3.appendChild(el('div','settings-group-title',t('settings.notif_group')));
+  // (10) Haptic feedback
+  g3.appendChild(mkToggleRow(t('settings.haptic'),S.hapticFeedback,function(){
+    S.hapticFeedback=!S.hapticFeedback;
+    localStorage.setItem('hapticFeedback',String(S.hapticFeedback));
+    haptic([20,30,20]);
+    renderSettings();
+  },t('settings.haptic_sub')));
+  // (9) Daily reminder
+  var remRow=el('div','setting-row');
+  var remLeft=el('div','setting-label-wrap');
+  remLeft.appendChild(el('div','setting-label',t('settings.reminder')));
+  remLeft.appendChild(el('div','setting-sub',t('settings.reminder_sub')));
+  remRow.appendChild(remLeft);
+  var remRight=el('div','reminder-right');
+  if(S.dailyReminder){
+    var timeInp=document.createElement('input');
+    timeInp.type='time';timeInp.className='reminder-time-input';
+    timeInp.value=S.reminderTime;
+    on(timeInp,'change',function(){
+      S.reminderTime=timeInp.value;
+      localStorage.setItem('reminderTime',S.reminderTime);
+      scheduleReminder(true,S.reminderTime);
+    });
+    remRight.appendChild(timeInp);
+  }
+  var remToggle=el('div','toggle'+(S.dailyReminder?' on':''));
+  remToggle.appendChild(el('div','toggle-knob'));
+  on(remToggle,'click',function(){
+    S.dailyReminder=!S.dailyReminder;
+    localStorage.setItem('dailyReminder',String(S.dailyReminder));
+    scheduleReminder(S.dailyReminder,S.reminderTime);
+    renderSettings();
+  });
+  remRight.appendChild(remToggle);
+  remRow.appendChild(remRight);
+  g3.appendChild(remRow);
+  content.appendChild(g3);
 
-  var clearRow=el('div','setting-row');
-  clearRow.appendChild(el('div','setting-label',t('settings.clear_cache')));
-  var clearBtn=el('button','hdr-text-btn');
-  clearBtn.appendChild(icon('fas fa-trash'));
-  clearBtn.appendChild(document.createTextNode(' '+t('settings.clear_btn')));
-  on(clearBtn,'click',function(){
+  // ── Data & Sync ──────────────────────────────
+  var g4=el('div','settings-group');
+  g4.appendChild(el('div','settings-group-title',t('settings.data')));
+  // (6) Sync status
+  if(S.user){
+    var syncRow=el('div','setting-row');
+    var syncLeft=el('div','setting-label-wrap');
+    syncLeft.appendChild(el('div','setting-label',t('settings.sync_label')));
+    var syncTs=S.lastSyncTime?new Date(S.lastSyncTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):t('settings.sync_never');
+    syncLeft.appendChild(el('div','setting-sub',t('settings.sync_last')+' '+syncTs));
+    syncRow.appendChild(syncLeft);
+    var syncBtn=el('button','hdr-text-btn');
+    syncBtn.appendChild(icon('fas fa-cloud-arrow-up'));
+    syncBtn.appendChild(document.createTextNode(' '+t('settings.sync_btn')));
+    on(syncBtn,'click',function(){
+      syncToCloud();
+      toast(t('toast.sync_started'));
+    });
+    syncRow.appendChild(syncBtn);
+    g4.appendChild(syncRow);
+  }
+  // (8) Export bookmarks
+  g4.appendChild(mkBtnRow(t('settings.export_bookmarks'),t('settings.export_btn'),'fas fa-download',function(){
+    var bms2=getBookmarks();
+    if(!bms2.length){toast(t('toast.no_bookmarks'));return;}
+    var json=JSON.stringify(bms2,null,2);
+    var blob=new Blob([json],{type:'application/json'});
+    var url2=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url2;a.download='tafsirkurd-bookmarks.json';
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url2)},500);
+  }));
+  // (7) Reset reading progress
+  g4.appendChild(mkBtnRow(t('settings.reset_progress'),t('settings.reset_btn'),'fas fa-rotate-left',function(){
+    if(!confirm(t('settings.reset_confirm')))return;
+    localStorage.removeItem('readLog');
+    localStorage.removeItem('readAyahsToday');
+    localStorage.removeItem('bestStreak');
+    for(var i=1;i<=114;i++){
+      localStorage.removeItem('surah_progress_'+i);
+      localStorage.removeItem('surah_scroll_'+i);
+    }
+    S.todayVerses=new Set();
+    toast(t('toast.progress_reset'));
+    renderSettings();
+  },true));
+  // Clear cache
+  g4.appendChild(mkBtnRow(t('settings.clear_cache'),t('settings.clear_btn'),'fas fa-trash',function(){
     if(confirm(t('settings.clear_confirm'))){
       localStorage.removeItem('quran_data_cache');
       localStorage.removeItem('tafsir_data_cache');
@@ -1909,12 +2330,31 @@ function renderSettings(){
       loadQuranData();loadTafsirData();
       toast(t('toast.cache_cleared'));
     }
-  });
-  clearRow.appendChild(clearBtn);
-  g3.appendChild(clearRow);
-  content.appendChild(g3);
+  }));
+  content.appendChild(g4);
 
-  // About
+  // ── App ──────────────────────────────────────
+  var g5=el('div','settings-group');
+  g5.appendChild(el('div','settings-group-title',t('settings.app_group')));
+  // (4) Share app
+  g5.appendChild(mkBtnRow(t('settings.share_app'),t('settings.share_btn'),'fas fa-share-nodes',function(){
+    var url3='https://tafsirkurd.com';
+    if(navigator.share){
+      navigator.share({title:'Tafsir Kurd',text:t('settings.about_desc'),url:url3}).catch(function(){});
+    }else{
+      navigator.clipboard.writeText(url3).then(function(){toast(t('toast.link_copied'))}).catch(function(){toast(url3)});
+    }
+  }));
+  // (5) Rate app
+  g5.appendChild(mkBtnRow(t('settings.rate_app'),t('settings.rate_btn'),'fas fa-star',function(){
+    var playUrl='market://details?id=com.tafsirkurd.app';
+    var webUrl='https://play.google.com/store/apps/details?id=com.tafsirkurd.app';
+    try{window.location.href=playUrl}catch(e){window.open(webUrl,'_blank')}
+    setTimeout(function(){window.open(webUrl,'_blank')},500);
+  }));
+  content.appendChild(g5);
+
+  // ── About ────────────────────────────────────
   var about=el('div','about-section');
   var aboutLogo=document.createElement('img');
   aboutLogo.src='/assets/images/logo.png';aboutLogo.alt='';
@@ -1959,7 +2399,7 @@ function checkAuthSession(){
   }).catch(function(e){console.error('Auth session check error:',e)});
 
   S.supabase.auth.onAuthStateChange(function(event,session){
-    console.log('AUTH EVENT:',event,'session:',!!session,'S.user:',!!S.user);
+    // Auth state changed (session details not logged for security)
     if(event==='SIGNED_IN'&&session){
       setUserFromSession(session);
       startCloudSync();
@@ -1984,13 +2424,95 @@ function setUserFromSession(session){
 }
 
 /* --- Cloud Sync --- */
+/* ===== PRODUCTION SYNC SYSTEM ===== */
+// Field categories:
+//   ADDITIVE  — always union across devices (never lose data)
+//   LWW       — last-write-wins (settings, scroll positions)
+//   FURTHEST  — take whichever position is further in the Quran (lastRead)
+
 var SYNC_SIMPLE_KEYS=[
   'lastRead','readingGoal','readLog','readAyahsToday',
   'app_bookmarks','iv_watch_progress',
-  'showTafsir','bgAudio','theme',
-  'app_arSize','app_tfSize',
-  'app_reciter','app_speed','app_repeat','app_repeatCount'
+  'showTafsir','bgAudio','theme','keepAwake',
+  'app_arSize','app_tfSize','app_lineH',
+  'app_reciter','app_speed','app_repeat','app_repeatCount',
+  'autoAdvance','scrollFollowsAudio','hapticFeedback',
+  'dailyReminder','reminderTime'
 ];
+
+// ── Merge helpers ─────────────────────────────────────────────────────────────
+
+// Bookmarks: union by (surah:ayah), newest note wins on conflict
+function _mergeBookmarks(aStr,bStr){
+  try{
+    var a=JSON.parse(aStr||'[]');var b=JSON.parse(bStr||'[]');
+    if(!Array.isArray(a))a=[];if(!Array.isArray(b))b=[];
+    var map={};
+    a.concat(b).forEach(function(bm){
+      var id=bm.surah+':'+bm.ayah;
+      if(!map[id]||(bm.ts||0)>(map[id].ts||0))map[id]=bm;
+    });
+    return JSON.stringify(Object.values(map));
+  }catch(e){return aStr||bStr||'[]'}
+}
+
+// readLog: per-date max (keep highest ayah count for each day)
+function _mergeReadLog(aStr,bStr){
+  try{
+    var a=JSON.parse(aStr||'{}');var b=JSON.parse(bStr||'{}');
+    var r=Object.assign({},a);
+    Object.keys(b).forEach(function(d){r[d]=Math.max(r[d]||0,b[d]||0)});
+    return JSON.stringify(r);
+  }catch(e){return aStr||bStr||'{}'}
+}
+
+// surah_progress: union of ayah numbers read
+function _mergeProgress(aStr,bStr){
+  try{
+    var a=JSON.parse(aStr||'[]');var b=JSON.parse(bStr||'[]');
+    if(!Array.isArray(a))a=[];if(!Array.isArray(b))b=[];
+    var set={};
+    a.concat(b).forEach(function(n){set[n]=true});
+    return JSON.stringify(Object.keys(set).map(Number).sort(function(x,y){return x-y}));
+  }catch(e){return aStr||bStr||'[]'}
+}
+
+// Master merge — called on both login-load and realtime push
+function mergeSyncData(local,cloud){
+  if(!local)return cloud;
+  if(!cloud)return local;
+  var lTime=new Date(local._syncTime||0).getTime();
+  var cTime=new Date(cloud._syncTime||0).getTime();
+  // Start with the newer set as LWW base for settings
+  var base=cTime>=lTime?cloud:local;
+  var result=Object.assign({},base);
+
+  // ADDITIVE: bookmarks — always union
+  result.app_bookmarks=_mergeBookmarks(local.app_bookmarks,cloud.app_bookmarks);
+
+  // ADDITIVE: reading log — per-day max
+  result.readLog=_mergeReadLog(local.readLog,cloud.readLog);
+
+  // ADDITIVE: surah progress — union of read ayahs
+  for(var i=1;i<=114;i++){
+    var pk='surah_progress_'+i;
+    if(local[pk]||cloud[pk])result[pk]=_mergeProgress(local[pk],cloud[pk]);
+  }
+
+  // FURTHEST: last read position — take whichever is deeper in the Quran
+  try{
+    var lLR=JSON.parse(local.lastRead||'{}');
+    var cLR=JSON.parse(cloud.lastRead||'{}');
+    var lPos=(lLR.surah||0)*300+(lLR.ayah||0);
+    var cPos=(cLR.surah||0)*300+(cLR.ayah||0);
+    result.lastRead=lPos>=cPos?local.lastRead:cloud.lastRead;
+  }catch(e){}
+
+  result._syncTime=new Date().toISOString();
+  return result;
+}
+
+// ── Gather / Apply ────────────────────────────────────────────────────────────
 
 function gatherSyncData(){
   var data={};
@@ -1999,14 +2521,12 @@ function gatherSyncData(){
     if(v!==null)data[k]=v;
   });
   for(var i=1;i<=114;i++){
-    var pk='surah_progress_'+i;
-    var sk='surah_scroll_'+i;
-    var pv=localStorage.getItem(pk);
-    var sv=localStorage.getItem(sk);
+    var pk='surah_progress_'+i;var sk='surah_scroll_'+i;
+    var pv=localStorage.getItem(pk);var sv=localStorage.getItem(sk);
     if(pv!==null)data[pk]=pv;
     if(sv!==null)data[sk]=sv;
   }
-  data._syncTime=new Date().toISOString();
+  // _syncTime set by caller so reads never pollute the timestamp
   return data;
 }
 
@@ -2016,29 +2536,70 @@ function applySyncData(data){
     if(k==='_syncTime')return;
     localStorage.setItem(k,data[k]);
   });
-  // Refresh in-memory state
   S.theme=localStorage.getItem('theme')||'light';
   S.arSize=parseFloat(localStorage.getItem('app_arSize'))||2.0;
   S.tfSize=parseFloat(localStorage.getItem('app_tfSize'))||1.0;
+  S.lineH=parseFloat(localStorage.getItem('app_lineH'))||2.2;
   S.showTafsir=localStorage.getItem('showTafsir')!=='false';
   S.bgAudio=localStorage.getItem('bgAudio')==='true';
+  S.keepAwake=localStorage.getItem('keepAwake')==='true';
+  S.autoAdvance=localStorage.getItem('autoAdvance')==='true';
+  S.scrollFollowsAudio=localStorage.getItem('scrollFollowsAudio')!=='false';
+  S.hapticFeedback=localStorage.getItem('hapticFeedback')!=='false';
+  S.dailyReminder=localStorage.getItem('dailyReminder')==='true';
+  S.reminderTime=localStorage.getItem('reminderTime')||'08:00';
   applyTheme();applySizes();
 }
+
+function renderCurrentTab(){
+  renderContinue();
+  if(S.tab==='settings')renderSettings();
+  if(S.tab==='bookmarks')renderBookmarks();
+  if(S.tab==='goals')renderGoals();
+  if(S.tab==='prayer'&&window.PrayerUI)PrayerUI.render();
+}
+
+// ── Sync to cloud ─────────────────────────────────────────────────────────────
+
+var _syncRetryDelay=2000;
+var _syncRetryTimer=null;
 
 function syncToCloud(){
   if(!S.supabase||!S.user||S.isSyncing)return;
   var now=Date.now();
   if(now-S.lastSyncTime<5000)return;
   S.isSyncing=true;
+  var payload=gatherSyncData();
+  payload._syncTime=new Date().toISOString();
   S.supabase.from('user_data').upsert({
     user_id:S.user.id,
-    app_data:gatherSyncData(),
+    app_data:payload,
     updated_at:new Date().toISOString()
   },{onConflict:'user_id',ignoreDuplicates:false}).then(function(resp){
-    if(resp.error)console.error('Sync error:',resp.error);
-    else S.lastSyncTime=Date.now();
-  }).catch(function(e){console.error('Sync failed:',e)}).finally(function(){S.isSyncing=false});
+    if(resp.error){
+      console.error('Sync error:',resp.error);
+      _schedSyncRetry(); // retry with backoff
+    }else{
+      S.lastSyncTime=Date.now();
+      localStorage.setItem('_lastSyncTime',payload._syncTime);
+      _syncRetryDelay=2000; // reset backoff on success
+    }
+  }).catch(function(e){
+    console.error('Sync failed:',e);
+    _schedSyncRetry();
+  }).finally(function(){S.isSyncing=false});
 }
+
+function _schedSyncRetry(){
+  if(!S.user)return;
+  clearTimeout(_syncRetryTimer);
+  _syncRetryTimer=setTimeout(function(){
+    _syncRetryDelay=Math.min(_syncRetryDelay*2,60000); // cap at 60s
+    syncToCloud();
+  },_syncRetryDelay);
+}
+
+// ── Load from cloud ───────────────────────────────────────────────────────────
 
 function loadFromCloud(cb){
   if(!S.supabase||!S.user){if(cb)cb();return}
@@ -2046,36 +2607,69 @@ function loadFromCloud(cb){
   .then(function(resp){
     if(resp.error){
       if(resp.error.code==='PGRST116'){
-        // No cloud data yet, upload current local data
-        syncToCloud();
+        syncToCloud(); // first login — upload local data
       }else{console.error('Load cloud error:',resp.error)}
-      if(cb)cb();
-      return;
+      if(cb)cb();return;
     }
     if(resp.data&&resp.data.app_data){
-      applySyncData(resp.data.app_data);
-      // Re-render current view
-      renderContinue();
-      if(S.tab==='settings')renderSettings();
-      if(S.tab==='bookmarks')renderBookmarks();
-      if(S.tab==='goals')renderGoals();
+      var localData=gatherSyncData();
+      localData._syncTime=localStorage.getItem('_lastSyncTime')||'0';
+      var merged=mergeSyncData(localData,resp.data.app_data);
+      applySyncData(merged);
+      localStorage.setItem('_lastSyncTime',merged._syncTime);
+      // Push merged result back if it added anything from local
+      setTimeout(syncToCloud,500);
+      renderCurrentTab();
     }
     if(cb)cb();
   }).catch(function(e){console.error('Load cloud failed:',e);if(cb)cb()});
 }
 
+// ── Realtime (instant cross-device push) ─────────────────────────────────────
+
+function subscribeRealtime(){
+  if(!S.supabase||!S.user||S.realtimeChannel)return;
+  S.realtimeChannel=S.supabase
+    .channel('user-data-'+S.user.id)
+    .on('postgres_changes',{
+      event:'UPDATE',schema:'public',table:'user_data',
+      filter:'user_id=eq.'+S.user.id
+    },function(payload){
+      if(S.isSyncing)return; // ignore echo of our own push
+      if(!payload.new||!payload.new.app_data)return;
+      var localData=gatherSyncData();
+      localData._syncTime=localStorage.getItem('_lastSyncTime')||'0';
+      var merged=mergeSyncData(localData,payload.new.app_data);
+      applySyncData(merged);
+      localStorage.setItem('_lastSyncTime',merged._syncTime);
+      renderCurrentTab();
+      toast(t('toast.synced_live'));
+    })
+    .subscribe();
+}
+
+function unsubscribeRealtime(){
+  if(S.realtimeChannel){
+    try{S.supabase.removeChannel(S.realtimeChannel)}catch(e){}
+    S.realtimeChannel=null;
+  }
+}
+
+// ── Lifecycle ─────────────────────────────────────────────────────────────────
+
 function startCloudSync(){
   stopCloudSync();
   loadFromCloud(function(){
     S.syncInterval=setInterval(syncToCloud,30000);
+    subscribeRealtime();
   });
-  // Sync on app background
   document.addEventListener('visibilitychange',syncOnHide);
 }
 
 function stopCloudSync(){
   if(S.syncInterval){clearInterval(S.syncInterval);S.syncInterval=null}
   document.removeEventListener('visibilitychange',syncOnHide);
+  unsubscribeRealtime();
 }
 
 function syncOnHide(){if(document.hidden&&S.user)syncToCloud()}
@@ -2085,6 +2679,11 @@ function debouncedSync(){
   clearTimeout(S._syncDebounce);
   S._syncDebounce=setTimeout(syncToCloud,2000);
 }
+
+// Re-sync immediately when network comes back after being offline
+window.addEventListener('online',function(){
+  if(S.user){_syncRetryDelay=2000;syncToCloud();}
+});
 
 /* --- Auth Panel --- */
 App.openLogin=function(){
@@ -2157,12 +2756,10 @@ App.openLogin=function(){
       submitBtn.disabled=true;submitBtn.textContent='...';
       S.supabase.auth.signInWithPassword({email:email,password:pass}).then(function(resp){
         if(resp.error){showMsg(resp.error.message,'error');submitBtn.disabled=false;submitBtn.textContent=t('auth.login');return}
-        console.log('signIn resp:',JSON.stringify(resp.data));
         var session=resp.data.session;
         if(!session){
           // Session might be null if email not confirmed; try getSession
           S.supabase.auth.getSession().then(function(r2){
-            console.log('getSession:',JSON.stringify(r2.data));
             if(r2.data&&r2.data.session){
               checkProfileComplete(r2.data.session);
             }else{
@@ -2275,9 +2872,7 @@ App.openLogin=function(){
   }
 
   function loginSuccess(session){
-    console.log('loginSuccess called, session user:',session&&session.user?session.user.email:'NO USER');
     setUserFromSession(session);
-    console.log('S.user after set:',JSON.stringify(S.user));
     startCloudSync();
     App.closeLogin();
     App.tab('settings');
@@ -2569,17 +3164,23 @@ function renderProfile(panel){
     if(!confirm(t('profile.confirm_delete1')))return;
     if(!confirm(t('profile.confirm_delete2')))return;
     clearPPMsg();
-    // Delete user data then sign out
-    S.supabase.from('user_data').delete().eq('user_id',S.user.id).then(function(){
-      return S.supabase.from('profiles').delete().eq('id',S.user.id);
-    }).then(function(){
-      return S.supabase.auth.signOut();
-    }).then(function(){
-      S.user=null;
-      stopCloudSync();
-      App.closeProfile();
-      toast(t('toast.account_deleted'));
-      renderSettings();
+    // Get current session token, then call server to fully delete the account
+    S.supabase.auth.getSession().then(function(resp){
+      var accessToken=resp&&resp.data&&resp.data.session&&resp.data.session.access_token;
+      if(!accessToken){showPPMsg(t('error.generic'),'error');return}
+      return fetch('/delete-account',{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'}
+      }).then(function(r){return r.json()}).then(function(result){
+        if(!result.success)throw new Error(result.error||t('error.delete'));
+        return S.supabase.auth.signOut();
+      }).then(function(){
+        S.user=null;
+        stopCloudSync();
+        App.closeProfile();
+        toast(t('toast.account_deleted'));
+        renderSettings();
+      });
     }).catch(function(e){showPPMsg(e.message||t('error.delete'),'error')});
   });
   body.appendChild(deleteBtn);
@@ -3178,6 +3779,8 @@ function startApp(){
   } else {
     init();
   }
+  // Re-render current tab whenever background translation merge completes
+  document.addEventListener('i18n:updated',function(){ renderCurrentTab(); });
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',startApp)}else{startApp()}
 
