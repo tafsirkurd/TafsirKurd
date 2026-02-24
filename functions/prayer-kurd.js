@@ -1,5 +1,5 @@
 /**
- * Prayer Times Proxy — amozhgary.tv (debug v2)
+ * Prayer Times Proxy — amozhgary.tv (debug v3: find table structure)
  */
 
 const CITY_KURDISH = {
@@ -12,16 +12,13 @@ const CITY_KURDISH = {
 export async function onRequest(context) {
   try {
     const { request } = context;
-
-    if (request.method === 'OPTIONS') {
-      return resp(null, 204);
-    }
+    if (request.method === 'OPTIONS') return resp(null, 204);
 
     const url   = new URL(request.url);
     const city  = url.searchParams.get('city')  || '';
     const month = parseInt(url.searchParams.get('month') || '0');
     const year  = parseInt(url.searchParams.get('year')  || '0');
-    const debug = url.searchParams.get('debug') === '1';
+    const debug = url.searchParams.get('debug') || '';
 
     const kurdishName = CITY_KURDISH[city];
     if (!kurdishName || month < 1 || month > 12 || !year) {
@@ -29,22 +26,15 @@ export async function onRequest(context) {
     }
 
     const pageUrl = 'https://amozhgary.tv/bang/' + encodeURIComponent(kurdishName) + '?month=' + month;
-
-    const res = await fetch(pageUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36' }
-    });
-
-    if (!res.ok) {
-      return resp({ error: 'upstream ' + res.status }, 502);
-    }
-
+    const res = await fetch(pageUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (!res.ok) return resp({ error: 'upstream ' + res.status }, 502);
     const html = await res.text();
 
-    if (debug) {
-      // Find the first time match and show 800 chars around it
-      const idx = html.indexOf('>05:');
-      const sample = idx >= 0 ? html.slice(Math.max(0, idx - 400), idx + 400) : 'NOT FOUND';
-      return resp({ htmlSize: html.length, sample });
+    if (debug === 'table') {
+      // Show 1000 chars around "05:39" (first Feb entry in the monthly table)
+      const idx = html.indexOf('>05:39<');
+      if (idx < 0) return resp({ error: 'marker not found', htmlSize: html.length });
+      return resp({ sample: html.slice(Math.max(0, idx - 600), idx + 400) });
     }
 
     const days = parseMonthlyTimes(html);
@@ -65,28 +55,20 @@ function parseMonthlyTimes(html) {
     const after   = html.slice(pos + m[0].length, pos + m[0].length + 600);
     const raw     = [];
     const tRe     = />(\d{2}:\d{2})</g;
-    let   tm;
-    while ((tm = tRe.exec(after)) !== null && raw.length < 6) {
-      raw.push(tm[1]);
-    }
+    let tm;
+    while ((tm = tRe.exec(after)) !== null && raw.length < 6) raw.push(tm[1]);
     if (raw.length === 6) {
       const t = to24h(raw);
-      const before = html.slice(Math.max(0, pos - 400), pos);
-      const hm = before.match(/(\d{1,2})\u06CC\s*([\u0600-\u06FF]+)\s*(\d{4})/);
       days[gregDay] = { Fajr: t[0], Sunrise: t[1], Dhuhr: t[2], Asr: t[3], Maghrib: t[4], Isha: t[5] };
-      if (hm) days[gregDay].hijri = hm[1] + '\u06CC ' + hm[2] + ' ' + hm[3];
     }
   }
   return days;
 }
 
 function to24h(times) {
-  const out = [];
-  let prev = 0;
+  const out = []; let prev = 0;
   for (const t of times) {
-    const p = t.split(':');
-    let h = parseInt(p[0]);
-    const m = parseInt(p[1]);
+    const p = t.split(':'); let h = parseInt(p[0]); const m = parseInt(p[1]);
     let mins = h * 60 + m;
     if (h < 12 && mins < prev) { h += 12; mins += 720; }
     prev = mins;
