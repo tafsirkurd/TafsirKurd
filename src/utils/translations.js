@@ -159,7 +159,8 @@
     }
 
     /**
-     * Fetch translations from Supabase
+     * Fetch ALL translations from Supabase with pagination.
+     * Supabase returns max 1000 rows per request — loop until exhausted.
      * Returns true if data changed (new or updated translations)
      */
     async function fetchFromSupabase() {
@@ -169,29 +170,37 @@
                 if (!loaded) throw new Error('Could not load Supabase config');
             }
 
-            const response = await fetch(
-                `${SUPABASE_URL}/rest/v1/kurdish_translations?select=key_id,kurdish_text`,
-                {
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                        'Content-Type': 'application/json'
+            const BATCH = 1000;
+            let allData = [];
+            let offset = 0;
+
+            while (true) {
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/kurdish_translations?select=key_id,kurdish_text&limit=${BATCH}&offset=${offset}`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'Content-Type': 'application/json'
+                        }
                     }
-                }
-            );
+                );
 
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-            const data = await response.json();
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const batch = await response.json();
+                allData = allData.concat(batch);
+                if (batch.length < BATCH) break; // last page
+                offset += BATCH;
+            }
 
             // Check if anything changed
             const oldCount = Object.keys(translations).length;
             const newTranslations = {};
-            data.forEach(row => {
+            allData.forEach(row => {
                 newTranslations[row.key_id] = row.kurdish_text;
             });
 
-            let changed = oldCount !== data.length;
+            let changed = oldCount !== allData.length;
             if (!changed) {
                 for (const key of Object.keys(newTranslations)) {
                     if (translations[key] !== newTranslations[key]) {
@@ -206,7 +215,7 @@
             saveToCache();
 
             if (changed) {
-                console.log(`✓ Loaded ${data.length} translations from Supabase (changed)`);
+                console.log(`✓ Loaded ${allData.length} translations from Supabase (changed)`);
             }
             return changed;
         } catch (e) {
