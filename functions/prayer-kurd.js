@@ -1,5 +1,5 @@
 /**
- * Prayer Times Proxy — amozhgary.tv
+ * Prayer Times Proxy — amozhgary.tv (debug v2)
  */
 
 const CITY_KURDISH = {
@@ -14,13 +14,14 @@ export async function onRequest(context) {
     const { request } = context;
 
     if (request.method === 'OPTIONS') {
-      return resp(null, 204, {});
+      return resp(null, 204);
     }
 
     const url   = new URL(request.url);
     const city  = url.searchParams.get('city')  || '';
     const month = parseInt(url.searchParams.get('month') || '0');
     const year  = parseInt(url.searchParams.get('year')  || '0');
+    const debug = url.searchParams.get('debug') === '1';
 
     const kurdishName = CITY_KURDISH[city];
     if (!kurdishName || month < 1 || month > 12 || !year) {
@@ -34,20 +35,23 @@ export async function onRequest(context) {
     });
 
     if (!res.ok) {
-      return resp({ error: 'upstream ' + res.status, url: pageUrl }, 502);
+      return resp({ error: 'upstream ' + res.status }, 502);
     }
 
     const html = await res.text();
-    const size = html.length;
 
-    // Quick smoke test — find any time patterns
-    const timeSample = (html.match(/>(\d{2}:\d{2})</g) || []).slice(0, 12);
+    if (debug) {
+      // Find the first time match and show 800 chars around it
+      const idx = html.indexOf('>05:');
+      const sample = idx >= 0 ? html.slice(Math.max(0, idx - 400), idx + 400) : 'NOT FOUND';
+      return resp({ htmlSize: html.length, sample });
+    }
+
     const days = parseMonthlyTimes(html);
-
-    return resp({ city, year, month, htmlSize: size, timeSample, dayCount: Object.keys(days).length, days });
+    return resp({ city, year, month, days });
 
   } catch (e) {
-    return resp({ error: String(e), stack: String(e && e.stack) }, 500);
+    return resp({ error: String(e) }, 500);
   }
 }
 
@@ -91,10 +95,9 @@ function to24h(times) {
   return out;
 }
 
-function resp(data, status, extraHeaders) {
-  const headers = Object.assign({
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*'
-  }, extraHeaders || {});
-  return new Response(data == null ? '' : JSON.stringify(data), { status: status || 200, headers });
+function resp(data, status) {
+  return new Response(data == null ? '' : JSON.stringify(data), {
+    status: status || 200,
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+  });
 }
