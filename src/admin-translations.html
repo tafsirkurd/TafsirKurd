@@ -1048,6 +1048,63 @@
             .t-text { font-size: 15px; }
         }
 
+        /* ===== History Drawer ===== */
+        .history-drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s;
+        }
+        .history-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+        #historyPanel {
+            position: fixed !important;
+            top: 0;
+            right: 0;
+            width: 580px;
+            max-width: 100vw;
+            height: 100vh;
+            background: var(--bg-app);
+            border-left: 1px solid var(--border-light);
+            border-radius: 0 !important;
+            box-shadow: -8px 0 48px rgba(0,0,0,0.14);
+            z-index: 1000;
+            display: flex !important;
+            flex-direction: column;
+            margin-top: 0 !important;
+            transform: translateX(100%);
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+            overflow: hidden;
+        }
+        #historyPanel.open { transform: translateX(0); }
+        #historyPanel .history-list { flex: 1; max-height: none; overflow-y: auto; }
+        #historyPanel .history-header {
+            flex-shrink: 0;
+            padding: 18px 20px;
+        }
+        #historyPanel .history-filters { flex-shrink: 0; }
+        #historyPanel .history-stats { flex-shrink: 0; }
+        .history-close-btn {
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+        .history-close-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
         /* ===== History panel — mobile ===== */
         @media (max-width: 768px) {
             .history-filters { flex-direction: column; align-items: stretch; gap: 8px; }
@@ -1237,10 +1294,14 @@
                     <button class="pagination-btn" id="nextPage" onclick="changePage(1)"><i data-lucide="chevron-right"></i></button>
                 </div>
 
-                <div class="history-panel" id="historyPanel" style="display:none;">
+                <div class="history-drawer-overlay" id="historyOverlay" onclick="toggleHistory()"></div>
+                <div class="history-panel" id="historyPanel">
                     <div class="history-header">
                         <h2 class="history-title"><i data-lucide="history" style="width:18px;height:18px;vertical-align:middle;margin-left:6px"></i> تاریخچەی گۆڕانکاریەکان</h2>
-                        <button class="btn btn-secondary" onclick="loadHistory()" id="historyRefreshBtn" style="font-size:13px;padding:8px 14px"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i><span>نوێکردنەوە</span></button>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <button class="btn btn-secondary" onclick="loadHistory()" id="historyRefreshBtn" style="font-size:13px;padding:8px 14px"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i><span>نوێکردنەوە</span></button>
+                            <button class="history-close-btn" onclick="toggleHistory()" title="Close">&times;</button>
+                        </div>
                     </div>
                     <div class="history-filters">
                         <input type="search" class="history-search" id="historySearch" placeholder="گەڕان بە کلیل، دەق، ئیمەیل..." oninput="filterHistory()">
@@ -2079,7 +2140,14 @@
         var _historyAllRows = [];
         var _historyTab = 'all';
 
-        function getPlatform(keyId) {
+        function getPlatform(keyId, page) {
+            // Trust page field first — most accurate (prayer.fajr is android, not web)
+            if (page) {
+                var np = normalizePage(page);
+                if (np === 'android') return 'android';
+                if (np === 'ios') return 'ios';
+            }
+            // Fall back to key prefix
             if (!keyId) return 'web';
             var k = keyId.toLowerCase();
             if (k.startsWith('android_') || k.startsWith('app_')) return 'android';
@@ -2089,22 +2157,23 @@
 
         function toggleHistory() {
             var panel = document.getElementById('historyPanel');
-            var isHidden = panel.style.display === 'none';
-            panel.style.display = isHidden ? 'block' : 'none';
-            if (isHidden) {
-                lucide.createIcons();
+            var overlay = document.getElementById('historyOverlay');
+            var isOpen = panel.classList.contains('open');
+            if (isOpen) {
+                panel.classList.remove('open');
+                overlay.classList.remove('open');
+            } else {
+                panel.classList.add('open');
+                overlay.classList.add('open');
+                lucide.createIcons({ nodes: [panel] });
                 loadHistory();
-                // Scroll panel into view so admin doesn't have to hunt for it
-                setTimeout(function() {
-                    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 50);
             }
         }
 
         async function logChange(action, details) {
             try {
                 var email = sessionStorage.getItem('adminEmail') || '';
-                var platform = getPlatform(details.key_id);
+                var platform = getPlatform(details.key_id, details.page);
                 var result = await supabase.from('admin_audit_logs').insert([{
                     email: email,
                     action: 'translation_' + action,
@@ -2169,7 +2238,7 @@
             } else if (_historyTab !== 'all') {
                 rows = rows.filter(function(row) {
                     var details = row.details || {};
-                    var p = details.platform || getPlatform(details.key_id);
+                    var p = details.platform || getPlatform(details.key_id, details.page);
                     return p === _historyTab;
                 });
             }
