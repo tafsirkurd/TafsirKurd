@@ -940,19 +940,6 @@ function renderReaderSettings(){
   tafRow.appendChild(tafToggle);
   body.appendChild(tafRow);
 
-  // Dark mode
-  var darkRow=el('div','qs-row');
-  darkRow.appendChild(el('div','qs-row-label',t('settings.dark_mode')));
-  var darkToggle=el('div','toggle'+(S.theme==='dark'?' on':''));
-  darkToggle.appendChild(el('div','toggle-knob'));
-  on(darkToggle,'click',function(){
-    S.theme=S.theme==='dark'?'light':'dark';
-    applyTheme();
-    darkToggle.classList.toggle('on',S.theme==='dark');
-  });
-  darkRow.appendChild(darkToggle);
-  body.appendChild(darkRow);
-
   // Keep screen awake
   var kaRow=el('div','qs-row');
   kaRow.appendChild(el('div','qs-row-label',t('qs.screen_lock')));
@@ -966,19 +953,6 @@ function renderReaderSettings(){
   });
   kaRow.appendChild(kaToggle);
   body.appendChild(kaRow);
-
-  // Background audio
-  var bgRow=el('div','qs-row');
-  bgRow.appendChild(el('div','qs-row-label',t('settings.bg_audio')));
-  var bgToggle=el('div','toggle'+(S.bgAudio?' on':''));
-  bgToggle.appendChild(el('div','toggle-knob'));
-  on(bgToggle,'click',function(){
-    S.bgAudio=!S.bgAudio;
-    localStorage.setItem('bgAudio',String(S.bgAudio));
-    bgToggle.classList.toggle('on',S.bgAudio);
-  });
-  bgRow.appendChild(bgToggle);
-  body.appendChild(bgRow);
 
   /* ---- TEXT SIZE ---- */
   body.appendChild(el('div','qs-section-title',t('qs.text_size')));
@@ -2198,6 +2172,21 @@ function mkBtnRow(labelText,btnLabel,btnIcon,onClick,danger){
   row.appendChild(btn);
   return row;
 }
+function mkSliderRow(labelText,value,min,max,step,onInput,onChange){
+  var row=el('div','setting-row setting-row--slider');
+  var titleRow=el('div','setting-slider-title');
+  titleRow.appendChild(el('div','setting-label',labelText));
+  var valEl=el('span','qs-val',value.toFixed(1));
+  titleRow.appendChild(valEl);
+  row.appendChild(titleRow);
+  var slider=document.createElement('input');
+  slider.type='range';slider.className='slider';
+  slider.min=String(min);slider.max=String(max);slider.step=String(step);slider.value=String(value);
+  on(slider,'input',function(){var v=parseFloat(this.value);valEl.textContent=v.toFixed(1);onInput(v);});
+  on(slider,'change',function(){onChange(parseFloat(this.value));});
+  row.appendChild(slider);
+  return row;
+}
 
 function renderSettings(){
   var content=$('settingsContent');
@@ -2272,6 +2261,11 @@ function renderSettings(){
     S.theme=S.theme==='dark'?'light':'dark';
     applyTheme();renderSettings();
   }));
+  g1.appendChild(mkToggleRow(t('qs.screen_lock'),S.keepAwake,function(){
+    S.keepAwake=!S.keepAwake;
+    localStorage.setItem('keepAwake',String(S.keepAwake));
+    applyKeepAwake();renderSettings();
+  }));
   content.appendChild(g1);
 
   // ── Reading ──────────────────────────────────
@@ -2282,19 +2276,56 @@ function renderSettings(){
     localStorage.setItem('showTafsir',String(S.showTafsir));
     applyShowTafsir();renderSettings();
   }));
-  // (2) Auto-advance surah
   g2.appendChild(mkToggleRow(t('settings.auto_advance'),S.autoAdvance,function(){
     S.autoAdvance=!S.autoAdvance;
     localStorage.setItem('autoAdvance',String(S.autoAdvance));
     renderSettings();
   },t('settings.auto_advance_sub')));
-  // (3) Scroll follows audio
   g2.appendChild(mkToggleRow(t('settings.scroll_follows'),S.scrollFollowsAudio,function(){
     S.scrollFollowsAudio=!S.scrollFollowsAudio;
     localStorage.setItem('scrollFollowsAudio',String(S.scrollFollowsAudio));
     renderSettings();
   },t('settings.scroll_follows_sub')));
+  g2.appendChild(mkSliderRow(t('settings.arabic_size'),S.arSize,1.0,3.5,0.1,
+    function(v){S.arSize=v;applySizes();},
+    function(v){localStorage.setItem('app_arSize',String(v));}
+  ));
+  g2.appendChild(mkSliderRow(t('settings.tafsir_size'),S.tfSize,0.5,2.0,0.1,
+    function(v){S.tfSize=v;applySizes();},
+    function(v){localStorage.setItem('app_tfSize',String(v));}
+  ));
+  g2.appendChild(mkSliderRow(t('qs.line_spacing'),S.lineH,1.4,3.5,0.1,
+    function(v){S.lineH=v;applySizes();},
+    function(v){localStorage.setItem('app_lineH',String(v));}
+  ));
   content.appendChild(g2);
+
+  // ── Audio ────────────────────────────────────
+  var gAudio=el('div','settings-group');
+  gAudio.appendChild(el('div','settings-group-title',t('audio.reciter')));
+  // Reciter chips row
+  var recRow=el('div','setting-row setting-row--reciter');
+  var recList=el('div','qs-reciter-list');
+  recList.style.cssText='padding:4px 0 0;margin:0;';
+  RECITERS.forEach(function(r){
+    var chip=el('div','qs-reciter-chip'+(RECITER===r.id?' on':''),r.name);
+    on(chip,'click',function(){
+      RECITER=r.id;
+      localStorage.setItem('app_reciter',r.id);
+      clearPrefetch();
+      if(S.audio.playing)playAyah(S.audio.surah,S.audio.ayah);
+      renderSettings();
+    });
+    recList.appendChild(chip);
+  });
+  recRow.appendChild(recList);
+  gAudio.appendChild(recRow);
+  gAudio.appendChild(mkToggleRow(t('settings.bg_audio'),S.bgAudio,function(){
+    S.bgAudio=!S.bgAudio;
+    localStorage.setItem('bgAudio',String(S.bgAudio));
+    renderSettings();
+  }));
+  content.appendChild(gAudio);
 
   // ── Notifications & Haptics ──────────────────
   var g3=el('div','settings-group');

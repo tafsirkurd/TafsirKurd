@@ -455,6 +455,10 @@ body{background:var(--bg);color:var(--text)}
 .setting-row:first-child{border-radius:var(--r-xl) var(--r-xl) 0 0}
 .setting-row:last-child{border-radius:0 0 var(--r-xl) var(--r-xl);margin-bottom:0}
 .setting-row:only-child{border-radius:var(--r-xl)}
+.setting-row--slider{flex-direction:column;align-items:stretch;gap:8px}
+.setting-row--slider .slider{width:100%}
+.setting-slider-title{display:flex;justify-content:space-between;align-items:center}
+.setting-row--reciter{flex-direction:column;align-items:stretch;padding:12px 16px}
 .setting-label{font-size:.9rem;font-weight:500}
 .toggle{width:48px;height:28px;border-radius:14px;background:var(--border2);cursor:pointer;position:relative;transition:background .25s var(--ease)}
 .toggle.on{background:var(--accent)}
