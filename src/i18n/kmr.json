@@ -30,6 +30,12 @@
   "prayer.notif_body": "کاتا ${prayer} گهیشتە ${city}",
   "prayer.settings_title": "ڕێکخستنێن نوێژ",
   "prayer.format_label": "شێوازا کات",
+  "prayer.qibla_title": "ئیستیقامەتا قیبلە",
+  "prayer.qibla_direction": "ئاراستە",
+  "prayer.qibla_distance": "دووری",
+  "prayer.qibla_approx": "نزیکەوە",
+  "prayer.qibla_locating": "دیارکرنا شوین...",
+  "prayer.qibla_no_loc": "ناکارە بوی دیارکرنا شوین",
 
   "header.bookmarks": "نیشانکرین",
   "header.goals": "ئارمانج",

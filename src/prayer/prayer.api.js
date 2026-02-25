@@ -15,12 +15,28 @@
 
   var KURD_BASE = 'https://tafsirkurd.com';
 
-  // Aladhan fallback coordinates
+  // Coordinates for all 20 supported cities (used as Aladhan fallback + Qibla compass)
   var CITY_COORDS = {
-    'Duhok':        { lat: 36.8686, lon: 42.9450 },
-    'Erbil':        { lat: 36.1914, lon: 44.0091 },
     'Sulaymaniyah': { lat: 35.5580, lon: 45.4350 },
-    'Zakho':        { lat: 37.1397, lon: 42.6844 }
+    'Erbil':        { lat: 36.1914, lon: 44.0091 },
+    'Duhok':        { lat: 36.8686, lon: 42.9450 },
+    'Kirkuk':       { lat: 35.4681, lon: 44.3922 },
+    'Halabja':      { lat: 35.1787, lon: 45.9862 },
+    'Kfry':         { lat: 35.6464, lon: 44.6329 },
+    'Rania':        { lat: 36.2563, lon: 44.8780 },
+    'Koya':         { lat: 36.0869, lon: 44.6210 },
+    'Qaladze':      { lat: 36.1804, lon: 45.1237 },
+    'Zakho':        { lat: 37.1397, lon: 42.6844 },
+    'Bardarash':    { lat: 36.5012, lon: 43.6564 },
+    'Mosul':        { lat: 36.3350, lon: 43.1189 },
+    'Darbandikhan': { lat: 35.1098, lon: 45.6943 },
+    'Kalar':        { lat: 34.6235, lon: 45.3221 },
+    'Akre':         { lat: 36.7490, lon: 43.8863 },
+    'Daquq':        { lat: 35.2380, lon: 44.3600 },
+    'Makhmur':      { lat: 35.7763, lon: 43.5923 },
+    'Mandali':      { lat: 33.7455, lon: 45.5574 },
+    'Qarahanjir':   { lat: 34.1786, lon: 45.3850 },
+    'DuzKhormatou': { lat: 34.8453, lon: 44.9580 }
   };
 
   /**
