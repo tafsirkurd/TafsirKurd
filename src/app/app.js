@@ -195,10 +195,10 @@ function init(){
 
     // Pull-to-refresh on all tabs
     setupPullToRefresh('panelQuran',function(){renderSurahGrid();renderContinue()},function(){return !S.surah});
-    setupPullToRefresh('panelBookmarks',function(){renderBookmarks()});
-    setupPullToRefresh('panelGoals',function(){renderGoals()});
-    setupPullToRefresh('panelIslamvoice',function(){if(typeof App.ivRefresh==='function')App.ivRefresh()});
-    setupPullToRefresh('panelSettings',function(){renderSettings()});
+    setupPullToRefresh('panelBookmarks',function(){_renderHash.bm=null;renderBookmarks();});
+    setupPullToRefresh('panelGoals',function(){_renderHash.goals=null;renderGoals();});
+    setupPullToRefresh('panelIslamvoice',function(){_renderHash.iv=null;if(typeof App.ivRefresh==='function')App.ivRefresh();});
+    setupPullToRefresh('panelSettings',function(){_renderHash.settings=null;renderSettings();});
     setupPullToRefresh('panelPrayer',function(){if(window.PrayerUI)PrayerUI.refresh()});
 
     // Load data
@@ -317,17 +317,31 @@ function init(){
   // Schedule athan on startup (in case it's a new day)
   if(window.PrayerUI)PrayerUI.initScheduleOnStart();
 
-  // Pre-warm prayer cache in background so the tab is instant on first open
-  setTimeout(function(){
-    if(!window.PrayerAPI||!window.PrayerCache||!window.PrayerLogic)return;
-    var city=localStorage.getItem('prayerCity')||'Duhok';
-    var today=window.PrayerLogic.todayBaghdad();
-    var p=today.split('-').map(Number);
-    var mkey=window.PrayerCache.monthKey(city,p[0],p[1]);
-    if(!window.PrayerCache.read(mkey)){
-      window.PrayerAPI.fetchPrayerTimes(city,today).catch(function(){});
+  // Fetch prayer data immediately (no delay) so cache is ready for pre-render below
+  if(window.PrayerAPI&&window.PrayerCache&&window.PrayerLogic){
+    var _pwCity=localStorage.getItem('prayerCity')||'Duhok';
+    var _pwToday=window.PrayerLogic.todayBaghdad();
+    var _pwParts=_pwToday.split('-').map(Number);
+    var _pwMkey=window.PrayerCache.monthKey(_pwCity,_pwParts[0],_pwParts[1]);
+    if(!window.PrayerCache.read(_pwMkey)){
+      window.PrayerAPI.fetchPrayerTimes(_pwCity,_pwToday).catch(function(){});
     }
-  },1500);
+  }
+
+  // Pre-render all tabs in background so every tab is already built before user taps.
+  // Splash hides at ~800ms; start at 900ms then stagger 80ms each to avoid jank.
+  setTimeout(function(){
+    var jobs=[
+      function(){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');},
+      function(){renderGoals();_renderHash.goals=_tabHash('goals');},
+      function(){renderSettings();_renderHash.settings=_tabHash('settings');},
+      function(){if(window.PrayerUI)PrayerUI.render();},
+      function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}
+    ];
+    var i=0;
+    function next(){if(i>=jobs.length)return;jobs[i++]();setTimeout(next,80);}
+    next();
+  },900);
 
   // Hide splash (always runs even if init errors above)
   setTimeout(function(){
@@ -338,6 +352,24 @@ function init(){
     setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp)},300);
   },800);
 }
+
+/* ===== LIVE TRANSLATION UPDATE ===== */
+// When the admin saves a translation, i18n.js detects the change (polling every 8s),
+// fires i18n:updated, and we immediately re-render whichever tab is currently visible.
+document.addEventListener('i18n:updated', function(){
+  // Invalidate all pre-rendered caches — next tab visit rebuilds with fresh strings
+  _renderHash={};
+  if(window.PrayerUI) PrayerUI.invalidate();
+
+  // Re-render the currently visible tab right now so the user sees the change immediately
+  var tab=S.tab;
+  if(tab==='bookmarks'){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');}
+  else if(tab==='goals'){renderGoals();_renderHash.goals=_tabHash('goals');}
+  else if(tab==='settings'){renderSettings();_renderHash.settings=_tabHash('settings');}
+  else if(tab==='islamvoice'){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}
+  else if(tab==='prayer'&&window.PrayerUI){PrayerUI.redraw();}
+  // quran tab uses data-i18n attributes — applyTranslations() already handled it above
+});
 
 /* ===== DATA LOADING ===== */
 function loadQuranData(){
@@ -442,6 +474,24 @@ function applyKeepAwake(){
 }
 
 /* ===== TAB SWITCHING ===== */
+var _renderHash={};
+function _tabHash(name){
+  if(name==='bookmarks'){
+    var bms=getBookmarks();
+    return bms.length+':'+S.bmSort;
+  }
+  if(name==='goals'){
+    var log=getReadLog();var g=getGoal();var today=dateKey(new Date());
+    return JSON.stringify(g)+':'+(log[today]||0)+':'+calcStreak(log);
+  }
+  if(name==='settings'){
+    return (S.user?S.user.email:'')+S.darkMode+S.hapticFeedback+S.fontSize+S.keepAwake+S.reminderEnabled+S.reminderTime;
+  }
+  if(name==='islamvoice'){
+    return (S.ivSeries?S.ivSeries.length:0)+':'+(S.ivSearchQuery||'');
+  }
+  return null;
+}
 window.App={};
 App.tab=function(name){
   if(name===S.tab&&!S.surah)return;
@@ -455,10 +505,10 @@ App.tab=function(name){
   var tabBtn=document.querySelector('.tab-item[data-tab="'+name+'"]');
   if(tabBtn)tabBtn.classList.add('on');
 
-  if(name==='bookmarks')renderBookmarks();
-  if(name==='goals')renderGoals();
-  if(name==='islamvoice')renderIslamVoice();
-  if(name==='settings')renderSettings();
+  if(name==='bookmarks'){var h=_tabHash('bookmarks');if(h!==_renderHash.bm){renderBookmarks();_renderHash.bm=h;}}
+  if(name==='goals'){var h=_tabHash('goals');if(h!==_renderHash.goals){renderGoals();_renderHash.goals=h;}}
+  if(name==='islamvoice'){var h=_tabHash('islamvoice');if(h!==_renderHash.iv){renderIslamVoice();_renderHash.iv=h;}}
+  if(name==='settings'){var h=_tabHash('settings');if(h!==_renderHash.settings){renderSettings();_renderHash.settings=h;}}
   if(name==='prayer'){if(window.PrayerUI)PrayerUI.render();}
 };
 
@@ -2384,19 +2434,32 @@ var SUPA_CONFIG_URL='https://tafsirkurd.com/config';
 function initSupabase(cb){
   if(S.supabase){if(cb)cb();return}
   if(!window.supabase){console.warn('Supabase JS library not loaded');if(cb)cb();return}
+
+  // Use cached config immediately (enables offline auth session recovery)
+  var cachedCfg=null;
+  try{cachedCfg=JSON.parse(localStorage.getItem('supa_cfg'))}catch(e){}
+  if(cachedCfg&&cachedCfg.supabaseUrl&&cachedCfg.supabaseKey){
+    S.supabase=window.supabase.createClient(cachedCfg.supabaseUrl,cachedCfg.supabaseKey);
+    checkAuthSession();
+    if(cb)cb();
+  }
+
+  // Update config from network in background
   fetch(SUPA_CONFIG_URL).then(function(r){
     if(!r.ok)throw new Error('Config HTTP '+r.status);
     return r.json();
   }).then(function(cfg){
     if(cfg.supabaseUrl&&cfg.supabaseKey){
-      S.supabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);
-      console.log('Supabase connected');
-      checkAuthSession();
-      if(cb)cb();
-    }else{throw new Error('Missing supabase config')}
+      try{localStorage.setItem('supa_cfg',JSON.stringify(cfg))}catch(e){}
+      if(!S.supabase){
+        S.supabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);
+        checkAuthSession();
+        if(cb)cb();
+      }
+    }
   }).catch(function(e){
-    console.error('Supabase init error:',e);
-    if(cb)cb();
+    console.warn('Supabase config fetch failed (offline?)');
+    if(!S.supabase&&cb)cb();
   });
 }
 
@@ -2406,6 +2469,7 @@ function checkAuthSession(){
     var session=resp.data.session;
     if(session){
       setUserFromSession(session);
+      _renderHash.settings=null; // auth changed — force settings re-render
       startCloudSync();
       if(S.tab==='settings')renderSettings();
     }
@@ -2415,10 +2479,12 @@ function checkAuthSession(){
     // Auth state changed (session details not logged for security)
     if(event==='SIGNED_IN'&&session){
       setUserFromSession(session);
+      _renderHash.settings=null;
       startCloudSync();
       if(S.tab==='settings')renderSettings();
     }else if(event==='SIGNED_OUT'){
       S.user=null;
+      _renderHash.settings=null;
       stopCloudSync();
       if(S.tab==='settings')renderSettings();
     }
