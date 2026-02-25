@@ -879,7 +879,7 @@
                 padding-left: 44px;
             }
             .filter-search svg { left: 16px; width: 18px; height: 18px; }
-            .filter-clear { right: 12px; width: 28px; height: 28px; font-size: 16px; }
+            .filter-clear { right: 8px; width: 40px; height: 40px; font-size: 18px; border-radius: 50%; }
 
             /* Page chips - wrap to new lines */
             .page-chips-wrap {
@@ -1065,6 +1065,15 @@
         .t-row.qe-saved { animation: qeSavedFlash 0.7s ease forwards; }
         body.dark-mode .t-row.qe-saved { animation: none; border-color: #22c55e; }
         #quickEditBtn.qe-active { background: var(--text-primary); color: var(--bg-app); border-color: var(--text-primary); }
+        .qe-save-btn { font-size: 18px; font-weight: 700; line-height: 1; }
+        .qe-save-btn:hover { color: #22c55e !important; background: #f0fdf4 !important; }
+        body.dark-mode .qe-save-btn:hover { background: #052e16 !important; }
+
+        /* ===== Page actions — icons only on narrow screens ===== */
+        @media (max-width: 480px) {
+            .page-header .page-actions .btn span { display: none; }
+            .page-header .page-actions .btn { padding: 8px 10px; min-width: 40px; }
+        }
 
         /* ===== Small phones ===== */
         @media (max-width: 380px) {
@@ -1072,6 +1081,8 @@
             .t-row { padding: 14px 12px; }
             .t-key { font-size: 11px; }
             .t-text { font-size: 15px; }
+            .platform-tab { padding: 8px 10px; font-size: 12px; gap: 4px; }
+            .platform-tab .tab-count { display: none; }
         }
 
         /* ===== History Drawer ===== */
@@ -1109,7 +1120,7 @@
         #historyPanel .history-list { flex: 1; max-height: none; overflow-y: auto; }
         #historyPanel .history-header {
             flex-shrink: 0;
-            padding: 18px 20px;
+            padding: max(18px, env(safe-area-inset-top)) 20px 18px;
         }
         #historyPanel .history-filters { flex-shrink: 0; }
         #historyPanel .history-stats { flex-shrink: 0; }
@@ -1148,9 +1159,10 @@
             .history-time::before { content: '·'; margin-left: 4px; color: var(--text-tertiary); }
             .history-meta { width: 100%; min-width: 0; }
             .mark-form textarea { font-size: 16px; }
+            .history-close-btn { width: 44px; height: 44px; font-size: 22px; border-radius: 10px; }
 
             /* Quick Edit bar on mobile */
-            .qe-bar { flex-wrap: wrap; gap: 8px; top: 0; border-radius: 0; border-left: none; border-right: none; border-top: none; margin: 0 -10px 12px; padding: 10px 14px; }
+            .qe-bar { flex-wrap: wrap; gap: 8px; top: 56px; border-radius: 0; border-left: none; border-right: none; border-top: none; margin: 0 -10px 12px; padding: 10px 14px; }
             .qe-hint { display: none; }
             .qe-count { width: 100%; font-size: 12px; }
 
@@ -1341,7 +1353,7 @@
                         </div>
                     </div>
                     <div class="history-filters">
-                        <input type="search" class="history-search" id="historySearch" placeholder="گەڕان بە کلیل، دەق، ئیمەیل..." oninput="filterHistory()">
+                        <input type="search" class="history-search" id="historySearch" placeholder="گەڕان بە کلیل، دەق، ئیمەیل..." oninput="onHistorySearch()">
                         <div class="history-tabs">
                             <button class="history-tab active" onclick="setHistoryTab('all', this)">هەموو</button>
                             <button class="history-tab" onclick="setHistoryTab('web', this)">🌐 Web</button>
@@ -1435,6 +1447,18 @@
         });
 
         function setPlatform(platform, btn) {
+            // Warn if quick edit has unsaved changes before switching platforms
+            if (quickEditMode && Object.keys(quickEditDirty).length > 0) {
+                if (!confirm('You have ' + Object.keys(quickEditDirty).length + ' unsaved change(s). Switch platform and discard?')) return;
+            }
+            if (quickEditMode) {
+                quickEditMode = false;
+                quickEditDirty = {};
+                var _qeBtn = document.getElementById('quickEditBtn');
+                var _qeBar = document.getElementById('qeBar');
+                if (_qeBtn) { _qeBtn.classList.remove('qe-active'); _qeBtn.querySelector('span').textContent = 'Quick Edit'; }
+                if (_qeBar) _qeBar.style.display = 'none';
+            }
             activePlatform = platform;
             activePageFilter = '';
             currentPage = 1;
@@ -1593,11 +1617,12 @@
             return page.toLowerCase().replace(/\.html$/i, '');
         }
 
+        var _searchDebounce = null;
         function onSearchInput() {
             var val = document.getElementById('searchInput').value;
-            var clearBtn = document.getElementById('searchClear');
-            clearBtn.classList.toggle('visible', val.length > 0);
-            filterTranslations();
+            document.getElementById('searchClear').classList.toggle('visible', val.length > 0);
+            clearTimeout(_searchDebounce);
+            _searchDebounce = setTimeout(filterTranslations, 220);
         }
 
         function clearSearch() {
@@ -2058,6 +2083,8 @@
 
                 allTranslations = allTranslations.filter(function(t) { return t.id !== id; });
                 filteredList = filteredList.filter(function(t) { return t.id !== id; });
+                delete quickEditDirty[id];
+                if (quickEditMode) updateQeBar();
                 updateStats();
                 renderPage();
                 showToast('Deleted');
@@ -2182,6 +2209,11 @@
         // ===== History =====
         var _historyAllRows = [];
         var _historyTab = 'all';
+        var _historySearchDebounce = null;
+        function onHistorySearch() {
+            clearTimeout(_historySearchDebounce);
+            _historySearchDebounce = setTimeout(filterHistory, 220);
+        }
 
         function getPlatform(keyId, page) {
             // Trust page field first — most accurate (prayer.fajr is android, not web)
@@ -2566,12 +2598,14 @@
                 this.style.height = 'auto';
                 this.style.height = this.scrollHeight + 'px';
                 var isDirty = this.value !== t.kurdish_text;
+                // Re-query row by ID — never use stale closure reference
+                var liveRow = document.getElementById('row-' + t.id);
                 if (isDirty) {
                     quickEditDirty[t.id] = this.value;
-                    row.classList.add('qe-dirty');
+                    if (liveRow) liveRow.classList.add('qe-dirty');
                 } else {
                     delete quickEditDirty[t.id];
-                    row.classList.remove('qe-dirty');
+                    if (liveRow) liveRow.classList.remove('qe-dirty');
                 }
                 updateQeBar();
             });
@@ -2603,8 +2637,13 @@
             pageDiv.textContent = (activePlatform === 'android' || activePlatform === 'ios') ? (t.category || 'general') : normalizePage(t.page);
             row.appendChild(pageDiv);
 
-            // Empty actions cell (keeps grid alignment)
-            row.appendChild(document.createElement('div'));
+            // Save button — tap-to-save for mobile users who can't press Enter
+            var qeSaveBtn = document.createElement('button');
+            qeSaveBtn.className = 't-btn qe-save-btn';
+            qeSaveBtn.title = 'Save (Enter)';
+            qeSaveBtn.textContent = '✓';
+            qeSaveBtn.addEventListener('click', function() { saveSingleQuickEdit(t.id, ta.value); });
+            row.appendChild(qeSaveBtn);
 
             // Auto-grow on first render
             setTimeout(function() {
