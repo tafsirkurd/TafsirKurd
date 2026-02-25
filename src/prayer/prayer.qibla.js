@@ -1,67 +1,67 @@
 /**
- * Qibla Compass
+ * Qibla Compass — modal overlay, opened via PrayerQibla.open()
  *
- * Draws a live canvas compass that points toward the Kaaba (Mecca).
- * - Uses GPS for precise location; falls back to prayer city coordinates.
- * - Uses DeviceOrientationEvent (absolute) to rotate with the phone,
- *   so the green needle always points toward Mecca no matter how
- *   you turn the device.
- *
- * Usage:
- *   PrayerQibla.init(container, cityCoords, tFn)
- *   PrayerQibla.stop()
+ * Smoothing: exponential low-pass filter (α=0.12) on heading so
+ * shaking the phone doesn't cause jitter.
  */
 (function() {
   'use strict';
 
-  var MECCA = { lat: 21.4225, lon: 39.8262 };
+  var MECCA   = { lat: 21.4225, lon: 39.8262 };
+  var ALPHA   = 0.12;   // smoothing factor: lower = smoother / more lag
 
   var _canvas   = null;
   var _ctx      = null;
-  var _qibla    = 0;       // bearing from user to Mecca (0-360, clockwise from N)
-  var _heading  = 0;       // device compass heading (0-360, clockwise from N)
-  var _raf      = null;    // requestAnimationFrame handle
-  var _onOrient = null;    // orientation event listener
+  var _qibla    = 0;     // bearing to Mecca (0-360 CW from N)
+  var _rawH     = 0;     // latest raw device heading
+  var _smoothH  = 0;     // exponentially smoothed heading
+  var _raf      = null;
+  var _onOrient = null;
+  var _isOpen   = false;
 
   function toRad(d) { return d * Math.PI / 180; }
 
-  // Great-circle bearing from (lat,lon) to Mecca
   function calcQibla(lat, lon) {
-    var f1 = toRad(lat),   f2 = toRad(MECCA.lat);
+    var f1 = toRad(lat), f2 = toRad(MECCA.lat);
     var dl = toRad(MECCA.lon - lon);
     var y  = Math.sin(dl) * Math.cos(f2);
     var x  = Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dl);
     return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
   }
 
-  // Haversine distance to Mecca in km
   function calcDist(lat, lon) {
-    var R  = 6371;
-    var f1 = toRad(lat), f2 = toRad(MECCA.lat);
-    var df = toRad(MECCA.lat - lat);
-    var dl = toRad(MECCA.lon - lon);
+    var R = 6371, f1 = toRad(lat), f2 = toRad(MECCA.lat);
+    var df = toRad(MECCA.lat - lat), dl = toRad(MECCA.lon - lon);
     var a  = Math.sin(df/2)*Math.sin(df/2) +
              Math.cos(f1)*Math.cos(f2)*Math.sin(dl/2)*Math.sin(dl/2);
     return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
   }
 
-  // ─── Canvas drawing ────────────────────────────────────────────────────────
+  // ── Smoothing: circular EMA, handles 0/360 wrap ─────────────────────────
 
-  function draw(qibla, heading) {
-    if (!_canvas || !_ctx) return;
+  function updateSmoothedHeading(raw) {
+    var diff = raw - _smoothH;
+    if (diff >  180) diff -= 360;
+    if (diff < -180) diff += 360;
+    _smoothH = (_smoothH + ALPHA * diff + 360) % 360;
+  }
 
-    // Self-stop if prayer panel is no longer visible
-    var panel = document.getElementById('panelPrayer');
-    if (panel && !panel.classList.contains('on')) { stopDraw(); return; }
+  // ── Canvas drawing ───────────────────────────────────────────────────────
 
-    var W  = _canvas.width, H = _canvas.height;
+  function draw() {
+    if (!_canvas || !_ctx || !_isOpen) return;
+    updateSmoothedHeading(_rawH);
+
+    var heading = _smoothH;
+    var qibla   = _qibla;
+    var W = _canvas.width, H = _canvas.height;
     var cx = W / 2, cy = H / 2;
-    var R  = Math.min(W, H) / 2 - 6;
+    var R  = Math.min(W, H) / 2 - 8;
     var ctx = _ctx;
 
     ctx.clearRect(0, 0, W, H);
 
-    // ── Compass ring (rotates with device so N always faces true North) ──
+    // ── Compass ring (rotates with device) ──
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(toRad(-heading));
@@ -69,93 +69,77 @@
     // Outer ring
     ctx.beginPath();
     ctx.arc(0, 0, R, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Tick marks (72 ticks = every 5°)
+    // Degree ticks
     for (var i = 0; i < 72; i++) {
       var ang     = toRad(i * 5);
       var isMajor = i % 18 === 0;
-      var isMed   = i % 9 === 0;
-      var inner   = R * (isMajor ? 0.72 : isMed ? 0.80 : 0.86);
+      var isMed   = i % 9  === 0;
+      var inner   = R * (isMajor ? 0.73 : isMed ? 0.81 : 0.87);
       ctx.beginPath();
       ctx.moveTo(Math.sin(ang) * inner, -Math.cos(ang) * inner);
       ctx.lineTo(Math.sin(ang) * R,     -Math.cos(ang) * R);
-      ctx.strokeStyle = isMajor ? 'rgba(255,255,255,0.7)' :
-                        isMed   ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.12)';
+      ctx.strokeStyle = isMajor ? 'rgba(255,255,255,.75)'
+                      : isMed   ? 'rgba(255,255,255,.3)'
+                                : 'rgba(255,255,255,.1)';
       ctx.lineWidth = isMajor ? 2 : 1;
       ctx.stroke();
     }
 
-    // Cardinal labels: N (red), E / S / W (gray)
-    var cardinals = [
-      { label: 'N', angle: 0,   color: '#e55' },
-      { label: 'E', angle: 90,  color: '#aaa' },
-      { label: 'S', angle: 180, color: '#aaa' },
-      { label: 'W', angle: 270, color: '#aaa' }
+    // Cardinals
+    var cards = [
+      { l: 'N', a: 0,   c: '#e55' },
+      { l: 'E', a: 90,  c: '#999' },
+      { l: 'S', a: 180, c: '#999' },
+      { l: 'W', a: 270, c: '#999' }
     ];
-    var labelR = R * 0.62;
-    ctx.textAlign    = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.font         = 'bold ' + Math.round(R * 0.14) + 'px sans-serif';
-    cardinals.forEach(function(c) {
-      ctx.fillStyle = c.color;
-      var a = toRad(c.angle);
-      ctx.fillText(c.label, Math.sin(a) * labelR, -Math.cos(a) * labelR);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = 'bold ' + Math.round(R * 0.14) + 'px sans-serif';
+    cards.forEach(function(c) {
+      ctx.fillStyle = c.c;
+      var a = toRad(c.a);
+      ctx.fillText(c.l, Math.sin(a) * R * 0.62, -Math.cos(a) * R * 0.62);
     });
 
     ctx.restore();
 
-    // ── Qibla needle (screen-fixed; rotated to point toward Mecca) ──
+    // ── Qibla needle (fixed on screen; angle = qibla − heading) ──
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(toRad(qibla - heading));
 
-    var nLen  = R * 0.66;
-    var nBase = R * 0.24;
-    var nW    = R * 0.055;
+    var nLen = R * 0.67, nBase = R * 0.22, nW = R * 0.057;
 
-    // Green glow
-    ctx.shadowColor = '#4caf50';
-    ctx.shadowBlur  = 14;
+    ctx.shadowColor = '#4caf50'; ctx.shadowBlur = 16;
 
     // Arrow head
     ctx.beginPath();
-    ctx.moveTo(0,    -nLen);
-    ctx.lineTo( nW,  -nBase);
-    ctx.lineTo(-nW,  -nBase);
-    ctx.closePath();
-    ctx.fillStyle = '#4caf50';
-    ctx.fill();
+    ctx.moveTo(0, -nLen); ctx.lineTo(nW, -nBase); ctx.lineTo(-nW, -nBase);
+    ctx.closePath(); ctx.fillStyle = '#4caf50'; ctx.fill();
 
     // Arrow shaft
     ctx.beginPath();
-    ctx.moveTo( nW * 0.55, -nBase);
-    ctx.lineTo(-nW * 0.55, -nBase);
-    ctx.lineTo(-nW * 0.35,  nBase);
-    ctx.lineTo( nW * 0.35,  nBase);
-    ctx.closePath();
-    ctx.fillStyle = '#388e3c';
-    ctx.fill();
+    ctx.moveTo( nW * .55, -nBase); ctx.lineTo(-nW * .55, -nBase);
+    ctx.lineTo(-nW * .35,  nBase); ctx.lineTo( nW * .35,  nBase);
+    ctx.closePath(); ctx.fillStyle = '#2e7d32'; ctx.fill();
 
     ctx.shadowBlur = 0;
 
-    // Center pivot: green outer, dark inner
-    ctx.beginPath(); ctx.arc(0, 0, R * 0.09, 0, Math.PI * 2);
+    // Pivot
+    ctx.beginPath(); ctx.arc(0, 0, R * .09, 0, Math.PI*2);
     ctx.fillStyle = '#4caf50'; ctx.fill();
-    ctx.beginPath(); ctx.arc(0, 0, R * 0.045, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.arc(0, 0, R * .045, 0, Math.PI*2);
     ctx.fillStyle = '#111'; ctx.fill();
 
-    // Kaaba symbol above needle tip (uses Unicode, not emoji image)
-    ctx.font         = 'bold ' + Math.round(R * 0.13) + 'px sans-serif';
-    ctx.fillStyle    = '#fff';
-    ctx.textAlign    = 'center';
-    ctx.textBaseline = 'bottom';
-    ctx.shadowColor  = 'rgba(0,0,0,0.9)';
-    ctx.shadowBlur   = 8;
-    ctx.fillText('\u{1F54B}', 0, -nLen - 4); // 🕋
-    ctx.shadowBlur   = 0;
+    // 🕋 at tip
+    ctx.font = Math.round(R * 0.18) + 'px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.shadowColor = 'rgba(0,0,0,.9)'; ctx.shadowBlur = 8;
+    ctx.fillText('\uD83D\uDDD5', 0, -nLen - 4);
+    ctx.shadowBlur = 0;
 
     ctx.restore();
   }
@@ -163,7 +147,8 @@
   function startDraw() {
     if (_raf) return;
     (function frame() {
-      draw(_qibla, _heading);
+      if (!_isOpen) { _raf = null; return; }
+      draw();
       _raf = requestAnimationFrame(frame);
     })();
   }
@@ -172,19 +157,16 @@
     if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
   }
 
-  // ─── Device orientation ────────────────────────────────────────────────────
+  // ── Device orientation ───────────────────────────────────────────────────
 
   function startOrientation() {
     if (_onOrient) return;
     _onOrient = function(e) {
       if (e.alpha === null || e.alpha === undefined) return;
-      if (e.webkitCompassHeading !== undefined) {
-        // iOS: webkitCompassHeading is already clockwise from North
-        _heading = e.webkitCompassHeading;
+      if (typeof e.webkitCompassHeading !== 'undefined') {
+        _rawH = e.webkitCompassHeading;
       } else {
-        // Android: alpha=0 when device top faces North (absolute=true)
-        // Convert to clockwise-from-North heading
-        _heading = (360 - e.alpha) % 360;
+        _rawH = (360 - e.alpha) % 360;
       }
     };
     window.addEventListener('deviceorientationabsolute', _onOrient, true);
@@ -199,118 +181,135 @@
     }
   }
 
-  // ─── Info element builder (DOM-safe, no innerHTML) ────────────────────────
+  // ── Info chips (DOM-safe) ─────────────────────────────────────────────────
 
-  function buildInfoEl(infoEl, qibla, dist, approxLabel) {
+  function buildChips(infoEl, qibla, dist, approxStr) {
     while (infoEl.firstChild) infoEl.removeChild(infoEl.firstChild);
 
     var t = window.t;
-    var degStr  = String(Math.round(qibla)) + '\u00B0';   // e.g. "287°"
-    var distStr = dist.toLocaleString() + ' km';
+    [[t ? t('prayer.qibla_direction') : 'Direction',
+      Math.round(qibla) + '\u00B0'],
+     [t ? t('prayer.qibla_distance')  : 'Distance',
+      dist.toLocaleString() + ' km']
+    ].forEach(function(pair) {
+      var chip = document.createElement('div');
+      chip.className = 'qibla-chip';
+      var lbl = document.createElement('div');
+      lbl.className = 'qibla-chip-label';
+      lbl.textContent = pair[0];
+      var val = document.createElement('div');
+      val.className = 'qibla-chip-val';
+      val.textContent = pair[1];
+      chip.appendChild(lbl);
+      chip.appendChild(val);
+      infoEl.appendChild(chip);
+    });
 
-    // Degree chip
-    var chip1 = document.createElement('span');
-    chip1.className = 'qibla-chip';
-    var chip1Lbl = document.createElement('span');
-    chip1Lbl.className = 'qibla-chip-label';
-    chip1Lbl.textContent = t ? t('prayer.qibla_direction') : 'Direction';
-    var chip1Val = document.createElement('strong');
-    chip1Val.textContent = degStr;
-    chip1.appendChild(chip1Lbl);
-    chip1.appendChild(chip1Val);
-    infoEl.appendChild(chip1);
-
-    // Distance chip
-    var chip2 = document.createElement('span');
-    chip2.className = 'qibla-chip';
-    var chip2Lbl = document.createElement('span');
-    chip2Lbl.className = 'qibla-chip-label';
-    chip2Lbl.textContent = t ? t('prayer.qibla_distance') : 'Distance';
-    var chip2Val = document.createElement('strong');
-    chip2Val.textContent = distStr;
-    chip2.appendChild(chip2Lbl);
-    chip2.appendChild(chip2Val);
-    infoEl.appendChild(chip2);
-
-    // Optional "approx" badge
-    if (approxLabel) {
-      var badge = document.createElement('span');
+    if (approxStr) {
+      var badge = document.createElement('div');
       badge.className = 'qibla-approx-badge';
-      badge.textContent = approxLabel;
+      badge.textContent = approxStr;
       infoEl.appendChild(badge);
     }
   }
 
-  // ─── Public API ────────────────────────────────────────────────────────────
+  // ── Modal ────────────────────────────────────────────────────────────────
 
-  /**
-   * init(container, cityCoords, tFn)
-   *   container  — DOM element to render the compass card into
-   *   cityCoords — fallback {lat, lon} if GPS is denied
-   *   tFn        — window.t translation function (or null)
-   */
-  function init(container, cityCoords, tFn) {
-    stop();
-    while (container.firstChild) container.removeChild(container.firstChild);
+  function buildModal() {
+    if (document.getElementById('qiblaModal')) return;
 
-    function t(k) { return tFn ? tFn(k) : k; }
+    var overlay = document.createElement('div');
+    overlay.id        = 'qiblaModal';
+    overlay.className = 'qibla-modal';
+    overlay.onclick   = function(e) { if (e.target === overlay) close(); };
 
-    // ── Card ──
     var card = document.createElement('div');
-    card.className = 'qibla-card';
+    card.className = 'qibla-modal-card';
 
-    // Title
-    var titleEl = document.createElement('div');
-    titleEl.className = 'qibla-title';
-    titleEl.textContent = t('prayer.qibla_title');
-    card.appendChild(titleEl);
+    // Header row
+    var hdr = document.createElement('div');
+    hdr.className = 'qibla-modal-hdr';
+    var titleEl = document.createElement('span');
+    titleEl.className = 'qibla-modal-title';
+    titleEl.id = 'qiblaModalTitle';
+    var t = window.t;
+    titleEl.textContent = t ? t('prayer.qibla_title') : 'Qibla';
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'qibla-modal-close';
+    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    closeBtn.onclick = close;
+    hdr.appendChild(titleEl);
+    hdr.appendChild(closeBtn);
+    card.appendChild(hdr);
 
     // Canvas
-    var size = Math.min(Math.round(window.innerWidth * 0.62), 264);
+    var size = Math.min(Math.round(window.innerWidth * 0.78), 300);
     var canvas = document.createElement('canvas');
-    canvas.width  = size;
-    canvas.height = size;
+    canvas.width = size; canvas.height = size;
     _canvas = canvas;
     _ctx    = canvas.getContext('2d');
 
-    var wrap = document.createElement('div');
-    wrap.className = 'qibla-canvas-wrap';
-    wrap.appendChild(canvas);
-    card.appendChild(wrap);
+    var canvasWrap = document.createElement('div');
+    canvasWrap.className = 'qibla-canvas-wrap';
+    canvasWrap.appendChild(canvas);
+    card.appendChild(canvasWrap);
 
     // Info row
     var infoEl = document.createElement('div');
     infoEl.className = 'qibla-info';
-    var loadingEl = document.createElement('span');
-    loadingEl.className = 'qibla-loading';
-    loadingEl.textContent = t('prayer.qibla_locating');
-    infoEl.appendChild(loadingEl);
+    infoEl.id = 'qiblaInfo';
+    var loadEl = document.createElement('span');
+    loadEl.className = 'qibla-loading';
+    loadEl.textContent = t ? t('prayer.qibla_locating') : '...';
+    infoEl.appendChild(loadEl);
     card.appendChild(infoEl);
 
-    container.appendChild(card);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+  }
 
-    // Start live compass
+  /**
+   * open(cityCoords)
+   *   cityCoords — fallback {lat, lon} when GPS is denied
+   */
+  function open(cityCoords) {
+    buildModal();
+    var t = window.t;
+    var titleEl = document.getElementById('qiblaModalTitle');
+    if (titleEl) titleEl.textContent = t ? t('prayer.qibla_title') : 'Qibla';
+
+    _isOpen  = true;
+    _smoothH = _rawH; // start smooth at current raw to avoid initial spin
+
+    var modal = document.getElementById('qiblaModal');
+    if (modal) modal.classList.add('open');
+
     startOrientation();
     startDraw();
 
-    // ── Get location ──
+    // Resolve location
+    var infoEl = document.getElementById('qiblaInfo');
+    if (!infoEl) return;
+
     function onLocation(lat, lon, approx) {
       _qibla = calcQibla(lat, lon);
-      buildInfoEl(infoEl, _qibla, calcDist(lat, lon),
-                  approx ? t('prayer.qibla_approx') : null);
+      buildChips(infoEl, _qibla, calcDist(lat, lon),
+                 approx ? (t ? t('prayer.qibla_approx') : '~') : null);
     }
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         function(pos) { onLocation(pos.coords.latitude, pos.coords.longitude, false); },
         function()    {
-          if (cityCoords) { onLocation(cityCoords.lat, cityCoords.lon, true); }
+          if (cityCoords) onLocation(cityCoords.lat, cityCoords.lon, true);
           else {
             while (infoEl.firstChild) infoEl.removeChild(infoEl.firstChild);
-            var errEl = document.createElement('span');
-            errEl.className = 'qibla-no-loc';
-            errEl.textContent = t('prayer.qibla_no_loc');
-            infoEl.appendChild(errEl);
+            var e = document.createElement('span');
+            e.className = 'qibla-no-loc';
+            e.textContent = t ? t('prayer.qibla_no_loc') : 'Location unavailable';
+            infoEl.appendChild(e);
+            // Still show compass for city fallback if available
+            if (cityCoords) { _qibla = calcQibla(cityCoords.lat, cityCoords.lon); }
           }
         },
         { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
@@ -320,13 +319,16 @@
     }
   }
 
-  function stop() {
+  function close() {
+    _isOpen = false;
     stopDraw();
     stopOrientation();
+    var modal = document.getElementById('qiblaModal');
+    if (modal) modal.classList.remove('open');
     _canvas = null;
     _ctx    = null;
   }
 
-  window.PrayerQibla = { init: init, stop: stop };
+  window.PrayerQibla = { open: open, close: close };
 
 })();
