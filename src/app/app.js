@@ -526,8 +526,13 @@ function haptic(pattern){
   if(!S.hapticFeedback)return;
   try{
     var H=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;
-    if(H){H.vibrate({duration:pattern&&pattern[0]||30});}
-    else{navigator.vibrate(pattern||[30]);}
+    if(H){
+      // impact() is the correct Capacitor API for UI tap feedback.
+      // vibrate() with very short durations (<20ms) is silently ignored by Android.
+      var dur=pattern&&pattern[0]||30;
+      if(dur<=30){H.impact({style:'LIGHT'});}
+      else{H.vibrate({duration:dur});}
+    }else{navigator.vibrate(pattern||[30]);}
   }catch(e){}
 }
 
