@@ -7,10 +7,36 @@
     <script src="utils/theme-loader.js"></script>
     <title>Translations - TafsirKurd Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2" as="font" type="font/woff2" crossorigin="">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
     <link rel="stylesheet" href="/css/admin-styles.css">
     <style>
+        @font-face {
+            font-family: 'IBM Plex Sans Arabic';
+            src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'IBM Plex Sans Arabic';
+            src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2') format('woff2');
+            font-weight: 500 700;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        /* Kurdish text — use IBM Plex Sans Arabic everywhere */
+        .t-text,
+        .qe-textarea,
+        .edit-field textarea,
+        .history-diff,
+        .history-search,
+        .history-mark-note-text {
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+        }
+
         /* ===== No horizontal scroll ===== */
         .main-content { overflow-x: hidden; }
         .content-area { overflow-x: hidden; }
@@ -1105,8 +1131,12 @@
         }
         .history-close-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
 
+        /* ===== Body lock when drawer open ===== */
+        body.history-open { overflow: hidden; }
+
         /* ===== History panel — mobile ===== */
         @media (max-width: 768px) {
+            #historyPanel { width: 100vw; box-shadow: none; }
             .history-filters { flex-direction: column; align-items: stretch; gap: 8px; }
             .history-search { min-width: unset; width: 100%; font-size: 16px; height: 44px; }
             .history-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; flex-wrap: nowrap; }
@@ -1117,8 +1147,15 @@
             .history-date, .history-time { white-space: nowrap; }
             .history-time::before { content: '·'; margin-left: 4px; color: var(--text-tertiary); }
             .history-meta { width: 100%; min-width: 0; }
-            .history-list { max-height: 70vh; }
             .mark-form textarea { font-size: 16px; }
+
+            /* Quick Edit bar on mobile */
+            .qe-bar { flex-wrap: wrap; gap: 8px; top: 0; border-radius: 0; border-left: none; border-right: none; border-top: none; margin: 0 -10px 12px; padding: 10px 14px; }
+            .qe-hint { display: none; }
+            .qe-count { width: 100%; font-size: 12px; }
+
+            /* Quick Edit textarea on mobile */
+            .qe-textarea { font-size: 16px; line-height: 1.7; min-height: 32px; }
         }
         @media (max-width: 480px) {
             .history-header { padding: 12px 14px; }
@@ -2162,9 +2199,11 @@
             if (isOpen) {
                 panel.classList.remove('open');
                 overlay.classList.remove('open');
+                document.body.classList.remove('history-open');
             } else {
                 panel.classList.add('open');
                 overlay.classList.add('open');
+                document.body.classList.add('history-open');
                 lucide.createIcons({ nodes: [panel] });
                 loadHistory();
             }
