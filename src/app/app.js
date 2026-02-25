@@ -955,7 +955,7 @@ function renderReaderSettings(){
 
   // Keep screen awake
   var kaRow=el('div','qs-row');
-  kaRow.appendChild(el('div','qs-row-label','ڕووماندنی شاشە'));
+  kaRow.appendChild(el('div','qs-row-label',t('qs.screen_lock')));
   var kaToggle=el('div','toggle'+(S.keepAwake?' on':''));
   kaToggle.appendChild(el('div','toggle-knob'));
   on(kaToggle,'click',function(){
@@ -981,7 +981,7 @@ function renderReaderSettings(){
   body.appendChild(bgRow);
 
   /* ---- TEXT SIZE ---- */
-  body.appendChild(el('div','qs-section-title','قەبارەی نووسین'));
+  body.appendChild(el('div','qs-section-title',t('qs.text_size')));
 
   // Arabic font size
   var arRow=el('div','qs-row');
@@ -1011,7 +1011,7 @@ function renderReaderSettings(){
 
   // Line spacing
   var lhRow=el('div','qs-row');
-  lhRow.appendChild(el('div','qs-row-label','مەودای ڕیزەکان'));
+  lhRow.appendChild(el('div','qs-row-label',t('qs.line_spacing')));
   var lhWrap=el('div','qs-slider-wrap');
   var lhSlider=document.createElement('input');
   lhSlider.type='range';lhSlider.className='slider';lhSlider.min='1.4';lhSlider.max='3.5';lhSlider.step='0.1';lhSlider.value=String(S.lineH);
@@ -1039,17 +1039,17 @@ function renderReaderSettings(){
   body.appendChild(recList);
 
   /* ---- ACTIONS ---- */
-  body.appendChild(el('div','qs-section-title','چالاکییەکان'));
+  body.appendChild(el('div','qs-section-title',t('qs.actions')));
 
   // Jump to ayah (only when surah open)
   if(S.surah){
     var s=SURAHS[S.surah-1];
     var jumpRow=el('div','qs-jump-row');
-    jumpRow.appendChild(el('div','qs-row-label','ببڕە بۆ ئایەت'));
+    jumpRow.appendChild(el('div','qs-row-label',t('qs.jump_to')));
     var jumpInput=document.createElement('input');
     jumpInput.type='number';jumpInput.className='qs-jump-input';
     jumpInput.min='1';jumpInput.max=s?String(s.a):'286';jumpInput.placeholder='١';
-    var jumpBtn=el('button','qs-jump-btn','برۆ');
+    var jumpBtn=el('button','qs-jump-btn',t('qs.go'));
     on(jumpBtn,'click',function(){
       var n=parseInt(jumpInput.value);
       if(n>=1&&(!s||n<=s.a)){App.closeReaderSettings();scrollToAyah(n);}
@@ -1063,7 +1063,7 @@ function renderReaderSettings(){
   if(S.audio.playing&&S.audio.surah===S.surah){
     var scrollBtn=el('button','qs-action-btn');
     scrollBtn.appendChild(icon('fas fa-headphones'));
-    scrollBtn.appendChild(document.createTextNode(' ببڕە بۆ ئایەتی دەنگ'));
+    scrollBtn.appendChild(document.createTextNode(' '+t('qs.jump_audio')));
     on(scrollBtn,'click',function(){App.closeReaderSettings();scrollToAyah(S.audio.ayah);});
     body.appendChild(scrollBtn);
   }
