@@ -317,6 +317,18 @@ function init(){
   // Schedule athan on startup (in case it's a new day)
   if(window.PrayerUI)PrayerUI.initScheduleOnStart();
 
+  // Pre-warm prayer cache in background so the tab is instant on first open
+  setTimeout(function(){
+    if(!window.PrayerAPI||!window.PrayerCache||!window.PrayerLogic)return;
+    var city=localStorage.getItem('prayerCity')||'Duhok';
+    var today=window.PrayerLogic.todayBaghdad();
+    var p=today.split('-').map(Number);
+    var mkey=window.PrayerCache.monthKey(city,p[0],p[1]);
+    if(!window.PrayerCache.read(mkey)){
+      window.PrayerAPI.fetchPrayerTimes(city,today).catch(function(){});
+    }
+  },1500);
+
   // Hide splash (always runs even if init errors above)
   setTimeout(function(){
     var sp=$('splash');

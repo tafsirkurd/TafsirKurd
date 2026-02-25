@@ -131,6 +131,22 @@
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
+  // Read today's data directly from localStorage cache — no Promise, no await.
+  // Returns a data object ready for buildPanel(), or null if not cached yet.
+  function readCacheNow(city, today) {
+    var parts   = today.split('-').map(Number);
+    var mkey    = window.PrayerCache.monthKey(city, parts[0], parts[1]);
+    var monthly = window.PrayerCache.read(mkey);
+    if (!monthly || !monthly.days) return null;
+    var d = monthly.days[parts[2]] || monthly.days[String(parts[2])];
+    if (!d) return null;
+    return {
+      timings: { Fajr: d.Fajr, Sunrise: d.Sunrise, Dhuhr: d.Dhuhr,
+                 Asr:  d.Asr,  Maghrib: d.Maghrib,  Isha:  d.Isha },
+      date: { hijriStr: d.hijri || null }
+    };
+  }
+
   async function render() {
     var container = document.getElementById('prayerContent');
     if (!container) return;
@@ -138,15 +154,19 @@
     var city  = getCity();
     var today = window.PrayerLogic.todayBaghdad();
 
-    // Show instantly if monthly cache already has today's data
-    var parts   = today.split('-').map(Number);
-    var mkey    = window.PrayerCache.monthKey(city, parts[0], parts[1]);
-    var monthly = window.PrayerCache.read(mkey);
-    var hasDay  = monthly && monthly.days &&
-                  (monthly.days[parts[2]] || monthly.days[String(parts[2])]);
+    // ── Fast path: render immediately from cache, no network call ──
+    var cached = readCacheNow(city, today);
+    if (cached) {
+      _currentTimings = cached.timings;
+      _currentDateISO = today;
+      _currentData    = cached;
+      buildPanel(container, cached, city, today);
+      startCountdown();
+      return;
+    }
 
-    if (!hasDay) buildLoading(container);
-
+    // ── Slow path: no cache yet — show spinner and fetch ──
+    buildLoading(container);
     try {
       var data = await window.PrayerAPI.fetchPrayerTimes(city, today);
       _currentTimings = data.timings;
@@ -155,7 +175,7 @@
       buildPanel(container, data, city, today);
       startCountdown();
     } catch(e) {
-      if (!hasDay) buildError(container);
+      buildError(container);
     }
   }
 
