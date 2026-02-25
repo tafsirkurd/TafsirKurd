@@ -706,6 +706,61 @@
             line-height: 1;
         }
         .history-mark-remove:hover { color: #b91c1c; }
+        /* Realtime badge on History button */
+        .history-notif-badge {
+            position: absolute;
+            top: -7px;
+            right: -7px;
+            background: #ef4444;
+            color: #fff;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            line-height: 18px;
+            text-align: center;
+            padding: 0 4px;
+            pointer-events: none;
+            box-shadow: 0 0 0 2px var(--bg-primary);
+            animation: badgePop 0.3s ease-out;
+        }
+        @keyframes badgePop {
+            0%   { transform: scale(0); }
+            70%  { transform: scale(1.25); }
+            100% { transform: scale(1); }
+        }
+        /* New entry slide-in when panel is open */
+        @keyframes historySlideIn {
+            from { opacity: 0; transform: translateY(-6px); background: #dcfce7; }
+            to   { opacity: 1; transform: translateY(0);  background: transparent; }
+        }
+        .history-item-new { animation: historySlideIn 0.5s ease-out forwards; }
+        body.dark-mode .history-item-new {
+            animation-name: historySlideInDark;
+        }
+        @keyframes historySlideInDark {
+            from { opacity: 0; transform: translateY(-6px); background: #052e16; }
+            to   { opacity: 1; transform: translateY(0);  background: transparent; }
+        }
+        /* Live dot in history panel header */
+        .history-live-dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+            margin-right: 6px;
+            box-shadow: 0 0 0 2px #bbf7d0;
+            animation: livePulse 2s ease-in-out infinite;
+            vertical-align: middle;
+        }
+        body.dark-mode .history-live-dot { box-shadow: 0 0 0 2px #14532d; }
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.5; transform: scale(0.8); }
+        }
+        .history-live-dot.offline { background: #f59e0b; box-shadow: 0 0 0 2px #fde68a; animation: none; }
+        body.dark-mode .history-live-dot.offline { box-shadow: 0 0 0 2px #78350f; }
         /* Inline mark form */
         .mark-form {
             margin-top: 8px;
@@ -1267,7 +1322,7 @@
                     <h1 class="page-title">Translations</h1>
                     <div class="page-actions">
                         <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn"><i data-lucide="download"></i><span>Import All</span></button>
-                        <button class="btn btn-secondary" onclick="toggleHistory()" id="historyBtn"><i data-lucide="history"></i><span>History</span></button>
+                        <button class="btn btn-secondary" onclick="toggleHistory()" id="historyBtn" style="position:relative"><i data-lucide="history"></i><span>History</span><span id="historyBadge" class="history-notif-badge" style="display:none">0</span></button>
                         <button class="btn btn-secondary" onclick="toggleQuickEdit()" id="quickEditBtn" style="display:none"><i data-lucide="zap"></i><span>Quick Edit</span></button>
                         <button class="btn btn-primary" onclick="toggleAddForm()" id="addBtn"><i data-lucide="plus"></i><span>Add New</span></button>
                     </div>
@@ -1346,7 +1401,7 @@
                 <div class="history-drawer-overlay" id="historyOverlay" onclick="toggleHistory()"></div>
                 <div class="history-panel" id="historyPanel">
                     <div class="history-header">
-                        <h2 class="history-title"><i data-lucide="history" style="width:18px;height:18px;vertical-align:middle;margin-left:6px"></i> تاریخچەی گۆڕانکاریەکان</h2>
+                        <h2 class="history-title"><i data-lucide="history" style="width:18px;height:18px;vertical-align:middle;margin-left:6px"></i> تاریخچەی گۆڕانکاریەکان <span id="historyLiveDot" class="history-live-dot" title="Live"></span></h2>
                         <div style="display:flex;gap:8px;align-items:center">
                             <button class="btn btn-secondary" onclick="loadHistory()" id="historyRefreshBtn" style="font-size:13px;padding:8px 14px"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i><span>نوێکردنەوە</span></button>
                             <button class="history-close-btn" onclick="toggleHistory()" title="Close">&times;</button>
@@ -1410,6 +1465,7 @@
                 if (canEdit) document.getElementById('quickEditBtn').style.display = '';
                 populatePageDropdowns();
                 loadTranslations();
+                subscribeHistoryRealtime();
             }
         })();
 
@@ -2211,6 +2267,8 @@
         var _historyTab = 'all';
         var _historySearchDebounce = null;
         var _historyPollInterval = null;
+        var _historyChannel = null;
+        var _unreadCount = 0;
         function onHistorySearch() {
             clearTimeout(_historySearchDebounce);
             _historySearchDebounce = setTimeout(filterHistory, 220);
@@ -2239,7 +2297,6 @@
                 panel.classList.remove('open');
                 overlay.classList.remove('open');
                 document.body.classList.remove('history-open');
-                // Stop live poll when drawer closes
                 clearInterval(_historyPollInterval);
                 _historyPollInterval = null;
             } else {
@@ -2247,14 +2304,65 @@
                 overlay.classList.add('open');
                 document.body.classList.add('history-open');
                 lucide.createIcons({ nodes: [panel] });
+                // Clear badge when opening
+                _unreadCount = 0;
+                updateHistoryBadge();
                 loadHistory();
-                // Poll for new entries every 30s while drawer is open
+                // Fallback poll every 30s (safety net if Realtime drops)
                 clearInterval(_historyPollInterval);
-                _historyPollInterval = setInterval(pollHistory, 8000);
+                _historyPollInterval = setInterval(pollHistory, 30000);
             }
         }
 
-        // Silent background poll — only re-renders if new entries arrived
+        function updateHistoryBadge() {
+            var badge = document.getElementById('historyBadge');
+            if (!badge) return;
+            if (_unreadCount > 0) {
+                badge.textContent = _unreadCount > 9 ? '9+' : String(_unreadCount);
+                badge.style.display = '';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Supabase Realtime subscription — instant push for new history entries
+        function subscribeHistoryRealtime() {
+            if (_historyChannel || !supabase) return;
+            var dot = document.getElementById('historyLiveDot');
+            _historyChannel = supabase
+                .channel('history-live')
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'admin_audit_logs',
+                    filter: 'page_slug=eq.admin-translations'
+                }, function(payload) {
+                    var panel = document.getElementById('historyPanel');
+                    if (panel && panel.classList.contains('open')) {
+                        // Panel open — prepend new row instantly and animate it
+                        _historyAllRows.unshift(payload.new);
+                        filterHistory();
+                        var firstItem = document.querySelector('#historyList .history-item');
+                        if (firstItem) firstItem.classList.add('history-item-new');
+                    } else {
+                        // Panel closed — show badge
+                        _unreadCount++;
+                        updateHistoryBadge();
+                    }
+                })
+                .subscribe(function(status) {
+                    if (!dot) return;
+                    if (status === 'SUBSCRIBED') {
+                        dot.classList.remove('offline');
+                        dot.title = 'Live';
+                    } else {
+                        dot.classList.add('offline');
+                        dot.title = 'Reconnecting...';
+                    }
+                });
+        }
+
+        // Silent fallback poll — only fires if Realtime somehow missed an entry
         async function pollHistory() {
             try {
                 var result = await supabase
@@ -2264,10 +2372,8 @@
                     .order('created_at', { ascending: false })
                     .limit(1);
                 if (result.error || !result.data || !result.data.length) return;
-                var latest = result.data[0];
-                // If the newest DB row is newer than what we have, reload fully
                 var haveLatest = _historyAllRows.length ? _historyAllRows[0].created_at : null;
-                if (!haveLatest || latest.created_at > haveLatest) {
+                if (!haveLatest || result.data[0].created_at > haveLatest) {
                     loadHistory();
                 }
             } catch(e) {}
@@ -2288,11 +2394,8 @@
                 if (result.error) {
                     console.error('[History] logChange failed:', result.error.message, result.error);
                     showToast('⚠️ History log failed: ' + result.error.message);
-                } else {
-                    // Immediately refresh history panel if it's open
-                    var hp = document.getElementById('historyPanel');
-                    if (hp && hp.classList.contains('open')) loadHistory();
                 }
+                // Realtime subscription handles panel refresh — no manual reload needed
             } catch (e) {
                 console.error('[History] logChange exception:', e.message);
             }
