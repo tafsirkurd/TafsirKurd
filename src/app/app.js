@@ -199,6 +199,7 @@ function init(){
     setupPullToRefresh('panelGoals',function(){renderGoals()});
     setupPullToRefresh('panelIslamvoice',function(){if(typeof App.ivRefresh==='function')App.ivRefresh()});
     setupPullToRefresh('panelSettings',function(){renderSettings()});
+    setupPullToRefresh('panelPrayer',function(){if(window.PrayerUI)PrayerUI.refresh()});
 
     // Load data
     loadQuranData();

@@ -1,23 +1,27 @@
 /**
  * Qibla Compass — modal overlay, opened via PrayerQibla.open()
  *
- * Smoothing: exponential low-pass filter (α=0.12) on heading so
- * shaking the phone doesn't cause jitter.
+ * Smoothing: circular mean over a rolling buffer of the last BUF_SIZE
+ * readings (sampled at max 15 Hz). This is the mathematically correct
+ * way to average angles (handles 0/360 wrap) and keeps the needle
+ * visually still when the phone is resting on a surface.
  */
 (function() {
   'use strict';
 
-  var MECCA   = { lat: 21.4225, lon: 39.8262 };
-  var ALPHA   = 0.12;   // smoothing factor: lower = smoother / more lag
+  var MECCA    = { lat: 21.4225, lon: 39.8262 };
+  var BUF_SIZE = 12;   // rolling window (~0.8 s at 15 Hz)
+  var THROTTLE = 66;   // ms between orientation samples (~15 Hz)
 
-  var _canvas   = null;
-  var _ctx      = null;
-  var _qibla    = 0;     // bearing to Mecca (0-360 CW from N)
-  var _rawH     = 0;     // latest raw device heading
-  var _smoothH  = 0;     // exponentially smoothed heading
-  var _raf      = null;
-  var _onOrient = null;
-  var _isOpen   = false;
+  var _canvas      = null;
+  var _ctx         = null;
+  var _qibla       = 0;
+  var _smoothH     = 0;
+  var _headingBuf  = [];   // rolling buffer of raw headings
+  var _lastSample  = 0;
+  var _raf         = null;
+  var _onOrient    = null;
+  var _isOpen      = false;
 
   function toRad(d) { return d * Math.PI / 180; }
 
@@ -37,20 +41,25 @@
     return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
   }
 
-  // ── Smoothing: circular EMA, handles 0/360 wrap ─────────────────────────
+  // ── Circular mean of buffered headings ──────────────────────────────────
+  // Correct angle averaging: convert to unit vectors, average, convert back.
 
-  function updateSmoothedHeading(raw) {
-    var diff = raw - _smoothH;
-    if (diff >  180) diff -= 360;
-    if (diff < -180) diff += 360;
-    _smoothH = (_smoothH + ALPHA * diff + 360) % 360;
+  function addHeading(raw) {
+    _headingBuf.push(raw);
+    if (_headingBuf.length > BUF_SIZE) _headingBuf.shift();
+    var sinSum = 0, cosSum = 0;
+    _headingBuf.forEach(function(h) {
+      sinSum += Math.sin(toRad(h));
+      cosSum += Math.cos(toRad(h));
+    });
+    _smoothH = ((Math.atan2(sinSum, cosSum) * 180 / Math.PI) + 360) % 360;
   }
 
   // ── Canvas drawing ───────────────────────────────────────────────────────
 
   function draw() {
     if (!_canvas || !_ctx || !_isOpen) return;
-    updateSmoothedHeading(_rawH);
+    // heading is updated by orientation events, not here — no smoothing in draw loop
 
     var heading = _smoothH;
     var qibla   = _qibla;
@@ -163,11 +172,17 @@
     if (_onOrient) return;
     _onOrient = function(e) {
       if (e.alpha === null || e.alpha === undefined) return;
+      var now = Date.now();
+      if (now - _lastSample < THROTTLE) return;   // cap at ~15 Hz
+      _lastSample = now;
+
+      var raw;
       if (typeof e.webkitCompassHeading !== 'undefined') {
-        _rawH = e.webkitCompassHeading;
+        raw = e.webkitCompassHeading;             // iOS: already CW from N
       } else {
-        _rawH = (360 - e.alpha) % 360;
+        raw = (360 - e.alpha) % 360;              // Android
       }
+      addHeading(raw);                            // update circular mean
     };
     window.addEventListener('deviceorientationabsolute', _onOrient, true);
     window.addEventListener('deviceorientation',         _onOrient, true);
@@ -278,8 +293,9 @@
     var titleEl = document.getElementById('qiblaModalTitle');
     if (titleEl) titleEl.textContent = t ? t('prayer.qibla_title') : 'Qibla';
 
-    _isOpen  = true;
-    _smoothH = _rawH; // start smooth at current raw to avoid initial spin
+    _isOpen     = true;
+    _headingBuf = [];            // clear old readings
+    _lastSample = 0;
 
     var modal = document.getElementById('qiblaModal');
     if (modal) modal.classList.add('open');
