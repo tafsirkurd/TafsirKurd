@@ -106,6 +106,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "delete_footer_dev", kurdish_text: "دەڤەلۆپەر: سامان عبدالرحمن", category: "ui", page: "delete-account" },
     { key_id: "delete_intro", kurdish_text: "ئەڤ لاپەڕە تایبەت ە بۆ داواکاریا سڕینەوەی هەژمار ل ئەپلیکەیشنا (ئەندرۆید و ئای‌ئۆ‌ئێس)، کو ژ لایەن هاتیە پەرەپێدان. ئەڤ لاپەڕە ب پابەندبوونا مەرجێن بۆ سڕینەوەی هەژمار هاتیە دروستکرن.", category: "content", page: "delete-account" },
     { key_id: "delete_local_note", kurdish_text: "ئەگەر تۆ هەژمارت نەکریبە (بەکارهێنەری لۆکاڵ)، تەنها ئەپلیکەیشنەکە بسڕەوە بۆ سڕینەوەی داتایا لۆکاڵ.", category: "content", page: "delete-account" },
+    { key_id: "delete_page_subtitle", kurdish_text: "Delete Your TafsirKurd Account", category: "content", page: "delete-account" },
     { key_id: "delete_page_title", kurdish_text: "سڕینەوەی هەژمارا TafsirKurd", category: "content", page: "delete-account" },
     { key_id: "delete_privacy_li1", kurdish_text: "ئێمە داتایا بەکارهێنەران نافرۆشین.", category: "general", page: "delete-account" },
     { key_id: "delete_privacy_li2", kurdish_text: "تەنها ئەو داتایانە دپارێزین کو بۆ کارکردنا ئەپلیکەیشنەکە پێدڤی ن.", category: "general", page: "delete-account" },

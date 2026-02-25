@@ -341,8 +341,9 @@
         // 3. data-t key-based (most reliable — always wins)
         document.querySelectorAll('[data-t]').forEach(function(el) {
             const key = el.getAttribute('data-t');
-            if (translations[key] !== undefined) {
-                el.textContent = translations[key];
+            const val = translations[key];
+            if (val !== undefined && el.textContent !== val) {
+                el.textContent = val;
                 replacements++;
             }
         });
@@ -356,11 +357,6 @@
         });
 
         savePrevious();
-
-        const elapsed = (performance.now() - startTime).toFixed(1);
-        if (replacements > 0) {
-            console.log('✓ Applied ' + replacements + ' translations in ' + elapsed + 'ms');
-        }
     }
 
     /**
