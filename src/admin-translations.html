@@ -1262,13 +1262,13 @@
                 </div>
 
                 <div class="platform-tabs" id="platformTabs">
-                    <button class="platform-tab active" onclick="setPlatform('web')">
+                    <button class="platform-tab active" onclick="setPlatform('web', this)">
                         <i data-lucide="globe" style="width:16px;height:16px"></i> Web <span class="tab-count" id="webCount">--</span>
                     </button>
-                    <button class="platform-tab" onclick="setPlatform('android')">
+                    <button class="platform-tab" onclick="setPlatform('android', this)">
                         <i data-lucide="smartphone" style="width:16px;height:16px"></i> Android <span class="tab-count" id="androidCount">--</span>
                     </button>
-                    <button class="platform-tab" onclick="setPlatform('ios')">
+                    <button class="platform-tab" onclick="setPlatform('ios', this)">
                         <i data-lucide="tablet" style="width:16px;height:16px"></i> iOS <span class="tab-count" id="iosCount">--</span>
                     </button>
                 </div>
@@ -1425,13 +1425,16 @@
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                // History drawer takes priority
+                var hp = document.getElementById('historyPanel');
+                if (hp && hp.classList.contains('open')) { toggleHistory(); return; }
                 cancelEdit();
                 var af = document.getElementById('addForm');
-                if (af.classList.contains('active')) toggleAddForm();
+                if (af && af.classList.contains('active')) toggleAddForm();
             }
         });
 
-        function setPlatform(platform) {
+        function setPlatform(platform, btn) {
             activePlatform = platform;
             activePageFilter = '';
             currentPage = 1;
@@ -1440,7 +1443,7 @@
             document.querySelectorAll('.platform-tab').forEach(function(tab) {
                 tab.classList.remove('active');
             });
-            event.currentTarget.classList.add('active');
+            if (btn) btn.classList.add('active');
 
             updateStats();
             populatePageFilter();
@@ -1785,18 +1788,21 @@
         }
 
         function highlightText(el, text, search) {
-            var lower = text.toLowerCase();
-            var idx = lower.indexOf(search);
-            if (idx === -1) {
-                el.textContent = text;
-                return;
-            }
-            el.appendChild(document.createTextNode(text.substring(0, idx)));
-            var mark = document.createElement('span');
-            mark.className = 'highlight';
-            mark.textContent = text.substring(idx, idx + search.length);
-            el.appendChild(mark);
-            el.appendChild(document.createTextNode(text.substring(idx + search.length)));
+            if (!search) { el.textContent = text; return; }
+            // Escape special regex chars then highlight ALL occurrences
+            var escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            var parts = text.split(new RegExp('(' + escaped + ')', 'i'));
+            if (parts.length === 1) { el.textContent = text; return; }
+            parts.forEach(function(part) {
+                if (part.toLowerCase() === search.toLowerCase()) {
+                    var mark = document.createElement('span');
+                    mark.className = 'highlight';
+                    mark.textContent = part;
+                    el.appendChild(mark);
+                } else if (part) {
+                    el.appendChild(document.createTextNode(part));
+                }
+            });
         }
 
         function buildEditFormDOM(row, t) {
@@ -2502,8 +2508,14 @@
         // ===== Quick Edit Mode =====
         function toggleQuickEdit() {
             if (!canEdit) return;
+            // Warn before discarding unsaved changes
+            if (quickEditMode && Object.keys(quickEditDirty).length > 0) {
+                if (!confirm('You have ' + Object.keys(quickEditDirty).length + ' unsaved change(s). Exit and discard them?')) return;
+            }
             quickEditMode = !quickEditMode;
             quickEditDirty = {};
+            _qeSaving = {};
+            _qeSaveAllInProgress = false;
             var btn = document.getElementById('quickEditBtn');
             var bar = document.getElementById('qeBar');
             if (quickEditMode) {
@@ -2567,16 +2579,19 @@
             ta.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    saveSingleQuickEdit(t.id, this.value, row);
+                    e.stopPropagation();
+                    saveSingleQuickEdit(t.id, this.value);
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
+                    e.stopPropagation(); // don't trigger global Escape handler
                     delete quickEditDirty[t.id];
-                    row.classList.remove('qe-dirty');
+                    var currentRow = document.getElementById('row-' + t.id);
+                    if (currentRow) currentRow.classList.remove('qe-dirty');
                     this.value = t.kurdish_text;
                     this.style.height = 'auto';
                     this.style.height = this.scrollHeight + 'px';
                     updateQeBar();
-                    focusNextQeRow(t.id);
+                    // Escape = stay on current row (discard only, no navigation)
                 }
             });
 
@@ -2598,12 +2613,18 @@
             }, 0);
         }
 
-        async function saveSingleQuickEdit(id, value, row) {
+        var _qeSaving = {}; // guard against double-save per row
+
+        async function saveSingleQuickEdit(id, value) {
+            if (_qeSaving[id]) return; // already in flight
             var item = allTranslations.find(function(t) { return String(t.id) === String(id); });
             if (!item) { focusNextQeRow(id); return; }
             if (value === item.kurdish_text) { focusNextQeRow(id); return; }
 
-            row.style.opacity = '0.5';
+            _qeSaving[id] = true;
+            var liveRow = document.getElementById('row-' + id);
+            if (liveRow) liveRow.style.opacity = '0.5';
+            var oldText = item.kurdish_text;
             try {
                 var result = await supabase
                     .from('kurdish_translations')
@@ -2611,17 +2632,23 @@
                     .eq('id', id);
                 if (result.error) throw result.error;
 
-                logChange('edit', { key_id: item.key_id, old_text: item.kurdish_text, new_text: value, page: item.page });
+                logChange('edit', { key_id: item.key_id, old_text: oldText, new_text: value, page: item.page });
                 item.kurdish_text = value;
                 delete quickEditDirty[id];
-                row.classList.remove('qe-dirty');
-                row.classList.add('qe-saved');
-                setTimeout(function() { row.classList.remove('qe-saved'); }, 700);
+                // Re-query row since DOM may have re-rendered during await
+                liveRow = document.getElementById('row-' + id);
+                if (liveRow) {
+                    liveRow.classList.remove('qe-dirty');
+                    liveRow.classList.add('qe-saved');
+                    setTimeout(function() { var r = document.getElementById('row-' + id); if (r) r.classList.remove('qe-saved'); }, 700);
+                }
                 updateQeBar();
             } catch (err) {
                 showToast('Save failed: ' + err.message);
             } finally {
-                row.style.opacity = '';
+                delete _qeSaving[id];
+                liveRow = document.getElementById('row-' + id);
+                if (liveRow) liveRow.style.opacity = '';
             }
             focusNextQeRow(id);
         }
@@ -2631,43 +2658,63 @@
             var pageItems = filteredList.slice(start, start + PER_PAGE);
             var idx = pageItems.findIndex(function(t) { return String(t.id) === String(id); });
             if (idx >= 0 && idx < pageItems.length - 1) {
+                // Next row on same page
                 var nextTa = document.getElementById('qe-' + pageItems[idx + 1].id);
                 if (nextTa) { nextTa.focus(); nextTa.select(); }
+            } else if (idx === pageItems.length - 1) {
+                // Last row — advance to next page if there is one
+                var totalPages = Math.max(1, Math.ceil(filteredList.length / PER_PAGE));
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderPage();
+                    setTimeout(function() {
+                        var first = document.querySelector('.qe-textarea');
+                        if (first) { first.focus(); first.select(); }
+                    }, 40);
+                }
             }
         }
 
+        var _qeSaveAllInProgress = false;
+
         async function saveAllQuickEdits() {
             var ids = Object.keys(quickEditDirty);
-            if (ids.length === 0) return;
+            if (ids.length === 0 || _qeSaveAllInProgress) return;
+            _qeSaveAllInProgress = true;
 
             var saveBtn = document.getElementById('qeSaveBtn');
             saveBtn.disabled = true;
             saveBtn.querySelector('span').textContent = 'Saving...';
 
+            var saved = 0, failed = 0;
             var results = await Promise.allSettled(ids.map(function(id) {
                 var item = allTranslations.find(function(t) { return String(t.id) === String(id); });
                 if (!item) return Promise.resolve();
                 var newText = quickEditDirty[id];
+                var oldText = item.kurdish_text; // capture before mutation
                 return supabase
                     .from('kurdish_translations')
                     .update({ kurdish_text: newText })
                     .eq('id', id)
                     .then(function(r) {
                         if (r.error) throw r.error;
-                        logChange('edit', { key_id: item.key_id, old_text: item.kurdish_text, new_text: newText, page: item.page });
+                        logChange('edit', { key_id: item.key_id, old_text: oldText, new_text: newText, page: item.page });
                         item.kurdish_text = newText;
                     });
             }));
 
-            var saved = results.filter(function(r) { return r.status === 'fulfilled'; }).length;
-            var failed = results.filter(function(r) { return r.status === 'rejected'; }).length;
+            // Only clear items that actually saved — failed ones stay dirty so user can retry
+            results.forEach(function(r, i) {
+                if (r.status === 'fulfilled') { delete quickEditDirty[ids[i]]; saved++; }
+                else failed++;
+            });
 
-            quickEditDirty = {};
             renderPage();
             updateQeBar();
-            showToast(saved + ' saved' + (failed ? ', ' + failed + ' failed' : ''));
+            showToast(saved + ' saved' + (failed ? ', ' + failed + ' failed — retry with Save All' : ''));
 
-            saveBtn.disabled = false;
+            _qeSaveAllInProgress = false;
+            saveBtn.disabled = Object.keys(quickEditDirty).length === 0;
             saveBtn.querySelector('span').textContent = 'Save All';
         }
 
