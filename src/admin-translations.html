@@ -1289,7 +1289,6 @@
             updateStats();
             populatePageFilter();
             filterTranslations();
-            lucide.createIcons();
         }
 
         function getPlatformData() {
@@ -1530,7 +1529,7 @@
                 msg.textContent = 'No translations found';
                 empty.appendChild(msg);
                 container.appendChild(empty);
-                lucide.createIcons();
+                lucide.createIcons({ nodes: [container] });
                 return;
             }
 
@@ -1549,7 +1548,7 @@
                 container.appendChild(row);
             });
 
-            lucide.createIcons();
+            lucide.createIcons({ nodes: [container] });
         }
 
         function buildDisplayRow(row, t) {
@@ -1844,14 +1843,30 @@
             try {
                 var result = await supabase
                     .from('kurdish_translations')
-                    .insert([{ key_id: keyVal, kurdish_text: textVal, page: pageVal, category: 'general', context: ctxVal || '' }]);
+                    .insert([{ key_id: keyVal, kurdish_text: textVal, page: pageVal, category: 'general', context: ctxVal || '' }])
+                    .select()
+                    .single();
 
                 if (result.error) throw result.error;
 
                 logChange('add', { key_id: keyVal, new_text: textVal, page: pageVal });
 
+                // Insert into local array and re-sort — no full DB reload needed
+                allTranslations.push(result.data);
+                allTranslations.sort(function(a, b) {
+                    var pa = (a.page || '').toLowerCase();
+                    var pb = (b.page || '').toLowerCase();
+                    if (pa < pb) return -1;
+                    if (pa > pb) return 1;
+                    var ka = (a.key_id || '').toLowerCase();
+                    var kb = (b.key_id || '').toLowerCase();
+                    return ka < kb ? -1 : ka > kb ? 1 : 0;
+                });
+
                 toggleAddForm();
-                await loadTranslations();
+                updateStats();
+                populatePageFilter();
+                filterTranslations();
                 showToast('Translation added');
             } catch (err) {
                 console.error('Add error:', err);
