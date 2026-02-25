@@ -67,8 +67,8 @@
     // Request permission once from the UI when master toggle is enabled.
     // If called from initScheduleOnStart (auto-reschedule), permission is already granted.
     if (!permissionGranted) {
-      var result = await LN.requestPermissions().catch(function() { return { granted: 'denied' }; });
-      if (result.granted !== 'granted') return;
+      var result = await LN.requestPermissions().catch(function() { return { display: 'denied' }; });
+      if (result.display !== 'granted') return;
     }
 
     var now = new Date();

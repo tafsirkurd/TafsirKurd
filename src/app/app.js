@@ -524,7 +524,11 @@ function toast(msg){
 /* ===== HAPTIC ===== */
 function haptic(pattern){
   if(!S.hapticFeedback)return;
-  try{navigator.vibrate(pattern||[30])}catch(e){}
+  try{
+    var H=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;
+    if(H){H.vibrate({duration:pattern&&pattern[0]||30});}
+    else{navigator.vibrate(pattern||[30]);}
+  }catch(e){}
 }
 
 /* ===== DAILY REMINDER ===== */
