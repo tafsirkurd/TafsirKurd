@@ -2250,7 +2250,7 @@
                 loadHistory();
                 // Poll for new entries every 30s while drawer is open
                 clearInterval(_historyPollInterval);
-                _historyPollInterval = setInterval(pollHistory, 30000);
+                _historyPollInterval = setInterval(pollHistory, 8000);
             }
         }
 
@@ -2287,6 +2287,11 @@
                 }]);
                 if (result.error) {
                     console.error('[History] logChange failed:', result.error.message, result.error);
+                    showToast('⚠️ History log failed: ' + result.error.message);
+                } else {
+                    // Immediately refresh history panel if it's open
+                    var hp = document.getElementById('historyPanel');
+                    if (hp && hp.classList.contains('open')) loadHistory();
                 }
             } catch (e) {
                 console.error('[History] logChange exception:', e.message);
