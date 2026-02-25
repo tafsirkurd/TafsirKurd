@@ -1,7 +1,6 @@
 /**
  * Prayer Times UI
- * Renders the prayer times panel, handles city/method selection,
- * countdown timer, and athan notification settings.
+ * Modern design: dark header card + 2-column prayer grid + settings sheet.
  *
  * Depends on: prayer.cache.js, prayer.api.js, prayer.logic.js,
  *             prayer.notifications.android.js
@@ -16,11 +15,36 @@
   var _tomorrowTimings  = null;
   var _tomorrowDateISO  = null;
 
-  var CITIES = ['Duhok', 'Erbil', 'Sulaymaniyah', 'Zakho'];
+  var CITIES = [
+    'Sulaymaniyah', 'Erbil', 'Duhok', 'Kirkuk',
+    'Halabja', 'Kfry', 'Rania', 'Koya',
+    'Qaladze', 'Zakho', 'Bardarash', 'Mosul',
+    'Darbandikhan', 'Kalar', 'Akre', 'Daquq',
+    'Makhmur', 'Mandali', 'Qarahanjir', 'DuzKhormatou'
+  ];
 
-  function tStr(key, replacements) {
-    return window.t ? window.t(key, replacements) : key;
-  }
+  var CITY_LABEL = {
+    Sulaymaniyah: 'سلێمانی',
+    Erbil:        'هەولێر',
+    Duhok:        'دهۆک',
+    Kirkuk:       'کەرکووک',
+    Halabja:      'هەڵەبجە',
+    Kfry:         'کفری',
+    Rania:        'ڕانیە',
+    Koya:         'کۆیە',
+    Qaladze:      'قەڵادزێ',
+    Zakho:        'زاخۆ',
+    Bardarash:    'بەردەڕەش',
+    Mosul:        'موسل',
+    Darbandikhan: 'دەربەندیخان',
+    Kalar:        'کەلار',
+    Akre:         'ئاکرێ',
+    Daquq:        'داقووق',
+    Makhmur:      'مەخموور',
+    Mandali:      'مەندەلی',
+    Qarahanjir:   'قەرەهەنجیر',
+    DuzKhormatou: 'دوز خورماتوو'
+  };
 
   var PRAYER_I18N = {
     Fajr:    'prayer.fajr',
@@ -31,8 +55,11 @@
     Isha:    'prayer.isha'
   };
 
-  function getCity()    { return (window.S && S.prayerCity)   || localStorage.getItem('prayerCity')   || 'Duhok'; }
-  function getMethod()  { return (window.S ? S.prayerMethod   : null) || parseInt(localStorage.getItem('prayerMethod') || '13'); }
+  function tStr(key, replacements) {
+    return window.t ? window.t(key, replacements) : key;
+  }
+
+  function getCity()    { return (window.S && S.prayerCity) || localStorage.getItem('prayerCity') || 'Duhok'; }
   function getAthan()   { return window.S ? S.prayerAthanEnabled : localStorage.getItem('prayerAthanEnabled') === 'true'; }
   function getToggles() {
     if (window.S && S.prayerToggles) return S.prayerToggles;
@@ -40,23 +67,15 @@
   }
   function getFormat()  { return localStorage.getItem('prayerTimeFormat') || '24'; }
 
-  function setCity(v)    { if (window.S) S.prayerCity = v;           localStorage.setItem('prayerCity', v); }
-  function setMethod(v)  { if (window.S) S.prayerMethod = v;         localStorage.setItem('prayerMethod', String(v)); }
-  function setAthan(v)   { if (window.S) S.prayerAthanEnabled = v;   localStorage.setItem('prayerAthanEnabled', String(v)); }
-  function setToggles(v) { if (window.S) S.prayerToggles = v;        localStorage.setItem('prayerToggles', JSON.stringify(v)); }
+  function setCity(v)    { if (window.S) S.prayerCity = v;         localStorage.setItem('prayerCity', v); }
+  function setAthan(v)   { if (window.S) S.prayerAthanEnabled = v; localStorage.setItem('prayerAthanEnabled', String(v)); }
+  function setToggles(v) { if (window.S) S.prayerToggles = v;      localStorage.setItem('prayerToggles', JSON.stringify(v)); }
   function setFormat(v)  { localStorage.setItem('prayerTimeFormat', v); }
 
-  function clearEl(el) {
-    while (el.firstChild) el.removeChild(el.firstChild);
-  }
+  function clearEl(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+  function cel(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
 
-  function cel(tag, cls) {
-    var e = document.createElement(tag);
-    if (cls) e.className = cls;
-    return e;
-  }
-
-  // ─── Countdown ──────────────────────────────────────────────────────────────
+  // ─── Countdown ─────────────────────────────────────────────────────────────
 
   function stopCountdown() {
     if (_countdownInterval) { clearInterval(_countdownInterval); _countdownInterval = null; }
@@ -78,23 +97,23 @@
     var next = pl.getNextPrayer(_currentTimings, _currentDateISO, now);
 
     if (next) {
-      cdEl.textContent  = pl.formatCountdown(next.time - now);
+      cdEl.textContent   = pl.formatCountdown(next.time - now);
       nameEl.textContent = tStr(PRAYER_I18N[next.name] || next.name);
-      document.querySelectorAll('.prayer-item[data-prayer]').forEach(function(el) {
-        el.classList.toggle('prayer-item--next', el.dataset.prayer === next.name);
+      document.querySelectorAll('.prayer-grid-card[data-prayer]').forEach(function(el) {
+        el.classList.toggle('prayer-grid-card--next', el.dataset.prayer === next.name);
       });
     } else {
       if (_tomorrowTimings && _tomorrowDateISO) {
         var fajrAt = pl.parseAsDate(_tomorrowTimings.Fajr, _tomorrowDateISO);
-        cdEl.textContent  = pl.formatCountdown(fajrAt - now);
+        cdEl.textContent   = pl.formatCountdown(fajrAt - now);
         nameEl.textContent = tStr('prayer.fajr') + ' — ' + tStr('prayer.tomorrow');
       } else {
-        cdEl.textContent  = '--:--:--';
+        cdEl.textContent   = '--:--:--';
         nameEl.textContent = tStr('prayer.fajr');
         fetchTomorrow();
       }
-      document.querySelectorAll('.prayer-item[data-prayer]').forEach(function(el) {
-        el.classList.remove('prayer-item--next');
+      document.querySelectorAll('.prayer-grid-card[data-prayer]').forEach(function(el) {
+        el.classList.remove('prayer-grid-card--next');
       });
     }
   }
@@ -110,7 +129,7 @@
     } catch(e) {}
   }
 
-  // ─── Render ──────────────────────────────────────────────────────────────────
+  // ─── Render ────────────────────────────────────────────────────────────────
 
   async function render() {
     var container = document.getElementById('prayerContent');
@@ -146,7 +165,6 @@
     var city  = getCity();
     var today = window.PrayerLogic.todayBaghdad();
 
-    // Clear monthly cache so fresh data is fetched
     var parts = today.split('-').map(Number);
     window.PrayerCache.clear(window.PrayerCache.monthKey(city, parts[0], parts[1]));
 
@@ -167,7 +185,7 @@
     }
   }
 
-  // ─── DOM builders ────────────────────────────────────────────────────────────
+  // ─── DOM builders ──────────────────────────────────────────────────────────
 
   function buildLoading(container) {
     stopCountdown();
@@ -182,13 +200,11 @@
     clearEl(container);
     var d = cel('div', 'prayer-status prayer-error');
     d.textContent = tStr('prayer.error');
-    var br1 = document.createElement('br');
-    var br2 = document.createElement('br');
     var btn = cel('button', 'prayer-retry-btn');
     btn.textContent = tStr('prayer.retry');
     btn.onclick = refresh;
-    d.appendChild(br1);
-    d.appendChild(br2);
+    d.appendChild(document.createElement('br'));
+    d.appendChild(document.createElement('br'));
     d.appendChild(btn);
     container.appendChild(d);
   }
@@ -197,123 +213,187 @@
     clearEl(container);
     var timings  = data.timings;
     var dateInfo = data.date;
+    var pl       = window.PrayerLogic;
 
-    // ── City selector ──
-    var selWrap = cel('div', 'prayer-selectors');
-    var seg = cel('div', 'prayer-city-seg');
-    CITIES.forEach(function(c) {
-      var btn = cel('button', 'prayer-city-btn' + (c === city ? ' on' : ''));
-      btn.textContent = c;
-      btn.onclick = function() { onCityChange(c); };
-      seg.appendChild(btn);
-    });
-    selWrap.appendChild(seg);
+    // ── Dark header card ──
+    var hdr = cel('div', 'prayer-hdr-card');
 
-    // ── 12h / 24h format toggle ──
-    var fmt = getFormat();
-    var fmtRow = cel('div', 'prayer-fmt-row');
-    var fmtSeg = cel('div', 'prayer-city-seg prayer-fmt-seg');
-    ['24', '12'].forEach(function(f) {
-      var btn = cel('button', 'prayer-city-btn' + (f === fmt ? ' on' : ''));
-      btn.textContent = f === '24' ? '24h' : '12h';
-      btn.onclick = function() { onFormatChange(f); };
-      fmtSeg.appendChild(btn);
-    });
-    fmtRow.appendChild(fmtSeg);
-    selWrap.appendChild(fmtRow);
+    var cityEl = cel('div', 'prayer-hdr-city');
+    cityEl.textContent = CITY_LABEL[city] || city;
+    hdr.appendChild(cityEl);
 
-    container.appendChild(selWrap);
-
-    // ── Dates row ──
-    var datesRow = cel('div', 'prayer-dates');
-    var greg = cel('div', 'prayer-date-greg');
+    var gregEl = cel('div', 'prayer-hdr-date-greg');
     if (dateInfo && dateInfo.gregorian) {
-      // Aladhan fallback: full gregorian object
-      greg.textContent = dateInfo.gregorian.weekday.en + ', ' +
-                         dateInfo.gregorian.day + ' ' +
-                         dateInfo.gregorian.month.en + ' ' +
-                         dateInfo.gregorian.year;
+      gregEl.textContent = dateInfo.gregorian.weekday.en + ', ' +
+                           dateInfo.gregorian.day + ' ' +
+                           dateInfo.gregorian.month.en + ' ' +
+                           dateInfo.gregorian.year;
     } else {
-      // amozhgary source: derive from dateISO
       var gregDate = new Date(today + 'T12:00:00+03:00');
-      greg.textContent = gregDate.toLocaleDateString('en-US', {
+      gregEl.textContent = gregDate.toLocaleDateString('en-US', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
         timeZone: 'Asia/Baghdad'
       });
     }
-    var hijri = cel('div', 'prayer-date-hijri');
-    if (dateInfo && dateInfo.hijri) {
-      // Aladhan fallback format
-      hijri.textContent = dateInfo.hijri.day + ' ' +
-                          dateInfo.hijri.month.en + ' ' +
-                          dateInfo.hijri.year + ' هـ';
-    } else if (dateInfo && dateInfo.hijriStr) {
-      // amozhgary format: raw Kurdish string e.g. "25ی شعبان 1447"
-      hijri.textContent = dateInfo.hijriStr;
+    hdr.appendChild(gregEl);
+
+    if (dateInfo) {
+      var hijriEl = cel('div', 'prayer-hdr-date-hijri');
+      if (dateInfo.hijri) {
+        hijriEl.textContent = dateInfo.hijri.day + ' ' + dateInfo.hijri.month.en + ' ' + dateInfo.hijri.year + ' هـ';
+      } else if (dateInfo.hijriStr) {
+        hijriEl.textContent = dateInfo.hijriStr;
+      }
+      if (hijriEl.textContent) hdr.appendChild(hijriEl);
     }
-    datesRow.appendChild(greg);
-    datesRow.appendChild(hijri);
-    container.appendChild(datesRow);
 
-    // ── Next prayer countdown card ──
-    var pl   = window.PrayerLogic;
+    // Next prayer countdown inside header
     var next = pl.getNextPrayer(timings, today);
-    var nextCard = cel('div', 'prayer-next-card');
-    var nextNameEl = cel('div', 'prayer-next-name');
-    nextNameEl.id = 'prayerNextName';
-    nextNameEl.textContent = next ? tStr(PRAYER_I18N[next.name] || next.name) : tStr('prayer.fajr');
-    var nextCd = cel('div', 'prayer-next-countdown');
-    nextCd.id = 'prayerCountdown';
-    nextCd.textContent = next ? pl.formatCountdown(next.time - new Date()) : '--:--:--';
-    nextCard.appendChild(nextNameEl);
-    nextCard.appendChild(nextCd);
-    container.appendChild(nextCard);
+    var cdWrap = cel('div', 'prayer-hdr-countdown');
+    var cdLabel = cel('div', 'prayer-hdr-cd-label');
+    cdLabel.id = 'prayerNextName';
+    cdLabel.textContent = next ? tStr(PRAYER_I18N[next.name] || next.name) : tStr('prayer.fajr');
+    var cdVal = cel('div', 'prayer-hdr-cd-val');
+    cdVal.id = 'prayerCountdown';
+    cdVal.textContent = next ? pl.formatCountdown(next.time - new Date()) : '--:--:--';
+    cdWrap.appendChild(cdLabel);
+    cdWrap.appendChild(cdVal);
+    hdr.appendChild(cdWrap);
 
-    // ── Prayer list ──
-    var list = cel('div', 'prayer-list');
+    container.appendChild(hdr);
+
+    // ── 2-column prayer grid ──
     var use12h = getFormat() === '12';
+    var grid = cel('div', 'prayer-grid');
     pl.PRAYER_ORDER.forEach(function(name) {
       var raw         = timings[name] || '';
       var timeDisplay = pl.formatTime(raw, use12h);
       var isNext      = next && next.name === name;
 
-      var row = cel('div', 'prayer-item' + (isNext ? ' prayer-item--next' : ''));
-      row.dataset.prayer = name;
+      var card = cel('div', 'prayer-grid-card' + (isNext ? ' prayer-grid-card--next' : ''));
+      card.dataset.prayer = name;
 
-      var nameSpan = cel('span', 'prayer-item-name');
-      nameSpan.textContent = tStr(PRAYER_I18N[name] || name);
+      var nameEl = cel('div', 'prayer-grid-name');
+      nameEl.textContent = tStr(PRAYER_I18N[name] || name);
+      card.appendChild(nameEl);
 
-      var timeSpan = cel('span', 'prayer-item-time');
-      timeSpan.textContent = timeDisplay;
+      var timeEl = cel('div', 'prayer-grid-time');
+      timeEl.textContent = timeDisplay;
+      card.appendChild(timeEl);
 
-      row.appendChild(nameSpan);
-      row.appendChild(timeSpan);
-      list.appendChild(row);
+      grid.appendChild(card);
     });
-    container.appendChild(list);
+    container.appendChild(grid);
 
-    // ── Athan notifications section ──
-    var notifSec = cel('div', 'prayer-notif-section');
+    // ── Ensure settings overlay exists ──
+    if (!document.getElementById('prayerSettingsOverlay')) {
+      buildSettingsOverlay();
+    }
+    updateAthanSettings(timings, city, today);
+  }
 
-    var notifTitle = cel('div', 'prayer-notif-title');
-    notifTitle.textContent = tStr('prayer.athan_section');
-    notifSec.appendChild(notifTitle);
+  // ─── Settings sheet ────────────────────────────────────────────────────────
 
-    buildToggleRow(notifSec, tStr('prayer.enable_athan'), getAthan(), function(val) {
-      onAthanMasterToggle(val, timings, city, today);
+  function buildSettingsOverlay() {
+    var overlay = cel('div', 'prayer-settings-overlay');
+    overlay.id = 'prayerSettingsOverlay';
+    overlay.onclick = function(e) { if (e.target === overlay) closeSettings(); };
+
+    var sheet = cel('div', 'prayer-settings-sheet');
+    sheet.id = 'prayerSettingsSheet';
+
+    // Header
+    var sheetHdr = cel('div', 'prayer-settings-hdr');
+    var sheetTitle = cel('span', 'prayer-settings-title');
+    sheetTitle.textContent = tStr('prayer.settings_title');
+    var closeBtn = cel('button', 'prayer-settings-close');
+    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    closeBtn.onclick = closeSettings;
+    sheetHdr.appendChild(sheetTitle);
+    sheetHdr.appendChild(closeBtn);
+    sheet.appendChild(sheetHdr);
+
+    // City section
+    var cityLabel = cel('div', 'prayer-settings-section-label');
+    cityLabel.textContent = tStr('prayer.city_label');
+    sheet.appendChild(cityLabel);
+
+    var cityGrid = cel('div', 'prayer-city-grid');
+    cityGrid.id = 'prayerCityGrid';
+    var currentCity = getCity();
+    CITIES.forEach(function(c) {
+      var btn = cel('button', 'prayer-city-grid-btn' + (c === currentCity ? ' on' : ''));
+      btn.dataset.city = c;
+      btn.textContent = CITY_LABEL[c] || c;
+      btn.onclick = function() { onCityChange(c); };
+      cityGrid.appendChild(btn);
+    });
+    sheet.appendChild(cityGrid);
+
+    // Format section
+    var fmtLabel = cel('div', 'prayer-settings-section-label');
+    fmtLabel.textContent = tStr('prayer.format_label');
+    sheet.appendChild(fmtLabel);
+
+    var fmtWrap = cel('div', 'prayer-fmt-wrap');
+    var fmtSeg = cel('div', 'prayer-fmt-seg');
+    var fmt = getFormat();
+    ['24', '12'].forEach(function(f) {
+      var btn = cel('button', 'prayer-fmt-btn' + (f === fmt ? ' on' : ''));
+      btn.dataset.fmt = f;
+      btn.textContent = f === '24' ? '24h' : '12h';
+      btn.onclick = function() { onFormatChange(f); };
+      fmtSeg.appendChild(btn);
+    });
+    fmtWrap.appendChild(fmtSeg);
+    sheet.appendChild(fmtWrap);
+
+    // Athan section
+    var athanLabel = cel('div', 'prayer-settings-section-label');
+    athanLabel.textContent = tStr('prayer.athan_section');
+    sheet.appendChild(athanLabel);
+
+    var athanContainer = cel('div', 'prayer-settings-athan');
+    athanContainer.id = 'prayerAthanSettings';
+    sheet.appendChild(athanContainer);
+
+    // Spacer for safe area
+    var spacer = cel('div', 'prayer-settings-spacer');
+    sheet.appendChild(spacer);
+
+    overlay.appendChild(sheet);
+    document.body.appendChild(overlay);
+  }
+
+  function updateAthanSettings(timings, city, dateISO) {
+    var container = document.getElementById('prayerAthanSettings');
+    if (!container) return;
+    clearEl(container);
+
+    buildToggleRow(container, tStr('prayer.enable_athan'), getAthan(), function(val) {
+      onAthanMasterToggle(val, timings, city, dateISO);
     }, 'prayer-master-toggle');
 
     var togglesWrap = cel('div', 'prayer-per-toggles' + (getAthan() ? '' : ' prayer-per-toggles--dim'));
     togglesWrap.id = 'prayerTogglesWrap';
     var toggles = getToggles();
-    pl.NOTIF_PRAYERS.forEach(function(name) {
+    window.PrayerLogic.NOTIF_PRAYERS.forEach(function(name) {
       var isOn = toggles[name] !== false;
       buildToggleRow(togglesWrap, tStr(PRAYER_I18N[name] || name), isOn, function(val) {
-        onPrayerToggle(name, val, timings, city, today);
+        onPrayerToggle(name, val, timings, city, dateISO);
       });
     });
-    notifSec.appendChild(togglesWrap);
-    container.appendChild(notifSec);
+    container.appendChild(togglesWrap);
+  }
+
+  function openSettings() {
+    var overlay = document.getElementById('prayerSettingsOverlay');
+    if (overlay) overlay.classList.add('open');
+  }
+
+  function closeSettings() {
+    var overlay = document.getElementById('prayerSettingsOverlay');
+    if (overlay) overlay.classList.remove('open');
   }
 
   function buildToggleRow(parent, label, isOn, onChange, extraClass) {
@@ -333,10 +413,13 @@
     parent.appendChild(row);
   }
 
-  // ─── Event handlers ──────────────────────────────────────────────────────────
+  // ─── Event handlers ────────────────────────────────────────────────────────
 
   function onFormatChange(fmt) {
     setFormat(fmt);
+    document.querySelectorAll('[data-fmt]').forEach(function(btn) {
+      btn.classList.toggle('on', btn.dataset.fmt === fmt);
+    });
     if (_currentData && _currentDateISO) {
       var container = document.getElementById('prayerContent');
       if (container) {
@@ -348,22 +431,15 @@
 
   async function onCityChange(city) {
     setCity(city);
+    document.querySelectorAll('.prayer-city-grid-btn').forEach(function(btn) {
+      btn.classList.toggle('on', btn.dataset.city === city);
+    });
+    closeSettings();
     if (getAthan()) await window.PrayerNotifications.cancelAllAthanNotifications();
     await render();
     if (getAthan() && _currentTimings) {
       await window.PrayerNotifications.scheduleAthanNotifications(
         _currentTimings, city, getToggles(), _currentDateISO, true
-      );
-    }
-  }
-
-  async function onMethodChange(method) {
-    setMethod(method);
-    if (getAthan()) await window.PrayerNotifications.cancelAllAthanNotifications();
-    await render();
-    if (getAthan() && _currentTimings) {
-      await window.PrayerNotifications.scheduleAthanNotifications(
-        _currentTimings, getCity(), getToggles(), _currentDateISO, true
       );
     }
   }
@@ -407,13 +483,12 @@
     }
   }
 
-  // ─── Auto-schedule on start/foreground ───────────────────────────────────────
+  // ─── Auto-schedule on start/foreground ────────────────────────────────────
 
   async function initScheduleOnStart() {
     if (!getAthan()) return;
     var today = window.PrayerLogic.todayBaghdad();
     if (localStorage.getItem('prayerLastScheduleDate') === today) return;
-
     var city = getCity();
     try {
       var data = await window.PrayerAPI.fetchPrayerTimes(city, today);
@@ -423,11 +498,12 @@
     } catch(e) {}
   }
 
-  // ─── Export ──────────────────────────────────────────────────────────────────
+  // ─── Export ────────────────────────────────────────────────────────────────
 
   window.PrayerUI = {
     render: render,
     refresh: refresh,
+    openSettings: openSettings,
     initScheduleOnStart: initScheduleOnStart
   };
 
