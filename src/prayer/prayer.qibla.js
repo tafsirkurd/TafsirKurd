@@ -9,7 +9,8 @@
 (function() {
   'use strict';
 
-  var MECCA    = { lat: 21.4225, lon: 39.8262 };
+  // Precise Kaaba coordinates (Masjid al-Haram, Mecca)
+  var MECCA    = { lat: 21.422487, lon: 39.826206 };
   var BUF_SIZE = 12;   // rolling window (~0.8 s at 15 Hz)
   var THROTTLE = 66;   // ms between orientation samples (~15 Hz)
 
@@ -19,6 +20,7 @@
   var _smoothH     = 0;
   var _headingBuf  = [];   // rolling buffer of raw headings
   var _lastSample  = 0;
+  var _hasAbsolute = false; // true once we receive geographic-N (absolute) events
   var _raf         = null;
   var _onOrient    = null;
   var _isOpen      = false;
@@ -172,17 +174,28 @@
     if (_onOrient) return;
     _onOrient = function(e) {
       if (e.alpha === null || e.alpha === undefined) return;
+
+      // Prefer geographic North (absolute=true) over magnetic North.
+      // Once we have an absolute reading, ignore all non-absolute events.
+      if (e.absolute) {
+        _hasAbsolute = true;
+      } else if (_hasAbsolute) {
+        return; // discard magnetic-North reading — we already have better data
+      }
+
       var now = Date.now();
       if (now - _lastSample < THROTTLE) return;   // cap at ~15 Hz
       _lastSample = now;
 
       var raw;
       if (typeof e.webkitCompassHeading !== 'undefined') {
-        raw = e.webkitCompassHeading;             // iOS: already CW from N
+        raw = e.webkitCompassHeading;             // iOS: already CW from true N
       } else {
-        raw = (360 - e.alpha) % 360;              // Android
+        // Android deviceorientationabsolute: alpha=0 when top faces N,
+        // increases counter-clockwise → convert to clockwise compass heading
+        raw = (360 - e.alpha) % 360;
       }
-      addHeading(raw);                            // update circular mean
+      addHeading(raw);
     };
     window.addEventListener('deviceorientationabsolute', _onOrient, true);
     window.addEventListener('deviceorientation',         _onOrient, true);
@@ -293,9 +306,10 @@
     var titleEl = document.getElementById('qiblaModalTitle');
     if (titleEl) titleEl.textContent = t ? t('prayer.qibla_title') : 'Qibla';
 
-    _isOpen     = true;
-    _headingBuf = [];            // clear old readings
-    _lastSample = 0;
+    _isOpen      = true;
+    _headingBuf  = [];   // clear old readings
+    _lastSample  = 0;
+    _hasAbsolute = false;
 
     var modal = document.getElementById('qiblaModal');
     if (modal) modal.classList.add('open');
