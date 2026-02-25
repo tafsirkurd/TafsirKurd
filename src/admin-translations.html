@@ -2210,6 +2210,7 @@
         var _historyAllRows = [];
         var _historyTab = 'all';
         var _historySearchDebounce = null;
+        var _historyPollInterval = null;
         function onHistorySearch() {
             clearTimeout(_historySearchDebounce);
             _historySearchDebounce = setTimeout(filterHistory, 220);
@@ -2238,13 +2239,38 @@
                 panel.classList.remove('open');
                 overlay.classList.remove('open');
                 document.body.classList.remove('history-open');
+                // Stop live poll when drawer closes
+                clearInterval(_historyPollInterval);
+                _historyPollInterval = null;
             } else {
                 panel.classList.add('open');
                 overlay.classList.add('open');
                 document.body.classList.add('history-open');
                 lucide.createIcons({ nodes: [panel] });
                 loadHistory();
+                // Poll for new entries every 30s while drawer is open
+                clearInterval(_historyPollInterval);
+                _historyPollInterval = setInterval(pollHistory, 30000);
             }
+        }
+
+        // Silent background poll — only re-renders if new entries arrived
+        async function pollHistory() {
+            try {
+                var result = await supabase
+                    .from('admin_audit_logs')
+                    .select('id,created_at')
+                    .eq('page_slug', 'admin-translations')
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                if (result.error || !result.data || !result.data.length) return;
+                var latest = result.data[0];
+                // If the newest DB row is newer than what we have, reload fully
+                var haveLatest = _historyAllRows.length ? _historyAllRows[0].created_at : null;
+                if (!haveLatest || latest.created_at > haveLatest) {
+                    loadHistory();
+                }
+            } catch(e) {}
         }
 
         async function logChange(action, details) {
