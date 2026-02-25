@@ -14,7 +14,7 @@ var translations = {};
 var loadPromise = null;
 var CACHE_KEY = 'tafsirkurd_i18n_cache';
 var CACHE_TS_KEY = 'tafsirkurd_i18n_ts';
-var CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+var CACHE_TTL = 30 * 1000; // 30 seconds — stale cache served max 30s on startup
 
 /**
  * Try loading from remote endpoint (background merge only — do not use as primary source)
@@ -162,8 +162,8 @@ function applyTranslations(){
   });
 }
 
-// Live polling: re-merge remote translations every 30s so admin changes appear
-// without needing an app restart (matches the 60s CDN cache on the endpoint).
+// Live polling: re-merge remote translations every 8s so admin changes appear
+// within ~18s total (10s CDN cache + 8s poll interval).
 (function startPolling(){
   setInterval(function(){
     loadRemote().then(function(data){
@@ -175,7 +175,7 @@ function applyTranslations(){
         document.dispatchEvent(new CustomEvent('i18n:updated'));
       }
     }).catch(function(){});
-  }, 30000);
+  }, 8000);
 })();
 
 // Export

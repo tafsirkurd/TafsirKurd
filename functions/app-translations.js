@@ -36,7 +36,7 @@ export async function onRequest(context) {
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=60'
+        'Cache-Control': 'public, max-age=10'
     };
 
     if (request.method === 'OPTIONS') {

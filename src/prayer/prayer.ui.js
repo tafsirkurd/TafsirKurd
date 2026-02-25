@@ -14,6 +14,7 @@
   var _currentData      = null;
   var _tomorrowTimings  = null;
   var _tomorrowDateISO  = null;
+  var _renderedKey      = null; // city:date:format — skip rebuild if unchanged
 
   var CITIES = [
     'Sulaymaniyah', 'Erbil', 'Duhok', 'Kirkuk',
@@ -151,8 +152,15 @@
     var container = document.getElementById('prayerContent');
     if (!container) return;
 
-    var city  = getCity();
-    var today = window.PrayerLogic.todayBaghdad();
+    var city   = getCity();
+    var today  = window.PrayerLogic.todayBaghdad();
+    var key    = city + ':' + today + ':' + getFormat();
+
+    // ── Already rendered with same data — just ensure countdown is alive ──
+    if (_renderedKey === key && _currentTimings) {
+      if (!_countdownInterval) startCountdown();
+      return;
+    }
 
     // ── Fast path: render immediately from cache, no network call ──
     var cached = readCacheNow(city, today);
@@ -166,6 +174,7 @@
     }
 
     // ── Slow path: no cache yet — show spinner and fetch ──
+    _renderedKey = null;
     buildLoading(container);
     try {
       var data = await window.PrayerAPI.fetchPrayerTimes(city, today);
@@ -188,6 +197,7 @@
     var parts = today.split('-').map(Number);
     window.PrayerCache.clear(window.PrayerCache.monthKey(city, parts[0], parts[1]));
 
+    _renderedKey     = null;
     buildLoading(container);
     stopCountdown();
     _currentTimings  = null;
@@ -230,6 +240,7 @@
   }
 
   function buildPanel(container, data, city, today) {
+    _renderedKey = city + ':' + today + ':' + getFormat();
     clearEl(container);
     var timings  = data.timings;
     var dateInfo = data.date;
@@ -518,6 +529,17 @@
     } catch(e) {}
   }
 
+  // ─── Redraw with existing data (translation update, no network call) ───────
+
+  function redraw() {
+    if (!_currentData || !_currentDateISO) return;
+    var container = document.getElementById('prayerContent');
+    if (!container) return;
+    _renderedKey = null; // force rebuild
+    buildPanel(container, _currentData, getCity(), _currentDateISO);
+    startCountdown();
+  }
+
   // ─── Export ────────────────────────────────────────────────────────────────
 
   function openQibla() {
@@ -531,6 +553,8 @@
   window.PrayerUI = {
     render: render,
     refresh: refresh,
+    redraw: redraw,
+    invalidate: function(){ _renderedKey = null; },
     openSettings: openSettings,
     openQibla: openQibla,
     initScheduleOnStart: initScheduleOnStart
