@@ -285,17 +285,6 @@
     });
     container.appendChild(grid);
 
-    // ── Qibla compass ──
-    var qiblaWrap = cel('div', '');
-    qiblaWrap.id = 'prayerQiblaWrap';
-    container.appendChild(qiblaWrap);
-
-    if (window.PrayerQibla) {
-      var coords = window.PrayerAPI && window.PrayerAPI.CITY_COORDS
-                   ? window.PrayerAPI.CITY_COORDS[city] : null;
-      window.PrayerQibla.init(qiblaWrap, coords, window.t || null);
-    }
-
     // ── Ensure settings overlay exists ──
     if (!document.getElementById('prayerSettingsOverlay')) {
       buildSettingsOverlay();
@@ -511,10 +500,19 @@
 
   // ─── Export ────────────────────────────────────────────────────────────────
 
+  function openQibla() {
+    if (!window.PrayerQibla) return;
+    var city   = getCity();
+    var coords = window.PrayerAPI && window.PrayerAPI.CITY_COORDS
+                 ? window.PrayerAPI.CITY_COORDS[city] : null;
+    window.PrayerQibla.open(coords);
+  }
+
   window.PrayerUI = {
     render: render,
     refresh: refresh,
     openSettings: openSettings,
+    openQibla: openQibla,
     initScheduleOnStart: initScheduleOnStart
   };
 

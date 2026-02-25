@@ -719,16 +719,19 @@ body{background:var(--bg);color:var(--text)}
 .prayer-status{padding:80px 16px;text-align:center;color:var(--text3);font-size:.95rem}
 .prayer-error{color:var(--danger)}
 .prayer-retry-btn{margin-top:16px;padding:10px 24px;border-radius:var(--r-full);background:var(--accent);color:var(--accent-t);border:none;font-size:.9rem;cursor:pointer;font-family:inherit}
-/* ── Qibla compass ── */
-.qibla-card{background:linear-gradient(160deg,#111 0%,#1e1e1e 100%);margin:0 0 4px;padding:20px 16px 22px;display:flex;flex-direction:column;align-items:center;gap:14px}
-.qibla-title{font-size:.72rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.1em;align-self:flex-start}
-.qibla-canvas-wrap{position:relative;display:flex;align-items:center;justify-content:center}
-.qibla-canvas-wrap canvas{display:block}
-.qibla-info{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
-.qibla-chip{display:flex;flex-direction:column;align-items:center;background:rgba(255,255,255,.07);border-radius:10px;padding:8px 16px;min-width:90px}
-.qibla-chip-label{font-size:.65rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
-.qibla-chip strong{font-size:1.1rem;color:#fff;font-variant-numeric:tabular-nums}
-.qibla-approx-badge{font-size:.72rem;color:rgba(255,255,255,.35);align-self:center}
+/* ── Qibla compass modal ── */
+.qibla-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;align-items:center;justify-content:center}
+.qibla-modal.open{display:flex}
+.qibla-modal-card{background:linear-gradient(160deg,#111 0%,#1e1e1e 100%);border-radius:20px;padding:0 0 24px;width:min(92vw,360px);display:flex;flex-direction:column;align-items:center;overflow:hidden}
+.qibla-modal-hdr{width:100%;display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.qibla-modal-title{font-size:.9rem;font-weight:600;color:#fff;letter-spacing:.03em}
+.qibla-modal-close{background:rgba(255,255,255,.1);border:none;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem}
+.qibla-canvas-wrap{padding:20px 0 10px;display:flex;align-items:center;justify-content:center}
+.qibla-info{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:0 16px}
+.qibla-chip{display:flex;flex-direction:column;align-items:center;background:rgba(255,255,255,.07);border-radius:12px;padding:10px 20px;min-width:100px}
+.qibla-chip-label{font-size:.62rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.qibla-chip-val{font-size:1.2rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+.qibla-approx-badge{font-size:.72rem;color:rgba(255,255,255,.3);align-self:center;padding-top:4px}
 .qibla-loading{font-size:.82rem;color:rgba(255,255,255,.4)}
 .qibla-no-loc{font-size:.82rem;color:#e55}
 </style>
@@ -836,6 +839,7 @@ body{background:var(--bg);color:var(--text)}
   <div class="hdr">
     <div class="hdr-title"><i class="fas fa-mosque"></i> <span data-i18n="header.prayer">کاتا نوێژ</span></div>
     <div style="display:flex;gap:4px">
+      <button class="hdr-btn" onclick="PrayerUI.openQibla()" title="Qibla"><i class="fas fa-compass"></i></button>
       <button class="hdr-btn" onclick="PrayerUI.refresh()" title="Refresh"><i class="fas fa-sync-alt"></i></button>
       <button class="hdr-btn" onclick="PrayerUI.openSettings()" title="Settings"><i class="fas fa-sliders-h"></i></button>
     </div>
