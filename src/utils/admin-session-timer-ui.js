@@ -25,7 +25,7 @@
         }
 
         // Calculate elapsed and remaining time
-        const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 hour
+        const SESSION_TIMEOUT = 20 * 60 * 1000; // 20 minutes — must match admin-heartbeat.js
         const startTime = new Date(sessionStart).getTime();
         const elapsed = Date.now() - startTime;
         const remaining = Math.max(0, SESSION_TIMEOUT - elapsed);
@@ -42,12 +42,14 @@
         // Session expired - force logout immediately
         if (remainingMs <= 0) {
             stopTimerDisplay();
-            alert('Session expired! You will be logged out.');
             sessionStorage.removeItem('adminToken');
             sessionStorage.removeItem('adminSessionStart');
             sessionStorage.removeItem('warning5minShown');
             sessionStorage.removeItem('warning2minShown');
-            window.location.href = '/admin-login.html';
+            if (window.showNotification) {
+                window.showNotification('Session expired. Logging out...', 'error');
+            }
+            setTimeout(() => { window.location.href = '/admin-login.html'; }, 1500);
             return;
         }
 
@@ -67,16 +69,16 @@
             timerElement.classList.add('warning');
         }
 
-        // Show warning notification at 5 minutes
-        if (remainingMinutes === 4 && remainingSeconds === 59 && !sessionStorage.getItem('warning5minShown')) {
+        // Show warning notification at 5 minutes (threshold-based, not exact-second match)
+        if (remainingMs <= 5 * 60 * 1000 && remainingMs > 0 && !sessionStorage.getItem('warning5minShown')) {
             sessionStorage.setItem('warning5minShown', 'true');
             if (window.showNotification) {
                 window.showNotification('⚠️ Session expires in 5 minutes. Save your work!', 'warning');
             }
         }
 
-        // Show critical notification at 2 minutes
-        if (remainingMinutes === 1 && remainingSeconds === 59 && !sessionStorage.getItem('warning2minShown')) {
+        // Show critical notification at 2 minutes (threshold-based, not exact-second match)
+        if (remainingMs <= 2 * 60 * 1000 && remainingMs > 0 && !sessionStorage.getItem('warning2minShown')) {
             sessionStorage.setItem('warning2minShown', 'true');
             if (window.showNotification) {
                 window.showNotification('🚨 Session expires in 2 minutes! You will be logged out soon.', 'error');

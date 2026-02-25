@@ -61,19 +61,19 @@ function updateDashboardUI(stats) {
     // Update Total Users
     const userCountElement = document.querySelector('.stat-card:nth-child(1) .stat-number');
     if (userCountElement) {
-        userCountElement.textContent = stats.users.total.toLocaleString();
+        userCountElement.textContent = (stats.users?.total ?? 0).toLocaleString();
     }
 
     // Update Total Videos
     const videoCountElement = document.querySelector('.stat-card:nth-child(2) .stat-number');
     if (videoCountElement) {
-        videoCountElement.textContent = stats.videos.total.toLocaleString();
+        videoCountElement.textContent = (stats.videos?.total ?? 0).toLocaleString();
     }
 
     // Update Unread Messages
     const messageCountElement = document.querySelector('.stat-card:nth-child(3) .stat-number');
     if (messageCountElement) {
-        messageCountElement.textContent = stats.messages.unread.toLocaleString();
+        messageCountElement.textContent = (stats.messages?.unread ?? 0).toLocaleString();
     }
 
     console.log('✅ Dashboard UI updated with stats');

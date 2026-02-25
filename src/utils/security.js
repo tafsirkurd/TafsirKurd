@@ -141,8 +141,7 @@ function generateFingerprint() {
         platform: navigator.platform,
         hardwareConcurrency: navigator.hardwareConcurrency || 0,
         deviceMemory: navigator.deviceMemory || 0,
-        plugins: Array.from(navigator.plugins || []).map(p => p.name).join(',').slice(0, 100),
-        timestamp: Date.now()
+        plugins: Array.from(navigator.plugins || []).map(p => p.name).join(',').slice(0, 100)
     };
 
     return btoa(JSON.stringify(fingerprint)).slice(0, 64);
@@ -625,13 +624,6 @@ ${events.slice(-10).reverse().map(e => `
     `.trim();
 
     console.log(dashboard);
-    alert('🔒 Security Dashboard logged to console!\n\nPress F12 to view.');
-
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(dashboard).then(() => {
-            console.log('Dashboard copied to clipboard');
-        });
-    }
 }
 
 function initSecurityDashboard() {

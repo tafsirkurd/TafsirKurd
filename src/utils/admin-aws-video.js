@@ -62,12 +62,12 @@ function saveAWSConfig() {
     const config = {
         region: regionEl.value,
         bucketName: bucketEl.value,
-        accessKeyId: accessKeyEl.value,
-        secretAccessKey: secretKeyEl.value
+        accessKeyId: accessKeyEl.value
+        // secretAccessKey is intentionally NOT persisted — storing secret keys in
+        // localStorage is a security risk (XSS-exploitable). Re-enter after page reload.
     };
 
     try {
-        // WARNING: localStorage is for development only! Use secure backend in production
         localStorage.setItem('awsS3Config', JSON.stringify(config));
         showStatus('awsConfigStatus', '✅ Configuration saved successfully!', 'success');
         initAWSSDK();
@@ -86,7 +86,7 @@ function loadAWSConfig() {
         const config = JSON.parse(configStr);
         if (!config) return;
 
-        const { region, bucketName, accessKeyId, secretAccessKey } = config;
+        const { region, bucketName, accessKeyId } = config;
 
         const regionEl = getElement('awsRegion');
         const bucketEl = getElement('s3BucketName');
@@ -96,7 +96,7 @@ function loadAWSConfig() {
         if (regionEl) regionEl.value = region || 'eu-north-1';
         if (bucketEl) bucketEl.value = bucketName || '';
         if (accessKeyEl) accessKeyEl.value = accessKeyId || '';
-        if (secretKeyEl) secretKeyEl.value = secretAccessKey || '';
+        // secretAccessKey is never persisted — leave field blank for manual entry
 
         initAWSSDK();
     } catch (error) {

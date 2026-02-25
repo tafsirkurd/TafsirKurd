@@ -681,6 +681,17 @@
         // Initialize Lucide icons
         lucide.createIcons();
 
+        // Delegated click handler for table action buttons (avoids inline onclick XSS)
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            const action = btn.dataset.action;
+            const userId = btn.dataset.userid;
+            if (!userId) return;
+            if (action === 'view') viewUser(userId);
+            else if (action === 'delete') deleteUser(userId);
+        });
+
         // State management
         let allUsers = [];
         let filteredUsers = [];
@@ -776,11 +787,8 @@
                 // Fetch users via server-side API (bypasses RLS)
                 const response = await fetch('/admin-users-data', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'get_users',
-                        token: adminToken
-                    })
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                    body: JSON.stringify({ action: 'get_users' })
                 });
 
                 const data = await response.json();
@@ -962,9 +970,9 @@
             } else {
                 filteredUsers = allUsers.filter(user => {
                     return (
-                        user.profile_name.toLowerCase().includes(query) ||
-                        user.profile_email.toLowerCase().includes(query) ||
-                        user.user_id.toLowerCase().includes(query)
+                        (user.profile_name || '').toLowerCase().includes(query) ||
+                        (user.profile_email || '').toLowerCase().includes(query) ||
+                        (user.user_id || '').toLowerCase().includes(query)
                     );
                 });
             }
@@ -987,12 +995,12 @@
 
                 switch (field) {
                     case 'name':
-                        valA = a.profile_name.toLowerCase();
-                        valB = b.profile_name.toLowerCase();
+                        valA = (a.profile_name || '').toLowerCase();
+                        valB = (b.profile_name || '').toLowerCase();
                         break;
                     case 'email':
-                        valA = a.profile_email.toLowerCase();
-                        valB = b.profile_email.toLowerCase();
+                        valA = (a.profile_email || '').toLowerCase();
+                        valB = (b.profile_email || '').toLowerCase();
                         break;
                     case 'created':
                         valA = new Date(a.created_at);
@@ -1079,7 +1087,7 @@
                     <tr>
                         <td>
                             <div class="user-info">
-                                <img src="${avatar}" alt="${user.profile_name}" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.profile_name)}&background=random&size=80'">
+                                <img src="${escapeHtml(avatar)}" alt="${escapeHtml(user.profile_name)}" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.profile_name)}&background=random&size=80'">
                                 <div class="user-details">
                                     <div class="user-name">${escapeHtml(user.profile_name)}</div>
                                     <div class="user-id">${user.user_id.substring(0, 8)}...</div>
@@ -1101,10 +1109,10 @@
                         <td>${formatDate(user.created_at)}</td>
                         <td>
                             <div class="table-actions">
-                                <button class="table-btn" title="View Details" onclick="viewUser('${user.user_id}')">
+                                <button class="table-btn" title="View Details" data-action="view" data-userid="${escapeHtml(user.user_id)}">
                                     <i data-lucide="eye"></i>
                                 </button>
-                                <button class="table-btn" title="Delete User" onclick="deleteUser('${user.user_id}')">
+                                <button class="table-btn" title="Delete User" data-action="delete" data-userid="${escapeHtml(user.user_id)}">
                                     <i data-lucide="trash-2"></i>
                                 </button>
                             </div>
@@ -1163,7 +1171,7 @@
             const modalBody = document.getElementById('modalBody');
             modalBody.innerHTML = `
                 <div style="text-align: center; margin-bottom: 24px;">
-                    <img src="${avatar}" alt="${user.profile_name}" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 12px;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.profile_name)}&background=random&size=120'">
+                    <img src="${escapeHtml(avatar)}" alt="${escapeHtml(user.profile_name)}" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 12px;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.profile_name)}&background=random&size=120'">
                     <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">${escapeHtml(user.profile_name)}</div>
                     <div style="font-size: 13px; color: var(--text-tertiary);">${escapeHtml(user.profile_email)}</div>
                 </div>
@@ -1246,33 +1254,19 @@
             if (!deleteUserId) return;
 
             try {
-                const supabase = window.adminAuth.getSupabase();
-                if (!supabase) {
-                    alert('Supabase not initialized');
+                const adminToken = sessionStorage.getItem('adminToken');
+                if (!adminToken) { alert('Not authenticated'); return; }
+
+                const res = await fetch('/admin-users-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                    body: JSON.stringify({ action: 'delete_user', userId: deleteUserId })
+                });
+                const result = await res.json();
+
+                if (!result.success) {
+                    alert('Failed to delete user: ' + (result.error || 'Unknown error'));
                     return;
-                }
-
-                // Delete from user_data
-                const { error: userError } = await supabase
-                    .from('user_data')
-                    .delete()
-                    .eq('user_id', deleteUserId);
-
-                if (userError) {
-                    console.error('Error deleting user_data:', userError);
-                    alert('Failed to delete user data: ' + userError.message);
-                    return;
-                }
-
-                // Delete from profiles (if exists)
-                const { error: profileError } = await supabase
-                    .from('profiles')
-                    .delete()
-                    .eq('id', deleteUserId);
-
-                // Profile deletion might fail if it doesn't exist, that's okay
-                if (profileError) {
-                    console.warn('Profile deletion:', profileError.message);
                 }
 
                 // Remove from local array
@@ -1338,7 +1332,7 @@
                         <div class="empty-state">
                             <i data-lucide="alert-circle"></i>
                             <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #dc2626;">Error</div>
-                            <div style="font-size: 14px;">${message}</div>
+                            <div style="font-size: 14px;">${escapeHtml(message)}</div>
                         </div>
                     </td>
                 </tr>

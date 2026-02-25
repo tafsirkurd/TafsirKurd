@@ -927,17 +927,25 @@
             containers.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
-                    el.innerHTML = `<div class="error-message">${message}</div>`;
+                    while (el.firstChild) el.removeChild(el.firstChild);
+                    const errDiv = document.createElement('div');
+                    errDiv.className = 'error-message';
+                    errDiv.textContent = message;
+                    el.appendChild(errDiv);
                 }
             });
 
-            document.getElementById('topPagesTable').innerHTML = `
-                <tr>
-                    <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-tertiary);">
-                        ${message}
-                    </td>
-                </tr>
-            `;
+            const table = document.getElementById('topPagesTable');
+            if (table) {
+                while (table.firstChild) table.removeChild(table.firstChild);
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 4;
+                td.style.cssText = 'text-align: center; padding: 40px; color: var(--text-tertiary);';
+                td.textContent = message;
+                tr.appendChild(td);
+                table.appendChild(tr);
+            }
         }
     </script>
 </body>

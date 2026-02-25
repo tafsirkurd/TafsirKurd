@@ -335,7 +335,7 @@
         if (state.activeFilter) {
             filterIndicator = `
                 <div class="active-filter-indicator">
-                    <span><i class="fas fa-user-tie"></i> ${state.activeFilter.value}</span>
+                    <span><i class="fas fa-user-tie"></i> ${escapeHtml(state.activeFilter.value)}</span>
                     <button onclick="filterBySheikh(null);" title="لابردنی فلتەر"><i class="fas fa-times"></i></button>
                 </div>
             `;
@@ -348,15 +348,15 @@
             const watchedCount = topic.episodes.filter(ep => state.watchedVideos.includes(ep.id)).length;
 
             return `
-                <div class="topic-card" onclick="window.tvApp.showTopic('${topic.id}')">
+                <div class="topic-card" onclick="window.tvApp.showTopic('${escapeHtml(String(topic.id))}')">
                     <div class="topic-card-image">
-                        <img src="${topic.thumbnail}" alt="${topic.title}" loading="lazy" decoding="async" width="320" height="180" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
+                        <img src="${escapeHtml(topic.thumbnail || '')}" alt="${escapeHtml(topic.title)}" loading="lazy" decoding="async" width="320" height="180" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
                         <div class="topic-fallback-icon"><i class="fas fa-play-circle"></i></div>
                     </div>
                     <div class="topic-card-content">
-                        <h3 class="topic-card-title">${topic.title}</h3>
+                        <h3 class="topic-card-title">${escapeHtml(topic.title)}</h3>
                         ${topic.description ? `
-                            <p class="topic-card-description">${topic.description}</p>
+                            <p class="topic-card-description">${escapeHtml(topic.description)}</p>
                         ` : ''}
                         <div class="topic-card-meta">
                             <span><i class="fas fa-play-circle"></i> ${toKu(episodeCount)} بەش</span>
@@ -458,20 +458,21 @@
             // Check if episode is locked (scheduled for future)
             const locked = isEpisodeLocked(episode);
             const lockedClass = locked ? 'locked' : '';
+            const safeEpisodeId = escapeHtml(String(episode.id));
             const clickHandler = locked
                 ? `shakeLockedEpisode(this)`
-                : `window.tvApp.playEpisode('${episode.id}')`;
+                : `window.tvApp.playEpisode('${safeEpisodeId}')`;
 
             // Check if video was fully watched
             const isWatched = state.watchedVideos.includes(episode.id);
             const watchPercent = progress ? progress.percent : 0;
 
             return `
-                <div class="episode-item ${isCompleted ? 'completed' : ''} ${isWatched ? 'is-watched' : ''} ${lockedClass}" data-video-id="${episode.id}">
+                <div class="episode-item ${isCompleted ? 'completed' : ''} ${isWatched ? 'is-watched' : ''} ${lockedClass}" data-video-id="${safeEpisodeId}">
                     <div class="episode-number">${toKu(index + 1)}</div>
 
                     <div class="episode-thumbnail">
-                        <img src="${episode.thumbnail || ''}" alt="${episode.title}" loading="lazy" decoding="async" width="240" height="135" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
+                        <img src="${escapeHtml(episode.thumbnail || '')}" alt="${escapeHtml(episode.title)}" loading="lazy" decoding="async" width="240" height="135" onerror="this.style.display='none'; this.parentElement.classList.add('no-image');">
                         <div class="episode-fallback-icon"><i class="fas fa-film"></i></div>
                         ${locked ? `
                             <div class="locked-badge">
@@ -494,13 +495,13 @@
                     </div>
 
                     <div class="episode-info">
-                        <h4 class="episode-title">${episode.title}</h4>
+                        <h4 class="episode-title">${escapeHtml(episode.title)}</h4>
                         ${locked ? `
                             <p class="episode-description" style="color: #ffc107;">
-                                <i class="fas fa-clock"></i> دێ ڤەببێت دوور <span data-countdown="${episode.scheduled_at}">${formatScheduledTime(episode.scheduled_at)}</span>
+                                <i class="fas fa-clock"></i> دێ ڤەببێت دوور <span data-countdown="${escapeHtml(episode.scheduled_at || '')}">${formatScheduledTime(episode.scheduled_at)}</span>
                             </p>
                         ` : episode.description ? `
-                            <p class="episode-description">${episode.description}</p>
+                            <p class="episode-description">${escapeHtml(episode.description)}</p>
                         ` : ''}
                         <div class="episode-meta">
                             ${episode.duration ? `<span><i class="fas fa-clock"></i> ${formatEpisodeDuration(episode.duration)}</span>` : ''}
@@ -510,7 +511,7 @@
 
                     <div class="episode-actions" onclick="event.stopPropagation()">
                         <button class="episode-action-btn"
-                                onclick="window.tvApp.shareEpisode('${episode.id}', '${episode.title.replace(/'/g, "\\'")}')"
+                                onclick="window.tvApp.shareEpisode('${safeEpisodeId}', '${escapeHtml(episode.title)}')"
                                 title="پارڤەکرن">
                             <i class="fas fa-share-alt"></i>
                         </button>
@@ -914,11 +915,11 @@
                     const isOwn = comment.user_id === userId;
 
                     return `
-                        <div class="comment-item ${isOwn ? 'own-comment' : ''}" data-comment-id="${comment.id}">
-                            <img src="${avatar}" alt="${name}" class="comment-avatar">
+                        <div class="comment-item ${isOwn ? 'own-comment' : ''}" data-comment-id="${escapeHtml(String(comment.id))}">
+                            <img src="${escapeHtml(avatar)}" alt="${escapeHtml(name)}" class="comment-avatar">
                             <div class="comment-content">
                                 <div class="comment-header">
-                                    <span class="comment-author">${name}</span>
+                                    <span class="comment-author">${escapeHtml(name)}</span>
                                     <span class="comment-time">${timeAgo}</span>
                                 </div>
                                 <p class="comment-text">${escapeHtml(comment.content)}</p>
@@ -3444,11 +3445,11 @@
                             <span>هەموو</span>
                         </button>
                         ${speakers.map(speaker => `
-                            <button class="filter-item" onclick="filterBySheikh('${speaker.name}')" data-sheikh="${speaker.name}">
+                            <button class="filter-item" onclick="filterBySheikh(this.dataset.sheikh)" data-sheikh="${escapeHtml(speaker.name)}">
                                 ${speaker.thumbnail_url
-                                    ? `<img src="${speaker.thumbnail_url}" alt="${speaker.name}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`
+                                    ? `<img src="${escapeHtml(speaker.thumbnail_url)}" alt="${escapeHtml(speaker.name)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">`
                                     : '<i class="fas fa-user-tie"></i>'}
-                                <span>${speaker.name}</span>
+                                <span>${escapeHtml(speaker.name)}</span>
                             </button>
                         `).join('')}
                     `;
@@ -3604,8 +3605,8 @@
                 </div>
             `;
         } else {
-            resultsDiv.innerHTML = results.slice(0, 10).map(video => `
-                <div onclick="window.tvApp.playEpisode('${video.id}'); document.getElementById('searchModal').classList.remove('active');" style="
+            resultsDiv.innerHTML = results.slice(0, 10).map(video => { const safeVid = escapeHtml(String(video.id)); return `
+                <div onclick="window.tvApp.playEpisode('${safeVid}'); document.getElementById('searchModal').classList.remove('active');" style="
                     padding: 0.75rem 1rem;
                     border-bottom: 1px solid var(--border);
                     cursor: pointer;
@@ -3635,7 +3636,7 @@
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `; }).join('');
         }
     }
 
@@ -3705,8 +3706,8 @@
                 </div>
             `;
         } else {
-            searchResultsContainer.innerHTML = results.slice(0, 8).map(video => `
-                <div class="search-result-item" onclick="window.tvApp.playEpisode('${video.id}'); hideSearchResults();" style="
+            searchResultsContainer.innerHTML = results.slice(0, 8).map(video => { const safeVid2 = escapeHtml(String(video.id)); return `
+                <div class="search-result-item" onclick="window.tvApp.playEpisode('${safeVid2}'); hideSearchResults();" style="
                     padding: 0.75rem 1rem;
                     border-bottom: 1px solid var(--border);
                     cursor: pointer;
@@ -3734,7 +3735,7 @@
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `; }).join('');
         }
 
         searchResultsContainer.style.display = 'block';

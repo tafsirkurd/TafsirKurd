@@ -183,17 +183,18 @@ class CloudSyncManager {
             }
 
             // Restore all data to localStorage
-            if (data.current_surah) localStorage.setItem('currentSurah', data.current_surah.toString());
-            if (data.current_ayah) localStorage.setItem('currentAyah', data.current_ayah.toString());
-            if (data.scroll_position) localStorage.setItem('scrollPosition', data.scroll_position.toString());
+            // Use != null to correctly restore valid zero values (e.g. streak=0, scroll=0)
+            if (data.current_surah != null) localStorage.setItem('currentSurah', data.current_surah.toString());
+            if (data.current_ayah != null) localStorage.setItem('currentAyah', data.current_ayah.toString());
+            if (data.scroll_position != null) localStorage.setItem('scrollPosition', data.scroll_position.toString());
 
-            if (data.bookmarks) localStorage.setItem('bookmarks', JSON.stringify(data.bookmarks));
+            if (data.bookmarks != null) localStorage.setItem('bookmarks', JSON.stringify(data.bookmarks));
 
-            if (data.daily_goal) localStorage.setItem('dailyGoal', data.daily_goal.toString());
-            if (data.monthly_goal) localStorage.setItem('monthlyGoal', data.monthly_goal.toString());
-            if (data.reading_streak) localStorage.setItem('readingStreak', data.reading_streak.toString());
-            if (data.total_ayahs_read) localStorage.setItem('totalAyahsRead', data.total_ayahs_read.toString());
-            if (data.completed_surahs) localStorage.setItem('completedSurahs', JSON.stringify(data.completed_surahs));
+            if (data.daily_goal != null) localStorage.setItem('dailyGoal', data.daily_goal.toString());
+            if (data.monthly_goal != null) localStorage.setItem('monthlyGoal', data.monthly_goal.toString());
+            if (data.reading_streak != null) localStorage.setItem('readingStreak', data.reading_streak.toString());
+            if (data.total_ayahs_read != null) localStorage.setItem('totalAyahsRead', data.total_ayahs_read.toString());
+            if (data.completed_surahs != null) localStorage.setItem('completedSurahs', JSON.stringify(data.completed_surahs));
 
             if (data.reading_history) localStorage.setItem('readingHistory', JSON.stringify(data.reading_history));
 

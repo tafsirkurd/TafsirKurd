@@ -80,6 +80,25 @@
            (sec < 10 ? '0' : '') + sec;
   }
 
+  /**
+   * Format a prayer time string as 12-hour or 24-hour.
+   * @param {string}  timeStr — API time like "05:20" or "17:57 (PKT)"
+   * @param {boolean} use12h  — true → "5:20 AM", false → "05:20"
+   * @returns {string}
+   */
+  function formatTime(timeStr, use12h) {
+    var hm = timeStr.trim().split(' ')[0].split(':');
+    var h = parseInt(hm[0], 10);
+    var m = parseInt(hm[1], 10);
+    if (!use12h) {
+      return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+    }
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h === 0) h = 12;
+    return h + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
+  }
+
   window.PrayerLogic = {
     PRAYER_ORDER: PRAYER_ORDER,
     NOTIF_PRAYERS: NOTIF_PRAYERS,
@@ -87,7 +106,8 @@
     tomorrowBaghdad: tomorrowBaghdad,
     parseAsDate: parseAsDate,
     getNextPrayer: getNextPrayer,
-    formatCountdown: formatCountdown
+    formatCountdown: formatCountdown,
+    formatTime: formatTime
   };
 
 })();
