@@ -2,7 +2,7 @@
 <html dir="rtl" lang="ku">
 <head>
     <script src="/utils/theme-loader.js"></script>
-    <script src="/utils/translations.js?v=202602210001"></script>
+    <script src="/utils/translations.js?v=20260225"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="چوونە ژوورڤە بۆ تەفسیر کورد">
@@ -1124,8 +1124,8 @@
 
             // If we have a redirect param, go there
             if (redirect) {
-                // Handle relative paths
-                if (redirect.startsWith('/')) {
+                // Handle relative paths — /^\/[^/]/ rejects protocol-relative URLs like //evil.com
+                if (/^\/[^/]/.test(redirect)) {
                     window.location.href = redirect;
                 } else if (redirect === 'islamvoice') {
                     window.location.href = '/islamvoice.html';
@@ -1146,7 +1146,7 @@
 
             // Check stored redirect destination
             const storedRedirect = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination');
-            if (storedRedirect) {
+            if (storedRedirect && /^\/[^/]/.test(storedRedirect)) {
                 window.location.href = storedRedirect;
                 return;
             }
@@ -1873,8 +1873,8 @@ Press Ctrl+Shift+C to copy this report
             let redirectDestination = '/quran.html'; // Default
 
             // Check URL parameter first (highest priority)
-            if (redirect) {
-                // Use the explicit redirect parameter
+            // Validate to prevent open redirect — reject protocol-relative URLs like //evil.com
+            if (redirect && /^\/[^/]/.test(redirect)) {
                 redirectDestination = redirect;
             }
             // Check referrer if no explicit redirect parameter
@@ -2303,7 +2303,7 @@ Press Ctrl+Shift+C to copy this report
                 } else if (error.message.includes('Email not confirmed')) {
                     errorMessage = 'تکایە ئیمەیلا خوە پشتڕاستکە!<br><br>ئێمە لینکێن پشتڕاستکرنێ نارینە بۆ ئیمەیلا تە. چاڤێ ئیمەیلا خوە بکە و لینکێ کلیک بکە بۆ چالاککرنا ئەژمارێ.';
                 } else if (error.message) {
-                    errorMessage = error.message;
+                    errorMessage = escapeHtml(error.message);
                 }
 
                 showMessage(errorMessage, 'error');
@@ -2517,7 +2517,7 @@ Press Ctrl+Shift+C to copy this report
 
                 showMessage(
                     '✅ لینکا ڤەگەهاندنا پاسوۆردێ هاتە شاندن!<br><br>' +
-                    'چاڤێ ئیمەیلا خوە بکە بۆ <strong>' + email + '</strong> و لینکێ کلیک بکە بۆ ڤەگەهاندنا پاسوۆردا خوە.',
+                    'چاڤێ ئیمەیلا خوە بکە بۆ <strong>' + escapeHtml(email) + '</strong> و لینکێ کلیک بکە بۆ ڤەگەهاندنا پاسوۆردا خوە.',
                     'success'
                 );
                 document.getElementById('forgotEmail').value = '';

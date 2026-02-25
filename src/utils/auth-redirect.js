@@ -182,8 +182,8 @@
             // Store intended destination for after completing signup
             sessionStorage.setItem('post_signup_redirect', intendedDestination);
             window.location.href = status.redirectUrl;
-        } else if (intendedDestination && intendedDestination !== window.location.pathname) {
-            // Redirect to intended destination
+        } else if (intendedDestination && intendedDestination !== window.location.pathname && /^\/[^/]/.test(intendedDestination)) {
+            // Redirect to intended destination (validated to prevent open redirect)
             window.location.href = intendedDestination;
         }
         // Otherwise, stay on current page
@@ -217,9 +217,9 @@
             var storedRedirect = sessionStorage.getItem('post_signup_redirect') || '/quran.html';
             sessionStorage.removeItem('post_signup_redirect');
 
-            // Validate redirect URL - only allow relative paths starting with /
+            // Validate redirect URL — must be a relative path like /page (no protocol, no double-slash)
             var redirectUrl = '/quran.html';
-            if (storedRedirect && storedRedirect.startsWith('/') && !storedRedirect.startsWith('//')) {
+            if (storedRedirect && /^\/[^/]/.test(storedRedirect)) {
                 redirectUrl = storedRedirect;
             }
             window.location.href = redirectUrl;

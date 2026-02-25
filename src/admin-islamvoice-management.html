@@ -3241,7 +3241,10 @@
             const select = document.getElementById('youtube-import-series');
             select.innerHTML = '<option value="">Select series...</option>';
             allSeriesData.forEach(s => {
-                select.innerHTML += `<option value="${s.id}">${s.name_ku}</option>`;
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.name_ku;
+                select.appendChild(opt);
             });
 
             lucide.createIcons();

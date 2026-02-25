@@ -3,7 +3,7 @@
 <head>
     <script src="/utils/theme-loader.js"></script>
     <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co">
-  <script src="/utils/translations.js?v=202602210001"></script>
+  <script src="/utils/translations.js?v=20260225"></script>
     <script src="/utils/security.js"></script>
     <script src="/utils/scroll-position.js"></script>
     <meta charset="UTF-8">
@@ -851,9 +851,11 @@
                             fridayReminder: true
                         };
 
+                        const { data: { session: _s1 } } = await supabaseClient.auth.getSession();
+                        const _token1 = _s1?.access_token || '';
                         fetch('/user-data', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _token1 },
                             body: JSON.stringify({
                                 userId: user.sub,
                                 action: 'save',
@@ -899,9 +901,11 @@
                             emailReminders: false
                         };
 
+                        const { data: { session: _s2 } } = await supabaseClient.auth.getSession();
+                        const _token2 = _s2?.access_token || '';
                         fetch('/user-data', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _token2 },
                             body: JSON.stringify({
                                 userId: user.sub,
                                 action: 'save',

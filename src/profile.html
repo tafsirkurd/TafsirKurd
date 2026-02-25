@@ -3,7 +3,7 @@
 <head>
     <script src="/utils/theme-loader.js"></script>
     <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co">
-  <script src="/utils/translations.js?v=202602210001"></script>
+  <script src="/utils/translations.js?v=20260225"></script>
     <script src="/utils/security.js"></script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -1758,16 +1758,17 @@
                 // Bookmarks
                 if (data.bookmarks && data.bookmarks.length > 0) {
                     const bookmarksList = document.getElementById('bookmarksList');
-                    bookmarksList.innerHTML = data.bookmarks.slice(0, 5).map(b => `
-                        <div class="device-item">
-                            <div class="device-info">
-                                <div class="device-icon">📖</div>
-                                <div class="device-details">
-                                    <h4>سوورەت ${b.surah} - ئایەت ${b.ayah}</h4>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('');
+                    while (bookmarksList.firstChild) bookmarksList.removeChild(bookmarksList.firstChild);
+                    data.bookmarks.slice(0, 5).forEach(function(b) {
+                        const item = document.createElement('div'); item.className = 'device-item';
+                        const info = document.createElement('div'); info.className = 'device-info';
+                        const iconDiv = document.createElement('div'); iconDiv.className = 'device-icon'; iconDiv.textContent = '📖';
+                        const details = document.createElement('div'); details.className = 'device-details';
+                        const h4 = document.createElement('h4');
+                        h4.textContent = 'سوورەت ' + (parseInt(b.surah, 10) || 0) + ' - ئایەت ' + (parseInt(b.ayah, 10) || 0);
+                        details.appendChild(h4); info.appendChild(iconDiv); info.appendChild(details); item.appendChild(info);
+                        bookmarksList.appendChild(item);
+                    });
                 }
             }
         }

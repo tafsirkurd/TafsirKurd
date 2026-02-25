@@ -201,6 +201,8 @@
 
         (async () => { await window.adminAuth.checkAuth(); loadData(); loadSitemaps(); })();
 
+        function getAdminToken() { return sessionStorage.getItem('adminToken') || ''; }
+
         document.querySelectorAll('.date-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.date-tab').forEach(t => t.classList.remove('active'));
@@ -215,7 +217,7 @@
             try {
                 const response = await fetch('/search-console', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAdminToken()}` },
                     body: JSON.stringify({ action: 'performance', dateRange: currentDateRange })
                 });
                 const result = await response.json();
@@ -240,7 +242,7 @@
 
         async function loadSitemaps() {
             try {
-                const response = await fetch('/search-console', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'sitemaps' }) });
+                const response = await fetch('/search-console', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAdminToken()}` }, body: JSON.stringify({ action: 'sitemaps' }) });
                 const result = await response.json();
                 if (result.success && result.data.sitemap) {
                     renderTable('sitemaps-body', result.data.sitemap, s => '<div class="data-table-row"><div><a href="' + escapeHtml(s.path) + '" target="_blank" class="page-url">' + escapeHtml(s.path.replace('https://tafsirkurd.com', '')) + '</a></div><div>' + (s.lastSubmitted ? new Date(s.lastSubmitted).toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'}) : '-') + '</div><div>' + (s.lastDownloaded ? new Date(s.lastDownloaded).toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'}) : '-') + '</div><div><span class="status-badge">Success</span></div><div>' + (s.contents?.[0]?.submitted || '-') + '</div></div>');

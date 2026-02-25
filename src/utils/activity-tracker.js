@@ -8,13 +8,21 @@ class ActivityTracker {
 
     async track(type, data) {
         try {
+            // Attach Supabase session token so the server can verify identity
+            const authKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+            const authData = authKey ? JSON.parse(localStorage.getItem(authKey) || 'null') : null;
+            const accessToken = authData?.access_token || '';
+
             await fetch(this.endpoint, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(accessToken ? { 'Authorization': 'Bearer ' + accessToken } : {})
+                },
                 body: JSON.stringify({ type, data })
             });
         } catch (error) {
-            console.error('Activity tracking error:', error);
+            // Silently ignore tracking errors
         }
     }
 
@@ -130,11 +138,14 @@ class ActivityTracker {
         });
     }
 
-    // Helper: Get current user from Firebase
+    // Helper: Get current user from storage (app uses Supabase, not Firebase)
     getCurrentUser() {
-        if (typeof firebase !== 'undefined' && firebase.auth) {
-            return firebase.auth().currentUser;
-        }
+        try {
+            const sessionUser = JSON.parse(sessionStorage.getItem('session_user') || 'null');
+            if (sessionUser) return sessionUser;
+            const lsUser = JSON.parse(localStorage.getItem('user') || 'null');
+            if (lsUser) return lsUser;
+        } catch (e) {}
         return null;
     }
 

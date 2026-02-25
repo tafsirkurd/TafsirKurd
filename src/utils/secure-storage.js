@@ -72,7 +72,7 @@ class SecureStorage {
     /**
      * Save user data to all storage locations with redundancy
      */
-    async saveUser(userData) {
+    async saveUser(userData, _retryCount = 0) {
         if (!userData || !userData.email) {
             console.error('Invalid user data');
             return false;
@@ -106,11 +106,10 @@ class SecureStorage {
 
             // Verify all saves succeeded
             const verified = this.verifyAllStorages(userData);
-            if (!verified) {
+            if (!verified && _retryCount < 1) {
                 console.error('Storage verification failed, retrying...');
-                // Retry once
                 await new Promise(resolve => setTimeout(resolve, 100));
-                return this.saveUser(userData);
+                return this.saveUser(userData, _retryCount + 1);
             }
 
             return true;
@@ -301,11 +300,19 @@ class SecureStorage {
             // Clear sessionStorage
             sessionStorage.clear();
 
-            // Clear IndexedDB
+            // Clear IndexedDB — await deletion so it completes before returning
             if (this.db) {
-                const transaction = this.db.transaction(['userData'], 'readwrite');
-                const store = transaction.objectStore('userData');
-                store.delete('currentUser');
+                await new Promise((resolve) => {
+                    try {
+                        const transaction = this.db.transaction(['userData'], 'readwrite');
+                        const store = transaction.objectStore('userData');
+                        const request = store.delete('currentUser');
+                        request.onsuccess = () => resolve();
+                        request.onerror = () => resolve(); // resolve even on error to avoid hanging
+                    } catch (e) {
+                        resolve();
+                    }
+                });
             }
 
             return true;

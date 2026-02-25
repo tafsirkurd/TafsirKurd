@@ -51,8 +51,8 @@ async function checkAuth() {
         return false;
     }
 
-    // Get device fingerprint
-    const deviceFingerprint = window.deviceFingerprint ? window.deviceFingerprint.get() : null;
+    // Get device fingerprint (get() returns a Promise — must await)
+    const deviceFingerprint = window.deviceFingerprint ? await window.deviceFingerprint.get() : null;
 
     try {
         const response = await fetch('/admin-auth', {
@@ -122,7 +122,7 @@ async function checkAuth() {
 
 // Login function with device fingerprinting
 async function login(email, password) {
-    const deviceFingerprint = window.deviceFingerprint ? window.deviceFingerprint.get() : null;
+    const deviceFingerprint = window.deviceFingerprint ? await window.deviceFingerprint.get() : null;
 
     try {
         const response = await fetch('/admin-auth', {

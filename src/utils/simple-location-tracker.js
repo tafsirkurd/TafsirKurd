@@ -2,56 +2,35 @@
 // Server does all the work: IP detection, location lookup, database save
 
 (async function() {
-    console.log('🌍 Simple Location Tracker: Starting...');
-
-    // Wait a bit for auth to load
+    // Wait for auth to load
     await new Promise(resolve => setTimeout(resolve, 3000));
 
     try {
-        // Try to get user ID from localStorage (works even if Supabase CDN fails)
-        const authData = localStorage.getItem('sb-sroaorqiuocygfzggbax-auth-token');
+        // Dynamically find the Supabase auth token key (avoids hardcoding project ID)
+        const authKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+        const authData = authKey ? localStorage.getItem(authKey) : null;
 
-        if (!authData) {
-            console.log('👤 No auth data found, skipping location tracking');
-            return;
-        }
+        if (!authData) return;
 
         const parsed = JSON.parse(authData);
         const userId = parsed?.user?.id;
-        const userEmail = parsed?.user?.email;
+        const accessToken = parsed?.access_token;
 
-        if (!userId) {
-            console.log('👤 No user ID found, skipping location tracking');
-            return;
-        }
+        if (!userId || !accessToken) return;
 
-        console.log('✅ Found user ID:', userId);
-        console.log('📍 Sending location tracking request...');
-
-        // Send to Cloudflare function - it does everything
+        // Send to Cloudflare function — pass auth token so server can verify identity
         const response = await fetch('/track-location', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + accessToken
             },
-            body: JSON.stringify({
-                userId: userId,
-                userEmail: userEmail
-            })
+            body: JSON.stringify({ userId: userId })
         });
 
-        const result = await response.json();
-
-        if (result.success) {
-            console.log('✅ Location tracked successfully!');
-            if (result.location) {
-                console.log('📍 Your location:', result.location);
-            }
-        } else {
-            console.error('❌ Location tracking failed:', result.error);
-        }
+        await response.json();
 
     } catch (error) {
-        console.error('❌ Location tracker error:', error);
+        // Silently ignore tracking errors
     }
 })();

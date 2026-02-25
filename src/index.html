@@ -23,7 +23,7 @@
   </script>
   <!-- Defer non-critical scripts -->
   <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co">
-  <script src="/utils/translations.js?v=202602210001" defer></script>
+  <script src="/utils/translations.js?v=20260225" defer></script>
   <script src="/utils/scroll-position.js" defer></script>
   <meta name="description" content="TafsirKurd (تەفسیر کورد) - پلاتفۆرمەکا کوردی بۆ خویندن و تەفسیرا قورئانا پیرۆز ب زمانی کوردی. Kurdish Quran Tafsir platform with translation and Islamic video content.">
   <meta name="keywords" content="TafsirKurd, tafsirkurd, Tafsir Kurd, تەفسیر کورد, تەفسیرا قورئانا پیرۆز, تەفسیرا کوردی, تەفسیر بادینی, قورئان ب کوردی, Kurdish Quran, Quran Kurdish translation, tafsir kurdish">
@@ -6674,9 +6674,11 @@ function convertToEmbedUrl(url) {
             return `https://www.instagram.com/p/${postMatch[1]}/embed/?cr=1&v=14&rd=https%3A%2F%2Ftafsirkurd.com`;
         }
 
-        return url;
+        // Only return https:// URLs for iframe src safety
+        if (typeof url === 'string' && url.startsWith('https://')) return url;
+        return '';
     } catch {
-        return url;
+        return '';
     }
 }
 
@@ -6957,10 +6959,10 @@ async function loadFeatures() {
             ` + data.map(feature => `
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <i class="${feature.icon_class}"></i>
+                        <i class="${sanitizeHtml(feature.icon_class)}"></i>
                     </div>
-                    <h3 class="feature-title">${feature.title}</h3>
-                    <p class="feature-desc">${feature.description}</p>
+                    <h3 class="feature-title">${sanitizeHtml(feature.title)}</h3>
+                    <p class="feature-desc">${sanitizeHtml(feature.description)}</p>
                 </div>
             `).join('');
         }
@@ -6989,17 +6991,40 @@ async function loadScheduleItems() {
             // Filter out "ناڤەڕۆکا ئاسایی" card
             const filteredData = data.filter(item => !item.topic.includes('ناڤەڕۆکا ئاسایی'));
 
-            container.innerHTML = filteredData.map(item => `
-                <div class="schedule-card">
-                    <div class="schedule-day">
-                        <i class="${item.icon_class}"></i>
-                        ${item.day_label}
-                    </div>
-                    <div class="schedule-time">${item.time_label}</div>
-                    <div class="schedule-topic">${item.topic}</div>
-                    <div class="schedule-desc">${item.description}</div>
-                </div>
-            `).join('');
+            const schedFrag = document.createDocumentFragment();
+            filteredData.forEach(function(item) {
+                const card = document.createElement('div');
+                card.className = 'schedule-card';
+
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'schedule-day';
+                const dayIcon = document.createElement('i');
+                dayIcon.className = item.icon_class || '';
+                const dayLabel = document.createElement('span');
+                dayLabel.textContent = item.day_label || '';
+                dayDiv.appendChild(dayIcon);
+                dayDiv.appendChild(dayLabel);
+
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'schedule-time';
+                timeDiv.textContent = item.time_label || '';
+
+                const topicDiv = document.createElement('div');
+                topicDiv.className = 'schedule-topic';
+                topicDiv.textContent = item.topic || '';
+
+                const descDiv = document.createElement('div');
+                descDiv.className = 'schedule-desc';
+                descDiv.textContent = item.description || '';
+
+                card.appendChild(dayDiv);
+                card.appendChild(timeDiv);
+                card.appendChild(topicDiv);
+                card.appendChild(descDiv);
+                schedFrag.appendChild(card);
+            });
+            while (container.firstChild) container.removeChild(container.firstChild);
+            container.appendChild(schedFrag);
         }
     } catch (error) {
         console.error('Failed to load schedule:', error);
@@ -7023,16 +7048,38 @@ async function loadSocialStats() {
             if (!container) return;
 
             // Build HTML from database
-            container.innerHTML = data.map(stat => `
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="${stat.icon_class}"></i>
-                    </div>
-                    <div class="stat-number" data-target="${stat.stat_value}">٠</div>
-                    <div class="stat-unit">${stat.stat_unit}</div>
-                    <div class="stat-label">${stat.stat_label}</div>
-                </div>
-            `).join('');
+            const statFrag = document.createDocumentFragment();
+            data.forEach(function(stat) {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+
+                const iconDiv = document.createElement('div');
+                iconDiv.className = 'stat-icon';
+                const icon = document.createElement('i');
+                icon.className = stat.icon_class || '';
+                iconDiv.appendChild(icon);
+
+                const numDiv = document.createElement('div');
+                numDiv.className = 'stat-number';
+                numDiv.setAttribute('data-target', String(parseInt(stat.stat_value, 10) || 0));
+                numDiv.textContent = '٠';
+
+                const unitDiv = document.createElement('div');
+                unitDiv.className = 'stat-unit';
+                unitDiv.textContent = stat.stat_unit || '';
+
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'stat-label';
+                labelDiv.textContent = stat.stat_label || '';
+
+                card.appendChild(iconDiv);
+                card.appendChild(numDiv);
+                card.appendChild(unitDiv);
+                card.appendChild(labelDiv);
+                statFrag.appendChild(card);
+            });
+            while (container.firstChild) container.removeChild(container.firstChild);
+            container.appendChild(statFrag);
         }
     } catch (error) {
         console.error('Failed to load social stats:', error);

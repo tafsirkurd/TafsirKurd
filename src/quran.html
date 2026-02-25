@@ -16,7 +16,7 @@
     </script>
     <!-- Defer all non-critical scripts -->
     <script src="/utils/production-mode.js" defer></script>
-    <script src="/utils/translations.js?v=202602210001" defer></script>
+    <script src="/utils/translations.js?v=20260225" defer></script>
     <script src="/utils/secure-storage.js" defer></script>
     <script src="/utils/cloud-sync.js" defer></script>
     <!-- Disabled: Auto-restoration removed - always start at homepage -->
@@ -9584,9 +9584,11 @@
 
                 const localData = JSON.parse(saved);
 
+                const { data: { session: _dbSession } } = await supabaseClient.auth.getSession();
+                const _dbToken = _dbSession?.access_token || '';
                 await fetch('/user-data', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _dbToken },
                     body: JSON.stringify({
                         userId: currentUser.sub,
                         action: 'save',
@@ -9604,9 +9606,11 @@
             if (!isUserAuthenticated || !currentUser) return null;
 
             try {
+                const { data: { session: _loadSession } } = await supabaseClient.auth.getSession();
+                const _loadToken = _loadSession?.access_token || '';
                 const response = await fetch('/user-data', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _loadToken },
                     body: JSON.stringify({
                         userId: currentUser.sub,
                         action: 'load'
