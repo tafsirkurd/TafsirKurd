@@ -495,6 +495,7 @@ function _tabHash(name){
 window.App={};
 App.tab=function(name){
   if(name===S.tab&&!S.surah)return;
+  haptic([8]);
   if(S.surah&&name==='quran'){App.backToList();return}
   S.tabHistory.push(S.tab);
   S.tab=name;
