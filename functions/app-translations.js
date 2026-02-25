@@ -53,13 +53,18 @@ export async function onRequest(context) {
             });
         }
 
-        // Fetch all translations for this platform (paginated — Supabase returns max 1000 rows)
+        // Fetch ALL translations across every page/category (paginated — Supabase max 1000/batch).
+        // We intentionally do NOT filter by `page` here: the admin panel stores keys under
+        // page values like 'android', 'index', 'bookmarks', 'goals', 'islamvoice', etc.
+        // Filtering by platform meant 642/1000 records were never returned, so admin edits
+        // to those keys never reached the app. All keys share one Kurdish language — every
+        // client receives everything and the i18n system merges on top of kmr.json.
         const BATCH = 1000;
         let rows = [];
         let offset = 0;
         while (true) {
             const res = await fetch(
-                `${supabaseUrl}/rest/v1/kurdish_translations?page=eq.${platform}&select=key_id,kurdish_text&limit=${BATCH}&offset=${offset}`,
+                `${supabaseUrl}/rest/v1/kurdish_translations?select=key_id,kurdish_text&limit=${BATCH}&offset=${offset}`,
                 {
                     headers: {
                         'apikey': supabaseKey,
