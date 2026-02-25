@@ -2763,6 +2763,13 @@
                 }
             });
 
+            // Auto-save when the admin clicks/tabs away — no need to press Enter
+            ta.addEventListener('blur', function() {
+                if (quickEditDirty[t.id] !== undefined) {
+                    saveSingleQuickEdit(t.id, this.value);
+                }
+            });
+
             row.appendChild(ta);
 
             // Page / category badge
@@ -2807,21 +2814,28 @@
 
                 logChange('edit', { key_id: item.key_id, old_text: oldText, new_text: value, page: item.page });
                 item.kurdish_text = value;
-                // Only clear dirty if no new change was typed while this save was in flight.
-                // If quickEditDirty[id] changed (admin typed something else during the await),
-                // keep it dirty so the new value still gets saved.
+
                 var pendingNew = quickEditDirty[id];
+                var hasPending = pendingNew !== undefined && pendingNew !== value;
                 liveRow = document.getElementById('row-' + id);
-                if (pendingNew === value || pendingNew === undefined) {
+                if (!hasPending) {
                     delete quickEditDirty[id];
                     if (liveRow) liveRow.classList.remove('qe-dirty');
                 }
-                // Flash saved indicator regardless
                 if (liveRow) {
                     liveRow.classList.add('qe-saved');
                     setTimeout(function() { var r = document.getElementById('row-' + id); if (r) r.classList.remove('qe-saved'); }, 700);
                 }
                 updateQeBar();
+
+                if (hasPending) {
+                    // New value typed while save was in flight — auto-save it immediately.
+                    // Delete _qeSaving first so the recursive call isn't blocked.
+                    delete _qeSaving[id];
+                    if (liveRow) liveRow.style.opacity = '';
+                    saveSingleQuickEdit(id, pendingNew);
+                    return; // skip focusNextQeRow — stay on this row
+                }
             } catch (err) {
                 showToast('Save failed: ' + err.message);
             } finally {
