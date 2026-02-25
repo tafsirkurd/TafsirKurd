@@ -488,8 +488,8 @@
     var LN = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications;
     var granted = false;
     if (LN) {
-      var result = await LN.requestPermissions().catch(function() { return { granted: 'denied' }; });
-      granted = result.granted === 'granted';
+      var result = await LN.requestPermissions().catch(function() { return { display: 'denied' }; });
+      granted = result.display === 'granted';
       if (!granted) {
         setAthan(false);
         var masterTog = document.querySelector('.prayer-master-toggle .toggle');
