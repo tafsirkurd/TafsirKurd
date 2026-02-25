@@ -28,6 +28,8 @@
   "prayer.retry": "دووباره هەوڵبدە",
   "prayer.notif_title": "کاتا نوێژ",
   "prayer.notif_body": "کاتا ${prayer} گهیشتە ${city}",
+  "prayer.settings_title": "ڕێکخستنێن نوێژ",
+  "prayer.format_label": "شێوازا کات",
 
   "header.bookmarks": "نیشانکرین",
   "header.goals": "ئارمانج",

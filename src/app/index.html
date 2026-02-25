@@ -673,30 +673,50 @@ body{background:var(--bg);color:var(--text)}
 .repeat-status-stop{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem}
 
 /* ===== PRAYER TIMES ===== */
-.prayer-selectors{padding:12px 16px 0;display:flex;flex-direction:column;gap:10px}
-.prayer-city-seg{display:flex;border:1px solid var(--border2);border-radius:var(--r-m);overflow:hidden}
-.prayer-city-btn{flex:1;padding:8px 0;font-size:.7rem;text-align:center;background:none;color:var(--text2);border:none;cursor:pointer;transition:background .2s,color .2s;font-family:inherit}
-.prayer-city-btn.on{background:var(--accent);color:var(--accent-t)}
-.prayer-method-sel{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-m);background:var(--bg2);color:var(--text);font-size:.85rem;font-family:inherit;outline:none}
-.prayer-dates{padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
-.prayer-date-greg{font-size:.82rem;color:var(--text2)}
-.prayer-date-hijri{font-size:.82rem;color:var(--text3)}
-.prayer-next-card{margin:0 16px 8px;background:var(--accent);color:var(--accent-t);border-radius:var(--r-l);padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
-.prayer-next-name{font-size:1rem;font-weight:600}
-.prayer-next-countdown{font-size:1.3rem;font-weight:700;letter-spacing:.04em;font-variant-numeric:tabular-nums;direction:ltr}
-.prayer-list{padding:0 16px;display:flex;flex-direction:column;gap:2px;margin-bottom:4px}
-.prayer-item{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-radius:var(--r-m);background:var(--bg2)}
-.prayer-item--next{background:var(--surface-h);border:1px solid var(--border2)}
-.prayer-item-name{font-size:.95rem;color:var(--text)}
-.prayer-item-time{font-size:.95rem;color:var(--text2);font-variant-numeric:tabular-nums;direction:ltr}
-.prayer-item--next .prayer-item-name,.prayer-item--next .prayer-item-time{color:var(--text);font-weight:600}
-.prayer-notif-section{padding:8px 16px 32px}
-.prayer-notif-title{font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 6px}
+/* Dark header card */
+.prayer-hdr-card{background:linear-gradient(160deg,#111 0%,#2a2a2a 100%);padding:24px 20px 20px;position:relative;overflow:hidden}
+.prayer-hdr-card::after{content:'\f678';font-family:'Font Awesome 5 Free';font-weight:900;font-size:200px;position:absolute;left:-20px;bottom:-50px;opacity:.05;color:#fff;line-height:1;pointer-events:none}
+.prayer-hdr-city{font-size:2rem;font-weight:700;color:#fff;line-height:1.1;margin-bottom:4px}
+.prayer-hdr-date-greg{font-size:.82rem;color:rgba(255,255,255,.65);margin-bottom:2px}
+.prayer-hdr-date-hijri{font-size:.78rem;color:rgba(255,255,255,.45)}
+.prayer-hdr-countdown{margin-top:18px}
+.prayer-hdr-cd-label{font-size:.72rem;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+.prayer-hdr-cd-val{font-size:2.8rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.02em;direction:ltr;line-height:1}
+/* Prayer 2-col grid */
+.prayer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 14px 6px}
+.prayer-grid-card{background:var(--bg2);border-radius:var(--r-l);padding:16px 14px;display:flex;flex-direction:column;gap:6px;border:1px solid transparent;transition:all .2s}
+.prayer-grid-card--next{background:var(--surface-h);border-color:var(--border2)}
+.prayer-grid-name{font-size:.78rem;color:var(--text3)}
+.prayer-grid-card--next .prayer-grid-name{color:var(--text2)}
+.prayer-grid-time{font-size:1.5rem;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;direction:ltr;line-height:1}
+.prayer-grid-card--next .prayer-grid-time{color:var(--accent)}
+/* Settings overlay / sheet */
+.prayer-settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:flex-end}
+.prayer-settings-overlay.open{display:flex}
+.prayer-settings-sheet{width:100%;background:var(--bg);border-radius:20px 20px 0 0;max-height:82vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,0)}
+.prayer-settings-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:1}
+.prayer-settings-title{font-size:1rem;font-weight:600;color:var(--text)}
+.prayer-settings-close{background:var(--bg2);border:none;color:var(--text2);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem}
+.prayer-settings-section-label{font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:14px 20px 8px}
+/* City grid in settings */
+.prayer-city-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px}
+.prayer-city-grid-btn{padding:10px 8px;border:1px solid var(--border);border-radius:var(--r-m);background:var(--bg2);color:var(--text2);font-size:.82rem;text-align:center;cursor:pointer;font-family:inherit;transition:all .15s}
+.prayer-city-grid-btn.on{background:var(--accent);color:var(--accent-t);border-color:var(--accent)}
+/* Format toggle in settings */
+.prayer-fmt-wrap{padding:0 16px}
+.prayer-fmt-seg{display:flex;border:1px solid var(--border2);border-radius:var(--r-m);overflow:hidden;max-width:120px}
+.prayer-fmt-btn{flex:1;padding:9px 0;font-size:.82rem;text-align:center;background:none;color:var(--text2);border:none;cursor:pointer;font-family:inherit;transition:background .2s,color .2s}
+.prayer-fmt-btn.on{background:var(--accent);color:var(--accent-t)}
+/* Athan toggles in settings */
+.prayer-settings-athan{padding:0 16px}
 .prayer-per-toggles{transition:opacity .2s}
 .prayer-per-toggles--dim{opacity:.4;pointer-events:none}
-.prayer-toggle-row{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-radius:var(--r-m);background:var(--bg2);margin-bottom:2px}
+.prayer-toggle-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--border)}
+.prayer-toggle-row:last-child{border-bottom:none}
 .prayer-toggle-label{font-size:.9rem;color:var(--text)}
-.prayer-status{padding:60px 16px;text-align:center;color:var(--text3);font-size:.95rem}
+.prayer-settings-spacer{height:24px}
+/* Status / error */
+.prayer-status{padding:80px 16px;text-align:center;color:var(--text3);font-size:.95rem}
 .prayer-error{color:var(--danger)}
 .prayer-retry-btn{margin-top:16px;padding:10px 24px;border-radius:var(--r-full);background:var(--accent);color:var(--accent-t);border:none;font-size:.9rem;cursor:pointer;font-family:inherit}
 </style>
@@ -803,7 +823,10 @@ body{background:var(--bg);color:var(--text)}
 <section class="panel" id="panelPrayer" data-tab="prayer">
   <div class="hdr">
     <div class="hdr-title"><i class="fas fa-mosque"></i> <span data-i18n="header.prayer">کاتا نوێژ</span></div>
-    <button class="hdr-btn" onclick="PrayerUI.refresh()" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+    <div style="display:flex;gap:4px">
+      <button class="hdr-btn" onclick="PrayerUI.refresh()" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+      <button class="hdr-btn" onclick="PrayerUI.openSettings()" title="Settings"><i class="fas fa-sliders-h"></i></button>
+    </div>
   </div>
   <div id="prayerContent" class="panel-scroll"></div>
 </section>
@@ -879,8 +902,8 @@ body{background:var(--bg);color:var(--text)}
   <button class="tab-item" data-tab="islamvoice" onclick="App.tab('islamvoice')"><i class="fas fa-video"></i><span data-i18n="tabs.video" data-t="android_span_13">ڤیدیۆ</span></button>
   <button class="tab-item" data-tab="goals" onclick="App.tab('goals')"><i class="fas fa-bullseye"></i><span data-i18n="tabs.goals" data-t="android_span_14">ئارمانج</span></button>
   <button class="tab-item" data-tab="bookmarks" onclick="App.tab('bookmarks')"><i class="fas fa-bookmark"></i><span data-i18n="tabs.bookmarks" data-t="android_span_15">نیشانەکری</span></button>
-  <button class="tab-item" data-tab="settings" onclick="App.tab('settings')"><i class="fas fa-cog"></i><span data-i18n="tabs.settings" data-t="android_span_16">ڕێکخستن</span></button>
   <button class="tab-item" data-tab="prayer" onclick="App.tab('prayer')"><i class="fas fa-mosque"></i><span data-i18n="tabs.prayer">نوێژ</span></button>
+  <button class="tab-item" data-tab="settings" onclick="App.tab('settings')"><i class="fas fa-cog"></i><span data-i18n="tabs.settings" data-t="android_span_16">ڕێکخستن</span></button>
 </nav>
 
 <!-- COPY MODAL -->

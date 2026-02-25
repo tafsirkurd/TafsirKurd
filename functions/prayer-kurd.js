@@ -5,19 +5,38 @@
  * Returns: { city, year, month, days: { "1": { Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha, hijri } } }
  *
  * HTML structure (Shadcn UI <table> with long class names per <td>):
- *   <td class="...hidden md:table-cell..."><div><span>01 - شوبات - 2026</span></div></td>
+ *   <td class="...hidden md:table-cell...<div><span>01 - شوبات - 2026</span></div></td>
  *   <td class="...hidden md:table-cell...">13ی شعبان 1447</td>
  *   <td ...>05:39</td> <td ...>07:10</td> ... (6 prayer times)
  *
  * Each <td> has ~165 chars of class attributes, so window must be ≥1500.
  * Times are 12h without AM/PM; converted via sequential-order detection.
+ *
+ * CITY_URL values are the URL-encoded path segments used by amozhgary.tv.
+ * They are inserted directly into the URL (no additional encodeURIComponent).
  */
 
-const CITY_KURDISH = {
-  Duhok:        '\u062f\u0647\u06c6\u06a9',
-  Erbil:        '\u0647\u06d5\u0648\u0644\u06ce\u0631',
-  Sulaymaniyah: '\u0633\u0644\u06ce\u0645\u0627\u0646\u06cc',
-  Zakho:        '\u0632\u0627\u062e\u06c6'
+const CITY_URL = {
+  Sulaymaniyah:  '%D8%B3%D9%84%DB%8E%D9%85%D8%A7%D9%86%DB%8C',
+  Erbil:         '%D9%87%DB%95%D9%88%D9%84%DB%8E%D8%B1',
+  Duhok:         '%D8%AF%D9%87%DB%86%DA%A9',
+  Kirkuk:        '%DA%A9%DB%95%D8%B1%DA%A9%D9%88%DA%A9',
+  Halabja:       '%D9%87%DB%95%DA%B5%DB%95%D8%A8%D8%AC%DB%95',
+  Kfry:          '%DA%A9%D9%81%D8%B1%DB%8C',
+  Rania:         '%DA%95%D8%A7%D9%86%DB%8C%DB%95',
+  Koya:          '%DA%A9%DB%86%DB%8C%DB%95',
+  Qaladze:       '%D9%82%DB%95%DA%B5%D8%A7%D8%AF%D8%B2%DB%8E',
+  Zakho:         '%D8%B2%D8%A7%D8%AE%DB%86',
+  Bardarash:     '%D8%A8%DB%95%D8%B1%D8%AF%DB%95%DA%95%DB%95%D8%B4',
+  Mosul:         '%D9%85%D9%88%D8%B3%D9%84%D8%B5',
+  Darbandikhan:  '%D8%AF%DB%95%D8%B1%D8%A8%DB%95%D9%86%D8%AF%DB%8C%D8%AE%D8%A7%D9%86',
+  Kalar:         '%DA%A9%DB%95%D9%84%D8%A7%D8%B1',
+  Akre:          '%D8%A6%D8%A7%DA%A9%D8%B1%DB%8C',
+  Daquq:         '%D8%AF%D8%A7%D9%82%D9%88%D9%82',
+  Makhmur:       '%D9%85%DB%95%D8%AE%D9%85%D9%88%D8%B1',
+  Mandali:       '%D9%85%DB%95%D9%86%D8%AF%DB%95%D9%84%DB%8C',
+  Qarahanjir:    '%D9%82%DB%95%D8%B1%DB%95%D9%87%DB%95%D9%86%D8%AC%DB%8C%D8%B1',
+  DuzKhormatou:  '%D8%AF%D9%88%D8%B2%20%D8%AE%D9%88%D8%B1%D9%85%D8%A7%D8%AA%D9%88%D9%88',
 };
 
 export async function onRequest(context) {
@@ -30,12 +49,13 @@ export async function onRequest(context) {
     const month = parseInt(url.searchParams.get('month') || '0');
     const year  = parseInt(url.searchParams.get('year')  || '0');
 
-    const kurdishName = CITY_KURDISH[city];
-    if (!kurdishName || month < 1 || month > 12 || !year) {
+    const cityPath = CITY_URL[city];
+    if (!cityPath || month < 1 || month > 12 || !year) {
       return resp({ error: 'Invalid params' }, 400);
     }
 
-    const pageUrl = 'https://amozhgary.tv/bang/' + encodeURIComponent(kurdishName) + '?month=' + month;
+    // cityPath is already percent-encoded — do NOT wrap with encodeURIComponent
+    const pageUrl = 'https://amozhgary.tv/bang/' + cityPath + '?month=' + month;
     const res = await fetch(pageUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
     if (!res.ok) return resp({ error: 'upstream ' + res.status }, 502);
 
@@ -63,7 +83,7 @@ function parseMonthlyTimes(html) {
     // plus the closing tags and Hijri cell (~230 chars) before the times start.
     const after  = html.slice(pos + m[0].length, pos + m[0].length + 1500);
     const raw    = [];
-    const tRe    = />(\d{2}:\d{2})</g;
+    const tRe    = />(\\d{2}:\\d{2})</g;
     let tm;
     while ((tm = tRe.exec(after)) !== null && raw.length < 6) raw.push(tm[1]);
 
