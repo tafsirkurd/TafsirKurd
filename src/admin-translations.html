@@ -2807,11 +2807,17 @@
 
                 logChange('edit', { key_id: item.key_id, old_text: oldText, new_text: value, page: item.page });
                 item.kurdish_text = value;
-                delete quickEditDirty[id];
-                // Re-query row since DOM may have re-rendered during await
+                // Only clear dirty if no new change was typed while this save was in flight.
+                // If quickEditDirty[id] changed (admin typed something else during the await),
+                // keep it dirty so the new value still gets saved.
+                var pendingNew = quickEditDirty[id];
                 liveRow = document.getElementById('row-' + id);
+                if (pendingNew === value || pendingNew === undefined) {
+                    delete quickEditDirty[id];
+                    if (liveRow) liveRow.classList.remove('qe-dirty');
+                }
+                // Flash saved indicator regardless
                 if (liveRow) {
-                    liveRow.classList.remove('qe-dirty');
                     liveRow.classList.add('qe-saved');
                     setTimeout(function() { var r = document.getElementById('row-' + id); if (r) r.classList.remove('qe-saved'); }, 700);
                 }
@@ -2859,11 +2865,16 @@
             saveBtn.disabled = true;
             saveBtn.querySelector('span').textContent = 'Saving...';
 
+            // Snapshot the values we are about to save BEFORE the async work.
+            // This lets us detect if the admin typed a new value during the await.
+            var snapshot = {};
+            ids.forEach(function(id) { snapshot[id] = quickEditDirty[id]; });
+
             var saved = 0, failed = 0;
             var results = await Promise.allSettled(ids.map(function(id) {
                 var item = allTranslations.find(function(t) { return String(t.id) === String(id); });
                 if (!item) return Promise.resolve();
-                var newText = quickEditDirty[id];
+                var newText = snapshot[id];
                 var oldText = item.kurdish_text; // capture before mutation
                 return supabase
                     .from('kurdish_translations')
@@ -2876,10 +2887,14 @@
                     });
             }));
 
-            // Only clear items that actually saved — failed ones stay dirty so user can retry
+            // Only clear dirty if value hasn't changed since we started saving.
+            // If the admin typed something new during the await, keep it dirty.
             results.forEach(function(r, i) {
-                if (r.status === 'fulfilled') { delete quickEditDirty[ids[i]]; saved++; }
-                else failed++;
+                if (r.status === 'fulfilled') {
+                    var id = ids[i];
+                    if (quickEditDirty[id] === snapshot[id]) delete quickEditDirty[id];
+                    saved++;
+                } else failed++;
             });
 
             renderPage();
