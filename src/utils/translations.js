@@ -385,47 +385,24 @@
         return isLoaded;
     }
 
-    // ── Sync cache apply: runs during DOMContentLoaded (before first paint)
-    //    so returning visitors see translated text with zero flash.
-    (function syncApplyCache() {
-        try {
-            var raw = localStorage.getItem(CACHE_KEY);
-            if (!raw) return;
-            var cached = JSON.parse(raw);
-            var map = cached && cached.translations;
-            if (!map) return;
-            function applySync() {
-                document.querySelectorAll('[data-t]').forEach(function(el) {
-                    var v = map[el.getAttribute('data-t')];
-                    if (v !== undefined) el.textContent = v;
-                });
-            }
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', applySync, { once: true });
-            } else {
-                applySync();
-            }
-        } catch (e) { /* silent */ }
-    })();
-
     // ── Eager fetch: start loading config + translations immediately,
     //    before DOMContentLoaded, so data is ready by the time DOM renders.
+    //    Always awaits a fresh Supabase fetch before resolving — no stale
+    //    cache ever gets painted to the DOM.
     const _eagerPromise = (async function() {
         try {
             await loadConfig();
-            // Apply cache instantly if available (serves page in <5ms)
-            if (loadFromCache()) {
-                isLoaded = true;
-                // Always re-apply after background refresh, not just on change,
-                // to ensure data-t elements pick up any admin edits reliably.
-                fetchFromSupabase().then(function() {
-                    autoApply();
-                });
-                return;
+            // Populate JS translations from cache so window.t() works while
+            // the fresh fetch is in flight, but do NOT apply to DOM yet.
+            const hadCache = loadFromCache();
+            if (!hadCache) {
+                // First-ever visit: seed textToKey reverse-lookup from bulk list.
+                await loadBulkTranslations();
             }
-            await fetchFromSupabase();
-            await loadBulkTranslations();
             isLoaded = true;
+            // Always wait for the live Supabase result before resolving so
+            // onReady's autoApply is guaranteed to use fresh admin edits.
+            await fetchFromSupabase();
         } catch (e) {
             // Non-blocking — page still renders with original text
         }
@@ -437,12 +414,11 @@
             autoApply();
 
             // Live polling: re-fetch every 5s when tab is visible.
-            // Always run autoApply after fetch — not just on detected change —
-            // so data-t elements are guaranteed to show latest admin edits.
+            // Only re-apply when data actually changed to avoid unnecessary DOM writes.
             setInterval(function() {
                 if (document.visibilityState !== 'visible') return;
-                fetchFromSupabase().then(function() {
-                    autoApply();
+                fetchFromSupabase().then(function(changed) {
+                    if (changed) autoApply();
                 });
             }, 5000);
 
