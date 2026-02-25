@@ -1214,5 +1214,27 @@ window.BULK_TRANSLATIONS = [
     { key_id: "prayer.qibla_distance", kurdish_text: "دووری",                                category: "prayer",     page: "android" },
     { key_id: "prayer.qibla_approx",   kurdish_text: "نزیکەوە",                              category: "prayer",     page: "android" },
     { key_id: "prayer.qibla_locating", kurdish_text: "دیارکرنا شوین...",                     category: "prayer",     page: "android" },
-    { key_id: "prayer.qibla_no_loc",   kurdish_text: "ناکارە بوی دیارکرنا شوین",            category: "prayer",     page: "android" }
+    { key_id: "prayer.qibla_no_loc",   kurdish_text: "ناکارە بوی دیارکرنا شوین",            category: "prayer",     page: "android" },
+
+    // ===== Copy Modal =====
+    { key_id: "copy.title",       kurdish_text: "کۆپیکرن",                category: "copy",   page: "android" },
+    { key_id: "copy.both",        kurdish_text: "قورئان + تەفسیر",        category: "copy",   page: "android" },
+    { key_id: "copy.quran_only",  kurdish_text: "قورئان تەنها",           category: "copy",   page: "android" },
+    { key_id: "copy.tafsir_only", kurdish_text: "تەفسیر تەنها",           category: "copy",   page: "android" },
+    { key_id: "copy.range",       kurdish_text: "مەودای ئایەتەکان",       category: "copy",   page: "android" },
+    { key_id: "copy.from",        kurdish_text: "لە ئایەت:",              category: "copy",   page: "android" },
+    { key_id: "copy.to",          kurdish_text: "بۆ ئایەت:",              category: "copy",   page: "android" },
+    { key_id: "copy.fmt_quran",   kurdish_text: "قورئان",                 category: "copy",   page: "android" },
+    { key_id: "copy.fmt_tafsir",  kurdish_text: "تەفسیر",                 category: "copy",   page: "android" },
+    { key_id: "copy.copy_btn",    kurdish_text: "کۆپیکرن",                category: "copy",   page: "android" },
+    { key_id: "copy.back",        kurdish_text: "گەڕانەڤە",               category: "copy",   page: "android" },
+
+    // ===== Quick Settings Panel =====
+    { key_id: "qs.screen_lock",   kurdish_text: "ڕووماندنی شاشە",         category: "settings", page: "android" },
+    { key_id: "qs.text_size",     kurdish_text: "قەبارەی نووسین",         category: "settings", page: "android" },
+    { key_id: "qs.line_spacing",  kurdish_text: "مەودای ڕیزەکان",         category: "settings", page: "android" },
+    { key_id: "qs.actions",       kurdish_text: "چالاکییەکان",             category: "settings", page: "android" },
+    { key_id: "qs.jump_to",       kurdish_text: "ببڕە بۆ ئایەت",          category: "settings", page: "android" },
+    { key_id: "qs.go",            kurdish_text: "برۆ",                    category: "settings", page: "android" },
+    { key_id: "qs.jump_audio",    kurdish_text: "ببڕە بۆ ئایەتی دەنگ",   category: "settings", page: "android" }
 ];

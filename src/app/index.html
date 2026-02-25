@@ -925,31 +925,31 @@ body{background:var(--bg);color:var(--text)}
 <div class="copy-modal" id="copyModal" onclick="if(event.target===this)App.closeCopyModal()">
   <div class="copy-sheet">
     <div class="copy-sheet-hdr">
-      <span id="copyModalTitle">کۆپیکرن</span>
+      <span id="copyModalTitle" data-i18n="copy.title">کۆپیکرن</span>
       <button onclick="App.closeCopyModal()"><i class="fas fa-times"></i></button>
     </div>
     <div id="copyMainOpts">
-      <button class="copy-opt-btn" onclick="App.copyDo('both')"><i class="fas fa-layer-group"></i><span>قورئان + تەفسیر</span></button>
-      <button class="copy-opt-btn" onclick="App.copyDo('quran')"><i class="fas fa-book"></i><span>قورئان تەنها</span></button>
-      <button class="copy-opt-btn" onclick="App.copyDo('tafsir')"><i class="fas fa-book-open"></i><span>تەفسیر تەنها</span></button>
-      <button class="copy-opt-btn" onclick="App.copyShowRange()"><i class="fas fa-list-ol"></i><span>مەودای ئایەتەکان</span></button>
+      <button class="copy-opt-btn" onclick="App.copyDo('both')"><i class="fas fa-layer-group"></i><span data-i18n="copy.both">قورئان + تەفسیر</span></button>
+      <button class="copy-opt-btn" onclick="App.copyDo('quran')"><i class="fas fa-book"></i><span data-i18n="copy.quran_only">قورئان تەنها</span></button>
+      <button class="copy-opt-btn" onclick="App.copyDo('tafsir')"><i class="fas fa-book-open"></i><span data-i18n="copy.tafsir_only">تەفسیر تەنها</span></button>
+      <button class="copy-opt-btn" onclick="App.copyShowRange()"><i class="fas fa-list-ol"></i><span data-i18n="copy.range">مەودای ئایەتەکان</span></button>
     </div>
     <div id="copyRangeOpts" style="display:none">
       <div class="copy-range-row">
-        <label>لە ئایەت:</label>
+        <label data-i18n="copy.from">لە ئایەت:</label>
         <input type="number" id="copyFrom" min="1" value="1">
       </div>
       <div class="copy-range-row">
-        <label>بۆ ئایەت:</label>
+        <label data-i18n="copy.to">بۆ ئایەت:</label>
         <input type="number" id="copyTo" min="1" value="3">
       </div>
       <div class="copy-range-fmt">
-        <button class="copy-fmt-btn on" onclick="App.copyFmtSelect(this,'both')">قورئان + تەفسیر</button>
-        <button class="copy-fmt-btn" onclick="App.copyFmtSelect(this,'quran')">قورئان</button>
-        <button class="copy-fmt-btn" onclick="App.copyFmtSelect(this,'tafsir')">تەفسیر</button>
+        <button class="copy-fmt-btn on" data-i18n="copy.both" onclick="App.copyFmtSelect(this,'both')">قورئان + تەفسیر</button>
+        <button class="copy-fmt-btn" data-i18n="copy.fmt_quran" onclick="App.copyFmtSelect(this,'quran')">قورئان</button>
+        <button class="copy-fmt-btn" data-i18n="copy.fmt_tafsir" onclick="App.copyFmtSelect(this,'tafsir')">تەفسیر</button>
       </div>
-      <button class="copy-range-copy-btn" onclick="App.copyRangeDo()"><i class="fas fa-copy"></i> کۆپیکرن</button>
-      <button class="copy-back-btn" onclick="App.copyBackToMain()"><i class="fas fa-arrow-right"></i> گەڕانەڤە</button>
+      <button class="copy-range-copy-btn" onclick="App.copyRangeDo()"><i class="fas fa-copy"></i> <span data-i18n="copy.copy_btn">کۆپیکرن</span></button>
+      <button class="copy-back-btn" onclick="App.copyBackToMain()"><i class="fas fa-arrow-right"></i> <span data-i18n="copy.back">گەڕانەڤە</span></button>
     </div>
   </div>
 </div>

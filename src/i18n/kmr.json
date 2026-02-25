@@ -343,5 +343,25 @@
   "onboarding.btn_next": "پاشین",
   "onboarding.btn_start": "دەستپێکرن",
   "onboarding.skip": "راکێشان و دەستپێکرن",
-  "onboarding.welcome": "ب خێر بێی ${name}!"
+  "onboarding.welcome": "ب خێر بێی ${name}!",
+
+  "copy.title": "کۆپیکرن",
+  "copy.both": "قورئان + تەفسیر",
+  "copy.quran_only": "قورئان تەنها",
+  "copy.tafsir_only": "تەفسیر تەنها",
+  "copy.range": "مەودای ئایەتەکان",
+  "copy.from": "لە ئایەت:",
+  "copy.to": "بۆ ئایەت:",
+  "copy.fmt_quran": "قورئان",
+  "copy.fmt_tafsir": "تەفسیر",
+  "copy.copy_btn": "کۆپیکرن",
+  "copy.back": "گەڕانەڤە",
+
+  "qs.screen_lock": "ڕووماندنی شاشە",
+  "qs.text_size": "قەبارەی نووسین",
+  "qs.line_spacing": "مەودای ڕیزەکان",
+  "qs.actions": "چالاکییەکان",
+  "qs.jump_to": "ببڕە بۆ ئایەت",
+  "qs.go": "برۆ",
+  "qs.jump_audio": "ببڕە بۆ ئایەتی دەنگ"
 }
