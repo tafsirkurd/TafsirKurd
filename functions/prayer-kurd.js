@@ -83,7 +83,7 @@ function parseMonthlyTimes(html) {
     // plus the closing tags and Hijri cell (~230 chars) before the times start.
     const after  = html.slice(pos + m[0].length, pos + m[0].length + 1500);
     const raw    = [];
-    const tRe    = />(\\d{2}:\\d{2})</g;
+    const tRe    = />(\d{2}:\d{2})</g;
     let tm;
     while ((tm = tRe.exec(after)) !== null && raw.length < 6) raw.push(tm[1]);
 
