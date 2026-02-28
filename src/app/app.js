@@ -155,7 +155,7 @@ var S={
   todayVerses:null,
   supabase:null,user:null,syncInterval:null,isSyncing:false,lastSyncTime:0,realtimeChannel:null,
   mushafFont:localStorage.getItem('mushafFont')||'qcf1',
-  mushafFontSize:(function(){var f=localStorage.getItem('mushafFont')||'qcf1';return parseInt(localStorage.getItem('mushafFontSize_'+f))||(f==='qcf1'?23:20);}()),
+  mushafFontSize:(function(){var f=localStorage.getItem('mushafFont')||'qcf1';return parseInt(localStorage.getItem('mushafFontSize_'+f))||(f==='qcf1'?22:20);}()),
   mushafLineH:parseFloat(localStorage.getItem('mushafLineH'))||1.8,
   renderedAyahs:[],renderedTafsirs:{},
   copy:{surah:0,ayah:0,rangeFmt:'both'}
@@ -1040,7 +1040,10 @@ function loadMushafPageQCF(pageEl,pageNum){
     frag.appendChild(foot);
 
     // Metadata — set on pageEl immediately (progress tracking reads dataset)
-    var svn=verses.filter(function(v){return Number(v.surah_number)===S.surah;}).map(function(v){return Number(v.verse_number);});
+    var svn=verses.filter(function(v){
+      var sn=Number(v.surah_number)||parseInt((v.verse_key||'0:0').split(':')[0]);
+      return sn===S.surah;
+    }).map(function(v){return Number(v.verse_number);});
     pageEl.dataset.verses=JSON.stringify(svn);
 
     // Prefetch adjacent pages for zero-delay scroll
@@ -1316,17 +1319,14 @@ function updateMushafProgress(view){
   var total=s?s.a:0;
   var progressEl=document.querySelector('.sticky-progress');
   var saveTimer=null;var destroyed=false;
+  var hasGoal=!!getGoal();
 
-  console.log('[MT] ENTER surah='+surahId+' total='+total+' goal='+JSON.stringify(getGoal())+' progressEl='+(progressEl?'found':'null'));
-  if(!getGoal()||!total){
-    if(progressEl)progressEl.style.display='none';
-    _progressCleanup=function(){destroyed=true;};
-    console.log('[MT] EXIT no goal or total');
-    return;
-  }
+  // Always show progress bar — goal is needed only for daily verse counting
+  if(!total){_progressCleanup=function(){destroyed=true;};return;}
   if(progressEl)progressEl.style.display='';
 
   var seenAyahs=new Set();
+  var markedPages=new Set(); // pages already dwelt — separate from ayah set to avoid inflating count
   try{JSON.parse(localStorage.getItem('surah_progress_'+surahId)||'[]')
     .forEach(function(n){if(n>=1&&n<=total)seenAyahs.add(n);});}catch(e){}
 
@@ -1342,7 +1342,9 @@ function updateMushafProgress(view){
   }
   function markSeen(idx){
     if(seenAyahs.has(idx))return false;
-    seenAyahs.add(idx);trackVerse(surahId,idx);return true;
+    seenAyahs.add(idx);
+    if(hasGoal)trackVerse(surahId,idx);
+    return true;
   }
   function scheduleSave(){
     clearTimeout(saveTimer);
@@ -1364,77 +1366,67 @@ function updateMushafProgress(view){
 
   if(seenAyahs.size>0)updateHeader();
 
-  // --- Scroll + getBoundingClientRect tracking ---
-  // mushafView grows to fit all pages (not constrained), so panelQuran is the real scroll container.
-  // We use panelQuran's visible rect as the viewport reference for visibility calculations.
-  var scrollEl=$('panelQuran');
-  var dwellTimers={};
+  // Visibility tracking — track only the single most-visible page to avoid jumpy progress
+  var dwellTimer=null;var dwellPage=null;
 
   function visibleRatio(pageEl){
-    // Use viewport height (not page height) as denominator:
-    // "what fraction of the visible screen does this page occupy?"
-    var vr=scrollEl.getBoundingClientRect();
     var pr=pageEl.getBoundingClientRect();
-    var top=Math.max(pr.top,vr.top);
-    var bot=Math.min(pr.bottom,vr.bottom);
-    var vis=Math.max(0,bot-top);
-    var viewH=Math.max(1,vr.bottom-vr.top);
-    return vis/viewH;
+    var top=Math.max(pr.top,0);
+    var bot=Math.min(pr.bottom,window.innerHeight);
+    return Math.max(0,bot-top)/Math.max(1,window.innerHeight);
   }
 
   function checkVisible(){
     if(destroyed||S.surah!==surahId)return;
-    var panelR=scrollEl.getBoundingClientRect();
     var pages=view.querySelectorAll('.mushaf-text-page');
-    console.log('[MT] check pages='+pages.length+' panel='+Math.round(panelR.top)+'/'+Math.round(panelR.bottom)+' scrollTop='+scrollEl.scrollTop);
+    // Find the page with the highest visible ratio
+    var bestRatio=0;var bestPage=null;
     pages.forEach(function(pageEl){
-      var pn=pageEl.dataset.page||'0';
-      var ratio=visibleRatio(pageEl);
-      var pr=pageEl.getBoundingClientRect();
-      console.log('[MT] p='+pn+' ratio='+ratio.toFixed(2)+' pr='+Math.round(pr.top)+'/'+Math.round(pr.bottom)+' v='+(pageEl.dataset.verses||'null'));
-      if(ratio>=0.25){
-        if(!dwellTimers[pn]){
-          dwellTimers[pn]=setTimeout(function(){
-            delete dwellTimers[pn];
-            if(destroyed||S.surah!==surahId)return;
-            if(pageEl.dataset.verses){
-              console.log('[MT] MARK p='+pn+' v='+pageEl.dataset.verses);
-              markPage(pageEl);
-            } else {
-              dwellTimers[pn+'_r']=setTimeout(function(){
-                delete dwellTimers[pn+'_r'];
-                if(!destroyed&&S.surah===surahId&&pageEl.dataset.verses)markPage(pageEl);
-              },1200);
-            }
-          },1500);
-        }
-      } else {
-        if(dwellTimers[pn]){clearTimeout(dwellTimers[pn]);delete dwellTimers[pn];}
-      }
+      var r=visibleRatio(pageEl);
+      if(r>bestRatio){bestRatio=r;bestPage=pageEl;}
     });
+    var bestPn=bestPage?bestPage.dataset.page||'0':null;
+    // If best page changed or went below threshold, cancel current dwell
+    if(dwellPage&&dwellPage!==bestPage){
+      clearTimeout(dwellTimer);dwellTimer=null;dwellPage=null;
+    }
+    // Start dwell for best visible page (must cover >=25% of screen)
+    if(bestPage&&bestRatio>=0.25&&!dwellTimer&&!markedPages.has(bestPn)){
+      dwellPage=bestPage;
+      dwellTimer=setTimeout(function(){
+        dwellTimer=null;dwellPage=null;
+        if(destroyed||S.surah!==surahId)return;
+        markedPages.add(bestPn); // prevent re-dwelling this page
+        if(bestPage.dataset.verses){
+          markPage(bestPage);
+        } else {
+          // page data still loading — retry once after 2s
+          dwellTimer=setTimeout(function(){
+            dwellTimer=null;
+            if(!destroyed&&S.surah===surahId&&bestPage.dataset.verses)markPage(bestPage);
+          },2000);
+        }
+      },3000);
+    }
   }
 
-  // Throttled scroll handler on the actual scroll container
   var scrollTick=null;
   function onScroll(){
     if(scrollTick)return;
-    scrollTick=setTimeout(function(){scrollTick=null;checkVisible();},120);
+    scrollTick=setTimeout(function(){scrollTick=null;checkVisible();},200);
   }
-  scrollEl.addEventListener('scroll',onScroll,{passive:true});
+  // Listen on window capture (catches any scrolling child) AND directly on view
+  window.addEventListener('scroll',onScroll,{passive:true,capture:true});
+  view.addEventListener('scroll',onScroll,{passive:true});
 
-  // Initial check (first page visible before any scroll)
-  var initTimer=setTimeout(checkVisible,500);
-  // Periodic check catches pages that load after scroll stops
-  var periodic=setInterval(checkVisible,3000);
+  var initTimer=setTimeout(checkVisible,800);
+  var periodic=setInterval(checkVisible,4000);
 
   _progressCleanup=function(){
     destroyed=true;
-    clearTimeout(saveTimer);
-    clearTimeout(initTimer);
-    clearTimeout(scrollTick);
-    clearInterval(periodic);
-    Object.keys(dwellTimers).forEach(function(k){clearTimeout(dwellTimers[k]);});
-    scrollEl.removeEventListener('scroll',onScroll);
+    clearTimeout(saveTimer);clearTimeout(initTimer);clearTimeout(scrollTick);clearTimeout(dwellTimer);clearInterval(periodic);
+    window.removeEventListener('scroll',onScroll,{capture:true});
+    view.removeEventListener('scroll',onScroll);
   };
 }
 
@@ -1835,7 +1827,7 @@ App.openMushafSettings=function(){
       localStorage.setItem('mushafFontSize_'+S.mushafFont,String(S.mushafFontSize));
       S.mushafFont=f.id;
       localStorage.setItem('mushafFont',f.id);
-      var newSize=parseInt(localStorage.getItem('mushafFontSize_'+f.id))||(f.id==='qcf1'?23:20);
+      var newSize=parseInt(localStorage.getItem('mushafFontSize_'+f.id))||(f.id==='qcf1'?22:20);
       S.mushafFontSize=newSize;
       document.documentElement.style.setProperty('--mushaf-size',newSize+'px');
       setFsSize(newSize);
@@ -4706,7 +4698,7 @@ function ivTrackView(episodeId){
 /* ===== START ===== */
 function startApp(){
   // Apply persisted mushaf CSS vars immediately
-  document.documentElement.style.setProperty('--mushaf-size',(S.mushafFontSize||23)+'px');
+  document.documentElement.style.setProperty('--mushaf-size',(S.mushafFontSize||22)+'px');
   document.documentElement.style.setProperty('--mushaf-lh',String(S.mushafLineH||1.8));
   if(window.i18n){
     i18n.initLang().then(function(){ init(); i18n.applyTranslations(); });
