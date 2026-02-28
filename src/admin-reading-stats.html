@@ -189,7 +189,7 @@
                 const response = await fetch('/admin-users-data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
-                    body: JSON.stringify({ action: 'get_reading_stats' })
+                    body: JSON.stringify({ action: 'get_reading_stats', token: adminToken })
                 });
 
                 const data = await response.json();

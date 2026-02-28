@@ -788,7 +788,7 @@
                 const response = await fetch('/admin-users-data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
-                    body: JSON.stringify({ action: 'get_users' })
+                    body: JSON.stringify({ action: 'get_users', token: adminToken })
                 });
 
                 const data = await response.json();
@@ -1260,7 +1260,7 @@
                 const res = await fetch('/admin-users-data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
-                    body: JSON.stringify({ action: 'delete_user', userId: deleteUserId })
+                    body: JSON.stringify({ action: 'delete_user', userId: deleteUserId, token: adminToken })
                 });
                 const result = await res.json();
 
