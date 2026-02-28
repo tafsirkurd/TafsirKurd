@@ -1319,10 +1319,34 @@ function updateMushafProgress(view){
   var total=s?s.a:0;
   var progressEl=document.querySelector('.sticky-progress');
   var saveTimer=null;var destroyed=false;
-  // No goal — hide bar, do nothing
+  // No goal — hide bar but still track scroll position for resume
   if(!getGoal()){
     if(progressEl)progressEl.style.display='none';
-    _progressCleanup=function(){destroyed=true;};
+    var _lrTimer=null;
+    var onMushafScrollNoGoal=function(){
+      if(destroyed)return;
+      clearTimeout(_lrTimer);
+      _lrTimer=setTimeout(function(){
+        if(destroyed||S.surah!==surahId)return;
+        var pages=view.querySelectorAll('.mushaf-text-page');
+        var vh=window.innerHeight;
+        for(var i=0;i<pages.length;i++){
+          var r=pages[i].getBoundingClientRect();
+          if(r.bottom>0&&r.top<vh){
+            var vns=[];try{vns=JSON.parse(pages[i].dataset.verses||'[]');}catch(e){}
+            if(vns.length){try{localStorage.setItem('lastRead',JSON.stringify({surah:surahId,ayah:vns[0]}));}catch(e){}}
+            break;
+          }
+        }
+      },500);
+    };
+    window.addEventListener('scroll',onMushafScrollNoGoal,{passive:true,capture:true});
+    view.addEventListener('scroll',onMushafScrollNoGoal,{passive:true});
+    _progressCleanup=function(){
+      destroyed=true;clearTimeout(_lrTimer);
+      window.removeEventListener('scroll',onMushafScrollNoGoal,{capture:true});
+      view.removeEventListener('scroll',onMushafScrollNoGoal);
+    };
     return;
   }
 
@@ -1332,7 +1356,7 @@ function updateMushafProgress(view){
   var seenAyahs=new Set();
   var markedPages=new Set(); // pages already dwelt — separate from ayah set to avoid inflating count
   try{JSON.parse(localStorage.getItem('surah_progress_'+surahId)||'[]')
-    .forEach(function(n){if(n>=1&&n<=total)seenAyahs.add(n);});}catch(e){}
+    .forEach(function(n){if(typeof n==='number'&&n>=1&&n<=total)seenAyahs.add(n);});}catch(e){}
 
   function updateHeader(){
     if(destroyed||S.surah!==surahId)return;
@@ -1345,7 +1369,8 @@ function updateMushafProgress(view){
     $('readerPct').textContent=pct+'%';
   }
   function markSeen(idx){
-    if(seenAyahs.has(idx))return false;
+    idx=Number(idx);
+    if(!idx||isNaN(idx)||seenAyahs.has(idx))return false;
     seenAyahs.add(idx);
     trackVerse(surahId,idx);
     return true;
@@ -1370,8 +1395,8 @@ function updateMushafProgress(view){
 
   if(seenAyahs.size>0)updateHeader();
 
-  // Visibility tracking — track only the single most-visible page to avoid jumpy progress
-  var dwellTimer=null;var dwellPage=null;
+  // Dwell tracking: watch the most-visible page; mark it after user has been on it 2.5s
+  var dwellTimer=null;var dwellPage=null;var retryTimer=null;
 
   function visibleRatio(pageEl){
     var pr=pageEl.getBoundingClientRect();
@@ -1383,52 +1408,51 @@ function updateMushafProgress(view){
   function checkVisible(){
     if(destroyed||S.surah!==surahId)return;
     var pages=view.querySelectorAll('.mushaf-text-page');
-    // Find the page with the highest visible ratio
     var bestRatio=0;var bestPage=null;
     pages.forEach(function(pageEl){
       var r=visibleRatio(pageEl);
       if(r>bestRatio){bestRatio=r;bestPage=pageEl;}
     });
     var bestPn=bestPage?bestPage.dataset.page||'0':null;
-    // If best page changed or went below threshold, cancel current dwell
-    if(dwellPage&&dwellPage!==bestPage){
+    // Cancel current dwell if the dominant page changed or dropped below threshold
+    if(dwellPage&&(dwellPage!==bestPage||bestRatio<0.3)){
       clearTimeout(dwellTimer);dwellTimer=null;dwellPage=null;
     }
-    // Start dwell for best visible page (must cover >=25% of screen)
-    if(bestPage&&bestRatio>=0.25&&!dwellTimer&&!markedPages.has(bestPn)){
+    // Start a new dwell only when: a clear page dominates (≥35%), no dwell running, not already marked
+    if(bestPage&&bestRatio>=0.35&&!dwellTimer&&!markedPages.has(bestPn)){
       dwellPage=bestPage;
       dwellTimer=setTimeout(function(){
         dwellTimer=null;dwellPage=null;
         if(destroyed||S.surah!==surahId)return;
-        markedPages.add(bestPn); // prevent re-dwelling this page
+        markedPages.add(bestPn); // lock out re-dwell for this page
         if(bestPage.dataset.verses){
           markPage(bestPage);
         } else {
-          // page data still loading — retry once after 2s
-          dwellTimer=setTimeout(function(){
-            dwellTimer=null;
+          // Verses still loading — retry once in 2s (retryTimer tracked for cleanup)
+          retryTimer=setTimeout(function(){
+            retryTimer=null;
             if(!destroyed&&S.surah===surahId&&bestPage.dataset.verses)markPage(bestPage);
           },2000);
         }
-      },3000);
+      },2500);
     }
   }
 
   var scrollTick=null;
-  function onScroll(){
+  var onScroll=function(){
     if(scrollTick)return;
-    scrollTick=setTimeout(function(){scrollTick=null;checkVisible();},200);
-  }
-  // Listen on window capture (catches any scrolling child) AND directly on view
+    scrollTick=setTimeout(function(){scrollTick=null;checkVisible();},150);
+  };
   window.addEventListener('scroll',onScroll,{passive:true,capture:true});
   view.addEventListener('scroll',onScroll,{passive:true});
 
-  var initTimer=setTimeout(checkVisible,800);
-  var periodic=setInterval(checkVisible,4000);
+  var initTimer=setTimeout(checkVisible,500);
+  var periodic=setInterval(checkVisible,3000);
 
   _progressCleanup=function(){
     destroyed=true;
-    clearTimeout(saveTimer);clearTimeout(initTimer);clearTimeout(scrollTick);clearTimeout(dwellTimer);clearInterval(periodic);
+    clearTimeout(saveTimer);clearTimeout(initTimer);clearTimeout(scrollTick);
+    clearTimeout(dwellTimer);clearTimeout(retryTimer);clearInterval(periodic);
     window.removeEventListener('scroll',onScroll,{capture:true});
     view.removeEventListener('scroll',onScroll);
   };
