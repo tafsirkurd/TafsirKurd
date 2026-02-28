@@ -1319,9 +1319,13 @@ function updateMushafProgress(view){
   var total=s?s.a:0;
   var progressEl=document.querySelector('.sticky-progress');
   var saveTimer=null;var destroyed=false;
-  var hasGoal=!!getGoal();
+  // No goal — hide bar, do nothing
+  if(!getGoal()){
+    if(progressEl)progressEl.style.display='none';
+    _progressCleanup=function(){destroyed=true;};
+    return;
+  }
 
-  // Always show progress bar — goal is needed only for daily verse counting
   if(!total){_progressCleanup=function(){destroyed=true;};return;}
   if(progressEl)progressEl.style.display='';
 
@@ -1343,7 +1347,7 @@ function updateMushafProgress(view){
   function markSeen(idx){
     if(seenAyahs.has(idx))return false;
     seenAyahs.add(idx);
-    if(hasGoal)trackVerse(surahId,idx);
+    trackVerse(surahId,idx);
     return true;
   }
   function scheduleSave(){
