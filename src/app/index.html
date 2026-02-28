@@ -13,8 +13,9 @@
 <script>
 if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
   var SB=window.Capacitor.Plugins.StatusBar;
-  SB.setStyle({style:(localStorage.getItem('theme')||'light')==='dark'?'DARK':'LIGHT'});
-  SB.setBackgroundColor({color:'#ffffff'});
+  var _t=localStorage.getItem('theme')||'light';
+  SB.setStyle({style:(_t==='dark'||_t==='sakina')?'DARK':'LIGHT'});
+  SB.setBackgroundColor({color:{light:'#fafafa',dark:'#0a0a0a',sakina:'#0c1c12',noor:'#f4e8cc'}[_t]||'#fafafa'});
 }
 </script>
 
@@ -24,6 +25,7 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
 
 <style>
+
 /* ===== RESET & BASE ===== */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;height:100%;overflow:hidden;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;user-select:none;overscroll-behavior:none}
@@ -62,6 +64,28 @@ img{display:block;max-width:100%}
   --shadow-m:0 4px 12px rgba(0,0,0,.4);
   --shadow-l:0 12px 32px rgba(0,0,0,.6);
 }
+/* ── Sakina: deep emerald night × gold ── */
+[data-theme="sakina"]{
+  --bg:#0c1c12;--bg2:#112318;--bg3:#081410;
+  --surface:#162d1f;--surface-h:#1c3827;
+  --text:#f0e6c8;--text2:#a89268;--text3:#6b5c3e;
+  --border:#1e3828;--border2:#2c5038;
+  --accent:#c9a84c;--accent-t:#0c1c12;
+  --shadow-s:0 1px 4px rgba(0,0,0,.45);
+  --shadow-m:0 4px 14px rgba(0,0,0,.55);
+  --shadow-l:0 12px 36px rgba(0,0,0,.75);
+}
+/* ── Noor: warm parchment × deep green ── */
+[data-theme="noor"]{
+  --bg:#f4e8cc;--bg2:#fdf4e3;--bg3:#eddfc0;
+  --surface:#fdf4e3;--surface-h:#f0e2c4;
+  --text:#1a0e04;--text2:#5c3d1a;--text3:#9b7650;
+  --border:#d9c9a8;--border2:#c9b490;
+  --accent:#1a5c3a;--accent-t:#fdf4e3;
+  --shadow-s:0 1px 3px rgba(0,0,0,.07);
+  --shadow-m:0 4px 12px rgba(0,0,0,.09);
+  --shadow-l:0 12px 32px rgba(0,0,0,.14);
+}
 
 body{background:var(--bg);color:var(--text)}
 
@@ -87,6 +111,8 @@ body{background:var(--bg);color:var(--text)}
 /* ===== APP HEADER ===== */
 .hdr{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:0 16px;min-height:56px;display:flex;align-items:center;gap:12px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:rgba(250,250,250,.92)}
 [data-theme="dark"] .hdr{background:rgba(10,10,10,.92)}
+[data-theme="sakina"] .hdr{background:rgba(12,28,18,.94)}
+[data-theme="noor"] .hdr{background:rgba(244,232,204,.94)}
 .hdr-logo{display:flex;align-items:center;gap:10px;flex:1}
 .hdr-logo img{width:40px;height:40px;object-fit:contain}
 .hdr-logo span{font-size:1.05rem;font-weight:800;letter-spacing:-.2px}
@@ -116,11 +142,13 @@ body{background:var(--bg);color:var(--text)}
 .surah-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:16px}
 .surah-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:14px;cursor:pointer;transition:transform .2s var(--ease),border-color .2s,box-shadow .2s;display:flex;align-items:center;gap:12px;min-height:68px}
 .surah-card:active{transform:scale(.98);border-color:var(--accent);box-shadow:var(--shadow-s)}
-.surah-num{width:30px;height:30px;border-radius:var(--r-s);background:var(--accent);color:var(--accent-t);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.7rem;flex-shrink:0}
+.surah-num{width:34px;border-radius:var(--r-m);background:var(--accent);color:var(--accent-t);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 0;flex-shrink:0}
+.surah-num-n{font-weight:700;font-size:.72rem;line-height:1}
+.surah-num-origin{font-size:.58rem;opacity:.75;line-height:1}
 .surah-info{flex:1;min-width:0}
-.surah-name-en{font-size:.78rem;font-weight:700}
-.surah-name-ar{font-size:.7rem;color:var(--text2);font-weight:500}
-.surah-ayahs{font-size:.62rem;color:#aaa;margin-top:1px}
+.surah-name-ar{font-family:var(--font-su);font-size:1.5rem;font-weight:400;line-height:1.1;margin-bottom:2px}
+.surah-name-en{font-size:.68rem;color:var(--text2);font-weight:500;margin-top:1px}
+.surah-ayahs{font-size:.62rem;color:#aaa;margin-top:2px}
 
 /* ===== CONTINUE READING CARD ===== */
 .continue-card{margin:16px 16px 0;padding:18px;background:var(--accent);color:var(--accent-t);border-radius:var(--r-xl);cursor:pointer;transition:transform .2s var(--ease),box-shadow .2s}
@@ -141,6 +169,66 @@ body{background:var(--bg);color:var(--text)}
 .sticky-progress-bar{height:4px;background:var(--bg3);border-radius:var(--r-full);overflow:hidden;margin-bottom:6px}
 .sticky-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#27ae60);border-radius:var(--r-full);transition:width .3s ease;width:0}
 .sticky-progress-info{display:flex;justify-content:space-between;align-items:center}
+/* Mushaf QCF V1 (Madinah) */
+.mushaf-view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);padding:8px 8px calc(var(--tab-h) + var(--safe-b) + 80px)}
+.mushaf-text-page{background:var(--surface);border-radius:18px;padding:32px 22px 22px;margin-bottom:16px;box-shadow:0 2px 24px rgba(0,0,0,.11);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s ease}
+.mushaf-text-page:active{opacity:.75}
+.mushaf-surah-nav{padding:8px 16px 24px;display:flex;justify-content:space-between;gap:10px}
+.mushaf-surah-nav-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 16px;border-radius:var(--r-xl);background:var(--accent);color:var(--accent-t);font-size:.85rem;font-weight:600;border:none;cursor:pointer;direction:rtl}
+.mushaf-surah-banner{position:relative;text-align:center;font-family:'KFGQPC Hafs',serif;font-size:1rem;color:var(--text);margin:0 0 12px;padding:0 44px}
+.mushaf-surah-banner::before,.mushaf-surah-banner::after{content:'';position:absolute;top:50%;transform:translateY(-50%);height:1px;background:var(--border2);width:36%}
+.mushaf-surah-banner::before{right:0}.mushaf-surah-banner::after{left:0}
+.mushaf-bismillah{text-align:center;font-family:'KFGQPC Hafs',serif;font-size:1.5rem;line-height:2.2;color:var(--text);margin-bottom:4px}
+.mushaf-qcf-line{font-size:var(--mushaf-size,23px);line-height:var(--mushaf-lh,1.8);text-align:center;direction:rtl;color:var(--text);white-space:nowrap;overflow:hidden;border-radius:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;transition:background .12s}
+.mushaf-qcf-line:active{background:rgba(128,128,128,.12)}
+.mushaf-line--playing{background:rgba(34,197,94,.15);border-radius:6px}
+.mushaf-line--playing:active{background:rgba(34,197,94,.25)}
+.mushaf-flow-verse{font-size:var(--mushaf-size,23px);line-height:var(--mushaf-lh,1.8);text-align:justify;direction:rtl;color:var(--text);padding:2px 0;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:6px;transition:background .12s}
+.mushaf-flow-verse:active{background:rgba(128,128,128,.12)}
+.mushaf-page-foot{text-align:center;margin-top:12px;padding-top:8px;border-top:1px solid var(--border)}
+.mushaf-page-num{font-size:.78rem;color:var(--text3);font-variant-numeric:tabular-nums}
+.mushaf-juz-banner{text-align:center;padding:6px 0 2px;font-size:.72rem;font-weight:700;color:var(--accent);letter-spacing:.08em;border-bottom:1px solid var(--border2);margin-bottom:6px}
+.mushaf-page-ph{padding:40px 0;text-align:center;color:var(--text3);font-size:1.4rem}
+.mushaf-loading{padding:80px 0;text-align:center;color:var(--text3);font-size:1.6rem}
+.mushaf-error{padding:48px 20px;text-align:center;color:var(--danger);font-size:.9rem}
+/* Mushaf tafsir sheet */
+.mushaf-tafsir-ov{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.45);display:flex;align-items:flex-end}
+.mushaf-tafsir-pane{width:100%;min-height:220px;max-height:75vh;background:var(--surface);border-radius:20px 20px 0 0;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .26s var(--ease)}
+.mushaf-tafsir-pane.on{transform:translateY(0)}
+.mushaf-tafsir-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 13px;border-bottom:1px solid var(--border);flex-shrink:0}
+.mushaf-tafsir-title{font-size:.95rem;font-weight:600;color:var(--text);font-family:'KFGQPC Hafs',serif;direction:rtl}
+.mushaf-tafsir-close{width:30px;height:30px;border-radius:50%;background:var(--bg2);color:var(--text2);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;font-size:.8rem;flex-shrink:0}
+.mushaf-tafsir-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 20px;padding-bottom:calc(var(--tab-h) + var(--safe-b) + 20px)}
+.mushaf-tafsir-txt{font-size:.92rem;line-height:1.9;color:var(--text);direction:rtl;text-align:right}
+.mushaf-tafsir-empty{font-size:.85rem;color:var(--text3);text-align:center;padding:28px 0}
+/* Mushaf settings sheet */
+.mushaf-settings-ov{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.45);display:flex;align-items:flex-end}
+.mushaf-settings-pane{width:100%;background:var(--surface);border-radius:20px 20px 0 0;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .26s var(--ease)}
+.mushaf-settings-pane.on{transform:translateY(0)}
+.mushaf-settings-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 13px;border-bottom:1px solid var(--border)}
+.mushaf-settings-title{font-size:.95rem;font-weight:600;color:var(--text)}
+.mushaf-settings-close{width:30px;height:30px;border-radius:50%;background:var(--bg2);color:var(--text2);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;font-size:.8rem}
+.mushaf-settings-body{padding:16px 20px;padding-bottom:calc(var(--tab-h) + var(--safe-b) + 20px);display:flex;flex-direction:column;gap:18px;overflow-y:auto;max-height:70vh}
+.ms-section-label{font-size:.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:-10px}
+.ms-slider-wrap{display:flex;align-items:center;gap:12px}
+.ms-slider{flex:1;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--border2);outline:none;cursor:pointer}
+.ms-slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.ms-slider-val{font-size:.82rem;color:var(--text2);min-width:36px;text-align:left;font-variant-numeric:tabular-nums}
+.ms-seg{display:flex;border:1px solid var(--border2);border-radius:var(--r-m);overflow:hidden}
+.ms-seg-btn{flex:1;padding:10px 4px;font-size:.78rem;text-align:center;background:none;color:var(--text2);border:none;cursor:pointer;transition:all .2s}
+.ms-seg-btn.on{background:var(--accent);color:var(--accent-t)}
+/* Tajweed colors (quran.com standard) */
+.tj-ham_wasl,.tj-laam_shamsiyah,.tj-silent{color:#aaa}
+.tj-madda_normal{color:#537fff}
+.tj-madda_permissible{color:#4050ff}
+.tj-madda_necessary,.tj-madda_obligatory{color:#000ebc}
+.tj-qalaqah{color:#dd4a57}
+.tj-ikhfa,.tj-ikhfa_no_ghunnah{color:#9400a8}
+.tj-idgham_ghunnah,.tj-idgham_no_ghunnah,.tj-idgham_mutajanisayn,.tj-idgham_mutaqaribayn{color:#169200}
+.tj-iqlab{color:#26bffd}
+.tj-ghunnah{color:#ff7e1e}
+.tj-end{color:var(--text3)}
+.hdr-btn.on{background:var(--accent);color:var(--accent-t)}
 .sticky-ayah-label{font-size:.72rem;font-weight:600;color:var(--text2)}
 .sticky-pct{font-size:.75rem;font-weight:800;color:var(--accent)}
 
@@ -150,9 +238,10 @@ body{background:var(--bg);color:var(--text)}
 .ayah-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .ayah-badge{width:36px;height:36px;border-radius:var(--r-s);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem}
 .ayah-actions{display:flex;gap:4px}
-.ayah-act{width:36px;height:36px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;color:var(--text2);transition:background .1s,color .1s}
-.ayah-act:active{background:var(--surface-h)}
-.ayah-act.active{color:var(--accent)}
+.ayah-act{width:36px;height:36px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;color:var(--text3);background:transparent;border:none;transition:background .15s,color .15s,transform .12s}
+.ayah-act:active{background:var(--bg3);transform:scale(.92)}
+.ayah-act.active{color:var(--text);background:var(--bg3)}
+.ayah-act.active:active{background:var(--bg2);transform:scale(.92)}
 .ayah-arabic{font-family:var(--font-ar);font-size:var(--ar-size);line-height:var(--line-h);text-align:center;margin-bottom:14px;direction:rtl;user-select:text;word-spacing:4px}
 .ayah-tafsir{font-size:var(--tf-size);line-height:1.9;color:var(--text2);user-select:text;display:block}
 .ayah-tafsir.hide{display:none}
@@ -214,6 +303,8 @@ body{background:var(--bg);color:var(--text)}
 /* ===== BOTTOM TAB BAR ===== */
 .tabbar{position:fixed;bottom:0;left:0;right:0;height:calc(var(--tab-h) + var(--safe-b));padding-bottom:var(--safe-b);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:stretch;z-index:300;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);background:rgba(255,255,255,.92)}
 [data-theme="dark"] .tabbar{background:rgba(22,22,22,.92)}
+[data-theme="sakina"] .tabbar{background:rgba(17,35,24,.94)}
+[data-theme="noor"] .tabbar{background:rgba(253,244,227,.94)}
 .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text3);cursor:pointer;position:relative;transition:color .3s var(--ease);-webkit-tap-highlight-color:transparent;padding:4px 0;max-height:60px;overflow:visible}
 .tab-item i{font-size:18px !important;width:48px;height:32px;line-height:32px;text-align:center;border-radius:var(--r-full);transition:all .3s var(--ease);background:transparent}
 .tab-item span{font-size:10px !important;line-height:1;white-space:nowrap;transition:all .3s var(--ease);font-weight:500}
@@ -318,6 +409,19 @@ body{background:var(--bg);color:var(--text)}
 .heatmap-legend{display:flex;align-items:center;justify-content:center;gap:3px;margin-top:12px;font-size:.58rem;color:var(--text3);opacity:.6}
 .heatmap-legend-cell{width:11px;height:11px;border-radius:3px}
 .heatmap-legend .legend-label{margin:0 5px;font-weight:500}
+/* Month calendar */
+.month-cal-section{padding:0 16px 14px}
+.month-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px}
+.month-cal-dh{text-align:center;font-size:.6rem;font-weight:700;color:var(--text3);padding:4px 0;opacity:.6}
+.month-cal-cell{aspect-ratio:1;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.72rem;color:var(--text2);font-variant-numeric:tabular-nums;transition:transform .15s}
+.month-cal-cell:active{transform:scale(.9)}
+.month-cal-empty{background:transparent;pointer-events:none}
+.month-cal-cell.heat-1{background:rgba(34,197,94,.15);color:var(--text2)}
+.month-cal-cell.heat-2{background:rgba(34,197,94,.35);color:var(--text)}
+.month-cal-cell.heat-3{background:rgba(34,197,94,.6);color:#fff;font-weight:600}
+.month-cal-cell.heat-4{background:var(--accent);color:var(--accent-t);font-weight:700}
+.month-cal-cell.is-today{box-shadow:0 0 0 2px var(--accent);color:var(--accent);font-weight:700}
+.month-cal-cell.is-today.heat-3,.month-cal-cell.is-today.heat-4{color:var(--accent-t)}
 
 .goal-delete-section{padding:20px 16px;padding-bottom:160px}
 .goal-delete-warn{font-size:.68rem;color:var(--text3);margin-bottom:10px;text-align:center;opacity:.6}
@@ -451,6 +555,20 @@ body{background:var(--bg);color:var(--text)}
 .auth-otp-info{text-align:center;color:var(--text2);font-size:.85rem;line-height:1.5;padding:8px 0}
 .settings-group{margin-bottom:28px}
 .settings-group-title{font-size:.72rem;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;padding:0 4px}
+/* Theme picker */
+.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:2px}
+.theme-card{border:2px solid var(--border);border-radius:var(--r-xl);padding:14px 14px 12px;cursor:pointer;transition:border-color .18s,box-shadow .18s;position:relative;overflow:hidden}
+.theme-card.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.theme-card:active{transform:scale(.97)}
+.theme-card-preview{display:flex;gap:5px;margin-bottom:9px;align-items:flex-end}
+.theme-swatch-main{width:38px;height:26px;border-radius:7px;position:relative;flex-shrink:0}
+.theme-swatch-dot{width:11px;height:11px;border-radius:50%;position:absolute;bottom:4px;right:4px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.theme-swatch-lines{flex:1;display:flex;flex-direction:column;gap:3px;justify-content:center;padding:0 2px}
+.theme-swatch-line{height:3px;border-radius:2px;opacity:.35}
+.theme-card-name{font-size:.88rem;font-weight:700;color:var(--text)}
+.theme-card-sub{font-size:.65rem;color:var(--text3);margin-top:1px}
+.theme-card-check{position:absolute;top:10px;left:10px;width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--accent-t);display:none;align-items:center;justify-content:center;font-size:.6rem}
+.theme-card.on .theme-card-check{display:flex}
 .setting-row{display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--surface);border:1px solid var(--border);margin-bottom:-1px;transition:background .15s}
 .setting-row:first-child{border-radius:var(--r-xl) var(--r-xl) 0 0}
 .setting-row:last-child{border-radius:0 0 var(--r-xl) var(--r-xl);margin-bottom:0}
@@ -458,6 +576,12 @@ body{background:var(--bg);color:var(--text)}
 .setting-row--slider{flex-direction:column;align-items:stretch;gap:8px}
 .setting-row--slider .slider{width:100%}
 .setting-slider-title{display:flex;justify-content:space-between;align-items:center}
+.setting-row--stepper{display:flex;justify-content:space-between;align-items:center}
+.setting-stepper{display:flex;align-items:center;gap:2px;background:var(--bg3);border-radius:var(--r-l);padding:2px}
+.stepper-btn{width:36px;height:36px;border-radius:var(--r-m);border:none;background:transparent;color:var(--text);font-size:1.25rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.stepper-btn:active{background:var(--border2)}
+.stepper-btn:disabled{color:var(--text3);cursor:default}
+.stepper-val{min-width:44px;text-align:center;font-size:.9rem;font-weight:700;color:var(--accent)}
 .setting-row--reciter{flex-direction:column;align-items:stretch;padding:12px 16px}
 .setting-label{font-size:.9rem;font-weight:500}
 .toggle{width:48px;height:28px;border-radius:14px;background:var(--border2);cursor:pointer;position:relative;transition:background .25s var(--ease)}
@@ -583,6 +707,40 @@ body{background:var(--bg);color:var(--text)}
 .iv-ep-item.watched{border-color:#2ecc71;background:linear-gradient(135deg,var(--surface),rgba(46,204,113,.06))}
 .iv-ep-item.watched .iv-ep-num{background:#2ecc71;color:#fff}
 .iv-watched-badge{display:flex;align-items:center;gap:4px;font-size:.65rem;font-weight:700;color:#2ecc71;margin-top:4px}
+/* IV save button on episode rows */
+.iv-ep-save{width:34px;height:34px;background:none;border:none;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:color .15s,background .15s;flex-shrink:0;font-size:.9rem}
+.iv-ep-save:active{background:var(--bg3)}
+.iv-ep-save.saved{color:var(--accent)}
+/* IV saved/history overlays */
+.iv-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:flex-end;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.iv-overlay.open{display:flex;animation:ivOverlayIn .22s ease}
+@keyframes ivOverlayIn{from{opacity:0}to{opacity:1}}
+.iv-overlay-sheet{width:100%;background:var(--bg);border-radius:22px 22px 0 0;height:82vh;display:flex;flex-direction:column;animation:ivSheetIn .28s cubic-bezier(.22,.9,.36,1);overflow:hidden}
+@keyframes ivSheetIn{from{transform:translateY(60px);opacity:.5}to{transform:translateY(0);opacity:1}}
+.iv-overlay-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:10px auto 0;flex-shrink:0}
+.iv-overlay-hdr{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.iv-overlay-icon{width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:var(--text2);flex-shrink:0}
+.iv-overlay-title{flex:1;font-size:.95rem;font-weight:700;color:var(--text)}
+.iv-overlay-close{width:30px;height:30px;background:var(--bg3);border:none;color:var(--text2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.75rem;flex-shrink:0}
+.iv-overlay-close:active{background:var(--surface-h)}
+.iv-overlay-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+/* Empty state */
+.iv-overlay-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:24px;gap:0}
+.iv-overlay-empty-icon{width:68px;height:68px;border-radius:18px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:1.7rem;color:var(--text2);margin-bottom:16px}
+.iv-overlay-empty-title{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:6px}
+.iv-overlay-empty-sub{font-size:.8rem;color:var(--text3);text-align:center;line-height:1.5;max-width:220px}
+/* Episode rows */
+.iv-overlay-ep{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.iv-overlay-ep:last-child{border-bottom:none}
+.iv-overlay-ep:active{background:var(--surface-h)}
+.iv-overlay-ep-thumb{width:76px;height:48px;border-radius:9px;overflow:hidden;background:var(--bg3);flex-shrink:0;position:relative}
+.iv-overlay-ep-thumb img{width:100%;height:100%;object-fit:cover}
+.iv-overlay-ep-info{flex:1;min-width:0}
+.iv-overlay-ep-series{font-size:.62rem;color:var(--text3);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iv-overlay-ep-title{font-size:.85rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.iv-overlay-ep-pct{display:inline-flex;align-items:center;gap:4px;font-size:.62rem;color:var(--accent);margin-top:3px;font-weight:600}
+.iv-overlay-ep-del{width:36px;height:36px;background:none;border:none;color:var(--text3);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:.8rem;transition:color .15s,background .15s}
+.iv-overlay-ep-del:active{background:rgba(255,80,80,.12);color:#f87171}
 .iv-player{margin:0 16px 12px;border-radius:var(--r-l);overflow:hidden;background:#000;position:relative}
 .iv-player video,.iv-player iframe{width:100%;aspect-ratio:16/9;display:block;border:none}
 .iv-player-close{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;z-index:10}
@@ -598,16 +756,16 @@ body{background:var(--bg);color:var(--text)}
 .iv-refresh:active{transform:scale(.97)}
 
 /* ===== READER QUICK SETTINGS ===== */
-.qs-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:310;display:none}
+.qs-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:310;display:none;transition:opacity .2s ease}
 .qs-overlay.on{display:block}
-.qs-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:var(--r-xl) var(--r-xl) 0 0;z-index:311;padding:0 0 calc(var(--safe-b) + 8px);transform:translateY(100%);transition:transform .3s var(--ease)}
+.qs-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:var(--r-xl) var(--r-xl) 0 0;z-index:311;padding:0 0 calc(var(--safe-b) + 8px);transform:translateY(100%);transition:transform .3s var(--ease),opacity .2s ease}
 .qs-sheet.on{transform:translateY(0)}
 .qs-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 12px;border-bottom:1px solid var(--border)}
 .qs-hdr span{font-weight:700;font-size:.95rem}
 .qs-close-btn{background:none;border:none;color:var(--text2);font-size:1rem;cursor:pointer;padding:6px;border-radius:var(--r-m)}
 .qs-row{display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);gap:12px}
 .qs-row:last-child{border-bottom:none}
-.qs-row-label{font-size:.9rem;font-weight:500;color:var(--text1);min-width:100px;flex-shrink:0}
+.qs-row-label{font-size:.9rem;font-weight:500;color:var(--text1);flex:1}
 .qs-slider-wrap{flex:1;display:flex;align-items:center;gap:10px}
 .qs-val{font-size:.85rem;color:var(--accent);font-weight:700;min-width:30px;text-align:center}
 .qs-row-info{display:flex;flex-direction:column;gap:2px}
@@ -677,23 +835,60 @@ body{background:var(--bg);color:var(--text)}
 .repeat-status-stop{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem}
 
 /* ===== PRAYER TIMES ===== */
-/* Dark header card */
-.prayer-hdr-card{background:linear-gradient(160deg,#111 0%,#2a2a2a 100%);padding:24px 20px 20px;position:relative;overflow:hidden}
-.prayer-hdr-card::after{content:'\f678';font-family:'Font Awesome 5 Free';font-weight:900;font-size:200px;position:absolute;left:-20px;bottom:-50px;opacity:.05;color:#fff;line-height:1;pointer-events:none}
-.prayer-hdr-city{font-size:2rem;font-weight:700;color:#fff;line-height:1.1;margin-bottom:4px}
-.prayer-hdr-date-greg{font-size:.82rem;color:rgba(255,255,255,.65);margin-bottom:2px}
-.prayer-hdr-date-hijri{font-size:.78rem;color:rgba(255,255,255,.45)}
-.prayer-hdr-countdown{margin-top:18px}
-.prayer-hdr-cd-label{font-size:.72rem;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
-.prayer-hdr-cd-val{font-size:2.8rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.02em;direction:ltr;line-height:1}
+/* Theme-aware header variables */
+:root{
+  --ph-from:#111111;--ph-to:#2c2c2c;
+  --ph-text:#ffffff;--ph-text2:rgba(255,255,255,.65);--ph-text3:rgba(255,255,255,.42);
+  --ph-bell:rgba(255,255,255,.1);--ph-bell-t:rgba(255,255,255,.4);--ph-bell-on:rgba(255,255,255,.2);
+}
+[data-theme="sakina"]{
+  --ph-from:#071510;--ph-to:#163220;
+  --ph-text:#f0e6c8;--ph-text2:rgba(240,230,200,.65);--ph-text3:rgba(201,168,76,.55);
+  --ph-bell:rgba(201,168,76,.1);--ph-bell-t:rgba(201,168,76,.5);--ph-bell-on:rgba(201,168,76,.22);
+}
+[data-theme="noor"]{
+  --ph-from:#1e0e04;--ph-to:#3a1e08;
+  --ph-text:#f4e8cc;--ph-text2:rgba(244,232,204,.68);--ph-text3:rgba(244,232,204,.42);
+  --ph-bell:rgba(244,232,204,.12);--ph-bell-t:rgba(244,232,204,.5);--ph-bell-on:rgba(244,232,204,.22);
+}
+/* ── Sky Scene ── */
+.sky-scene{position:relative;height:210px;overflow:hidden;background:#020815}
+.sky-bg{position:absolute;inset:0;transition:background 12s linear}
+.sky-hz{position:absolute;bottom:0;left:0;right:0;height:55%;pointer-events:none;transition:opacity 8s}
+.sky-stars{position:absolute;top:0;left:0;width:100%;height:75%;pointer-events:none;transition:opacity 8s;will-change:transform}
+@keyframes sky-tw{0%{opacity:.3}100%{opacity:1}}
+.sky-star-t{animation:sky-tw 2.8s ease-in-out infinite alternate}
+.sky-cel-wrap{position:absolute;transform:translate(-50%,-50%);width:50px;height:50px;pointer-events:none;transition:left 60s linear,top 60s linear;z-index:2;will-change:transform}
+.sky-cel-glow{position:absolute;inset:-160%;width:420%;height:420%;border-radius:50%;pointer-events:none}
+.sky-cel{position:absolute;inset:0;border-radius:50%;transition:background 10s}
+.sky-cel-sun{box-shadow:0 0 24px rgba(255,220,80,.7),0 0 60px rgba(255,160,40,.35)}
+.sky-cel-moon{width:38px;height:38px;margin:6px;box-shadow:0 0 18px rgba(200,215,255,.45)}
+.sky-cel-moon::after{content:'';position:absolute;width:80%;height:80%;border-radius:50%;background:inherit;top:-12%;right:-20%;filter:blur(1px);opacity:.85}
+.sky-horizon{position:absolute;bottom:0;left:0;right:0;width:100%;height:55px;pointer-events:none;will-change:transform}
+.sky-top-row{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px 0;z-index:5}
+.sky-city{font-size:1.5rem;font-weight:700;color:rgba(255,255,255,.92);text-shadow:0 1px 8px rgba(0,0,0,.5);line-height:1}
+.sky-bell{background:rgba(255,255,255,.15);border:none;color:rgba(255,255,255,.8);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.sky-bell--on{background:rgba(255,255,255,.25);color:#fff}
+.sky-bottom-row{position:absolute;bottom:0;left:0;right:0;padding:0 16px 12px;z-index:5;background:linear-gradient(to top,rgba(0,0,0,.45) 0%,transparent 100%);text-align:right}
+.sky-next-name{font-size:.7rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.7);text-shadow:0 1px 4px rgba(0,0,0,.5);margin-bottom:2px}
+.sky-countdown{font-size:2.6rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.02em;direction:ltr;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.4);display:inline-block}
+.sky-dates{display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;justify-content:flex-start}
+.sky-dates span{font-size:.72rem;color:rgba(255,255,255,.6);text-shadow:0 1px 4px rgba(0,0,0,.4)}
 /* Prayer 2-col grid */
 .prayer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 14px 6px}
 .prayer-grid-card{background:var(--bg2);border-radius:var(--r-l);padding:16px 14px;display:flex;flex-direction:column;gap:6px;border:1px solid transparent;transition:all .2s}
-.prayer-grid-card--next{background:var(--surface-h);border-color:var(--border2)}
+.prayer-grid-card--next{background:var(--surface-h);border-color:var(--accent);box-shadow:0 0 0 1px rgba(34,197,94,.12),0 4px 16px rgba(0,0,0,.18)}
 .prayer-grid-name{font-size:.78rem;color:var(--text3)}
 .prayer-grid-card--next .prayer-grid-name{color:var(--text2)}
 .prayer-grid-time{font-size:1.5rem;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;direction:ltr;line-height:1}
 .prayer-grid-card--next .prayer-grid-time{color:var(--accent)}
+/* Athan status banner */
+.prayer-athan-banner{display:flex;align-items:center;gap:10px;margin:12px 0 4px;padding:12px 16px;border-radius:12px;cursor:pointer;border:1.5px solid transparent}
+.prayer-athan-banner--on{background:rgba(var(--accent-rgb,34,197,94),.12);border-color:rgba(var(--accent-rgb,34,197,94),.3);color:var(--accent)}
+.prayer-athan-banner--off{background:rgba(255,80,80,.1);border-color:rgba(255,80,80,.25);color:#f87171}
+.prayer-athan-banner .fa-bell,.prayer-athan-banner .fa-bell-slash{font-size:1rem;flex-shrink:0}
+.prayer-athan-banner-text{flex:1;font-size:.85rem;font-weight:500}
+.prayer-athan-banner .fa-chevron-left{font-size:.7rem;opacity:.6;flex-shrink:0}
 /* Settings overlay / sheet */
 .prayer-settings-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:flex-end}
 .prayer-settings-overlay.open{display:flex}
@@ -708,9 +903,10 @@ body{background:var(--bg);color:var(--text)}
 .prayer-city-grid-btn.on{background:var(--accent);color:var(--accent-t);border-color:var(--accent)}
 /* Format toggle in settings */
 .prayer-fmt-wrap{padding:0 16px}
-.prayer-fmt-seg{display:flex;border:1px solid var(--border2);border-radius:var(--r-m);overflow:hidden;max-width:120px}
-.prayer-fmt-btn{flex:1;padding:9px 0;font-size:.82rem;text-align:center;background:none;color:var(--text2);border:none;cursor:pointer;font-family:inherit;transition:background .2s,color .2s}
-.prayer-fmt-btn.on{background:var(--accent);color:var(--accent-t)}
+.prayer-fmt-seg{display:flex;width:100%;background:rgba(255,255,255,.06);border-radius:100px;padding:3px;gap:2px}
+.prayer-fmt-btn{flex:1;padding:12px 0;font-size:.9rem;font-weight:500;text-align:center;background:none;color:var(--text3);border:none;cursor:pointer;font-family:inherit;border-radius:100px;transition:background .2s,color .18s,box-shadow .2s,transform .12s;letter-spacing:.01em}
+.prayer-fmt-btn.on{background:rgba(255,255,255,.13);color:var(--text);font-weight:700;box-shadow:0 1px 8px rgba(0,0,0,.35)}
+.prayer-fmt-btn:active{transform:scale(.91)}
 /* Athan toggles in settings */
 .prayer-settings-athan{padding:0 16px}
 .prayer-per-toggles{transition:opacity .2s}
@@ -719,6 +915,27 @@ body{background:var(--bg);color:var(--text)}
 .prayer-toggle-row:last-child{border-bottom:none}
 .prayer-toggle-label{font-size:.9rem;color:var(--text)}
 .prayer-settings-spacer{height:24px}
+/* Voice picker */
+.prayer-voice-label{padding-top:18px}
+.prayer-voice-row{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.prayer-voice-row:last-child{border-bottom:none}
+.prayer-voice-row:active{background:var(--bg3)}
+.prayer-voice-row.on .prayer-voice-name-ar{color:var(--text);font-weight:600}
+.prayer-voice-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;position:relative;transition:border-color .15s}
+.prayer-voice-radio.on{border-color:var(--accent)}
+.prayer-voice-radio.on::after{content:'';position:absolute;inset:3px;border-radius:50%;background:var(--accent)}
+.prayer-voice-names{flex:1;display:flex;align-items:center;min-width:0}
+.prayer-voice-name-ar{font-size:.9rem;color:var(--text2);font-weight:400;direction:rtl;transition:color .12s,font-weight .12s}
+.prayer-voice-preview-btn{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--bg3);border:none;color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:.8rem;cursor:pointer;transition:background .15s,color .15s,transform .12s}
+.prayer-voice-preview-btn:active{transform:scale(.9)}
+.prayer-voice-row.playing .prayer-voice-preview-btn{background:var(--accent);color:#fff}
+.prayer-voice-row.playing .prayer-voice-preview-btn:active{filter:brightness(.82);transform:scale(.9)}
+/* Duration picker */
+.prayer-duration-label{padding-top:18px}
+.prayer-duration-wrap{display:flex;flex-wrap:wrap;gap:8px;padding:8px 0 4px}
+.prayer-duration-btn{padding:9px 18px;border-radius:100px;background:rgba(255,255,255,.07);border:none;color:var(--text2);font-size:.88rem;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s,color .15s,transform .12s;letter-spacing:.01em}
+.prayer-duration-btn.on{background:var(--accent);color:var(--accent-t);font-weight:700}
+.prayer-duration-btn:active{transform:scale(.9)}
 /* Status / error */
 .prayer-status{padding:80px 16px;text-align:center;color:var(--text3);font-size:.95rem}
 .prayer-error{color:var(--danger)}
@@ -757,7 +974,11 @@ body{background:var(--bg);color:var(--text)}
   <div id="quranHome">
     <div class="hdr">
       <div class="hdr-logo"><img src="/assets/images/logo.png" alt=""><span>Tafsir Kurd</span></div>
-      <button class="hdr-btn" onclick="App.toggleSearch()"><i class="fas fa-search"></i></button>
+      <div style="display:flex;gap:2px">
+        <button class="hdr-btn" onclick="App.tab('goals')" title="Goals"><i class="fas fa-bullseye"></i></button>
+        <button class="hdr-btn" onclick="App.tab('bookmarks')" title="Bookmarks"><i class="fas fa-bookmark"></i></button>
+        <button class="hdr-btn" onclick="App.toggleSearch()"><i class="fas fa-search"></i></button>
+      </div>
     </div>
     <div class="search-bar" id="searchBar">
       <div class="search-wrap">
@@ -774,7 +995,11 @@ body{background:var(--bg);color:var(--text)}
     <div class="reader-hdr">
       <button class="back-btn" onclick="App.backToList()"><i class="fas fa-arrow-right"></i></button>
       <div class="reader-title"><span class="surah-label" id="readerName"></span></div>
-      <button class="hdr-btn" onclick="App.openReaderSettings()"><i class="fas fa-cog"></i></button>
+      <div style="display:flex;gap:2px;align-items:center">
+        <button class="hdr-btn" id="mushafPlayBtn" onclick="App.mushafPlayToggle()" style="display:none" title="Play"><i class="fas fa-play"></i></button>
+        <button class="hdr-btn" id="mushafToggleBtn" onclick="App.toggleMushafMode()" title="Mushaf"><i class="fas fa-book-open"></i></button>
+        <button class="hdr-btn" onclick="App.openReaderSettings()"><i class="fas fa-cog"></i></button>
+      </div>
     </div>
     <div class="sticky-progress">
       <div class="sticky-progress-bar"><div class="sticky-progress-fill" id="readerProgressFill"></div></div>
@@ -784,12 +1009,16 @@ body{background:var(--bg);color:var(--text)}
       </div>
     </div>
     <div class="ayah-list" id="ayahList"></div>
+    <div class="mushaf-view" id="mushafView" style="display:none"></div>
   </div>
 </section>
 
 <!-- TAB: BOOKMARKS -->
 <section class="panel" id="panelBookmarks" data-tab="bookmarks">
-  <div class="hdr"><div class="hdr-title"><i class="fas fa-bookmark"></i> <span data-i18n="header.bookmarks" data-t="android_span_2">نیشانەکری</span></div></div>
+  <div class="hdr">
+    <button class="hdr-btn" onclick="App.tab('quran')" style="margin-inline-end:4px"><i class="fas fa-arrow-right"></i></button>
+    <div class="hdr-title"><i class="fas fa-bookmark"></i> <span data-i18n="header.bookmarks" data-t="android_span_2">نیشانەکری</span></div>
+  </div>
   <div id="bmStats"></div>
   <div id="bmControls"></div>
   <div id="bmList"></div>
@@ -798,6 +1027,7 @@ body{background:var(--bg);color:var(--text)}
 <!-- TAB: GOALS -->
 <section class="panel" id="panelGoals" data-tab="goals">
   <div class="hdr">
+    <button class="hdr-btn" onclick="App.tab('quran')" style="margin-inline-end:4px"><i class="fas fa-arrow-right"></i></button>
     <div class="hdr-title"><i class="fas fa-bullseye"></i> <span data-i18n="header.goals" data-t="android_span_3">ئارمانج</span></div>
     <button class="hdr-text-btn" onclick="App.openWizard()"><i class="fas fa-plus"></i> <span data-i18n="header.goals_new" data-t="android_span_4">نوی</span></button>
   </div>
@@ -809,7 +1039,11 @@ body{background:var(--bg);color:var(--text)}
   <div id="ivHome" class="iv-home">
     <div class="hdr">
       <div class="hdr-title"><i class="fas fa-video"></i> <span data-i18n="header.islamvoice" data-t="android_span_5">ئیسلام ڤۆیس</span></div>
-      <button class="hdr-btn" onclick="App.ivToggleSearch()"><i class="fas fa-search"></i></button>
+      <div style="display:flex;gap:2px">
+        <button class="hdr-btn" id="ivHistoryBtn" onclick="App.ivShowHistory()" title="مێژوو"><i class="fas fa-clock-rotate-left"></i></button>
+        <button class="hdr-btn" id="ivSavedBtn" onclick="App.ivShowSaved()" title="پاراستە"><i class="fas fa-bookmark"></i></button>
+        <button class="hdr-btn" onclick="App.ivToggleSearch()"><i class="fas fa-search"></i></button>
+      </div>
     </div>
     <div class="iv-search-bar" id="ivSearchBar">
       <div class="iv-search-wrap">
@@ -829,6 +1063,30 @@ body{background:var(--bg);color:var(--text)}
     <div id="ivPlayer"></div>
     <div id="ivSeriesDesc" class="iv-series-desc"></div>
     <div id="ivEpList" class="iv-ep-list"></div>
+  </div>
+  <!-- Saved episodes overlay -->
+  <div class="iv-overlay" id="ivSavedOverlay" onclick="if(event.target===this)App.ivCloseSaved()">
+    <div class="iv-overlay-sheet">
+      <div class="iv-overlay-handle"></div>
+      <div class="iv-overlay-hdr">
+        <div class="iv-overlay-icon iv-overlay-icon--saved"><i class="fas fa-bookmark"></i></div>
+        <span class="iv-overlay-title">پاراستەکان</span>
+        <button class="iv-overlay-close" onclick="App.ivCloseSaved()"><i class="fas fa-times"></i></button>
+      </div>
+      <div id="ivSavedList" class="iv-overlay-list"></div>
+    </div>
+  </div>
+  <!-- History overlay -->
+  <div class="iv-overlay" id="ivHistoryOverlay" onclick="if(event.target===this)App.ivCloseHistory()">
+    <div class="iv-overlay-sheet">
+      <div class="iv-overlay-handle"></div>
+      <div class="iv-overlay-hdr">
+        <div class="iv-overlay-icon iv-overlay-icon--history"><i class="fas fa-clock-rotate-left"></i></div>
+        <span class="iv-overlay-title">مێژووی تەماشاکردن</span>
+        <button class="iv-overlay-close" onclick="App.ivCloseHistory()"><i class="fas fa-times"></i></button>
+      </div>
+      <div id="ivHistoryList" class="iv-overlay-list"></div>
+    </div>
   </div>
 </section>
 
@@ -919,8 +1177,6 @@ body{background:var(--bg);color:var(--text)}
 <nav class="tabbar">
   <button class="tab-item on" data-tab="quran" onclick="App.tab('quran')"><i class="fas fa-book"></i><span data-i18n="tabs.quran" data-t="android_span_12">قورئان</span></button>
   <button class="tab-item" data-tab="islamvoice" onclick="App.tab('islamvoice')"><i class="fas fa-video"></i><span data-i18n="tabs.video" data-t="android_span_13">ڤیدیۆ</span></button>
-  <button class="tab-item" data-tab="goals" onclick="App.tab('goals')"><i class="fas fa-bullseye"></i><span data-i18n="tabs.goals" data-t="android_span_14">ئارمانج</span></button>
-  <button class="tab-item" data-tab="bookmarks" onclick="App.tab('bookmarks')"><i class="fas fa-bookmark"></i><span data-i18n="tabs.bookmarks" data-t="android_span_15">نیشانەکری</span></button>
   <button class="tab-item" data-tab="prayer" onclick="App.tab('prayer')"><i class="fas fa-mosque"></i><span data-i18n="tabs.prayer">نوێژ</span></button>
   <button class="tab-item" data-tab="settings" onclick="App.tab('settings')"><i class="fas fa-cog"></i><span data-i18n="tabs.settings" data-t="android_span_16">ڕێکخستن</span></button>
 </nav>
@@ -1053,13 +1309,13 @@ body{background:var(--bg);color:var(--text)}
 
 <script src="/utils/supabase.js"></script>
 <script src="/i18n/i18n.js?v=20260224"></script>
-<script src="/prayer/prayer.cache.js?v=20260224"></script>
-<script src="/prayer/prayer.api.js?v=20260224"></script>
-<script src="/prayer/prayer.logic.js?v=20260224"></script>
-<script src="/prayer/prayer.notifications.android.js?v=20260224"></script>
-<script src="/prayer/prayer.qibla.js?v=20260225"></script>
-<script src="/prayer/prayer.ui.js?v=20260225"></script>
-<script src="/app/app.js?v=20260223"></script>
+<script src="/prayer/prayer.cache.js?v=20260228b"></script>
+<script src="/prayer/prayer.api.js?v=20260228b"></script>
+<script src="/prayer/prayer.logic.js?v=20260228b"></script>
+<script src="/prayer/prayer.notifications.android.js?v=20260228c"></script>
+<script src="/prayer/prayer.qibla.js?v=20260228c"></script>
+<script src="/prayer/prayer.ui.js?v=20260228k"></script>
+<script src="/app/app.js?v=20260301b"></script>
 <script>
 /* Failsafe: hide splash after 3s even if app.js fails */
 setTimeout(function(){
