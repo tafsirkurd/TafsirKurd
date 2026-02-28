@@ -1401,25 +1401,25 @@
                 <div class="history-drawer-overlay" id="historyOverlay" onclick="toggleHistory()"></div>
                 <div class="history-panel" id="historyPanel">
                     <div class="history-header">
-                        <h2 class="history-title"><i data-lucide="history" style="width:18px;height:18px;vertical-align:middle;margin-left:6px"></i> تاریخچەی گۆڕانکاریەکان <span id="historyLiveDot" class="history-live-dot" title="Live"></span></h2>
+                        <h2 class="history-title"><i data-lucide="history" style="width:18px;height:18px;vertical-align:middle;margin-right:6px"></i> Change History <span id="historyLiveDot" class="history-live-dot" title="Live"></span></h2>
                         <div style="display:flex;gap:8px;align-items:center">
-                            <button class="btn btn-secondary" onclick="loadHistory()" id="historyRefreshBtn" style="font-size:13px;padding:8px 14px"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i><span>نوێکردنەوە</span></button>
+                            <button class="btn btn-secondary" onclick="loadHistory()" id="historyRefreshBtn" style="font-size:13px;padding:8px 14px"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i><span>Refresh</span></button>
                             <button class="history-close-btn" onclick="toggleHistory()" title="Close">&times;</button>
                         </div>
                     </div>
                     <div class="history-filters">
-                        <input type="search" class="history-search" id="historySearch" placeholder="گەڕان بە کلیل، دەق، ئیمەیل..." oninput="onHistorySearch()">
+                        <input type="search" class="history-search" id="historySearch" placeholder="Search by key, text, email..." oninput="onHistorySearch()">
                         <div class="history-tabs">
-                            <button class="history-tab active" onclick="setHistoryTab('all', this)">هەموو</button>
+                            <button class="history-tab active" onclick="setHistoryTab('all', this)">All</button>
                             <button class="history-tab" onclick="setHistoryTab('web', this)">🌐 Web</button>
                             <button class="history-tab" onclick="setHistoryTab('android', this)">🤖 Android</button>
                             <button class="history-tab" onclick="setHistoryTab('ios', this)">🍎 iOS</button>
-                            <button class="history-tab marked-tab" onclick="setHistoryTab('marked', this)">🔖 مارک کراو</button>
+                            <button class="history-tab marked-tab" onclick="setHistoryTab('marked', this)">🔖 Marked</button>
                         </div>
                     </div>
                     <div class="history-stats" id="historyStats"></div>
                     <div class="history-list" id="historyList">
-                        <div class="history-empty">کلیک بکە لە سەر نوێکردنەوە بۆ بارکردنی تاریخچە</div>
+                        <div class="history-empty">Click Refresh to load history</div>
                     </div>
                 </div>
             </div>
@@ -2406,7 +2406,7 @@
             var statsEl = document.getElementById('historyStats');
             var btn = document.getElementById('historyRefreshBtn');
             listEl.textContent = '';
-            statsEl.textContent = 'بارکردن...';
+            statsEl.textContent = 'Loading...';
             btn.disabled = true;
 
             try {
@@ -2425,7 +2425,7 @@
                 statsEl.textContent = '';
                 var errDiv = document.createElement('div');
                 errDiv.className = 'history-empty';
-                errDiv.textContent = 'نەتوانرا بارکرێت: ' + e.message;
+                errDiv.textContent = 'Failed to load: ' + e.message;
                 listEl.appendChild(errDiv);
             } finally {
                 btn.disabled = false;
@@ -2471,7 +2471,7 @@
                 var edits = rows.filter(function(r){ return r.action === 'translation_edit'; }).length;
                 var adds  = rows.filter(function(r){ return r.action === 'translation_add'; }).length;
                 var dels  = rows.filter(function(r){ return r.action === 'translation_delete'; }).length;
-                statsEl.textContent = (shown < total ? shown + ' لە ' + total : total) + ' گۆڕانکاری — ' + edits + ' گۆڕدرا · ' + adds + ' زیادکرا · ' + dels + ' سڕایەوە';
+                statsEl.textContent = (shown < total ? shown + ' of ' + total : total) + ' changes — ' + edits + ' edited · ' + adds + ' added · ' + dels + ' deleted';
             } else {
                 statsEl.textContent = '';
             }
@@ -2491,7 +2491,7 @@
             listEl.textContent = '';
 
             if (!rows.length) {
-                listEl.appendChild(makeEl('div', 'history-empty', 'هیچ تۆمارێک نییە'));
+                listEl.appendChild(makeEl('div', 'history-empty', 'No records found'));
                 return;
             }
 
@@ -2499,7 +2499,7 @@
                 var action = (row.action || '').replace('translation_', '');
                 var details = row.details || {};
                 var badgeClass = action === 'add' ? 'add' : action === 'delete' ? 'delete' : 'edit';
-                var badgeLabel = action === 'add' ? 'زیادکرا' : action === 'delete' ? 'سڕایەوە' : 'گۆڕدرا';
+                var badgeLabel = action === 'add' ? 'Added' : action === 'delete' ? 'Deleted' : 'Edited';
                 var platform = details.platform || getPlatform(details.key_id);
                 var platformLabel = platform === 'android' ? 'Android' : platform === 'ios' ? 'iOS' : 'Web';
 
@@ -2529,7 +2529,7 @@
                 if (action === 'edit') {
                     if (details.old_key && details.old_key !== details.key_id) {
                         var keyRow = makeEl('div', 'diff-row');
-                        keyRow.appendChild(makeEl('span', 'diff-label', 'کلیل:'));
+                        keyRow.appendChild(makeEl('span', 'diff-label', 'Key:'));
                         var oldK = makeEl('span', 'old-text', details.old_key);
                         var arr = makeEl('span', '', ' → ');
                         arr.style.color = 'var(--text-tertiary)';
@@ -2540,22 +2540,22 @@
                     }
                     if ((details.old_text || '') !== (details.new_text || '')) {
                         var beforeRow = makeEl('div', 'diff-row');
-                        beforeRow.appendChild(makeEl('span', 'diff-label', 'پێشتر:'));
-                        beforeRow.appendChild(makeEl('span', 'old-text', details.old_text || '(بەتال)'));
+                        beforeRow.appendChild(makeEl('span', 'diff-label', 'Before:'));
+                        beforeRow.appendChild(makeEl('span', 'old-text', details.old_text || '(empty)'));
                         diff.appendChild(beforeRow);
                         var afterRow = makeEl('div', 'diff-row');
-                        afterRow.appendChild(makeEl('span', 'diff-label', 'ئێستا:'));
-                        afterRow.appendChild(makeEl('span', 'new-text', details.new_text || '(بەتال)'));
+                        afterRow.appendChild(makeEl('span', 'diff-label', 'After:'));
+                        afterRow.appendChild(makeEl('span', 'new-text', details.new_text || '(empty)'));
                         diff.appendChild(afterRow);
                     }
                 } else if (action === 'add') {
                     var addRow = makeEl('div', 'diff-row');
-                    addRow.appendChild(makeEl('span', 'diff-label', 'دەق:'));
+                    addRow.appendChild(makeEl('span', 'diff-label', 'Text:'));
                     addRow.appendChild(makeEl('span', 'new-text', details.new_text || ''));
                     diff.appendChild(addRow);
                 } else if (action === 'delete') {
                     var delRow = makeEl('div', 'diff-row');
-                    delRow.appendChild(makeEl('span', 'diff-label', 'دەق:'));
+                    delRow.appendChild(makeEl('span', 'diff-label', 'Text:'));
                     delRow.appendChild(makeEl('span', 'old-text', details.old_text || ''));
                     diff.appendChild(delRow);
                 }
@@ -2572,19 +2572,19 @@
                         ind.appendChild(makeEl('span', '', '🔖'));
                         var indContent = makeEl('div', '');
                         indContent.style.flex = '1';
-                        indContent.appendChild(makeEl('div', 'history-mark-note-text', '"' + (rowDetails.mark_note || 'مارک کراوە') + '"'));
+                        indContent.appendChild(makeEl('div', 'history-mark-note-text', '"' + (rowDetails.mark_note || 'Marked') + '"'));
                         if (rowDetails.marked_by) {
                             indContent.appendChild(makeEl('div', 'history-mark-by', '👤 ' + rowDetails.marked_by + (rowDetails.marked_at ? ' · ' + new Date(rowDetails.marked_at).toLocaleDateString('en-GB') : '')));
                         }
                         ind.appendChild(indContent);
-                        var removeBtn = makeEl('button', 'history-mark-remove', '× لابردن');
-                        removeBtn.title = 'لابردنی مارک';
+                        var removeBtn = makeEl('button', 'history-mark-remove', '× Remove');
+                        removeBtn.title = 'Remove mark';
                         removeBtn.onclick = function() { removeMark(rowId); };
                         ind.appendChild(removeBtn);
                         meta.appendChild(ind);
                     } else {
                         // Show mark button + hidden inline form
-                        var markBtn = makeEl('button', 'history-mark-btn', '🔖 مارک بکە');
+                        var markBtn = makeEl('button', 'history-mark-btn', '🔖 Mark');
                         var formId = 'mf-' + rowId;
                         markBtn.onclick = function() {
                             var f = document.getElementById(formId);
@@ -2600,13 +2600,13 @@
                         form.id = formId;
                         form.style.display = 'none';
                         var ta = document.createElement('textarea');
-                        ta.placeholder = 'بۆچی مارک دەکەی؟ (ئۆپشنەل)';
+                        ta.placeholder = 'Why are you marking this? (optional)';
                         form.appendChild(ta);
                         var actions = makeEl('div', 'mark-form-actions');
-                        var cancelBtn = makeEl('button', 'mark-btn-cancel', 'پاشگەزبوونەوە');
+                        var cancelBtn = makeEl('button', 'mark-btn-cancel', 'Cancel');
                         cancelBtn.type = 'button';
                         cancelBtn.onclick = function() { form.style.display = 'none'; };
-                        var saveBtn = makeEl('button', 'mark-btn-save', '✓ مارک کردن');
+                        var saveBtn = makeEl('button', 'mark-btn-save', '✓ Save Mark');
                         saveBtn.type = 'button';
                         saveBtn.onclick = function() { saveMark(rowId, ta.value.trim()); };
                         actions.appendChild(cancelBtn);
@@ -2646,9 +2646,9 @@
                 if (result.error) throw result.error;
                 row.details = newDetails;
                 filterHistory();
-                showToast('🔖 مارک کرا');
+                showToast('🔖 Marked');
             } catch(e) {
-                showToast('نەتوانرا مارک بکرێت');
+                showToast('Failed to save mark');
             }
         }
 
@@ -2665,9 +2665,9 @@
                 if (result.error) throw result.error;
                 row.details = newDetails;
                 filterHistory();
-                showToast('مارک لابرا');
+                showToast('Mark removed');
             } catch(e) {
-                showToast('نەتوانرا مارک لابردرێت');
+                showToast('Failed to remove mark');
             }
         }
 
