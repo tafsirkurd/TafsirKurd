@@ -1458,6 +1458,19 @@ function updateMushafProgress(view){
   };
 }
 
+// Re-initialize progress tracking in-place (called when goal is created or deleted while a surah is open)
+function _restartProgressTracking(){
+  if(!S.surah)return;
+  if(S.mushafMode){
+    var mv=$('mushafView');
+    if(mv)updateMushafProgress(mv);
+  } else {
+    var list=document.querySelector('.ayah-list');
+    var s=SURAHS[(S.surah||1)-1];
+    if(list&&s)updateProgress(list,s.a);
+  }
+}
+
 /* ===== SIDEBAR ===== */
 App.openSidebar=function(){
   haptic([8]);
@@ -2672,10 +2685,10 @@ App.confirmDeleteGoal=function(){
   localStorage.removeItem('readLog');
   localStorage.removeItem('readAyahsToday');
   localStorage.removeItem('bestStreak');
-  // Clear all surah progress so it starts fresh
   for(var i=1;i<=114;i++){localStorage.removeItem('surah_progress_'+i)}
   S.todayVerses=new Set();
   $('goalConfirmOverlay').classList.remove('on');
+  _restartProgressTracking(); // immediately hide bar + stop tracking if reader is open
   toast(t('toast.goal_deleted'));
   haptic([50]);
   renderGoals();
@@ -2700,6 +2713,8 @@ App.wizardNext=function(){
       goal={name:t('wizard.custom_name'),pages:v,created:Date.now()};
     }
     saveGoal(goal);
+    initTodayVerses(); // reset S.todayVerses so new goal starts counting from now
+    _restartProgressTracking(); // immediately show bar + start fresh tracking if reader is open
     S.wizardStep=2;
     renderWizardStep();
     haptic([50]);
