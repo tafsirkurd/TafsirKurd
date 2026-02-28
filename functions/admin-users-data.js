@@ -5,9 +5,9 @@ export async function onRequest(context) {
     const { request, env } = context;
 
     const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://tafsirkurd.com',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Content-Type': 'application/json'
     };
 
@@ -36,8 +36,11 @@ export async function onRequest(context) {
 
     try {
         const body = await request.json();
-        const { action, token } = body;
+        const { action } = body;
 
+        // Read token from Authorization header, fallback to body.token
+        // (Cloudflare edge may strip Authorization header in some configurations)
+        const token = (request.headers.get('Authorization') || '').replace('Bearer ', '').trim() || (body.token || '').trim();
         if (!token) {
             return jsonResponse({ error: 'No token provided' }, 401, corsHeaders);
         }
@@ -67,17 +70,19 @@ export async function onRequest(context) {
             const { data: profiles, error: profileError } = await supabase
                 .from('profiles')
                 .select('*')
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .limit(5000);
 
             if (profileError) {
                 console.error('Error fetching profiles:', profileError);
-                return jsonResponse({ error: 'Failed to fetch profiles: ' + profileError.message }, 500, corsHeaders);
+                return jsonResponse({ error: 'Failed to fetch profiles' }, 500, corsHeaders);
             }
 
             // Fetch user_data (reading progress)
             const { data: userData, error: userError } = await supabase
                 .from('user_data')
-                .select('*');
+                .select('*')
+                .limit(5000);
 
             if (userError) {
                 console.error('Error fetching user_data:', userError);
@@ -123,7 +128,7 @@ export async function onRequest(context) {
 
             if (profileError) {
                 console.error('Error fetching profiles:', profileError);
-                return jsonResponse({ error: 'Failed to fetch profiles: ' + profileError.message }, 500, corsHeaders);
+                return jsonResponse({ error: 'Failed to fetch profiles' }, 500, corsHeaders);
             }
 
             // Fetch user_data
@@ -181,6 +186,39 @@ export async function onRequest(context) {
                 },
                 users: users.sort((a, b) => b.ayahsRead - a.ayahsRead).slice(0, 50)
             }, 200, corsHeaders);
+        }
+
+        // ===== DELETE USER =====
+        if (action === 'delete_user') {
+            if (role !== 'super_admin') {
+                return jsonResponse({ error: 'Unauthorized. Super Admin access required.' }, 403, corsHeaders);
+            }
+
+            const { userId } = body;
+            if (!userId || typeof userId !== 'string') {
+                return jsonResponse({ error: 'userId is required' }, 400, corsHeaders);
+            }
+
+            const { error: userDataError } = await supabase
+                .from('user_data')
+                .delete()
+                .eq('user_id', userId);
+
+            if (userDataError) {
+                console.error('Error deleting user_data:', userDataError);
+                return jsonResponse({ error: 'Failed to delete user data', details: userDataError.message }, 500, corsHeaders);
+            }
+
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .delete()
+                .eq('id', userId);
+
+            if (profileError) {
+                console.warn('Profile deletion:', profileError.message);
+            }
+
+            return jsonResponse({ success: true, message: 'User deleted' }, 200, corsHeaders);
         }
 
         return jsonResponse({ error: 'Unknown action' }, 400, corsHeaders);
