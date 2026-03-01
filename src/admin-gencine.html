@@ -465,18 +465,26 @@
 
     <!-- MAIN -->
     <main class="main-content">
-        <header class="top-bar">
-            <div class="top-bar-left">
-                <button class="mobile-menu-btn" id="mobile-menu-btn"><i data-lucide="menu"></i></button>
-                <div class="breadcrumb">
-                    <span class="breadcrumb-item">Content</span>
-                    <i data-lucide="chevron-right" class="breadcrumb-sep"></i>
-                    <span class="breadcrumb-item active">Gencine</span>
-                </div>
+        <header class="topbar">
+            <button class="topbar-menu-toggle" id="mobile-menu-toggle">
+                <i data-lucide="menu"></i>
+            </button>
+            <div class="topbar-search">
+                <i data-lucide="search"></i>
+                <input type="text" placeholder="Search Gencine..." id="search-input">
             </div>
-            <div class="top-bar-right">
-                <div id="session-timer-display"></div>
-                <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
+            <div class="topbar-actions">
+                <div class="session-timer" id="sessionTimer" title="Session expires after 20 minutes">
+                    <i data-lucide="clock"></i>
+                    <span id="sessionTimerText">20:00</span>
+                </div>
+                <button class="topbar-btn" style="position: relative;">
+                    <i data-lucide="bell"></i>
+                    <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span>
+                </button>
+                <button class="topbar-btn" id="theme-toggle">
+                    <i data-lucide="moon" id="theme-icon"></i>
+                </button>
             </div>
         </header>
 
@@ -1023,9 +1031,17 @@ document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 document.getElementById('menu-toggle').addEventListener('click', function() {
     document.getElementById('sidebar').classList.toggle('collapsed');
 });
-var mobileBtn = document.getElementById('mobile-menu-btn');
+var mobileBtn = document.getElementById('mobile-menu-toggle');
 if (mobileBtn) mobileBtn.addEventListener('click', function() {
     document.getElementById('sidebar').classList.toggle('mobile-open');
+});
+// Search filter
+var searchInput = document.getElementById('search-input');
+if (searchInput) searchInput.addEventListener('input', function() {
+    var q = this.value.toLowerCase();
+    document.querySelectorAll('.item-card, .cat-card').forEach(function(el) {
+        el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
 });
 if (typeof lucide !== 'undefined') lucide.createIcons();
 </script>
