@@ -150,6 +150,40 @@ function _getHadiths() {
   return (_dbHadiths && _dbHadiths.length) ? _dbHadiths : [];
 }
 
+var APP_LINK = 'https://tafsirkurd.com';
+
+function _mkCopyBtn(text) {
+  var btn = document.createElement('button');
+  btn.className = 'dua-copy-btn';
+  var ico = document.createElement('i');
+  ico.className = 'fas fa-copy';
+  btn.appendChild(ico);
+  btn.onclick = function(e) {
+    e.stopPropagation();
+    var full = text + '\n\n──────────\nTafsirKurd\n' + APP_LINK;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(full).catch(function(){});
+    } else {
+      /* Fallback for older WebViews */
+      var ta = document.createElement('textarea');
+      ta.value = full;
+      ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try { document.execCommand('copy'); } catch(ex){}
+      document.body.removeChild(ta);
+    }
+    haptic(12);
+    ico.className = 'fas fa-check';
+    btn.classList.add('copied');
+    setTimeout(function(){
+      ico.className = 'fas fa-copy';
+      btn.classList.remove('copied');
+    }, 1500);
+  };
+  return btn;
+}
+
 function haptic(ms){
   try{
     if(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Haptics)
@@ -362,6 +396,8 @@ window.GencineUI = {
           rep.textContent = '\u00D7 ' + repeatCount;
           footer.appendChild(rep);
         }
+        var copyText = (dua.ar || '') + (dua.ku ? '\n\n' + dua.ku : '') + (dua.source ? '\n\n' + dua.source : '');
+        footer.appendChild(_mkCopyBtn(copyText));
         card.appendChild(footer);
         list.appendChild(card);
       });
@@ -551,15 +587,15 @@ window.GencineUI = {
       ku.textContent = h.ku;
       card.appendChild(ku);
 
-      if (h.source) {
-        var footer = document.createElement('div');
-        footer.className = 'dua-card-footer';
-        var src = document.createElement('span');
-        src.className = 'dua-card-src';
-        src.textContent = h.source;
-        footer.appendChild(src);
-        card.appendChild(footer);
-      }
+      var hFooter = document.createElement('div');
+      hFooter.className = 'dua-card-footer';
+      var hSrc = document.createElement('span');
+      hSrc.className = 'dua-card-src';
+      hSrc.textContent = h.source || '';
+      hFooter.appendChild(hSrc);
+      var hCopyText = (h.ar || '') + (h.ku ? '\n\n' + h.ku : '') + (h.source ? '\n\n' + h.source : '');
+      hFooter.appendChild(_mkCopyBtn(hCopyText));
+      card.appendChild(hFooter);
 
       list.appendChild(card);
     });
