@@ -31,9 +31,24 @@
         var SCROLL_KEY = 'adminSidebarScroll';
         var nav = document.querySelector('.sidebar-nav');
         if (nav) {
-            // Restore saved position
-            var saved = sessionStorage.getItem(SCROLL_KEY);
-            if (saved) nav.scrollTop = parseInt(saved, 10) || 0;
+            var savedScroll = parseInt(sessionStorage.getItem(SCROLL_KEY), 10) || 0;
+
+            function applyScroll() {
+                if (savedScroll > 0) nav.scrollTop = savedScroll;
+            }
+
+            // Try immediately (works if sidebar already visible)
+            applyScroll();
+
+            // admin-auth.js calls sidebarNav.style.visibility = 'visible' after auth check.
+            // That style mutation resets scrollTop, so we re-apply right after it fires.
+            if (window.MutationObserver && savedScroll > 0) {
+                var revealObs = new MutationObserver(function () {
+                    applyScroll();
+                    revealObs.disconnect();
+                });
+                revealObs.observe(nav, { attributes: true, attributeFilter: ['style'] });
+            }
 
             // Save position whenever a nav link is clicked
             nav.addEventListener('click', function (e) {
