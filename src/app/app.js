@@ -203,6 +203,7 @@ function init(){
     setupPullToRefresh('panelIslamvoice',function(){_renderHash.iv=null;if(typeof App.ivRefresh==='function')App.ivRefresh();});
     setupPullToRefresh('panelSettings',function(){_renderHash.settings=null;renderSettings();});
     setupPullToRefresh('panelPrayer',function(){if(window.PrayerUI)PrayerUI.refresh()});
+    setupPullToRefresh('panelGencine',function(){if(window.GencineUI)GencineUI._draw();});
 
     // Load data
     loadQuranData();
@@ -560,6 +561,7 @@ App.tab=function(name){
   if(name==='islamvoice'){var h=_tabHash('islamvoice');if(h!==_renderHash.iv){renderIslamVoice();_renderHash.iv=h;}}
   if(name==='settings'){var h=_tabHash('settings');if(h!==_renderHash.settings){renderSettings();_renderHash.settings=h;}}
   if(name==='prayer'){if(window.PrayerUI)PrayerUI.render();}
+  if(name==='gencine'){if(window.GencineUI)GencineUI.render();}
 };
 
 /* ===== TOAST ===== */
@@ -1153,7 +1155,7 @@ function renderAyahs(surahNum,scrollTo){
       on(copyBtn,'click',function(){App.openCopyModal(surahNum,ayahNum)});
       actions.appendChild(copyBtn);
 
-      head.appendChild(actions);
+head.appendChild(actions);
       card.appendChild(head);
 
       // Arabic text
@@ -4225,8 +4227,9 @@ function renderIvError(msg){
 }
 
 function loadIslamVoiceData(force){
-  // Show loading spinner immediately
-  if(!S.ivSeries||force){
+  // Only show loading spinner when we have no data at all.
+  // On force-refresh with existing data, fetch silently — content stays visible.
+  if(!S.ivSeries){
     renderIvLoading();
   }
 
@@ -4621,7 +4624,6 @@ App.ivCloseVideo=function(){
 };
 
 App.ivRefresh=function(){
-  S.ivSeries=null;S.ivEpisodes=null;
   loadIslamVoiceData(true);
 };
 

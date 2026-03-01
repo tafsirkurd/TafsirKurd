@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>Gencine - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/fontawesome/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        .view-tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:2px solid var(--border-light)}
+        .tab-btn{padding:12px 24px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-secondary);font-family:var(--font-family);font-size:14px;font-weight:500;cursor:pointer;margin-bottom:-2px;transition:all .2s}
+        .tab-btn:hover{color:var(--text-primary)}
+        .tab-btn.active{color:var(--text-primary);border-bottom-color:var(--primary)}
+        .view-panel{display:none}
+        .view-panel.active{display:block}
+        .ar-text{font-family:'IBM Plex Sans Arabic',serif;font-size:15px;direction:rtl;line-height:1.9;color:var(--text-primary)}
+        .ku-text{font-size:13px;direction:rtl;color:var(--text-secondary);line-height:1.7}
+        .items-list{display:flex;flex-direction:column;gap:10px}
+        .item-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:10px;padding:16px;transition:border-color .2s}
+        .item-card:hover{border-color:var(--border-medium)}
+        .item-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
+        .item-card-meta{display:flex;align-items:center;gap:8px;flex-shrink:0}
+        .item-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:var(--bg-active);color:var(--text-secondary)}
+        .item-badge.cat{background:rgba(59,130,246,.12);color:#3b82f6}
+        .item-source{font-size:12px;color:var(--text-tertiary);direction:rtl}
+        .item-ku{margin-top:8px;padding-top:8px;border-top:1px solid var(--border-light)}
+        .item-actions{display:flex;gap:6px}
+        .btn-icon{width:30px;height:30px;border-radius:6px;border:1px solid var(--border-light);background:var(--bg-surface);color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s}
+        .btn-icon:hover{background:var(--bg-hover);color:var(--text-primary);border-color:var(--border-medium)}
+        .btn-icon.danger:hover{background:rgba(220,38,38,.1);color:#dc2626;border-color:rgba(220,38,38,.3)}
+        .form-panel{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:12px;padding:20px;margin-bottom:20px}
+        .form-panel h3{font-size:15px;font-weight:600;margin:0 0 16px 0;color:var(--text-primary)}
+        .form-grid{display:flex;flex-direction:column;gap:14px}
+        .form-group{display:flex;flex-direction:column;gap:6px}
+        .form-label{font-size:12px;font-weight:500;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em}
+        .form-input,.form-textarea,.form-select{width:100%;padding:10px 12px;border:1px solid var(--border-medium);border-radius:8px;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-family);font-size:14px;transition:border-color .2s;box-sizing:border-box}
+        .form-input:focus,.form-textarea:focus,.form-select:focus{outline:none;border-color:var(--primary)}
+        .form-textarea{resize:vertical;min-height:80px;direction:rtl;font-family:'IBM Plex Sans Arabic',serif;font-size:15px;line-height:1.9}
+        .form-textarea.ku{font-family:var(--font-family);font-size:14px;line-height:1.7;min-height:70px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
+        .btn-primary{padding:9px 20px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:opacity .2s}
+        .btn-primary:hover{opacity:.88}
+        .btn-secondary{padding:9px 20px;background:var(--bg-hover);color:var(--text-primary);border:1px solid var(--border-medium);border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s}
+        .btn-secondary:hover{background:var(--bg-active)}
+        .cat-card-header{display:flex;align-items:center;gap:10px}
+        .cat-key-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:rgba(59,130,246,.12);color:#3b82f6;font-family:monospace}
+        .cat-label{font-size:16px;font-weight:600;direction:rtl}
+        .cat-desc{font-size:13px;color:var(--text-secondary);direction:rtl;margin-top:4px}
+        .cat-image-name{font-size:12px;color:var(--text-tertiary);margin-top:4px;font-family:monospace}
+        .empty-state{padding:48px 24px;text-align:center;color:var(--text-tertiary)}
+        .empty-state i{font-size:32px;margin-bottom:12px;display:block}
+        .empty-state p{font-size:14px;margin:0}
+        .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap}
+        .toolbar-left{display:flex;align-items:center;gap:10px}
+        .item-count{font-size:13px;color:var(--text-secondary)}
+        .cat-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+        .cat-filter-btn{padding:5px 14px;border-radius:16px;border:1px solid var(--border-medium);background:var(--bg-surface);color:var(--text-secondary);font-size:13px;cursor:pointer;transition:all .15s;direction:rtl}
+        .cat-filter-btn.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+    </style>
+    <style id="early-sidebar-hide">
+        .sidebar-nav{visibility:hidden}
+    </style>
+    <script>
+        (function(){
+            var role=sessionStorage.getItem('adminRole');
+            var style=document.getElementById('early-sidebar-hide');
+            var css='.sidebar-nav{visibility:visible}';
+            if(role==='super_admin'){
+                css='.sidebar-nav{visibility:visible}';
+            }else if(role==='analyst'){
+                css='.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            }else if(role==='editor'){
+                css='.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            }else if(role==='custom'){
+                css='.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            }
+            if(role)style.textContent=css;
+        })();
+    </script>
+</head>
+<body>
+<div class="dashboard-container">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <i data-lucide="play-circle"></i>
+                <span class="sidebar-logo-text">TafsirKurd</span>
+            </div>
+            <button class="sidebar-toggle" id="menu-toggle">
+                <i data-lucide="chevron-left"></i>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-header">Overview</div>
+                <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span></a>
+                <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Content</div>
+                <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span></a>
+                <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                <a href="/admin-gencine.html" class="nav-item active"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Users</div>
+                <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                <a href="/admin-reading-stats.html" class="nav-item"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">System</div>
+                <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+                <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+                <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
+                <a href="/admin-activity-feed.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">Activity Feed</span></a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-profile">
+                <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                <div class="sidebar-profile-info">
+                    <div class="sidebar-profile-name"></div>
+                    <div class="sidebar-profile-email"></div>
+                </div>
+                <button onclick="window.adminAuth.logout()" style="background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;transition:color .2s;" title="Logout">
+                    <i data-lucide="log-out"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="mobile-menu-btn" id="mobile-menu-btn"><i data-lucide="menu"></i></button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Content</span>
+                    <i data-lucide="chevron-right" class="breadcrumb-sep"></i>
+                    <span class="breadcrumb-item active">Gencine</span>
+                </div>
+            </div>
+            <div class="top-bar-right">
+                <div id="session-timer-display"></div>
+                <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><i data-lucide="sun"></i></button>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Gencine &mdash; &#x06AF;&#x06D5;&#x0646;&#x062C;&#x06CC;&#x0646;&#x06D5;&#x06CC;&#x0627; &#x0626;&#x0627;&#x06CC;&#x06CC;&#x0646;&#x06CC;</h1>
+                    <p class="page-subtitle">Manage categories, duas, and hadiths shown in the app Gencine tab.</p>
+                </div>
+            </div>
+
+            <div class="view-tabs">
+                <button class="tab-btn active" onclick="switchTab('categories')">Categories</button>
+                <button class="tab-btn" onclick="switchTab('duas')">Duas</button>
+                <button class="tab-btn" onclick="switchTab('hadiths')">Hadiths</button>
+            </div>
+
+            <!-- CATEGORIES -->
+            <div id="panel-categories" class="view-panel active">
+                <div class="form-panel" id="cat-form-panel">
+                    <h3 id="cat-form-title">Add Category</h3>
+                    <input type="hidden" id="cat-edit-id">
+                    <div class="form-grid">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Key (slug)</label>
+                                <input type="text" id="cat-key" class="form-input" placeholder="e.g. morning" style="font-family:monospace">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Kurdish Label (Badini)</label>
+                                <input type="text" id="cat-label" class="form-input" placeholder="&#x628;&#x6D5;&#x06CC;&#x0627;&#x0646;&#x06CC;&#x06A9;&#x0631;&#x062F;&#x0646;" dir="rtl">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Image Name</label>
+                                <input type="text" id="cat-image" class="form-input" placeholder="e.g. genc-morning-bg.webp" style="font-family:monospace">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Sort Order</label>
+                                <input type="number" id="cat-sort" class="form-input" value="10" min="0">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description (Badini)</label>
+                            <input type="text" id="cat-desc" class="form-input" placeholder="Short description shown on card" dir="rtl">
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn-secondary" onclick="cancelCatEdit()">Cancel</button>
+                            <button class="btn-primary" onclick="saveCat()">Save Category</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="toolbar"><div class="toolbar-left"><span class="item-count" id="cat-count"></span></div></div>
+                <div id="cat-list" class="items-list"></div>
+            </div>
+
+            <!-- DUAS -->
+            <div id="panel-duas" class="view-panel">
+                <div class="form-panel" id="dua-form-panel">
+                    <h3 id="dua-form-title">Add Dua</h3>
+                    <input type="hidden" id="dua-edit-id">
+                    <div class="form-grid">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Category</label>
+                                <select id="dua-cat" class="form-select"></select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Source (Hadith)</label>
+                                <input type="text" id="dua-source" class="form-input" placeholder="&#x628;&#x62E;&#x627;&#x631;&#x06CC;" dir="rtl">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Arabic Text</label>
+                            <textarea id="dua-ar" class="form-textarea" placeholder="&#x627;&#x643;&#x62A;&#x628; &#x627;&#x644;&#x62F;&#x639;&#x627;&#x621; &#x628;&#x627;&#x644;&#x639;&#x631;&#x628;&#x64A;&#x629;..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kurdish Translation (Badini)</label>
+                            <textarea id="dua-ku" class="form-textarea ku" placeholder="&#x698;&#x6D5;&#x648;&#x062C;&#x6D5;&#x0631;&#x0627; &#x06A9;&#x0648;&#x0631;&#x062F;&#x06CC;..."></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Repeat Count</label>
+                                <input type="number" id="dua-repeat" class="form-input" value="1" min="1" max="1000">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Sort Order</label>
+                                <input type="number" id="dua-sort" class="form-input" value="10" min="0">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn-secondary" onclick="cancelDuaEdit()">Cancel</button>
+                            <button class="btn-primary" onclick="saveDua()">Save Dua</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="toolbar"><div class="toolbar-left"><span class="item-count" id="dua-count"></span></div></div>
+                <div class="cat-filter" id="dua-cat-filter"></div>
+                <div id="dua-list" class="items-list"></div>
+            </div>
+
+            <!-- HADITHS -->
+            <div id="panel-hadiths" class="view-panel">
+                <div class="form-panel" id="hadith-form-panel">
+                    <h3 id="hadith-form-title">Add Hadith</h3>
+                    <input type="hidden" id="hadith-edit-id">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Arabic Text</label>
+                            <textarea id="hadith-ar" class="form-textarea" placeholder="&#x627;&#x643;&#x62A;&#x628; &#x627;&#x644;&#x62D;&#x62F;&#x64A;&#x62B;..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kurdish Translation (Badini)</label>
+                            <textarea id="hadith-ku" class="form-textarea ku" placeholder="&#x698;&#x6D5;&#x648;&#x062C;&#x6D5;&#x0631;&#x0627; &#x06A9;&#x0648;&#x0631;&#x062F;&#x06CC;..."></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Source</label>
+                                <input type="text" id="hadith-source" class="form-input" placeholder="&#x628;&#x62E;&#x627;&#x631;&#x06CC;" dir="rtl">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Sort Order</label>
+                                <input type="number" id="hadith-sort" class="form-input" value="10" min="0">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn-secondary" onclick="cancelHadithEdit()">Cancel</button>
+                            <button class="btn-primary" onclick="saveHadith()">Save Hadith</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="toolbar"><div class="toolbar-left"><span class="item-count" id="hadith-count"></span></div></div>
+                <div id="hadith-list" class="items-list"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="notification-container" style="position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:340px;pointer-events:none;"></div>
+
+<script src="/utils/admin-session-timer-ui.js?v=5"></script>
+<script src="/utils/admin-auth.js?v=4"></script>
+<script>
+'use strict';
+
+/* ── Tab switching ── */
+var currentTab = 'categories';
+function switchTab(name) {
+    currentTab = name;
+    var tabs = ['categories', 'duas', 'hadiths'];
+    document.querySelectorAll('.tab-btn').forEach(function(b, i) {
+        b.classList.toggle('active', tabs[i] === name);
+    });
+    document.querySelectorAll('.view-panel').forEach(function(p) { p.classList.remove('active'); });
+    document.getElementById('panel-' + name).classList.add('active');
+}
+
+/* ── Toast ── */
+function showNotification(msg, type) {
+    type = type || 'info';
+    var colors = { success: '#22c55e', error: '#ef4444', info: '#3b82f6', warning: '#f59e0b' };
+    var container = document.getElementById('notification-container');
+    var el = document.createElement('div');
+    el.style.cssText = 'background:var(--bg-surface);border:1px solid var(--border-medium);border-left:4px solid ' + (colors[type] || colors.info) + ';border-radius:8px;padding:12px 16px;font-size:13px;color:var(--text-primary);pointer-events:auto;box-shadow:0 4px 16px rgba(0,0,0,.15);';
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(function() { el.remove(); }, 3500);
+}
+
+/* ── State ── */
+var allCategories = [];
+var allDuas = [];
+var allHadiths = [];
+var duaFilterCat = 'all';
+
+async function loadAll() { await Promise.all([loadCategories(), loadDuas(), loadHadiths()]); }
+
+async function loadCategories() {
+    var supabase = window.adminAuth.getSupabase();
+    if (!supabase) return;
+    var r = await supabase.from('gencine_categories').select('*').order('sort_order');
+    if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+    allCategories = r.data || [];
+    renderCategoryList(); populateCatDropdown(); renderDuaCatFilter();
+}
+async function loadDuas() {
+    var supabase = window.adminAuth.getSupabase();
+    if (!supabase) return;
+    var r = await supabase.from('gencine_duas').select('*').order('category_key').order('sort_order');
+    if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+    allDuas = r.data || [];
+    renderDuaList();
+}
+async function loadHadiths() {
+    var supabase = window.adminAuth.getSupabase();
+    if (!supabase) return;
+    var r = await supabase.from('gencine_hadiths').select('*').order('sort_order');
+    if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+    allHadiths = r.data || [];
+    renderHadithList();
+}
+
+/* ── DOM helpers ── */
+function mke(tag, cls) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    return e;
+}
+function mkIconBtn(iconCls, title, danger, cb) {
+    var btn = mke('button', 'btn-icon' + (danger ? ' danger' : ''));
+    btn.title = title;
+    btn.onclick = cb;
+    var ico = mke('i'); ico.className = iconCls;
+    btn.appendChild(ico);
+    return btn;
+}
+
+/* ── CATEGORIES ── */
+function renderCategoryList() {
+    var list = document.getElementById('cat-list');
+    document.getElementById('cat-count').textContent = allCategories.length + ' categories';
+    list.textContent = '';
+    if (!allCategories.length) {
+        var es = mke('div', 'empty-state');
+        var ico = mke('i'); ico.className = 'fas fa-folder-open'; es.appendChild(ico);
+        var p = mke('p'); p.textContent = 'No categories yet. Add one above.'; es.appendChild(p);
+        list.appendChild(es); return;
+    }
+    allCategories.forEach(function(cat) {
+        var card = mke('div', 'item-card');
+        var hdr = mke('div', 'item-card-header');
+        var left = mke('div', 'cat-card-header');
+        var keyBadge = mke('span', 'cat-key-badge'); keyBadge.textContent = cat.key;
+        var labelEl = mke('span', 'cat-label'); labelEl.textContent = cat.label_ku;
+        left.appendChild(keyBadge); left.appendChild(labelEl);
+        var acts = mke('div', 'item-actions');
+        acts.appendChild(mkIconBtn('fas fa-pen', 'Edit', false, function() { editCat(cat.id); }));
+        acts.appendChild(mkIconBtn('fas fa-trash', 'Delete', true, function() { deleteCat(cat.id); }));
+        hdr.appendChild(left); hdr.appendChild(acts);
+        card.appendChild(hdr);
+        if (cat.description) { var d = mke('div', 'cat-desc'); d.textContent = cat.description; card.appendChild(d); }
+        if (cat.image_name) { var img = mke('div', 'cat-image-name'); img.textContent = cat.image_name; card.appendChild(img); }
+        list.appendChild(card);
+    });
+}
+function populateCatDropdown() {
+    var sel = document.getElementById('dua-cat');
+    sel.textContent = '';
+    allCategories.forEach(function(cat) {
+        var opt = document.createElement('option');
+        opt.value = cat.key;
+        opt.textContent = cat.key + ' \u2014 ' + cat.label_ku;
+        sel.appendChild(opt);
+    });
+}
+function editCat(id) {
+    var cat = allCategories.find(function(c) { return c.id === id; });
+    if (!cat) return;
+    document.getElementById('cat-edit-id').value = id;
+    document.getElementById('cat-key').value = cat.key;
+    document.getElementById('cat-label').value = cat.label_ku;
+    document.getElementById('cat-image').value = cat.image_name || '';
+    document.getElementById('cat-desc').value = cat.description || '';
+    document.getElementById('cat-sort').value = cat.sort_order;
+    document.getElementById('cat-form-title').textContent = 'Edit Category';
+    document.getElementById('cat-form-panel').scrollIntoView({ behavior: 'smooth' });
+}
+function cancelCatEdit() {
+    ['cat-edit-id','cat-key','cat-label','cat-image','cat-desc'].forEach(function(id) { document.getElementById(id).value = ''; });
+    document.getElementById('cat-sort').value = '10';
+    document.getElementById('cat-form-title').textContent = 'Add Category';
+}
+async function saveCat() {
+    var key = document.getElementById('cat-key').value.trim();
+    var label = document.getElementById('cat-label').value.trim();
+    if (!key || !label) { showNotification('Key and Kurdish label are required.', 'warning'); return; }
+    var payload = { key: key, label_ku: label,
+        image_name: document.getElementById('cat-image').value.trim() || null,
+        description: document.getElementById('cat-desc').value.trim() || null,
+        sort_order: parseInt(document.getElementById('cat-sort').value) || 0 };
+    var supabase = window.adminAuth.getSupabase();
+    var editId = document.getElementById('cat-edit-id').value;
+    var r = editId ? await supabase.from('gencine_categories').update(payload).eq('id', editId)
+                   : await supabase.from('gencine_categories').insert(payload);
+    if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
+    showNotification(editId ? 'Category updated.' : 'Category added.', 'success');
+    cancelCatEdit(); await loadCategories(); localStorage.removeItem('gencine_cats_v1');
+}
+async function deleteCat(id) {
+    var cat = allCategories.find(function(c) { return c.id === id; });
+    if (!confirm('Delete category "' + (cat ? cat.key : id) + '"?\nDuas in this category will be orphaned.')) return;
+    var supabase = window.adminAuth.getSupabase();
+    var r = await supabase.from('gencine_categories').delete().eq('id', id);
+    if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
+    showNotification('Category deleted.', 'success'); await loadCategories(); localStorage.removeItem('gencine_cats_v1');
+}
+
+/* ── DUAS ── */
+function renderDuaCatFilter() {
+    var bar = document.getElementById('dua-cat-filter');
+    bar.textContent = '';
+    var allBtn = mke('button', 'cat-filter-btn' + (duaFilterCat === 'all' ? ' on' : ''));
+    allBtn.textContent = 'All';
+    allBtn.onclick = function() { duaFilterCat = 'all'; renderDuaList(); renderDuaCatFilter(); };
+    bar.appendChild(allBtn);
+    allCategories.forEach(function(cat) {
+        var btn = mke('button', 'cat-filter-btn' + (duaFilterCat === cat.key ? ' on' : ''));
+        btn.textContent = cat.label_ku;
+        btn.onclick = function() { duaFilterCat = cat.key; renderDuaList(); renderDuaCatFilter(); };
+        bar.appendChild(btn);
+    });
+}
+function renderDuaList() {
+    var list = document.getElementById('dua-list');
+    list.textContent = '';
+    var filtered = duaFilterCat === 'all' ? allDuas : allDuas.filter(function(d) { return d.category_key === duaFilterCat; });
+    document.getElementById('dua-count').textContent = filtered.length + ' duas' + (duaFilterCat !== 'all' ? ' in ' + duaFilterCat : '');
+    if (!filtered.length) {
+        var es = mke('div', 'empty-state');
+        var ico = mke('i'); ico.className = 'fas fa-hands-praying'; es.appendChild(ico);
+        var p = mke('p'); p.textContent = 'No duas found. Add one above.'; es.appendChild(p);
+        list.appendChild(es); return;
+    }
+    filtered.forEach(function(dua) {
+        var card = mke('div', 'item-card');
+        var arEl = mke('div', 'ar-text'); arEl.textContent = dua.ar; arEl.style.flex = '1';
+        var meta = mke('div', 'item-card-meta');
+        var catBadge = mke('span', 'item-badge cat'); catBadge.textContent = dua.category_key;
+        meta.appendChild(catBadge);
+        if (dua.repeat > 1) { var rep = mke('span', 'item-badge'); rep.textContent = '\u00D7 ' + dua.repeat; meta.appendChild(rep); }
+        var acts = mke('div', 'item-actions');
+        acts.appendChild(mkIconBtn('fas fa-pen', 'Edit', false, function() { editDua(dua.id); }));
+        acts.appendChild(mkIconBtn('fas fa-trash', 'Delete', true, function() { deleteDua(dua.id); }));
+        meta.appendChild(acts);
+        var hdr = mke('div', 'item-card-header');
+        hdr.appendChild(arEl); hdr.appendChild(meta);
+        card.appendChild(hdr);
+        var ku = mke('div', 'item-ku ku-text'); ku.textContent = dua.ku; card.appendChild(ku);
+        if (dua.source) { var src = mke('div', 'item-source'); src.textContent = dua.source; src.style.marginTop = '6px'; card.appendChild(src); }
+        list.appendChild(card);
+    });
+}
+function editDua(id) {
+    var dua = allDuas.find(function(d) { return d.id === id; });
+    if (!dua) return;
+    document.getElementById('dua-edit-id').value = id;
+    document.getElementById('dua-ar').value = dua.ar;
+    document.getElementById('dua-ku').value = dua.ku;
+    document.getElementById('dua-source').value = dua.source || '';
+    document.getElementById('dua-repeat').value = dua.repeat || 1;
+    document.getElementById('dua-sort').value = dua.sort_order || 10;
+    document.getElementById('dua-cat').value = dua.category_key;
+    document.getElementById('dua-form-title').textContent = 'Edit Dua';
+    document.getElementById('dua-form-panel').scrollIntoView({ behavior: 'smooth' });
+}
+function cancelDuaEdit() {
+    ['dua-edit-id','dua-ar','dua-ku','dua-source'].forEach(function(id) { document.getElementById(id).value = ''; });
+    document.getElementById('dua-repeat').value = '1';
+    document.getElementById('dua-sort').value = '10';
+    document.getElementById('dua-form-title').textContent = 'Add Dua';
+}
+async function saveDua() {
+    var ar = document.getElementById('dua-ar').value.trim();
+    var ku = document.getElementById('dua-ku').value.trim();
+    if (!ar || !ku) { showNotification('Arabic and Kurdish text are required.', 'warning'); return; }
+    var payload = { category_key: document.getElementById('dua-cat').value, ar: ar, ku: ku,
+        source: document.getElementById('dua-source').value.trim() || null,
+        repeat: parseInt(document.getElementById('dua-repeat').value) || 1,
+        sort_order: parseInt(document.getElementById('dua-sort').value) || 0 };
+    var supabase = window.adminAuth.getSupabase();
+    var editId = document.getElementById('dua-edit-id').value;
+    var r = editId ? await supabase.from('gencine_duas').update(payload).eq('id', editId)
+                   : await supabase.from('gencine_duas').insert(payload);
+    if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
+    showNotification(editId ? 'Dua updated.' : 'Dua added.', 'success');
+    cancelDuaEdit(); await loadDuas(); localStorage.removeItem('gencine_duas_v1');
+}
+async function deleteDua(id) {
+    if (!confirm('Delete this dua?')) return;
+    var supabase = window.adminAuth.getSupabase();
+    var r = await supabase.from('gencine_duas').delete().eq('id', id);
+    if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
+    showNotification('Dua deleted.', 'success'); await loadDuas(); localStorage.removeItem('gencine_duas_v1');
+}
+
+/* ── HADITHS ── */
+function renderHadithList() {
+    var list = document.getElementById('hadith-list');
+    list.textContent = '';
+    document.getElementById('hadith-count').textContent = allHadiths.length + ' hadiths';
+    if (!allHadiths.length) {
+        var es = mke('div', 'empty-state');
+        var ico = mke('i'); ico.className = 'fas fa-scroll'; es.appendChild(ico);
+        var p = mke('p'); p.textContent = 'No hadiths yet. Add one above.'; es.appendChild(p);
+        list.appendChild(es); return;
+    }
+    allHadiths.forEach(function(hadith) {
+        var card = mke('div', 'item-card');
+        var arEl = mke('div', 'ar-text'); arEl.textContent = hadith.ar; arEl.style.flex = '1';
+        var acts = mke('div', 'item-actions');
+        acts.appendChild(mkIconBtn('fas fa-pen', 'Edit', false, function() { editHadith(hadith.id); }));
+        acts.appendChild(mkIconBtn('fas fa-trash', 'Delete', true, function() { deleteHadith(hadith.id); }));
+        var hdr = mke('div', 'item-card-header');
+        hdr.appendChild(arEl); hdr.appendChild(acts);
+        card.appendChild(hdr);
+        var ku = mke('div', 'item-ku ku-text'); ku.textContent = hadith.ku; card.appendChild(ku);
+        if (hadith.source) { var src = mke('div', 'item-source'); src.textContent = hadith.source; src.style.marginTop = '6px'; card.appendChild(src); }
+        list.appendChild(card);
+    });
+}
+function editHadith(id) {
+    var h = allHadiths.find(function(x) { return x.id === id; });
+    if (!h) return;
+    document.getElementById('hadith-edit-id').value = id;
+    document.getElementById('hadith-ar').value = h.ar;
+    document.getElementById('hadith-ku').value = h.ku;
+    document.getElementById('hadith-source').value = h.source || '';
+    document.getElementById('hadith-sort').value = h.sort_order || 10;
+    document.getElementById('hadith-form-title').textContent = 'Edit Hadith';
+    document.getElementById('hadith-form-panel').scrollIntoView({ behavior: 'smooth' });
+}
+function cancelHadithEdit() {
+    ['hadith-edit-id','hadith-ar','hadith-ku','hadith-source'].forEach(function(id) { document.getElementById(id).value = ''; });
+    document.getElementById('hadith-sort').value = '10';
+    document.getElementById('hadith-form-title').textContent = 'Add Hadith';
+}
+async function saveHadith() {
+    var ar = document.getElementById('hadith-ar').value.trim();
+    var ku = document.getElementById('hadith-ku').value.trim();
+    if (!ar || !ku) { showNotification('Arabic and Kurdish text are required.', 'warning'); return; }
+    var payload = { ar: ar, ku: ku,
+        source: document.getElementById('hadith-source').value.trim() || null,
+        sort_order: parseInt(document.getElementById('hadith-sort').value) || 0 };
+    var supabase = window.adminAuth.getSupabase();
+    var editId = document.getElementById('hadith-edit-id').value;
+    var r = editId ? await supabase.from('gencine_hadiths').update(payload).eq('id', editId)
+                   : await supabase.from('gencine_hadiths').insert(payload);
+    if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
+    showNotification(editId ? 'Hadith updated.' : 'Hadith added.', 'success');
+    cancelHadithEdit(); await loadHadiths(); localStorage.removeItem('gencine_hadiths_v1');
+}
+async function deleteHadith(id) {
+    if (!confirm('Delete this hadith?')) return;
+    var supabase = window.adminAuth.getSupabase();
+    var r = await supabase.from('gencine_hadiths').delete().eq('id', id);
+    if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
+    showNotification('Hadith deleted.', 'success'); await loadHadiths(); localStorage.removeItem('gencine_hadiths_v1');
+}
+
+/* ── Init ── */
+(async function() {
+    var isAuth = await window.adminAuth.checkAuth();
+    if (isAuth) await loadAll();
+})();
+
+document.getElementById('menu-toggle').addEventListener('click', function() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+});
+var mobileBtn = document.getElementById('mobile-menu-btn');
+if (mobileBtn) mobileBtn.addEventListener('click', function() {
+    document.getElementById('sidebar').classList.toggle('mobile-open');
+});
+if (typeof lucide !== 'undefined') lucide.createIcons();
+</script>
+</body>
+</html>

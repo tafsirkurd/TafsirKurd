@@ -19,6 +19,9 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 }
 </script>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
 <link rel="preload" href="/assets/fonts/hafs.woff2?v=16" as="font" type="font/woff2" crossorigin="">
 <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin="">
 <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
@@ -53,6 +56,7 @@ img{display:block;max-width:100%}
   --safe-t:env(safe-area-inset-top,0px);
   --ease:cubic-bezier(.16,1,.3,1);
   --r-s:8px;--r-m:12px;--r-l:16px;--r-xl:20px;--r-full:9999px;
+  --accent-glow:rgba(0,0,0,.1);
 }
 [data-theme="dark"]{
   --bg:#0a0a0a;--bg2:#161616;--bg3:#050505;
@@ -63,6 +67,7 @@ img{display:block;max-width:100%}
   --shadow-s:0 1px 3px rgba(0,0,0,.3);
   --shadow-m:0 4px 12px rgba(0,0,0,.4);
   --shadow-l:0 12px 32px rgba(0,0,0,.6);
+  --accent-glow:rgba(255,255,255,.07);
 }
 /* ── Sakina: deep emerald night × gold ── */
 [data-theme="sakina"]{
@@ -74,6 +79,7 @@ img{display:block;max-width:100%}
   --shadow-s:0 1px 4px rgba(0,0,0,.45);
   --shadow-m:0 4px 14px rgba(0,0,0,.55);
   --shadow-l:0 12px 36px rgba(0,0,0,.75);
+  --accent-glow:rgba(201,168,76,.28);
 }
 /* ── Noor: warm parchment × deep green ── */
 [data-theme="noor"]{
@@ -85,6 +91,7 @@ img{display:block;max-width:100%}
   --shadow-s:0 1px 3px rgba(0,0,0,.07);
   --shadow-m:0 4px 12px rgba(0,0,0,.09);
   --shadow-l:0 12px 32px rgba(0,0,0,.14);
+  --accent-glow:rgba(26,92,58,.14);
 }
 
 body{background:var(--bg);color:var(--text)}
@@ -852,28 +859,123 @@ body{background:var(--bg);color:var(--text)}
   --ph-bell:rgba(244,232,204,.12);--ph-bell-t:rgba(244,232,204,.5);--ph-bell-on:rgba(244,232,204,.22);
 }
 /* ── Sky Scene ── */
-.sky-scene{position:relative;height:210px;overflow:hidden;background:#020815}
+.sky-scene{position:relative;height:268px;overflow:hidden;background:#020815}
 .sky-bg{position:absolute;inset:0;transition:background 12s linear}
-.sky-hz{position:absolute;bottom:0;left:0;right:0;height:55%;pointer-events:none;transition:opacity 8s}
-.sky-stars{position:absolute;top:0;left:0;width:100%;height:75%;pointer-events:none;transition:opacity 8s;will-change:transform}
-@keyframes sky-tw{0%{opacity:.3}100%{opacity:1}}
-.sky-star-t{animation:sky-tw 2.8s ease-in-out infinite alternate}
-.sky-cel-wrap{position:absolute;transform:translate(-50%,-50%);width:50px;height:50px;pointer-events:none;transition:left 60s linear,top 60s linear;z-index:2;will-change:transform}
-.sky-cel-glow{position:absolute;inset:-160%;width:420%;height:420%;border-radius:50%;pointer-events:none}
+.sky-hz{position:absolute;bottom:0;left:0;right:0;height:60%;pointer-events:none;transition:opacity 8s}
+/* Stars — 3 twinkling speed variants */
+.sky-stars{position:absolute;top:0;left:0;width:100%;height:80%;pointer-events:none;transition:opacity 8s;will-change:transform}
+@keyframes sky-tw0{0%{opacity:.18}100%{opacity:.95}}
+@keyframes sky-tw1{0%{opacity:.08}100%{opacity:1}}
+@keyframes sky-tw2{0%{opacity:.28}100%{opacity:.82}}
+.sky-star-t0{animation:sky-tw0 2.2s ease-in-out infinite alternate}
+.sky-star-t1{animation:sky-tw1 3.6s ease-in-out infinite alternate}
+.sky-star-t2{animation:sky-tw2 1.7s ease-in-out infinite alternate}
+/* Shooting star */
+@keyframes sky-shoot{0%{opacity:1;width:3px;transform:translate(0,0)}100%{opacity:0;width:95px;transform:translate(115px,68px)}}
+.sky-shoot{position:absolute;height:1.5px;background:linear-gradient(90deg,rgba(255,255,255,.95),transparent);border-radius:2px;transform-origin:0 50%;transform:rotate(-32deg);animation:sky-shoot .65s ease-out forwards;pointer-events:none;z-index:1}
+/* Aurora borealis */
+.sky-aurora{position:absolute;top:0;left:-10%;right:-10%;height:56%;pointer-events:none;transition:opacity 8s;z-index:1}
+@keyframes sky-au1{0%,100%{opacity:.45;transform:skewX(-4deg) scaleX(.93)}50%{opacity:.78;transform:skewX(4deg) scaleX(1.07)}}
+@keyframes sky-au2{0%,100%{opacity:.22;transform:skewX(6deg)}50%{opacity:.52;transform:skewX(-5deg)}}
+@keyframes sky-au3{0%,100%{opacity:.32;transform:skewX(-2deg)}50%{opacity:.62;transform:skewX(5deg)}}
+.sky-au1{position:absolute;inset:0;background:linear-gradient(180deg,transparent 0%,rgba(0,210,120,.22) 38%,rgba(60,180,255,.15) 65%,transparent 100%);filter:blur(14px);animation:sky-au1 7s ease-in-out infinite}
+.sky-au2{position:absolute;top:10%;left:6%;right:6%;height:72%;background:linear-gradient(180deg,transparent,rgba(130,55,255,.16) 46%,rgba(0,200,140,.13) 74%,transparent);filter:blur(20px);animation:sky-au2 9.5s ease-in-out infinite}
+.sky-au3{position:absolute;top:6%;left:20%;right:20%;height:62%;background:linear-gradient(180deg,transparent,rgba(55,255,180,.16) 52%,transparent);filter:blur(11px);animation:sky-au3 5.8s ease-in-out infinite}
+/* Clouds */
+.sky-cloud{position:absolute;pointer-events:none;transition:opacity 6s,color 6s;z-index:2}
+@keyframes sky-cl1{0%{left:-165px}100%{left:calc(100% + 165px)}}
+@keyframes sky-cl2{0%{left:-115px}100%{left:calc(100% + 115px)}}
+@keyframes sky-cl3{0%{left:-185px}100%{left:calc(100% + 185px)}}
+.sky-cloud-a{top:12%;animation:sky-cl1 62s linear infinite}
+.sky-cloud-b{top:23%;animation:sky-cl2 88s linear infinite;animation-delay:-26s}
+.sky-cloud-c{top:7%;animation:sky-cl3 72s linear infinite;animation-delay:-44s}
+/* Celestial body + glow */
+.sky-cel-wrap{position:absolute;transform:translate(-50%,-50%);width:52px;height:52px;pointer-events:none;transition:left 60s linear,top 60s linear;z-index:3;will-change:transform}
+.sky-cel-glow{position:absolute;inset:-160%;width:420%;height:420%;border-radius:50%;pointer-events:none;transition:background 10s}
+@keyframes sky-glow-p{0%,100%{transform:scale(1);opacity:.82}50%{transform:scale(1.14);opacity:1}}
+.sky-cel-glow{animation:sky-glow-p 4.8s ease-in-out infinite}
+/* Sun rays */
+.sky-sun-rays{position:absolute;inset:-115%;width:330%;height:330%;pointer-events:none;transition:opacity 8s}
+@keyframes sky-ray-sp{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.sky-sun-rays-inner{position:absolute;inset:0;animation:sky-ray-sp 26s linear infinite}
+.sky-sun-ray{position:absolute;top:50%;left:50%;height:1.5px;border-radius:2px;transform-origin:0 50%;background:linear-gradient(90deg,rgba(255,210,50,.55),transparent)}
+/* Sun */
 .sky-cel{position:absolute;inset:0;border-radius:50%;transition:background 10s}
-.sky-cel-sun{box-shadow:0 0 24px rgba(255,220,80,.7),0 0 60px rgba(255,160,40,.35)}
-.sky-cel-moon{width:38px;height:38px;margin:6px;box-shadow:0 0 18px rgba(200,215,255,.45)}
-.sky-cel-moon::after{content:'';position:absolute;width:80%;height:80%;border-radius:50%;background:inherit;top:-12%;right:-20%;filter:blur(1px);opacity:.85}
-.sky-horizon{position:absolute;bottom:0;left:0;right:0;width:100%;height:55px;pointer-events:none;will-change:transform}
-.sky-top-row{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px 0;z-index:5}
+.sky-cel-sun{box-shadow:0 0 22px rgba(255,220,80,.9),0 0 56px rgba(255,160,40,.45)}
+/* Moon — crescent via CSS variable overlay */
+.sky-cel-moon{overflow:visible;box-shadow:0 0 16px rgba(200,215,255,.52),0 0 42px rgba(170,185,255,.24)}
+.sky-cel-moon::after{content:'';position:absolute;width:82%;height:82%;border-radius:50%;background:var(--sky-crescent,#0b1130);top:-10%;right:-18%;filter:blur(2px);opacity:.92}
+/* Birds */
+.sky-birds{position:absolute;pointer-events:none;z-index:4;transition:opacity 5s}
+@keyframes sky-bf1{0%{transform:translateX(-60px) translateY(0)}100%{transform:translateX(calc(100vw + 60px)) translateY(-16px)}}
+@keyframes sky-bf2{0%{transform:translateX(-60px) translateY(0)}100%{transform:translateX(calc(100vw + 60px)) translateY(10px)}}
+@keyframes sky-bf3{0%{transform:translateX(-60px) translateY(0)}100%{transform:translateX(calc(100vw + 60px)) translateY(-7px)}}
+.sky-bird-1{position:absolute;top:30%;animation:sky-bf1 22s linear infinite}
+.sky-bird-2{position:absolute;top:43%;animation:sky-bf2 28s linear infinite;animation-delay:-10s}
+.sky-bird-3{position:absolute;top:24%;animation:sky-bf3 24s linear infinite;animation-delay:-16s}
+/* Particles (sunrise/sunset) */
+.sky-particles{position:absolute;bottom:26%;left:0;right:0;pointer-events:none;z-index:2;transition:opacity 6s}
+@keyframes sky-pt{0%{transform:translateY(0) scale(1);opacity:.88}100%{transform:translateY(-72px) scale(0);opacity:0}}
+.sky-pt{position:absolute;width:2.5px;height:2.5px;border-radius:50%;animation:sky-pt linear infinite}
+/* Mosque/city silhouette */
+.sky-horizon{position:absolute;bottom:0;left:0;right:0;width:100%;height:78px;pointer-events:none;will-change:transform}
+/* UI overlay */
+.sky-top-row{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px 0;z-index:8}
 .sky-city{font-size:1.5rem;font-weight:700;color:rgba(255,255,255,.92);text-shadow:0 1px 8px rgba(0,0,0,.5);line-height:1}
 .sky-bell{background:rgba(255,255,255,.15);border:none;color:rgba(255,255,255,.8);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .sky-bell--on{background:rgba(255,255,255,.25);color:#fff}
-.sky-bottom-row{position:absolute;bottom:0;left:0;right:0;padding:0 16px 12px;z-index:5;background:linear-gradient(to top,rgba(0,0,0,.45) 0%,transparent 100%);text-align:right}
-.sky-next-name{font-size:.7rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.7);text-shadow:0 1px 4px rgba(0,0,0,.5);margin-bottom:2px}
-.sky-countdown{font-size:2.6rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.02em;direction:ltr;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.4);display:inline-block}
-.sky-dates{display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;justify-content:flex-start}
-.sky-dates span{font-size:.72rem;color:rgba(255,255,255,.6);text-shadow:0 1px 4px rgba(0,0,0,.4)}
+.sky-bottom-row{position:absolute;bottom:0;left:0;right:0;padding:0 16px 14px;z-index:8;background:linear-gradient(to top,rgba(0,0,0,.54) 0%,transparent 100%);text-align:right}
+.sky-next-name{font-size:.68rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.78);text-shadow:0 1px 4px rgba(0,0,0,.5);margin-bottom:2px}
+.sky-countdown{font-size:2.8rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.02em;direction:ltr;line-height:1;text-shadow:0 2px 16px rgba(0,0,0,.5);display:inline-block}
+.sky-dates{display:flex;gap:10px;margin-top:5px;flex-wrap:wrap;justify-content:flex-start}
+.sky-dates span{font-size:.7rem;color:rgba(255,255,255,.68);text-shadow:0 1px 4px rgba(0,0,0,.4)}
+/* Milky Way diagonal band */
+.sky-milkyway{position:absolute;top:0;left:-12%;right:-12%;height:70%;background:linear-gradient(132deg,transparent 15%,rgba(138,122,215,0.06) 33%,rgba(185,165,245,0.14) 50%,rgba(138,122,215,0.06) 67%,transparent 85%);filter:blur(14px);pointer-events:none;transition:opacity 10s;z-index:1}
+/* Nebula glow (deep night) */
+.sky-nebula{position:absolute;top:5%;left:10%;width:55%;height:45%;background:radial-gradient(ellipse,rgba(80,50,160,0.08) 0%,rgba(40,60,160,0.05) 40%,transparent 70%);filter:blur(18px);pointer-events:none;transition:opacity 10s;z-index:1}
+/* Aircraft blink animations */
+@keyframes sky-acr{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes sky-acw{0%,24%{opacity:1}25%,74%{opacity:0}75%,100%{opacity:1}}
+.sky-aircraft{position:absolute;pointer-events:none;z-index:6}
+.sky-ac-body{position:relative;width:5px;height:1.5px;background:rgba(255,255,255,.92);border-radius:1px}
+.sky-ac-r{position:absolute;width:2px;height:2px;border-radius:50%;background:#ff3838;animation:sky-acr 1.2s linear infinite;top:-.5px;right:-9px}
+.sky-ac-w{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:sky-acw .7s linear infinite;top:-.5px;left:-9px}
+.sky-ac-trail{position:absolute;height:1px;width:24px;background:linear-gradient(90deg,rgba(255,255,255,.2),transparent);right:5px;top:.25px}
+/* Fog / mist (prefajr / fajr) */
+.sky-fog{position:absolute;bottom:16%;left:-5%;right:-5%;height:32%;background:linear-gradient(to top,rgba(200,215,255,0.24) 0%,rgba(200,215,255,0.10) 50%,transparent 100%);filter:blur(12px);pointer-events:none;z-index:3;transition:opacity 8s}
+/* Rainbow arc (sunrise / morning) */
+.sky-rainbow{position:absolute;bottom:14%;left:-22%;right:-22%;height:82%;background:radial-gradient(ellipse 60% 58% at 50% 100%,transparent 53%,rgba(255,0,0,0.07) 55%,rgba(255,130,0,0.08) 57%,rgba(255,220,0,0.07) 59%,rgba(0,190,0,0.07) 61%,rgba(0,90,255,0.07) 63%,rgba(110,0,190,0.06) 65%,transparent 67%);filter:blur(6px);pointer-events:none;z-index:3;transition:opacity 8s}
+/* Hot air balloon */
+.sky-balloon{position:absolute;pointer-events:none;z-index:5;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.30))}
+/* Floating lanterns (dusk / night) */
+@keyframes sky-lant{0%{transform:translateY(0) rotate(-4deg);opacity:0}8%{opacity:1}85%{opacity:0.85}100%{transform:translateY(-115px) rotate(4deg);opacity:0}}
+.sky-lantern{position:absolute;width:7px;height:9px;background:rgba(255,195,50,0.92);border-radius:45% 45% 65% 65%;box-shadow:0 0 8px rgba(255,165,0,0.90),0 0 20px rgba(255,130,0,0.42);pointer-events:none;z-index:6;animation:sky-lant 9s ease-out forwards}
+/* Moon surface craters / mare texture */
+.sky-cel-moon::before{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle 30% at 38% 36%,rgba(0,0,0,0.14) 0%,transparent 100%),radial-gradient(circle 18% at 67% 27%,rgba(0,0,0,0.11) 0%,transparent 100%),radial-gradient(circle 22% at 54% 68%,rgba(0,0,0,0.12) 0%,transparent 100%),radial-gradient(circle 12% at 22% 72%,rgba(0,0,0,0.09) 0%,transparent 100%),radial-gradient(circle 8% at 78% 55%,rgba(0,0,0,0.08) 0%,transparent 100%)}
+/* God rays / crepuscular rays */
+@keyframes sky-gdr{0%{opacity:.35}50%{opacity:.65}100%{opacity:.35}}
+.sky-godrays{position:absolute;bottom:0;left:0;right:0;height:100%;pointer-events:none;z-index:2;transition:opacity 6s;animation:sky-gdr 5s ease-in-out infinite;background:repeating-conic-gradient(from 270deg at 50% 108%,rgba(255,195,80,0.055) 0deg,transparent 3.5deg,rgba(255,215,110,0.045) 5.5deg,transparent 8deg)}
+/* Fireflies */
+@keyframes sky-ff{0%,100%{opacity:0;transform:scale(0.7)}45%{opacity:1;transform:scale(1.3)}58%{opacity:0.9;transform:scale(1.1)}}
+.sky-firefly{position:absolute;width:3px;height:3px;background:rgba(185,255,100,0.92);border-radius:50%;box-shadow:0 0 5px rgba(160,255,70,0.88),0 0 13px rgba(110,240,50,0.44);pointer-events:none;z-index:7;animation:sky-ff var(--ffd,2s) ease-in-out infinite var(--ffdl,0s)}
+/* Sun corona / halo ring */
+.sky-cel-sun::after{content:'';position:absolute;inset:-48%;border-radius:50%;background:radial-gradient(circle,transparent 38%,rgba(255,215,75,0.20) 46%,rgba(255,195,55,0.15) 54%,rgba(255,175,35,0.07) 63%,transparent 72%);pointer-events:none}
+/* Animated bird wing flap (CSS d-path animation) */
+@keyframes sky-bwl{0%,100%{d:path("M11,5 Q5.5,0 0,5")}50%{d:path("M11,5 Q5.5,7.5 0,9")}}
+@keyframes sky-bwr{0%,100%{d:path("M11,5 Q16.5,0 22,5")}50%{d:path("M11,5 Q16.5,7.5 22,9")}}
+.sky-bwl{animation:sky-bwl .88s ease-in-out infinite}
+.sky-bwr{animation:sky-bwr .88s ease-in-out infinite}
+.sky-bird-1 .sky-bwl,.sky-bird-1 .sky-bwr{animation-duration:.88s;animation-delay:0s}
+.sky-bird-2 .sky-bwl,.sky-bird-2 .sky-bwr{animation-duration:.72s;animation-delay:-.30s}
+.sky-bird-3 .sky-bwl,.sky-bird-3 .sky-bwr{animation-duration:1.05s;animation-delay:-.58s}
+/* Cirrus (high-altitude wispy) clouds */
+@keyframes sky-cl4{0%{transform:translateX(-20%)}100%{transform:translateX(115%)}}
+.sky-cloud-d{top:3%;animation:sky-cl4 108s linear infinite;animation-delay:-54s}
+/* Venus / morning-evening star */
+@keyframes sky-vns{0%,100%{box-shadow:0 0 5px rgba(255,240,145,.94),0 0 13px rgba(255,218,95,.54)}50%{box-shadow:0 0 8px rgba(255,245,170,1),0 0 20px rgba(255,228,110,.72)}}
+.sky-venus{position:absolute;width:4px;height:4px;background:#fff8e0;border-radius:50%;z-index:5;pointer-events:none;transition:opacity 5s,left 8s,top 8s;animation:sky-vns 3.8s ease-in-out infinite}
+/* Star constellation lines */
+.sky-const{stroke:rgba(180,200,255,0.11);stroke-width:0.4}
 /* Prayer 2-col grid */
 .prayer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 14px 6px}
 .prayer-grid-card{background:var(--bg2);border-radius:var(--r-l);padding:16px 14px;display:flex;flex-direction:column;gap:6px;border:1px solid transparent;transition:all .2s}
@@ -936,6 +1038,11 @@ body{background:var(--bg);color:var(--text)}
 .prayer-duration-btn{padding:9px 18px;border-radius:100px;background:rgba(255,255,255,.07);border:none;color:var(--text2);font-size:.88rem;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s,color .15s,transform .12s;letter-spacing:.01em}
 .prayer-duration-btn.on{background:var(--accent);color:var(--accent-t);font-weight:700}
 .prayer-duration-btn:active{transform:scale(.9)}
+/* Action buttons row (Test + Reschedule) */
+.prayer-athan-btn-row{display:flex;gap:8px;padding:18px 0 4px;flex-wrap:wrap}
+.prayer-athan-action-btn{flex:1;padding:10px 12px;border-radius:100px;background:var(--accent);color:var(--accent-t);border:none;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s,transform .12s;min-width:120px}
+.prayer-athan-action-btn--secondary{background:rgba(255,255,255,.1);color:var(--text)}
+.prayer-athan-action-btn:active{transform:scale(.95)}
 /* Status / error */
 .prayer-status{padding:80px 16px;text-align:center;color:var(--text3);font-size:.95rem}
 .prayer-error{color:var(--danger)}
@@ -955,9 +1062,83 @@ body{background:var(--bg);color:var(--text)}
 .qibla-approx-badge{font-size:.72rem;color:rgba(255,255,255,.3);align-self:center;padding-top:4px}
 .qibla-loading{font-size:.82rem;color:rgba(255,255,255,.4)}
 .qibla-no-loc{font-size:.82rem;color:#e55}
+
+/* ===== GENCINE TAB ===== */
+/* Gencine home — cinematic cards */
+.genc-home{display:flex;flex-direction:column;gap:14px;padding:20px 16px 32px}
+/* Base card — fully theme-aware */
+.genc-card-btn{position:relative;width:100%;height:150px;border-radius:24px;overflow:hidden;border:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s;display:block;background:var(--surface);background-size:cover;background-position:center;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.genc-card-btn:active{transform:scale(.97)}
+/* Top accent bar */
+.genc-card-topbar{position:absolute;top:0;left:0;right:0;height:2px;z-index:3;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.7}
+/* Card body — anchored to bottom */
+.genc-card-body{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;padding:14px 18px 18px;gap:14px;direction:rtl;z-index:2}
+/* Icon */
+.genc-card-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;background:var(--surface-h);border:1px solid var(--border2);color:var(--accent)}
+/* Texts */
+.genc-card-texts{flex:1;direction:rtl;text-align:right}
+.genc-card-title{font-size:1.38rem;font-weight:800;color:var(--text);letter-spacing:.01em}
+.genc-card-sub{font-size:.74rem;color:var(--text3);margin-top:4px;line-height:1.5}
+.genc-card-arrow{color:var(--text3);font-size:.85rem;flex-shrink:0}
+/* Overlay — bottom-heavy gradient, shown only when image loaded */
+.genc-card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.5) 45%,rgba(0,0,0,.05) 100%);opacity:0;z-index:1;pointer-events:none}
+/* When image is loaded — overlay + text go white, no transition */
+.genc-card-btn.has-image .genc-card-overlay{opacity:1}
+.genc-card-btn.has-image .genc-card-title{color:#fff}
+.genc-card-btn.has-image .genc-card-sub{color:rgba(255,255,255,.55)}
+.genc-card-btn.has-image .genc-card-arrow{color:rgba(255,255,255,.4)}
+.genc-card-btn.has-image .genc-card-icon{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff}
+/* back row */
+.genc-back-row{display:flex;align-items:center;gap:12px;padding:12px 16px 4px}
+.genc-back-btn{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);cursor:pointer;flex-shrink:0}
+.genc-back-btn i{font-size:.85rem}
+.genc-back-label{font-size:1rem;font-weight:700;color:var(--text)}
+/* Dua — tab bar */
+.dua-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 16px;overflow-x:auto;scrollbar-width:none}
+.dua-tab-btn{flex-shrink:0;padding:10px 14px;font-size:.82rem;font-weight:600;background:none;color:var(--text3);border:none;cursor:pointer;position:relative;transition:color .2s;white-space:nowrap}
+.dua-tab-btn.on{color:var(--accent)}
+.dua-tab-btn.on::after{content:'';position:absolute;bottom:-1px;left:8%;right:8%;height:2px;border-radius:2px;background:var(--accent)}
+/* Dua list */
+.dua-list{padding:0 0 40px;display:flex;flex-direction:column}
+.dua-card{padding:20px 16px 14px;border-bottom:1px solid var(--border);position:relative;padding-right:22px}
+.dua-card::after{content:'';position:absolute;right:0;top:16px;bottom:16px;width:3px;border-radius:3px;background:var(--accent);opacity:.5}
+.dua-card:last-child{border-bottom:none}
+.dua-card-ar{font-family:'Scheherazade New',serif;font-size:1.3rem;line-height:2.2;color:var(--text);direction:rtl;text-align:right;margin-bottom:10px}
+.dua-card-ku{font-size:.84rem;line-height:1.8;color:var(--text2);direction:rtl;text-align:right;padding-top:10px;border-top:1px solid var(--border)}
+.dua-card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;direction:rtl}
+.dua-card-src{font-size:.68rem;color:var(--text3)}
+.dua-card-repeat{background:var(--bg2);color:var(--text2);border-radius:20px;padding:2px 10px;font-size:.68rem;font-weight:700;border:1px solid var(--border)}
+/* Tasbih */
+.tasbih-wrap{display:flex;flex-direction:column;align-items:center;padding:8px 0 28px}
+.tasbih-dhikr-scroll{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:8px 16px;width:100%;box-sizing:border-box}
+.tasbih-dhikr-card{flex-shrink:0;padding:10px 14px;border-radius:12px;background:var(--bg2);border:1.5px solid var(--border);cursor:pointer;direction:rtl;transition:all .18s;text-align:center}
+.tasbih-dhikr-card.on{border-color:var(--accent);background:var(--surface)}
+.tasbih-dhikr-card-ar{font-size:.8rem;color:var(--text2);line-height:1.5}
+.tasbih-dhikr-card.on .tasbih-dhikr-card-ar{color:var(--accent);font-weight:600}
+.tasbih-dhikr-display{font-family:'KFGQPC Hafs',serif;font-size:1.5rem;color:var(--text);text-align:center;width:calc(100% - 32px);padding:16px 20px;background:var(--surface);border-radius:16px;border:1px solid var(--border);direction:rtl;line-height:2;margin:4px 16px 14px}
+.tasbih-target-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;justify-content:center;padding:0 16px}
+.tasbih-target-btn{padding:8px 16px;border-radius:var(--r-m);background:var(--bg2);color:var(--text2);border:1px solid var(--border);cursor:pointer;font-size:.82rem;font-weight:600;transition:all .18s}
+.tasbih-target-btn.on{background:var(--accent);color:var(--accent-t);border-color:transparent}
+.tasbih-ring{position:relative;width:220px;height:220px;margin:0 0 14px}
+.tasbih-ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.tasbih-ring-track{fill:none;stroke:var(--bg2);stroke-width:14}
+.tasbih-ring-fill{fill:none;stroke:var(--accent);stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .3s}
+.tasbih-tap-btn{position:absolute;inset:16px;border-radius:50%;background:var(--surface);color:var(--text);border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;user-select:none;box-shadow:0 2px 16px rgba(0,0,0,.08)}
+.tasbih-count-num{font-size:3.8rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.tasbih-count-of{font-size:.74rem;color:var(--text3);margin-top:3px}
+.tasbih-reset-btn{padding:11px 36px;border-radius:var(--r-m);background:var(--bg2);color:var(--text2);border:1px solid var(--border);cursor:pointer;font-size:.88rem;font-weight:600}
+/* Hadith coming-soon */
+.genc-coming{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center;gap:14px}
+.genc-coming-icon{font-size:3rem;color:var(--accent)}
+.genc-coming-title{font-size:1.3rem;font-weight:800;color:var(--text)}
+.genc-coming-sub{font-size:.88rem;color:var(--text3);line-height:1.7;direction:rtl}
 </style>
 </head>
 <body>
+
+<!-- Font primer: forces KFGQPC Hafs to activate at page-load so Gencine/Dua
+     tab Arabic text is instant with zero FOUT on first open -->
+<div aria-hidden="true" style="position:fixed;top:-200px;left:-200px;pointer-events:none;font-family:'KFGQPC Hafs',serif;font-size:1px;opacity:0">بسم الله</div>
 
 <!-- SPLASH -->
 <div class="splash" id="splash">
@@ -1096,6 +1277,14 @@ body{background:var(--bg);color:var(--text)}
   <div class="settings-content" id="settingsContent"></div>
 </section>
 
+<!-- TAB: GENCINE (Religious Treasure) -->
+<section class="panel" id="panelGencine" data-tab="gencine">
+  <div class="hdr">
+    <div class="hdr-title"><i class="fas fa-gem"></i> <span data-i18n="header.gencine">گەنجینەیا ئایینی</span></div>
+  </div>
+  <div id="gencineContent"></div>
+</section>
+
 <!-- TAB: PRAYER TIMES -->
 <section class="panel" id="panelPrayer" data-tab="prayer">
   <div class="hdr">
@@ -1177,6 +1366,7 @@ body{background:var(--bg);color:var(--text)}
 <nav class="tabbar">
   <button class="tab-item on" data-tab="quran" onclick="App.tab('quran')"><i class="fas fa-book"></i><span data-i18n="tabs.quran" data-t="android_span_12">قورئان</span></button>
   <button class="tab-item" data-tab="islamvoice" onclick="App.tab('islamvoice')"><i class="fas fa-video"></i><span data-i18n="tabs.video" data-t="android_span_13">ڤیدیۆ</span></button>
+  <button class="tab-item" data-tab="gencine" onclick="App.tab('gencine')"><i class="fas fa-gem"></i><span data-i18n="tabs.gencine">گەنجینە</span></button>
   <button class="tab-item" data-tab="prayer" onclick="App.tab('prayer')"><i class="fas fa-mosque"></i><span data-i18n="tabs.prayer">نوێژ</span></button>
   <button class="tab-item" data-tab="settings" onclick="App.tab('settings')"><i class="fas fa-cog"></i><span data-i18n="tabs.settings" data-t="android_span_16">ڕێکخستن</span></button>
 </nav>
@@ -1314,7 +1504,9 @@ body{background:var(--bg);color:var(--text)}
 <script src="/prayer/prayer.logic.js?v=20260228b"></script>
 <script src="/prayer/prayer.notifications.android.js?v=20260228c"></script>
 <script src="/prayer/prayer.qibla.js?v=20260228c"></script>
-<script src="/prayer/prayer.ui.js?v=20260228k"></script>
+<script src="/prayer/prayer.ui.js?v=20260301s"></script>
+<script src="/dhikr/dua-data.js?v=20260301a"></script>
+<script src="/dhikr/dhikr.js?v=20260301a"></script>
 <script src="/app/app.js?v=20260301j"></script>
 <script>
 /* Failsafe: hide splash after 3s even if app.js fails */
