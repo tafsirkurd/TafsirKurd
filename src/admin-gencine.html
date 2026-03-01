@@ -161,9 +161,20 @@
 
         <div class="content-area">
             <div class="page-header">
-                <div>
-                    <h1 class="page-title">Gencine &mdash; &#x06AF;&#x06D5;&#x0646;&#x062C;&#x06CC;&#x0646;&#x06D5;&#x06CC;&#x0627; &#x0626;&#x0627;&#x06CC;&#x06CC;&#x0646;&#x06CC;</h1>
-                    <p class="page-subtitle">Manage categories, duas, and hadiths shown in the app Gencine tab.</p>
+                <h1 class="page-title">Gencine</h1>
+                <div class="page-actions">
+                    <button class="btn btn-secondary" onclick="switchTab('categories')">
+                        <i data-lucide="folder"></i>
+                        Categories
+                    </button>
+                    <button class="btn btn-secondary" onclick="switchTab('duas')">
+                        <i data-lucide="hands-helping"></i>
+                        Duas
+                    </button>
+                    <button class="btn btn-primary" onclick="switchTab('hadiths')">
+                        <i data-lucide="scroll-text"></i>
+                        Hadiths
+                    </button>
                 </div>
             </div>
 
