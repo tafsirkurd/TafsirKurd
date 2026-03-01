@@ -27,35 +27,31 @@
             }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
         }
 
-        // ── 3. Sidebar scroll position persistence ──
-        var SCROLL_KEY = 'adminSidebarScroll';
+        // ── 3. Scroll active nav item into view in the sidebar ──
+        // Instead of saving/restoring pixel offsets (fragile with auth timing),
+        // we simply ensure the current page's active nav item is visible.
         var nav = document.querySelector('.sidebar-nav');
         if (nav) {
-            var savedScroll = parseInt(sessionStorage.getItem(SCROLL_KEY), 10) || 0;
+            var activeItem = nav.querySelector('.nav-item.active');
 
-            function applyScroll() {
-                if (savedScroll > 0) nav.scrollTop = savedScroll;
+            function scrollActiveIntoView() {
+                if (activeItem) {
+                    activeItem.scrollIntoView({ block: 'nearest' });
+                }
             }
 
-            // Try immediately (works if sidebar already visible)
-            applyScroll();
+            // Try immediately (sidebar may already be visible from early inline script)
+            scrollActiveIntoView();
 
-            // admin-auth.js calls sidebarNav.style.visibility = 'visible' after auth check.
-            // That style mutation resets scrollTop, so we re-apply right after it fires.
-            if (window.MutationObserver && savedScroll > 0) {
+            // admin-auth.js sets sidebarNav.style.visibility after async auth check.
+            // Re-run scrollIntoView right after that style change fires.
+            if (window.MutationObserver) {
                 var revealObs = new MutationObserver(function () {
-                    applyScroll();
+                    scrollActiveIntoView();
                     revealObs.disconnect();
                 });
                 revealObs.observe(nav, { attributes: true, attributeFilter: ['style'] });
             }
-
-            // Save position whenever a nav link is clicked
-            nav.addEventListener('click', function (e) {
-                if (e.target.closest('a.nav-item')) {
-                    sessionStorage.setItem(SCROLL_KEY, nav.scrollTop);
-                }
-            });
         }
     });
 })();
