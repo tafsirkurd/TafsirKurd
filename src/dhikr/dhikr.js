@@ -4,7 +4,7 @@
 
 var SECTIONS = [
   { name:'hadith', label:'حەدیس',  sub:'فەرمودێن پێغەمبەرێ ئیسلامێ',      icon:'fas fa-scroll'        },
-  { name:'dua',    label:'دوعا',    sub:'دعاهای بەیانی، ئێوار و زیاتر',    icon:'fas fa-hands-praying' },
+  { name:'dua',    label:'دوعا',    sub:'دعاهای بەیانی، ئێوار و زیاتر',    icon:'fas fa-book-open'     },
   { name:'tasbih', label:'تەسبیح', sub:'ژمارتنا دیکرێن ئیسلامی',           icon:'fas fa-rotate'        }
 ];
 
