@@ -1,19 +1,46 @@
-// Universal Dark Mode Theme Loader
-// This script runs immediately on page load to prevent flash of wrong theme
+// Admin Theme Loader + Sidebar Scroll Persistence
+// Runs immediately in <head> — must stay small and synchronous
+
 (function() {
+    // ── 1. Flash prevention: apply dark mode to <html> before first paint ──
     try {
-        var savedTheme = localStorage.getItem('theme');
-        var userPrefs = {};
-        try {
-            var prefsStr = localStorage.getItem('userPreferences');
-            if (prefsStr) userPrefs = JSON.parse(prefsStr);
-        } catch (e) {
-            // Invalid JSON in userPreferences, ignore
+        var savedTheme = localStorage.getItem('admin-theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark-mode');
         }
-        var theme = savedTheme || (userPrefs.darkMode ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-theme', theme);
-    } catch (e) {
-        // Fallback to light theme on any error
-        document.documentElement.setAttribute('data-theme', 'light');
-    }
+    } catch (e) {}
+
+    // ── 2. After DOM ready ──
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // 2a. Move dark-mode class from <html> to <body> so body.dark-mode rules apply
+        if (document.documentElement.classList.contains('dark-mode')) {
+            document.body.classList.add('dark-mode');
+        }
+
+        // 2b. Keep html.dark-mode in sync whenever body.dark-mode is toggled
+        //     (so the flash prevention works on the NEXT page load too)
+        if (window.MutationObserver) {
+            new MutationObserver(function () {
+                var isDark = document.body.classList.contains('dark-mode');
+                document.documentElement.classList.toggle('dark-mode', isDark);
+            }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+        }
+
+        // ── 3. Sidebar scroll position persistence ──
+        var SCROLL_KEY = 'adminSidebarScroll';
+        var nav = document.querySelector('.sidebar-nav');
+        if (nav) {
+            // Restore saved position
+            var saved = sessionStorage.getItem(SCROLL_KEY);
+            if (saved) nav.scrollTop = parseInt(saved, 10) || 0;
+
+            // Save position whenever a nav link is clicked
+            nav.addEventListener('click', function (e) {
+                if (e.target.closest('a.nav-item')) {
+                    sessionStorage.setItem(SCROLL_KEY, nav.scrollTop);
+                }
+            });
+        }
+    });
 })();
