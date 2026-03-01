@@ -13,7 +13,7 @@
     },
     // Monthly key for amozhgary.tv data — one fetch covers the whole month
     monthKey: function(city, year, month) {
-      return 'prayer-kurd:' + city + ':' + year + ':' + month;
+      return 'prayer-kurd2:' + city + ':' + year + ':' + month;
     },
     read: function(key) {
       try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; }

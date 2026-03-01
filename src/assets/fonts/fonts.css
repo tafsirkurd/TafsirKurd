@@ -44,7 +44,7 @@
   font-family: 'KFGQPC Hafs';
   font-style: normal;
   font-weight: 400;
-  font-display: swap;
+  font-display: block;
   src: url('/assets/fonts/hafs.woff2?v=16') format('woff2');
 }
 
