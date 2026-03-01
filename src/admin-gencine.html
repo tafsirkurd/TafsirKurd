@@ -6,62 +6,381 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="utils/theme-loader.js"></script>
     <title>Gencine - TafsirKurd Admin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/fontawesome/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2" as="font" type="font/woff2" crossorigin="">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="/css/admin-styles.css">
     <style>
-        .view-tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:2px solid var(--border-light)}
-        .tab-btn{padding:12px 24px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text-secondary);font-family:var(--font-family);font-size:14px;font-weight:500;cursor:pointer;margin-bottom:-2px;transition:all .2s}
-        .tab-btn:hover{color:var(--text-primary)}
-        .tab-btn.active{color:var(--text-primary);border-bottom-color:var(--primary)}
-        .view-panel{display:none}
-        .view-panel.active{display:block}
-        .ar-text{font-family:'IBM Plex Sans Arabic',serif;font-size:15px;direction:rtl;line-height:1.9;color:var(--text-primary)}
-        .ku-text{font-size:13px;direction:rtl;color:var(--text-secondary);line-height:1.7}
-        .items-list{display:flex;flex-direction:column;gap:10px}
-        .item-card{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:10px;padding:16px;transition:border-color .2s}
-        .item-card:hover{border-color:var(--border-medium)}
-        .item-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
-        .item-card-meta{display:flex;align-items:center;gap:8px;flex-shrink:0}
-        .item-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:var(--bg-active);color:var(--text-secondary)}
-        .item-badge.cat{background:rgba(59,130,246,.12);color:#3b82f6}
-        .item-source{font-size:12px;color:var(--text-tertiary);direction:rtl}
-        .item-ku{margin-top:8px;padding-top:8px;border-top:1px solid var(--border-light)}
-        .item-actions{display:flex;gap:6px}
-        .btn-icon{width:30px;height:30px;border-radius:6px;border:1px solid var(--border-light);background:var(--bg-surface);color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s}
-        .btn-icon:hover{background:var(--bg-hover);color:var(--text-primary);border-color:var(--border-medium)}
-        .btn-icon.danger:hover{background:rgba(220,38,38,.1);color:#dc2626;border-color:rgba(220,38,38,.3)}
-        .form-panel{background:var(--bg-surface);border:1px solid var(--border-light);border-radius:12px;padding:20px;margin-bottom:20px}
-        .form-panel h3{font-size:15px;font-weight:600;margin:0 0 16px 0;color:var(--text-primary)}
-        .form-grid{display:flex;flex-direction:column;gap:14px}
-        .form-group{display:flex;flex-direction:column;gap:6px}
-        .form-label{font-size:12px;font-weight:500;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em}
-        .form-input,.form-textarea,.form-select{width:100%;padding:10px 12px;border:1px solid var(--border-medium);border-radius:8px;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-family);font-size:14px;transition:border-color .2s;box-sizing:border-box}
-        .form-input:focus,.form-textarea:focus,.form-select:focus{outline:none;border-color:var(--primary)}
-        .form-textarea{resize:vertical;min-height:80px;direction:rtl;font-family:'IBM Plex Sans Arabic',serif;font-size:15px;line-height:1.9}
-        .form-textarea.ku{font-family:var(--font-family);font-size:14px;line-height:1.7;min-height:70px}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-        .form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
-        .btn-primary{padding:9px 20px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:opacity .2s}
-        .btn-primary:hover{opacity:.88}
-        .btn-secondary{padding:9px 20px;background:var(--bg-hover);color:var(--text-primary);border:1px solid var(--border-medium);border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s}
-        .btn-secondary:hover{background:var(--bg-active)}
-        .cat-card-header{display:flex;align-items:center;gap:10px}
-        .cat-key-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:rgba(59,130,246,.12);color:#3b82f6;font-family:monospace}
-        .cat-label{font-size:16px;font-weight:600;direction:rtl}
-        .cat-desc{font-size:13px;color:var(--text-secondary);direction:rtl;margin-top:4px}
-        .cat-image-name{font-size:12px;color:var(--text-tertiary);margin-top:4px;font-family:monospace}
-        .empty-state{padding:48px 24px;text-align:center;color:var(--text-tertiary)}
-        .empty-state i{font-size:32px;margin-bottom:12px;display:block}
-        .empty-state p{font-size:14px;margin:0}
-        .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap}
-        .toolbar-left{display:flex;align-items:center;gap:10px}
-        .item-count{font-size:13px;color:var(--text-secondary)}
-        .cat-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-        .cat-filter-btn{padding:5px 14px;border-radius:16px;border:1px solid var(--border-medium);background:var(--bg-surface);color:var(--text-secondary);font-size:13px;cursor:pointer;transition:all .15s;direction:rtl}
-        .cat-filter-btn.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+        @font-face {
+            font-family: 'IBM Plex Sans Arabic';
+            src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2') format('woff2');
+            font-weight: 400; font-style: normal; font-display: swap;
+        }
+        @font-face {
+            font-family: 'IBM Plex Sans Arabic';
+            src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2') format('woff2');
+            font-weight: 500 700; font-style: normal; font-display: swap;
+        }
+
+        /* ── Stats row ── */
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+        .stat-pill {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            flex: 1;
+            min-width: 120px;
+        }
+        .stat-pill-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: var(--bg-active);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+        .stat-pill-icon svg { width: 16px; height: 16px; }
+        .stat-pill strong {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+            display: block;
+        }
+
+        /* ── Platform tabs ── */
+        .platform-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border-light);
+        }
+        .platform-tab {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            color: var(--text-tertiary);
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .platform-tab:hover { color: var(--text-primary); }
+        .platform-tab.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--text-primary);
+        }
+        .platform-tab .tab-count {
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+            padding: 2px 8px;
+            border-radius: 10px;
+            min-width: 22px;
+            text-align: center;
+        }
+        .platform-tab.active .tab-count {
+            background: var(--text-primary);
+            color: var(--bg-app);
+        }
+
+        /* ── View panels ── */
+        .view-panel { display: none; }
+        .view-panel.active { display: block; }
+
+        /* ── Add form panel ── */
+        .add-form-wrap {
+            margin-bottom: 24px;
+        }
+        .add-form-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        .add-form-toggle:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border-color: var(--border-medium);
+        }
+        .add-form-toggle svg { width: 16px; height: 16px; }
+        .add-form-body {
+            display: none;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            padding: 20px;
+        }
+        .add-form-body.open { display: block; }
+        .form-grid { display: flex; flex-direction: column; gap: 14px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid var(--border-medium);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            font-size: 14px;
+            transition: border-color 0.15s;
+            box-sizing: border-box;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+            direction: rtl;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+            font-size: 15px;
+            line-height: 1.9;
+        }
+        .form-textarea.ku {
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+            font-size: 14px;
+            min-height: 68px;
+        }
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            padding-top: 4px;
+        }
+
+        /* ── Item list ── */
+        .items-list { display: flex; flex-direction: column; gap: 8px; }
+        .item-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px 16px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .item-card:hover {
+            border-color: var(--border-medium);
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+        .item-card-icon {
+            width: 38px; height: 38px;
+            border-radius: 10px;
+            background: var(--bg-active);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+        .item-card-body { flex: 1; min-width: 0; }
+        .item-card-ar {
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+            font-size: 15px;
+            direction: rtl;
+            line-height: 1.9;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .item-card-ku {
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+            font-size: 13px;
+            direction: rtl;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 6px;
+        }
+        .item-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-cat { background: rgba(59,130,246,.1); color: #3b82f6; }
+        .badge-repeat { background: var(--bg-active); color: var(--text-secondary); }
+        .badge-source { background: var(--bg-active); color: var(--text-tertiary); font-weight: 400; }
+        .item-card-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .icon-action {
+            width: 30px; height: 30px;
+            border-radius: 7px;
+            border: 1px solid var(--border-light);
+            background: transparent;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+        }
+        .icon-action:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-medium); }
+        .icon-action.danger:hover { background: rgba(220,38,38,.08); color: #dc2626; border-color: rgba(220,38,38,.25); }
+        .icon-action svg { width: 13px; height: 13px; }
+
+        /* ── Category cards ── */
+        .cat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 12px;
+        }
+        .cat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 16px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .cat-card:hover {
+            border-color: var(--border-medium);
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+        .cat-card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .cat-card-left { display: flex; align-items: center; gap: 10px; }
+        .cat-card-key {
+            font-size: 11px;
+            font-weight: 700;
+            font-family: monospace;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: rgba(59,130,246,.1);
+            color: #3b82f6;
+        }
+        .cat-card-label {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-primary);
+            direction: rtl;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+        }
+        .cat-card-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            direction: rtl;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+            margin-bottom: 6px;
+        }
+        .cat-card-image {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            font-family: monospace;
+        }
+
+        /* ── Dua filter chips ── */
+        .filter-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .filter-chip {
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border-medium);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            direction: rtl;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+        }
+        .filter-chip:hover { border-color: var(--border-dark); color: var(--text-primary); }
+        .filter-chip.on { background: var(--text-primary); color: var(--bg-app); border-color: var(--text-primary); }
+
+        /* ── Toolbar ── */
+        .list-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        .list-count {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            padding: 56px 24px;
+            text-align: center;
+            color: var(--text-tertiary);
+            background: var(--bg-surface);
+            border: 1px dashed var(--border-medium);
+            border-radius: 12px;
+        }
+        .empty-state-icon {
+            width: 48px; height: 48px;
+            margin: 0 auto 14px;
+            border-radius: 14px;
+            background: var(--bg-active);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .empty-state-icon svg { width: 22px; height: 22px; color: var(--text-tertiary); }
+        .empty-state p { font-size: 14px; margin: 0; }
+
+        /* ── Edit mode highlight ── */
+        .add-form-toggle.editing {
+            background: rgba(59,130,246,.06);
+            border-color: rgba(59,130,246,.3);
+            color: var(--primary);
+        }
     </style>
     <style id="early-sidebar-hide">
         .sidebar-nav{visibility:hidden}
@@ -86,6 +405,7 @@
 </head>
 <body>
 <div class="dashboard-container">
+    <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-logo">
@@ -143,6 +463,7 @@
         </div>
     </aside>
 
+    <!-- MAIN -->
     <main class="main-content">
         <header class="top-bar">
             <div class="top-bar-left">
@@ -155,151 +476,191 @@
             </div>
             <div class="top-bar-right">
                 <div id="session-timer-display"></div>
-                <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><i data-lucide="sun"></i></button>
+                <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
             </div>
         </header>
 
         <div class="content-area">
+            <!-- Page header -->
             <div class="page-header">
                 <h1 class="page-title">Gencine</h1>
                 <div class="page-actions">
-                    <button class="btn btn-secondary" onclick="switchTab('categories')">
-                        <i data-lucide="folder"></i>
-                        Categories
-                    </button>
-                    <button class="btn btn-secondary" onclick="switchTab('duas')">
-                        <i data-lucide="hands-helping"></i>
-                        Duas
-                    </button>
-                    <button class="btn btn-primary" onclick="switchTab('hadiths')">
-                        <i data-lucide="scroll-text"></i>
-                        Hadiths
+                    <button class="btn btn-primary" id="top-add-btn" onclick="topAddClick()">
+                        <i data-lucide="plus"></i>
+                        <span id="top-add-label">Add</span>
                     </button>
                 </div>
             </div>
 
-            <div class="view-tabs">
-                <button class="tab-btn active" onclick="switchTab('categories')">Categories</button>
-                <button class="tab-btn" onclick="switchTab('duas')">Duas</button>
-                <button class="tab-btn" onclick="switchTab('hadiths')">Hadiths</button>
+            <!-- Stats row -->
+            <div class="stats-row">
+                <div class="stat-pill">
+                    <div class="stat-pill-icon"><i data-lucide="folder"></i></div>
+                    <div><strong id="stat-cats">—</strong>Categories</div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-pill-icon"><i data-lucide="hands-helping"></i></div>
+                    <div><strong id="stat-duas">—</strong>Duas</div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-pill-icon"><i data-lucide="scroll-text"></i></div>
+                    <div><strong id="stat-hadiths">—</strong>Hadiths</div>
+                </div>
             </div>
 
-            <!-- CATEGORIES -->
+            <!-- Tabs -->
+            <div class="platform-tabs">
+                <button class="platform-tab active" onclick="switchTab('categories')">
+                    <i data-lucide="folder" style="width:15px;height:15px"></i>
+                    Categories
+                    <span class="tab-count" id="tab-count-cats">0</span>
+                </button>
+                <button class="platform-tab" onclick="switchTab('duas')">
+                    <i data-lucide="hands-helping" style="width:15px;height:15px"></i>
+                    Duas
+                    <span class="tab-count" id="tab-count-duas">0</span>
+                </button>
+                <button class="platform-tab" onclick="switchTab('hadiths')">
+                    <i data-lucide="scroll-text" style="width:15px;height:15px"></i>
+                    Hadiths
+                    <span class="tab-count" id="tab-count-hadiths">0</span>
+                </button>
+            </div>
+
+            <!-- ── CATEGORIES ── -->
             <div id="panel-categories" class="view-panel active">
-                <div class="form-panel" id="cat-form-panel">
-                    <h3 id="cat-form-title">Add Category</h3>
-                    <input type="hidden" id="cat-edit-id">
-                    <div class="form-grid">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Key (slug)</label>
-                                <input type="text" id="cat-key" class="form-input" placeholder="e.g. morning" style="font-family:monospace">
+                <input type="hidden" id="cat-edit-id">
+                <div class="add-form-wrap">
+                    <button class="add-form-toggle" id="cat-form-toggle" onclick="toggleForm('cat')">
+                        <i data-lucide="plus"></i>
+                        <span id="cat-form-toggle-label">Add Category</span>
+                    </button>
+                    <div class="add-form-body" id="cat-form-body">
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Key (slug)</label>
+                                    <input type="text" id="cat-key" class="form-input" placeholder="e.g. morning" style="font-family:monospace">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Kurdish Label</label>
+                                    <input type="text" id="cat-label" class="form-input" placeholder="&#x628;&#x6D5;&#x06CC;&#x0627;&#x0646;&#x06CC;&#x06A9;&#x0631;&#x062F;&#x0646;" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Image Filename</label>
+                                    <input type="text" id="cat-image" class="form-input" placeholder="genc-morning-bg.webp" style="font-family:monospace">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Sort Order</label>
+                                    <input type="number" id="cat-sort" class="form-input" value="10" min="0">
+                                </div>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Kurdish Label (Badini)</label>
-                                <input type="text" id="cat-label" class="form-input" placeholder="&#x628;&#x6D5;&#x06CC;&#x0627;&#x0646;&#x06CC;&#x06A9;&#x0631;&#x062F;&#x0646;" dir="rtl">
+                                <label class="form-label">Description</label>
+                                <input type="text" id="cat-desc" class="form-input" placeholder="Short description shown on card" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Image Name</label>
-                                <input type="text" id="cat-image" class="form-input" placeholder="e.g. genc-morning-bg.webp" style="font-family:monospace">
+                            <div class="form-actions">
+                                <button class="btn btn-secondary" onclick="cancelCatEdit()">Cancel</button>
+                                <button class="btn btn-primary" onclick="saveCat()">Save Category</button>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Sort Order</label>
-                                <input type="number" id="cat-sort" class="form-input" value="10" min="0">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Description (Badini)</label>
-                            <input type="text" id="cat-desc" class="form-input" placeholder="Short description shown on card" dir="rtl">
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn-secondary" onclick="cancelCatEdit()">Cancel</button>
-                            <button class="btn-primary" onclick="saveCat()">Save Category</button>
                         </div>
                     </div>
                 </div>
-                <div class="toolbar"><div class="toolbar-left"><span class="item-count" id="cat-count"></span></div></div>
-                <div id="cat-list" class="items-list"></div>
+                <div id="cat-list" class="cat-grid"></div>
             </div>
 
-            <!-- DUAS -->
+            <!-- ── DUAS ── -->
             <div id="panel-duas" class="view-panel">
-                <div class="form-panel" id="dua-form-panel">
-                    <h3 id="dua-form-title">Add Dua</h3>
-                    <input type="hidden" id="dua-edit-id">
-                    <div class="form-grid">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Category</label>
-                                <select id="dua-cat" class="form-select"></select>
+                <input type="hidden" id="dua-edit-id">
+                <div class="add-form-wrap">
+                    <button class="add-form-toggle" id="dua-form-toggle" onclick="toggleForm('dua')">
+                        <i data-lucide="plus"></i>
+                        <span id="dua-form-toggle-label">Add Dua</span>
+                    </button>
+                    <div class="add-form-body" id="dua-form-body">
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Category</label>
+                                    <select id="dua-cat" class="form-select"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Source</label>
+                                    <input type="text" id="dua-source" class="form-input" placeholder="&#x628;&#x62E;&#x627;&#x631;&#x06CC;" dir="rtl">
+                                </div>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Source (Hadith)</label>
-                                <input type="text" id="dua-source" class="form-input" placeholder="&#x628;&#x62E;&#x627;&#x631;&#x06CC;" dir="rtl">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Arabic Text</label>
-                            <textarea id="dua-ar" class="form-textarea" placeholder="&#x627;&#x643;&#x62A;&#x628; &#x627;&#x644;&#x62F;&#x639;&#x627;&#x621; &#x628;&#x627;&#x644;&#x639;&#x631;&#x628;&#x64A;&#x629;..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Kurdish Translation (Badini)</label>
-                            <textarea id="dua-ku" class="form-textarea ku" placeholder="&#x698;&#x6D5;&#x648;&#x062C;&#x6D5;&#x0631;&#x0627; &#x06A9;&#x0648;&#x0631;&#x062F;&#x06CC;..."></textarea>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Repeat Count</label>
-                                <input type="number" id="dua-repeat" class="form-input" value="1" min="1" max="1000">
+                                <label class="form-label">Arabic Text</label>
+                                <textarea id="dua-ar" class="form-textarea" placeholder="&#x627;&#x643;&#x62A;&#x628; &#x627;&#x644;&#x62F;&#x639;&#x627;&#x621;..."></textarea>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Sort Order</label>
-                                <input type="number" id="dua-sort" class="form-input" value="10" min="0">
+                                <label class="form-label">Kurdish Translation</label>
+                                <textarea id="dua-ku" class="form-textarea ku" placeholder="&#x698;&#x6D5;&#x648;&#x062C;&#x6D5;&#x0631;&#x0627; &#x06A9;&#x0648;&#x0631;&#x062F;&#x06CC;..."></textarea>
                             </div>
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn-secondary" onclick="cancelDuaEdit()">Cancel</button>
-                            <button class="btn-primary" onclick="saveDua()">Save Dua</button>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Repeat Count</label>
+                                    <input type="number" id="dua-repeat" class="form-input" value="1" min="1" max="1000">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Sort Order</label>
+                                    <input type="number" id="dua-sort" class="form-input" value="10" min="0">
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-secondary" onclick="cancelDuaEdit()">Cancel</button>
+                                <button class="btn btn-primary" onclick="saveDua()">Save Dua</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="toolbar"><div class="toolbar-left"><span class="item-count" id="dua-count"></span></div></div>
-                <div class="cat-filter" id="dua-cat-filter"></div>
+                <div class="filter-chips" id="dua-cat-filter"></div>
+                <div class="list-toolbar">
+                    <span class="list-count" id="dua-count"></span>
+                </div>
                 <div id="dua-list" class="items-list"></div>
             </div>
 
-            <!-- HADITHS -->
+            <!-- ── HADITHS ── -->
             <div id="panel-hadiths" class="view-panel">
-                <div class="form-panel" id="hadith-form-panel">
-                    <h3 id="hadith-form-title">Add Hadith</h3>
-                    <input type="hidden" id="hadith-edit-id">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Arabic Text</label>
-                            <textarea id="hadith-ar" class="form-textarea" placeholder="&#x627;&#x643;&#x62A;&#x628; &#x627;&#x644;&#x62D;&#x62F;&#x64A;&#x62B;..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Kurdish Translation (Badini)</label>
-                            <textarea id="hadith-ku" class="form-textarea ku" placeholder="&#x698;&#x6D5;&#x648;&#x062C;&#x6D5;&#x0631;&#x0627; &#x06A9;&#x0648;&#x0631;&#x062F;&#x06CC;..."></textarea>
-                        </div>
-                        <div class="form-row">
+                <input type="hidden" id="hadith-edit-id">
+                <div class="add-form-wrap">
+                    <button class="add-form-toggle" id="hadith-form-toggle" onclick="toggleForm('hadith')">
+                        <i data-lucide="plus"></i>
+                        <span id="hadith-form-toggle-label">Add Hadith</span>
+                    </button>
+                    <div class="add-form-body" id="hadith-form-body">
+                        <div class="form-grid">
                             <div class="form-group">
-                                <label class="form-label">Source</label>
-                                <input type="text" id="hadith-source" class="form-input" placeholder="&#x628;&#x62E;&#x627;&#x631;&#x06CC;" dir="rtl">
+                                <label class="form-label">Arabic Text</label>
+                                <textarea id="hadith-ar" class="form-textarea" placeholder="&#x627;&#x643;&#x62A;&#x628; &#x627;&#x644;&#x62D;&#x62F;&#x64A;&#x62B;..."></textarea>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Sort Order</label>
-                                <input type="number" id="hadith-sort" class="form-input" value="10" min="0">
+                                <label class="form-label">Kurdish Translation</label>
+                                <textarea id="hadith-ku" class="form-textarea ku" placeholder="&#x698;&#x6D5;&#x648;&#x062C;&#x6D5;&#x0631;&#x0627; &#x06A9;&#x0648;&#x0631;&#x062F;&#x06CC;..."></textarea>
                             </div>
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn-secondary" onclick="cancelHadithEdit()">Cancel</button>
-                            <button class="btn-primary" onclick="saveHadith()">Save Hadith</button>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Source</label>
+                                    <input type="text" id="hadith-source" class="form-input" placeholder="&#x628;&#x62E;&#x627;&#x631;&#x06CC;" dir="rtl">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Sort Order</label>
+                                    <input type="number" id="hadith-sort" class="form-input" value="10" min="0">
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-secondary" onclick="cancelHadithEdit()">Cancel</button>
+                                <button class="btn btn-primary" onclick="saveHadith()">Save Hadith</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="toolbar"><div class="toolbar-left"><span class="item-count" id="hadith-count"></span></div></div>
+                <div class="list-toolbar">
+                    <span class="list-count" id="hadith-count"></span>
+                </div>
                 <div id="hadith-list" class="items-list"></div>
             </div>
         </div>
@@ -315,23 +676,58 @@
 
 /* ── Tab switching ── */
 var currentTab = 'categories';
+var addLabels = { categories: 'Add Category', duas: 'Add Dua', hadiths: 'Add Hadith' };
+
 function switchTab(name) {
     currentTab = name;
-    var tabs = ['categories', 'duas', 'hadiths'];
-    document.querySelectorAll('.tab-btn').forEach(function(b, i) {
-        b.classList.toggle('active', tabs[i] === name);
+    document.querySelectorAll('.platform-tab').forEach(function(b, i) {
+        b.classList.toggle('active', ['categories','duas','hadiths'][i] === name);
     });
     document.querySelectorAll('.view-panel').forEach(function(p) { p.classList.remove('active'); });
     document.getElementById('panel-' + name).classList.add('active');
+    document.getElementById('top-add-label').textContent = addLabels[name] || 'Add';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+/* ── Top Add button — opens the relevant form ── */
+function topAddClick() {
+    toggleForm(currentTab === 'categories' ? 'cat' : currentTab === 'duas' ? 'dua' : 'hadith');
+}
+
+/* ── Collapsible forms ── */
+function toggleForm(prefix) {
+    var body = document.getElementById(prefix + '-form-body');
+    var toggle = document.getElementById(prefix + '-form-toggle');
+    if (!body) return;
+    var isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    toggle.classList.toggle('editing', !isOpen);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+function openForm(prefix) {
+    var body = document.getElementById(prefix + '-form-body');
+    var toggle = document.getElementById(prefix + '-form-toggle');
+    if (!body) return;
+    body.classList.add('open');
+    toggle.classList.add('editing');
+    body.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+function closeForm(prefix) {
+    var body = document.getElementById(prefix + '-form-body');
+    var toggle = document.getElementById(prefix + '-form-toggle');
+    if (!body) return;
+    body.classList.remove('open');
+    toggle.classList.remove('editing');
 }
 
 /* ── Toast ── */
 function showNotification(msg, type) {
     type = type || 'info';
-    var colors = { success: '#22c55e', error: '#ef4444', info: '#3b82f6', warning: '#f59e0b' };
+    var colors = { success:'#22c55e', error:'#ef4444', info:'#3b82f6', warning:'#f59e0b' };
     var container = document.getElementById('notification-container');
     var el = document.createElement('div');
-    el.style.cssText = 'background:var(--bg-surface);border:1px solid var(--border-medium);border-left:4px solid ' + (colors[type] || colors.info) + ';border-radius:8px;padding:12px 16px;font-size:13px;color:var(--text-primary);pointer-events:auto;box-shadow:0 4px 16px rgba(0,0,0,.15);';
+    el.style.cssText = 'background:var(--bg-surface);border:1px solid var(--border-medium);border-left:4px solid ' + (colors[type]||colors.info) + ';border-radius:8px;padding:12px 16px;font-size:13px;color:var(--text-primary);pointer-events:auto;box-shadow:0 4px 16px rgba(0,0,0,.15);animation:fadeIn .2s ease;';
     el.textContent = msg;
     container.appendChild(el);
     setTimeout(function() { el.remove(); }, 3500);
@@ -343,44 +739,46 @@ var allDuas = [];
 var allHadiths = [];
 var duaFilterCat = 'all';
 
+function updateStats() {
+    document.getElementById('stat-cats').textContent    = allCategories.length;
+    document.getElementById('stat-duas').textContent    = allDuas.length;
+    document.getElementById('stat-hadiths').textContent = allHadiths.length;
+    document.getElementById('tab-count-cats').textContent    = allCategories.length;
+    document.getElementById('tab-count-duas').textContent    = allDuas.length;
+    document.getElementById('tab-count-hadiths').textContent = allHadiths.length;
+}
+
 async function loadAll() { await Promise.all([loadCategories(), loadDuas(), loadHadiths()]); }
 
 async function loadCategories() {
-    var supabase = window.adminAuth.getSupabase();
-    if (!supabase) return;
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     var r = await supabase.from('gencine_categories').select('*').order('sort_order');
     if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
     allCategories = r.data || [];
-    renderCategoryList(); populateCatDropdown(); renderDuaCatFilter();
+    renderCategoryList(); populateCatDropdown(); renderDuaCatFilter(); updateStats();
 }
 async function loadDuas() {
-    var supabase = window.adminAuth.getSupabase();
-    if (!supabase) return;
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     var r = await supabase.from('gencine_duas').select('*').order('category_key').order('sort_order');
     if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
     allDuas = r.data || [];
-    renderDuaList();
+    renderDuaList(); updateStats();
 }
 async function loadHadiths() {
-    var supabase = window.adminAuth.getSupabase();
-    if (!supabase) return;
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     var r = await supabase.from('gencine_hadiths').select('*').order('sort_order');
     if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
     allHadiths = r.data || [];
-    renderHadithList();
+    renderHadithList(); updateStats();
 }
 
 /* ── DOM helpers ── */
-function mke(tag, cls) {
-    var e = document.createElement(tag);
-    if (cls) e.className = cls;
-    return e;
-}
-function mkIconBtn(iconCls, title, danger, cb) {
-    var btn = mke('button', 'btn-icon' + (danger ? ' danger' : ''));
+function mke(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
+function mkIconBtn(lucideIcon, title, danger, cb) {
+    var btn = mke('button', 'icon-action' + (danger ? ' danger' : ''));
     btn.title = title;
     btn.onclick = cb;
-    var ico = mke('i'); ico.className = iconCls;
+    var ico = mke('i'); ico.setAttribute('data-lucide', lucideIcon);
     btn.appendChild(ico);
     return btn;
 }
@@ -388,57 +786,56 @@ function mkIconBtn(iconCls, title, danger, cb) {
 /* ── CATEGORIES ── */
 function renderCategoryList() {
     var list = document.getElementById('cat-list');
-    document.getElementById('cat-count').textContent = allCategories.length + ' categories';
     list.textContent = '';
     if (!allCategories.length) {
         var es = mke('div', 'empty-state');
-        var ico = mke('i'); ico.className = 'fas fa-folder-open'; es.appendChild(ico);
-        var p = mke('p'); p.textContent = 'No categories yet. Add one above.'; es.appendChild(p);
-        list.appendChild(es); return;
+        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','folder'); eico.appendChild(ei);
+        var ep = mke('p'); ep.textContent = 'No categories yet. Add one above.';
+        es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
+        if (typeof lucide !== 'undefined') lucide.createIcons(); return;
     }
     allCategories.forEach(function(cat) {
-        var card = mke('div', 'item-card');
-        var hdr = mke('div', 'item-card-header');
-        var left = mke('div', 'cat-card-header');
-        var keyBadge = mke('span', 'cat-key-badge'); keyBadge.textContent = cat.key;
-        var labelEl = mke('span', 'cat-label'); labelEl.textContent = cat.label_ku;
-        left.appendChild(keyBadge); left.appendChild(labelEl);
-        var acts = mke('div', 'item-actions');
-        acts.appendChild(mkIconBtn('fas fa-pen', 'Edit', false, function() { editCat(cat.id); }));
-        acts.appendChild(mkIconBtn('fas fa-trash', 'Delete', true, function() { deleteCat(cat.id); }));
-        hdr.appendChild(left); hdr.appendChild(acts);
-        card.appendChild(hdr);
-        if (cat.description) { var d = mke('div', 'cat-desc'); d.textContent = cat.description; card.appendChild(d); }
-        if (cat.image_name) { var img = mke('div', 'cat-image-name'); img.textContent = cat.image_name; card.appendChild(img); }
+        var card = mke('div', 'cat-card');
+        var top = mke('div', 'cat-card-top');
+        var left = mke('div', 'cat-card-left');
+        var keyEl = mke('span', 'cat-card-key'); keyEl.textContent = cat.key;
+        var labelEl = mke('span', 'cat-card-label'); labelEl.textContent = cat.label_ku;
+        left.appendChild(keyEl); left.appendChild(labelEl);
+        var acts = mke('div', 'item-card-actions');
+        acts.appendChild(mkIconBtn('pencil', 'Edit', false, function() { editCat(cat.id); }));
+        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, function() { deleteCat(cat.id); }));
+        top.appendChild(left); top.appendChild(acts);
+        card.appendChild(top);
+        if (cat.description) { var d = mke('div', 'cat-card-desc'); d.textContent = cat.description; card.appendChild(d); }
+        if (cat.image_name) { var img = mke('div', 'cat-card-image'); img.textContent = cat.image_name; card.appendChild(img); }
         list.appendChild(card);
     });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 function populateCatDropdown() {
-    var sel = document.getElementById('dua-cat');
-    sel.textContent = '';
+    var sel = document.getElementById('dua-cat'); sel.textContent = '';
     allCategories.forEach(function(cat) {
         var opt = document.createElement('option');
-        opt.value = cat.key;
-        opt.textContent = cat.key + ' \u2014 ' + cat.label_ku;
+        opt.value = cat.key; opt.textContent = cat.key + ' \u2014 ' + cat.label_ku;
         sel.appendChild(opt);
     });
 }
 function editCat(id) {
-    var cat = allCategories.find(function(c) { return c.id === id; });
-    if (!cat) return;
+    var cat = allCategories.find(function(c) { return c.id === id; }); if (!cat) return;
     document.getElementById('cat-edit-id').value = id;
     document.getElementById('cat-key').value = cat.key;
     document.getElementById('cat-label').value = cat.label_ku;
     document.getElementById('cat-image').value = cat.image_name || '';
     document.getElementById('cat-desc').value = cat.description || '';
     document.getElementById('cat-sort').value = cat.sort_order;
-    document.getElementById('cat-form-title').textContent = 'Edit Category';
-    document.getElementById('cat-form-panel').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('cat-form-toggle-label').textContent = 'Editing: ' + cat.key;
+    openForm('cat');
 }
 function cancelCatEdit() {
     ['cat-edit-id','cat-key','cat-label','cat-image','cat-desc'].forEach(function(id) { document.getElementById(id).value = ''; });
     document.getElementById('cat-sort').value = '10';
-    document.getElementById('cat-form-title').textContent = 'Add Category';
+    document.getElementById('cat-form-toggle-label').textContent = 'Add Category';
+    closeForm('cat');
 }
 async function saveCat() {
     var key = document.getElementById('cat-key').value.trim();
@@ -458,80 +855,74 @@ async function saveCat() {
 }
 async function deleteCat(id) {
     var cat = allCategories.find(function(c) { return c.id === id; });
-    if (!confirm('Delete category "' + (cat ? cat.key : id) + '"?\nDuas in this category will be orphaned.')) return;
-    var supabase = window.adminAuth.getSupabase();
-    var r = await supabase.from('gencine_categories').delete().eq('id', id);
+    if (!confirm('Delete "' + (cat ? cat.key : id) + '"? Duas in this category will be orphaned.')) return;
+    var r = await window.adminAuth.getSupabase().from('gencine_categories').delete().eq('id', id);
     if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
     showNotification('Category deleted.', 'success'); await loadCategories(); localStorage.removeItem('gencine_cats_v1');
 }
 
 /* ── DUAS ── */
 function renderDuaCatFilter() {
-    var bar = document.getElementById('dua-cat-filter');
-    bar.textContent = '';
-    var allBtn = mke('button', 'cat-filter-btn' + (duaFilterCat === 'all' ? ' on' : ''));
-    allBtn.textContent = 'All';
-    allBtn.onclick = function() { duaFilterCat = 'all'; renderDuaList(); renderDuaCatFilter(); };
+    var bar = document.getElementById('dua-cat-filter'); bar.textContent = '';
+    var allBtn = mke('button', 'filter-chip' + (duaFilterCat === 'all' ? ' on' : ''));
+    allBtn.textContent = 'All'; allBtn.onclick = function() { duaFilterCat = 'all'; renderDuaList(); renderDuaCatFilter(); };
     bar.appendChild(allBtn);
     allCategories.forEach(function(cat) {
-        var btn = mke('button', 'cat-filter-btn' + (duaFilterCat === cat.key ? ' on' : ''));
+        var btn = mke('button', 'filter-chip' + (duaFilterCat === cat.key ? ' on' : ''));
         btn.textContent = cat.label_ku;
         btn.onclick = function() { duaFilterCat = cat.key; renderDuaList(); renderDuaCatFilter(); };
         bar.appendChild(btn);
     });
 }
 function renderDuaList() {
-    var list = document.getElementById('dua-list');
-    list.textContent = '';
+    var list = document.getElementById('dua-list'); list.textContent = '';
     var filtered = duaFilterCat === 'all' ? allDuas : allDuas.filter(function(d) { return d.category_key === duaFilterCat; });
-    document.getElementById('dua-count').textContent = filtered.length + ' duas' + (duaFilterCat !== 'all' ? ' in ' + duaFilterCat : '');
+    document.getElementById('dua-count').textContent = filtered.length + ' duas' + (duaFilterCat !== 'all' ? ' in "' + duaFilterCat + '"' : '');
     if (!filtered.length) {
         var es = mke('div', 'empty-state');
-        var ico = mke('i'); ico.className = 'fas fa-hands-praying'; es.appendChild(ico);
-        var p = mke('p'); p.textContent = 'No duas found. Add one above.'; es.appendChild(p);
-        list.appendChild(es); return;
+        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','hands-helping'); eico.appendChild(ei);
+        var ep = mke('p'); ep.textContent = 'No duas found. Add one above.';
+        es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
+        if (typeof lucide !== 'undefined') lucide.createIcons(); return;
     }
     filtered.forEach(function(dua) {
         var card = mke('div', 'item-card');
-        var arEl = mke('div', 'ar-text'); arEl.textContent = dua.ar; arEl.style.flex = '1';
+        var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','hands-helping'); icon.appendChild(ico);
+        var body = mke('div', 'item-card-body');
+        var arEl = mke('div', 'item-card-ar'); arEl.textContent = dua.ar; body.appendChild(arEl);
+        var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = dua.ku; body.appendChild(kuEl);
         var meta = mke('div', 'item-card-meta');
-        var catBadge = mke('span', 'item-badge cat'); catBadge.textContent = dua.category_key;
-        meta.appendChild(catBadge);
-        if (dua.repeat > 1) { var rep = mke('span', 'item-badge'); rep.textContent = '\u00D7 ' + dua.repeat; meta.appendChild(rep); }
-        var acts = mke('div', 'item-actions');
-        acts.appendChild(mkIconBtn('fas fa-pen', 'Edit', false, function() { editDua(dua.id); }));
-        acts.appendChild(mkIconBtn('fas fa-trash', 'Delete', true, function() { deleteDua(dua.id); }));
-        meta.appendChild(acts);
-        var hdr = mke('div', 'item-card-header');
-        hdr.appendChild(arEl); hdr.appendChild(meta);
-        card.appendChild(hdr);
-        var ku = mke('div', 'item-ku ku-text'); ku.textContent = dua.ku; card.appendChild(ku);
-        if (dua.source) { var src = mke('div', 'item-source'); src.textContent = dua.source; src.style.marginTop = '6px'; card.appendChild(src); }
+        var cb = mke('span', 'badge badge-cat'); cb.textContent = dua.category_key; meta.appendChild(cb);
+        if (dua.repeat > 1) { var rb = mke('span', 'badge badge-repeat'); rb.textContent = '\u00D7 ' + dua.repeat; meta.appendChild(rb); }
+        if (dua.source) { var sb = mke('span', 'badge badge-source'); sb.textContent = dua.source; meta.appendChild(sb); }
+        body.appendChild(meta);
+        var acts = mke('div', 'item-card-actions');
+        acts.appendChild(mkIconBtn('pencil', 'Edit', false, function() { editDua(dua.id); }));
+        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, function() { deleteDua(dua.id); }));
+        card.appendChild(icon); card.appendChild(body); card.appendChild(acts);
         list.appendChild(card);
     });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 function editDua(id) {
-    var dua = allDuas.find(function(d) { return d.id === id; });
-    if (!dua) return;
+    var dua = allDuas.find(function(d) { return d.id === id; }); if (!dua) return;
     document.getElementById('dua-edit-id').value = id;
-    document.getElementById('dua-ar').value = dua.ar;
-    document.getElementById('dua-ku').value = dua.ku;
+    document.getElementById('dua-ar').value = dua.ar; document.getElementById('dua-ku').value = dua.ku;
     document.getElementById('dua-source').value = dua.source || '';
     document.getElementById('dua-repeat').value = dua.repeat || 1;
     document.getElementById('dua-sort').value = dua.sort_order || 10;
     document.getElementById('dua-cat').value = dua.category_key;
-    document.getElementById('dua-form-title').textContent = 'Edit Dua';
-    document.getElementById('dua-form-panel').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('dua-form-toggle-label').textContent = 'Editing dua';
+    switchTab('duas'); openForm('dua');
 }
 function cancelDuaEdit() {
     ['dua-edit-id','dua-ar','dua-ku','dua-source'].forEach(function(id) { document.getElementById(id).value = ''; });
-    document.getElementById('dua-repeat').value = '1';
-    document.getElementById('dua-sort').value = '10';
-    document.getElementById('dua-form-title').textContent = 'Add Dua';
+    document.getElementById('dua-repeat').value = '1'; document.getElementById('dua-sort').value = '10';
+    document.getElementById('dua-form-toggle-label').textContent = 'Add Dua';
+    closeForm('dua');
 }
 async function saveDua() {
-    var ar = document.getElementById('dua-ar').value.trim();
-    var ku = document.getElementById('dua-ku').value.trim();
+    var ar = document.getElementById('dua-ar').value.trim(); var ku = document.getElementById('dua-ku').value.trim();
     if (!ar || !ku) { showNotification('Arabic and Kurdish text are required.', 'warning'); return; }
     var payload = { category_key: document.getElementById('dua-cat').value, ar: ar, ku: ku,
         source: document.getElementById('dua-source').value.trim() || null,
@@ -547,56 +938,54 @@ async function saveDua() {
 }
 async function deleteDua(id) {
     if (!confirm('Delete this dua?')) return;
-    var supabase = window.adminAuth.getSupabase();
-    var r = await supabase.from('gencine_duas').delete().eq('id', id);
+    var r = await window.adminAuth.getSupabase().from('gencine_duas').delete().eq('id', id);
     if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
     showNotification('Dua deleted.', 'success'); await loadDuas(); localStorage.removeItem('gencine_duas_v1');
 }
 
 /* ── HADITHS ── */
 function renderHadithList() {
-    var list = document.getElementById('hadith-list');
-    list.textContent = '';
+    var list = document.getElementById('hadith-list'); list.textContent = '';
     document.getElementById('hadith-count').textContent = allHadiths.length + ' hadiths';
     if (!allHadiths.length) {
         var es = mke('div', 'empty-state');
-        var ico = mke('i'); ico.className = 'fas fa-scroll'; es.appendChild(ico);
-        var p = mke('p'); p.textContent = 'No hadiths yet. Add one above.'; es.appendChild(p);
-        list.appendChild(es); return;
+        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','scroll-text'); eico.appendChild(ei);
+        var ep = mke('p'); ep.textContent = 'No hadiths yet. Add one above.';
+        es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
+        if (typeof lucide !== 'undefined') lucide.createIcons(); return;
     }
-    allHadiths.forEach(function(hadith) {
+    allHadiths.forEach(function(h) {
         var card = mke('div', 'item-card');
-        var arEl = mke('div', 'ar-text'); arEl.textContent = hadith.ar; arEl.style.flex = '1';
-        var acts = mke('div', 'item-actions');
-        acts.appendChild(mkIconBtn('fas fa-pen', 'Edit', false, function() { editHadith(hadith.id); }));
-        acts.appendChild(mkIconBtn('fas fa-trash', 'Delete', true, function() { deleteHadith(hadith.id); }));
-        var hdr = mke('div', 'item-card-header');
-        hdr.appendChild(arEl); hdr.appendChild(acts);
-        card.appendChild(hdr);
-        var ku = mke('div', 'item-ku ku-text'); ku.textContent = hadith.ku; card.appendChild(ku);
-        if (hadith.source) { var src = mke('div', 'item-source'); src.textContent = hadith.source; src.style.marginTop = '6px'; card.appendChild(src); }
+        var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','scroll-text'); icon.appendChild(ico);
+        var body = mke('div', 'item-card-body');
+        var arEl = mke('div', 'item-card-ar'); arEl.textContent = h.ar; body.appendChild(arEl);
+        var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = h.ku; body.appendChild(kuEl);
+        if (h.source) { var meta = mke('div', 'item-card-meta'); var sb = mke('span', 'badge badge-source'); sb.textContent = h.source; meta.appendChild(sb); body.appendChild(meta); }
+        var acts = mke('div', 'item-card-actions');
+        acts.appendChild(mkIconBtn('pencil', 'Edit', false, function() { editHadith(h.id); }));
+        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, function() { deleteHadith(h.id); }));
+        card.appendChild(icon); card.appendChild(body); card.appendChild(acts);
         list.appendChild(card);
     });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 function editHadith(id) {
-    var h = allHadiths.find(function(x) { return x.id === id; });
-    if (!h) return;
+    var h = allHadiths.find(function(x) { return x.id === id; }); if (!h) return;
     document.getElementById('hadith-edit-id').value = id;
-    document.getElementById('hadith-ar').value = h.ar;
-    document.getElementById('hadith-ku').value = h.ku;
+    document.getElementById('hadith-ar').value = h.ar; document.getElementById('hadith-ku').value = h.ku;
     document.getElementById('hadith-source').value = h.source || '';
     document.getElementById('hadith-sort').value = h.sort_order || 10;
-    document.getElementById('hadith-form-title').textContent = 'Edit Hadith';
-    document.getElementById('hadith-form-panel').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('hadith-form-toggle-label').textContent = 'Editing hadith';
+    switchTab('hadiths'); openForm('hadith');
 }
 function cancelHadithEdit() {
     ['hadith-edit-id','hadith-ar','hadith-ku','hadith-source'].forEach(function(id) { document.getElementById(id).value = ''; });
     document.getElementById('hadith-sort').value = '10';
-    document.getElementById('hadith-form-title').textContent = 'Add Hadith';
+    document.getElementById('hadith-form-toggle-label').textContent = 'Add Hadith';
+    closeForm('hadith');
 }
 async function saveHadith() {
-    var ar = document.getElementById('hadith-ar').value.trim();
-    var ku = document.getElementById('hadith-ku').value.trim();
+    var ar = document.getElementById('hadith-ar').value.trim(); var ku = document.getElementById('hadith-ku').value.trim();
     if (!ar || !ku) { showNotification('Arabic and Kurdish text are required.', 'warning'); return; }
     var payload = { ar: ar, ku: ku,
         source: document.getElementById('hadith-source').value.trim() || null,
@@ -611,11 +1000,19 @@ async function saveHadith() {
 }
 async function deleteHadith(id) {
     if (!confirm('Delete this hadith?')) return;
-    var supabase = window.adminAuth.getSupabase();
-    var r = await supabase.from('gencine_hadiths').delete().eq('id', id);
+    var r = await window.adminAuth.getSupabase().from('gencine_hadiths').delete().eq('id', id);
     if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
     showNotification('Hadith deleted.', 'success'); await loadHadiths(); localStorage.removeItem('gencine_hadiths_v1');
 }
+
+/* ── Theme toggle (matches other admin pages) ── */
+function toggleTheme() {
+    var isDark = document.documentElement.classList.toggle('dark-mode');
+    localStorage.setItem('adminTheme', isDark ? 'dark' : 'light');
+    document.getElementById('theme-icon').setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 
 /* ── Init ── */
 (async function() {
