@@ -27,31 +27,6 @@
             }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
         }
 
-        // ── 3. Scroll active nav item into view in the sidebar ──
-        // Instead of saving/restoring pixel offsets (fragile with auth timing),
-        // we simply ensure the current page's active nav item is visible.
-        var nav = document.querySelector('.sidebar-nav');
-        if (nav) {
-            var activeItem = nav.querySelector('.nav-item.active');
-
-            function scrollActiveIntoView() {
-                if (activeItem) {
-                    activeItem.scrollIntoView({ block: 'nearest' });
-                }
-            }
-
-            // Try immediately (sidebar may already be visible from early inline script)
-            scrollActiveIntoView();
-
-            // admin-auth.js sets sidebarNav.style.visibility after async auth check.
-            // Re-run scrollIntoView right after that style change fires.
-            if (window.MutationObserver) {
-                var revealObs = new MutationObserver(function () {
-                    scrollActiveIntoView();
-                    revealObs.disconnect();
-                });
-                revealObs.observe(nav, { attributes: true, attributeFilter: ['style'] });
-            }
-        }
+        // Sidebar active item scroll is handled by admin-auth.js revealSidebar()
     });
 })();
