@@ -390,6 +390,16 @@ function revealSidebar(role) {
             messagesCard.style.display = 'none';
         }
     }
+
+    // Scroll the active nav item into view so it's always visible after navigation
+    if (sidebarNav) {
+        const activeItem = sidebarNav.querySelector('.nav-item.active');
+        if (activeItem) {
+            setTimeout(function() {
+                activeItem.scrollIntoView({ block: 'nearest' });
+            }, 0);
+        }
+    }
 }
 
 function getCurrentPageSlug() {
