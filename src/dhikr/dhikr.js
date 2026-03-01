@@ -3,9 +3,113 @@
 'use strict';
 
 var SECTIONS = [
-  { name:'hadith', label:'حەدیس',  sub:'فەرمودێن پێغەمبەرێ ئیسلامێ',      icon:'fas fa-scroll'        },
+  { name:'hadith', label:'حەدیس',  sub:'فەرمودێن پێغەمبەرێ ئیسلامێ',      icon:'fas fa-scroll'             },
   { name:'dua',    label:'دوعا',    sub:'دعاهای بەیانی، ئێوار و زیاتر',    icon:'fa-solid fa-person-praying' },
-  { name:'tasbih', label:'تەسبیح', sub:'ژمارتنا دیکرێن ئیسلامی',           icon:'fas fa-rotate'        }
+  { name:'tasbih', label:'تەسبیح', sub:'ژمارتنا دیکرێن ئیسلامی',           icon:'fas fa-rotate'             },
+  { name:'asma',   label:'ناوێن خوا', sub:'٩٩ ناوێن گەورەیێ خوایێ بەزەیی کار', icon:'fas fa-star-and-crescent' }
+];
+
+/* ── 99 Names of Allah ── */
+var ASMA_DATA = [
+  {n:1,  ar:'الرَّحْمَنُ',            tr:'Ar-Rahmaan',          ku:'ئەو زۆر بەزەیی کار'},
+  {n:2,  ar:'الرَّحِيمُ',             tr:'Ar-Raheem',            ku:'ئەو هەمیشە بەزەیی کار'},
+  {n:3,  ar:'الْمَلِكُ',              tr:'Al-Malik',             ku:'پاشا'},
+  {n:4,  ar:'الْقُدُّوسُ',            tr:'Al-Quddoos',           ku:'پیرۆز'},
+  {n:5,  ar:'السَّلَامُ',             tr:'As-Salaam',            ku:'ئاشتی بەخش'},
+  {n:6,  ar:'الْمُؤْمِنُ',            tr:"Al-Mu'min",            ku:'باوەڕداری دەر'},
+  {n:7,  ar:'الْمُهَيْمِنُ',          tr:'Al-Muhaimin',          ku:'پاراستووار'},
+  {n:8,  ar:'الْعَزِيزُ',             tr:'Al-Azeez',             ku:'بەهێز'},
+  {n:9,  ar:'الْجَبَّارُ',            tr:'Al-Jabbaar',           ku:'سەروەر'},
+  {n:10, ar:'الْمُتَكَبِّرُ',         tr:'Al-Mutakabbir',        ku:'گەورەیی خاوەن'},
+  {n:11, ar:'الْخَالِقُ',             tr:'Al-Khaaliq',           ku:'دروستکار'},
+  {n:12, ar:'الْبَارِئُ',             tr:"Al-Baari'",            ku:'بوونی دەر هێنەر'},
+  {n:13, ar:'الْمُصَوِّرُ',           tr:'Al-Musawwir',          ku:'شێوەدەر'},
+  {n:14, ar:'الْغَفَّارُ',            tr:'Al-Ghaffaar',          ku:'زۆر بەخشینکار'},
+  {n:15, ar:'الْقَهَّارُ',            tr:'Al-Qahhaar',           ku:'زەبردەست'},
+  {n:16, ar:'الْوَهَّابُ',            tr:'Al-Wahhaab',           ku:'بەخشینکارێ گەورە'},
+  {n:17, ar:'الرَّزَّاقُ',            tr:'Ar-Razzaaq',           ku:'رزگاری دەر'},
+  {n:18, ar:'الْفَتَّاحُ',            tr:'Al-Fattaah',           ku:'کردنەوەر'},
+  {n:19, ar:'الْعَلِيمُ',             tr:"Al-'Aleem",            ku:'زاناس'},
+  {n:20, ar:'الْقَابِضُ',             tr:'Al-Qaabid',            ku:'گرتنکار'},
+  {n:21, ar:'الْبَاسِطُ',             tr:'Al-Baasit',            ku:'فراخکار'},
+  {n:22, ar:'الْخَافِضُ',             tr:'Al-Khaafid',           ku:'دەخوازینەر'},
+  {n:23, ar:'الرَّافِعُ',             tr:"Ar-Raafi'",            ku:'برزکار'},
+  {n:24, ar:'الْمُعِزُّ',             tr:"Al-Mu'izz",            ku:'بریزدارکار'},
+  {n:25, ar:'الْمُذِلُّ',             tr:'Al-Mudhill',           ku:'بێبریزی دەر'},
+  {n:26, ar:'السَّمِيعُ',             tr:"As-Samee'",            ku:'بیستکار'},
+  {n:27, ar:'الْبَصِيرُ',             tr:'Al-Baseer',            ku:'بینەر'},
+  {n:28, ar:'الْحَكَمُ',              tr:'Al-Hakam',             ku:'دادوەر'},
+  {n:29, ar:'الْعَدْلُ',              tr:"Al-'Adl",              ku:'دادپەروەر'},
+  {n:30, ar:'اللَّطِيفُ',             tr:'Al-Lateef',            ku:'نەرمدڵ'},
+  {n:31, ar:'الْخَبِيرُ',             tr:'Al-Khabeer',           ku:'ئاگادار'},
+  {n:32, ar:'الْحَلِيمُ',             tr:'Al-Haleem',            ku:'بردبار'},
+  {n:33, ar:'الْعَظِيمُ',             tr:"Al-'Azeem",            ku:'گەورە'},
+  {n:34, ar:'الْغَفُورُ',             tr:'Al-Ghafoor',           ku:'بەخشینکار'},
+  {n:35, ar:'الشَّكُورُ',             tr:'Ash-Shakoor',          ku:'سوپاسگوزار'},
+  {n:36, ar:'الْعَلِيُّ',             tr:"Al-'Aliyy",            ku:'برز'},
+  {n:37, ar:'الْكَبِيرُ',             tr:'Al-Kabeer',            ku:'گەورە'},
+  {n:38, ar:'الْحَفِيظُ',             tr:'Al-Hafeez',            ku:'پاراستووار'},
+  {n:39, ar:'الْمُقِيتُ',             tr:'Al-Muqeet',            ku:'خواردن دەر'},
+  {n:40, ar:'الْحَسِيبُ',             tr:'Al-Haseeb',            ku:'ژمارەکار'},
+  {n:41, ar:'الْجَلِيلُ',             tr:'Al-Jaleel',            ku:'شکوهمەند'},
+  {n:42, ar:'الْكَرِيمُ',             tr:'Al-Kareem',            ku:'کەریم'},
+  {n:43, ar:'الرَّقِيبُ',             tr:'Ar-Raqeeb',            ku:'چاودێر'},
+  {n:44, ar:'الْمُجِيبُ',             tr:'Al-Mujeeb',            ku:'وەڵامدەر'},
+  {n:45, ar:'الْوَاسِعُ',             tr:"Al-Waasi'",            ku:'فراخ'},
+  {n:46, ar:'الْحَكِيمُ',             tr:'Al-Hakeem',            ku:'شارەزا'},
+  {n:47, ar:'الْوَدُودُ',             tr:'Al-Wadood',            ku:'خۆشەویست'},
+  {n:48, ar:'الْمَجِيدُ',             tr:'Al-Majeed',            ku:'شانازیدار'},
+  {n:49, ar:'الْبَاعِثُ',             tr:"Al-Baa'ith",           ku:'هەستینەر'},
+  {n:50, ar:'الشَّهِيدُ',             tr:'Ash-Shaheed',          ku:'شایەت'},
+  {n:51, ar:'الْحَقُّ',               tr:'Al-Haqq',              ku:'ڕاست'},
+  {n:52, ar:'الْوَكِيلُ',             tr:'Al-Wakeel',            ku:'پشتی'},
+  {n:53, ar:'الْقَوِيُّ',             tr:'Al-Qawiyy',            ku:'بەهێز'},
+  {n:54, ar:'الْمَتِينُ',             tr:'Al-Mateen',            ku:'مەحکەم'},
+  {n:55, ar:'الْوَلِيُّ',             tr:'Al-Waliyy',            ku:'دۆست'},
+  {n:56, ar:'الْحَمِيدُ',             tr:'Al-Hameed',            ku:'ستایشدار'},
+  {n:57, ar:'الْمُحْصِي',             tr:'Al-Muhsee',            ku:'ژمارەکارێ هەمەیان'},
+  {n:58, ar:'الْمُبْدِئُ',            tr:"Al-Mubdi'",            ku:'دەستپێکار'},
+  {n:59, ar:'الْمُعِيدُ',             tr:"Al-Mu'eed",            ku:'گەڕاندنەوەر'},
+  {n:60, ar:'الْمُحْيِي',             tr:'Al-Muhyee',            ku:'ژیانی دەر'},
+  {n:61, ar:'الْمُمِيتُ',             tr:'Al-Mumeet',            ku:'مردنی دەر'},
+  {n:62, ar:'الْحَيُّ',               tr:'Al-Hayy',              ku:'ژیاو'},
+  {n:63, ar:'الْقَيُّومُ',            tr:'Al-Qayyoom',           ku:'ئایەندەپار'},
+  {n:64, ar:'الْوَاجِدُ',             tr:'Al-Waajid',            ku:'دۆزەرەوە'},
+  {n:65, ar:'الْمَاجِدُ',             tr:'Al-Maajid',            ku:'شانازیدار'},
+  {n:66, ar:'الْوَاحِدُ',             tr:'Al-Waahid',            ku:'یەک'},
+  {n:67, ar:'الْأَحَدُ',              tr:'Al-Ahad',              ku:'تاک'},
+  {n:68, ar:'الصَّمَدُ',              tr:'As-Samad',             ku:'بێ نیاز'},
+  {n:69, ar:'الْقَادِرُ',             tr:'Al-Qaadir',            ku:'توانا'},
+  {n:70, ar:'الْمُقْتَدِرُ',          tr:'Al-Muqtadir',          ku:'توانادار'},
+  {n:71, ar:'الْمُقَدِّمُ',           tr:'Al-Muqaddim',          ku:'پێشخەر'},
+  {n:72, ar:'الْمُؤَخِّرُ',           tr:"Al-Mu'akhkhir",        ku:'دواخەر'},
+  {n:73, ar:'الْأَوَّلُ',             tr:'Al-Awwal',             ku:'یەکەم'},
+  {n:74, ar:'الْآخِرُ',               tr:'Al-Aakhir',            ku:'کۆتایی'},
+  {n:75, ar:'الظَّاهِرُ',             tr:'Az-Zaahir',            ku:'ئاشکرا'},
+  {n:76, ar:'الْبَاطِنُ',             tr:'Al-Baatin',            ku:'نهێنی'},
+  {n:77, ar:'الْوَالِي',              tr:'Al-Waali',             ku:'سەروەر'},
+  {n:78, ar:'الْمُتَعَالِي',          tr:"Al-Muta'aali",         ku:'برزتر'},
+  {n:79, ar:'الْبَرُّ',               tr:'Al-Barr',              ku:'باش'},
+  {n:80, ar:'التَّوَّابُ',            tr:'At-Tawwaab',           ku:'توبە پەذیر'},
+  {n:81, ar:'الْمُنْتَقِمُ',          tr:'Al-Muntaqim',          ku:'توانجەگر'},
+  {n:82, ar:'الْعَفُوُّ',             tr:"Al-'Afuww",            ku:'بوخشایینکار'},
+  {n:83, ar:'الرَّءُوفُ',             tr:"Ar-Ra'oof",            ku:'نەرمدڵ'},
+  {n:84, ar:'مَالِكُ الْمُلْكِ',      tr:'Maalik-ul-Mulk',       ku:'پاشایێ پاشایان'},
+  {n:85, ar:'ذُو الْجَلَالِ وَالْإِكْرَامِ', tr:'Dhul-Jalaali wal-Ikraam', ku:'خاوەنێ شکوه و کەرامەت'},
+  {n:86, ar:'الْمُقْسِطُ',            tr:'Al-Muqsit',            ku:'دادپەروەر'},
+  {n:87, ar:'الْجَامِعُ',             tr:'Al-Jaami',             ku:'کۆکار'},
+  {n:88, ar:'الْغَنِيُّ',             tr:'Al-Ghaniyy',           ku:'بێ نیاز'},
+  {n:89, ar:'الْمُغْنِي',             tr:'Al-Mughnee',           ku:'دەوڵەمەند کار'},
+  {n:90, ar:'الْمَانِعُ',             tr:'Al-Maani',             ku:'پاراستووار'},
+  {n:91, ar:'الضَّارُّ',              tr:'Ad-Daarr',             ku:'زیانی دەر'},
+  {n:92, ar:'النَّافِعُ',             tr:"An-Naafi'",            ku:'سوودی دەر'},
+  {n:93, ar:'النُّورُ',               tr:'An-Noor',              ku:'ڕووناکی'},
+  {n:94, ar:'الْهَادِي',              tr:'Al-Haadee',            ku:'ڕێنیشاندەر'},
+  {n:95, ar:'الْبَدِيعُ',             tr:"Al-Badee'",            ku:'دروستکارێ نوێ'},
+  {n:96, ar:'الْبَاقِي',              tr:'Al-Baaqee',            ku:'هەمیشە مایەوە'},
+  {n:97, ar:'الْوَارِثُ',             tr:'Al-Waarith',           ku:'وارس'},
+  {n:98, ar:'الرَّشِيدُ',             tr:'Ar-Rasheed',           ku:'ڕێنیشاندەر'},
+  {n:99, ar:'الصَّبُورُ',             tr:'As-Saboor',            ku:'بردبار'}
 ];
 
 /* Persistent image-loaded tracker — survives every home re-render */
@@ -245,6 +349,7 @@ window.GencineUI = {
     if(this._view === 'home')        this._renderHome(el);
     else if(this._view === 'dua')    this._renderDua(el);
     else if(this._view === 'tasbih') this._renderTasbih(el);
+    else if(this._view === 'asma')   this._renderAsma(el);
     else                             this._renderHadith(el);
   },
 
@@ -601,6 +706,83 @@ window.GencineUI = {
     });
 
     container.appendChild(list);
+  },
+
+  /* ═══════════════════ 99 NAMES ═══════════════════ */
+  _renderAsma: function(container){
+    container.appendChild(this._backRow('ناوێن خوا'));
+
+    /* sticky search bar */
+    var searchWrap = document.createElement('div');
+    searchWrap.className = 'asma-search-wrap';
+    var input = document.createElement('input');
+    input.className = 'asma-search';
+    input.type = 'search';
+    input.placeholder = 'گەڕان...';
+    searchWrap.appendChild(input);
+    container.appendChild(searchWrap);
+
+    /* count label */
+    var countEl = document.createElement('div');
+    countEl.className = 'asma-count';
+    countEl.textContent = '٩٩ ناوێن خوا';
+    container.appendChild(countEl);
+
+    /* grid */
+    var grid = document.createElement('div');
+    grid.className = 'asma-grid';
+
+    function buildCards(filter){
+      while(grid.firstChild) grid.removeChild(grid.firstChild);
+      var list = filter
+        ? ASMA_DATA.filter(function(a){
+            var q = filter.toLowerCase();
+            return a.ar.includes(filter) || a.tr.toLowerCase().includes(q) || a.ku.includes(filter);
+          })
+        : ASMA_DATA;
+
+      countEl.textContent = filter ? (list.length + ' / ٩٩') : '٩٩ ناوێن خوا';
+
+      list.forEach(function(a){
+        var card = document.createElement('div');
+        card.className = 'asma-card';
+
+        var num = document.createElement('div');
+        num.className = 'asma-num';
+        num.textContent = a.n;
+        card.appendChild(num);
+
+        var ar = document.createElement('div');
+        ar.className = 'asma-ar';
+        ar.textContent = a.ar;
+        card.appendChild(ar);
+
+        var tr = document.createElement('div');
+        tr.className = 'asma-trans';
+        tr.textContent = a.tr;
+        card.appendChild(tr);
+
+        var ku = document.createElement('div');
+        ku.className = 'asma-ku';
+        ku.textContent = a.ku;
+        card.appendChild(ku);
+
+        var footer = document.createElement('div');
+        footer.className = 'asma-card-footer';
+        var copyText = a.ar + '\n' + a.tr + '\n' + a.ku;
+        footer.appendChild(_mkCopyBtn(copyText));
+        card.appendChild(footer);
+
+        grid.appendChild(card);
+      });
+    }
+
+    buildCards('');
+    container.appendChild(grid);
+
+    input.addEventListener('input', function(){
+      buildCards(this.value.trim());
+    });
   },
 
   /* ═══════════════════ TASBIH ACTIONS ═══════════════════ */
