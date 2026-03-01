@@ -21,8 +21,8 @@
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Dark Mode */
-body.dark-mode {
+/* Dark Mode — body.dark-mode (toggled by JS) OR html.dark-mode body (pre-paint flash prevention) */
+body.dark-mode, html.dark-mode body {
     --bg-app: #000000;
     --bg-surface: #111111;
     --bg-hover: #222222;
