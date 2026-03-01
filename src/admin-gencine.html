@@ -1013,14 +1013,22 @@ async function deleteHadith(id) {
     showNotification('Hadith deleted.', 'success'); await loadHadiths(); localStorage.removeItem('gencine_hadiths_v1');
 }
 
-/* ── Theme toggle (matches other admin pages) ── */
-function toggleTheme() {
-    var isDark = document.documentElement.classList.toggle('dark-mode');
-    localStorage.setItem('adminTheme', isDark ? 'dark' : 'light');
-    document.getElementById('theme-icon').setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+/* ── Theme toggle ── */
+(function() {
+    var themeIcon = document.getElementById('theme-icon');
+    if (localStorage.getItem('admin-theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        themeIcon.setAttribute('data-lucide', 'sun');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+    document.getElementById('theme-toggle').addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        var isDark = document.body.classList.contains('dark-mode');
+        themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+    });
+})();
 
 /* ── Init ── */
 (async function() {
