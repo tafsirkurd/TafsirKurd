@@ -249,6 +249,7 @@ body{background:var(--bg);color:var(--text)}
 .ayah-act:active{background:var(--bg3);transform:scale(.92)}
 .ayah-act.active{color:var(--text);background:var(--bg3)}
 .ayah-act.active:active{background:var(--bg2);transform:scale(.92)}
+.ayah-act.share-flash{color:var(--accent);background:var(--bg3)}
 .ayah-arabic{font-family:var(--font-ar);font-size:var(--ar-size);line-height:var(--line-h);text-align:center;margin-bottom:14px;direction:rtl;user-select:text;word-spacing:4px}
 .ayah-tafsir{font-size:var(--tf-size);line-height:1.9;color:var(--text2);user-select:text;display:block}
 .ayah-tafsir.hide{display:none}
@@ -308,6 +309,8 @@ body{background:var(--bg);color:var(--text)}
 .ayah-card.playing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 
 /* ===== BOTTOM TAB BAR ===== */
+.offline-banner{position:fixed;bottom:calc(var(--tab-h) + var(--safe-b));left:0;right:0;z-index:299;background:#1a1a2e;color:#a0c4ff;font-size:.78rem;display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 16px;border-top:1px solid rgba(100,150,255,.25);animation:slideUpBanner .25s ease}
+@keyframes slideUpBanner{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .tabbar{position:fixed;bottom:0;left:0;right:0;height:calc(var(--tab-h) + var(--safe-b));padding-bottom:var(--safe-b);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:stretch;z-index:300;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);background:rgba(255,255,255,.92)}
 [data-theme="dark"] .tabbar{background:rgba(22,22,22,.92)}
 [data-theme="sakina"] .tabbar{background:rgba(17,35,24,.94)}
@@ -1377,6 +1380,12 @@ body{background:var(--bg);color:var(--text)}
 
 <!-- PROFILE PAGE -->
 <div class="profile-panel" id="profilePanel"></div>
+
+<!-- OFFLINE BANNER -->
+<div id="offlineBanner" class="offline-banner" style="display:none">
+  <i class="fas fa-wifi" style="opacity:.5;text-decoration:line-through"></i>
+  <span>بێ ئینتەرنێت — داتا کاش دێت</span>
+</div>
 
 <!-- TAB BAR -->
 <nav class="tabbar">
