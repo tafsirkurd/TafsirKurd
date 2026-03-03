@@ -215,6 +215,7 @@
             font-size: 15px;
         }
         .item-card-body { flex: 1; min-width: 0; }
+        .item-card-title { font-size:13px; font-weight:700; color:var(--text-primary); direction:rtl; margin-bottom:4px; font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; }
         .item-card-ar {
             font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
             font-size: 15px;
@@ -507,7 +508,7 @@
                     <div><strong id="stat-cats">—</strong>Categories</div>
                 </div>
                 <div class="stat-pill">
-                    <div class="stat-pill-icon"><i data-lucide="hands-helping"></i></div>
+                    <div class="stat-pill-icon"><i data-lucide="hand-heart"></i></div>
                     <div><strong id="stat-duas">—</strong>Duas</div>
                 </div>
                 <div class="stat-pill">
@@ -524,7 +525,7 @@
                     <span class="tab-count" id="tab-count-cats">0</span>
                 </button>
                 <button class="platform-tab" onclick="switchTab('duas')">
-                    <i data-lucide="hands-helping" style="width:15px;height:15px"></i>
+                    <i data-lucide="hand-heart" style="width:15px;height:15px"></i>
                     Duas
                     <span class="tab-count" id="tab-count-duas">0</span>
                 </button>
@@ -641,6 +642,10 @@
                     </button>
                     <div class="add-form-body" id="hadith-form-body">
                         <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Title (Kurdish)</label>
+                                <input type="text" id="hadith-title" class="form-input" placeholder="&#x28;&#x66F;&#x6CE;;&#x648;&#x646;&#x6D5;&#x62A;&#x29; &#x646;&#x627;&#x648;&#x06CE; &#x628;&#x627;&#x628;" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
+                            </div>
                             <div class="form-group">
                                 <label class="form-label">Arabic Text</label>
                                 <textarea id="hadith-ar" class="form-textarea" placeholder="&#x627;&#x643;&#x62A;&#x628; &#x627;&#x644;&#x62D;&#x62F;&#x64A;&#x62B;..."></textarea>
@@ -888,14 +893,14 @@ function renderDuaList() {
     document.getElementById('dua-count').textContent = filtered.length + ' duas' + (duaFilterCat !== 'all' ? ' in "' + duaFilterCat + '"' : '');
     if (!filtered.length) {
         var es = mke('div', 'empty-state');
-        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','hands-helping'); eico.appendChild(ei);
+        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','hand-heart'); eico.appendChild(ei);
         var ep = mke('p'); ep.textContent = 'No duas found. Add one above.';
         es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
         if (typeof lucide !== 'undefined') lucide.createIcons(); return;
     }
     filtered.forEach(function(dua) {
         var card = mke('div', 'item-card');
-        var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','hands-helping'); icon.appendChild(ico);
+        var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','hand-heart'); icon.appendChild(ico);
         var body = mke('div', 'item-card-body');
         var arEl = mke('div', 'item-card-ar'); arEl.textContent = dua.ar; body.appendChild(arEl);
         var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = dua.ku; body.appendChild(kuEl);
@@ -966,6 +971,7 @@ function renderHadithList() {
         var card = mke('div', 'item-card');
         var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','scroll-text'); icon.appendChild(ico);
         var body = mke('div', 'item-card-body');
+        if (h.title) { var titleEl = mke('div', 'item-card-title'); titleEl.textContent = h.title; body.appendChild(titleEl); }
         var arEl = mke('div', 'item-card-ar'); arEl.textContent = h.ar; body.appendChild(arEl);
         var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = h.ku; body.appendChild(kuEl);
         if (h.source) { var meta = mke('div', 'item-card-meta'); var sb = mke('span', 'badge badge-source'); sb.textContent = h.source; meta.appendChild(sb); body.appendChild(meta); }
@@ -980,6 +986,7 @@ function renderHadithList() {
 function editHadith(id) {
     var h = allHadiths.find(function(x) { return x.id === id; }); if (!h) return;
     document.getElementById('hadith-edit-id').value = id;
+    document.getElementById('hadith-title').value = h.title || '';
     document.getElementById('hadith-ar').value = h.ar; document.getElementById('hadith-ku').value = h.ku;
     document.getElementById('hadith-source').value = h.source || '';
     document.getElementById('hadith-sort').value = h.sort_order || 10;
@@ -987,7 +994,7 @@ function editHadith(id) {
     switchTab('hadiths'); openForm('hadith');
 }
 function cancelHadithEdit() {
-    ['hadith-edit-id','hadith-ar','hadith-ku','hadith-source'].forEach(function(id) { document.getElementById(id).value = ''; });
+    ['hadith-edit-id','hadith-title','hadith-ar','hadith-ku','hadith-source'].forEach(function(id) { document.getElementById(id).value = ''; });
     document.getElementById('hadith-sort').value = '10';
     document.getElementById('hadith-form-toggle-label').textContent = 'Add Hadith';
     closeForm('hadith');
@@ -995,7 +1002,7 @@ function cancelHadithEdit() {
 async function saveHadith() {
     var ar = document.getElementById('hadith-ar').value.trim(); var ku = document.getElementById('hadith-ku').value.trim();
     if (!ar || !ku) { showNotification('Arabic and Kurdish text are required.', 'warning'); return; }
-    var payload = { ar: ar, ku: ku,
+    var payload = { title: document.getElementById('hadith-title').value.trim() || null, ar: ar, ku: ku,
         source: document.getElementById('hadith-source').value.trim() || null,
         sort_order: parseInt(document.getElementById('hadith-sort').value) || 0 };
     var supabase = window.adminAuth.getSupabase();

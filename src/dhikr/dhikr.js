@@ -152,7 +152,7 @@ var RING_CIRC = 2 * Math.PI * RING_R;
 /* ── Supabase data cache ── */
 var _dbCats    = null;   /* [{key, label_ku, ...}] */
 var _dbDuas    = null;   /* [{category_key, ar, ku, source, repeat}] */
-var _dbHadiths = null;   /* [{ar, ku, source}] */
+var _dbHadiths = null;   /* [{title, ar, ku, source}] */
 var _loadingDb = false;
 var _dbLoaded  = false;
 
@@ -163,7 +163,8 @@ function _readCache(key) {
     var raw = localStorage.getItem(key);
     if (!raw) return null;
     var parsed = JSON.parse(raw);
-    if (Date.now() - parsed.ts > CACHE_TTL_MS) { localStorage.removeItem(key); return null; }
+    // Never expire cache when offline — keep data usable forever without internet
+    if (navigator.onLine && Date.now() - parsed.ts > CACHE_TTL_MS) { localStorage.removeItem(key); return null; }
     return parsed.data;
   } catch(e) { return null; }
 }
@@ -297,11 +298,12 @@ function haptic(ms){
 function $(id){return document.getElementById(id)}
 
 window.GencineUI = {
-  _view:          'home',   /* 'home' | 'dua' | 'tasbih' | 'hadith' */
-  _duaCat:        'morning',
-  _tasbihCount:   0,
-  _tasbihTarget:  33,
-  _tasbihDhikrIdx:0,
+  _view:            'home',   /* 'home' | 'dua' | 'tasbih' | 'hadith' */
+  _duaCat:          'morning',
+  _tasbihCount:     0,
+  _tasbihTarget:    33,
+  _tasbihDhikrIdx:  0,
+  _hadithDetailIdx: null,   /* null = list view; number = detail view */
 
   /* ── state persistence ── */
   _loadState: function(){
@@ -323,6 +325,7 @@ window.GencineUI = {
     var self = this;
     this._loadState();
     this._view = 'home';
+    this._hadithDetailIdx = null;
 
     /* If DB data not loaded yet, kick off load then redraw */
     if (!_dbLoaded) {
@@ -338,6 +341,7 @@ window.GencineUI = {
   /* ── called by section nav buttons ── */
   section: function(name){
     this._view = name;
+    if (name === 'hadith') this._hadithDetailIdx = null;
     this._draw();
   },
 
@@ -648,12 +652,74 @@ window.GencineUI = {
   /* ═══════════════════ HADITH ═══════════════════ */
   _renderHadith: function(container){
     var self = this;
-    container.appendChild(this._backRow('حەدیس'));
-
     var hadiths = _getHadiths();
 
+    /* Detail view */
+    if (this._hadithDetailIdx !== null) {
+      var h = hadiths[this._hadithDetailIdx];
+      if (!h) { this._hadithDetailIdx = null; this._renderHadith(container); return; }
+
+      /* Back row → returns to hadith list, not home */
+      var backRow = document.createElement('div');
+      backRow.className = 'genc-back-row';
+      var backBtn = document.createElement('button');
+      backBtn.className = 'genc-back-btn';
+      var backIco = document.createElement('i');
+      backIco.className = 'fas fa-arrow-right';
+      backBtn.appendChild(backIco);
+      backBtn.onclick = function(){ self._hadithDetailIdx = null; self._draw(); };
+      backRow.appendChild(backBtn);
+      var backLbl = document.createElement('span');
+      backLbl.className = 'genc-back-label';
+      backLbl.textContent = 'حەدیس';
+      backRow.appendChild(backLbl);
+      container.appendChild(backRow);
+
+      /* Detail card */
+      var detail = document.createElement('div');
+      detail.className = 'hadith-detail-card';
+
+      if (h.title) {
+        var titleEl = document.createElement('div');
+        titleEl.className = 'hadith-detail-title';
+        titleEl.textContent = h.title;
+        detail.appendChild(titleEl);
+      }
+
+      if (h.ar) {
+        var arEl = document.createElement('div');
+        arEl.className = 'dua-card-ar';
+        arEl.textContent = h.ar;
+        detail.appendChild(arEl);
+      }
+
+      if (h.ku) {
+        var kuEl = document.createElement('div');
+        kuEl.className = 'dua-card-ku';
+        kuEl.textContent = h.ku;
+        detail.appendChild(kuEl);
+      }
+
+      var detailFooter = document.createElement('div');
+      detailFooter.className = 'dua-card-footer';
+      if (h.source) {
+        var srcEl = document.createElement('span');
+        srcEl.className = 'dua-card-src';
+        srcEl.textContent = h.source;
+        detailFooter.appendChild(srcEl);
+      }
+      var copyText = (h.title ? h.title + '\n\n' : '') + (h.ar || '') + (h.ku ? '\n\n' + h.ku : '') + (h.source ? '\n\n' + h.source : '');
+      detailFooter.appendChild(_mkCopyBtn(copyText));
+      detail.appendChild(detailFooter);
+
+      container.appendChild(detail);
+      return;
+    }
+
+    /* List view */
+    container.appendChild(this._backRow('حەدیس'));
+
     if (!hadiths.length) {
-      /* Coming soon screen */
       var wrap = document.createElement('div');
       wrap.className = 'genc-coming';
       var iconEl = document.createElement('div');
@@ -662,10 +728,10 @@ window.GencineUI = {
       i.className = 'fas fa-book-open';
       iconEl.appendChild(i);
       wrap.appendChild(iconEl);
-      var title = document.createElement('div');
-      title.className = 'genc-coming-title';
-      title.textContent = 'بەمزوانە دێت';
-      wrap.appendChild(title);
+      var comingTitle = document.createElement('div');
+      comingTitle.className = 'genc-coming-title';
+      comingTitle.textContent = 'بەمزوانە دێت';
+      wrap.appendChild(comingTitle);
       var sub = document.createElement('div');
       sub.className = 'genc-coming-sub';
       sub.textContent = 'ئەم بەشە هەنووکا ئامادەدەبێت.\nبەمزوانە زیاد دەبێت!';
@@ -674,35 +740,36 @@ window.GencineUI = {
       return;
     }
 
-    /* Render hadith cards */
     var list = document.createElement('div');
-    list.className = 'dua-list';
+    list.className = 'hadith-list';
 
-    hadiths.forEach(function(h){
-      var card = document.createElement('div');
-      card.className = 'dua-card';
+    hadiths.forEach(function(h, idx){
+      var item = document.createElement('button');
+      item.className = 'hadith-title-item';
 
-      var ar = document.createElement('div');
-      ar.className = 'dua-card-ar';
-      ar.textContent = h.ar;
-      card.appendChild(ar);
+      var textCol = document.createElement('div');
+      textCol.className = 'hadith-title-col';
 
-      var ku = document.createElement('div');
-      ku.className = 'dua-card-ku';
-      ku.textContent = h.ku;
-      card.appendChild(ku);
+      var titleText = document.createElement('div');
+      titleText.className = 'hadith-title-text';
+      titleText.textContent = h.title || (h.ar ? h.ar.substring(0, 55) + '…' : '');
+      textCol.appendChild(titleText);
 
-      var hFooter = document.createElement('div');
-      hFooter.className = 'dua-card-footer';
-      var hSrc = document.createElement('span');
-      hSrc.className = 'dua-card-src';
-      hSrc.textContent = h.source || '';
-      hFooter.appendChild(hSrc);
-      var hCopyText = (h.ar || '') + (h.ku ? '\n\n' + h.ku : '') + (h.source ? '\n\n' + h.source : '');
-      hFooter.appendChild(_mkCopyBtn(hCopyText));
-      card.appendChild(hFooter);
+      if (h.source) {
+        var srcEl = document.createElement('div');
+        srcEl.className = 'hadith-title-src';
+        srcEl.textContent = h.source;
+        textCol.appendChild(srcEl);
+      }
 
-      list.appendChild(card);
+      item.appendChild(textCol);
+
+      var arrow = document.createElement('i');
+      arrow.className = 'fas fa-chevron-left';
+      item.appendChild(arrow);
+
+      item.onclick = function(){ self._hadithDetailIdx = idx; self._draw(); };
+      list.appendChild(item);
     });
 
     container.appendChild(list);
