@@ -309,8 +309,6 @@ body{background:var(--bg);color:var(--text)}
 .ayah-card.playing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 
 /* ===== BOTTOM TAB BAR ===== */
-.offline-banner{position:fixed;bottom:calc(var(--tab-h) + var(--safe-b));left:0;right:0;z-index:299;background:#1a1a2e;color:#a0c4ff;font-size:.78rem;display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 16px;border-top:1px solid rgba(100,150,255,.25);animation:slideUpBanner .25s ease}
-@keyframes slideUpBanner{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .tabbar{position:fixed;bottom:0;left:0;right:0;height:calc(var(--tab-h) + var(--safe-b));padding-bottom:var(--safe-b);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:stretch;z-index:300;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);background:rgba(255,255,255,.92)}
 [data-theme="dark"] .tabbar{background:rgba(22,22,22,.92)}
 [data-theme="sakina"] .tabbar{background:rgba(17,35,24,.94)}
@@ -768,7 +766,8 @@ body{background:var(--bg);color:var(--text)}
 /* ===== READER QUICK SETTINGS ===== */
 .qs-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:310;display:none;transition:opacity .2s ease}
 .qs-overlay.on{display:block}
-.qs-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:var(--r-xl) var(--r-xl) 0 0;z-index:311;padding:0 0 calc(var(--safe-b) + 8px);transform:translateY(100%);transition:transform .3s var(--ease),opacity .2s ease}
+.qs-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:var(--r-xl) var(--r-xl) 0 0;z-index:311;max-height:82vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s var(--ease),opacity .2s ease}
+#qsBody{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;padding-bottom:calc(var(--safe-b) + 8px)}
 .qs-sheet.on{transform:translateY(0)}
 .qs-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 12px;border-bottom:1px solid var(--border)}
 .qs-hdr span{font-weight:700;font-size:.95rem}
@@ -781,6 +780,9 @@ body{background:var(--bg);color:var(--text)}
 .qs-row-info{display:flex;flex-direction:column;gap:2px}
 .qs-row-sub{font-size:.72rem;color:var(--text3);margin-top:1px}
 .qs-section-title{font-size:.7rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:14px 20px 4px}
+.qs-font-preview{margin:6px 20px 4px;padding:12px 14px;background:var(--bg2);border-radius:var(--r-m);border:1px solid var(--border);direction:rtl;text-align:center}
+.qs-font-preview-ar{font-family:var(--font-ar);font-size:var(--ar-size);line-height:var(--line-h);color:var(--text)}
+.qs-font-preview-tf{font-size:var(--tf-size);line-height:1.7;color:var(--text2);margin-top:4px}
 .qs-reciter-list{display:flex;gap:8px;overflow-x:auto;padding:10px 20px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-bottom:1px solid var(--border)}
 .qs-reciter-list::-webkit-scrollbar{display:none}
 .qs-reciter-chip{flex-shrink:0;padding:7px 14px;border-radius:var(--r-full);background:var(--bg3);font-size:.8rem;cursor:pointer;border:2px solid transparent;transition:all .15s;white-space:nowrap}
@@ -932,6 +934,7 @@ body{background:var(--bg);color:var(--text)}
 .sky-countdown{font-size:2.8rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.02em;direction:ltr;line-height:1;text-shadow:0 2px 16px rgba(0,0,0,.5);display:inline-block}
 .sky-dates{display:flex;gap:10px;margin-top:5px;flex-wrap:wrap;justify-content:flex-start}
 .sky-dates span{font-size:.7rem;color:rgba(255,255,255,.68);text-shadow:0 1px 4px rgba(0,0,0,.4)}
+.sky-sync{font-size:.6rem;color:rgba(255,220,80,.7);text-shadow:0 1px 3px rgba(0,0,0,.4);margin-top:3px;min-height:0}
 /* Milky Way diagonal band */
 .sky-milkyway{position:absolute;top:0;left:-12%;right:-12%;height:70%;background:linear-gradient(132deg,transparent 15%,rgba(138,122,215,0.06) 33%,rgba(185,165,245,0.14) 50%,rgba(138,122,215,0.06) 67%,transparent 85%);filter:blur(14px);pointer-events:none;transition:opacity 10s;z-index:1}
 /* Nebula glow (deep night) */
@@ -979,13 +982,16 @@ body{background:var(--bg);color:var(--text)}
 .sky-venus{position:absolute;width:4px;height:4px;background:#fff8e0;border-radius:50%;z-index:5;pointer-events:none;transition:opacity 5s,left 8s,top 8s;animation:sky-vns 3.8s ease-in-out infinite}
 /* Star constellation lines */
 .sky-const{stroke:rgba(180,200,255,0.11);stroke-width:0.4}
+/* Prayer panel — no scroll, exact fit */
+#panelPrayer{overflow:hidden;padding-bottom:0}
+#prayerContent{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
 /* Prayer 2-col grid */
-.prayer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 14px 6px}
-.prayer-grid-card{background:var(--bg2);border-radius:var(--r-l);padding:16px 14px;display:flex;flex-direction:column;gap:6px;border:1px solid transparent;transition:all .2s}
+.prayer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 14px calc(var(--tab-h) + var(--safe-b) + 10px);flex:1;align-content:stretch}
+.prayer-grid-card{background:var(--bg2);border-radius:var(--r-l);padding:16px 16px 14px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid transparent;transition:all .2s}
 .prayer-grid-card--next{background:var(--surface-h);border-color:var(--accent);box-shadow:0 0 0 1px rgba(34,197,94,.12),0 4px 16px rgba(0,0,0,.18)}
-.prayer-grid-name{font-size:.78rem;color:var(--text3)}
-.prayer-grid-card--next .prayer-grid-name{color:var(--text2)}
-.prayer-grid-time{font-size:1.5rem;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;direction:ltr;line-height:1}
+.prayer-grid-name{font-size:.95rem;font-weight:700;color:var(--text2);text-align:right}
+.prayer-grid-card--next .prayer-grid-name{color:var(--accent)}
+.prayer-grid-time{font-size:1.75rem;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;direction:ltr;line-height:1;letter-spacing:-.01em}
 .prayer-grid-card--next .prayer-grid-time{color:var(--accent)}
 /* Athan status banner */
 .prayer-athan-banner{display:flex;align-items:center;gap:10px;margin:12px 0 4px;padding:12px 16px;border-radius:12px;cursor:pointer;border:1.5px solid transparent}
@@ -1151,6 +1157,15 @@ body{background:var(--bg);color:var(--text)}
 .genc-coming-icon{font-size:3rem;color:var(--accent)}
 .genc-coming-title{font-size:1.3rem;font-weight:800;color:var(--text)}
 .genc-coming-sub{font-size:.88rem;color:var(--text3);line-height:1.7;direction:rtl}
+/* Hadith list + detail */
+.hadith-list{display:flex;flex-direction:column;gap:2px;padding:8px 16px 24px}
+.hadith-title-item{display:flex;align-items:center;gap:10px;width:100%;background:var(--bg2);border:none;border-radius:var(--r-m);padding:14px;cursor:pointer;text-align:right;direction:rtl}
+.hadith-title-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.hadith-title-text{font-size:.92rem;font-weight:600;color:var(--text);line-height:1.45;direction:rtl;word-break:break-word}
+.hadith-title-src{font-size:.72rem;color:var(--text3)}
+.hadith-title-item .fa-chevron-left{font-size:.75rem;color:var(--text3);flex-shrink:0;margin-right:auto}
+.hadith-detail-card{margin:12px 16px 24px;background:var(--bg2);border-radius:var(--r-l);padding:18px;border:1px solid var(--border)}
+.hadith-detail-title{font-size:1rem;font-weight:700;color:var(--accent);direction:rtl;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 </style>
 </head>
 <body>
@@ -1381,11 +1396,6 @@ body{background:var(--bg);color:var(--text)}
 <!-- PROFILE PAGE -->
 <div class="profile-panel" id="profilePanel"></div>
 
-<!-- OFFLINE BANNER -->
-<div id="offlineBanner" class="offline-banner" style="display:none">
-  <i class="fas fa-wifi" style="opacity:.5;text-decoration:line-through"></i>
-  <span>بێ ئینتەرنێت — داتا کاش دێت</span>
-</div>
 
 <!-- TAB BAR -->
 <nav class="tabbar">
