@@ -196,10 +196,24 @@ function _initDbData(onDone) {
   }
 }
 
+var _sbRetries = 0;
+
 function _fetchDbData(onDone) {
   if (_loadingDb) { if (onDone) onDone(); return; }
   var sb = _getSupabase();
-  if (!sb) { _dbLoaded = true; if (onDone) onDone(); return; }
+  if (!sb) {
+    /* Supabase not initialised yet — retry every 700ms, give up after 8s */
+    if (_sbRetries < 12) {
+      _sbRetries++;
+      setTimeout(function() { _fetchDbData(onDone); }, 700);
+    } else {
+      _sbRetries = 0;
+      _dbLoaded = true;
+      if (onDone) onDone();
+    }
+    return;
+  }
+  _sbRetries = 0;
 
   _loadingDb = true;
 
