@@ -203,7 +203,7 @@ function init(){
     setupPullToRefresh('panelIslamvoice',function(){_renderHash.iv=null;if(typeof App.ivRefresh==='function')App.ivRefresh();});
     setupPullToRefresh('panelSettings',function(){_renderHash.settings=null;renderSettings();});
     setupPullToRefresh('panelPrayer',function(){if(window.PrayerUI)PrayerUI.refresh()});
-    setupPullToRefresh('panelGencine',function(){if(window.GencineUI)GencineUI._draw();});
+    setupPullToRefresh('panelGencine',function(){if(window.GencineUI)GencineUI.refresh();});
 
     // Load data
     loadQuranData();

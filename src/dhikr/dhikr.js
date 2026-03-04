@@ -357,6 +357,17 @@ window.GencineUI = {
     }
   },
 
+  /* ── pull-to-refresh: clear cache + re-fetch + re-render ── */
+  refresh: function(){
+    var self = this;
+    localStorage.removeItem('gencine_cats_v1');
+    localStorage.removeItem('gencine_duas_v1');
+    localStorage.removeItem('gencine_hadiths_v2');
+    _dbLoaded  = false;
+    _loadingDb = false;
+    _fetchDbData(function(){ self._draw(); });
+  },
+
   /* ── called by section nav buttons ── */
   section: function(name){
     this._view = name;
