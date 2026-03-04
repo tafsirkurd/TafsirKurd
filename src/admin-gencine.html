@@ -250,6 +250,7 @@
         .badge-cat { background: rgba(59,130,246,.1); color: #3b82f6; }
         .badge-repeat { background: var(--bg-active); color: var(--text-secondary); }
         .badge-source { background: var(--bg-active); color: var(--text-tertiary); font-weight: 400; }
+        .badge-num { background: var(--accent-light, rgba(99,102,241,.12)); color: var(--accent, #6366f1); font-weight: 700; margin-bottom: 4px; }
         .source-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; min-height: 4px; }
         .source-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--bg-active); border: 1px solid var(--border-light); border-radius: 20px; font-size: 12px; direction: rtl; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
         .source-tag-remove { background: none; border: none; cursor: pointer; font-size: 14px; line-height: 1; padding: 0; color: var(--text-tertiary); margin-right: 2px; }
@@ -669,10 +670,7 @@
                                         <button type="button" class="btn btn-secondary" onclick="addHadithSource()">+</button>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">Sort Order</label>
-                                    <input type="number" id="hadith-sort" class="form-input" value="10" min="0">
-                                </div>
+                                <input type="hidden" id="hadith-sort" value="0">
                             </div>
                             <div class="form-actions">
                                 <button class="btn btn-secondary" onclick="cancelHadithEdit()">Cancel</button>
@@ -977,10 +975,11 @@ function renderHadithList() {
         es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
         if (typeof lucide !== 'undefined') lucide.createIcons(); return;
     }
-    allHadiths.forEach(function(h) {
+    allHadiths.forEach(function(h, idx) {
         var card = mke('div', 'item-card');
         var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','scroll-text'); icon.appendChild(ico);
         var body = mke('div', 'item-card-body');
+        var numBadge = mke('span', 'badge badge-num'); numBadge.textContent = '#' + (idx + 1); body.appendChild(numBadge);
         if (h.title) { var titleEl = mke('div', 'item-card-title'); titleEl.textContent = h.title; body.appendChild(titleEl); }
         var arEl = mke('div', 'item-card-ar'); arEl.textContent = h.ar; body.appendChild(arEl);
         var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = h.ku; body.appendChild(kuEl);
@@ -1028,7 +1027,7 @@ function editHadith(id) {
     hadithSources = h.source ? h.source.split('\n').filter(Boolean) : [];
     _renderSourceTags();
     document.getElementById('hadith-source-input').value = '';
-    document.getElementById('hadith-sort').value = h.sort_order || 10;
+    document.getElementById('hadith-sort').value = h.sort_order || 0;
     document.getElementById('hadith-form-toggle-label').textContent = 'Editing hadith';
     switchTab('hadiths'); openForm('hadith');
 }
@@ -1036,18 +1035,22 @@ function cancelHadithEdit() {
     ['hadith-edit-id','hadith-title','hadith-ar','hadith-ku'].forEach(function(id) { document.getElementById(id).value = ''; });
     document.getElementById('hadith-source-input').value = '';
     hadithSources = []; _renderSourceTags();
-    document.getElementById('hadith-sort').value = '10';
+    document.getElementById('hadith-sort').value = '0';
     document.getElementById('hadith-form-toggle-label').textContent = 'Add Hadith';
     closeForm('hadith');
 }
 async function saveHadith() {
     var ar = document.getElementById('hadith-ar').value.trim(); var ku = document.getElementById('hadith-ku').value.trim();
     if (!ar || !ku) { showNotification('Arabic and Kurdish text are required.', 'warning'); return; }
+    var editId = document.getElementById('hadith-edit-id').value;
+    /* Auto sort_order: keep existing on edit; for new hadiths use max+10 */
+    var sortVal = editId
+        ? (parseInt(document.getElementById('hadith-sort').value) || 0)
+        : (allHadiths.reduce(function(m,h){ return Math.max(m, h.sort_order||0); }, 0) + 10);
     var payload = { title: document.getElementById('hadith-title').value.trim() || null, ar: ar, ku: ku,
         source: hadithSources.length ? hadithSources.join('\n') : null,
-        sort_order: parseInt(document.getElementById('hadith-sort').value) || 0 };
+        sort_order: sortVal };
     var supabase = window.adminAuth.getSupabase();
-    var editId = document.getElementById('hadith-edit-id').value;
     var r = editId ? await supabase.from('gencine_hadiths').update(payload).eq('id', editId)
                    : await supabase.from('gencine_hadiths').insert(payload);
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }

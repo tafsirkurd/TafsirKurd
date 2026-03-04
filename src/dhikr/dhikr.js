@@ -709,6 +709,11 @@ window.GencineUI = {
       var detail = document.createElement('div');
       detail.className = 'hadith-detail-card';
 
+      var numRow = document.createElement('div');
+      numRow.className = 'hadith-num-badge';
+      numRow.textContent = '#' + (this._hadithDetailIdx + 1);
+      detail.appendChild(numRow);
+
       if (h.title) {
         var titleEl = document.createElement('div');
         titleEl.className = 'hadith-detail-title';
@@ -782,6 +787,11 @@ window.GencineUI = {
     hadiths.forEach(function(h, idx){
       var item = document.createElement('button');
       item.className = 'hadith-title-item';
+
+      var numEl = document.createElement('div');
+      numEl.className = 'hadith-num';
+      numEl.textContent = idx + 1;
+      item.appendChild(numEl);
 
       var textCol = document.createElement('div');
       textCol.className = 'hadith-title-col';
