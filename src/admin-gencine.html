@@ -250,6 +250,12 @@
         .badge-cat { background: rgba(59,130,246,.1); color: #3b82f6; }
         .badge-repeat { background: var(--bg-active); color: var(--text-secondary); }
         .badge-source { background: var(--bg-active); color: var(--text-tertiary); font-weight: 400; }
+        .source-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; min-height: 4px; }
+        .source-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--bg-active); border: 1px solid var(--border-light); border-radius: 20px; font-size: 12px; direction: rtl; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+        .source-tag-remove { background: none; border: none; cursor: pointer; font-size: 14px; line-height: 1; padding: 0; color: var(--text-tertiary); margin-right: 2px; }
+        .source-tag-remove:hover { color: var(--danger, #ef4444); }
+        .source-add-row { display: flex; gap: 8px; align-items: center; }
+        .source-add-row .form-input { flex: 1; }
         .item-card-actions {
             display: flex;
             gap: 4px;
@@ -656,8 +662,12 @@
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">Source</label>
-                                    <input type="text" id="hadith-source" class="form-input" placeholder="&#x628;&#x62E;&#x627;&#x631;&#x06CC;" dir="rtl">
+                                    <label class="form-label">Sources</label>
+                                    <div class="source-tags" id="hadith-source-tags"></div>
+                                    <div class="source-add-row">
+                                        <input type="text" id="hadith-source-input" class="form-input" placeholder="&#x628;&#x62E;&#x627;&#x631;&#x06CC;" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif" onkeydown="if(event.key==='Enter'){event.preventDefault();addHadithSource();}">
+                                        <button type="button" class="btn btn-secondary" onclick="addHadithSource()">+</button>
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Sort Order</label>
@@ -974,7 +984,7 @@ function renderHadithList() {
         if (h.title) { var titleEl = mke('div', 'item-card-title'); titleEl.textContent = h.title; body.appendChild(titleEl); }
         var arEl = mke('div', 'item-card-ar'); arEl.textContent = h.ar; body.appendChild(arEl);
         var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = h.ku; body.appendChild(kuEl);
-        if (h.source) { var meta = mke('div', 'item-card-meta'); var sb = mke('span', 'badge badge-source'); sb.textContent = h.source; meta.appendChild(sb); body.appendChild(meta); }
+        if (h.source) { var meta = mke('div', 'item-card-meta'); h.source.split('\n').filter(Boolean).forEach(function(s){ var sb = mke('span', 'badge badge-source'); sb.textContent = s; meta.appendChild(sb); }); body.appendChild(meta); }
         var acts = mke('div', 'item-card-actions');
         acts.appendChild(mkIconBtn('pencil', 'Edit', false, function() { editHadith(h.id); }));
         acts.appendChild(mkIconBtn('trash-2', 'Delete', true, function() { deleteHadith(h.id); }));
@@ -983,18 +993,49 @@ function renderHadithList() {
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
+var hadithSources = [];
+function _renderSourceTags() {
+    var container = document.getElementById('hadith-source-tags');
+    if (!container) return;
+    container.textContent = '';
+    hadithSources.forEach(function(src, i) {
+        var tag = document.createElement('span');
+        tag.className = 'source-tag';
+        var rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'source-tag-remove';
+        rm.textContent = '×';
+        rm.onclick = (function(idx){ return function(){ hadithSources.splice(idx,1); _renderSourceTags(); }; })(i);
+        tag.appendChild(rm);
+        tag.appendChild(document.createTextNode(src));
+        container.appendChild(tag);
+    });
+}
+function addHadithSource() {
+    var input = document.getElementById('hadith-source-input');
+    var val = input.value.trim();
+    if (!val) return;
+    hadithSources.push(val);
+    _renderSourceTags();
+    input.value = '';
+    input.focus();
+}
 function editHadith(id) {
     var h = allHadiths.find(function(x) { return x.id === id; }); if (!h) return;
     document.getElementById('hadith-edit-id').value = id;
     document.getElementById('hadith-title').value = h.title || '';
     document.getElementById('hadith-ar').value = h.ar; document.getElementById('hadith-ku').value = h.ku;
-    document.getElementById('hadith-source').value = h.source || '';
+    hadithSources = h.source ? h.source.split('\n').filter(Boolean) : [];
+    _renderSourceTags();
+    document.getElementById('hadith-source-input').value = '';
     document.getElementById('hadith-sort').value = h.sort_order || 10;
     document.getElementById('hadith-form-toggle-label').textContent = 'Editing hadith';
     switchTab('hadiths'); openForm('hadith');
 }
 function cancelHadithEdit() {
-    ['hadith-edit-id','hadith-title','hadith-ar','hadith-ku','hadith-source'].forEach(function(id) { document.getElementById(id).value = ''; });
+    ['hadith-edit-id','hadith-title','hadith-ar','hadith-ku'].forEach(function(id) { document.getElementById(id).value = ''; });
+    document.getElementById('hadith-source-input').value = '';
+    hadithSources = []; _renderSourceTags();
     document.getElementById('hadith-sort').value = '10';
     document.getElementById('hadith-form-toggle-label').textContent = 'Add Hadith';
     closeForm('hadith');
@@ -1003,7 +1044,7 @@ async function saveHadith() {
     var ar = document.getElementById('hadith-ar').value.trim(); var ku = document.getElementById('hadith-ku').value.trim();
     if (!ar || !ku) { showNotification('Arabic and Kurdish text are required.', 'warning'); return; }
     var payload = { title: document.getElementById('hadith-title').value.trim() || null, ar: ar, ku: ku,
-        source: document.getElementById('hadith-source').value.trim() || null,
+        source: hadithSources.length ? hadithSources.join('\n') : null,
         sort_order: parseInt(document.getElementById('hadith-sort').value) || 0 };
     var supabase = window.adminAuth.getSupabase();
     var editId = document.getElementById('hadith-edit-id').value;
