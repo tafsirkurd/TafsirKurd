@@ -173,8 +173,8 @@ function _writeCache(key, data) {
 }
 
 function _getSupabase() {
-  /* app.js exposes supabase via window.S.supabase (initialized with anon key) */
-  return (window.S && window.S.supabase) ? window.S.supabase : null;
+  /* app.js exposes supabase via window._appSupabase once initialized */
+  return window._appSupabase || null;
 }
 
 /* Load from cache instantly, then re-fetch in background */

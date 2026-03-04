@@ -1155,11 +1155,6 @@ function renderAyahs(surahNum,scrollTo){
       on(copyBtn,'click',function(){App.openCopyModal(surahNum,ayahNum)});
       actions.appendChild(copyBtn);
 
-      // share btn
-      var shareBtn=el('button','ayah-act');
-      shareBtn.appendChild(icon('fas fa-share-nodes'));
-      on(shareBtn,'click',function(){App.shareVerse(surahNum,ayahNum);});
-      actions.appendChild(shareBtn);
 
 head.appendChild(actions);
       card.appendChild(head);
@@ -1552,6 +1547,15 @@ function renderReaderSettings(){
 
   /* ---- TEXT SIZE ---- */
   body.appendChild(el('div','qs-section-title',t('qs.text_size')));
+
+  // Live preview box — updates in real-time because applySizes() sets CSS vars
+  var prev=el('div','qs-font-preview');
+  var prevAr=el('div','qs-font-preview-ar');
+  prevAr.textContent='بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ';
+  var prevTf=el('div','qs-font-preview-tf');
+  prevTf.textContent='ب ناڤێ خودێ ئه‌ز خواندنا قورئانێ ده‌ست پێ دكه‌م';
+  prev.appendChild(prevAr);prev.appendChild(prevTf);
+  body.appendChild(prev);
 
   // Arabic font size
   var arRow=el('div','qs-row');
@@ -3235,6 +3239,7 @@ function initSupabase(cb){
   try{cachedCfg=JSON.parse(localStorage.getItem('supa_cfg'))}catch(e){}
   if(cachedCfg&&cachedCfg.supabaseUrl&&cachedCfg.supabaseKey){
     S.supabase=window.supabase.createClient(cachedCfg.supabaseUrl,cachedCfg.supabaseKey);
+    window._appSupabase=S.supabase;
     checkAuthSession();
     if(cb)cb();
   }
@@ -3248,6 +3253,7 @@ function initSupabase(cb){
       try{localStorage.setItem('supa_cfg',JSON.stringify(cfg))}catch(e){}
       if(!S.supabase){
         S.supabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);
+        window._appSupabase=S.supabase;
         checkAuthSession();
         if(cb)cb();
       }
@@ -3557,137 +3563,15 @@ function debouncedSync(){
 // Re-sync immediately when network comes back after being offline
 window.addEventListener('online',function(){
   if(S.user){_syncRetryDelay=2000;syncToCloud();}
-  _updateOfflineBanner();
+  // Auto-refresh prayer and islamvoice with fresh data
+  setTimeout(function(){
+    if(S.tab==='prayer'&&window.PrayerUI)PrayerUI.refresh();
+    if(S.tab==='islamvoice'&&S.ivInited!==false)loadIslamVoiceData(true);
+  },800);
+  // Show reconnected toast
+  showToast('ئینتەرنێت گەڕایەوە ✓');
 });
-window.addEventListener('offline',function(){ _updateOfflineBanner(); });
-function _updateOfflineBanner(){
-  var b=$('offlineBanner');
-  if(!b)return;
-  if(navigator.onLine){b.style.display='none';}
-  else{b.style.display='flex';}
-}
-// Check on startup
-document.addEventListener('DOMContentLoaded',function(){ _updateOfflineBanner(); });
 
-/* ── Share Verse ── */
-App.shareVerse=function(surahNum,ayahNum){
-  var s=SURAHS[surahNum-1];
-  if(!s)return;
-  var arabicText='';
-  if(S.quranData){
-    var sd=S.quranData[String(surahNum)];
-    if(sd){var v=sd.verses||sd;if(Array.isArray(v)&&v[ayahNum-1])arabicText=v[ayahNum-1].text||v[ayahNum-1];}
-  }
-  var tafsirText='';
-  if(S.tafsirData){
-    var td=S.tafsirData[surahNum-1]||S.tafsirData[String(surahNum)];
-    if(td){var tv=td.verses||td;if(Array.isArray(tv)&&tv[ayahNum-1])tafsirText=typeof tv[ayahNum-1]==='string'?tv[ayahNum-1]:(tv[ayahNum-1].text||tv[ayahNum-1].tafsir||'');}
-  }
-  var ref=s.ar+' \u2022 '+surahNum+':'+ayahNum;
-
-  /* Build canvas */
-  var SIZE=1080;
-  var canvas=document.createElement('canvas');
-  canvas.width=SIZE; canvas.height=SIZE;
-  var ctx=canvas.getContext('2d');
-
-  /* Background gradient */
-  var grad=ctx.createLinearGradient(0,0,SIZE,SIZE);
-  grad.addColorStop(0,'#0d1b2a');
-  grad.addColorStop(1,'#1a3a4a');
-  ctx.fillStyle=grad;
-  ctx.fillRect(0,0,SIZE,SIZE);
-
-  /* Subtle corner glow */
-  var glow=ctx.createRadialGradient(SIZE/2,SIZE/2,100,SIZE/2,SIZE/2,SIZE*0.7);
-  glow.addColorStop(0,'rgba(90,160,180,0.12)');
-  glow.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=glow;
-  ctx.fillRect(0,0,SIZE,SIZE);
-
-  ctx.textAlign='center';
-  ctx.direction='rtl';
-
-  /* Bismillah */
-  ctx.font='38px "Scheherazade New", serif';
-  ctx.fillStyle='rgba(255,255,255,0.4)';
-  ctx.fillText('بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',SIZE/2,120);
-
-  /* Arabic verse text — word-wrap */
-  var PADX=90, maxW=SIZE-PADX*2;
-  ctx.font='58px "Scheherazade New", serif';
-  ctx.fillStyle='#ffffff';
-  var lines=_wrapCanvasText(ctx,arabicText||'',maxW);
-  var lineH=90, startY=220;
-  lines.forEach(function(line,idx){
-    ctx.fillText(line,SIZE/2,startY+idx*lineH);
-  });
-
-  /* Tafsir text */
-  if(tafsirText){
-    var tafsirY=startY+lines.length*lineH+30;
-    ctx.font='32px system-ui, sans-serif';
-    ctx.fillStyle='rgba(255,255,255,0.6)';
-    ctx.direction='rtl';
-    var tlines=_wrapCanvasText(ctx,tafsirText.substring(0,200)+(tafsirText.length>200?'…':''),maxW);
-    tlines.slice(0,4).forEach(function(line,idx){
-      ctx.fillText(line,SIZE/2,tafsirY+idx*50);
-    });
-  }
-
-  /* Divider */
-  ctx.strokeStyle='rgba(255,255,255,0.15)';
-  ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(PADX,SIZE-160);ctx.lineTo(SIZE-PADX,SIZE-160);ctx.stroke();
-
-  /* Surah ref */
-  ctx.font='34px "Scheherazade New", serif';
-  ctx.fillStyle='rgba(255,255,255,0.7)';
-  ctx.textAlign='right';
-  ctx.direction='rtl';
-  ctx.fillText(ref,SIZE-PADX,SIZE-110);
-
-  /* TafsirKurd branding */
-  ctx.font='bold 30px system-ui, sans-serif';
-  ctx.fillStyle='#5ab4c8';
-  ctx.textAlign='left';
-  ctx.fillText('TafsirKurd',PADX,SIZE-110);
-  ctx.font='22px system-ui, sans-serif';
-  ctx.fillStyle='rgba(255,255,255,0.4)';
-  ctx.fillText('tafsirkurd.com',PADX,SIZE-78);
-
-  /* Share */
-  canvas.toBlob(function(blob){
-    if(!blob)return;
-    var file=new File([blob],'verse-'+surahNum+'-'+ayahNum+'.png',{type:'image/png'});
-    var shareData={title:'TafsirKurd',text:arabicText+'\n'+ref+'\n\ntafsirkurd.com'};
-    if(navigator.canShare&&navigator.canShare({files:[file]})){
-      shareData.files=[file];
-    }
-    if(navigator.share){
-      navigator.share(shareData).catch(function(){});
-    } else {
-      /* Fallback: download image */
-      var a=document.createElement('a');
-      a.href=URL.createObjectURL(blob);
-      a.download='verse-'+surahNum+'-'+ayahNum+'.png';
-      a.click();
-    }
-  },'image/png');
-};
-
-function _wrapCanvasText(ctx,text,maxW){
-  if(!text)return[''];
-  var words=text.split(' ');
-  var lines=[],cur='';
-  words.forEach(function(w){
-    var test=cur?cur+' '+w:w;
-    if(ctx.measureText(test).width>maxW&&cur){lines.push(cur);cur=w;}
-    else{cur=test;}
-  });
-  if(cur)lines.push(cur);
-  return lines.length?lines:[''];
-}
 
 /* --- Auth Panel --- */
 App.openLogin=function(){
@@ -4331,7 +4215,6 @@ function initIslamVoice(cb){
     if(cfg.supabaseUrl&&cfg.supabaseKey){
       S.ivSupabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);
       if(!S.supabase)S.supabase=S.ivSupabase;
-      console.log('IslamVoice Supabase connected');
       if(cb)cb();
     }else{
       throw new Error('Missing supabaseUrl or supabaseKey in config');
@@ -4339,6 +4222,12 @@ function initIslamVoice(cb){
   }).catch(function(e){
     console.error('IslamVoice init error:',e);
     S.ivInited=false;
+    // Use cached data if available instead of showing error
+    try{
+      var cs=localStorage.getItem('iv_series_cache');
+      var ce=localStorage.getItem('iv_episodes_cache');
+      if(cs&&ce){S.ivSeries=JSON.parse(cs);S.ivEpisodes=JSON.parse(ce);renderIvGrid();return;}
+    }catch(err){}
     renderIvError(t('iv.error.server'));
   });
 }
@@ -4364,7 +4253,6 @@ function renderIvError(msg){
 
 function loadIslamVoiceData(force){
   // Only show loading spinner when we have no data at all.
-  // On force-refresh with existing data, fetch silently — content stays visible.
   if(!S.ivSeries){
     renderIvLoading();
   }
@@ -4381,6 +4269,9 @@ function loadIslamVoiceData(force){
       }
     }catch(e){}
   }
+
+  // If offline and we already have something to show, stop here
+  if(!navigator.onLine&&S.ivSeries){return;}
 
   // Fetch fresh from Supabase
   if(!S.ivSupabase){
