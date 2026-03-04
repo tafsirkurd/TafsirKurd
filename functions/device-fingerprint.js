@@ -4,8 +4,12 @@
 export async function onRequest(context) {
     const { request, env } = context;
 
+    // Allow web + Capacitor iOS/Android origins
+    const origin = request.headers.get('Origin') || '';
+    const ALLOWED_ORIGINS = ['https://tafsirkurd.com', 'capacitor://localhost', 'http://localhost'];
+    const corsOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : 'https://tafsirkurd.com';
     const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': corsOrigin,
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json'
@@ -30,7 +34,13 @@ export async function onRequest(context) {
         const userAgent = request.headers.get('User-Agent') || 'unknown';
 
         // Secret salt from environment (NOT exposed to client)
-        const SECRET_SALT = env.FINGERPRINT_SECRET || 'TafsirKurd-Admin-2024-SecretKey';
+        const SECRET_SALT = env.FINGERPRINT_SECRET;
+        if (!SECRET_SALT) {
+            return new Response(
+                JSON.stringify({ error: 'Server misconfiguration' }),
+                { status: 500, headers: corsHeaders }
+            );
+        }
 
         // Combine client data with server data and secret
         const components = [

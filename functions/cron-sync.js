@@ -13,10 +13,7 @@ export async function onRequest(context) {
     const authHeader = request.headers.get('Authorization') || '';
     const cronSecret = env.CRON_SECRET;
 
-    // Also check for Cloudflare's cron header (for scheduled workers)
-    const isCronTrigger = request.headers.get('CF-Cron') === 'true';
-
-    if (!isCronTrigger && authHeader !== `Bearer ${cronSecret}`) {
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
         return new Response(
             JSON.stringify({ error: 'Unauthorized' }),
             { status: 401, headers: corsHeaders }

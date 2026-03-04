@@ -5,7 +5,7 @@ export async function onRequest(context) {
     const { request, env } = context;
 
     const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://tafsirkurd.com',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json'
@@ -22,9 +22,23 @@ export async function onRequest(context) {
         );
     }
 
+    // Require CRON_SECRET to prevent unauthorized use
+    const authHeader = request.headers.get('Authorization') || '';
+    const providedSecret = authHeader.replace('Bearer ', '');
+    if (!env.CRON_SECRET || providedSecret !== env.CRON_SECRET) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+    }
+
     try {
-        const data = await request.json();
+        let data;
+        try { data = await request.json(); } catch { return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400, headers: corsHeaders }); }
         const { message } = data;
+        if (!message || typeof message !== 'string') {
+            return new Response(JSON.stringify({ error: 'message is required' }), { status: 400, headers: corsHeaders });
+        }
+        if (message.length > 4096) {
+            return new Response(JSON.stringify({ error: 'message too long' }), { status: 400, headers: corsHeaders });
+        }
 
         // Check if Telegram bot is configured
         if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) {
@@ -65,11 +79,8 @@ export async function onRequest(context) {
     } catch (error) {
         console.error('Telegram notify error:', error);
         return new Response(
-            JSON.stringify({
-                success: false,
-                error: error.message
-            }),
-            { status: 200, headers: corsHeaders }
+            JSON.stringify({ success: false, error: 'Internal server error' }),
+            { status: 500, headers: corsHeaders }
         );
     }
 }

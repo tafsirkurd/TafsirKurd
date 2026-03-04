@@ -86,3 +86,23 @@ test.html
 *.rej
 *~
 .history/
+
+# Capacitor - track ios/ and android/ but ignore build artifacts
+ios/App/Pods/
+ios/App/build/
+android/.gradle/
+android/**/build/
+android/local.properties
+android/*.keystore
+android/nul
+
+# Sensitive / personal data
+testers.csv
+
+# Local Claude settings
+.claude/
+
+# Temp / generated files
+duplicate_report.txt
+scripts/test.txt
+scripts/scan-results.json

@@ -5,7 +5,7 @@ export async function onRequest(context) {
     const { request, env } = context;
 
     const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://tafsirkurd.com',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json'
@@ -23,8 +23,17 @@ export async function onRequest(context) {
     }
 
     try {
-        const data = await request.json();
-        const { message, type = 'info' } = data;
+        let body;
+        try { body = await request.json(); } catch { return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400, headers: corsHeaders }); }
+        const { message, type = 'info' } = body;
+        if (!message || typeof message !== 'string') {
+            return new Response(JSON.stringify({ error: 'message is required' }), { status: 400, headers: corsHeaders });
+        }
+
+        // Enforce allowed types and message length to limit abuse
+        const ALLOWED_TYPES = ['new_user', 'new_message', 'info', 'success', 'error'];
+        const safeType = ALLOWED_TYPES.includes(type) ? type : 'info';
+        const safeMessage = String(message).slice(0, 500);
 
         // Check if Discord webhook is configured
         if (!env.DISCORD_WEBHOOK_URL) {
@@ -42,10 +51,10 @@ export async function onRequest(context) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                content: message,
+                content: safeMessage,
                 embeds: [{
-                    description: message,
-                    color: type === 'error' ? 15158332 : type === 'success' ? 3066993 : 3447003,
+                    description: safeMessage,
+                    color: safeType === 'error' ? 15158332 : safeType === 'success' ? 3066993 : 3447003,
                     timestamp: new Date().toISOString()
                 }]
             })
@@ -65,11 +74,8 @@ export async function onRequest(context) {
     } catch (error) {
         console.error('Discord notify error:', error);
         return new Response(
-            JSON.stringify({
-                success: false,
-                error: error.message
-            }),
-            { status: 200, headers: corsHeaders }
+            JSON.stringify({ success: false, error: 'Internal server error' }),
+            { status: 500, headers: corsHeaders }
         );
     }
 }

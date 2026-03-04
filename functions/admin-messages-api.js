@@ -7,7 +7,7 @@ export async function onRequest(context) {
     const { request, env } = context;
 
     const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://tafsirkurd.com',
         'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Content-Type': 'application/json'
@@ -92,9 +92,20 @@ export async function onRequest(context) {
                     return jsonResponse({ error: 'Message ID and data required' }, 400, corsHeaders);
                 }
 
+                // Whitelist allowed fields to prevent arbitrary column updates
+                const allowedUpdateFields = {};
+                if (data.is_read !== undefined) allowedUpdateFields.is_read = !!data.is_read;
+                if (data.notes !== undefined) allowedUpdateFields.notes = String(data.notes).slice(0, 2000);
+                const VALID_STATUSES = ['new', 'read', 'replied', 'archived', 'spam'];
+                if (data.status !== undefined && VALID_STATUSES.includes(data.status)) allowedUpdateFields.status = data.status;
+
+                if (Object.keys(allowedUpdateFields).length === 0) {
+                    return jsonResponse({ error: 'No valid fields to update' }, 400, corsHeaders);
+                }
+
                 const { error: updateError } = await supabase
                     .from('contact_messages')
-                    .update(data)
+                    .update(allowedUpdateFields)
                     .eq('id', messageId);
 
                 if (updateError) {
@@ -122,10 +133,7 @@ export async function onRequest(context) {
 
     } catch (error) {
         console.error('Admin messages API error:', error);
-        return jsonResponse({
-            error: 'Internal server error',
-            details: error.message
-        }, 500, corsHeaders);
+        return jsonResponse({ error: 'Internal server error' }, 500, corsHeaders);
     }
 }
 

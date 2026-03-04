@@ -4,8 +4,12 @@
 export async function onRequest(context) {
     const { request, env } = context;
 
+    // Allow web + Capacitor iOS/Android origins
+    const origin = request.headers.get('Origin') || '';
+    const ALLOWED_ORIGINS = ['https://tafsirkurd.com', 'capacitor://localhost', 'http://localhost'];
+    const corsOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : 'https://tafsirkurd.com';
     const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': corsOrigin,
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json'
@@ -43,10 +47,44 @@ export async function onRequest(context) {
             );
         }
 
+        // Verify the request comes from an authenticated user owning this userId
+        const authHeader = request.headers.get('Authorization') || '';
+        const userToken = authHeader.replace('Bearer ', '');
+        if (!userToken) {
+            return new Response(
+                JSON.stringify({ error: 'Authentication required' }),
+                { status: 401, headers: corsHeaders }
+            );
+        }
+
+        // Verify the token belongs to the claimed userId via Supabase auth
+        const authRes = await fetch(
+            `${supabaseUrl}/auth/v1/user`,
+            {
+                headers: {
+                    'apikey': supabaseServiceKey,
+                    'Authorization': `Bearer ${userToken}`
+                }
+            }
+        );
+        if (!authRes.ok) {
+            return new Response(
+                JSON.stringify({ error: 'Invalid or expired token' }),
+                { status: 401, headers: corsHeaders }
+            );
+        }
+        const authUser = await authRes.json();
+        if (!authUser || authUser.id !== userId) {
+            return new Response(
+                JSON.stringify({ error: 'Unauthorized: token does not match userId' }),
+                { status: 403, headers: corsHeaders }
+            );
+        }
+
         // ===== LOAD USER DATA =====
         if (action === 'load') {
             const response = await fetch(
-                `${supabaseUrl}/rest/v1/user_data?user_id=eq.${userId}&select=*`,
+                `${supabaseUrl}/rest/v1/user_data?user_id=eq.${encodeURIComponent(userId)}&select=*`,
                 {
                     headers: {
                         'apikey': supabaseServiceKey,
@@ -115,7 +153,7 @@ export async function onRequest(context) {
 
             // Check if user record exists
             const checkResponse = await fetch(
-                `${supabaseUrl}/rest/v1/user_data?user_id=eq.${userId}&select=id`,
+                `${supabaseUrl}/rest/v1/user_data?user_id=eq.${encodeURIComponent(userId)}&select=id`,
                 {
                     headers: {
                         'apikey': supabaseServiceKey,
@@ -130,7 +168,7 @@ export async function onRequest(context) {
             if (existing.length > 0) {
                 // Update existing record
                 saveResponse = await fetch(
-                    `${supabaseUrl}/rest/v1/user_data?user_id=eq.${userId}`,
+                    `${supabaseUrl}/rest/v1/user_data?user_id=eq.${encodeURIComponent(userId)}`,
                     {
                         method: 'PATCH',
                         headers: {
@@ -179,7 +217,7 @@ export async function onRequest(context) {
     } catch (error) {
         console.error('User data error:', error);
         return new Response(
-            JSON.stringify({ error: error.message || 'Internal server error' }),
+            JSON.stringify({ error: 'Internal server error' }),
             { status: 500, headers: corsHeaders }
         );
     }

@@ -8,7 +8,7 @@ export async function onRequest(context) {
     const { request, env } = context;
 
     const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://tafsirkurd.com',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Content-Type': 'application/json'
@@ -39,7 +39,9 @@ export async function onRequest(context) {
     );
 
     try {
-        const { token } = await request.json();
+        let body;
+        try { body = await request.json(); } catch { return jsonResponse({ error: 'Invalid JSON' }, 400, corsHeaders); }
+        const { token } = body;
 
         // Verify admin session
         if (!token) {
@@ -121,10 +123,7 @@ export async function onRequest(context) {
 
     } catch (error) {
         console.error('Admin stats error:', error);
-        return jsonResponse({
-            error: 'Internal server error',
-            details: error.message
-        }, 500, corsHeaders);
+        return jsonResponse({ error: 'Internal server error' }, 500, corsHeaders);
     }
 }
 

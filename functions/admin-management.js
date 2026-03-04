@@ -6,7 +6,7 @@ export async function onRequest(context) {
     const { request, env } = context;
 
     const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://tafsirkurd.com',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json'
@@ -47,12 +47,12 @@ export async function onRequest(context) {
         // Verify the requesting user is a super admin
         const { data: session } = await supabase
             .from('admin_sessions')
-            .select('user_id, admin_users(role, email)')
+            .select('user_id, admin_users(role, email, is_active)')
             .eq('token', token)
             .gt('expires_at', new Date().toISOString())
             .single();
 
-        if (!session || !session.admin_users || session.admin_users.role !== 'super_admin') {
+        if (!session || !session.admin_users || session.admin_users.role !== 'super_admin' || !session.admin_users.is_active) {
             return jsonResponse({ error: 'Unauthorized. Super Admin access required.' }, 403, corsHeaders);
         }
 
@@ -94,7 +94,7 @@ export async function onRequest(context) {
                 .single();
 
             if (insertError) {
-                return jsonResponse({ error: 'Failed to create account: ' + insertError.message }, 500, corsHeaders);
+                return jsonResponse({ error: 'Failed to create account' }, 500, corsHeaders);
             }
 
             // Log action
@@ -164,7 +164,7 @@ export async function onRequest(context) {
                 .eq('id', targetUserId);
 
             if (updateError) {
-                return jsonResponse({ error: 'Failed to update account: ' + updateError.message }, 500, corsHeaders);
+                return jsonResponse({ error: 'Failed to update account' }, 500, corsHeaders);
             }
 
             // Log action
@@ -441,7 +441,7 @@ export async function onRequest(context) {
 
     } catch (error) {
         console.error('Admin management error:', error);
-        return jsonResponse({ error: 'Internal server error: ' + (error.message || String(error)) }, 500, corsHeaders);
+        return jsonResponse({ error: 'Internal server error' }, 500, corsHeaders);
     }
 }
 

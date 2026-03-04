@@ -5,14 +5,24 @@ export async function onRequest(context) {
     const { env } = context;
 
     const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://tafsirkurd.com',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, X-Debug-Secret',
         'Content-Type': 'application/json'
     };
 
     if (context.request.method === 'OPTIONS') {
         return new Response(null, { status: 200, headers: corsHeaders });
+    }
+
+    // Require debug secret — blocks all public access if DEBUG_SECRET is not set
+    const debugSecret = env.DEBUG_SECRET;
+    const providedSecret = context.request.headers.get('X-Debug-Secret');
+    if (!debugSecret || providedSecret !== debugSecret) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 
     try {
@@ -68,8 +78,7 @@ export async function onRequest(context) {
                 success: true,
                 message: 'Database connection working!',
                 checks,
-                adminCount: count,
-                sampleAdmins: data.map(a => ({ email: a.email, role: a.role, active: a.is_active }))
+                adminCount: count
             }),
             { status: 200, headers: corsHeaders }
         );
@@ -78,8 +87,7 @@ export async function onRequest(context) {
         return new Response(
             JSON.stringify({
                 error: 'Exception occurred',
-                message: error.message,
-                stack: error.stack
+                message: error.message
             }),
             { status: 500, headers: corsHeaders }
         );
