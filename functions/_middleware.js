@@ -69,19 +69,19 @@ export async function onRequest(context) {
     <meta property="og:image" content="${escapeHtml(thumbnail)}">
     <meta property="og:image:width" content="1280">
     <meta property="og:image:height" content="720">
-    <meta property="og:url" content="${videoUrl}">
+    <meta property="og:url" content="${escapeHtml(videoUrl)}">
     <meta property="og:site_name" content="تەفسیر کورد">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="${escapeHtml(title)}">
     <meta name="twitter:description" content="${escapeHtml(description)}">
     <meta name="twitter:image" content="${escapeHtml(thumbnail)}">
-    <meta http-equiv="refresh" content="0;url=${videoUrl}">
+    <meta http-equiv="refresh" content="0;url=${escapeHtml(videoUrl)}">
 </head>
 <body>
     <h1>${escapeHtml(title)}</h1>
     <p>${escapeHtml(description)}</p>
     <img src="${escapeHtml(thumbnail)}" alt="${escapeHtml(title)}">
-    <p><a href="${videoUrl}">Watch on TafsirKurd</a></p>
+    <p><a href="${escapeHtml(videoUrl)}">Watch on TafsirKurd</a></p>
 </body>
 </html>`;
 

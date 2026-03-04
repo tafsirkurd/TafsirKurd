@@ -9,9 +9,8 @@ export async function onRequest(context) {
     const referer = request.headers.get('Referer') || '';
     const allowedDomains = ['tafsirkurd.com', 'localhost', '127.0.0.1'];
 
-    const isAllowed = allowedDomains.some(domain =>
-        origin.includes(domain) || referer.includes(domain)
-    );
+    // Use only Origin for access decisions — Referer is spoofable and not a security boundary
+    const isAllowed = allowedDomains.some(domain => origin.includes(domain));
 
     // Allow Capacitor mobile app (origin: capacitor://localhost or https://localhost)
     const isCapacitor = origin === 'capacitor://localhost' || origin === 'https://localhost';
@@ -52,21 +51,13 @@ export async function onRequest(context) {
         // Clean environment variables - remove any newlines/whitespace that break HTTP headers
         const cleanUrl = env.SUPABASE_URL?.replace(/[\n\r\s]/g, '');
         const cleanKey = env.SUPABASE_ANON_KEY?.replace(/[\n\r\s]/g, '');
-        const youtubeKey = env.YOUTUBE_API_KEY?.replace(/[\n\r\s]/g, '');
 
         // Return public configuration (ONLY anon key, NEVER service_role!)
+        // YouTube API key is NOT exposed here — proxy YouTube API calls server-side
         const config = {
             supabaseUrl: cleanUrl,
-            supabaseKey: cleanKey,
-            youtubeApiKey: youtubeKey || null
+            supabaseKey: cleanKey
         };
-
-        console.log('Environment check:', {
-            hasUrl: !!cleanUrl,
-            hasKey: !!cleanKey,
-            keyPrefix: cleanKey?.substring(0, 50) + '...',
-            hadNewlines: env.SUPABASE_ANON_KEY?.includes('\n')
-        });
 
         if (!config.supabaseUrl || !config.supabaseKey) {
             console.error('Missing Supabase environment variables');

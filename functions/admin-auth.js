@@ -9,7 +9,7 @@ export async function onRequest(context) {
     const { request, env } = context;
 
     const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://tafsirkurd.com',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json'
@@ -38,7 +38,7 @@ export async function onRequest(context) {
     );
 
     try {
-        const { action, email, password, token, deviceFingerprint } = await request.json();
+        const { action, email, password, token, deviceFingerprint, page_slug, permission_type } = await request.json();
         const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
         const userAgent = request.headers.get('User-Agent') || 'unknown';
 
@@ -176,8 +176,6 @@ export async function onRequest(context) {
 
         // ===== CHECK PERMISSION =====
         if (action === 'check_permission') {
-            const { page_slug, permission_type } = await request.json();
-
             if (!token) {
                 return jsonResponse({ success: false }, 401, corsHeaders);
             }

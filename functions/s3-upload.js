@@ -6,7 +6,7 @@ export async function onRequest(context) {
     const { request, env } = context;
 
     const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://tafsirkurd.com',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Content-Type': 'application/json'
@@ -139,7 +139,7 @@ export async function onRequest(context) {
     } catch (error) {
         console.error('Upload error:', error);
         return new Response(
-            JSON.stringify({ error: 'Internal server error', details: error.message }),
+            JSON.stringify({ error: 'Internal server error' }),
             { status: 500, headers: corsHeaders }
         );
     }

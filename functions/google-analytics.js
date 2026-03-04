@@ -10,13 +10,36 @@ export async function onRequest(context) {
     const corsHeaders = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Content-Type': 'application/json'
     };
 
     // Handle OPTIONS request for CORS
     if (context.request.method === 'OPTIONS') {
         return new Response(null, { headers: corsHeaders });
+    }
+
+    // Verify admin session token
+    const authHeader = context.request.headers.get('Authorization') || '';
+    const token = authHeader.replace('Bearer ', '');
+    if (!token) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+    }
+
+    const supabaseUrl = env.SUPABASE_URL?.replace(/[\n\r\s]/g, '');
+    const supabaseServiceKey = env.SUPABASE_SERVICE_ROLE_KEY?.replace(/[\n\r\s]/g, '');
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+        return new Response(JSON.stringify({ error: 'Server configuration error' }), { status: 500, headers: corsHeaders });
+    }
+
+    const sessionRes = await fetch(
+        `${supabaseUrl}/rest/v1/admin_sessions?token=eq.${encodeURIComponent(token)}&expires_at=gt.${new Date().toISOString()}&select=user_id`,
+        { headers: { 'apikey': supabaseServiceKey, 'Authorization': `Bearer ${supabaseServiceKey}` } }
+    );
+    const sessions = sessionRes.ok ? await sessionRes.json() : [];
+    if (!sessions || sessions.length === 0) {
+        return new Response(JSON.stringify({ error: 'Invalid or expired session' }), { status: 401, headers: corsHeaders });
     }
 
     try {

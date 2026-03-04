@@ -53,7 +53,7 @@ export async function onRequest(context) {
     try {
         // Verify admin session
         const sessionRes = await fetch(
-            `${supabaseUrl}/rest/v1/admin_sessions?token=eq.${token}&expires_at=gt.${new Date().toISOString()}&select=user_id`,
+            `${supabaseUrl}/rest/v1/admin_sessions?token=eq.${encodeURIComponent(token)}&expires_at=gt.${new Date().toISOString()}&select=user_id`,
             {
                 headers: {
                     'apikey': supabaseServiceKey,

@@ -3,14 +3,24 @@ export async function onRequest(context) {
     const { env } = context;
 
     const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://tafsirkurd.com',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, X-Debug-Secret',
         'Content-Type': 'application/json'
     };
 
     if (context.request.method === 'OPTIONS') {
         return new Response(null, { status: 200, headers: corsHeaders });
+    }
+
+    // Require debug secret — blocks all public access if DEBUG_SECRET is not set
+    const debugSecret = env.DEBUG_SECRET;
+    const providedSecret = context.request.headers.get('X-Debug-Secret');
+    if (!debugSecret || providedSecret !== debugSecret) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 
     try {
@@ -23,8 +33,6 @@ export async function onRequest(context) {
             hasSpacesAtStart: serviceKey.length > 0 && serviceKey[0] === ' ',
             hasSpacesAtEnd: serviceKey.length > 0 && serviceKey[serviceKey.length - 1] === ' ',
             hasNewlines: serviceKey.includes('\n') || serviceKey.includes('\r'),
-            firstChars: serviceKey.substring(0, 10),
-            lastChars: serviceKey.substring(serviceKey.length - 10),
             trimmedLength: serviceKey.trim().length,
             needsTrimming: serviceKey.trim().length !== serviceKey.length
         };
@@ -34,8 +42,7 @@ export async function onRequest(context) {
                 message: 'Environment variable analysis',
                 SUPABASE_SERVICE_ROLE_KEY: analysis,
                 SUPABASE_URL: {
-                    exists: !!env.SUPABASE_URL,
-                    value: env.SUPABASE_URL || 'NOT SET'
+                    exists: !!env.SUPABASE_URL
                 },
                 recommendation: analysis.needsTrimming
                     ? '⚠️ Your service key has extra spaces or newlines! Copy it again from Supabase and paste carefully.'

@@ -7,9 +7,9 @@ export async function onRequest(context) {
     const { request, env } = context;
 
     const corsHeaders = {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://tafsirkurd.com',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Content-Type': 'application/json'
     };
 
@@ -24,24 +24,47 @@ export async function onRequest(context) {
         );
     }
 
+    // Require admin token — location data is private
+    const authHeader = request.headers.get('Authorization') || '';
+    const token = authHeader.replace('Bearer ', '').trim();
+    if (!token) {
+        return new Response(
+            JSON.stringify({ error: 'Unauthorized' }),
+            { status: 401, headers: corsHeaders }
+        );
+    }
+
     try {
         // Initialize Supabase client
         const supabase = createClient(
             env.SUPABASE_URL,
             env.SUPABASE_SERVICE_ROLE_KEY,
-            {
-                auth: {
-                    autoRefreshToken: false,
-                    persistSession: false
-                }
-            }
+            { auth: { autoRefreshToken: false, persistSession: false } }
         );
 
-        // Fetch all location tracking data
+        // Verify token is a valid active admin session
+        const { data: session } = await supabase
+            .from('admin_sessions')
+            .select('user_id')
+            .eq('token', token)
+            .gt('expires_at', new Date().toISOString())
+            .single();
+
+        if (!session) {
+            return new Response(
+                JSON.stringify({ error: 'Unauthorized' }),
+                { status: 401, headers: corsHeaders }
+            );
+        }
+
+        // Fetch location tracking data — limit to last 30 days with row cap
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
         const { data: locations, error } = await supabase
             .from('location_tracking')
             .select('*')
-            .order('created_at', { ascending: false });
+            .gte('created_at', thirtyDaysAgo)
+            .order('created_at', { ascending: false })
+            .limit(10000);
 
         if (error) throw error;
 
