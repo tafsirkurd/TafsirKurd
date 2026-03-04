@@ -1,5 +1,11 @@
 apply plugin: 'com.android.application'
 
+def keystorePropsFile = rootProject.file('keystore.properties')
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystoreProps.load(new FileInputStream(keystorePropsFile))
+}
+
 android {
     namespace = "com.tafsirkurd.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +13,8 @@ android {
         applicationId "com.tafsirkurd.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 3
+        versionName "1.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -18,10 +24,10 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file('../tafsirkurd-release.keystore')
-            storePassword 'tafsirkurd2026'
-            keyAlias 'tafsirkurd'
-            keyPassword 'tafsirkurd2026'
+            storeFile file(keystoreProps['storeFile'] ?: '../tafsirkurd-release.keystore')
+            storePassword keystoreProps['storePassword'] ?: ''
+            keyAlias keystoreProps['keyAlias'] ?: ''
+            keyPassword keystoreProps['keyPassword'] ?: ''
         }
     }
     buildTypes {
