@@ -750,6 +750,41 @@ window.GencineUI = {
       detail.appendChild(detailFooter);
 
       container.appendChild(detail);
+
+      /* Prev / Next navigation */
+      var nav = document.createElement('div');
+      nav.className = 'hadith-nav';
+
+      var prevBtn = document.createElement('button');
+      prevBtn.className = 'hadith-nav-btn' + (this._hadithDetailIdx === 0 ? ' disabled' : '');
+      prevBtn.disabled = this._hadithDetailIdx === 0;
+      var prevIco = document.createElement('i');
+      prevIco.className = 'fas fa-arrow-right';
+      prevBtn.appendChild(prevIco);
+      var prevLbl = document.createElement('span');
+      prevLbl.textContent = 'پێشوو';
+      prevBtn.appendChild(prevLbl);
+      prevBtn.onclick = function(){ self._hadithDetailIdx--; self._draw(); };
+      nav.appendChild(prevBtn);
+
+      var navCount = document.createElement('span');
+      navCount.className = 'hadith-nav-count';
+      navCount.textContent = (this._hadithDetailIdx + 1) + ' / ' + hadiths.length;
+      nav.appendChild(navCount);
+
+      var nextBtn = document.createElement('button');
+      nextBtn.className = 'hadith-nav-btn' + (this._hadithDetailIdx === hadiths.length - 1 ? ' disabled' : '');
+      nextBtn.disabled = this._hadithDetailIdx === hadiths.length - 1;
+      var nextLbl = document.createElement('span');
+      nextLbl.textContent = 'دواتر';
+      nextBtn.appendChild(nextLbl);
+      var nextIco = document.createElement('i');
+      nextIco.className = 'fas fa-arrow-left';
+      nextBtn.appendChild(nextIco);
+      nextBtn.onclick = function(){ self._hadithDetailIdx++; self._draw(); };
+      nav.appendChild(nextBtn);
+
+      container.appendChild(nav);
       return;
     }
 
