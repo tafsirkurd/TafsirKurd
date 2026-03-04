@@ -189,8 +189,11 @@ function _initDbData(onDone) {
     _dbHadiths = cachedHadiths;
     _dbLoaded  = true;
     if (onDone) onDone();
-    /* background refresh */
-    _fetchDbData(null);
+    /* background refresh — re-render hadith list if new data arrives */
+    _fetchDbData(function() {
+      var ui = window.GencineUI;
+      if (ui && ui._view === 'hadith' && ui._hadithDetailIdx === null) ui._draw();
+    });
   } else {
     _fetchDbData(onDone);
   }
