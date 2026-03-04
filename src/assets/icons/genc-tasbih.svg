@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#031508"/>
+      <stop offset="100%" stop-color="#0c3018"/>
+    </linearGradient>
+    <radialGradient id="bead" cx="32%" cy="28%" r="68%">
+      <stop offset="0%"   stop-color="#FFF0A0"/>
+      <stop offset="40%"  stop-color="#D4A820"/>
+      <stop offset="100%" stop-color="#7A5000"/>
+    </radialGradient>
+    <radialGradient id="ibead" cx="32%" cy="28%" r="68%">
+      <stop offset="0%"   stop-color="#FFFFFF"/>
+      <stop offset="35%"  stop-color="#FFD060"/>
+      <stop offset="100%" stop-color="#B05000"/>
+    </radialGradient>
+    <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFD700" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#FFD700" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="80" height="80" fill="url(#bg)"/>
+
+  <!-- Center glow -->
+  <circle cx="40" cy="38" r="22" fill="url(#centerGlow)"/>
+
+  <!-- String (faint ring) -->
+  <circle cx="40" cy="38" r="24" fill="none" stroke="#6B5000" stroke-width="1.2" stroke-dasharray="2,2" opacity="0.5"/>
+
+  <!-- 12 beads arranged in a circle (r=24, center 40,38) -->
+  <!-- 0°   (64,38)  --> <circle cx="64"   cy="38"    r="4.4" fill="url(#bead)"/>
+  <!-- 30°  (60.8,50)--> <circle cx="60.8" cy="50"    r="4.4" fill="url(#bead)"/>
+  <!-- 60°  (52,58.8)-> <circle cx="52"   cy="58.8"  r="4.4" fill="url(#bead)"/>
+  <!-- 90°  (40,62) imam bead (bigger, brighter) -->
+  <circle cx="40" cy="62" r="5.4" fill="url(#ibead)"/>
+  <!-- 120° (28,58.8)--> <circle cx="28"   cy="58.8"  r="4.4" fill="url(#bead)"/>
+  <!-- 150° (19.2,50)--> <circle cx="19.2" cy="50"    r="4.4" fill="url(#bead)"/>
+  <!-- 180° (16,38)  --> <circle cx="16"   cy="38"    r="4.4" fill="url(#bead)"/>
+  <!-- 210° (19.2,26)--> <circle cx="19.2" cy="26"    r="4.4" fill="url(#bead)"/>
+  <!-- 240° (28,17.2)--> <circle cx="28"   cy="17.2"  r="4.4" fill="url(#bead)"/>
+  <!-- 270° (40,14)  --> <circle cx="40"   cy="14"    r="4.4" fill="url(#bead)"/>
+  <!-- 300° (52,17.2)--> <circle cx="52"   cy="17.2"  r="4.4" fill="url(#bead)"/>
+  <!-- 330° (60.8,26)--> <circle cx="60.8" cy="26"    r="4.4" fill="url(#bead)"/>
+
+  <!-- Tassel hanging from imam bead at (40,62) -->
+  <line x1="40" y1="67.4" x2="40" y2="74" stroke="#6B5000" stroke-width="1.4"/>
+  <line x1="40" y1="74"   x2="36" y2="79" stroke="#6B5000" stroke-width="1.2"/>
+  <line x1="40" y1="74"   x2="44" y2="79" stroke="#6B5000" stroke-width="1.2"/>
+  <circle cx="36" cy="79" r="2" fill="url(#bead)"/>
+  <circle cx="44" cy="79" r="2" fill="url(#bead)"/>
+  <circle cx="40" cy="74" r="2.2" fill="url(#bead)"/>
+
+  <!-- Center decorative dot -->
+  <circle cx="40" cy="38" r="3.5" fill="#D4A820" opacity="0.55"/>
+  <circle cx="40" cy="38" r="1.8" fill="#FFE566" opacity="0.6"/>
+</svg>

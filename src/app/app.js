@@ -628,16 +628,64 @@ App.onSearch=function(v){
   var res=$('searchResults');
   clear(res);
   if(!S.search){res.classList.remove('on');return}
-  var matches=SURAHS.filter(function(s){
+
+  function stripD(s){return s.replace(/[\u064B-\u065F\u0670]/g,'');}
+  var qD=stripD(S.search);
+
+  /* ── Surah name matches ── */
+  var surahHits=SURAHS.filter(function(s){
     return s.en.toLowerCase().indexOf(S.search)!==-1||s.ar.indexOf(S.search)!==-1||String(s.n)===S.search;
-  }).slice(0,10);
-  if(!matches.length){res.classList.remove('on');return}
+  }).slice(0,5);
+
+  /* ── Verse matches (Arabic + Kurdish, query >= 2 chars) ── */
+  var verseHits=[];
+  if(S.search.length>=2&&S.quranData){
+    outer:for(var sn=1;sn<=114;sn++){
+      var sd=S.quranData[String(sn)];if(!sd)continue;
+      var vv=sd.verses||sd;
+      var kd=S.tafsirData?(S.tafsirData[sn-1]||{verses:[]}):{verses:[]};
+      for(var vi=0;vi<vv.length;vi++){
+        var vObj=vv[vi];
+        var arTxt=stripD(vObj.text||String(vObj)||'');
+        var kuTxt=kd.verses[vi]?String(kd.verses[vi].text||kd.verses[vi].tafsir||''):'';
+        if(arTxt.indexOf(qD)!==-1||kuTxt.toLowerCase().indexOf(S.search)!==-1){
+          verseHits.push({sn:sn,ayah:vi+1,ar:vObj.text||String(vObj),ku:kuTxt});
+          if(verseHits.length>=20)break outer;
+        }
+      }
+    }
+  }
+
+  if(!surahHits.length&&!verseHits.length){res.classList.remove('on');return}
   res.classList.add('on');
-  matches.forEach(function(s){
+
+  /* Surah results */
+  surahHits.forEach(function(s){
     var item=el('div','search-result');
     item.appendChild(el('div','search-result-title',s.n+'. '+s.en));
     item.appendChild(el('div','search-result-sub',s.ar+' - '+s.a+' '+t('reader.ayah')));
-    on(item,'click',function(){App.openSurah(s.n);App.clearSearch();$('searchBar').classList.remove('on')});
+    on(item,'click',function(){App.openSurah(s.n);App.clearSearch();$('searchBar').classList.remove('on');});
+    res.appendChild(item);
+  });
+
+  /* Divider between surah and verse sections */
+  if(surahHits.length&&verseHits.length){
+    res.appendChild(el('div','search-divider','ئایەت'));
+  }
+
+  /* Verse results */
+  verseHits.forEach(function(vm){
+    var sName=SURAHS[vm.sn-1];
+    var item=el('div','search-result search-result--verse');
+    var snippet=vm.ar?vm.ar.substring(0,75)+(vm.ar.length>75?'…':''):'';
+    item.appendChild(el('div','search-result-verse-ar',snippet));
+    item.appendChild(el('div','search-result-sub',(sName?sName.ar+' • ':'')+t('reader.ayah')+' '+vm.ayah));
+    on(item,'click',(function(sn,ayah){
+      return function(){
+        App.tab('quran');App.clearSearch();$('searchBar').classList.remove('on');
+        setTimeout(function(){App.openSurah(sn,ayah);},100);
+      };
+    })(vm.sn,vm.ayah));
     res.appendChild(item);
   });
 };

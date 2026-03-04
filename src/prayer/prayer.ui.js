@@ -730,6 +730,7 @@
         '<div class="sky-next-name" id="skyNextName"></div>' +
         '<div class="sky-countdown" id="skyCountdown"></div>' +
         '<div class="sky-dates" id="skyDates"></div>' +
+        '<div class="sky-sync" id="skySyncTime"></div>' +
       '</div>';
 
     container.appendChild(scene);
@@ -1104,6 +1105,32 @@
     };
   }
 
+  // Find ANY cached day across current + previous month — used as offline fallback
+  function readAnyCacheNow(city) {
+    var today = window.PrayerLogic.todayBaghdad();
+    var parts = today.split('-').map(Number);
+    for (var mo = 0; mo >= -1; mo--) {
+      var d = new Date(parts[0], parts[1] - 1 + mo, 1);
+      var mkey = window.PrayerCache.monthKey(city, d.getFullYear(), d.getMonth() + 1);
+      var monthly = window.PrayerCache.read(mkey);
+      if (monthly && monthly.days) {
+        var days = Object.keys(monthly.days).map(Number).sort(function(a, b) { return b - a; });
+        for (var i = 0; i < days.length; i++) {
+          var day = monthly.days[days[i]] || monthly.days[String(days[i])];
+          if (day && day.Fajr) {
+            return {
+              timings: { Fajr: day.Fajr, Sunrise: day.Sunrise, Dhuhr: day.Dhuhr,
+                         Asr: day.Asr, Maghrib: day.Maghrib, Isha: day.Isha },
+              date: { hijriStr: day.hijri || null },
+              _fromCache: true
+            };
+          }
+        }
+      }
+    }
+    return null;
+  }
+
   // Push prayer data to Android widget via JS bridge
   function pushWidgetData(data, city, dateISO) {
     try {
@@ -1158,8 +1185,25 @@
       return;
     }
 
-    // ── Slow path: no cache yet — show spinner and fetch ──
+    // ── Slow path: no cache yet ──
     _renderedKey = null;
+
+    // If offline, use any cached data before showing spinner/error
+    if (!navigator.onLine) {
+      var anyCache = readAnyCacheNow(city);
+      if (anyCache) {
+        _currentTimings = anyCache.timings;
+        _currentDateISO = today;
+        _currentData    = anyCache;
+        buildPanel(container, anyCache, city, today);
+        startCountdown();
+        _showCachedBadge(container);
+        return;
+      }
+      buildOfflineError(container);
+      return;
+    }
+
     buildLoading(container);
     try {
       var data = await window.PrayerAPI.fetchPrayerTimes(city, today);
@@ -1170,7 +1214,18 @@
       startCountdown();
       pushWidgetData(data, city, today);
     } catch(e) {
-      buildError(container);
+      // Network error — try any cached data as fallback
+      var fallback = readAnyCacheNow(city);
+      if (fallback) {
+        _currentTimings = fallback.timings;
+        _currentDateISO = today;
+        _currentData    = fallback;
+        buildPanel(container, fallback, city, today);
+        startCountdown();
+        _showCachedBadge(container);
+      } else {
+        buildError(container);
+      }
     }
   }
 
@@ -1180,6 +1235,25 @@
     var city  = getCity();
     var today = window.PrayerLogic.todayBaghdad();
 
+    // If offline, just re-render from whatever we have — never wipe content
+    if (!navigator.onLine) {
+      var offlineData = _currentData || readAnyCacheNow(city);
+      if (offlineData) {
+        if (!_currentTimings) {
+          _currentTimings = offlineData.timings;
+          _currentDateISO = today;
+          _currentData    = offlineData;
+          buildPanel(container, offlineData, city, today);
+          startCountdown();
+        }
+        _showCachedBadge(container);
+      } else {
+        buildOfflineError(container);
+      }
+      return;
+    }
+
+    // Online: clear cache so we fetch fresh data
     var parts = today.split('-').map(Number);
     window.PrayerCache.clear(window.PrayerCache.monthKey(city, parts[0], parts[1]));
 
@@ -1188,7 +1262,6 @@
     stopCountdown();
     _currentTimings  = null;
     _tomorrowTimings = null;
-    // Only wipe content when there's nothing to show — keep existing panel visible during refresh
     if (!hadData) buildLoading(container);
 
     try {
@@ -1199,7 +1272,6 @@
       buildPanel(container, data, city, today);
       startCountdown();
       pushWidgetData(data, city, today);
-      // Also reschedule notifications with fresh data
       if (getAthan()) {
         var daysData = await fetchDaysData(city, today, 7);
         if (daysData.length) {
@@ -1207,7 +1279,18 @@
         }
       }
     } catch(e) {
-      buildError(container);
+      // Fetch failed — show cached data if available
+      var fallback = readAnyCacheNow(city);
+      if (fallback) {
+        _currentTimings = fallback.timings;
+        _currentDateISO = today;
+        _currentData    = fallback;
+        buildPanel(container, fallback, city, today);
+        startCountdown();
+        _showCachedBadge(container);
+      } else {
+        buildError(container);
+      }
     }
   }
 
@@ -1235,14 +1318,57 @@
     container.appendChild(d);
   }
 
+  function buildOfflineError(container) {
+    stopCountdown();
+    clearEl(container);
+    var d = cel('div', 'prayer-status');
+    var icon = cel('div', 'prayer-offline-icon');
+    icon.textContent = '📡';
+    var msg = cel('div', '');
+    msg.textContent = tStr('prayer.offline_no_cache') || 'بێ ئینتەرنێت — داتایەک نەدیتووە';
+    var btn = cel('button', 'prayer-retry-btn');
+    btn.textContent = tStr('prayer.retry');
+    btn.onclick = refresh;
+    d.appendChild(icon);
+    d.appendChild(msg);
+    d.appendChild(document.createElement('br'));
+    d.appendChild(btn);
+    container.appendChild(d);
+  }
+
+  function _showCachedBadge(container) {
+    // Silently use cached data — no badge shown
+  }
+
   function buildPanel(container, data, city, today) {
     _renderedKey = city + ':' + today + ':' + getFormat();
     clearEl(container);
     var timings  = data.timings;
     var pl       = window.PrayerLogic;
 
+    // Record last-synced time (only when data came from network, not cache)
+    if (!data._fromCache) {
+      try { localStorage.setItem('prayerLastSynced', Date.now().toString()); } catch(e) {}
+    }
+
     // ── Sky scene (replaces old dark header card) ──
     buildSkyScene(container, data, city, today);
+
+    // Populate last-synced indicator (subtle, only for cached data)
+    if (data._fromCache) {
+      var syncEl = document.getElementById('skySyncTime');
+      if (syncEl) {
+        var lastSync = localStorage.getItem('prayerLastSynced');
+        if (lastSync) {
+          var diffMs = Date.now() - parseInt(lastSync, 10);
+          var diffH  = Math.floor(diffMs / 3600000);
+          var diffM  = Math.floor(diffMs / 60000);
+          syncEl.textContent = diffH >= 1 ? ('📡 ' + diffH + 'h') : (diffM >= 1 ? ('📡 ' + diffM + 'm') : '📡');
+        } else {
+          syncEl.textContent = '📡';
+        }
+      }
+    }
 
     // ── 2-column prayer grid ──
     var next  = pl.getNextPrayer(timings, today);
@@ -1273,6 +1399,27 @@
       buildSettingsOverlay();
     }
     updateAthanSettings(timings, city, today);
+
+    // Pre-fetch next month silently near end of current month
+    if (navigator.onLine) _prefetchNextMonth(city, today);
+  }
+
+  // Pre-fetch next month's prayer data in the last week of the month
+  function _prefetchNextMonth(city, today) {
+    var parts = today.split('-').map(Number);
+    if (parts[2] < 24) return; // only last 7 days of month
+    var y = parts[0], m = parts[1];
+    var nextY = m === 12 ? y + 1 : y;
+    var nextM = m === 12 ? 1 : m + 1;
+    var mkey  = window.PrayerCache.monthKey(city, nextY, nextM);
+    if (window.PrayerCache.read(mkey)) return; // already cached
+    var url = 'https://tafsirkurd.com/prayer-kurd?city=' + encodeURIComponent(city) +
+              '&year=' + nextY + '&month=' + nextM;
+    fetch(url).then(function(res) {
+      return res.ok ? res.json() : null;
+    }).then(function(data) {
+      if (data && data.days) window.PrayerCache.write(mkey, data);
+    }).catch(function() {});
   }
 
   // ─── Settings sheet ────────────────────────────────────────────────────────

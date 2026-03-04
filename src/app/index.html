@@ -137,13 +137,15 @@ body{background:var(--bg);color:var(--text)}
 .search-wrap input{flex:1;height:100%;font-size:.9rem;background:none}
 .search-wrap input::placeholder{color:var(--text3)}
 .search-clear{font-size:.85rem;color:var(--text3);cursor:pointer;padding:4px}
-.search-results{margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-l);max-height:300px;overflow-y:auto;display:none}
+.search-results{margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-l);max-height:380px;overflow-y:auto;display:none}
 .search-results.on{display:block}
 .search-result{padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
 .search-result:last-child{border-bottom:none}
 .search-result:active{background:var(--surface-h)}
 .search-result-title{font-weight:600;font-size:.9rem}
 .search-result-sub{font-size:.8rem;color:var(--text2);margin-top:2px}
+.search-divider{font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:5px 16px;border-top:1px solid var(--border);background:var(--bg3)}
+.search-result-verse-ar{font-size:.9rem;direction:rtl;font-family:var(--font-ar);line-height:1.7;color:var(--text);margin-bottom:2px;word-break:break-word}
 
 /* ===== SURAH GRID ===== */
 .surah-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:16px}
@@ -1173,6 +1175,13 @@ body{background:var(--bg);color:var(--text)}
 .hadith-nav-btn:active{background:var(--bg3)}
 .hadith-nav-btn.disabled{opacity:.35;cursor:default}
 .hadith-nav-count{font-size:.78rem;color:var(--text3);font-variant-numeric:tabular-nums}
+/* Hadith search */
+.hadith-search-wrap{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 16px 4px;display:flex;align-items:center;gap:8px}
+.hadith-search-ico{font-size:.8rem;color:var(--text3);flex-shrink:0}
+.hadith-search{flex:1;padding:9px 14px;border-radius:var(--r-m);border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:.85rem;direction:rtl;outline:none}
+.hadith-search:focus{border-color:var(--accent)}
+.hadith-count{font-size:.72rem;color:var(--text3);text-align:center;padding:2px 0 6px}
+.hadith-empty{padding:40px 16px;text-align:center;color:var(--text3);font-size:.88rem}
 </style>
 </head>
 <body>

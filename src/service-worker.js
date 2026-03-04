@@ -1,10 +1,29 @@
-const CACHE_NAME = 'tafsir-kurd-v525';
-const urlsToCache = [
-  // HTML files removed - they use NETWORK FIRST strategy and cache naturally
-  // This prevents caching stale HTML during service worker installation
+const CACHE_NAME = 'tafsir-kurd-v526';
+
+// All files required to run the app fully offline
+const PRECACHE = [
+  // Core app shell
+  '/app/index.html',
+  '/app/app.js',
+  // Prayer module
+  '/prayer/prayer.api.js',
+  '/prayer/prayer.cache.js',
+  '/prayer/prayer.logic.js',
+  '/prayer/prayer.notifications.android.js',
+  '/prayer/prayer.ui.js',
+  '/prayer/prayer.qibla.js',
+  // Gencine module
+  '/dhikr/dhikr.js',
+  '/dhikr/dua-data.js',
+  // i18n
+  '/i18n/i18n.js',
+  '/i18n/kmr.json',
+  // Data
   '/data/quran.json',
   '/data/kurdish_tafsir.json',
+  // Styles
   '/styles/mobile-optimize.css',
+  // Utils
   '/utils/console-cleaner.js',
   '/utils/kurdish-numbers.js',
   '/utils/auto-kurdish-numbers.js',
@@ -12,194 +31,122 @@ const urlsToCache = [
   '/utils/notification-scheduler.js',
   '/utils/theme-loader.js',
   '/utils/footer-loader.js',
-  '/utils/bot-detector.js',
-  '/utils/text-highlighter.js',
   '/utils/secure-storage.js',
   '/utils/cloud-sync.js',
+  // Fonts & icons
   '/assets/fonts/fonts.css',
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2',
-  // Skip weight-300 and 500 - not critical, load on demand
   '/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2',
-  // Skip weight-700 - can fallback to 600 if needed
   '/assets/fonts/hafs.woff2',
   '/assets/fonts/amiri-quran-v1-arabic-regular.woff2',
-  // Skip surah-name font - decorative, can lazy load on demand
   '/assets/fontawesome/all.min.css',
   '/assets/fontawesome/webfonts/fa-solid-900.woff2',
   '/assets/fontawesome/webfonts/fa-regular-400.woff2',
   '/assets/fontawesome/webfonts/fa-brands-400.woff2',
+  // Images
   '/assets/images/logo.png',
   '/assets/images/TafsirKurd.png',
-  '/manifest.json',
-  '/i18n/i18n.js',
-  '/i18n/kmr.json'
+  '/assets/icons/genc-asma-bg.webp',
+  '/manifest.json'
 ];
 
-// Install event - FAST cache installation with immediate activation
+// Same-origin API endpoints to cache with stale-while-revalidate
+const SWR_PATTERNS = [
+  '/prayer-kurd',
+  '/config'
+];
+
+// ── Install: pre-cache everything needed to run offline ──────────────────────
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing v525 - translation system fixes');
+  self.skipWaiting();
   event.waitUntil(
-    // Delete old caches FIRST for instant updates
-    caches.keys().then(cacheNames => {
+    caches.open(CACHE_NAME).then(cache => {
       return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('[ServiceWorker] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => {
-      // Open new cache and add resources with reload (bypass cache)
-      return caches.open(CACHE_NAME);
-    }).then(cache => {
-      console.log('[ServiceWorker] Caching resources');
-      // Cache files individually for better error handling
-      return Promise.all(
-        urlsToCache.map(url => {
-          return cache.add(url).catch(error => {
-            console.warn('[ServiceWorker] Failed to cache:', url, error);
-          });
-        })
+        PRECACHE.map(url =>
+          cache.add(url).catch(() => {/* ignore individual failures */})
+        )
       );
     })
   );
-  // INSTANT activation - don't wait
-  self.skipWaiting();
 });
 
-// Fetch event - NETWORK FIRST for HTML, CACHE FIRST for assets (instant updates!)
+// ── Activate: clean up old caches immediately ─────────────────────────────────
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
+
+// ── Fetch: smart caching strategies ──────────────────────────────────────────
 self.addEventListener('fetch', event => {
-  const url = event.request.url;
+  const req = event.request;
+  const url = req.url;
 
-  // Skip service worker for API requests and external resources
-  // CRITICAL: Skip YouTube completely - we don't use it
-  if (url.includes('googleapis.com') ||
-      url.includes('googleusercontent.com') ||
-      url.includes('accounts.google.com') ||
-      url.includes('supabase.co') ||
-      url.includes('unsplash.com') ||
-      url.includes('youtube.com') ||
-      url.includes('ytimg.com') ||
-      url.includes('youtu.be') ||
-      url.includes('iframe_api') ||
-      url.includes('functions') ||
-      url.includes('cdnjs.cloudflare.com') ||
-      url.includes('cdn.jsdelivr.net') ||
-      url.includes('googletagmanager.com') ||
-      url.includes('google-analytics.com') ||
-      url.includes('cloudflareinsights.com') ||
-      url.includes('instagram.com')) {
-    // Don't intercept - let browser handle directly
-    return;
-  }
+  // Only handle GET requests
+  if (req.method !== 'GET') return;
 
-  // NETWORK FIRST for HTML pages (instant updates on refresh!)
-  if (event.request.mode === 'navigate' ||
-      event.request.destination === 'document' ||
-      event.request.url.endsWith('.html')) {
+  // Skip non-HTTP schemes (chrome-extension, capacitor://, etc.)
+  if (!url.startsWith('http')) return;
 
-    // Skip caching for POST requests
-    if (event.request.method !== 'GET') {
-      event.respondWith(fetch(event.request));
-      return;
-    }
+  const reqUrl = new URL(url);
+  const isOwnOrigin = reqUrl.origin === self.location.origin;
 
+  // ── External domains: pass through (Supabase, YouTube, CDNs, analytics) ──
+  if (!isOwnOrigin) return;
+
+  // ── Same-origin API calls: stale-while-revalidate ─────────────────────────
+  // Returns cached response instantly, updates cache in background
+  const isSWR = SWR_PATTERNS.some(p => reqUrl.pathname.startsWith(p));
+  if (isSWR) {
     event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          // Cache the fresh HTML for offline use (only GET requests)
-          if (response && response.status === 200 && event.request.method === 'GET') {
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, responseToCache).catch(err => {
-                console.log('[ServiceWorker] Failed to cache:', err);
-              });
-            });
-          }
-          return response;
+      caches.open(CACHE_NAME).then(cache =>
+        cache.match(req).then(cached => {
+          const fetchPromise = fetch(req).then(fresh => {
+            if (fresh && fresh.status === 200) {
+              cache.put(req, fresh.clone());
+            }
+            return fresh;
+          }).catch(() => null);
+          // Serve cache instantly if available, otherwise wait for network
+          return cached || fetchPromise;
         })
-        .catch(() => {
-          // Offline - serve cached version
-          return caches.match(event.request).then(cached => {
-            return cached || caches.match('/quran.html');
-          });
-        })
+      )
     );
     return;
   }
 
-  // CACHE FIRST for CSS, JS, fonts, images (maximum speed!)
-  // Only cache GET requests
-  if (event.request.method !== 'GET') {
-    return;
-  }
-
-  // Skip service worker completely for external domains
-  const requestUrl = new URL(event.request.url);
-  if (requestUrl.origin !== self.location.origin) {
-    // External resource - let browser handle it directly
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          // Serve from cache immediately
-          return response;
+  // ── HTML pages: network first, fall back to cache ─────────────────────────
+  if (req.mode === 'navigate' || req.destination === 'document' || url.endsWith('.html')) {
+    event.respondWith(
+      fetch(req).then(res => {
+        if (res && res.status === 200) {
+          caches.open(CACHE_NAME).then(c => c.put(req, res.clone())).catch(() => {});
         }
-
-        // Not in cache - fetch from network
-        return fetch(event.request).then(response => {
-          // Only cache valid responses
-          if (!response || response.status !== 200) {
-            return response;
-          }
-
-          // Cache for future use
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache).catch(err => {
-              console.log('[ServiceWorker] Failed to cache:', err);
-            });
-          });
-
-          return response;
-        });
-      }).catch(() => {
-        // Offline fallback
-        return new Response('Offline', { status: 503 });
-      })
-  );
-});
-
-// Message event - handle skip waiting
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+        return res;
+      }).catch(() =>
+        caches.match(req).then(cached => cached || caches.match('/app/index.html'))
+      )
+    );
+    return;
   }
-});
 
-// Activate event - INSTANT takeover and cleanup
-self.addEventListener('activate', event => {
-  console.log('[ServiceWorker] Activating new version - INSTANT takeover!');
-  const cacheWhitelist = [CACHE_NAME];
-  event.waitUntil(
-    // Clean up old caches immediately
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            console.log('[ServiceWorker] Removing old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => {
-      console.log('[ServiceWorker] New version active and controlling all pages!');
-      // Take control of all pages IMMEDIATELY
-      return self.clients.claim();
+  // ── Everything else (JS, CSS, fonts, images): cache first ─────────────────
+  event.respondWith(
+    caches.match(req).then(cached => {
+      if (cached) return cached;
+      return fetch(req).then(res => {
+        if (res && res.status === 200) {
+          caches.open(CACHE_NAME).then(c => c.put(req, res.clone())).catch(() => {});
+        }
+        return res;
+      }).catch(() => new Response('', { status: 503 }));
     })
   );
+});
+
+// ── Message: force update ─────────────────────────────────────────────────────
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });

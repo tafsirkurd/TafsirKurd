@@ -321,6 +321,7 @@ window.GencineUI = {
   _tasbihTarget:    33,
   _tasbihDhikrIdx:  0,
   _hadithDetailIdx: null,   /* null = list view; number = detail view */
+  _hadithSearch:    '',     /* current search query */
 
   /* ── state persistence ── */
   _loadState: function(){
@@ -371,7 +372,7 @@ window.GencineUI = {
   /* ── called by section nav buttons ── */
   section: function(name){
     this._view = name;
-    if (name === 'hadith') this._hadithDetailIdx = null;
+    if (name === 'hadith') { this._hadithDetailIdx = null; this._hadithSearch = ''; }
     this._draw();
   },
 
@@ -680,16 +681,43 @@ window.GencineUI = {
   },
 
   /* ═══════════════════ HADITH ═══════════════════ */
+
+  /* Relevance score for a hadith against query q (0 = no match) */
+  _scoreHadith: function(h, q) {
+    if (!q) return 1;
+    function stripD(s) { return s.replace(/[\u064B-\u065F\u0670]/g, ''); }
+    var qN = stripD(q).toLowerCase();
+    if (!qN) return 1;
+    var title = stripD(h.title || '').toLowerCase();
+    var ar    = stripD(h.ar   || '').toLowerCase();
+    var ku    = (h.ku     || '').toLowerCase();
+
+    var score = 0;
+
+    if (title === qN) return 10000;
+    if (title.startsWith(qN))  score = Math.max(score, 5000);
+    if (title.includes(qN))    score = Math.max(score, 3000);
+    if (ar.includes(qN))       score = Math.max(score, 2000);
+    if (ku.includes(qN))       score = Math.max(score, 1500);
+
+    /* Per-word bonus */
+    qN.split(/\s+/).filter(function(w){ return w.length >= 2; }).forEach(function(w){
+      if (title.includes(w)) score += 500;
+      if (ar.includes(w))    score += 300;
+      if (ku.includes(w))    score += 200;
+    });
+    return score;
+  },
+
   _renderHadith: function(container){
     var self = this;
     var hadiths = _getHadiths();
 
-    /* Detail view */
+    /* ── Detail view ── */
     if (this._hadithDetailIdx !== null) {
       var h = hadiths[this._hadithDetailIdx];
       if (!h) { this._hadithDetailIdx = null; this._renderHadith(container); return; }
 
-      /* Back row → returns to hadith list, not home */
       var backRow = document.createElement('div');
       backRow.className = 'genc-back-row';
       var backBtn = document.createElement('button');
@@ -705,7 +733,6 @@ window.GencineUI = {
       backRow.appendChild(backLbl);
       container.appendChild(backRow);
 
-      /* Detail card */
       var detail = document.createElement('div');
       detail.className = 'hadith-detail-card';
 
@@ -720,14 +747,12 @@ window.GencineUI = {
         titleEl.textContent = h.title;
         detail.appendChild(titleEl);
       }
-
       if (h.ar) {
         var arEl = document.createElement('div');
         arEl.className = 'dua-card-ar';
         arEl.textContent = h.ar;
         detail.appendChild(arEl);
       }
-
       if (h.ku) {
         var kuEl = document.createElement('div');
         kuEl.className = 'dua-card-ku';
@@ -748,10 +773,9 @@ window.GencineUI = {
       var copyText = (h.title ? h.title + '\n\n' : '') + (h.ar || '') + (h.ku ? '\n\n' + h.ku : '') + (h.source ? '\n\n' + h.source : '');
       detailFooter.appendChild(_mkCopyBtn(copyText));
       detail.appendChild(detailFooter);
-
       container.appendChild(detail);
 
-      /* Prev / Next navigation */
+      /* Prev / Next */
       var nav = document.createElement('div');
       nav.className = 'hadith-nav';
 
@@ -788,11 +812,10 @@ window.GencineUI = {
       return;
     }
 
-    /* List view */
+    /* ── List view ── */
     container.appendChild(this._backRow('حەدیس'));
 
     if (!hadiths.length) {
-      /* Try a fresh fetch — re-render automatically if hadiths arrive */
       _fetchDbData(function() {
         if (_getHadiths().length && self._view === 'hadith' && self._hadithDetailIdx === null) self._draw();
       });
@@ -800,60 +823,117 @@ window.GencineUI = {
       wrap.className = 'genc-coming';
       var iconEl = document.createElement('div');
       iconEl.className = 'genc-coming-icon';
-      var i = document.createElement('i');
-      i.className = 'fas fa-book-open';
-      iconEl.appendChild(i);
+      var loadIco = document.createElement('i');
+      loadIco.className = 'fas fa-book-open';
+      iconEl.appendChild(loadIco);
       wrap.appendChild(iconEl);
       var comingTitle = document.createElement('div');
       comingTitle.className = 'genc-coming-title';
-      comingTitle.textContent = 'بەمزوانە دێت';
+      comingTitle.textContent = 'بارکرن...';
       wrap.appendChild(comingTitle);
-      var sub = document.createElement('div');
-      sub.className = 'genc-coming-sub';
-      sub.textContent = 'ئەم بەشە هەنووکا ئامادەدەبێت.\nبەمزوانە زیاد دەبێت!';
-      wrap.appendChild(sub);
       container.appendChild(wrap);
       return;
     }
 
+    /* Search bar */
+    var searchWrap = document.createElement('div');
+    searchWrap.className = 'hadith-search-wrap';
+    var searchIco = document.createElement('i');
+    searchIco.className = 'fas fa-search hadith-search-ico';
+    searchWrap.appendChild(searchIco);
+    var searchInput = document.createElement('input');
+    searchInput.className = 'hadith-search';
+    searchInput.type = 'search';
+    searchInput.placeholder = 'گەڕان بە ناو یا دەق...';
+    searchInput.value = this._hadithSearch;
+    searchWrap.appendChild(searchInput);
+    container.appendChild(searchWrap);
+
+    /* Count label */
+    var countEl = document.createElement('div');
+    countEl.className = 'hadith-count';
+    container.appendChild(countEl);
+
+    /* List container — rebuilt in-place on each keystroke */
     var list = document.createElement('div');
     list.className = 'hadith-list';
+    container.appendChild(list);
 
-    hadiths.forEach(function(h, idx){
-      var item = document.createElement('button');
-      item.className = 'hadith-title-item';
+    function buildList(q) {
+      while (list.firstChild) list.removeChild(list.firstChild);
 
-      var numEl = document.createElement('div');
-      numEl.className = 'hadith-num';
-      numEl.textContent = idx + 1;
-      item.appendChild(numEl);
-
-      var textCol = document.createElement('div');
-      textCol.className = 'hadith-title-col';
-
-      var titleText = document.createElement('div');
-      titleText.className = 'hadith-title-text';
-      titleText.textContent = h.title || (h.ar ? h.ar.substring(0, 55) + '…' : '');
-      textCol.appendChild(titleText);
-
-      if (h.source) {
-        var srcEl = document.createElement('div');
-        srcEl.className = 'hadith-title-src';
-        srcEl.textContent = h.source.split('\n').filter(Boolean).join(' • ');
-        textCol.appendChild(srcEl);
+      var scored;
+      if (!q || !q.trim()) {
+        scored = hadiths.map(function(h, i){ return {h: h, origIdx: i}; });
+        countEl.textContent = hadiths.length + ' فەرمودە';
+      } else {
+        scored = hadiths.map(function(h, i){
+          return {h: h, origIdx: i, score: self._scoreHadith(h, q.trim())};
+        }).filter(function(x){ return x.score > 0; });
+        scored.sort(function(a, b){ return b.score - a.score; });
+        countEl.textContent = scored.length + ' / ' + hadiths.length + ' فەرمودە';
       }
 
-      item.appendChild(textCol);
+      if (!scored.length) {
+        var empty = document.createElement('div');
+        empty.className = 'hadith-empty';
+        empty.textContent = 'هیچ فەرمودەیەک نەدۆزراوەتەوە';
+        list.appendChild(empty);
+        return;
+      }
 
-      var arrow = document.createElement('i');
-      arrow.className = 'fas fa-chevron-left';
-      item.appendChild(arrow);
+      scored.forEach(function(item){
+        var h = item.h;
+        var origIdx = item.origIdx;
 
-      item.onclick = function(){ self._hadithDetailIdx = idx; self._draw(); };
-      list.appendChild(item);
+        var row = document.createElement('button');
+        row.className = 'hadith-title-item';
+
+        var numEl = document.createElement('div');
+        numEl.className = 'hadith-num';
+        numEl.textContent = origIdx + 1;
+        row.appendChild(numEl);
+
+        var textCol = document.createElement('div');
+        textCol.className = 'hadith-title-col';
+
+        var titleText = document.createElement('div');
+        titleText.className = 'hadith-title-text';
+        titleText.textContent = h.title || (h.ar ? h.ar.substring(0, 55) + '…' : '');
+        textCol.appendChild(titleText);
+
+        if (h.source) {
+          var srcEl = document.createElement('div');
+          srcEl.className = 'hadith-title-src';
+          srcEl.textContent = h.source.split('\n').filter(Boolean).join(' • ');
+          textCol.appendChild(srcEl);
+        }
+        row.appendChild(textCol);
+
+        var arrow = document.createElement('i');
+        arrow.className = 'fas fa-chevron-left';
+        row.appendChild(arrow);
+
+        row.onclick = function(){ self._hadithDetailIdx = origIdx; self._draw(); };
+        list.appendChild(row);
+      });
+    }
+
+    buildList(this._hadithSearch);
+
+    searchInput.addEventListener('input', function(){
+      self._hadithSearch = this.value;
+      buildList(this.value);
     });
 
-    container.appendChild(list);
+    /* Restore focus if user was mid-search */
+    if (this._hadithSearch) {
+      setTimeout(function(){
+        searchInput.focus();
+        var len = searchInput.value.length;
+        searchInput.setSelectionRange(len, len);
+      }, 50);
+    }
   },
 
   /* ═══════════════════ 99 NAMES ═══════════════════ */
