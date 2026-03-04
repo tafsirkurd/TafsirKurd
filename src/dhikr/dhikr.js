@@ -181,7 +181,7 @@ function _getSupabase() {
 function _initDbData(onDone) {
   var cachedCats    = _readCache('gencine_cats_v1');
   var cachedDuas    = _readCache('gencine_duas_v1');
-  var cachedHadiths = _readCache('gencine_hadiths_v1');
+  var cachedHadiths = _readCache('gencine_hadiths_v2');
 
   if (cachedCats && cachedDuas && cachedHadiths) {
     _dbCats    = cachedCats;
@@ -220,7 +220,7 @@ function _fetchDbData(onDone) {
     }
     if (!hadithRes.error && hadithRes.data) {
       _dbHadiths = hadithRes.data;
-      _writeCache('gencine_hadiths_v1', _dbHadiths);
+      _writeCache('gencine_hadiths_v2', _dbHadiths);
     }
     _dbLoaded = true;
     if (onDone) onDone();
@@ -333,8 +333,10 @@ window.GencineUI = {
       _initDbData(function(){ self._draw(); });
     } else {
       this._draw();
-      /* Background refresh once per session */
-      _fetchDbData(null);
+      /* Background refresh — re-render hadith list if new data arrives */
+      _fetchDbData(function() {
+        if (self._view === 'hadith' && self._hadithDetailIdx === null) self._draw();
+      });
     }
   },
 
@@ -720,6 +722,10 @@ window.GencineUI = {
     container.appendChild(this._backRow('حەدیس'));
 
     if (!hadiths.length) {
+      /* Try a fresh fetch — re-render automatically if hadiths arrive */
+      _fetchDbData(function() {
+        if (_getHadiths().length && self._view === 'hadith' && self._hadithDetailIdx === null) self._draw();
+      });
       var wrap = document.createElement('div');
       wrap.className = 'genc-coming';
       var iconEl = document.createElement('div');
