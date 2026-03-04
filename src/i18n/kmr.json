@@ -42,6 +42,8 @@
   "prayer.loading": "چاوبیرکرن...",
   "prayer.error": "هەلەیەک هەیە. دووباره هەوڵبدە.",
   "prayer.retry": "دووباره هەوڵبدە",
+  "prayer.cached_data": "داتای کاش — دەمێ دوا نوێکراوە",
+  "prayer.offline_no_cache": "بێ ئینتەرنێت — داتایەک نەدیتووە",
   "prayer.voice_label": "دەنگی ئازان",
   "prayer.duration_label": "کاتی ئازان",
   "prayer.dur_10s": "10 چ",
