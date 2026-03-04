@@ -733,10 +733,12 @@ window.GencineUI = {
       var detailFooter = document.createElement('div');
       detailFooter.className = 'dua-card-footer';
       if (h.source) {
-        var srcEl = document.createElement('span');
-        srcEl.className = 'dua-card-src';
-        srcEl.textContent = h.source;
-        detailFooter.appendChild(srcEl);
+        h.source.split('\n').filter(Boolean).forEach(function(s) {
+          var srcEl = document.createElement('span');
+          srcEl.className = 'dua-card-src';
+          srcEl.textContent = s;
+          detailFooter.appendChild(srcEl);
+        });
       }
       var copyText = (h.title ? h.title + '\n\n' : '') + (h.ar || '') + (h.ku ? '\n\n' + h.ku : '') + (h.source ? '\n\n' + h.source : '');
       detailFooter.appendChild(_mkCopyBtn(copyText));
@@ -792,7 +794,7 @@ window.GencineUI = {
       if (h.source) {
         var srcEl = document.createElement('div');
         srcEl.className = 'hadith-title-src';
-        srcEl.textContent = h.source;
+        srcEl.textContent = h.source.split('\n').filter(Boolean).join(' • ');
         textCol.appendChild(srcEl);
       }
 
