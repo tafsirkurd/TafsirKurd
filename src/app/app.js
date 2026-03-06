@@ -141,6 +141,8 @@ var S={
   hapticFeedback:localStorage.getItem('hapticFeedback')!=='false',
   dailyReminder:localStorage.getItem('dailyReminder')==='true',
   reminderTime:localStorage.getItem('reminderTime')||'08:00',
+  dailyVerse:localStorage.getItem('dailyVerse')==='true',
+  dailyVerseTime:localStorage.getItem('dailyVerseTime')||'08:00',
   prayerCity:localStorage.getItem('prayerCity')||'Duhok',
   prayerMethod:parseInt(localStorage.getItem('prayerMethod')||'13'),
   prayerAthanEnabled:localStorage.getItem('prayerAthanEnabled')==='true',
@@ -204,6 +206,7 @@ function init(){
     setupPullToRefresh('panelSettings',function(){_renderHash.settings=null;renderSettings();});
     setupPullToRefresh('panelPrayer',function(){if(window.PrayerUI)PrayerUI.refresh()});
     setupPullToRefresh('panelGencine',function(){if(window.GencineUI)GencineUI.refresh();});
+    setupPullToRefresh('profilePanel',function(){var p=$('profilePanel');if(p){clear(p);renderProfile(p);}},function(){var p=$('profilePanel');return p&&p.classList.contains('on');});
 
     // Load data
     loadQuranData();
@@ -232,8 +235,9 @@ function init(){
             // Sync data when app goes to background
             if(S.user)syncToCloud();
           } else {
-            // App came to foreground — reschedule athan if it's a new day
+            // App came to foreground — reschedule athan + daily verse if new day
             if(window.PrayerUI)PrayerUI.initScheduleOnStart();
+            initDailyVerse();
           }
         });
       }
@@ -318,17 +322,21 @@ function init(){
     console.error('App init error:',e);
   }
 
-  // Request battery optimization exemption so Samsung doesn't kill our alarms
+  // Ensure notification channels exist on Android (capacitor.config channels[] is iOS-only)
   if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications){
     try{
-      var _cap=window.Capacitor;
-      // Trigger Android's "Allow background activity" prompt via Capacitor
-      _cap.Plugins.LocalNotifications.requestPermissions().catch(function(){});
+      var _LN=window.Capacitor.Plugins.LocalNotifications;
+      _LN.requestPermissions().catch(function(){});
+      // Force-recreate athan channels in case they were missing after install
+      localStorage.removeItem('athanChannelVer');
+      // Create reminder channel immediately at startup
+      _ensureReminderChannel(_LN);
     }catch(e){}
   }
 
-  // Schedule athan on startup (in case it's a new day)
+  // Schedule athan + daily verse on startup (in case it's a new day)
   if(window.PrayerUI)PrayerUI.initScheduleOnStart();
+  initDailyVerse();
   // Pre-fetch all 20 cities for this month in background (once per month)
   if(window.PrayerUI)PrayerUI.prefetchAllCities();
   // Pre-warm athan voice buffers after 4s so first preview tap is instant
@@ -400,6 +408,7 @@ document.addEventListener('i18n:updated', function(){
   else if(tab==='settings'){renderSettings();_renderHash.settings=_tabHash('settings');}
   else if(tab==='islamvoice'){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}
   else if(tab==='prayer'&&window.PrayerUI){PrayerUI.redraw();}
+  else if(tab==='gencine'&&window.GencineUI){GencineUI._draw();}
   // quran tab uses data-i18n attributes — applyTranslations() already handled it above
 });
 
@@ -543,7 +552,10 @@ function _tabHash(name){
 }
 window.App={};
 App.tab=function(name){
-  if(name===S.tab&&!S.surah)return;
+  if(name===S.tab&&!S.surah){
+    if(name==='gencine'&&window.GencineUI){GencineUI.render();var _gp=document.getElementById('panelGencine');if(_gp)_gp.scrollTop=0;}
+    return;
+  }
   haptic([8]);
   if(S.surah&&name==='quran'){App.backToList();return}
   S.tabHistory.push(S.tab);
@@ -588,6 +600,18 @@ function haptic(pattern){
 }
 
 /* ===== DAILY REMINDER ===== */
+/* Create the 'reminder' channel on Android (capacitor.config channels[] is iOS-only) */
+function _ensureReminderChannel(LN){
+  return LN.createChannel({
+    id:'reminder',
+    name:'Daily Reminder',
+    description:'Daily Quran reading and verse reminders',
+    importance:4,
+    vibration:true,
+    lights:true
+  }).catch(function(){});
+}
+
 function scheduleReminder(enabled,time){
   if(!window.Capacitor||!window.Capacitor.Plugins||!window.Capacitor.Plugins.LocalNotifications)return;
   var LN=window.Capacitor.Plugins.LocalNotifications;
@@ -596,19 +620,162 @@ function scheduleReminder(enabled,time){
   var parts=(time||'08:00').split(':');
   var h=parseInt(parts[0])||8;
   var m=parseInt(parts[1])||0;
+  LN.requestPermissions().then(function(perm){
+    _ensureReminderChannel(LN).then(function(){
+      LN.schedule({notifications:[{
+        id:1,
+        title:'Tafsir Kurd',
+        body:t('notif.reminder_body'),
+        schedule:{on:{hour:h,minute:m},allowWhileIdle:true},
+        smallIcon:'ic_notification',
+        channelId:'reminder'
+      }]}).catch(function(e){console.error('scheduleReminder error:',e);});
+    });
+  }).catch(function(){});
+}
+
+/* ===== DAILY VERSE NOTIFICATION ===== */
+/* Curated list of powerful ayahs */
+var DAILY_VERSE_LIST=[
+  {s:1,a:1},{s:1,a:2},{s:1,a:5},{s:1,a:6},
+  {s:2,a:45},{s:2,a:152},{s:2,a:153},{s:2,a:186},
+  {s:2,a:255},{s:2,a:256},{s:2,a:257},{s:2,a:285},{s:2,a:286},
+  {s:3,a:8},{s:3,a:18},{s:3,a:26},{s:3,a:103},{s:3,a:139},{s:3,a:160},{s:3,a:173},{s:3,a:200},
+  {s:4,a:36},{s:4,a:103},
+  {s:6,a:162},
+  {s:7,a:23},{s:7,a:55},{s:7,a:56},
+  {s:9,a:40},{s:9,a:51},{s:9,a:128},
+  {s:10,a:62},{s:10,a:107},
+  {s:11,a:88},
+  {s:13,a:28},
+  {s:14,a:7},{s:14,a:40},
+  {s:16,a:97},{s:16,a:98},
+  {s:17,a:23},{s:17,a:44},{s:17,a:80},
+  {s:18,a:10},{s:18,a:30},
+  {s:20,a:25},{s:20,a:114},{s:20,a:132},
+  {s:21,a:87},{s:21,a:107},
+  {s:22,a:77},
+  {s:23,a:1},{s:23,a:97},
+  {s:24,a:35},
+  {s:25,a:63},{s:25,a:70},
+  {s:27,a:19},{s:27,a:62},
+  {s:28,a:24},
+  {s:29,a:45},{s:29,a:69},
+  {s:30,a:21},
+  {s:33,a:41},{s:33,a:56},
+  {s:35,a:29},
+  {s:36,a:36},
+  {s:39,a:10},{s:39,a:53},
+  {s:40,a:44},{s:40,a:60},
+  {s:42,a:10},{s:42,a:19},
+  {s:47,a:19},
+  {s:49,a:13},
+  {s:51,a:56},
+  {s:55,a:13},
+  {s:57,a:3},{s:57,a:4},
+  {s:58,a:11},
+  {s:62,a:10},
+  {s:65,a:2},{s:65,a:3},
+  {s:67,a:1},{s:67,a:15},
+  {s:71,a:10},
+  {s:73,a:8},
+  {s:76,a:9},
+  {s:84,a:6},
+  {s:93,a:5},{s:93,a:11},
+  {s:94,a:5},{s:94,a:6},
+  {s:103,a:1},{s:103,a:2},{s:103,a:3},
+  {s:108,a:1},{s:108,a:2},
+  {s:112,a:1},{s:112,a:2},{s:112,a:3},{s:112,a:4}
+];
+
+function _getDayOfYear(d){
+  return Math.floor((d-new Date(d.getFullYear(),0,0))/86400000);
+}
+
+function scheduleDailyVerse(enabled,time){
+  if(!window.Capacitor||!Capacitor.Plugins||!Capacitor.Plugins.LocalNotifications)return;
+  var LN=Capacitor.Plugins.LocalNotifications;
+  /* Cancel IDs 20-26 */
+  LN.cancel({notifications:[20,21,22,23,24,25,26].map(function(id){return {id:id};})}).catch(function(){});
+  if(!enabled)return;
+
+  /* Wait until Quran + tafsir data is loaded */
+  if(!S.quranData||!S.tafsirData){
+    setTimeout(function(){scheduleDailyVerse(enabled,time);},1200);
+    return;
+  }
+
+  var parts=(time||'08:00').split(':');
+  var h=parseInt(parts[0])||8;
+  var m=parseInt(parts[1])||0;
   var now=new Date();
-  var next=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m,0,0);
-  if(next<=now)next.setDate(next.getDate()+1);
-  LN.requestPermissions().then(function(){
-    LN.schedule({notifications:[{
-      id:1,
-      title:'Tafsir Kurd',
-      body:t('notif.reminder_body'),
-      schedule:{at:next,repeats:true,every:'day'},
+  /* First slot: today if not yet passed, else tomorrow */
+  var first=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m,0,0);
+  if(first<=now)first.setDate(first.getDate()+1);
+
+  var notifications=[];
+  for(var d=0;d<7;d++){
+    var schedDate=new Date(first.getFullYear(),first.getMonth(),first.getDate()+d,h,m,0,0);
+    var v=DAILY_VERSE_LIST[_getDayOfYear(schedDate)%DAILY_VERSE_LIST.length];
+    var arText='',kuText='';
+    try{
+      var sd=S.quranData[String(v.s)];
+      var vv=sd.verses||sd;
+      var vObj=vv[v.a-1];
+      arText=String(vObj.text||vObj||'').substring(0,120);
+      var td=S.tafsirData[v.s-1];
+      if(td&&td.verses&&td.verses[v.a-1])
+        kuText=String(td.verses[v.a-1].text||td.verses[v.a-1].tafsir||'').substring(0,140);
+    }catch(e){}
+    var sName=SURAHS[v.s-1];
+    notifications.push({
+      id:20+d,
+      title:(sName?sName.ar:'')+'  ('+v.s+':'+v.a+')',
+      body:arText+(kuText?'\n\n'+kuText:''),
+      schedule:{at:schedDate,allowWhileIdle:true},
       smallIcon:'ic_notification',
       channelId:'reminder'
-    }]});
+    });
+  }
+
+  LN.requestPermissions().then(function(){
+    _ensureReminderChannel(LN).then(function(){
+      LN.schedule({notifications:notifications}).catch(function(e){console.error('dailyVerse schedule error:',e);});
+      localStorage.setItem('dailyVerseScheduledDate',new Date().toDateString());
+    });
   }).catch(function(){});
+}
+
+/* Show a one-time battery-optimization guidance dialog on Samsung/Android */
+window._showNotifSetupHint=function _showNotifSetupHint(){
+  if(!window.Capacitor)return; // web — skip
+  if(localStorage.getItem('notifHintShown'))return;
+  localStorage.setItem('notifHintShown','1');
+  // Build modal using DOM (no innerHTML)
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;padding:0 0 var(--safe-b,20px)';
+  var card=document.createElement('div');
+  card.style.cssText='width:100%;max-width:480px;background:var(--surface,#fff);border-radius:20px 20px 0 0;padding:24px 20px 20px;text-align:center';
+  var title=document.createElement('div');
+  title.style.cssText='font-size:1.05rem;font-weight:700;margin-bottom:10px;color:var(--text,#000)';
+  title.textContent=t('notif.setup_title')||'ئاگادارکرنەکان فەرمان بکە ✓';
+  var msg=document.createElement('div');
+  msg.style.cssText='font-size:.87rem;color:var(--text2,#666);line-height:1.75;direction:rtl;margin-bottom:18px';
+  msg.textContent=t('notif.setup_body')||'بۆ ئەوەی ئاگادارکرن باش کارببکات، هەڕە:\nSamsung: ڕێکخستن → مەرج → بیتاقورا → بێ ئێشکالە\n(Unrestricted Battery Usage)';
+  var btn=document.createElement('button');
+  btn.style.cssText='width:100%;padding:13px;background:var(--accent,#000);color:var(--accent-t,#fff);border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer';
+  btn.textContent=t('notif.setup_ok')||'تێگەیشتم';
+  btn.onclick=function(){overlay.remove();};
+  card.appendChild(title);card.appendChild(msg);card.appendChild(btn);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+}
+
+function initDailyVerse(){
+  if(!S.dailyVerse)return;
+  var last=localStorage.getItem('dailyVerseScheduledDate');
+  if(last===new Date().toDateString())return; /* already scheduled today */
+  scheduleDailyVerse(true,S.dailyVerseTime);
 }
 
 /* ===== SEARCH ===== */
@@ -2977,39 +3144,41 @@ function renderSettings(){
   var content=$('settingsContent');
   clear(content);
 
-  // ── Profile ──────────────────────────────────
+  // ── Profile hero card ────────────────────────
   var profile=el('div','profile-card');
   if(S.user){
+    // Avatar
     var avatarEl;
     if(S.user.avatar){
       avatarEl=document.createElement('img');
-      avatarEl.className='profile-avatar profile-avatar-img';
+      avatarEl.className='profile-avatar-img';
       avatarEl.src=S.user.avatar;avatarEl.alt='';
       avatarEl.referrerPolicy='no-referrer';avatarEl.crossOrigin='anonymous';
     }else{
       avatarEl=el('div','profile-avatar');
       avatarEl.appendChild(icon('fas fa-user'));
-      avatarEl.style.cssText='display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:var(--text3)';
     }
     profile.appendChild(avatarEl);
+    // Info block
     var pInfo=el('div','profile-info');
-    pInfo.appendChild(el('div','profile-name',S.user.name));
-    pInfo.appendChild(el('div','profile-email',S.user.email));
+    pInfo.appendChild(el('div','profile-name',S.user.name||t('profile.guest')));
+    pInfo.appendChild(el('div','profile-email',S.user.email||''));
     var syncBadge=el('div','profile-sync');
-    syncBadge.appendChild(icon('fas fa-cloud'));
+    syncBadge.appendChild(icon('fas fa-cloud-upload-alt'));
     syncBadge.appendChild(document.createTextNode(' '+t('profile.synced')));
     pInfo.appendChild(syncBadge);
     profile.appendChild(pInfo);
-    var chevron=icon('fas fa-chevron-left');
-    chevron.style.cssText='color:var(--text3);font-size:.8rem;flex-shrink:0';
-    profile.appendChild(chevron);
-    profile.style.cursor='pointer';
+    // "View profile" hint row
+    var chevRow=el('div','profile-chevron-row');
+    chevRow.appendChild(document.createTextNode(t('profile.view_profile')||'پرۆفایل ببینە'));
+    chevRow.appendChild(icon('fas fa-chevron-left'));
+    profile.appendChild(chevRow);
     on(profile,'click',function(){App.openProfile()});
   }else{
-    var avatarEl2=el('div','profile-avatar');
-    avatarEl2.appendChild(icon('fas fa-user'));
-    avatarEl2.style.cssText='display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:var(--text3)';
-    profile.appendChild(avatarEl2);
+    // Guest
+    var guestAv=el('div','profile-avatar');
+    guestAv.appendChild(icon('fas fa-user'));
+    profile.appendChild(guestAv);
     var pInfo2=el('div','profile-info');
     pInfo2.appendChild(el('div','profile-name',t('profile.guest')));
     pInfo2.appendChild(el('div','profile-email',t('profile.login_prompt')));
@@ -3017,6 +3186,7 @@ function renderSettings(){
     var loginBtn=el('button','profile-login-btn',t('profile.login'));
     on(loginBtn,'click',function(){App.openLogin()});
     profile.appendChild(loginBtn);
+    profile.style.cursor='default';
   }
   content.appendChild(profile);
 
@@ -3177,11 +3347,44 @@ function renderSettings(){
     S.dailyReminder=!S.dailyReminder;
     localStorage.setItem('dailyReminder',String(S.dailyReminder));
     scheduleReminder(S.dailyReminder,S.reminderTime);
+    if(S.dailyReminder)window._showNotifSetupHint();
     renderSettings();
   });
   remRight.appendChild(remToggle);
   remRow.appendChild(remRight);
   g3.appendChild(remRow);
+
+  // (10) Daily verse notification
+  var dvRow=el('div','setting-row');
+  var dvLeft=el('div','setting-label-wrap');
+  dvLeft.appendChild(el('div','setting-label',t('settings.daily_verse')));
+  dvLeft.appendChild(el('div','setting-sub',t('settings.daily_verse_sub')));
+  dvRow.appendChild(dvLeft);
+  var dvRight=el('div','reminder-right');
+  if(S.dailyVerse){
+    var dvInp=document.createElement('input');
+    dvInp.type='time';dvInp.className='reminder-time-input';
+    dvInp.value=S.dailyVerseTime;
+    on(dvInp,'change',function(){
+      S.dailyVerseTime=dvInp.value;
+      localStorage.setItem('dailyVerseTime',S.dailyVerseTime);
+      scheduleDailyVerse(true,S.dailyVerseTime);
+    });
+    dvRight.appendChild(dvInp);
+  }
+  var dvToggle=el('div','toggle'+(S.dailyVerse?' on':''));
+  dvToggle.appendChild(el('div','toggle-knob'));
+  on(dvToggle,'click',function(){
+    S.dailyVerse=!S.dailyVerse;
+    localStorage.setItem('dailyVerse',String(S.dailyVerse));
+    scheduleDailyVerse(S.dailyVerse,S.dailyVerseTime);
+    if(S.dailyVerse)window._showNotifSetupHint();
+    renderSettings();
+  });
+  dvRight.appendChild(dvToggle);
+  dvRow.appendChild(dvRight);
+  g3.appendChild(dvRow);
+
   content.appendChild(g3);
 
   // ── Data & Sync ──────────────────────────────
@@ -3563,8 +3766,12 @@ function subscribeRealtime(){
       event:'UPDATE',schema:'public',table:'user_data',
       filter:'user_id=eq.'+S.user.id
     },function(payload){
-      if(S.isSyncing)return; // ignore echo of our own push
+      if(S.isSyncing)return; // ignore echo while we are uploading
       if(!payload.new||!payload.new.app_data)return;
+      // Echo detection: skip if this update's _syncTime matches our own last push
+      var incomingTime=payload.new.app_data._syncTime;
+      var myLastSync=localStorage.getItem('_lastSyncTime');
+      if(incomingTime&&myLastSync&&incomingTime===myLastSync)return;
       var localData=gatherSyncData();
       localData._syncTime=localStorage.getItem('_lastSyncTime')||'0';
       var merged=mergeSyncData(localData,payload.new.app_data);
@@ -3585,8 +3792,30 @@ function unsubscribeRealtime(){
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 
+/* Clear all user-specific local data (called when a different account logs in) */
+function _clearUserLocalData(){
+  SYNC_SIMPLE_KEYS.forEach(function(k){localStorage.removeItem(k);});
+  for(var i=1;i<=114;i++){
+    localStorage.removeItem('surah_progress_'+i);
+    localStorage.removeItem('surah_scroll_'+i);
+  }
+  ['_lastSyncTime','readingGoal','readLog','readAyahsToday'].forEach(function(k){localStorage.removeItem(k);});
+  /* Reset in-memory state to defaults */
+  S.arSize=2.0;S.tfSize=1.0;S.lineH=2.2;S.showTafsir=true;S.bgAudio=false;
+  S.keepAwake=false;S.autoAdvance=false;S.scrollFollowsAudio=true;
+  S.hapticFeedback=true;S.dailyReminder=false;S.reminderTime='08:00';
+  if(S.theme!=='light'){S.theme='light';applyTheme();}
+  applySizes();
+}
+
 function startCloudSync(){
   stopCloudSync();
+  /* Data isolation: wipe previous user's local data when a new user logs in */
+  var prevUserId=localStorage.getItem('_lastUserId');
+  if(prevUserId&&prevUserId!==S.user.id){
+    _clearUserLocalData();
+  }
+  localStorage.setItem('_lastUserId',S.user.id);
   loadFromCloud(function(){
     S.syncInterval=setInterval(syncToCloud,30000);
     subscribeRealtime();
@@ -3930,7 +4159,11 @@ App.closeProfile=function(){
 };
 
 function renderProfile(panel){
-  // Header
+  var provider=S.user.avatar&&S.user.avatar.indexOf('google')!==-1?'Google':'Email';
+  var log=getReadLog();var bms=getBookmarks();
+  var totalRead=calcTotalRead(log);var streak=calcStreak(log);
+
+  // ── Header ────────────────────────────────────
   var hdr=el('div','pp-hdr');
   var backBtn=el('button','hdr-btn');
   backBtn.appendChild(icon('fas fa-arrow-right'));
@@ -3941,126 +4174,135 @@ function renderProfile(panel){
 
   var body=el('div','pp-body');
 
-  // Avatar
-  var avatarWrap=el('div','pp-avatar-wrap');
+  // ── Hero section ──────────────────────────────
+  var hero=el('div','pp-hero');
   var avatar=el('div','pp-avatar');
   if(S.user.avatar){
     var img=document.createElement('img');
-    img.src=S.user.avatar;img.alt='';
-    img.referrerPolicy='no-referrer';
-    img.crossOrigin='anonymous';
+    img.src=S.user.avatar;img.alt='';img.referrerPolicy='no-referrer';img.crossOrigin='anonymous';
     avatar.appendChild(img);
   }else{
-    avatar.appendChild(icon('fas fa-user'));
+    // Initials fallback
+    var initials=(S.user.name||'?').charAt(0).toUpperCase();
+    avatar.textContent=initials;
   }
-  avatarWrap.appendChild(avatar);
-  body.appendChild(avatarWrap);
+  hero.appendChild(avatar);
+  hero.appendChild(el('div','pp-name-display',S.user.name||''));
+  hero.appendChild(el('div','pp-email-display',S.user.email||''));
+  var heroSync=el('div','pp-hero-sync');
+  heroSync.appendChild(icon('fas fa-cloud-upload-alt'));
+  heroSync.appendChild(document.createTextNode(' '+t('profile.synced')));
+  hero.appendChild(heroSync);
+  // Stats row
+  var statsRow=el('div','pp-stats');
+  [[totalRead,t('settings.stats_ayahs'),'fas fa-quran'],
+   [streak,t('settings.stats_streak'),'fas fa-fire'],
+   [bms.length,t('settings.stats_bookmarks'),'fas fa-bookmark']
+  ].forEach(function(s){
+    var col=el('div','pp-stat');
+    col.appendChild(el('div','pp-stat-num',String(s[0])));
+    col.appendChild(el('div','pp-stat-lbl',s[1]));
+    statsRow.appendChild(col);
+  });
+  hero.appendChild(statsRow);
+  body.appendChild(hero);
 
-  // Name & email display
-  body.appendChild(el('div','pp-name-display',S.user.name));
-  body.appendChild(el('div','pp-email-display',S.user.email));
-
-  // Message area
-  var msg=el('div','pp-msg');
-  msg.id='ppMsg';
+  // Shared message area
+  var msg=el('div','pp-msg');msg.id='ppMsg';
   body.appendChild(msg);
-
-  function showPPMsg(text,type){msg.textContent=text;msg.className='pp-msg '+type}
+  function showPPMsg(text,type){msg.textContent=text;msg.className='pp-msg '+type;msg.scrollIntoView({block:'nearest'})}
   function clearPPMsg(){msg.className='pp-msg';msg.textContent=''}
 
-  // Info section
-  body.appendChild(el('div','pp-section-title',t('profile.info')));
-  var infoGroup=el('div','');
-
-  // Provider
-  var providerRow=el('div','pp-row');
-  providerRow.appendChild(el('div','pp-row-label',t('profile.login_method')));
-  var provider='Email';
-  if(S.user.avatar&&S.user.avatar.indexOf('google')!==-1)provider='Google';
-  providerRow.appendChild(el('div','pp-row-value',provider));
-  infoGroup.appendChild(providerRow);
-
-  // Member since
+  // ── Info card ─────────────────────────────────
+  var infoSec=el('div','pp-section');
+  infoSec.appendChild(el('div','pp-section-title',t('profile.info')));
+  var infoCard=el('div','pp-card');
+  var provRow=el('div','pp-row');
+  provRow.appendChild(el('div','pp-row-label',t('profile.login_method')));
+  provRow.appendChild(el('div','pp-row-value',provider));
+  infoCard.appendChild(provRow);
+  // Member since (async)
   if(S.supabase){
+    var sinceRow=el('div','pp-row');
+    sinceRow.appendChild(el('div','pp-row-label',t('profile.member_since')));
+    var sinceVal=el('div','pp-row-value','…');
+    sinceRow.appendChild(sinceVal);
+    infoCard.appendChild(sinceRow);
     S.supabase.auth.getUser().then(function(resp){
       if(resp.data&&resp.data.user&&resp.data.user.created_at){
         var d=new Date(resp.data.user.created_at);
-        var dateStr=d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');
-        var sinceRow=el('div','pp-row');
-        sinceRow.appendChild(el('div','pp-row-label',t('profile.member_since')));
-        sinceRow.appendChild(el('div','pp-row-value',dateStr));
-        infoGroup.appendChild(sinceRow);
-      }
+        sinceVal.textContent=d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');
+      }else{sinceRow.remove();}
     });
   }
-  body.appendChild(infoGroup);
+  infoSec.appendChild(infoCard);
+  body.appendChild(infoSec);
 
-  // Edit Name section
-  body.appendChild(el('div','pp-section-title',t('profile.change_name')));
+  // ── Edit name ─────────────────────────────────
+  var nameSec=el('div','pp-section');
+  nameSec.appendChild(el('div','pp-section-title',t('profile.change_name')));
   var nameGroup=el('div','pp-edit-group');
   var nameInput=document.createElement('input');
-  nameInput.type='text';nameInput.className='pp-edit-input';nameInput.value=S.user.name;nameInput.placeholder=t('profile.name_placeholder');
+  nameInput.type='text';nameInput.className='pp-edit-input';nameInput.value=S.user.name||'';nameInput.placeholder=t('profile.name_placeholder');
   nameGroup.appendChild(nameInput);
   var nameBtn=el('button','pp-save-btn',t('profile.save'));
   on(nameBtn,'click',function(){
-    var newName=nameInput.value.trim();
-    if(!newName){showPPMsg(t('profile.name_placeholder'),'error');return}
-    nameBtn.disabled=true;
-    clearPPMsg();
-    S.supabase.auth.updateUser({data:{full_name:newName}}).then(function(resp){
+    var v=nameInput.value.trim();
+    if(!v){showPPMsg(t('profile.name_placeholder'),'error');return}
+    nameBtn.disabled=true;clearPPMsg();
+    S.supabase.auth.updateUser({data:{full_name:v}}).then(function(resp){
       nameBtn.disabled=false;
       if(resp.error){showPPMsg(resp.error.message,'error');return}
-      S.user.name=newName;
-      S.supabase.from('profiles').update({full_name:newName,display_name:newName}).eq('id',S.user.id).then(function(){});
+      S.user.name=v;
+      S.supabase.from('profiles').update({full_name:v,display_name:v}).eq('id',S.user.id).then(function(){});
+      var nd=panel.querySelector('.pp-name-display');if(nd)nd.textContent=v;
+      var sh=panel.querySelector('.pp-name-display');if(sh)sh.textContent=v;
       showPPMsg(t('profile.name_changed'),'success');
-      // Update display
-      var nd=panel.querySelector('.pp-name-display');
-      if(nd)nd.textContent=newName;
     }).catch(function(e){nameBtn.disabled=false;showPPMsg(e.message||t('error.generic'),'error')});
   });
   nameGroup.appendChild(nameBtn);
-  body.appendChild(nameGroup);
+  nameSec.appendChild(nameGroup);
+  body.appendChild(nameSec);
 
-  // Edit Email section
-  body.appendChild(el('div','pp-section-title',t('profile.change_email')));
+  // ── Edit email ────────────────────────────────
+  var emailSec=el('div','pp-section');
+  emailSec.appendChild(el('div','pp-section-title',t('profile.change_email')));
   var emailGroup=el('div','pp-edit-group');
   var emailInput=document.createElement('input');
-  emailInput.type='email';emailInput.className='pp-edit-input';emailInput.value=S.user.email;emailInput.placeholder=t('profile.email_placeholder');
+  emailInput.type='email';emailInput.className='pp-edit-input';emailInput.value=S.user.email||'';emailInput.placeholder=t('profile.email_placeholder');
   emailGroup.appendChild(emailInput);
   var emailBtn=el('button','pp-save-btn',t('profile.change_email'));
   on(emailBtn,'click',function(){
-    var newEmail=emailInput.value.trim();
-    if(!newEmail){showPPMsg(t('profile.email_placeholder'),'error');return}
-    if(newEmail===S.user.email){showPPMsg(t('profile.new_email'),'error');return}
-    emailBtn.disabled=true;
-    clearPPMsg();
-    S.supabase.auth.updateUser({email:newEmail}).then(function(resp){
+    var v=emailInput.value.trim();
+    if(!v){showPPMsg(t('profile.email_placeholder'),'error');return}
+    if(v===S.user.email){showPPMsg(t('profile.new_email'),'error');return}
+    emailBtn.disabled=true;clearPPMsg();
+    S.supabase.auth.updateUser({email:v}).then(function(resp){
       emailBtn.disabled=false;
       if(resp.error){showPPMsg(resp.error.message,'error');return}
       showPPMsg(t('profile.email_sent'),'success');
     }).catch(function(e){emailBtn.disabled=false;showPPMsg(e.message||t('error.generic'),'error')});
   });
   emailGroup.appendChild(emailBtn);
-  body.appendChild(emailGroup);
+  emailSec.appendChild(emailGroup);
+  body.appendChild(emailSec);
 
-  // Change Password (hide for Google-only users)
+  // ── Change password (email users only) ────────
   if(provider==='Email'){
-    body.appendChild(el('div','pp-section-title',t('profile.change_pass')));
+    var passSec=el('div','pp-section');
+    passSec.appendChild(el('div','pp-section-title',t('profile.change_pass')));
     var passGroup=el('div','pp-edit-group');
     var passInput=document.createElement('input');
     passInput.type='password';passInput.className='pp-edit-input';passInput.placeholder=t('profile.new_pass');
-    passGroup.appendChild(passInput);
     var passConfirm=document.createElement('input');
     passConfirm.type='password';passConfirm.className='pp-edit-input';passConfirm.placeholder=t('profile.confirm_pass');
-    passConfirm.style.marginTop='8px';
-    passGroup.appendChild(passConfirm);
+    passGroup.appendChild(passInput);passGroup.appendChild(passConfirm);
     var passBtn=el('button','pp-save-btn',t('profile.change_pass_btn'));
     on(passBtn,'click',function(){
       var p1=passInput.value,p2=passConfirm.value;
       if(!p1||p1.length<6){showPPMsg(t('profile.pass_min'),'error');return}
       if(p1!==p2){showPPMsg(t('profile.pass_mismatch'),'error');return}
-      passBtn.disabled=true;
-      clearPPMsg();
+      passBtn.disabled=true;clearPPMsg();
       S.supabase.auth.updateUser({password:p1}).then(function(resp){
         passBtn.disabled=false;
         if(resp.error){showPPMsg(resp.error.message,'error');return}
@@ -4069,38 +4311,34 @@ function renderProfile(panel){
       }).catch(function(e){passBtn.disabled=false;showPPMsg(e.message||t('error.generic'),'error')});
     });
     passGroup.appendChild(passBtn);
-    body.appendChild(passGroup);
+    passSec.appendChild(passGroup);
+    body.appendChild(passSec);
   }
 
-  // Actions section
-  body.appendChild(el('div','pp-section-title',t('profile.actions')));
+  // ── Actions ───────────────────────────────────
+  var actSec=el('div','pp-section');
+  actSec.appendChild(el('div','pp-section-title',t('profile.actions')));
+  var actWrap=el('div','pp-actions');
 
-  // Force sync
   var syncBtn=el('button','pp-action-btn');
   syncBtn.appendChild(icon('fas fa-sync'));
   syncBtn.appendChild(document.createTextNode(' '+t('profile.sync')));
   on(syncBtn,'click',function(){App.forceSync()});
-  body.appendChild(syncBtn);
+  actWrap.appendChild(syncBtn);
 
-  // Logout
-  var logoutBtn=el('button','pp-action-btn');
+  var logoutBtn=el('button','pp-action-btn pp-logout');
   logoutBtn.appendChild(icon('fas fa-sign-out-alt'));
   logoutBtn.appendChild(document.createTextNode(' '+t('profile.logout')));
-  on(logoutBtn,'click',function(){
-    App.logout();
-    App.closeProfile();
-  });
-  body.appendChild(logoutBtn);
+  on(logoutBtn,'click',function(){App.logout();App.closeProfile();});
+  actWrap.appendChild(logoutBtn);
 
-  // Delete account
-  var deleteBtn=el('button','pp-action-btn danger');
-  deleteBtn.appendChild(icon('fas fa-trash'));
+  var deleteBtn=el('button','pp-action-btn pp-delete');
+  deleteBtn.appendChild(icon('fas fa-trash-alt'));
   deleteBtn.appendChild(document.createTextNode(' '+t('profile.delete_account')));
   on(deleteBtn,'click',function(){
     if(!confirm(t('profile.confirm_delete1')))return;
     if(!confirm(t('profile.confirm_delete2')))return;
     clearPPMsg();
-    // Get current session token, then call server to fully delete the account
     S.supabase.auth.getSession().then(function(resp){
       var accessToken=resp&&resp.data&&resp.data.session&&resp.data.session.access_token;
       if(!accessToken){showPPMsg(t('error.generic'),'error');return}
@@ -4111,15 +4349,14 @@ function renderProfile(panel){
         if(!result.success)throw new Error(result.error||t('error.delete'));
         return S.supabase.auth.signOut();
       }).then(function(){
-        S.user=null;
-        stopCloudSync();
-        App.closeProfile();
-        toast(t('toast.account_deleted'));
-        renderSettings();
+        S.user=null;stopCloudSync();App.closeProfile();
+        toast(t('toast.account_deleted'));renderSettings();
       });
     }).catch(function(e){showPPMsg(e.message||t('error.delete'),'error')});
   });
-  body.appendChild(deleteBtn);
+  actWrap.appendChild(deleteBtn);
+  actSec.appendChild(actWrap);
+  body.appendChild(actSec);
 
   panel.appendChild(body);
 }
@@ -4814,6 +5051,7 @@ function ivTrackView(episodeId){
   sessionStorage.setItem(vk,'1');
   S.ivSupabase.rpc('increment_episode_view',{episode_id:episodeId}).catch(function(){});
 }
+
 
 /* ===== START ===== */
 function startApp(){
