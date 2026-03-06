@@ -36,6 +36,10 @@
   "gencine.hadith_soon_sub": "ئەم بەشە هەنووکا ئامادەدەبێت.\nبەمزوانە زیاد دەبێت!",
   "gencine.reset": "سفر",
   "gencine.tap_hint": "بتەقینە",
+  "gencine.voice_start": "دەنگ",
+  "gencine.voice_stop": "وەستاندن",
+  "gencine.voice_listening": "...دەبیستم",
+  "gencine.voice_unsupported": "دەنگ li vê cîhazê nayê piştgirîkirin.",
 
   "prayer.fajr": "فەجر",
   "prayer.sunrise": "ڕۆژهەلات",

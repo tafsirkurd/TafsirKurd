@@ -198,12 +198,12 @@ async function login(email, password) {
             sessionStorage.setItem('adminFullName', data.user.fullName);
             adminPermissions = data.permissions || [];
             sessionStorage.setItem('adminPermissions', JSON.stringify(adminPermissions));
-            // Set session start time for 20-minute auto-logout
+            // Set session start time for 60-minute auto-logout
             sessionStorage.setItem('adminSessionStart', new Date().toISOString());
 
             // console.log('✅ Login successful');
 
-            // Start heartbeat with 20-minute timeout
+            // Start heartbeat with 60-minute timeout
             if (window.adminHeartbeat) {
                 window.adminHeartbeat.start();
             }

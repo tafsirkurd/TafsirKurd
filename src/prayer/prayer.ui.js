@@ -1905,6 +1905,7 @@
       if (count > 0) {
         localStorage.setItem('prayerLastScheduleTs', String(Date.now()));
         if (window.toast) toast(tStr('prayer.scheduled_ok', { count: count }));
+        if (window._showNotifSetupHint) window._showNotifSetupHint();
       } else {
         if (window.toast) toast(tStr('prayer.scheduled_zero'));
       }
@@ -2070,7 +2071,7 @@
       id: 999,
       title: tStr('prayer.test_notif_title'),
       body: tStr('prayer.test_notif_body'),
-      schedule: { at: at },
+      schedule: { at: at, allowWhileIdle: true },
       channelId: 'athan_' + voice,
       sound: 'athan_' + voice,
       smallIcon: 'ic_notification'

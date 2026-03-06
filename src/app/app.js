@@ -750,9 +750,9 @@ function scheduleDailyVerse(enabled,time){
 }
 
 /* Show a one-time battery-optimization guidance dialog on Samsung/Android */
-window._showNotifSetupHint=function _showNotifSetupHint(){
+window._showNotifSetupHint=function _showNotifSetupHint(force){
   if(!window.Capacitor)return; // web — skip
-  if(localStorage.getItem('notifHintShown'))return;
+  if(!force&&localStorage.getItem('notifHintShown'))return;
   localStorage.setItem('notifHintShown','1');
   // Build modal using DOM (no innerHTML)
   var overlay=document.createElement('div');
