@@ -2,12 +2,19 @@
 (function(){
 'use strict';
 
-var SECTIONS = [
-  { name:'hadith', label:'حەدیس',  sub:'فەرمودێن پێغەمبەرێ ئیسلامێ',      icon:'fas fa-scroll'             },
-  { name:'dua',    label:'دوعا',    sub:'دعاهای بەیانی، ئێوار و زیاتر',    icon:'fa-solid fa-person-praying' },
-  { name:'tasbih', label:'تەسبیح', sub:'ژمارتنا دیکرێن ئیسلامی',           icon:'fas fa-rotate'             },
-  { name:'asma',   label:'ناوێن خوا', sub:'٩٩ ناوێن گەورەیێ خوایێ بەزەیی کار', icon:'fas fa-star-and-crescent' }
-];
+function _sections(){
+  var T = window.t || function(k,d){ return d||k; };
+  var all = [
+    { name:'hadith', label:T('gencine.hadith','حەدیس'),     sub:T('gencine.hadith_sub','فەرمودێن پێغەمبەرێ ئیسلامێ'),           icon:'fas fa-scroll'             },
+    { name:'dua',    label:T('gencine.dua','دوعا'),          sub:T('gencine.dua_sub','دعاهای بەیانی، ئێوار و زیاتر'),           icon:'fa-solid fa-person-praying' },
+    { name:'tasbih', label:T('gencine.tasbih','تەسبیح'),    sub:T('gencine.tasbih_sub','ژمارتنا دیکرێن ئیسلامی'),              icon:'fas fa-rotate'             },
+    { name:'asma',   label:T('gencine.asma','ناوێن خوا'),   sub:T('gencine.asma_sub','٩٩ ناوێن گەورەیێ خوایێ بەزەیی کار'),   icon:'fas fa-star-and-crescent' }
+  ];
+  if (!_dbSections || !_dbSections.length) return all;
+  var activeMap = {};
+  _dbSections.forEach(function(s){ activeMap[s.key] = s.active; });
+  return all.filter(function(sec){ return activeMap[sec.name] !== false; });
+}
 
 /* ── 99 Names of Allah ── */
 var ASMA_DATA = [
@@ -117,7 +124,8 @@ var IMG_LOADED = {};
 
 /* Preload and mark loaded immediately */
 (function(){
-  SECTIONS.forEach(function(s){
+  ['hadith','dua','tasbih','asma'].forEach(function(name){
+    var s = {name:name};
     if(IMG_LOADED[s.name]) return;
     var img = new Image();
     img.onload = function(){ IMG_LOADED[s.name] = true; };
@@ -150,11 +158,14 @@ var RING_R    = 91;
 var RING_CIRC = 2 * Math.PI * RING_R;
 
 /* ── Supabase data cache ── */
-var _dbCats    = null;   /* [{key, label_ku, ...}] */
-var _dbDuas    = null;   /* [{category_key, ar, ku, source, repeat}] */
-var _dbHadiths = null;   /* [{title, ar, ku, source}] */
-var _loadingDb = false;
-var _dbLoaded  = false;
+var _dbCats     = null;   /* [{key, label_ku, ...}] */
+var _dbDuas     = null;   /* [{category_key, ar, ku, source, repeat}] */
+var _dbHadiths  = null;   /* [{title, ar, ku, source}] */
+var _dbSections = null;   /* [{key, active, sort_order}] */
+var _dbTasbih   = null;   /* [{ar, ku, sort_order}] */
+var _dbAsma99   = null;   /* [{n, ku}] overrides */
+var _loadingDb  = false;
+var _dbLoaded   = false;
 
 var CACHE_TTL_MS = 6 * 60 * 60 * 1000; /* 6 hours */
 
@@ -179,9 +190,14 @@ function _getSupabase() {
 
 /* Load from cache instantly, then re-fetch in background */
 function _initDbData(onDone) {
-  var cachedCats    = _readCache('gencine_cats_v1');
-  var cachedDuas    = _readCache('gencine_duas_v1');
-  var cachedHadiths = _readCache('gencine_hadiths_v2');
+  var cachedCats     = _readCache('gencine_cats_v1');
+  var cachedDuas     = _readCache('gencine_duas_v1');
+  var cachedHadiths  = _readCache('gencine_hadiths_v2');
+  var cachedSections = _readCache('gencine_sections_v1');
+  var cachedTasbih   = _readCache('gencine_tasbih_v1');
+  var cachedAsma99   = _readCache('gencine_asma99_v1');
+
+  if (cachedSections) _dbSections = cachedSections;
 
   if (cachedCats && cachedDuas && cachedHadiths) {
     _dbCats    = cachedCats;
@@ -220,13 +236,16 @@ function _fetchDbData(onDone) {
 
   _loadingDb = true;
 
-  var catsPromise = sb.from('gencine_categories').select('*').eq('active', true).order('sort_order');
-  var duasPromise = sb.from('gencine_duas').select('*').eq('active', true).order('category_key').order('sort_order');
-  var hadithsPromise = sb.from('gencine_hadiths').select('*').eq('active', true).order('sort_order');
+  var catsPromise     = sb.from('gencine_categories').select('*').eq('active', true).order('sort_order');
+  var duasPromise     = sb.from('gencine_duas').select('*').eq('active', true).order('category_key').order('sort_order');
+  var hadithsPromise  = sb.from('gencine_hadiths').select('*').eq('active', true).order('sort_order');
+  var sectionsPromise = sb.from('gencine_sections').select('*').order('sort_order');
+  var tasbihPromise   = sb.from('gencine_tasbih').select('*').eq('active', true).order('sort_order');
+  var asma99Promise   = sb.from('gencine_asma99').select('n,ku');
 
-  Promise.all([catsPromise, duasPromise, hadithsPromise]).then(function(results) {
+  Promise.all([catsPromise, duasPromise, hadithsPromise, sectionsPromise]).then(function(results) {
     _loadingDb = false;
-    var catRes = results[0], duaRes = results[1], hadithRes = results[2];
+    var catRes = results[0], duaRes = results[1], hadithRes = results[2], secRes = results[3];
     if (!catRes.error && catRes.data) {
       _dbCats = catRes.data;
       _writeCache('gencine_cats_v1', _dbCats);
@@ -238,6 +257,10 @@ function _fetchDbData(onDone) {
     if (!hadithRes.error && hadithRes.data) {
       _dbHadiths = hadithRes.data;
       _writeCache('gencine_hadiths_v2', _dbHadiths);
+    }
+    if (!secRes.error && secRes.data) {
+      _dbSections = secRes.data;
+      _writeCache('gencine_sections_v1', _dbSections);
     }
     _dbLoaded = true;
     if (onDone) onDone();
@@ -270,6 +293,14 @@ function _getDuas(catKey) {
 /* Return hadiths from DB */
 function _getHadiths() {
   return (_dbHadiths && _dbHadiths.length) ? _dbHadiths : [];
+}
+function _getTasbih() {
+  return (_dbTasbih && _dbTasbih.length) ? _dbTasbih : DHIKR_LIST;
+}
+function _getAsmaKuOverride(n) {
+  if (!_dbAsma99 || !_dbAsma99.length) return null;
+  var row = _dbAsma99.find(function(r){ return r.n === n; });
+  return row ? row.ku : null;
 }
 
 var APP_LINK = 'https://tafsirkurd.com';
@@ -394,26 +425,30 @@ window.GencineUI = {
     var home = document.createElement('div');
     home.className = 'genc-home';
 
-    SECTIONS.forEach(function(sec){
+    _sections().forEach(function(sec){
       var btn = document.createElement('button');
       btn.className = 'genc-card-btn';
       btn.dataset.sec = sec.name;
       btn.onclick = function(){ self.section(sec.name); };
 
-      /* CSS background-image — no <img> element, no flash on re-render */
+      /* <img> element — fades in via opacity when loaded, no background-size warp */
       var url = '/assets/icons/genc-' + sec.name + '-bg.webp';
+      var cardImg = document.createElement('img');
+      cardImg.className = 'genc-card-img';
+      cardImg.alt = '';
       if(IMG_LOADED[sec.name]){
-        btn.style.backgroundImage = 'url(' + url + ')';
+        cardImg.src = url;
         btn.classList.add('has-image');
       } else {
-        var loader = new Image();
-        loader.onload = function(){
-          IMG_LOADED[sec.name] = true;
-          btn.style.backgroundImage = 'url(' + url + ')';
-          btn.classList.add('has-image');
-        };
-        loader.src = url;
+        (function(b, img, name){
+          img.onload = function(){
+            IMG_LOADED[name] = true;
+            b.classList.add('has-image');
+          };
+          img.src = url;
+        })(btn, cardImg, sec.name);
       }
+      btn.appendChild(cardImg);
 
       /* Overlay */
       var overlay = document.createElement('div');
@@ -489,7 +524,8 @@ window.GencineUI = {
   /* ═══════════════════ DUA ═══════════════════ */
   _renderDua: function(container){
     var self = this;
-    container.appendChild(this._backRow('دوعا'));
+    var T = window.t || function(k,d){ return d||k; };
+    container.appendChild(this._backRow(T('gencine.dua','دوعا')));
 
     var catKeys = _getCatKeys();
 
@@ -567,7 +603,8 @@ window.GencineUI = {
   /* ═══════════════════ TASBIH ═══════════════════ */
   _renderTasbih: function(container){
     var self = this;
-    container.appendChild(this._backRow('تەسبیح'));
+    var T = window.t || function(k,d){ return d||k; };
+    container.appendChild(this._backRow(T('gencine.tasbih','تەسبیح')));
 
     var wrap = document.createElement('div');
     wrap.className = 'tasbih-wrap';
@@ -576,7 +613,7 @@ window.GencineUI = {
     var scrollWrap = document.createElement('div');
     scrollWrap.className = 'tasbih-dhikr-scroll';
     var dhikrCards = [];
-    DHIKR_LIST.forEach(function(d, i){
+    _getTasbih().forEach(function(d, i){
       var card = document.createElement('button');
       card.className = 'tasbih-dhikr-card' + (i === self._tasbihDhikrIdx ? ' on' : '');
       var arEl = document.createElement('div');
@@ -673,7 +710,7 @@ window.GencineUI = {
     /* reset button */
     var resetBtn = document.createElement('button');
     resetBtn.className = 'tasbih-reset-btn';
-    resetBtn.textContent = 'سفر';
+    resetBtn.textContent = T('gencine.reset','سفر');
     resetBtn.onclick = function(){ self._tasbihReset(); };
     wrap.appendChild(resetBtn);
 
@@ -711,6 +748,7 @@ window.GencineUI = {
 
   _renderHadith: function(container){
     var self = this;
+    var T = window.t || function(k,d){ return d||k; };
     var hadiths = _getHadiths();
 
     /* ── Detail view ── */
@@ -725,11 +763,17 @@ window.GencineUI = {
       var backIco = document.createElement('i');
       backIco.className = 'fas fa-arrow-right';
       backBtn.appendChild(backIco);
-      backBtn.onclick = function(){ self._hadithDetailIdx = null; self._draw(); };
+      backBtn.onclick = function(){
+        var savedScroll = self._hadithListScroll || 0;
+        self._hadithDetailIdx = null;
+        self._draw();
+        var p = document.getElementById('panelGencine');
+        if (p) p.scrollTop = savedScroll;
+      };
       backRow.appendChild(backBtn);
       var backLbl = document.createElement('span');
       backLbl.className = 'genc-back-label';
-      backLbl.textContent = 'حەدیس';
+      backLbl.textContent = T('gencine.hadith','حەدیس');
       backRow.appendChild(backLbl);
       container.appendChild(backRow);
 
@@ -786,9 +830,9 @@ window.GencineUI = {
       prevIco.className = 'fas fa-arrow-right';
       prevBtn.appendChild(prevIco);
       var prevLbl = document.createElement('span');
-      prevLbl.textContent = 'پێشوو';
+      prevLbl.textContent = T('gencine.hadith_prev','پێشوو');
       prevBtn.appendChild(prevLbl);
-      prevBtn.onclick = function(){ self._hadithDetailIdx--; self._draw(); };
+      prevBtn.onclick = function(){ self._hadithDetailIdx--; self._draw(); var p=document.getElementById('panelGencine');if(p)p.scrollTop=0; };
       nav.appendChild(prevBtn);
 
       var navCount = document.createElement('span');
@@ -800,12 +844,12 @@ window.GencineUI = {
       nextBtn.className = 'hadith-nav-btn' + (this._hadithDetailIdx === hadiths.length - 1 ? ' disabled' : '');
       nextBtn.disabled = this._hadithDetailIdx === hadiths.length - 1;
       var nextLbl = document.createElement('span');
-      nextLbl.textContent = 'دواتر';
+      nextLbl.textContent = T('gencine.hadith_next','دواتر');
       nextBtn.appendChild(nextLbl);
       var nextIco = document.createElement('i');
       nextIco.className = 'fas fa-arrow-left';
       nextBtn.appendChild(nextIco);
-      nextBtn.onclick = function(){ self._hadithDetailIdx++; self._draw(); };
+      nextBtn.onclick = function(){ self._hadithDetailIdx++; self._draw(); var p=document.getElementById('panelGencine');if(p)p.scrollTop=0; };
       nav.appendChild(nextBtn);
 
       container.appendChild(nav);
@@ -813,7 +857,7 @@ window.GencineUI = {
     }
 
     /* ── List view ── */
-    container.appendChild(this._backRow('حەدیس'));
+    container.appendChild(this._backRow(T('gencine.hadith','حەدیس')));
 
     if (!hadiths.length) {
       _fetchDbData(function() {
@@ -829,7 +873,7 @@ window.GencineUI = {
       wrap.appendChild(iconEl);
       var comingTitle = document.createElement('div');
       comingTitle.className = 'genc-coming-title';
-      comingTitle.textContent = 'بارکرن...';
+      comingTitle.textContent = T('gencine.loading','بارکرن...');
       wrap.appendChild(comingTitle);
       container.appendChild(wrap);
       return;
@@ -844,7 +888,7 @@ window.GencineUI = {
     var searchInput = document.createElement('input');
     searchInput.className = 'hadith-search';
     searchInput.type = 'search';
-    searchInput.placeholder = 'گەڕان بە ناو یا دەق...';
+    searchInput.placeholder = T('gencine.hadith_search_ph','گەڕان بە ناو یا دەق...');
     searchInput.value = this._hadithSearch;
     searchWrap.appendChild(searchInput);
     container.appendChild(searchWrap);
@@ -865,19 +909,19 @@ window.GencineUI = {
       var scored;
       if (!q || !q.trim()) {
         scored = hadiths.map(function(h, i){ return {h: h, origIdx: i}; });
-        countEl.textContent = hadiths.length + ' فەرمودە';
+        countEl.textContent = hadiths.length + ' ' + T('gencine.hadith_count','فەرمودە');
       } else {
         scored = hadiths.map(function(h, i){
           return {h: h, origIdx: i, score: self._scoreHadith(h, q.trim())};
         }).filter(function(x){ return x.score > 0; });
         scored.sort(function(a, b){ return b.score - a.score; });
-        countEl.textContent = scored.length + ' / ' + hadiths.length + ' فەرمودە';
+        countEl.textContent = scored.length + ' / ' + hadiths.length + ' ' + T('gencine.hadith_count','فەرمودە');
       }
 
       if (!scored.length) {
         var empty = document.createElement('div');
         empty.className = 'hadith-empty';
-        empty.textContent = 'هیچ فەرمودەیەک نەدۆزراوەتەوە';
+        empty.textContent = T('gencine.hadith_empty','هیچ فەرمودەیەک نەدۆزراوەتەوە');
         list.appendChild(empty);
         return;
       }
@@ -914,7 +958,13 @@ window.GencineUI = {
         arrow.className = 'fas fa-chevron-left';
         row.appendChild(arrow);
 
-        row.onclick = function(){ self._hadithDetailIdx = origIdx; self._draw(); };
+        row.onclick = function(){
+          var p = document.getElementById('panelGencine');
+          self._hadithListScroll = p ? p.scrollTop : 0;
+          self._hadithDetailIdx = origIdx;
+          self._draw();
+          if (p) p.scrollTop = 0;
+        };
         list.appendChild(row);
       });
     }
@@ -938,7 +988,8 @@ window.GencineUI = {
 
   /* ═══════════════════ 99 NAMES ═══════════════════ */
   _renderAsma: function(container){
-    container.appendChild(this._backRow('ناوێن خوا'));
+    var T = window.t || function(k,d){ return d||k; };
+    container.appendChild(this._backRow(T('gencine.asma','ناوێن خوا')));
 
     /* sticky search bar */
     var searchWrap = document.createElement('div');
@@ -946,14 +997,14 @@ window.GencineUI = {
     var input = document.createElement('input');
     input.className = 'asma-search';
     input.type = 'search';
-    input.placeholder = 'گەڕان...';
+    input.placeholder = T('gencine.asma_search_ph','گەڕان...');
     searchWrap.appendChild(input);
     container.appendChild(searchWrap);
 
     /* count label */
     var countEl = document.createElement('div');
     countEl.className = 'asma-count';
-    countEl.textContent = '٩٩ ناوێن خوا';
+    countEl.textContent = T('gencine.asma_count','٩٩ ناوێن خوا');
     container.appendChild(countEl);
 
     /* grid */
@@ -969,7 +1020,7 @@ window.GencineUI = {
           })
         : ASMA_DATA;
 
-      countEl.textContent = filter ? (list.length + ' / ٩٩') : '٩٩ ناوێن خوا';
+      countEl.textContent = filter ? (list.length + ' / ٩٩') : T('gencine.asma_count','٩٩ ناوێن خوا');
 
       list.forEach(function(a){
         var card = document.createElement('div');
@@ -992,7 +1043,7 @@ window.GencineUI = {
 
         var ku = document.createElement('div');
         ku.className = 'asma-ku';
-        ku.textContent = a.ku;
+        var _kuOvr=_getAsmaKuOverride(a.n); ku.textContent = _kuOvr!==null?_kuOvr:a.ku;
         card.appendChild(ku);
 
         var footer = document.createElement('div');

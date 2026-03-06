@@ -389,6 +389,151 @@
             border-color: rgba(59,130,246,.3);
             color: var(--primary);
         }
+
+        /* ── App sections panel ── */
+        .sections-panel {
+            margin-bottom: 24px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .sections-panel-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .sections-panel-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .sections-panel-hint {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+        .section-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .section-row:last-child { border-bottom: none; }
+        .section-row-icon {
+            width: 34px; height: 34px;
+            border-radius: 9px;
+            background: var(--bg-active);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .section-row-body { flex: 1; min-width: 0; }
+        .section-row-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .section-row-key { font-size: 11px; color: var(--text-tertiary); font-family: monospace; }
+        .section-toggle-btn {
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid transparent;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .section-toggle-btn.active {
+            background: rgba(34,197,94,.12);
+            color: #16a34a;
+            border-color: rgba(34,197,94,.3);
+        }
+        .section-toggle-btn.inactive {
+            background: var(--bg-hover);
+            color: var(--text-tertiary);
+            border-color: var(--border-medium);
+        }
+        .section-toggle-btn:hover { opacity: .8; }
+
+        /* ── 99 Names grid ── */
+        .asma-search-row { padding: 0 0 14px 0; }
+        .asma-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 10px;
+        }
+        .asma-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            padding: 12px 14px;
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .asma-card:hover { border-color: var(--border-medium); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+        .asma-card-num {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-tertiary);
+            font-family: monospace;
+            margin-bottom: 4px;
+        }
+        .asma-card-ar {
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+            font-size: 17px;
+            direction: rtl;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+        .asma-card-tr {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-style: italic;
+        }
+        .asma-card-ku {
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+            font-size: 12px;
+            direction: rtl;
+            color: var(--text-tertiary);
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 768px) {
+            /* Stack 2-col form rows into 1 col */
+            .form-row { grid-template-columns: 1fr; }
+
+            /* Narrower tab padding so all 4 tabs fit */
+            .platform-tab { padding: 10px 8px; font-size: 12px; gap: 4px; }
+            .platform-tab .tab-count { display: none; }
+
+            /* Toolbar wraps on small screens */
+            .list-toolbar { flex-wrap: wrap; gap: 8px; }
+
+            /* Category grid single column */
+            .cat-grid { grid-template-columns: 1fr; }
+
+            /* Stat pills full-width */
+            .stats-row { flex-direction: column; }
+            .stat-pill { flex: unset; }
+
+            /* Form actions stack vertically */
+            .form-actions { flex-direction: column-reverse; }
+            .form-actions .btn { width: 100%; justify-content: center; }
+
+            /* Item card: push actions to bottom-right */
+            .item-card { flex-wrap: wrap; }
+            .item-card-actions { width: 100%; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--border-light); margin-top: 4px; }
+            .icon-action { width: 36px; height: 36px; }
+
+            /* Source add row */
+            .source-add-row { flex-wrap: wrap; }
+            .source-add-row .btn { width: 100%; justify-content: center; }
+
+            /* Topbar padding */
+            .topbar { padding: 12px 16px; }
+            .page-title { font-size: 16px; }
+        }
     </style>
     <style id="early-sidebar-hide">
         .sidebar-nav{visibility:hidden}
@@ -541,6 +686,16 @@
                     Hadiths
                     <span class="tab-count" id="tab-count-hadiths">0</span>
                 </button>
+                <button class="platform-tab" onclick="switchTab('tasbih')">
+                    <i data-lucide="rotate-cw" style="width:15px;height:15px"></i>
+                    Tasbih
+                    <span class="tab-count" id="tab-count-tasbih">0</span>
+                </button>
+                <button class="platform-tab" onclick="switchTab('asma99')">
+                    <i data-lucide="star" style="width:15px;height:15px"></i>
+                    99 Names
+                    <span class="tab-count" id="tab-count-asma99">99</span>
+                </button>
             </div>
 
             <!-- ── CATEGORIES ── -->
@@ -584,7 +739,70 @@
                         </div>
                     </div>
                 </div>
+                <!-- App Home Sections visibility -->
+                <div class="sections-panel">
+                    <div class="sections-panel-hdr">
+                        <div class="sections-panel-title">App Home Sections</div>
+                        <div class="sections-panel-hint">Show or hide sections on the app's Gencine home screen</div>
+                    </div>
+                    <div id="sections-list"><!-- rendered by JS --></div>
+                </div>
+
                 <div id="cat-list" class="cat-grid"></div>
+            </div>
+
+            <!-- ── TASBIH ── -->
+            <div id="panel-tasbih" class="view-panel">
+                <input type="hidden" id="tasbih-edit-id">
+                <div class="add-form-wrap">
+                    <button class="add-form-toggle" id="tasbih-form-toggle" onclick="toggleForm('tasbih')">
+                        <i data-lucide="plus"></i>
+                        <span id="tasbih-form-toggle-label">Add Dhikr</span>
+                    </button>
+                    <div class="add-form-body" id="tasbih-form-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Arabic Text</label>
+                                <textarea id="tasbih-ar" class="form-textarea" placeholder="سُبْحَانَ اللَّهِ" dir="rtl" style="min-height:60px"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Kurdish / Short Label</label>
+                                <input type="text" id="tasbih-ku" class="form-input" placeholder="سبحان الله" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Sort Order</label>
+                                    <input type="number" id="tasbih-sort" class="form-input" value="10" min="0">
+                                </div>
+                                <div class="form-group" style="justify-content:flex-end;align-items:flex-end">
+                                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                                        <input type="checkbox" id="tasbih-active" checked>
+                                        <span class="form-label" style="margin:0">Active</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-secondary" onclick="cancelTasbihEdit()">Cancel</button>
+                                <button class="btn btn-primary" onclick="saveTasbih()">Save Dhikr</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-toolbar">
+                    <span class="list-count" id="tasbih-count"></span>
+                </div>
+                <div id="tasbih-list" class="items-list"></div>
+            </div>
+
+            <!-- ── 99 NAMES ── -->
+            <div id="panel-asma99" class="view-panel">
+                <div class="asma-search-row">
+                    <input type="text" id="asma-search" class="form-input" placeholder="Search names..." oninput="filterAsma(this.value)">
+                </div>
+                <div class="list-toolbar">
+                    <span class="list-count" id="asma-count">99 names</span>
+                </div>
+                <div id="asma-grid" class="asma-grid"></div>
             </div>
 
             <!-- ── DUAS ── -->
@@ -697,21 +915,27 @@
 
 /* ── Tab switching ── */
 var currentTab = 'categories';
-var addLabels = { categories: 'Add Category', duas: 'Add Dua', hadiths: 'Add Hadith' };
+var TAB_NAMES = ['categories','duas','hadiths','tasbih','asma99'];
+var addLabels = { categories: 'Add Category', duas: 'Add Dua', hadiths: 'Add Hadith', tasbih: 'Add Dhikr', asma99: '' };
 
 function switchTab(name) {
     currentTab = name;
     document.querySelectorAll('.platform-tab').forEach(function(b, i) {
-        b.classList.toggle('active', ['categories','duas','hadiths'][i] === name);
+        b.classList.toggle('active', TAB_NAMES[i] === name);
     });
     document.querySelectorAll('.view-panel').forEach(function(p) { p.classList.remove('active'); });
     document.getElementById('panel-' + name).classList.add('active');
+    var addBtn = document.getElementById('top-add-btn');
+    if (addBtn) addBtn.style.display = name === 'asma99' ? 'none' : '';
+    if (name === 'tasbih') renderTasbihList();
     document.getElementById('top-add-label').textContent = addLabels[name] || 'Add';
+    if (name === 'asma99') renderAsma99();
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 /* ── Top Add button — opens the relevant form ── */
 function topAddClick() {
+    if (currentTab === 'asma99') return;
     toggleForm(currentTab === 'categories' ? 'cat' : currentTab === 'duas' ? 'dua' : 'hadith');
 }
 
@@ -758,6 +982,7 @@ function showNotification(msg, type) {
 var allCategories = [];
 var allDuas = [];
 var allHadiths = [];
+var allSections = [];
 var duaFilterCat = 'all';
 
 function updateStats() {
@@ -769,7 +994,7 @@ function updateStats() {
     document.getElementById('tab-count-hadiths').textContent = allHadiths.length;
 }
 
-async function loadAll() { await Promise.all([loadCategories(), loadDuas(), loadHadiths()]); }
+async function loadAll() { await Promise.all([loadCategories(), loadDuas(), loadHadiths(), loadSections(), loadTasbih(), loadAsma99Overrides()]); }
 
 async function loadCategories() {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
@@ -1063,6 +1288,182 @@ async function deleteHadith(id) {
     if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
     showNotification('Hadith deleted.', 'success'); await loadHadiths(); localStorage.removeItem('gencine_hadiths_v1');
 }
+
+/* ── SECTIONS ── */
+var SECTION_META = {
+    hadith: { label: 'Hadith', icon: 'scroll-text' },
+    dua:    { label: 'Dua',    icon: 'hand-heart'  },
+    tasbih: { label: 'Tasbih', icon: 'rotate-cw'   },
+    asma:   { label: '99 Names', icon: 'star'       }
+};
+async function loadSections() {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_sections').select('*').order('sort_order');
+    if (r.error) { showNotification('Sections load error: ' + r.error.message, 'error'); return; }
+    allSections = r.data || [];
+    renderSections();
+}
+function renderSections() {
+    var list = document.getElementById('sections-list');
+    if (!list) return;
+    list.textContent = '';
+    var keys = ['hadith','dua','tasbih','asma'];
+    keys.forEach(function(key) {
+        var sec = allSections.find(function(s){ return s.key === key; });
+        var isActive = sec ? sec.active : true;
+        var meta = SECTION_META[key] || { label: key, icon: 'circle' };
+        var row = mke('div', 'section-row');
+        var iconWrap = mke('div', 'section-row-icon');
+        var ico = mke('i'); ico.setAttribute('data-lucide', meta.icon);
+        iconWrap.appendChild(ico);
+        var body = mke('div', 'section-row-body');
+        var lbl = mke('div', 'section-row-label'); lbl.textContent = meta.label;
+        var keyEl = mke('div', 'section-row-key'); keyEl.textContent = key;
+        body.appendChild(lbl); body.appendChild(keyEl);
+        var btn = mke('button', 'section-toggle-btn ' + (isActive ? 'active' : 'inactive'));
+        btn.textContent = isActive ? 'Visible' : 'Hidden';
+        btn.onclick = (function(k, a){ return function(){ toggleSection(k, !a); }; })(key, isActive);
+        row.appendChild(iconWrap); row.appendChild(body); row.appendChild(btn);
+        list.appendChild(row);
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+async function toggleSection(key, newActive) {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_sections').upsert({ key: key, active: newActive }, { onConflict: 'key' });
+    if (r.error) { showNotification('Toggle failed: ' + r.error.message, 'error'); return; }
+    showNotification((SECTION_META[key]||{label:key}).label + ' section ' + (newActive ? 'shown' : 'hidden') + '.', 'success');
+    await loadSections();
+    localStorage.removeItem('gencine_sections_v1');
+}
+
+
+/* ── TASBIH ── */
+var allTasbih = [];
+
+async function loadTasbih() {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_tasbih').select('*').order('sort_order');
+    if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+    allTasbih = r.data || [];
+    renderTasbihList(); updateStats();
+}
+
+function renderTasbihList() {
+    var list = document.getElementById('tasbih-list');
+    if (!list) return;
+    list.textContent = '';
+    var countEl = document.getElementById('tasbih-count');
+    if (countEl) countEl.textContent = allTasbih.length + ' dhikr items';
+    if (!allTasbih.length) {
+        var es = mke('div', 'empty-state');
+        var ep = mke('p'); ep.textContent = 'No tasbih items yet.';
+        es.appendChild(ep); list.appendChild(es); return;
+    }
+    allTasbih.forEach(function(item) {
+        var card = mke('div', 'item-card');
+        var body = mke('div', 'item-card-body');
+        var arEl = mke('div', 'item-card-ar'); arEl.textContent = item.ar;
+        arEl.style.cssText = 'direction:rtl;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:1rem';
+        var kuEl = mke('div', 'item-card-meta'); kuEl.textContent = item.ku;
+        var sortEl = mke('div','item-card-meta'); sortEl.textContent = 'order: ' + item.sort_order + (item.active ? '' : ' · hidden');
+        body.appendChild(arEl); body.appendChild(kuEl); body.appendChild(sortEl);
+        var acts = mke('div', 'item-card-actions');
+        acts.appendChild(mkIconBtn('pencil', 'Edit', false, function(id){ return function(){ editTasbih(id); }; }(item.id)));
+        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, function(id){ return function(){ deleteTasbih(id); }; }(item.id)));
+        card.appendChild(body); card.appendChild(acts);
+        list.appendChild(card);
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function editTasbih(id) {
+    var item = allTasbih.find(function(x){ return x.id === id; });
+    if (!item) return;
+    document.getElementById('tasbih-edit-id').value = id;
+    document.getElementById('tasbih-ar').value = item.ar || '';
+    document.getElementById('tasbih-ku').value = item.ku || '';
+    document.getElementById('tasbih-sort').value = item.sort_order || 10;
+    document.getElementById('tasbih-active').checked = item.active !== false;
+    var body = document.getElementById('tasbih-form-body');
+    body.classList.add('open');
+    document.getElementById('tasbih-form-toggle-label').textContent = 'Editing Dhikr';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function cancelTasbihEdit() {
+    document.getElementById('tasbih-edit-id').value = '';
+    document.getElementById('tasbih-ar').value = '';
+    document.getElementById('tasbih-ku').value = '';
+    document.getElementById('tasbih-sort').value = 10;
+    document.getElementById('tasbih-active').checked = true;
+    document.getElementById('tasbih-form-body').classList.remove('open');
+    document.getElementById('tasbih-form-toggle-label').textContent = 'Add Dhikr';
+}
+
+async function saveTasbih() {
+    var ar = document.getElementById('tasbih-ar').value.trim();
+    if (!ar) { showNotification('Arabic text is required.', 'warning'); return; }
+    var editId = document.getElementById('tasbih-edit-id').value;
+    var payload = {
+        ar: ar,
+        ku: document.getElementById('tasbih-ku').value.trim(),
+        sort_order: parseInt(document.getElementById('tasbih-sort').value) || 10,
+        active: document.getElementById('tasbih-active').checked
+    };
+    var supabase = window.adminAuth.getSupabase();
+    var r = editId
+        ? await supabase.from('gencine_tasbih').update(payload).eq('id', editId)
+        : await supabase.from('gencine_tasbih').insert(payload);
+    if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
+    showNotification(editId ? 'Dhikr updated.' : 'Dhikr added.', 'success');
+    cancelTasbihEdit();
+    await loadTasbih();
+    localStorage.removeItem('gencine_tasbih_v1');
+}
+
+async function deleteTasbih(id) {
+    if (!confirm('Delete this dhikr item?')) return;
+    var r = await window.adminAuth.getSupabase().from('gencine_tasbih').delete().eq('id', id);
+    if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
+    showNotification('Dhikr deleted.', 'success');
+    await loadTasbih();
+    localStorage.removeItem('gencine_tasbih_v1');
+}
+
+/* ── 99 NAMES ── */
+var ASMA_DATA_ADMIN = [
+  {n:1,ar:'الرَّحْمَنُ',tr:'Ar-Rahmaan',ku:'ئەو زۆر بەزەیی کار'},{n:2,ar:'الرَّحِيمُ',tr:'Ar-Raheem',ku:'ئەو هەمیشە بەزەیی کار'},{n:3,ar:'الْمَلِكُ',tr:'Al-Malik',ku:'پاشا'},{n:4,ar:'الْقُدُّوسُ',tr:'Al-Quddoos',ku:'پیرۆز'},{n:5,ar:'السَّلَامُ',tr:'As-Salaam',ku:'ئاشتی بەخش'},{n:6,ar:'الْمُؤْمِنُ',tr:"Al-Mu'min",ku:'باوەڕداری دەر'},{n:7,ar:'الْمُهَيْمِنُ',tr:'Al-Muhaimin',ku:'پاراستووار'},{n:8,ar:'الْعَزِيزُ',tr:'Al-Azeez',ku:'بەهێز'},{n:9,ar:'الْجَبَّارُ',tr:'Al-Jabbaar',ku:'سەروەر'},{n:10,ar:'الْمُتَكَبِّرُ',tr:'Al-Mutakabbir',ku:'گەورەیی خاوەن'},
+  {n:11,ar:'الْخَالِقُ',tr:'Al-Khaaliq',ku:'دروستکار'},{n:12,ar:'الْبَارِئُ',tr:"Al-Baari'",ku:'بوونی دەر هێنەر'},{n:13,ar:'الْمُصَوِّرُ',tr:'Al-Musawwir',ku:'شێوەدەر'},{n:14,ar:'الْغَفَّارُ',tr:'Al-Ghaffaar',ku:'زۆر بەخشینکار'},{n:15,ar:'الْقَهَّارُ',tr:'Al-Qahhaar',ku:'زەبردەست'},{n:16,ar:'الْوَهَّابُ',tr:'Al-Wahhaab',ku:'بەخشینکارێ گەورە'},{n:17,ar:'الرَّزَّاقُ',tr:'Ar-Razzaaq',ku:'رزگاری دەر'},{n:18,ar:'الْفَتَّاحُ',tr:'Al-Fattaah',ku:'کردنەوەر'},{n:19,ar:'الْعَلِيمُ',tr:"Al-'Aleem",ku:'زاناس'},{n:20,ar:'الْقَابِضُ',tr:'Al-Qaabid',ku:'گرتنکار'},
+  {n:21,ar:'الْبَاسِطُ',tr:'Al-Baasit',ku:'فراخکار'},{n:22,ar:'الْخَافِضُ',tr:'Al-Khaafid',ku:'دەخوازینەر'},{n:23,ar:'الرَّافِعُ',tr:"Ar-Raafi'",ku:'برزکار'},{n:24,ar:'الْمُعِزُّ',tr:"Al-Mu'izz",ku:'بریزدارکار'},{n:25,ar:'الْمُذِلُّ',tr:'Al-Mudhill',ku:'بێبریزی دەر'},{n:26,ar:'السَّمِيعُ',tr:"As-Samee'",ku:'بیستکار'},{n:27,ar:'الْبَصِيرُ',tr:'Al-Baseer',ku:'بینەر'},{n:28,ar:'الْحَكَمُ',tr:'Al-Hakam',ku:'دادوەر'},{n:29,ar:'الْعَدْلُ',tr:"Al-'Adl",ku:'دادپەروەر'},{n:30,ar:'اللَّطِيفُ',tr:'Al-Lateef',ku:'نەرمدڵ'},
+  {n:31,ar:'الْخَبِيرُ',tr:'Al-Khabeer',ku:'ئاگادار'},{n:32,ar:'الْحَلِيمُ',tr:'Al-Haleem',ku:'بردبار'},{n:33,ar:'الْعَظِيمُ',tr:"Al-'Azeem",ku:'گەورە'},{n:34,ar:'الْغَفُورُ',tr:'Al-Ghafoor',ku:'بەخشینکار'},{n:35,ar:'الشَّكُورُ',tr:'Ash-Shakoor',ku:'سوپاسگوزار'},{n:36,ar:'الْعَلِيُّ',tr:"Al-'Aliyy",ku:'برز'},{n:37,ar:'الْكَبِيرُ',tr:'Al-Kabeer',ku:'گەورە'},{n:38,ar:'الْحَفِيظُ',tr:'Al-Hafeez',ku:'پاراستووار'},{n:39,ar:'الْمُقِيتُ',tr:'Al-Muqeet',ku:'خواردن دەر'},{n:40,ar:'الْحَسِيبُ',tr:'Al-Haseeb',ku:'هەژمارکار'},
+  {n:41,ar:'الْجَلِيلُ',tr:'Al-Jaleel',ku:'شکۆمەند'},{n:42,ar:'الْكَرِيمُ',tr:'Al-Kareem',ku:'بەخشاو'},{n:43,ar:'الرَّقِيبُ',tr:'Ar-Raqeeb',ku:'چاودێر'},{n:44,ar:'الْمُجِيبُ',tr:'Al-Mujeeb',ku:'وەڵامدەر'},{n:45,ar:'الْوَاسِعُ',tr:'Al-Waasi',ku:'فراخ'},{n:46,ar:'الْحَكِيمُ',tr:'Al-Hakeem',ku:'پوخت'},{n:47,ar:'الْوَدُودُ',tr:'Al-Wadood',ku:'خۆشەویست'},{n:48,ar:'الْمَجِيدُ',tr:'Al-Majeed',ku:'شکۆمەند'},{n:49,ar:'الْبَاعِثُ',tr:'Al-Baaith',ku:'هەڵداگرتنکار'},{n:50,ar:'الشَّهِيدُ',tr:'Ash-Shaheed',ku:'شاهید'},
+  {n:51,ar:'الْحَقُّ',tr:'Al-Haqq',ku:'ڕاستی'},{n:52,ar:'الْوَكِيلُ',tr:'Al-Wakeel',ku:'باڵغایەتی'},{n:53,ar:'الْقَوِيُّ',tr:'Al-Qawiyy',ku:'بەهێز'},{n:54,ar:'الْمَتِينُ',tr:'Al-Mateen',ku:'بەهێزی قایم'},{n:55,ar:'الْوَلِيُّ',tr:'Al-Waliyy',ku:'دۆست'},{n:56,ar:'الْحَمِيدُ',tr:'Al-Hameed',ku:'ستوودراو'},{n:57,ar:'الْمُحْصِي',tr:'Al-Muhsee',ku:'ژمێرکار'},{n:58,ar:'الْمُبْدِئُ',tr:"Al-Mubdi'",ku:'دەستپێکردنکار'},{n:59,ar:'الْمُعِيدُ',tr:"Al-Mu'eed",ku:'گەڕاندنەوەکار'},{n:60,ar:'الْمُحْيِي',tr:'Al-Muhyee',ku:'ژیانی دەر'},
+  {n:61,ar:'الْمُمِيتُ',tr:'Al-Mumeet',ku:'مردن دەر'},{n:62,ar:'الْحَيُّ',tr:'Al-Hayy',ku:'ژیان'},{n:63,ar:'الْقَيُّومُ',tr:'Al-Qayyoom',ku:'هەمیشەیی'},{n:64,ar:'الْوَاجِدُ',tr:'Al-Waajid',ku:'دۆزینەوەکار'},{n:65,ar:'الْمَاجِدُ',tr:'Al-Maajid',ku:'شکۆمەند'},{n:66,ar:'الْوَاحِدُ',tr:'Al-Waahid',ku:'یەکێ'},{n:67,ar:'الْأَحَدُ',tr:"Al-Ahad",ku:'یەکتا'},{n:68,ar:'الصَّمَدُ',tr:'As-Samad',ku:'بێنیاز'},{n:69,ar:'الْقَادِرُ',tr:'Al-Qaadir',ku:'توانادار'},{n:70,ar:'الْمُقْتَدِرُ',tr:'Al-Muqtadir',ku:'توانادارێ گەورە'},
+  {n:71,ar:'الْمُقَدِّمُ',tr:'Al-Muqaddim',ku:'پێشخستنکار'},{n:72,ar:'الْمُؤَخِّرُ',tr:"Al-Mu'akhkhir",ku:'پشتخستنکار'},{n:73,ar:'الْأَوَّلُ',tr:"Al-Awwal",ku:'یەکەم'},{n:74,ar:'الْآخِرُ',tr:"Al-Aakhir",ku:'دوایی'},{n:75,ar:'الظَّاهِرُ',tr:'Az-Zaahir',ku:'ئاشکرا'},{n:76,ar:'الْبَاطِنُ',tr:'Al-Baatin',ku:'نهێنی'},{n:77,ar:'الْوَالِي',tr:'Al-Waali',ku:'والی'},{n:78,ar:'الْمُتَعَالِي',tr:"Al-Muta'aali",ku:'بەرزترین'},{n:79,ar:'الْبَرُّ',tr:'Al-Barr',ku:'چاکەکار'},{n:80,ar:'التَّوَّابُ',tr:'At-Tawwaab',ku:'تۆبەپەسەندکار'},
+  {n:81,ar:'الْمُنْتَقِمُ',tr:'Al-Muntaqim',ku:'تۆڵەستانکار'},{n:82,ar:'الْعَفُوُّ',tr:"Al-'Afuww",ku:'بەخشینکار'},{n:83,ar:'الرَّؤُوفُ',tr:"Ar-Ra'oof",ku:'نەرمدڵ'},{n:84,ar:'مَالِكُ الْمُلْكِ',tr:'Maalik-ul-Mulk',ku:'خاوەنی پاشایەتی'},{n:85,ar:'ذُو الْجَلَالِ وَالْإِكْرَامِ',tr:'Dhul-Jalaali wal-Ikraam',ku:'خاوەنی شکۆ و ئیکرام'},{n:86,ar:'الْمُقْسِطُ',tr:'Al-Muqsit',ku:'دادگەر'},{n:87,ar:'الْجَامِعُ',tr:'Al-Jaami',ku:'کۆکردنەوەکار'},{n:88,ar:'الْغَنِيُّ',tr:'Al-Ghaniyy',ku:'بێنیاز'},{n:89,ar:'الْمُغْنِي',tr:'Al-Mughnee',ku:'دەوڵەمەند دەکات'},{n:90,ar:'الْمَانِعُ',tr:'Al-Maani',ku:'بازدارنکار'},
+  {n:91,ar:'الضَّارُّ',tr:'Ad-Daarr',ku:'زیان دەر'},{n:92,ar:'النَّافِعُ',tr:'An-Naafi',ku:'سوود دەر'},{n:93,ar:'النُّورُ',tr:'An-Noor',ku:'ڕووناکی'},{n:94,ar:'الْهَادِي',tr:'Al-Haadee',ku:'ڕێنیشاندەر'},{n:95,ar:'الْبَدِيعُ',tr:"Al-Badee'",ku:'دروستکارێ نوێ'},{n:96,ar:'الْبَاقِي',tr:'Al-Baaqee',ku:'هەمیشە مایەوە'},{n:97,ar:'الْوَارِثُ',tr:'Al-Waarith',ku:'وارس'},{n:98,ar:'الرَّشِيدُ',tr:'Ar-Rasheed',ku:'ڕێنیشاندەر'},{n:99,ar:'الصَّبُورُ',tr:'As-Saboor',ku:'بردبار'}
+];
+function renderAsma99() {
+    var q = (document.getElementById('asma-search') || {value:''}).value.toLowerCase();
+    var filtered = q ? ASMA_DATA_ADMIN.filter(function(a){
+        return a.ar.includes(q) || a.tr.toLowerCase().includes(q) || a.ku.includes(q);
+    }) : ASMA_DATA_ADMIN;
+    var grid = document.getElementById('asma-grid'); if (!grid) return;
+    grid.textContent = '';
+    var countEl = document.getElementById('asma-count');
+    if (countEl) countEl.textContent = filtered.length + ' / 99 names';
+    filtered.forEach(function(a) {
+        var card = mke('div', 'asma-card');
+        var num = mke('div', 'asma-card-num'); num.textContent = '#' + a.n;
+        var ar  = mke('div', 'asma-card-ar');  ar.textContent  = a.ar;
+        var tr  = mke('div', 'asma-card-tr');  tr.textContent  = a.tr;
+        var ku  = mke('div', 'asma-card-ku');  ku.textContent  = a.ku;
+        card.appendChild(num); card.appendChild(ar); card.appendChild(tr); card.appendChild(ku);
+        grid.appendChild(card);
+    });
+}
+function filterAsma(q) { renderAsma99(); }
 
 /* ── Theme toggle ── */
 (function() {
