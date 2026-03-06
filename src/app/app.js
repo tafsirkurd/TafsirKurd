@@ -59,6 +59,7 @@ var SURAHS=[
 var JUZS={1:1,2:2,3:2,4:3,5:4,6:4,7:5,8:6,9:7,10:8,11:9,12:11,13:12,14:13,15:15,16:17,17:18,18:20,19:21,20:23,21:25,22:27,23:29,24:31,25:34,26:36,27:39,28:46,29:51,30:67};
 
 var RECITERS=[
+  {id:'Raad_Al_Kurdi',                name:'رعد محمد الکردي',             flag:'/assets/icons/flag-krd.svg',style:'murattal',surahMode:true,surahBase:'https://server6.mp3quran.net/kurdi/'},
   {id:'Alafasy_128kbps',              name:'مشاري العفاسي',              flag:'🇰🇼',style:'murattal'},
   {id:'Nasser_Alqatami_128kbps',      name:'ناصر القطامي',               flag:'🇰🇼',style:'murattal'},
   {id:'Ahmed_ibn_Ali_al-Ajamy_128kbps-almanar',name:'أحمد العجمي',       flag:'🇰🇼',style:'murattal'},
@@ -81,8 +82,7 @@ var RECITERS=[
   {id:'Minshawy_Murattal_128kbps',    name:'محمد المنشاوي',              flag:'🇪🇬',style:'murattal'},
   {id:'Husary_128kbps',               name:'محمود الحصري',               flag:'🇪🇬',style:'murattal'},
   {id:'Mustafa_Ismail_48kbps',        name:'مصطفى إسماعيل',             flag:'🇪🇬',style:'mujawwad'},
-  {id:'Mohammad_al_Tablaway_128kbps', name:'محمد الطبلاوي',              flag:'🇪🇬',style:'murattal'},
-  {id:'Raad_Al_Kurdi',                name:'رعد محمد الکردي',             flag:'☀️',style:'murattal',surahMode:true,surahBase:'https://server6.mp3quran.net/kurdi/'}
+  {id:'Mohammad_al_Tablaway_128kbps', name:'محمد الطبلاوي',              flag:'🇪🇬',style:'murattal'}
 ];
 var RECITER=localStorage.getItem('app_reciter')||'Alafasy_128kbps';
 
@@ -2233,7 +2233,7 @@ function renderAudioSettings(){
   var styleLbls={murattal:'مورتل',mujawwad:'مجود',hadr:'حدر'};
   RECITERS.forEach(function(r){
     var item=el('div','reciter-item'+(r.id===RECITER?' on':''));
-    if(r.flag){var flagEl=el('span','reciter-flag',r.flag);item.appendChild(flagEl);}
+    if(r.flag){var flagEl;if(r.flag.charAt(0)==='/'){flagEl=document.createElement('img');flagEl.src=r.flag;flagEl.className='reciter-flag-img';flagEl.alt='';}else{flagEl=el('span','reciter-flag',r.flag);}item.appendChild(flagEl);}
     var info=el('div','reciter-info');
     var nameRow=el('div','reciter-name-row');
     nameRow.appendChild(el('span','reciter-name',r.name));
