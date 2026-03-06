@@ -419,22 +419,5 @@
   "qs.actions": "چالاکییەکان",
   "qs.jump_to": "ببڕە بۆ ئایەت",
   "qs.go": "برۆ",
-  "qs.jump_audio": "ببڕە بۆ ئایەتی دەنگ",
-
-  "gencine.zakat": "زەکات",
-  "gencine.zakat_sub": "حسابکرنا زەکاتا مالی",
-  "zakat.gold_price": "نرخا زیو / گرام",
-  "zakat.nisab": "نیساب",
-  "zakat.gold": "زیو",
-  "zakat.assets": "داهاتوی زەکاتێ",
-  "zakat.cash": "پارە و بانک",
-  "zakat.gold_value": "نرخا زیو",
-  "zakat.business": "بازرگانی",
-  "zakat.receivables": "دەستدارانێ",
-  "zakat.deductions": "دەبران",
-  "zakat.debts": "قەرز",
-  "zakat.total": "کۆی گشتی",
-  "zakat.due": "زەکاتا دەعمە",
-  "zakat.eligible": "زەکات لازمە",
-  "zakat.not_eligible": "زەکات نالازمە"
+  "qs.jump_audio": "ببڕە بۆ ئایەتی دەنگ"
 }

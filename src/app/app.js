@@ -59,7 +59,6 @@ var SURAHS=[
 var JUZS={1:1,2:2,3:2,4:3,5:4,6:4,7:5,8:6,9:7,10:8,11:9,12:11,13:12,14:13,15:15,16:17,17:18,18:20,19:21,20:23,21:25,22:27,23:29,24:31,25:34,26:36,27:39,28:46,29:51,30:67};
 
 var RECITERS=[
-  {id:'Raad_Al_Kurdi',                name:'رعد محمد الکردي',             flag:'/assets/icons/flag-krd.svg',style:'murattal',surahMode:true,surahBase:'https://server6.mp3quran.net/kurdi/'},
   {id:'Alafasy_128kbps',              name:'مشاري العفاسي',              flag:'🇰🇼',style:'murattal'},
   {id:'Nasser_Alqatami_128kbps',      name:'ناصر القطامي',               flag:'🇰🇼',style:'murattal'},
   {id:'Ahmed_ibn_Ali_al-Ajamy_128kbps-almanar',name:'أحمد العجمي',       flag:'🇰🇼',style:'murattal'},
@@ -88,8 +87,6 @@ var RECITER=localStorage.getItem('app_reciter')||'Alafasy_128kbps';
 
 /* ===== AUDIO HELPERS ===== */
 function audioUrl(surah,ayah){
-  var r=RECITERS.find(function(x){return x.id===RECITER;});
-  if(r&&r.surahMode)return r.surahBase+String(surah).padStart(3,'0')+'.mp3';
   return 'https://everyayah.com/data/'+RECITER+'/'+String(surah).padStart(3,'0')+String(ayah).padStart(3,'0')+'.mp3';
 }
 

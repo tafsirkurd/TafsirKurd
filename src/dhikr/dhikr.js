@@ -8,8 +8,7 @@ function _sections(){
     { name:'hadith', label:T('gencine.hadith','حەدیس'),     sub:T('gencine.hadith_sub','فەرمودێن پێغەمبەرێ ئیسلامێ'),           icon:'fas fa-scroll'             },
     { name:'dua',    label:T('gencine.dua','دوعا'),          sub:T('gencine.dua_sub','دعاهای بەیانی، ئێوار و زیاتر'),           icon:'fa-solid fa-person-praying' },
     { name:'tasbih', label:T('gencine.tasbih','تەسبیح'),    sub:T('gencine.tasbih_sub','ژمارتنا دیکرێن ئیسلامی'),              icon:'fas fa-rotate'             },
-    { name:'asma',   label:T('gencine.asma','ناوێن خوا'),   sub:T('gencine.asma_sub','٩٩ ناوێن گەورەیێ خوایێ بەزەیی کار'),   icon:'fas fa-star-and-crescent' },
-    { name:'zakat',  label:T('gencine.zakat','زەکات'),        sub:T('gencine.zakat_sub','حسابکرنای زەکاتا مالی'),                  icon:'fas fa-coins'             }
+    { name:'asma',   label:T('gencine.asma','ناوێن خوا'),   sub:T('gencine.asma_sub','٩٩ ناوێن گەورەیێ خوایێ بەزەیی کار'),   icon:'fas fa-star-and-crescent' }
   ];
   if (!_dbSections || !_dbSections.length) return all;
   var activeMap = {};
@@ -417,7 +416,6 @@ window.GencineUI = {
     else if(this._view === 'dua')    this._renderDua(el);
     else if(this._view === 'tasbih') this._renderTasbih(el);
     else if(this._view === 'asma')   this._renderAsma(el);
-    else if(this._view === 'zakat') this._renderZakat(el);
     else                             this._renderHadith(el);
   },
 
@@ -722,156 +720,6 @@ window.GencineUI = {
   /* ═══════════════════ HADITH ═══════════════════ */
 
   /* Relevance score for a hadith against query q (0 = no match) */
-  _renderZakat: function(container) {
-    var self = this;
-    var T = window.t || function(k,d){ return d||k; };
-    container.appendChild(this._backRow(T("gencine.zakat","زەکات")));
-
-    var wrap = document.createElement("div");
-    wrap.className = "zakat-wrap";
-
-    /* Gold price card */
-    var priceCard = document.createElement("div");
-    priceCard.className = "zakat-price-card";
-    var priceLbl = document.createElement("div");
-    priceLbl.className = "zakat-price-label";
-    priceLbl.textContent = T("zakat.gold_price","نرخا زیو / گرام");
-    priceCard.appendChild(priceLbl);
-    var priceRow = document.createElement("div");
-    priceRow.className = "zakat-price-row";
-    var priceInput = document.createElement("input");
-    priceInput.className = "zakat-input";
-    priceInput.type = "number"; priceInput.min = "0"; priceInput.step = "0.01";
-    priceInput.value = localStorage.getItem("zakatGoldPrice") || "100";
-    priceInput.placeholder = "100";
-    priceRow.appendChild(priceInput);
-    var priceUnit = document.createElement("span");
-    priceUnit.className = "zakat-unit";
-    priceUnit.textContent = "$";
-    priceRow.appendChild(priceUnit);
-    priceCard.appendChild(priceRow);
-    var nisabNote = document.createElement("div");
-    nisabNote.className = "zakat-nisab-note";
-    priceCard.appendChild(nisabNote);
-    wrap.appendChild(priceCard);
-
-    /* Assets title */
-    var assetTitle = document.createElement("div");
-    assetTitle.className = "zakat-section-title";
-    assetTitle.textContent = T("zakat.assets","داهاتوی زەکاتێ");
-    wrap.appendChild(assetTitle);
-
-    var fieldDefs = [
-      {key:"cash",        label:T("zakat.cash","پارە و بانک"),          icon:"fa-money-bill-wave"},
-      {key:"gold",        label:T("zakat.gold_value","نرخا زیو"),        icon:"fa-coins"},
-      {key:"business",    label:T("zakat.business","بازرگانی"),          icon:"fa-store"},
-      {key:"receivables", label:T("zakat.receivables","دەستدارانێ"),     icon:"fa-handshake"}
-    ];
-    var inputs = {};
-
-    fieldDefs.forEach(function(f) {
-      var row = document.createElement("div");
-      row.className = "zakat-field-row";
-      var lbl = document.createElement("label");
-      lbl.className = "zakat-field-label";
-      var ico = document.createElement("i");
-      ico.className = "fas "+f.icon+" zakat-field-ico";
-      lbl.appendChild(ico);
-      var lblTxt = document.createElement("span");
-      lblTxt.textContent = f.label;
-      lbl.appendChild(lblTxt);
-      row.appendChild(lbl);
-      var inp = document.createElement("input");
-      inp.className = "zakat-input zakat-field-inp";
-      inp.type = "number"; inp.min = "0"; inp.step = "0.01";
-      inp.value = "0"; inp.placeholder = "0";
-      row.appendChild(inp);
-      inputs[f.key] = inp;
-      wrap.appendChild(row);
-    });
-
-    /* Deductions */
-    var debtTitle = document.createElement("div");
-    debtTitle.className = "zakat-section-title";
-    debtTitle.textContent = T("zakat.deductions","دەبران");
-    wrap.appendChild(debtTitle);
-
-    var debtRow = document.createElement("div");
-    debtRow.className = "zakat-field-row";
-    var debtLbl = document.createElement("label");
-    debtLbl.className = "zakat-field-label";
-    var debtIco = document.createElement("i");
-    debtIco.className = "fas fa-minus-circle zakat-field-ico zakat-debt-ico";
-    debtLbl.appendChild(debtIco);
-    var debtLblTxt = document.createElement("span");
-    debtLblTxt.textContent = T("zakat.debts","قەرز");
-    debtLbl.appendChild(debtLblTxt);
-    debtRow.appendChild(debtLbl);
-    var debtInp = document.createElement("input");
-    debtInp.className = "zakat-input zakat-field-inp";
-    debtInp.type = "number"; debtInp.min = "0"; debtInp.step = "0.01";
-    debtInp.value = "0"; debtInp.placeholder = "0";
-    debtRow.appendChild(debtInp);
-    inputs["debts"] = debtInp;
-    wrap.appendChild(debtRow);
-
-    /* Result card */
-    var resultCard = document.createElement("div");
-    resultCard.className = "zakat-result";
-    wrap.appendChild(resultCard);
-    container.appendChild(wrap);
-
-    function calc() {
-      var goldPrice = parseFloat(priceInput.value) || 0;
-      if (priceInput.value) localStorage.setItem("zakatGoldPrice", priceInput.value);
-      var nisab = +(87.48 * goldPrice).toFixed(2);
-      nisabNote.textContent = T("zakat.nisab","نیساب")+": $"+(goldPrice>0 ? nisab.toLocaleString("en",{maximumFractionDigits:2}) : "—")+" (87.48g "+T("zakat.gold","زیو")+")";
-
-      var total = 0;
-      ["cash","gold","business","receivables"].forEach(function(k){
-        total += parseFloat(inputs[k].value) || 0;
-      });
-      total -= parseFloat(inputs["debts"].value) || 0;
-      if (total < 0) total = 0;
-
-      while (resultCard.firstChild) resultCard.removeChild(resultCard.firstChild);
-
-      function mkRow(lbl,val,extraCls){
-        var r=document.createElement("div");
-        r.className="zakat-result-row"+(extraCls?" "+extraCls:"");
-        var l=document.createElement("span");
-        l.className="zakat-result-lbl"+(extraCls?" zakat-due-lbl":"");
-        l.textContent=lbl; r.appendChild(l);
-        var v=document.createElement("span");
-        v.className="zakat-result-val"+(extraCls?" zakat-due-val":"");
-        v.textContent=val; r.appendChild(v);
-        return r;
-      }
-      resultCard.appendChild(mkRow(T("zakat.total","کۆی گشتی"),"$"+total.toLocaleString("en",{maximumFractionDigits:2})));
-      resultCard.appendChild(mkRow(T("zakat.nisab","نیساب"),"$"+(goldPrice>0?nisab.toLocaleString("en",{maximumFractionDigits:2}):"—")));
-
-      var badge = document.createElement("div");
-      if (goldPrice > 0 && total >= nisab) {
-        badge.className = "zakat-status eligible";
-        badge.textContent = "✅ "+T("zakat.eligible","زەکات لازمە");
-        resultCard.appendChild(badge);
-        resultCard.appendChild(mkRow(
-          T("zakat.due","زەکاتا دەعمە")+" (2.5%)",
-          "$"+(total*0.025).toLocaleString("en",{maximumFractionDigits:2}),
-          "zakat-due-row"
-        ));
-      } else {
-        badge.className = "zakat-status not-eligible";
-        badge.textContent = goldPrice === 0 ? "" : "❌ "+T("zakat.not_eligible","زەکات نالازمە");
-        resultCard.appendChild(badge);
-      }
-    }
-
-    priceInput.addEventListener("input", calc);
-    Object.keys(inputs).forEach(function(k){ inputs[k].addEventListener("input", calc); });
-    calc();
-  },
-
   _scoreHadith: function(h, q) {
     if (!q) return 1;
     function stripD(s) { return s.replace(/[\u064B-\u065F\u0670]/g, ''); }
