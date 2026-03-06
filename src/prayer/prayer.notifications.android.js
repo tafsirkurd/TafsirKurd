@@ -144,7 +144,7 @@
           id: ID_BASE + dayOffset * 5 + PRAYER_IDX[name],
           title: title,
           body: body,
-          schedule: { at: at },
+          schedule: { at: at, allowWhileIdle: true },
           channelId: channelId,
           sound: soundFile,
           smallIcon: 'ic_notification'
@@ -195,7 +195,7 @@
       id: 200,
       title: window.t ? window.t('prayer.notif_title') : 'بانگ',
       body:  window.t ? window.t('prayer.test_notif_body') : 'تاقیکردنا بانگ — ئاگادارکرن چاکە دیکا!',
-      schedule: { at: at },
+      schedule: { at: at, allowWhileIdle: true },
       channelId: channelId,
       sound: 'athan_' + voice,
       smallIcon: 'ic_notification'

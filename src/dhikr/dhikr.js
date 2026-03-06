@@ -8,7 +8,8 @@ function _sections(){
     { name:'hadith', label:T('gencine.hadith','حەدیس'),     sub:T('gencine.hadith_sub','فەرمودێن پێغەمبەرێ ئیسلامێ'),           icon:'fas fa-scroll'             },
     { name:'dua',    label:T('gencine.dua','دوعا'),          sub:T('gencine.dua_sub','دعاهای بەیانی، ئێوار و زیاتر'),           icon:'fa-solid fa-person-praying' },
     { name:'tasbih', label:T('gencine.tasbih','تەسبیح'),    sub:T('gencine.tasbih_sub','ژمارتنا دیکرێن ئیسلامی'),              icon:'fas fa-rotate'             },
-    { name:'asma',   label:T('gencine.asma','ناوێن خوا'),   sub:T('gencine.asma_sub','٩٩ ناوێن گەورەیێ خوایێ بەزەیی کار'),   icon:'fas fa-star-and-crescent' }
+    { name:'asma',   label:T('gencine.asma','ناوێن خوا'),   sub:T('gencine.asma_sub','٩٩ ناوێن گەورەیێ خوایێ بەزەیی کار'),   icon:'fas fa-star-and-crescent' },
+    { name:'books',  label:T('gencine.books','کتێب'),        sub:T('gencine.books_sub','کتێبێن ئیسلامی'),                       icon:'fas fa-book-open' }
   ];
   if (!_dbSections || !_dbSections.length) return all;
   var activeMap = {};
@@ -134,16 +135,16 @@ var IMG_LOADED = {};
 })();
 
 var DHIKR_LIST = [
-  {ar:'سُبْحَانَ اللَّهِ',                    ku:'سبحان الله'},
-  {ar:'الْحَمْدُ لِلَّهِ',                    ku:'الحمد لله'},
-  {ar:'اللَّهُ أَكْبَرُ',                     ku:'الله أكبر'},
-  {ar:'لَا إِلَهَ إِلَّا اللَّهُ',            ku:'لا اله الا الله'},
-  {ar:'أَسْتَغْفِرُ اللَّهَ',                 ku:'استغفر الله'},
-  {ar:'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',       ku:'سبحان الله وبحمده'},
-  {ar:'سُبْحَانَ اللَّهِ الْعَظِيمِ',         ku:'سبحان الله العظیم'},
-  {ar:'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ',     ku:'صلات بەسەر پێغەمبەر'},
-  {ar:'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ', ku:'لا حوله ولا قوه'},
-  {ar:'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ', ku:'بسم الله الرحمن الرحیم'}
+  {ar:'سُبْحَانَ اللَّهِ',                         ku:'سبحان الله',                key:'سبحان'},
+  {ar:'الْحَمْدُ لِلَّهِ',                         ku:'الحمد لله',                 key:'الحمد'},
+  {ar:'اللَّهُ أَكْبَرُ',                          ku:'الله أكبر',                  key:'اكبر'},
+  {ar:'لَا إِلَهَ إِلَّا اللَّهُ',                ku:'لا اله الا الله',           key:'الا'},
+  {ar:'أَسْتَغْفِرُ اللَّهَ',                      ku:'استغفر الله',                key:'استغفر'},
+  {ar:'سُبْحَانَ اللَّهِ وَبِحَمْدِهِ',       ku:'سبحان الله وبحمده',         key:'وبحمده'},
+  {ar:'سُبْحَانَ اللَّهِ الْعَظِيمِ',              ku:'سبحان الله العظيم',         key:'العظيم'},
+  {ar:'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ',          ku:'صلات بەسەر پێغەمبەر',       key:'محمد'},
+  {ar:'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ', ku:'لا حوله ولا قوه',          key:'حوله'},
+  {ar:'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',     ku:'بسم الله الرحمن الرحيم',   key:'الرحمن'}
 ];
 
 /* Fallback hardcoded categories — used when Supabase not available */
@@ -154,7 +155,7 @@ var FALLBACK_CAT_LABELS = {
 };
 
 var TARGET_PRESETS = [33, 66, 99, 100, 500, 1000];
-var RING_R    = 91;
+var RING_R    = 110;
 var RING_CIRC = 2 * Math.PI * RING_R;
 
 /* ── Supabase data cache ── */
@@ -164,6 +165,7 @@ var _dbHadiths  = null;   /* [{title, ar, ku, source}] */
 var _dbSections = null;   /* [{key, active, sort_order}] */
 var _dbTasbih   = null;   /* [{ar, ku, sort_order}] */
 var _dbAsma99   = null;   /* [{n, ku}] overrides */
+var _dbBooks    = [];
 var _loadingDb  = false;
 var _dbLoaded   = false;
 
@@ -194,10 +196,12 @@ function _initDbData(onDone) {
   var cachedDuas     = _readCache('gencine_duas_v1');
   var cachedHadiths  = _readCache('gencine_hadiths_v2');
   var cachedSections = _readCache('gencine_sections_v1');
+  var cachedBooks    = _readCache('gencine_books_v1');
   var cachedTasbih   = _readCache('gencine_tasbih_v1');
   var cachedAsma99   = _readCache('gencine_asma99_v1');
 
   if (cachedSections) _dbSections = cachedSections;
+  if (cachedBooks)    _dbBooks    = cachedBooks;
 
   if (cachedCats && cachedDuas && cachedHadiths) {
     _dbCats    = cachedCats;
@@ -242,10 +246,12 @@ function _fetchDbData(onDone) {
   var sectionsPromise = sb.from('gencine_sections').select('*').order('sort_order');
   var tasbihPromise   = sb.from('gencine_tasbih').select('*').eq('active', true).order('sort_order');
   var asma99Promise   = sb.from('gencine_asma99').select('n,ku');
+  var booksPromise    = sb.from('gencine_books').select('*').eq('active', true).order('sort_order');
 
-  Promise.all([catsPromise, duasPromise, hadithsPromise, sectionsPromise]).then(function(results) {
+  var booksPromise    = sb.from('gencine_books').select('*').eq('active', true).order('sort_order');
+  Promise.all([catsPromise, duasPromise, hadithsPromise, sectionsPromise, booksPromise]).then(function(results) {
     _loadingDb = false;
-    var catRes = results[0], duaRes = results[1], hadithRes = results[2], secRes = results[3];
+    var catRes = results[0], duaRes = results[1], hadithRes = results[2], secRes = results[3], bookRes = results[4];
     if (!catRes.error && catRes.data) {
       _dbCats = catRes.data;
       _writeCache('gencine_cats_v1', _dbCats);
@@ -262,6 +268,7 @@ function _fetchDbData(onDone) {
       _dbSections = secRes.data;
       _writeCache('gencine_sections_v1', _dbSections);
     }
+    if (!bookRes.error && bookRes.data) { _dbBooks = bookRes.data; _writeCache('gencine_books_v1', _dbBooks); }
     _dbLoaded = true;
     if (onDone) onDone();
   }).catch(function() {
@@ -353,6 +360,14 @@ window.GencineUI = {
   _tasbihDhikrIdx:  0,
   _hadithDetailIdx: null,   /* null = list view; number = detail view */
   _hadithSearch:    '',     /* current search query */
+  _voiceActive:     false,
+  _recognition:     null,
+  _voiceListener:   null,
+  _bookCat:         'all',
+  _currentBook:     null,
+  _pdfDoc:          null,
+  _pdfPage:         1,
+  _pdfRendering:    false,
 
   /* ── state persistence ── */
   _loadState: function(){
@@ -411,12 +426,15 @@ window.GencineUI = {
   _draw: function(){
     var el = $('gencineContent');
     if(!el) return;
+    if(this._view !== 'tasbih' && this._voiceActive) this._stopVoice();
     while(el.firstChild) el.removeChild(el.firstChild);
     if(this._view === 'home')        this._renderHome(el);
     else if(this._view === 'dua')    this._renderDua(el);
     else if(this._view === 'tasbih') this._renderTasbih(el);
-    else if(this._view === 'asma')   this._renderAsma(el);
-    else                             this._renderHadith(el);
+    else if(this._view === 'asma')       this._renderAsma(el);
+    else if(this._view === 'books')       this._renderBooks(el);
+    else if(this._view === 'book-reader') this._renderBookReader(el);
+    else                                  this._renderHadith(el);
   },
 
   /* ═══════════════════ HOME ═══════════════════ */
@@ -436,18 +454,10 @@ window.GencineUI = {
       var cardImg = document.createElement('img');
       cardImg.className = 'genc-card-img';
       cardImg.alt = '';
-      if(IMG_LOADED[sec.name]){
-        cardImg.src = url;
-        btn.classList.add('has-image');
-      } else {
-        (function(b, img, name){
-          img.onload = function(){
-            IMG_LOADED[name] = true;
-            b.classList.add('has-image');
-          };
-          img.src = url;
-        })(btn, cardImg, sec.name);
-      }
+      /* Always apply has-image immediately — overlay + text colours render
+         correctly at once. Image opacity-fades in via CSS when it loads. */
+      cardImg.src = url;
+      btn.classList.add('has-image');
       btn.appendChild(cardImg);
 
       /* Overlay */
@@ -600,94 +610,68 @@ window.GencineUI = {
     container.appendChild(list);
   },
 
-  /* ═══════════════════ TASBIH ═══════════════════ */
+  /* ═════════════════════ TASBIH ═════════════════════ */
   _renderTasbih: function(container){
     var self = this;
     var T = window.t || function(k,d){ return d||k; };
-    container.appendChild(this._backRow(T('gencine.tasbih','تەسبیح')));
+    container.appendChild(this._backRow(T('gencine.tasbih','تاسبیح')));
 
     var wrap = document.createElement('div');
     wrap.className = 'tasbih-wrap';
 
-    /* horizontal dhikr scroll */
-    var scrollWrap = document.createElement('div');
-    scrollWrap.className = 'tasbih-dhikr-scroll';
+    /* ── dhikr selector grid ── */
+    var grid = document.createElement('div');
+    grid.className = 'tasbih-dhikr-grid';
     var dhikrCards = [];
     _getTasbih().forEach(function(d, i){
       var card = document.createElement('button');
-      card.className = 'tasbih-dhikr-card' + (i === self._tasbihDhikrIdx ? ' on' : '');
-      var arEl = document.createElement('div');
-      arEl.className = 'tasbih-dhikr-card-ar';
-      arEl.textContent = d.ku;
-      card.appendChild(arEl);
+      card.className = 'tasbih-dhikr-pill' + (i === self._tasbihDhikrIdx ? ' on' : '');
+      card.textContent = d.ku;
       card.onclick = function(){
         self._tasbihDhikrIdx = i;
         self._tasbihCount = 0;
         self._saveState();
-        /* update active state in-place — no scroll reset */
         dhikrCards.forEach(function(c){ c.classList.remove('on'); });
         card.classList.add('on');
         card.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
         var display = $('tasbihDhikrDisplay');
-        if(display) display.textContent = DHIKR_LIST[i].ar;
+        if(display) display.textContent = (_getTasbih()[i]||{}).ar || '';
         self._updateRing();
       };
       dhikrCards.push(card);
-      scrollWrap.appendChild(card);
+      grid.appendChild(card);
     });
-    wrap.appendChild(scrollWrap);
+    wrap.appendChild(grid);
 
-    /* selected dhikr display */
+    /* ── dhikr Arabic display ── */
     var dhikrDisplay = document.createElement('div');
     dhikrDisplay.className = 'tasbih-dhikr-display';
     dhikrDisplay.id = 'tasbihDhikrDisplay';
-    dhikrDisplay.textContent = DHIKR_LIST[self._tasbihDhikrIdx].ar;
+    dhikrDisplay.textContent = ((_getTasbih()[self._tasbihDhikrIdx])||{}).ar || '';
     wrap.appendChild(dhikrDisplay);
 
-    /* target buttons */
-    var targetRow = document.createElement('div');
-    targetRow.className = 'tasbih-target-row';
-    var targetBtns = [];
-    TARGET_PRESETS.forEach(function(n){
-      var btn = document.createElement('button');
-      btn.className = 'tasbih-target-btn' + (n === self._tasbihTarget ? ' on' : '');
-      btn.textContent = n;
-      btn.onclick = function(){
-        self._tasbihTarget = n;
-        self._tasbihCount = 0;
-        self._saveState();
-        /* update active state in-place — no scroll reset */
-        targetBtns.forEach(function(b){ b.classList.remove('on'); });
-        btn.classList.add('on');
-        self._updateRing();
-      };
-      targetBtns.push(btn);
-      targetRow.appendChild(btn);
-    });
-    wrap.appendChild(targetRow);
-
-    /* SVG ring */
+    /* ── SVG ring (bigger: 260px) ── */
     var ringWrap = document.createElement('div');
     ringWrap.className = 'tasbih-ring';
 
     var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-    svg.setAttribute('viewBox','0 0 220 220');
-    svg.setAttribute('width','220');
-    svg.setAttribute('height','220');
+    svg.setAttribute('viewBox','0 0 260 260');
+    svg.setAttribute('width','260');
+    svg.setAttribute('height','260');
 
     var track = document.createElementNS('http://www.w3.org/2000/svg','circle');
     track.setAttribute('class','tasbih-ring-track');
-    track.setAttribute('cx','110'); track.setAttribute('cy','110'); track.setAttribute('r', RING_R);
+    track.setAttribute('cx','130'); track.setAttribute('cy','130'); track.setAttribute('r', RING_R);
     svg.appendChild(track);
 
-    var fill = document.createElementNS('http://www.w3.org/2000/svg','circle');
-    fill.setAttribute('class','tasbih-ring-fill');
-    fill.setAttribute('cx','110'); fill.setAttribute('cy','110'); fill.setAttribute('r', RING_R);
-    fill.setAttribute('stroke-dasharray', RING_CIRC);
+    var fillEl = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    fillEl.setAttribute('class','tasbih-ring-fill');
+    fillEl.setAttribute('cx','130'); fillEl.setAttribute('cy','130'); fillEl.setAttribute('r', RING_R);
+    fillEl.setAttribute('stroke-dasharray', RING_CIRC);
     var pct = Math.min(self._tasbihCount / Math.max(self._tasbihTarget, 1), 1);
-    fill.setAttribute('stroke-dashoffset', RING_CIRC * (1 - pct));
-    fill.id = 'tasbihRingFill';
-    svg.appendChild(fill);
+    fillEl.setAttribute('stroke-dashoffset', RING_CIRC * (1 - pct));
+    fillEl.id = 'tasbihRingFill';
+    svg.appendChild(fillEl);
     ringWrap.appendChild(svg);
 
     /* tap button */
@@ -701,25 +685,84 @@ window.GencineUI = {
     var countOf = document.createElement('div');
     countOf.className = 'tasbih-count-of';
     countOf.id = 'tasbihCountOf';
-    countOf.textContent = '/ ' + self._tasbihTarget;
+    countOf.textContent = 'من ' + self._tasbihTarget;
     tapBtn.appendChild(countOf);
+    var tapHint = document.createElement('div');
+    tapHint.className = 'tasbih-tap-hint';
+    tapHint.textContent = T('gencine.tap_hint','بتاپینێ');
+    tapBtn.appendChild(tapHint);
     tapBtn.onclick = function(){ self._tasbihTap(); };
     ringWrap.appendChild(tapBtn);
     wrap.appendChild(ringWrap);
 
-    /* reset button */
+    /* ── target presets ── */
+    var targetRow = document.createElement('div');
+    targetRow.className = 'tasbih-target-row';
+    var targetBtns = [];
+    TARGET_PRESETS.forEach(function(n){
+      var btn = document.createElement('button');
+      btn.className = 'tasbih-target-btn' + (n === self._tasbihTarget ? ' on' : '');
+      btn.textContent = n;
+      btn.onclick = function(){
+        self._tasbihTarget = n;
+        self._tasbihCount = 0;
+        self._saveState();
+        targetBtns.forEach(function(b){ b.classList.remove('on'); });
+        btn.classList.add('on');
+        self._updateRing();
+      };
+      targetBtns.push(btn);
+      targetRow.appendChild(btn);
+    });
+    wrap.appendChild(targetRow);
+
+    /* ── action row: reset + voice ── */
+    var actionRow = document.createElement('div');
+    actionRow.className = 'tasbih-action-row';
+
     var resetBtn = document.createElement('button');
     resetBtn.className = 'tasbih-reset-btn';
-    resetBtn.textContent = T('gencine.reset','سفر');
+    var resetI = document.createElement('i');
+    resetI.className = 'fas fa-rotate-left';
+    resetBtn.appendChild(resetI);
+    var resetLbl = document.createElement('span');
+    resetLbl.textContent = T('gencine.reset','سفر');
+    resetBtn.appendChild(resetLbl);
     resetBtn.onclick = function(){ self._tasbihReset(); };
-    wrap.appendChild(resetBtn);
+    actionRow.appendChild(resetBtn);
+
+    var voiceBtn = document.createElement('button');
+    voiceBtn.id = 'tasbihVoiceBtn';
+    voiceBtn.className = 'tasbih-voice-btn' + (self._voiceActive ? ' on' : '');
+    var micI = document.createElement('i');
+    micI.className = 'fas fa-microphone mic-icon';
+    voiceBtn.appendChild(micI);
+    var voiceLbl = document.createElement('span');
+    voiceLbl.id = 'tasbihVoiceLbl';
+    voiceLbl.textContent = self._voiceActive ? T('gencine.voice_listening','...دابیستم') : T('gencine.voice_start','دانگ');
+    voiceBtn.appendChild(voiceLbl);
+    var bars = document.createElement('div');
+    bars.id = 'tasbihVoiceBars';
+    bars.className = 'tasbih-voice-bars ' + (self._voiceActive ? 'active' : 'idle');
+    for(var b = 0; b < 5; b++){
+      var bar = document.createElement('div');
+      bar.className = 'tasbih-voice-bar';
+      bars.appendChild(bar);
+    }
+    voiceBtn.appendChild(bars);
+    voiceBtn.onclick = function(){ self._toggleVoice(); };
+    actionRow.appendChild(voiceBtn);
+    wrap.appendChild(actionRow);
+
+    /* transcript */
+    var tscript = document.createElement('div');
+    tscript.id = 'tasbihVoiceTranscript';
+    tscript.className = 'tasbih-voice-transcript';
+    wrap.appendChild(tscript);
 
     container.appendChild(wrap);
   },
 
-  /* ═══════════════════ HADITH ═══════════════════ */
-
-  /* Relevance score for a hadith against query q (0 = no match) */
   _scoreHadith: function(h, q) {
     if (!q) return 1;
     function stripD(s) { return s.replace(/[\u064B-\u065F\u0670]/g, ''); }
@@ -1110,6 +1153,361 @@ window.GencineUI = {
     if(fill){
       var pct = Math.min(this._tasbihCount / Math.max(this._tasbihTarget, 1), 1);
       fill.setAttribute('stroke-dashoffset', RING_CIRC * (1 - pct));
+    }
+  },
+  /* =========== VOICE TASBIH =========== */
+  _toggleVoice: function(){
+    if(this._voiceActive){ this._stopVoice(); } else { this._startVoice(); }
+  },
+
+  _normalizeAr: function(s){
+    return s
+      .replace(/[\u064B-\u065F\u0670\u0671\u0651\u0652]/g,'')
+      .replace(/[آأإٱٲٳ]/g,'ا')
+      .replace(/ة/g,'ه').replace(/ى/g,'ي')
+      .replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/ء/g,'')
+      .trim().replace(/\s+/g,' ');
+  },
+
+  _countMatches: function(transcript){
+    var self = this;
+    var t = self._normalizeAr(transcript);
+    var tNoSpace = t.replace(/\s/g,'');
+    var list = _getTasbih();
+    var dhikr = list[self._tasbihDhikrIdx];
+    if(!dhikr) return 0;
+    function countIn(h,n){ if(!n)return 0; var x=0,p=0; while((p=h.indexOf(n,p))!==-1){x++;p+=n.length;} return x; }
+    var COMMON = {'الله':1,'اله':1,'لا':1,'في':1,'من':1,'على':1,'و':1,'ب':1,'ل':1};
+    var best = 0;
+    /* S0: hardcoded key — single most distinctive word, bypasses generic filtering */
+    if(dhikr.key){
+      var c0 = countIn(t, dhikr.key);
+      if(c0 > best) best = c0;
+    }
+    var sources = [self._normalizeAr(dhikr.ku), self._normalizeAr(dhikr.ar)];
+    for(var k=0;k<sources.length;k++){
+      var tgt=sources[k]; if(!tgt) continue;
+      /* S1: full phrase */
+      var c1=countIn(t,tgt); if(c1>best)best=c1;
+      /* S2: no-space (handles merged transcripts) */
+      var c2=countIn(tNoSpace,tgt.replace(/\s/g,'')); if(c2>best)best=c2;
+      var words=tgt.split(' ');
+      var kws=words.filter(function(w){return w.length>=3&&!COMMON[w];});
+      if(!kws.length)kws=words.filter(function(w){return w.length>=2&&!COMMON[w];});
+      if(!kws.length)kws=words.filter(function(w){return w.length>=2;});
+      if(!kws.length)kws=words;
+      /* S3: min-count across ALL keywords = complete repetitions only */
+      if(kws.length>=2){
+        var minC=Infinity;
+        for(var wi=0;wi<kws.length;wi++){ var wc=countIn(t,kws[wi]); if(wc<minC)minC=wc; }
+        if(minC>0&&minC<Infinity&&minC>best)best=minC;
+      }
+      /* S4: longest single keyword count */
+      kws.sort(function(a,b){return b.length-a.length;});
+      var c3=countIn(t,kws[0]); if(c3>best)best=c3;
+      /* S5: any keyword present = at least 1 */
+      if(!best)for(var w=0;w<kws.length;w++){if(t.includes(kws[w])){best=1;break;}}
+    }
+    return best;
+  },
+
+  _startVoice: function(){
+    var self = this;
+    var SR = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition;
+    if(!SR){
+      var T = window.t || function(k,d){ return d||k; };
+      alert(T('gencine.voice_unsupported','Voice recognition not supported.'));
+      return;
+    }
+    SR.requestPermissions().then(function(){
+      self._voiceActive = true;
+      self._updateVoiceBtn();
+      self._voiceLoop();
+    }).catch(function(){
+      var T = window.t || function(k,d){ return d||k; };
+      alert(T('gencine.voice_unsupported','Microphone permission denied.'));
+    });
+  },
+
+  _voiceLoop: function(){
+    var self = this;
+    if(!self._voiceActive) return;
+    var SR = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition;
+    if(!SR) return;
+    SR.start({
+      language: 'ar-SA',
+      maxResults: 10,
+      popup: false
+    }).then(function(result){
+      if(!self._voiceActive) return;
+      var matches = result && result.matches ? result.matches : [];
+      var best = 0; var bestText = '';
+      for(var i=0;i<matches.length;i++){
+        var n=self._countMatches(matches[i]);
+        if(n>best){best=n;bestText=matches[i];}
+      }
+      if(best>0){
+        self._showTranscript(bestText, best);
+        for(var j=0;j<best;j++) self._tasbihTap();
+      }
+      self._voiceLoop();
+    }).catch(function(){
+      if(self._voiceActive) self._voiceLoop();
+    });
+  },
+
+  _stopVoice: function(){
+    var self = this;
+    self._voiceActive = false;
+    var SR = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SpeechRecognition;
+    if(SR){ SR.stop().catch(function(){}); }
+    self._showTranscript('', 0);
+    self._updateVoiceBtn();
+  },
+
+  _showTranscript: function(text, count){
+    var self = this;
+    var el = document.getElementById('tasbihVoiceTranscript');
+    if(!el) return;
+    if(!text){ el.textContent=''; el.classList.remove('visible'); return; }
+    el.textContent = text + (count>1 ? ' ×'+count : '');
+    el.classList.add('visible');
+    clearTimeout(self._transcriptTimer);
+    self._transcriptTimer = setTimeout(function(){
+      el.classList.remove('visible');
+    }, 2500);
+  },
+
+  /* =========== BOOKS =========== */
+  _renderBooks: function(container){
+    var self = this;
+    var T = window.t || function(k,d){ return d||k; };
+    container.appendChild(this._backRow(T('gencine.books','کتێب')));
+
+    var books = _dbBooks.filter(function(b){ return b.active !== false; });
+
+    /* Category filter */
+    var cats = ['all'];
+    books.forEach(function(b){ if(b.category && cats.indexOf(b.category) === -1) cats.push(b.category); });
+
+    if (cats.length > 1) {
+      var catRow = document.createElement('div');
+      catRow.className = 'book-cat-row';
+      cats.forEach(function(cat){
+        var btn = document.createElement('button');
+        btn.className = 'book-cat-btn' + (cat === self._bookCat ? ' on' : '');
+        btn.textContent = cat === 'all' ? T('gencine.cat_all','هەمێ') : cat;
+        btn.onclick = function(){ self._bookCat = cat; self._draw(); };
+        catRow.appendChild(btn);
+      });
+      container.appendChild(catRow);
+    }
+
+    var filtered = self._bookCat === 'all' ? books : books.filter(function(b){ return b.category === self._bookCat; });
+
+    if (!filtered.length) {
+      var empty = document.createElement('div');
+      empty.className = 'genc-coming';
+      var ei = document.createElement('i'); ei.className = 'fas fa-book-open genc-coming-icon';
+      var et = document.createElement('div'); et.className = 'genc-coming-title'; et.textContent = T('gencine.books_empty','کتێبەكە نیە');
+      empty.appendChild(ei); empty.appendChild(et);
+      container.appendChild(empty);
+      return;
+    }
+
+    var grid = document.createElement('div');
+    grid.className = 'book-grid';
+
+    filtered.forEach(function(book){
+      var card = document.createElement('button');
+      card.className = 'book-card';
+      card.onclick = function(){
+        self._currentBook = book;
+        self._pdfDoc = null;
+        self._pdfPage = 1;
+        self._view = 'book-reader';
+        self._draw();
+      };
+
+      var coverWrap = document.createElement('div');
+      coverWrap.className = 'book-cover-wrap';
+      if (book.cover_url) {
+        var img = document.createElement('img');
+        img.className = 'book-cover';
+        img.src = book.cover_url;
+        img.alt = book.title_ku || '';
+        coverWrap.appendChild(img);
+      } else {
+        var placeholder = document.createElement('div');
+        placeholder.className = 'book-cover-placeholder';
+        var pi = document.createElement('i'); pi.className = 'fas fa-book';
+        placeholder.appendChild(pi);
+        coverWrap.appendChild(placeholder);
+      }
+      card.appendChild(coverWrap);
+
+      var info = document.createElement('div');
+      info.className = 'book-info';
+      var title = document.createElement('div');
+      title.className = 'book-title';
+      title.textContent = book.title_ku || book.title_ar || '';
+      info.appendChild(title);
+      if (book.author_ku || book.author_ar) {
+        var author = document.createElement('div');
+        author.className = 'book-author';
+        author.textContent = book.author_ku || book.author_ar;
+        info.appendChild(author);
+      }
+      if (book.pages) {
+        var pages = document.createElement('div');
+        pages.className = 'book-pages';
+        pages.textContent = book.pages + ' ڕۆپەل';
+        info.appendChild(pages);
+      }
+      card.appendChild(info);
+      grid.appendChild(card);
+    });
+
+    container.appendChild(grid);
+  },
+
+  _renderBookReader: function(container){
+    var self = this;
+    var book = self._currentBook;
+    if (!book) { self._view = 'books'; self._draw(); return; }
+    var T = window.t || function(k,d){ return d||k; };
+
+    /* Back row */
+    container.appendChild(this._backRow(book.title_ku || book.title_ar || T('gencine.books','کتێب'), function(){
+      self._view = 'books';
+      self._draw();
+    }));
+
+    /* Reader wrap */
+    var wrap = document.createElement('div');
+    wrap.className = 'book-reader-wrap';
+
+    /* Canvas for PDF rendering */
+    var canvas = document.createElement('canvas');
+    canvas.id = 'bookReaderCanvas';
+    canvas.className = 'book-reader-canvas';
+    wrap.appendChild(canvas);
+
+    /* Loading indicator */
+    var loadingEl = document.createElement('div');
+    loadingEl.className = 'book-reader-loading';
+    loadingEl.id = 'bookReaderLoading';
+    var spinner = document.createElement('i');
+    spinner.className = 'fas fa-spinner fa-spin';
+    loadingEl.appendChild(spinner);
+    loadingEl.appendChild(document.createTextNode(' ' + T('gencine.books_loading','باركردن...')));
+    wrap.appendChild(loadingEl);
+
+    /* Nav bar */
+    var nav = document.createElement('div');
+    nav.className = 'book-reader-nav';
+
+    var prevBtn = document.createElement('button');
+    prevBtn.className = 'book-nav-btn';
+    prevBtn.id = 'bookNavPrev';
+    var pi = document.createElement('i'); pi.className = 'fas fa-chevron-right';
+    prevBtn.appendChild(pi);
+    prevBtn.onclick = function(){ if(self._pdfPage > 1) self._goBookPage(self._pdfPage - 1); };
+    nav.appendChild(prevBtn);
+
+    var pageInfo = document.createElement('div');
+    pageInfo.className = 'book-nav-page';
+    pageInfo.id = 'bookNavPage';
+    pageInfo.textContent = '...';
+    nav.appendChild(pageInfo);
+
+    var nextBtn = document.createElement('button');
+    nextBtn.className = 'book-nav-btn';
+    nextBtn.id = 'bookNavNext';
+    var ni = document.createElement('i'); ni.className = 'fas fa-chevron-left';
+    nextBtn.appendChild(ni);
+    nextBtn.onclick = function(){ if(self._pdfDoc && self._pdfPage < self._pdfDoc.numPages) self._goBookPage(self._pdfPage + 1); };
+    nav.appendChild(nextBtn);
+
+    wrap.appendChild(nav);
+    container.appendChild(wrap);
+
+    /* Load PDF */
+    if (self._pdfDoc) {
+      /* Already loaded — just render current page */
+      self._goBookPage(self._pdfPage);
+    } else {
+      var pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+      if (!pdfjsLib) {
+        loadingEl.textContent = 'PDF.js not loaded';
+        return;
+      }
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      pdfjsLib.getDocument({ url: book.pdf_url, cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/', cMapPacked: true })
+        .promise.then(function(pdf){
+          self._pdfDoc = pdf;
+          self._goBookPage(self._pdfPage);
+        }).catch(function(e){
+          loadingEl.textContent = T('gencine.books_error','هەلەیەک هەیە');
+          console.error('PDF load error:', e);
+        });
+    }
+  },
+
+  _goBookPage: function(pageNum){
+    var self = this;
+    var pdf = self._pdfDoc;
+    if (!pdf || self._pdfRendering) return;
+    var canvas = document.getElementById('bookReaderCanvas');
+    var loadingEl = document.getElementById('bookReaderLoading');
+    var pageInfo = document.getElementById('bookNavPage');
+    var prevBtn = document.getElementById('bookNavPrev');
+    var nextBtn = document.getElementById('bookNavNext');
+    if (!canvas) return;
+
+    self._pdfRendering = true;
+    if (loadingEl) { loadingEl.style.display = 'flex'; }
+    if (canvas) canvas.style.opacity = '0.4';
+
+    pdf.getPage(pageNum).then(function(page){
+      var containerWidth = canvas.parentElement ? canvas.parentElement.offsetWidth : window.innerWidth;
+      var unscaledViewport = page.getViewport({ scale: 1 });
+      var scale = (containerWidth - 4) / unscaledViewport.width;
+      var viewport = page.getViewport({ scale: scale });
+      canvas.width  = viewport.width;
+      canvas.height = viewport.height;
+
+      var ctx = canvas.getContext('2d');
+      page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function(){
+        self._pdfPage = pageNum;
+        self._pdfRendering = false;
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (canvas) canvas.style.opacity = '1';
+        if (pageInfo) pageInfo.textContent = pageNum + ' / ' + pdf.numPages;
+        if (prevBtn) prevBtn.disabled = (pageNum <= 1);
+        if (nextBtn) nextBtn.disabled = (pageNum >= pdf.numPages);
+      });
+    }).catch(function(){
+      self._pdfRendering = false;
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (canvas) canvas.style.opacity = '1';
+    });
+  },
+
+  _updateVoiceBtn: function(){
+    var btn = document.getElementById('tasbihVoiceBtn');
+    var lbl = document.getElementById('tasbihVoiceLbl');
+    var bars = document.getElementById('tasbihVoiceBars');
+    var T = window.t || function(k,d){ return d||k; };
+    if(!btn) return;
+    if(this._voiceActive){
+      btn.classList.add('on');
+      if(lbl) lbl.textContent = T('gencine.voice_listening','...دابیستم');
+      if(bars){ bars.classList.remove('idle'); bars.classList.add('active'); }
+    } else {
+      btn.classList.remove('on');
+      if(lbl) lbl.textContent = T('gencine.voice_start','دانگ');
+      if(bars){ bars.classList.remove('active'); bars.classList.add('idle'); }
     }
   }
 };

@@ -696,6 +696,11 @@
                     99 Names
                     <span class="tab-count" id="tab-count-asma99">99</span>
                 </button>
+                <button class="platform-tab" onclick="switchTab('books')">
+                    <i data-lucide="book-open" style="width:15px;height:15px"></i>
+                    Books
+                    <span class="tab-count" id="tab-count-books">0</span>
+                </button>
             </div>
 
             <!-- ── CATEGORIES ── -->
@@ -902,6 +907,107 @@
                 </div>
                 <div id="hadith-list" class="items-list"></div>
             </div>
+
+            <!-- ── BOOKS ── -->
+            <div id="panel-books" class="view-panel">
+                <input type="hidden" id="book-edit-id">
+                <div class="add-form-wrap">
+                    <button class="add-form-toggle" id="book-form-toggle" onclick="toggleForm('book')">
+                        <i data-lucide="plus"></i>
+                        <span id="book-form-toggle-label">Add Book</span>
+                    </button>
+                    <div class="add-form-body" id="book-form-body">
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Kurdish Title *</label>
+                                    <input type="text" id="book-title-ku" class="form-input" placeholder="ناڤێ کتێبێ" dir="rtl">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Arabic Title</label>
+                                    <input type="text" id="book-title-ar" class="form-input" placeholder="عنوان الكتاب" dir="rtl">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Author (Kurdish)</label>
+                                    <input type="text" id="book-author-ku" class="form-input" placeholder="ناڤێ نووسەر" dir="rtl">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Author (Arabic)</label>
+                                    <input type="text" id="book-author-ar" class="form-input" placeholder="اسم المؤلف" dir="rtl">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Category</label>
+                                    <input type="text" id="book-category" class="form-input" placeholder="e.g. فقه, تفسیر, سیرە">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Pages</label>
+                                    <input type="number" id="book-pages" class="form-input" placeholder="320" min="1">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group" style="flex:2">
+                                    <label class="form-label">PDF URL (paste Cloudflare R2 link)</label>
+                                    <input type="url" id="book-pdf-url" class="form-input" placeholder="https://pub-xxx.r2.dev/books/book.pdf">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group" style="flex:2">
+                                    <label class="form-label">Description</label>
+                                    <textarea id="book-description" class="form-input" rows="2" placeholder="Short description..." dir="rtl" style="resize:vertical"></textarea>
+                                </div>
+                            </div>
+                            <!-- Cover image upload -->
+                            <div class="form-row">
+                                <div class="form-group" style="flex:2">
+                                    <label class="form-label">Cover Image (pick from your PC)</label>
+                                    <div style="display:flex;gap:12px;align-items:flex-start">
+                                        <div id="book-cover-preview" style="width:80px;height:110px;border-radius:8px;background:var(--bg-active);border:2px dashed var(--border-medium);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+                                            <i data-lucide="image" style="width:24px;height:24px;color:var(--text-tertiary)"></i>
+                                        </div>
+                                        <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+                                            <label style="cursor:pointer">
+                                                <input type="file" id="book-cover-file" accept="image/*" style="display:none" onchange="previewCover(this)">
+                                                <span class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+                                                    <i data-lucide="upload" style="width:14px;height:14px"></i>
+                                                    Pick Image
+                                                </span>
+                                            </label>
+                                            <input type="url" id="book-cover-url" class="form-input" placeholder="or paste URL directly" style="font-size:12px">
+                                            <div id="book-cover-upload-status" style="font-size:12px;color:var(--text-tertiary)"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Sort Order</label>
+                                    <input type="number" id="book-sort" class="form-input" placeholder="0" value="0">
+                                </div>
+                                <div class="form-group" style="align-self:flex-end;padding-bottom:4px">
+                                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-secondary)">
+                                        <input type="checkbox" id="book-active" checked style="width:16px;height:16px;accent-color:var(--primary)">
+                                        Active (visible in app)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveBook()">
+                                <i data-lucide="save"></i> Save Book
+                            </button>
+                            <button class="btn btn-secondary" onclick="cancelBookEdit()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-toolbar">
+                    <span class="list-count" id="book-count"></span>
+                </div>
+                <div id="book-list" class="items-list"></div>
+            </div>
         </div>
     </main>
 </div>
@@ -915,8 +1021,8 @@
 
 /* ── Tab switching ── */
 var currentTab = 'categories';
-var TAB_NAMES = ['categories','duas','hadiths','tasbih','asma99'];
-var addLabels = { categories: 'Add Category', duas: 'Add Dua', hadiths: 'Add Hadith', tasbih: 'Add Dhikr', asma99: '' };
+var TAB_NAMES = ['categories','duas','hadiths','tasbih','asma99','books'];
+var addLabels = { categories: 'Add Category', duas: 'Add Dua', hadiths: 'Add Hadith', tasbih: 'Add Dhikr', asma99: '', books: 'Add Book' };
 
 function switchTab(name) {
     currentTab = name;
@@ -928,6 +1034,7 @@ function switchTab(name) {
     var addBtn = document.getElementById('top-add-btn');
     if (addBtn) addBtn.style.display = name === 'asma99' ? 'none' : '';
     if (name === 'tasbih') renderTasbihList();
+    if (name === 'books') renderBooksList();
     document.getElementById('top-add-label').textContent = addLabels[name] || 'Add';
     if (name === 'asma99') renderAsma99();
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -936,7 +1043,9 @@ function switchTab(name) {
 /* ── Top Add button — opens the relevant form ── */
 function topAddClick() {
     if (currentTab === 'asma99') return;
-    toggleForm(currentTab === 'categories' ? 'cat' : currentTab === 'duas' ? 'dua' : 'hadith');
+    var prefixMap = { categories: 'cat', duas: 'dua', hadiths: 'hadith', tasbih: 'tasbih', books: 'book' };
+    var prefix = prefixMap[currentTab] || currentTab;
+    toggleForm(prefix);
 }
 
 /* ── Collapsible forms ── */
@@ -983,6 +1092,7 @@ var allCategories = [];
 var allDuas = [];
 var allHadiths = [];
 var allSections = [];
+var allBooks = [];
 var duaFilterCat = 'all';
 
 function updateStats() {
@@ -992,9 +1102,10 @@ function updateStats() {
     document.getElementById('tab-count-cats').textContent    = allCategories.length;
     document.getElementById('tab-count-duas').textContent    = allDuas.length;
     document.getElementById('tab-count-hadiths').textContent = allHadiths.length;
+    document.getElementById('tab-count-books').textContent   = allBooks.length;
 }
 
-async function loadAll() { await Promise.all([loadCategories(), loadDuas(), loadHadiths(), loadSections(), loadTasbih(), loadAsma99Overrides()]); }
+async function loadAll() { await Promise.all([loadCategories(), loadDuas(), loadHadiths(), loadSections(), loadTasbih(), loadBooks()]); }
 
 async function loadCategories() {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
@@ -1464,6 +1575,210 @@ function renderAsma99() {
     });
 }
 function filterAsma(q) { renderAsma99(); }
+
+/* ── BOOKS ── */
+async function loadBooks() {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_books').select('*').order('sort_order');
+    if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+    allBooks = r.data || [];
+    renderBooksList(); updateStats();
+}
+
+function renderBooksList() {
+    var list = document.getElementById('book-list'); if (!list) return;
+    list.textContent = '';
+    var countEl = document.getElementById('book-count');
+    if (countEl) countEl.textContent = allBooks.length + ' books';
+    if (!allBooks.length) {
+        var es = mke('div', 'empty-state');
+        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','book-open'); eico.appendChild(ei);
+        var ep = mke('p'); ep.textContent = 'No books yet. Add one above.';
+        es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
+        if (typeof lucide !== 'undefined') lucide.createIcons(); return;
+    }
+    allBooks.forEach(function(book) {
+        var card = mke('div', 'item-card');
+        /* Thumbnail */
+        var thumb = mke('div', 'item-card-icon');
+        thumb.style.cssText = 'width:52px;height:70px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--bg-active);';
+        if (book.cover_url) {
+            var img = document.createElement('img');
+            img.src = book.cover_url; img.alt = '';
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+            thumb.appendChild(img);
+        } else {
+            var ico = mke('i'); ico.setAttribute('data-lucide','book'); thumb.appendChild(ico);
+        }
+        var body = mke('div', 'item-card-body');
+        var titleEl = mke('div', 'item-card-title'); titleEl.textContent = book.title_ku || book.title_ar || '(no title)'; body.appendChild(titleEl);
+        if (book.author_ku || book.author_ar) {
+            var auth = mke('div', 'item-card-ku'); auth.textContent = book.author_ku || book.author_ar; body.appendChild(auth);
+        }
+        var meta = mke('div', 'item-card-meta');
+        if (book.category) { var cb = mke('span', 'badge badge-cat'); cb.textContent = book.category; meta.appendChild(cb); }
+        if (book.pages) { var pb = mke('span', 'badge badge-repeat'); pb.textContent = book.pages + ' pages'; meta.appendChild(pb); }
+        var ab = mke('span', 'badge'); ab.style.cssText = book.active ? 'background:rgba(34,197,94,.1);color:#16a34a' : 'background:var(--bg-active);color:var(--text-tertiary)';
+        ab.textContent = book.active ? 'Active' : 'Hidden'; meta.appendChild(ab);
+        body.appendChild(meta);
+        var acts = mke('div', 'item-card-actions');
+        acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(b){ return function(){ editBook(b.id); }; })(book)));
+        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, (function(id){ return function(){ deleteBook(id); }; })(book.id)));
+        card.appendChild(thumb); card.appendChild(body); card.appendChild(acts);
+        list.appendChild(card);
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function editBook(id) {
+    var book = allBooks.find(function(b){ return b.id === id; }); if (!book) return;
+    document.getElementById('book-edit-id').value = id;
+    document.getElementById('book-title-ku').value = book.title_ku || '';
+    document.getElementById('book-title-ar').value = book.title_ar || '';
+    document.getElementById('book-author-ku').value = book.author_ku || '';
+    document.getElementById('book-author-ar').value = book.author_ar || '';
+    document.getElementById('book-category').value = book.category || '';
+    document.getElementById('book-pages').value = book.pages || '';
+    document.getElementById('book-pdf-url').value = book.pdf_url || '';
+    document.getElementById('book-description').value = book.description || '';
+    document.getElementById('book-cover-url').value = book.cover_url || '';
+    document.getElementById('book-sort').value = book.sort_order || 0;
+    document.getElementById('book-active').checked = book.active !== false;
+    /* Show cover preview if URL exists */
+    var preview = document.getElementById('book-cover-preview');
+    if (preview) {
+        preview.textContent = '';
+        if (book.cover_url) {
+            var img = document.createElement('img');
+            img.src = book.cover_url; img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:6px;';
+            preview.appendChild(img);
+        } else {
+            var ico = mke('i'); ico.setAttribute('data-lucide','image');
+            ico.style.cssText = 'width:24px;height:24px;color:var(--text-tertiary)';
+            preview.appendChild(ico);
+        }
+    }
+    document.getElementById('book-form-toggle-label').textContent = 'Editing: ' + (book.title_ku || book.title_ar || 'book');
+    switchTab('books'); openForm('book');
+}
+
+function cancelBookEdit() {
+    document.getElementById('book-edit-id').value = '';
+    ['book-title-ku','book-title-ar','book-author-ku','book-author-ar','book-category',
+     'book-pages','book-pdf-url','book-description','book-cover-url'].forEach(function(id) {
+        var el = document.getElementById(id); if (el) el.value = '';
+    });
+    document.getElementById('book-sort').value = '0';
+    document.getElementById('book-active').checked = true;
+    document.getElementById('book-cover-file').value = '';
+    var preview = document.getElementById('book-cover-preview');
+    if (preview) {
+        preview.textContent = '';
+        var ico = mke('i'); ico.setAttribute('data-lucide','image');
+        ico.style.cssText = 'width:24px;height:24px;color:var(--text-tertiary)';
+        preview.appendChild(ico);
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+    document.getElementById('book-cover-upload-status').textContent = '';
+    document.getElementById('book-form-toggle-label').textContent = 'Add Book';
+    closeForm('book');
+}
+
+function previewCover(input) {
+    var file = input.files && input.files[0]; if (!file) return;
+    var preview = document.getElementById('book-cover-preview');
+    if (!preview) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        preview.textContent = '';
+        var img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:6px;';
+        preview.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+    /* Clear direct URL field when file is chosen */
+    document.getElementById('book-cover-url').value = '';
+}
+
+async function uploadCover(file) {
+    var token = sessionStorage.getItem('adminToken');
+    if (!token) { showNotification('Not authenticated', 'error'); return null; }
+
+    /* 1. Get a presigned R2 URL from our Pages Function */
+    var presignRes = await fetch('/s3-upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ filename: file.name, contentType: file.type, folder: 'book-covers', bucket: 'tafsirkurd-books' })
+    });
+    if (!presignRes.ok) {
+        var err = await presignRes.json().catch(function(){ return {}; });
+        showNotification('Cover presign failed: ' + (err.error || presignRes.status), 'error');
+        return null;
+    }
+    var presign = await presignRes.json();
+
+    /* 2. PUT the file directly to R2 via the presigned URL */
+    var putRes = await fetch(presign.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file
+    });
+    if (!putRes.ok) {
+        showNotification('Cover upload to R2 failed: ' + putRes.status, 'error');
+        return null;
+    }
+
+    return presign.publicUrl;
+}
+
+async function saveBook() {
+    var titleKu = document.getElementById('book-title-ku').value.trim();
+    var titleAr = document.getElementById('book-title-ar').value.trim();
+    if (!titleKu && !titleAr) { showNotification('At least one title is required.', 'warning'); return; }
+
+    var statusEl = document.getElementById('book-cover-upload-status');
+    var coverUrl = document.getElementById('book-cover-url').value.trim() || null;
+    var fileInput = document.getElementById('book-cover-file');
+
+    /* Upload cover file if one was picked */
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        if (statusEl) statusEl.textContent = 'Uploading cover...';
+        var uploaded = await uploadCover(fileInput.files[0]);
+        if (uploaded) coverUrl = uploaded;
+        if (statusEl) statusEl.textContent = uploaded ? 'Cover uploaded.' : 'Upload failed — using URL field.';
+    }
+
+    var payload = {
+        title_ku:    titleKu || null,
+        title_ar:    titleAr || null,
+        author_ku:   document.getElementById('book-author-ku').value.trim() || null,
+        author_ar:   document.getElementById('book-author-ar').value.trim() || null,
+        category:    document.getElementById('book-category').value.trim() || null,
+        pages:       parseInt(document.getElementById('book-pages').value) || null,
+        pdf_url:     document.getElementById('book-pdf-url').value.trim() || null,
+        description: document.getElementById('book-description').value.trim() || null,
+        cover_url:   coverUrl,
+        sort_order:  parseInt(document.getElementById('book-sort').value) || 0,
+        active:      document.getElementById('book-active').checked
+    };
+
+    var supabase = window.adminAuth.getSupabase();
+    var editId = document.getElementById('book-edit-id').value;
+    var r = editId ? await supabase.from('gencine_books').update(payload).eq('id', editId)
+                   : await supabase.from('gencine_books').insert(payload);
+    if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
+    showNotification(editId ? 'Book updated.' : 'Book added.', 'success');
+    cancelBookEdit(); await loadBooks(); localStorage.removeItem('gencine_books_v1');
+}
+
+async function deleteBook(id) {
+    var book = allBooks.find(function(b){ return b.id === id; });
+    if (!confirm('Delete "' + (book ? (book.title_ku || book.title_ar || id) : id) + '"?')) return;
+    var r = await window.adminAuth.getSupabase().from('gencine_books').delete().eq('id', id);
+    if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
+    showNotification('Book deleted.', 'success'); await loadBooks(); localStorage.removeItem('gencine_books_v1');
+}
 
 /* ── Theme toggle ── */
 (function() {

@@ -1101,29 +1101,23 @@ body{background:var(--bg);color:var(--text)}
 /* Gencine home — cinematic cards */
 .genc-home{display:flex;flex-direction:column;gap:14px;padding:20px 16px 32px}
 /* Base card — fully theme-aware */
-.genc-card-btn{position:relative;width:100%;height:150px;border-radius:24px;overflow:hidden;border:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s;display:block;background:var(--surface);box-shadow:0 4px 20px rgba(0,0,0,.1)}
-.genc-card-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s ease;z-index:0;border-radius:inherit}
+.genc-card-btn{position:relative;width:100%;height:150px;border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,.08);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s;display:block;background:linear-gradient(135deg,#1c3a5e 0%,#0d1f35 100%);box-shadow:0 4px 20px rgba(0,0,0,.25)}
+.genc-card-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s ease;z-index:0;border-radius:inherit}
 .genc-card-btn.has-image .genc-card-img{opacity:1}
 .genc-card-btn:active{transform:scale(.97)}
 /* Top accent bar */
-.genc-card-topbar{position:absolute;top:0;left:0;right:0;height:2px;z-index:3;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.7}
+.genc-card-topbar{position:absolute;top:0;left:0;right:0;height:2px;z-index:3;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);opacity:.7}
 /* Card body — anchored to bottom */
 .genc-card-body{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;padding:14px 18px 18px;gap:14px;direction:rtl;z-index:2}
-/* Icon */
-.genc-card-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;background:var(--surface-h);border:1px solid var(--border2);color:var(--accent)}
-/* Texts */
+/* Icon — always white-on-dark since card is always dark */
+.genc-card-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff}
+/* Texts — always white */
 .genc-card-texts{flex:1;direction:rtl;text-align:right}
-.genc-card-title{font-size:1.38rem;font-weight:800;color:var(--text);letter-spacing:.01em}
-.genc-card-sub{font-size:.74rem;color:var(--text3);margin-top:4px;line-height:1.5}
-.genc-card-arrow{color:var(--text3);font-size:.85rem;flex-shrink:0}
-/* Overlay — bottom-heavy gradient, shown only when image loaded */
-.genc-card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.5) 45%,rgba(0,0,0,.05) 100%);opacity:0;z-index:1;pointer-events:none;transition:opacity .35s ease}
-/* When image is loaded — overlay + text go white, no transition */
-.genc-card-btn.has-image .genc-card-overlay{opacity:1}
-.genc-card-btn.has-image .genc-card-title{color:#fff}
-.genc-card-btn.has-image .genc-card-sub{color:rgba(255,255,255,.55)}
-.genc-card-btn.has-image .genc-card-arrow{color:rgba(255,255,255,.4)}
-.genc-card-btn.has-image .genc-card-icon{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff}
+.genc-card-title{font-size:1.38rem;font-weight:800;color:#fff;letter-spacing:.01em}
+.genc-card-sub{font-size:.74rem;color:rgba(255,255,255,.55);margin-top:4px;line-height:1.5}
+.genc-card-arrow{color:rgba(255,255,255,.4);font-size:.85rem;flex-shrink:0}
+/* Overlay — always visible, no transition needed */
+.genc-card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,rgba(0,0,0,.3) 50%,rgba(0,0,0,.0) 100%);opacity:1;z-index:1;pointer-events:none}
 /* back row */
 .genc-back-row{display:flex;align-items:center;gap:12px;padding:12px 16px 4px}
 .genc-back-btn{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);cursor:pointer;flex-shrink:0}
@@ -1161,29 +1155,81 @@ body{background:var(--bg);color:var(--text)}
 .asma-ku{font-size:.72rem;color:var(--text2);direction:rtl;line-height:1.5;margin-top:2px}
 .asma-card-footer{display:flex;justify-content:flex-end;width:100%;margin-top:4px}
 /* Tasbih */
-.tasbih-wrap{display:flex;flex-direction:column;align-items:center;padding:8px 0 28px}
-.tasbih-dhikr-scroll{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:8px 16px;width:100%;box-sizing:border-box}
-.tasbih-dhikr-card{flex-shrink:0;padding:10px 14px;border-radius:12px;background:var(--bg2);border:1.5px solid var(--border);cursor:pointer;direction:rtl;transition:all .18s;text-align:center}
-.tasbih-dhikr-card.on{border-color:var(--accent);background:var(--surface)}
-.tasbih-dhikr-card-ar{font-size:.8rem;color:var(--text2);line-height:1.5}
-.tasbih-dhikr-card.on .tasbih-dhikr-card-ar{color:var(--accent);font-weight:600}
-.tasbih-dhikr-display{font-family:'KFGQPC Hafs',serif;font-size:1.5rem;color:var(--text);text-align:center;width:calc(100% - 32px);padding:16px 20px;background:var(--surface);border-radius:16px;border:1px solid var(--border);direction:rtl;line-height:2;margin:4px 16px 14px}
-.tasbih-target-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;justify-content:center;padding:0 16px}
-.tasbih-target-btn{padding:8px 16px;border-radius:var(--r-m);background:var(--bg2);color:var(--text2);border:1px solid var(--border);cursor:pointer;font-size:.82rem;font-weight:600;transition:all .18s}
-.tasbih-target-btn.on{background:var(--accent);color:var(--accent-t);border-color:transparent}
-.tasbih-ring{position:relative;width:220px;height:220px;margin:0 0 14px}
+/* ── Tasbih section ── */
+.tasbih-wrap{display:flex;flex-direction:column;align-items:center;padding:4px 0 32px;gap:0}
+/* Dhikr pill grid */
+.tasbih-dhikr-grid{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding:10px 16px 4px;width:100%;box-sizing:border-box}
+.tasbih-dhikr-pill{flex-shrink:0;padding:9px 16px;border-radius:20px;background:var(--bg2);border:1.5px solid var(--border);cursor:pointer;direction:rtl;transition:all .18s;font-size:.82rem;color:var(--text2);font-weight:500;white-space:nowrap}
+.tasbih-dhikr-pill.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--bg2));color:var(--accent);font-weight:700}
+/* Arabic dhikr display */
+.tasbih-dhikr-display{font-family:'KFGQPC Hafs',serif;font-size:1.55rem;color:var(--text);text-align:center;width:calc(100% - 32px);padding:14px 20px;background:var(--surface);border-radius:16px;border:1px solid var(--border);direction:rtl;line-height:2.1;margin:10px 16px 0}
+/* Ring */
+.tasbih-ring{position:relative;width:260px;height:260px;margin:14px 0 10px;flex-shrink:0}
 .tasbih-ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
-.tasbih-ring-track{fill:none;stroke:var(--bg2);stroke-width:14}
-.tasbih-ring-fill{fill:none;stroke:var(--accent);stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .3s}
-.tasbih-tap-btn{position:absolute;inset:16px;border-radius:50%;background:var(--surface);color:var(--text);border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;user-select:none;box-shadow:0 2px 16px rgba(0,0,0,.08)}
-.tasbih-count-num{font-size:3.8rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
-.tasbih-count-of{font-size:.74rem;color:var(--text3);margin-top:3px}
-.tasbih-reset-btn{padding:11px 36px;border-radius:var(--r-m);background:var(--bg2);color:var(--text2);border:1px solid var(--border);cursor:pointer;font-size:.88rem;font-weight:600}
+.tasbih-ring-track{fill:none;stroke:var(--bg2);stroke-width:16}
+.tasbih-ring-fill{fill:none;stroke:var(--accent);stroke-width:16;stroke-linecap:round;transition:stroke-dashoffset .35s cubic-bezier(.4,0,.2,1)}
+/* Tap button inside ring */
+.tasbih-tap-btn{position:absolute;inset:20px;border-radius:50%;background:var(--surface);color:var(--text);border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;user-select:none;box-shadow:0 4px 24px rgba(0,0,0,.1);transition:transform .1s,box-shadow .1s}
+.tasbih-tap-btn:active{transform:scale(.96);box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.tasbih-count-num{font-size:4.4rem;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.tasbih-count-of{font-size:.75rem;color:var(--text3);margin-top:2px;font-variant-numeric:tabular-nums}
+.tasbih-tap-hint{font-size:.65rem;color:var(--text3);margin-top:6px;opacity:.7}
+/* Target row */
+.tasbih-target-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:0 16px;margin-bottom:14px;width:100%;box-sizing:border-box}
+.tasbih-target-btn{padding:8px 14px;border-radius:var(--r-m);background:var(--bg2);color:var(--text2);border:1px solid var(--border);cursor:pointer;font-size:.8rem;font-weight:700;transition:all .18s;min-width:48px;text-align:center}
+.tasbih-target-btn.on{background:var(--accent);color:var(--accent-t);border-color:transparent;box-shadow:0 2px 8px color-mix(in srgb,var(--accent) 35%,transparent)}
+/* Action row: reset + voice side by side */
+.tasbih-action-row{display:flex;gap:10px;width:calc(100% - 32px);margin-bottom:10px}
+.tasbih-reset-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 0;border-radius:var(--r-l);background:var(--bg2);color:var(--text2);border:1px solid var(--border);cursor:pointer;font-size:.9rem;font-weight:600;transition:all .2s}
+.tasbih-reset-btn:active{transform:scale(.97)}
+/* Voice button */
+.tasbih-voice-btn{flex:2;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 0;border-radius:var(--r-l);background:var(--bg2);color:var(--text2);border:1.5px solid var(--border);cursor:pointer;font-size:.9rem;font-weight:700;transition:all .25s;position:relative;overflow:hidden}
+.tasbih-voice-btn .mic-icon{font-size:1.1rem;transition:transform .2s}
+.tasbih-voice-btn.on{background:var(--accent);color:var(--accent-t);border-color:transparent;box-shadow:0 4px 18px color-mix(in srgb,var(--accent) 40%,transparent)}
+.tasbih-voice-btn.on .mic-icon{animation:mic-bounce .5s ease-in-out infinite alternate}
+.tasbih-voice-btn.on::after{content:'';position:absolute;inset:-3px;border-radius:calc(var(--r-l) + 3px);border:2px solid var(--accent);animation:voice-ring 1.5s ease-out infinite;opacity:0;pointer-events:none}
+@keyframes mic-bounce{0%{transform:scale(1)}100%{transform:scale(1.3)}}
+@keyframes voice-ring{0%{opacity:.6;inset:-3px}100%{opacity:0;inset:-16px}}
+/* Waveform bars */
+.tasbih-voice-bars{display:flex;align-items:center;gap:2.5px;height:20px}
+.tasbih-voice-bar{width:3.5px;border-radius:2px;background:currentColor;opacity:.75}
+.tasbih-voice-bars.idle .tasbih-voice-bar{height:3px}
+.tasbih-voice-bars.active .tasbih-voice-bar:nth-child(1){animation:bar-wave .75s ease-in-out infinite}
+.tasbih-voice-bars.active .tasbih-voice-bar:nth-child(2){animation:bar-wave .75s ease-in-out .12s infinite}
+.tasbih-voice-bars.active .tasbih-voice-bar:nth-child(3){animation:bar-wave .75s ease-in-out .28s infinite}
+.tasbih-voice-bars.active .tasbih-voice-bar:nth-child(4){animation:bar-wave .75s ease-in-out .08s infinite}
+.tasbih-voice-bars.active .tasbih-voice-bar:nth-child(5){animation:bar-wave .75s ease-in-out .2s infinite}
+@keyframes bar-wave{0%,100%{height:3px}50%{height:17px}}
+/* Transcript */
+.tasbih-voice-transcript{font-size:.8rem;direction:rtl;min-height:20px;transition:all .3s;opacity:0;text-align:center;padding:0 16px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tasbih-voice-transcript.visible{opacity:1;color:var(--accent);font-weight:600}
 /* Hadith coming-soon */
 .genc-coming{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center;gap:14px}
 .genc-coming-icon{font-size:3rem;color:var(--accent)}
 .genc-coming-title{font-size:1.3rem;font-weight:800;color:var(--text)}
 .genc-coming-sub{font-size:.88rem;color:var(--text3);line-height:1.7;direction:rtl}
+/* ── Books ── */
+.book-cat-row{display:flex;gap:6px;padding:10px 16px 4px;overflow-x:auto;scrollbar-width:none}
+.book-cat-btn{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:.78rem;font-weight:600;background:var(--bg2);color:var(--text2);border:none;cursor:pointer;transition:all .2s}
+.book-cat-btn.on{background:var(--accent);color:var(--accent-t)}
+.book-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:12px 16px 32px}
+.book-card{background:var(--bg2);border-radius:16px;border:1px solid var(--border);overflow:hidden;cursor:pointer;text-align:right;direction:rtl;display:flex;flex-direction:column;transition:transform .15s;padding:0}
+.book-card:active{transform:scale(.97)}
+.book-cover-wrap{width:100%;aspect-ratio:2/3;overflow:hidden;background:var(--surface-h);display:flex;align-items:center;justify-content:center}
+.book-cover{width:100%;height:100%;object-fit:cover}
+.book-cover-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:var(--accent);background:linear-gradient(135deg,var(--bg2),var(--surface-h))}
+.book-info{padding:10px 10px 12px}
+.book-title{font-size:.82rem;font-weight:700;color:var(--text);line-height:1.4;margin-bottom:4px}
+.book-author{font-size:.72rem;color:var(--text2);margin-bottom:2px}
+.book-pages{font-size:.68rem;color:var(--text3)}
+/* ── Book Reader ── */
+.book-reader-wrap{display:flex;flex-direction:column;align-items:center;padding:8px 0 0}
+.book-reader-canvas{width:100%;display:block;opacity:1;transition:opacity .2s}
+.book-reader-loading{display:flex;align-items:center;justify-content:center;gap:8px;padding:40px;color:var(--text2);font-size:.9rem}
+.book-reader-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;width:100%;position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--border);z-index:10}
+.book-nav-btn{width:44px;height:44px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.book-nav-btn:disabled{opacity:.35;cursor:default}
+.book-nav-page{font-size:.9rem;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
 /* Hadith list + detail */
 .hadith-list{display:flex;flex-direction:column;gap:2px;padding:8px 16px 24px}
 .hadith-title-item{display:flex;align-items:center;gap:10px;width:100%;background:var(--bg2);border:none;border-radius:var(--r-m);padding:14px;cursor:pointer;text-align:right;direction:rtl}
@@ -1582,6 +1628,7 @@ body{background:var(--bg);color:var(--text)}
 <script src="/prayer/prayer.notifications.android.js?v=20260228c"></script>
 <script src="/prayer/prayer.qibla.js?v=20260228c"></script>
 <script src="/prayer/prayer.ui.js?v=20260301s"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="/dhikr/dua-data.js?v=20260301a"></script>
 <script src="/dhikr/dhikr.js?v=20260301a"></script>
 <script src="/app/app.js?v=20260301j"></script>

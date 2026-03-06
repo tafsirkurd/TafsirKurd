@@ -1,6 +1,6 @@
-// Admin Heartbeat System with 20-Minute Auto-Logout
+// Admin Heartbeat System with 60-Minute Auto-Logout
 // Keeps admin status as "online" and detects session expiration
-// Automatically logs out admin after 20 minutes for security
+// Automatically logs out admin after 60 minutes for security
 
 window.adminHeartbeat = (function() {
     let heartbeatInterval = null;
@@ -8,7 +8,7 @@ window.adminHeartbeat = (function() {
     let lastHeartbeatTime = null;
     let sessionStartTime = null;
     const HEARTBEAT_INTERVAL = 60000; // 60 seconds
-    const SESSION_TIMEOUT = 20 * 60 * 1000; // 20 minutes in milliseconds
+    const SESSION_TIMEOUT = 60 * 60 * 1000; // 60 minutes in milliseconds
     const MAX_FAILED_ATTEMPTS = 3;
     let failedAttempts = 0;
 
@@ -84,7 +84,7 @@ window.adminHeartbeat = (function() {
     }
 
     function handleSessionTimeout() {
-        console.log('⏰ 20-minute session timeout reached');
+        console.log('⏰ 60-minute session timeout reached');
         stop();
 
         // Clear session storage

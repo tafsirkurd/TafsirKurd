@@ -25,7 +25,7 @@ export async function onRequest(context) {
 
     try {
         const body = await request.json();
-        const { filename, contentType, folder = 'videos' } = body;
+        const { filename, contentType, folder = 'videos', bucket: bucketOverride } = body;
 
         if (!filename || !contentType) {
             return new Response(
@@ -67,7 +67,7 @@ export async function onRequest(context) {
             const accessKeyId = env.R2_ACCESS_KEY_ID;
             const secretAccessKey = env.R2_SECRET_ACCESS_KEY;
             const accountId = env.CF_ACCOUNT_ID;
-            const bucket = env.R2_BUCKET || 'tafsirkurd-videos';
+            const bucket = bucketOverride || env.R2_BUCKET || 'tafsirkurd-videos';
             const publicDomain = env.R2_PUBLIC_DOMAIN; // Custom domain or r2.dev subdomain
 
             if (!accessKeyId || !secretAccessKey || !accountId) {
