@@ -408,6 +408,7 @@
 
                 if (data.success) {
                     localStorage.removeItem('adminLoginLockoutUntil');
+                    localStorage.removeItem('adminLoginFailedAttempts');
                     sessionStorage.setItem('adminToken', data.token);
                     sessionStorage.setItem('adminSessionStart', new Date().toISOString());
                     if (data.user) {
@@ -422,18 +423,30 @@
                     window.location.href = landingPage;
                 } else {
                     if (data.locked && data.lockedUntil) {
+                        localStorage.removeItem('adminLoginFailedAttempts');
                         applyLockout(data.lockedUntil);
                         return;
                     }
 
-                    var errorMsg = data.error || 'Invalid credentials';
-                    if (data.deviceBlocked) {
-                        errorMsg = '\uD83D\uDD12 ' + errorMsg;
-                    } else if (data.attemptsRemaining !== undefined && data.attemptsRemaining > 0) {
-                        errorMsg += ' (' + data.attemptsRemaining + ' attempt' + (data.attemptsRemaining !== 1 ? 's' : '') + ' remaining)';
+                    // Client-side attempt counter covers wrong-email cases too
+                    if (!data.deviceBlocked) {
+                        var attempts = parseInt(localStorage.getItem('adminLoginFailedAttempts') || '0', 10) + 1;
+                        localStorage.setItem('adminLoginFailedAttempts', String(attempts));
+                        if (attempts >= 3) {
+                            localStorage.removeItem('adminLoginFailedAttempts');
+                            applyLockout(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
+                            return;
+                        }
+                        var attemptsLeft = data.attemptsRemaining !== undefined ? data.attemptsRemaining : (3 - attempts);
+                        var errorMsg = data.error || 'Invalid credentials';
+                        if (attemptsLeft > 0) {
+                            errorMsg += ' (' + attemptsLeft + ' attempt' + (attemptsLeft !== 1 ? 's' : '') + ' remaining)';
+                        }
+                        errorText.textContent = errorMsg;
+                    } else {
+                        errorText.textContent = '\uD83D\uDD12 ' + (data.error || 'Device not authorized');
                     }
 
-                    errorText.textContent = errorMsg;
                     errorMessage.classList.add('active');
                     lucide.createIcons();
                     resetBtn();
