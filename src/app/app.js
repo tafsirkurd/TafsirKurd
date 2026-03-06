@@ -59,34 +59,37 @@ var SURAHS=[
 var JUZS={1:1,2:2,3:2,4:3,5:4,6:4,7:5,8:6,9:7,10:8,11:9,12:11,13:12,14:13,15:15,16:17,17:18,18:20,19:21,20:23,21:25,22:27,23:29,24:31,25:34,26:36,27:39,28:46,29:51,30:67};
 
 var RECITERS=[
-  {id:'Alafasy_128kbps',              name:'میشاری العفاسی',           ar:'مشاري العفاسي',           flag:'🇰🇼',style:'murattal'},
-  {id:'Nasser_Alqatami_128kbps',      name:'ناصر القطامی',             ar:'ناصر القطامي',             flag:'🇰🇼',style:'murattal'},
-  {id:'Ahmed_ibn_Ali_al-Ajamy_128kbps-almanar',name:'أحمد العجمی',    ar:'أحمد العجمي',             flag:'🇰🇼',style:'murattal'},
-  {id:'MaherAlMuaiqly128kbps',        name:'ماهر المعیقلی',            ar:'ماهر المعيقلي',            flag:'🇸🇦',style:'murattal'},
-  {id:'Abdurrahmaan_As-Sudais_192kbps',name:'عبدالرحمن سدیس',         ar:'عبد الرحمن السديس',        flag:'🇸🇦',style:'murattal'},
-  {id:'Saood_ash-Shuraym_128kbps',    name:'سعود الشریم',              ar:'سعود الشريم',              flag:'🇸🇦',style:'murattal'},
-  {id:'Yasser_Ad-Dussary_128kbps',    name:'یاسر دوسری',               ar:'ياسر الدوسري',             flag:'🇸🇦',style:'murattal'},
-  {id:'Hudhaify_128kbps',             name:'علی حذیفی',                ar:'علي الحذيفي',              flag:'🇸🇦',style:'murattal'},
-  {id:'Abu_Bakr_Ash-Shaatree_128kbps',name:'ئەبووبەکر شاتری',         ar:'أبو بكر الشاطري',          flag:'🇸🇦',style:'murattal'},
-  {id:'Muhammad_Jibreel_128kbps',     name:'محمد جبریل',               ar:'محمد جبريل',               flag:'🇸🇦',style:'murattal'},
-  {id:'Hani_Rifai_192kbps',           name:'هانی رفاعی',               ar:'هاني الرفاعي',             flag:'🇸🇦',style:'murattal'},
-  {id:'Muhammad_Ayyoub_128kbps',      name:'محمد أیوب',                ar:'محمد أيوب',                flag:'🇸🇦',style:'murattal'},
-  {id:'Ghamadi_40kbps',               name:'سعد الغامدی',              ar:'سعد الغامدي',              flag:'🇸🇦',style:'murattal'},
-  {id:'Abdullaah_3awwaad_Al-Juhaynee_128kbps',name:'عبدالله الجهینی', ar:'عبد الله الجهني',          flag:'🇸🇦',style:'murattal'},
-  {id:'Sahl_Yassin_128kbps',          name:'سهل یاسین',                ar:'سهل ياسين',                flag:'🇸🇦',style:'murattal'},
-  {id:'Abdullah_Basfar_192kbps',      name:'عبدالله بصفر',             ar:'عبد الله بصفر',            flag:'🇸🇦',style:'murattal'},
-  {id:'Fares_Abbad_64kbps',           name:'فارس عباد',                ar:'فارس عباد',                flag:'🇩🇿',style:'murattal'},
-  {id:'Abdul_Basit_Murattal_192kbps', name:'عبدالباسط (مورتل)',        ar:'عبد الباسط عبد الصمد',    flag:'🇪🇬',style:'murattal'},
-  {id:'Abdul_Basit_Mujawwad_128kbps', name:'عبدالباسط (مجود)',         ar:'عبد الباسط عبد الصمد',    flag:'🇪🇬',style:'mujawwad'},
-  {id:'Minshawy_Murattal_128kbps',    name:'محمد المنشاوی',            ar:'محمد المنشاوي',            flag:'🇪🇬',style:'murattal'},
-  {id:'Husary_128kbps',               name:'محمود الحصری',             ar:'محمود الحصري',             flag:'🇪🇬',style:'murattal'},
-  {id:'Mustafa_Ismail_48kbps',        name:'مصطفی اسماعیل',           ar:'مصطفى إسماعيل',           flag:'🇪🇬',style:'mujawwad'},
-  {id:'Mohammad_al_Tablaway_128kbps', name:'محمد الطبلاوی',            ar:'محمد الطبلاوي',            flag:'🇪🇬',style:'murattal'}
+  {id:'Alafasy_128kbps',              name:'مشاري العفاسي',              flag:'🇰🇼',style:'murattal'},
+  {id:'Nasser_Alqatami_128kbps',      name:'ناصر القطامي',               flag:'🇰🇼',style:'murattal'},
+  {id:'Ahmed_ibn_Ali_al-Ajamy_128kbps-almanar',name:'أحمد العجمي',       flag:'🇰🇼',style:'murattal'},
+  {id:'MaherAlMuaiqly128kbps',        name:'ماهر المعيقلي',              flag:'🇸🇦',style:'murattal'},
+  {id:'Abdurrahmaan_As-Sudais_192kbps',name:'عبد الرحمن السديس',         flag:'🇸🇦',style:'murattal'},
+  {id:'Saood_ash-Shuraym_128kbps',    name:'سعود الشريم',                flag:'🇸🇦',style:'murattal'},
+  {id:'Yasser_Ad-Dussary_128kbps',    name:'ياسر الدوسري',               flag:'🇸🇦',style:'murattal'},
+  {id:'Hudhaify_128kbps',             name:'علي الحذيفي',                flag:'🇸🇦',style:'murattal'},
+  {id:'Abu_Bakr_Ash-Shaatree_128kbps',name:'أبو بكر الشاطري',           flag:'🇸🇦',style:'murattal'},
+  {id:'Muhammad_Jibreel_128kbps',     name:'محمد جبريل',                 flag:'🇸🇦',style:'murattal'},
+  {id:'Hani_Rifai_192kbps',           name:'هاني الرفاعي',               flag:'🇸🇦',style:'murattal'},
+  {id:'Muhammad_Ayyoub_128kbps',      name:'محمد أيوب',                  flag:'🇸🇦',style:'murattal'},
+  {id:'Ghamadi_40kbps',               name:'سعد الغامدي',                flag:'🇸🇦',style:'murattal'},
+  {id:'Abdullaah_3awwaad_Al-Juhaynee_128kbps',name:'عبد الله الجهني',    flag:'🇸🇦',style:'murattal'},
+  {id:'Sahl_Yassin_128kbps',          name:'سهل ياسين',                  flag:'🇸🇦',style:'murattal'},
+  {id:'Abdullah_Basfar_192kbps',      name:'عبد الله بصفر',              flag:'🇸🇦',style:'murattal'},
+  {id:'Fares_Abbad_64kbps',           name:'فارس عباد',                  flag:'🇩🇿',style:'murattal'},
+  {id:'Abdul_Basit_Murattal_192kbps', name:'عبد الباسط عبد الصمد',       flag:'🇪🇬',style:'murattal'},
+  {id:'Abdul_Basit_Mujawwad_128kbps', name:'عبد الباسط عبد الصمد',       flag:'🇪🇬',style:'mujawwad'},
+  {id:'Minshawy_Murattal_128kbps',    name:'محمد المنشاوي',              flag:'🇪🇬',style:'murattal'},
+  {id:'Husary_128kbps',               name:'محمود الحصري',               flag:'🇪🇬',style:'murattal'},
+  {id:'Mustafa_Ismail_48kbps',        name:'مصطفى إسماعيل',             flag:'🇪🇬',style:'mujawwad'},
+  {id:'Mohammad_al_Tablaway_128kbps', name:'محمد الطبلاوي',              flag:'🇪🇬',style:'murattal'},
+  {id:'Raad_Al_Kurdi',                name:'رعد محمد الکردي',             flag:'☀️',style:'murattal',surahMode:true,surahBase:'https://server6.mp3quran.net/kurdi/'}
 ];
 var RECITER=localStorage.getItem('app_reciter')||'Alafasy_128kbps';
 
 /* ===== AUDIO HELPERS ===== */
 function audioUrl(surah,ayah){
+  var r=RECITERS.find(function(x){return x.id===RECITER;});
+  if(r&&r.surahMode)return r.surahBase+String(surah).padStart(3,'0')+'.mp3';
   return 'https://everyayah.com/data/'+RECITER+'/'+String(surah).padStart(3,'0')+String(ayah).padStart(3,'0')+'.mp3';
 }
 
@@ -2236,7 +2239,6 @@ function renderAudioSettings(){
     nameRow.appendChild(el('span','reciter-name',r.name));
     if(r.style){nameRow.appendChild(el('span','reciter-style-badge',styleLbls[r.style]||r.style));}
     info.appendChild(nameRow);
-    if(r.ar){info.appendChild(el('div','reciter-ar',r.ar));}
     item.appendChild(info);
     if(r.id===RECITER){var ck=el('i','fas fa-check reciter-check');item.appendChild(ck);}
     on(item,'click',function(){
