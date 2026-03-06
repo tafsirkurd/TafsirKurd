@@ -245,6 +245,7 @@ export async function onRequest(context) {
             return jsonResponse({
                 error: `Account locked. Try again in ${hoursRemaining} hour${hoursRemaining !== 1 ? 's' : ''}.`,
                 locked: true,
+                lockedUntil: user.locked_until,
                 attemptsRemaining: 0
             }, 429, corsHeaders);
         }
@@ -306,6 +307,7 @@ export async function onRequest(context) {
                 return jsonResponse({
                     error: 'Account locked due to multiple failed attempts. Try again in 24 hours.',
                     locked: true,
+                    lockedUntil: lockedUntil.toISOString(),
                     attemptsRemaining: 0
                 }, 429, corsHeaders);
             }
