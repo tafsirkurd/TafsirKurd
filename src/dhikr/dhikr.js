@@ -8,7 +8,8 @@ function _sections(){
     { name:'hadith', label:T('gencine.hadith','حەدیس'),     sub:T('gencine.hadith_sub','فەرمودێن پێغەمبەرێ ئیسلامێ'),           icon:'fas fa-scroll'             },
     { name:'dua',    label:T('gencine.dua','دوعا'),          sub:T('gencine.dua_sub','دعاهای بەیانی، ئێوار و زیاتر'),           icon:'fa-solid fa-person-praying' },
     { name:'tasbih', label:T('gencine.tasbih','تەسبیح'),    sub:T('gencine.tasbih_sub','ژمارتنا دیکرێن ئیسلامی'),              icon:'fas fa-rotate'             },
-    { name:'asma',   label:T('gencine.asma','ناوێن خوا'),   sub:T('gencine.asma_sub','٩٩ ناوێن گەورەیێ خوایێ بەزەیی کار'),   icon:'fas fa-star-and-crescent' }
+    { name:'asma',   label:T('gencine.asma','ناوێن خوا'),   sub:T('gencine.asma_sub','٩٩ ناوێن گەورەیێ خوایێ بەزەیی کار'),   icon:'fas fa-star-and-crescent' },
+    { name:'zakat',  label:T('gencine.zakat','زەکات'),        sub:T('gencine.zakat_sub','حسابکرنای زەکاتا مالی'),                  icon:'fas fa-coins'             }
   ];
   if (!_dbSections || !_dbSections.length) return all;
   var activeMap = {};
@@ -416,6 +417,7 @@ window.GencineUI = {
     else if(this._view === 'dua')    this._renderDua(el);
     else if(this._view === 'tasbih') this._renderTasbih(el);
     else if(this._view === 'asma')   this._renderAsma(el);
+    else if(this._view === 'zakat') this._renderZakat(el);
     else                             this._renderHadith(el);
   },
 
