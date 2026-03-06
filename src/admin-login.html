@@ -166,6 +166,42 @@
             font-size: 12px;
             color: #999999;
         }
+
+        .lockout-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            text-align: center;
+        }
+
+        .lockout-box.active {
+            display: flex;
+        }
+
+        .lockout-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #856404;
+        }
+
+        .lockout-countdown {
+            font-size: 24px;
+            font-weight: 700;
+            color: #856404;
+            letter-spacing: 0.05em;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .lockout-sub {
+            font-size: 12px;
+            color: #856404;
+            opacity: 0.8;
+        }
     </style>
     <script>
         // Early role-based sidebar hiding - runs before body renders
@@ -230,6 +266,12 @@
                     <i data-lucide="alert-circle" style="width: 16px; height: 16px;"></i>
                     <span id="errorText"></span>
                 </div>
+
+                <div class="lockout-box" id="lockoutBox">
+                    <div class="lockout-title">&#128274; Account Locked</div>
+                    <div class="lockout-countdown" id="lockoutCountdown">--:--:--</div>
+                    <div class="lockout-sub">Try again when the timer reaches 00:00:00</div>
+                </div>
             </form>
         </div>
 
@@ -260,42 +302,118 @@
         const loginBtn = document.getElementById('loginBtn');
         const errorMessage = document.getElementById('errorMessage');
         const errorText = document.getElementById('errorText');
+        const lockoutBox = document.getElementById('lockoutBox');
+        const lockoutCountdown = document.getElementById('lockoutCountdown');
+
+        var _countdownInterval = null;
+
+        function formatCountdown(ms) {
+            if (ms <= 0) return '00:00:00';
+            var s = Math.floor(ms / 1000);
+            var h = Math.floor(s / 3600);
+            var m = Math.floor((s % 3600) / 60);
+            var sec = s % 60;
+            return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+        }
+
+        function setBtnLoading() {
+            loginBtn.disabled = true;
+            loginBtn.textContent = '';
+            var sp = document.createElement('div');
+            sp.className = 'spinner';
+            loginBtn.appendChild(sp);
+            var lbl = document.createElement('span');
+            lbl.textContent = 'Signing in...';
+            loginBtn.appendChild(lbl);
+        }
+
+        function resetBtn() {
+            loginBtn.disabled = false;
+            loginBtn.textContent = '';
+            var ic = document.createElement('i');
+            ic.setAttribute('data-lucide', 'log-in');
+            loginBtn.appendChild(ic);
+            var lbl = document.createElement('span');
+            lbl.textContent = 'Sign In';
+            loginBtn.appendChild(lbl);
+            lucide.createIcons();
+        }
+
+        function applyLockout(lockedUntilISO) {
+            localStorage.setItem('adminLoginLockoutUntil', lockedUntilISO);
+            showLockoutUI(new Date(lockedUntilISO));
+        }
+
+        function showLockoutUI(until) {
+            lockoutBox.classList.add('active');
+            errorMessage.classList.remove('active');
+            loginBtn.disabled = true;
+            document.getElementById('email').disabled = true;
+            document.getElementById('password').disabled = true;
+
+            if (_countdownInterval) clearInterval(_countdownInterval);
+            _countdownInterval = setInterval(function() {
+                var remaining = until - Date.now();
+                if (remaining <= 0) {
+                    clearInterval(_countdownInterval);
+                    lockoutBox.classList.remove('active');
+                    localStorage.removeItem('adminLoginLockoutUntil');
+                    resetBtn();
+                    document.getElementById('email').disabled = false;
+                    document.getElementById('password').disabled = false;
+                    lockoutCountdown.textContent = '00:00:00';
+                } else {
+                    lockoutCountdown.textContent = formatCountdown(remaining);
+                }
+            }, 1000);
+            lockoutCountdown.textContent = formatCountdown(until - Date.now());
+        }
+
+        // On load: restore lockout state if still active
+        (function() {
+            var stored = localStorage.getItem('adminLoginLockoutUntil');
+            if (stored) {
+                var until = new Date(stored);
+                if (until > new Date()) {
+                    showLockoutUI(until);
+                } else {
+                    localStorage.removeItem('adminLoginLockoutUntil');
+                }
+            }
+        })();
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            // Block if client-side lockout is still active
+            var stored = localStorage.getItem('adminLoginLockoutUntil');
+            if (stored && new Date(stored) > new Date()) return;
+
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            // Get device fingerprint (now async - generated server-side for security)
             const deviceFingerprint = window.deviceFingerprint ? await window.deviceFingerprint.get() : null;
 
-            // Show loading state
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<div class="spinner"></div><span>Signing in...</span>';
+            setBtnLoading();
             errorMessage.classList.remove('active');
 
             try {
                 const response = await fetch('/admin-auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email,
-                        password,
-                        deviceFingerprint
-                    })
+                    body: JSON.stringify({ email, password, deviceFingerprint })
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
+                    localStorage.removeItem('adminLoginLockoutUntil');
                     sessionStorage.setItem('adminToken', data.token);
                     sessionStorage.setItem('adminSessionStart', new Date().toISOString());
                     if (data.user) {
                         sessionStorage.setItem('adminRole', data.user.role);
                         sessionStorage.setItem('adminPermissions', JSON.stringify(data.permissions || []));
                     }
-                    // Redirect to first allowed page for custom roles
                     var landingPage = '/admin-dashboard.html';
                     if (data.user && data.user.role === 'custom' && data.permissions && data.permissions.length > 0) {
                         var first = data.permissions.find(function(p) { return p.can_view; });
@@ -303,35 +421,29 @@
                     }
                     window.location.href = landingPage;
                 } else {
-                    // Show error with attempts remaining
-                    let errorMsg = data.error || 'Invalid credentials';
+                    if (data.locked && data.lockedUntil) {
+                        applyLockout(data.lockedUntil);
+                        return;
+                    }
 
-                    // Handle device blocked
+                    var errorMsg = data.error || 'Invalid credentials';
                     if (data.deviceBlocked) {
-                        errorMsg = '🔒 ' + errorMsg;
+                        errorMsg = '\uD83D\uDD12 ' + errorMsg;
                     } else if (data.attemptsRemaining !== undefined && data.attemptsRemaining > 0) {
-                        errorMsg += ` (${data.attemptsRemaining} attempt${data.attemptsRemaining !== 1 ? 's' : ''} remaining)`;
+                        errorMsg += ' (' + data.attemptsRemaining + ' attempt' + (data.attemptsRemaining !== 1 ? 's' : '') + ' remaining)';
                     }
 
                     errorText.textContent = errorMsg;
                     errorMessage.classList.add('active');
                     lucide.createIcons();
-
-                    // Reset button
-                    loginBtn.disabled = false;
-                    loginBtn.innerHTML = '<i data-lucide="log-in"></i><span>Sign In</span>';
-                    lucide.createIcons();
+                    resetBtn();
                 }
             } catch (error) {
                 console.error('Login error:', error);
                 errorText.textContent = 'Connection error. Please try again.';
                 errorMessage.classList.add('active');
                 lucide.createIcons();
-
-                // Reset button
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i data-lucide="log-in"></i><span>Sign In</span>';
-                lucide.createIcons();
+                resetBtn();
             }
         });
     </script>
