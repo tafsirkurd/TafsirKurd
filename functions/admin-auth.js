@@ -3,7 +3,7 @@
 // v1.2 - Using bcrypt-ts for Cloudflare Workers compatibility
 
 import { createClient } from '@supabase/supabase-js';
-import { compare } from 'bcrypt-ts';
+import { compare, hash } from 'bcrypt-ts';
 
 export async function onRequest(context) {
     const { request, env } = context;
@@ -38,7 +38,7 @@ export async function onRequest(context) {
     );
 
     try {
-        const { action, email, password, token, deviceFingerprint, page_slug, permission_type } = await request.json();
+        const { action, email, password, token, deviceFingerprint, page_slug, permission_type, turnstileToken } = await request.json();
         const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
         const userAgent = request.headers.get('User-Agent') || 'unknown';
 
@@ -136,6 +136,7 @@ export async function onRequest(context) {
                 role: session.admin_users.role,
                 fullName: session.admin_users.full_name,
                 permissions: permissions || [],
+                totpEnabled: !!session.admin_users.totp_enabled,
                 deviceLocked: !!session.admin_users.device_fingerprint
             }, 200, corsHeaders);
         }
@@ -214,9 +215,154 @@ export async function onRequest(context) {
             return jsonResponse({ success: true, allowed }, 200, corsHeaders);
         }
 
+        // ===== VERIFY-TOTP (login step 2) =====
+        if (action === 'verify-totp') {
+            const { tempToken, totpCode } = await Promise.resolve({ tempToken: token, totpCode: email }); // reuse vars
+            const rawBody = { tempToken: token, totpCode: email }; // already destructured above
+            const pendingRaw = env.ADMIN_KV ? await env.ADMIN_KV.get(`totp_pending:${token}`, 'json') : null;
+            if (!pendingRaw) return jsonResponse({ error: 'Session expired. Please log in again.' }, 401, corsHeaders);
+
+            const { data: user2 } = await supabase.from('admin_users').select('*').eq('id', pendingRaw.userId).single();
+            if (!user2 || !user2.totp_enabled) return jsonResponse({ error: 'Invalid session.' }, 401, corsHeaders);
+
+            // Check backup code first
+            let usedBackup = false;
+            const codeInput = String(email).trim(); // 'email' field reused for totpCode from client
+            if (user2.totp_backup_codes && Array.isArray(user2.totp_backup_codes)) {
+                const codeHash = await sha256Hex(codeInput.toUpperCase());
+                const idx = user2.totp_backup_codes.indexOf(codeHash);
+                if (idx !== -1) {
+                    const remaining = user2.totp_backup_codes.filter((_, i) => i !== idx);
+                    await supabase.from('admin_users').update({ totp_backup_codes: remaining }).eq('id', user2.id);
+                    usedBackup = true;
+                }
+            }
+            if (!usedBackup) {
+                const valid = await verifyTOTP(user2.totp_secret, codeInput);
+                if (!valid) {
+                    // Track TOTP failures separately in KV (max 5 per temp token)
+                    const failKey = `totp_fail:${token}`;
+                    const fails = env.ADMIN_KV ? ((await env.ADMIN_KV.get(failKey, 'json')) || 0) + 1 : 1;
+                    if (fails >= 5) {
+                        if (env.ADMIN_KV) await env.ADMIN_KV.delete(`totp_pending:${token}`);
+                        await logAudit(supabase, user2.id, user2.email, 'totp_brute_force', {}, clientIP, userAgent, null, null, null, 'critical');
+                        await sendSecurityAlert(env, { type: 'totp_brute_force', email: user2.email, ip: clientIP, detail: '5 wrong 2FA codes in a row' });
+                        return jsonResponse({ error: 'Too many failed attempts. Please log in again.', expired: true }, 401, corsHeaders);
+                    }
+                    if (env.ADMIN_KV) await env.ADMIN_KV.put(failKey, JSON.stringify(fails), { expirationTtl: 300 });
+                    await logAudit(supabase, user2.id, user2.email, 'totp_failed', { attempt: fails }, clientIP, userAgent, null, null, null, 'warning');
+                    return jsonResponse({ error: 'Invalid code. Try again. (' + (5 - fails) + ' attempts left)' }, 401, corsHeaders);
+                }
+            }
+
+            await env.ADMIN_KV.delete(`totp_pending:${token}`);
+            if (env.ADMIN_KV) await env.ADMIN_KV.delete(`ip_attempts:${clientIP}`);
+
+            await supabase.from('admin_users').update({ failed_attempts: 0, last_login: new Date().toISOString(), status: 'online', last_heartbeat: new Date().toISOString() }).eq('id', user2.id);
+            const sessionToken = generateSecureToken();
+            const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+            await supabase.from('admin_sessions').insert({ user_id: user2.id, token: sessionToken, ip_address: clientIP, user_agent: userAgent, device_fingerprint: deviceFingerprint, expires_at: expiresAt.toISOString() });
+            await logAudit(supabase, user2.id, user2.email, 'login_success_2fa', { usedBackup }, clientIP, userAgent, null, null, null, 'info');
+            await cleanupOldSessions(supabase, user2.id);
+            const { data: perms2 } = await supabase.from('admin_permissions').select('page_slug,can_view,can_edit,can_delete').eq('user_id', user2.id);
+            return jsonResponse({ success: true, token: sessionToken, expiresAt: expiresAt.toISOString(), user: { email: user2.email, fullName: user2.full_name, role: user2.role }, permissions: perms2 || [] }, 200, corsHeaders);
+        }
+
+        // ===== SETUP-TOTP (step 1: generate secret + QR) =====
+        if (action === 'setup-totp') {
+            if (!token) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: sess } = await supabase.from('admin_sessions').select('user_id').eq('token', token).gt('expires_at', new Date().toISOString()).single();
+            if (!sess) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: u } = await supabase.from('admin_users').select('email,totp_enabled').eq('id', sess.user_id).single();
+            if (!u) return jsonResponse({ error: 'User not found' }, 404, corsHeaders);
+            if (u.totp_enabled) return jsonResponse({ error: '2FA is already enabled.' }, 400, corsHeaders);
+
+            const secretBytes = crypto.getRandomValues(new Uint8Array(20));
+            const secret = base32Encode(secretBytes);
+            if (env.ADMIN_KV) await env.ADMIN_KV.put(`totp_setup:${sess.user_id}`, secret, { expirationTtl: 600 });
+            const otpauthUrl = `otpauth://totp/TafsirKurd%20Admin:${encodeURIComponent(u.email)}?secret=${secret}&issuer=TafsirKurd&algorithm=SHA1&digits=6&period=30`;
+            return jsonResponse({ secret, otpauthUrl }, 200, corsHeaders);
+        }
+
+        // ===== CONFIRM-TOTP (step 2: verify then save) =====
+        if (action === 'confirm-totp') {
+            if (!token) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: sess } = await supabase.from('admin_sessions').select('user_id').eq('token', token).gt('expires_at', new Date().toISOString()).single();
+            if (!sess) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const secret = env.ADMIN_KV ? await env.ADMIN_KV.get(`totp_setup:${sess.user_id}`) : null;
+            if (!secret) return jsonResponse({ error: 'Setup session expired. Please start again.' }, 400, corsHeaders);
+            const valid = await verifyTOTP(secret, password); // 'password' field reused for code
+            if (!valid) return jsonResponse({ error: 'Invalid code. Check your authenticator and try again.' }, 400, corsHeaders);
+
+            const plainCodes = generateBackupCodes(8);
+            const hashedCodes = await Promise.all(plainCodes.map(c => sha256Hex(c)));
+            await supabase.from('admin_users').update({ totp_secret: secret, totp_enabled: true, totp_backup_codes: hashedCodes }).eq('id', sess.user_id);
+            if (env.ADMIN_KV) await env.ADMIN_KV.delete(`totp_setup:${sess.user_id}`);
+            const { data: u2 } = await supabase.from('admin_users').select('email').eq('id', sess.user_id).single();
+            await logAudit(supabase, sess.user_id, u2?.email, 'totp_enabled', {}, clientIP, userAgent, null, null, null, 'info');
+            return jsonResponse({ success: true, backupCodes: plainCodes }, 200, corsHeaders);
+        }
+
+        // ===== DISABLE-TOTP =====
+        if (action === 'disable-totp') {
+            if (!token) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: sess } = await supabase.from('admin_sessions').select('user_id').eq('token', token).gt('expires_at', new Date().toISOString()).single();
+            if (!sess) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: u } = await supabase.from('admin_users').select('*').eq('id', sess.user_id).single();
+            if (!u || !u.totp_enabled) return jsonResponse({ error: '2FA is not enabled.' }, 400, corsHeaders);
+            const valid = await verifyTOTP(u.totp_secret, password);
+            if (!valid) return jsonResponse({ error: 'Invalid code.' }, 400, corsHeaders);
+            await supabase.from('admin_users').update({ totp_secret: null, totp_enabled: false, totp_backup_codes: null }).eq('id', sess.user_id);
+            await logAudit(supabase, u.id, u.email, 'totp_disabled', {}, clientIP, userAgent, null, null, null, 'warning');
+            await sendSecurityAlert(env, { type: 'totp_disabled', email: u.email, ip: clientIP });
+            return jsonResponse({ success: true }, 200, corsHeaders);
+        }
+
+        // ===== RESET-TOTP (super admin resets another user's 2FA) =====
+        if (action === 'reset-totp') {
+            if (!token) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: sess } = await supabase.from('admin_sessions').select('user_id').eq('token', token).gt('expires_at', new Date().toISOString()).single();
+            if (!sess) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: caller } = await supabase.from('admin_users').select('role,email').eq('id', sess.user_id).single();
+            if (!caller || caller.role !== 'super_admin') return jsonResponse({ error: 'Forbidden' }, 403, corsHeaders);
+            const targetId = email; // 'email' field reused for targetUserId
+            await supabase.from('admin_users').update({ totp_secret: null, totp_enabled: false, totp_backup_codes: null }).eq('id', targetId);
+            await logAudit(supabase, sess.user_id, caller.email, 'totp_reset_by_admin', { target: targetId }, clientIP, userAgent, null, null, null, 'warning');
+            return jsonResponse({ success: true }, 200, corsHeaders);
+        }
+
         // ===== LOGIN =====
         if (!email || !password) {
             return jsonResponse({ error: 'Email and password are required' }, 400, corsHeaders);
+        }
+
+        // 0a. IP rate limit — max 10 failed attempts per IP per hour
+        const ipRateKey = `ip_attempts:${clientIP}`;
+        const ipStored = env.ADMIN_KV ? await env.ADMIN_KV.get(ipRateKey, 'json') : null;
+        if (ipStored) {
+            const now = Date.now();
+            const recent = (ipStored.attempts || []).filter(t => now - t < 3600000);
+            if (recent.length >= 10) {
+                await logAudit(supabase, null, email, 'ip_blocked', { ip: clientIP, attempts: recent.length }, clientIP, userAgent, null, null, null, 'critical');
+                await sendSecurityAlert(env, { type: 'ip_blocked', email, ip: clientIP, detail: `${recent.length} attempts in the last hour` });
+                return jsonResponse({ error: 'Too many failed attempts from your location. Try again in 1 hour.', ipBlocked: true }, 429, corsHeaders);
+            }
+        }
+
+        // 0b. Turnstile verification
+        if (env.TURNSTILE_SECRET_KEY) {
+            if (!turnstileToken) {
+                return jsonResponse({ error: 'Human verification required.' }, 400, corsHeaders);
+            }
+            const tsRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ secret: env.TURNSTILE_SECRET_KEY, response: turnstileToken, remoteip: clientIP })
+            });
+            const tsData = await tsRes.json();
+            if (!tsData.success) {
+                return jsonResponse({ error: 'Human verification failed. Please try again.', turnstileFailed: true }, 400, corsHeaders);
+            }
         }
 
         // 1. Get user
@@ -227,6 +373,7 @@ export async function onRequest(context) {
             .single();
 
         if (!user) {
+            await recordIPAttempt(env, clientIP);
             await logLoginAttempt(supabase, email, clientIP, false);
             await logAudit(supabase, null, email, 'login_failed', { reason: 'User not found' }, clientIP, userAgent);
             return jsonResponse({ error: 'Invalid credentials' }, 401, corsHeaders);
@@ -273,6 +420,7 @@ export async function onRequest(context) {
                     received: deviceFingerprint
                 }, clientIP, userAgent, null, null, deviceFingerprint, 'critical');
 
+                await sendSecurityAlert(env, { type: 'device_blocked', email: user.email, ip: clientIP, detail: 'Login attempted from unrecognized device' });
                 return jsonResponse({
                     error: 'This account is locked to a different device. Contact Super Admin to reset.',
                     deviceBlocked: true
@@ -284,6 +432,7 @@ export async function onRequest(context) {
         const passwordMatch = await compare(password, user.password_hash);
 
         if (!passwordMatch) {
+            await recordIPAttempt(env, clientIP);
             const newFailedAttempts = (user.failed_attempts || 0) + 1;
             const attemptsRemaining = 3 - newFailedAttempts;
 
@@ -304,6 +453,7 @@ export async function onRequest(context) {
                     locked_until: lockedUntil.toISOString()
                 }, clientIP, userAgent, null, null, deviceFingerprint, 'critical');
 
+                await sendSecurityAlert(env, { type: 'account_locked', email: user.email, ip: clientIP, detail: '3 consecutive wrong passwords' });
                 return jsonResponse({
                     error: 'Account locked due to multiple failed attempts. Try again in 24 hours.',
                     locked: true,
@@ -354,7 +504,23 @@ export async function onRequest(context) {
             }, clientIP, userAgent, null, null, deviceFingerprint, 'info');
         }
 
-        // 8. Clear failed attempts and update status
+        // 8. If 2FA enabled — issue a short-lived temp token instead of a full session
+        if (user.totp_enabled) {
+            const tempToken = generateSecureToken();
+            if (env.ADMIN_KV) {
+                await env.ADMIN_KV.put(
+                    `totp_pending:${tempToken}`,
+                    JSON.stringify({ userId: user.id, email: user.email }),
+                    { expirationTtl: 300 } // 5 minutes
+                );
+            }
+            return jsonResponse({ requiresTOTP: true, tempToken }, 200, corsHeaders);
+        }
+
+        // 8b. Clear IP rate limit on success
+        if (env.ADMIN_KV) await env.ADMIN_KV.delete(`ip_attempts:${clientIP}`);
+
+        // Clear failed attempts and update status
         await supabase
             .from('admin_users')
             .update({
@@ -383,6 +549,8 @@ export async function onRequest(context) {
 
         // 11. Log successful login
         await logLoginAttempt(supabase, email, clientIP, true);
+        const isNewDevice = !user.device_fingerprint && deviceFingerprint;
+        await sendSecurityAlert(env, { type: isNewDevice ? 'new_device' : 'login_success', email, ip: clientIP, detail: isNewDevice ? 'First login from this device' : '' });
         await logAudit(supabase, user.id, email, 'login_success', {
             device_fingerprint: deviceFingerprint
         }, clientIP, userAgent, null, null, deviceFingerprint, 'info');
@@ -461,6 +629,118 @@ async function logLoginAttempt(supabase, email, ipAddress, success) {
     } catch (error) {
         console.error('Login attempt log error:', error);
     }
+}
+
+async function sendSecurityAlert(env, { type, email, ip, detail = '' }) {
+    if (!env.RESEND_API_KEY) return;
+    const ALERT_TO = 'tefsirkurd@gmail.com';
+    const icons = {
+        login_success:    '✅',
+        login_failed:     '⚠️',
+        account_locked:   '🔒',
+        device_blocked:   '🚫',
+        ip_blocked:       '🛑',
+        totp_failed:      '🔐',
+        totp_brute_force: '🚨',
+        totp_disabled:    '⚠️',
+        new_device:       '📱',
+    };
+    const labels = {
+        login_success:    'Successful Login',
+        login_failed:     'Failed Login Attempt',
+        account_locked:   'Account Locked',
+        device_blocked:   'Blocked: Unrecognized Device',
+        ip_blocked:       'Blocked: Too Many Attempts (IP)',
+        totp_failed:      '2FA Code Failed',
+        totp_brute_force: '2FA Brute Force Detected',
+        totp_disabled:    '2FA Disabled',
+        new_device:       'New Device Logged In',
+    };
+    const icon  = icons[type]  || '🔔';
+    const label = labels[type] || type;
+    const time  = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Baghdad', hour12: false });
+    const html  = `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
+      <div style="background:#0f172a;padding:20px 24px;color:#fff">
+        <div style="font-size:22px;margin-bottom:4px">${icon} ${label}</div>
+        <div style="font-size:12px;opacity:.6">TafsirKurd Admin Security Alert</div>
+      </div>
+      <div style="padding:20px 24px;background:#fff">
+        <table style="width:100%;border-collapse:collapse;font-size:14px">
+          <tr><td style="padding:6px 0;color:#6b7280;width:80px">Account</td><td style="padding:6px 0;font-weight:600">${email || '—'}</td></tr>
+          <tr><td style="padding:6px 0;color:#6b7280">IP</td><td style="padding:6px 0">${ip || '—'}</td></tr>
+          <tr><td style="padding:6px 0;color:#6b7280">Time</td><td style="padding:6px 0">${time} (Baghdad)</td></tr>
+          ${detail ? `<tr><td style="padding:6px 0;color:#6b7280">Detail</td><td style="padding:6px 0">${detail}</td></tr>` : ''}
+        </table>
+        <div style="margin-top:16px;font-size:12px;color:#9ca3af">If this was not you, change your password immediately.</div>
+      </div>
+    </div>`;
+    try {
+        await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from: 'TafsirKurd Security <security@tafsirkurd.com>', to: ALERT_TO, subject: `${icon} ${label} — TafsirKurd Admin`, html })
+        });
+    } catch(e) { console.error('Alert email failed:', e); }
+}
+
+async function recordIPAttempt(env, ip) {
+    if (!env.ADMIN_KV) return;
+    const key = `ip_attempts:${ip}`;
+    const stored = await env.ADMIN_KV.get(key, 'json') || { attempts: [] };
+    const now = Date.now();
+    const recent = (stored.attempts || []).filter(t => now - t < 3600000);
+    recent.push(now);
+    await env.ADMIN_KV.put(key, JSON.stringify({ attempts: recent }), { expirationTtl: 3600 });
+}
+
+/* ══════════════════════════════════════════
+   TOTP / 2FA helpers
+══════════════════════════════════════════ */
+function base32Decode(input) {
+    const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    input = input.toUpperCase().replace(/=+$/, '').replace(/\s/g, '');
+    let bits = 0, value = 0;
+    const out = [];
+    for (const ch of input) {
+        const idx = alpha.indexOf(ch);
+        if (idx < 0) continue;
+        value = (value << 5) | idx; bits += 5;
+        if (bits >= 8) { out.push((value >>> (bits - 8)) & 0xff); bits -= 8; }
+    }
+    return new Uint8Array(out);
+}
+function base32Encode(bytes) {
+    const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let bits = 0, value = 0, out = '';
+    for (const b of bytes) { value = (value << 8) | b; bits += 8; while (bits >= 5) { out += alpha[(value >>> (bits - 5)) & 31]; bits -= 5; } }
+    if (bits > 0) out += alpha[(value << (5 - bits)) & 31];
+    return out;
+}
+async function verifyTOTP(secret, token, window = 1) {
+    const key = base32Decode(secret);
+    const ck = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+    const now = Math.floor(Date.now() / 30000);
+    for (let i = -window; i <= window; i++) {
+        const buf = new ArrayBuffer(8);
+        new DataView(buf).setUint32(4, now + i, false);
+        const sig = new Uint8Array(await crypto.subtle.sign('HMAC', ck, buf));
+        const off = sig[19] & 0xf;
+        const code = (((sig[off] & 0x7f) << 24) | (sig[off+1] << 16) | (sig[off+2] << 8) | sig[off+3]) % 1000000;
+        if (String(code).padStart(6, '0') === String(token).trim()) return true;
+    }
+    return false;
+}
+async function sha256Hex(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function generateBackupCodes(count = 8) {
+    const codes = [];
+    for (let i = 0; i < count; i++) {
+        const bytes = crypto.getRandomValues(new Uint8Array(5));
+        codes.push(Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase());
+    }
+    return codes; // e.g. ['A3F2B1C4D5', ...]
 }
 
 async function cleanupOldSessions(supabase, userId) {
