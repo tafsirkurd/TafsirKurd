@@ -215,10 +215,13 @@ function _initDbData(onDone) {
     _dbHadiths = cachedHadiths;
     _dbLoaded  = true;
     if (onDone) onDone();
-    /* background refresh — re-render hadith list if new data arrives */
+    /* background refresh — rebuild home (sort may have changed) + hadith list */
     _fetchDbData(function() {
       var ui = window.GencineUI;
-      if (ui && ui._view === 'hadith' && ui._hadithDetailIdx === null) ui._draw();
+      if (!ui) return;
+      ui._homeEl = null; // always rebuild home grid with fresh sort order
+      if (ui._view === 'home') ui._draw();
+      else if (ui._view === 'hadith' && ui._hadithDetailIdx === null) ui._draw();
     });
   } else {
     _fetchDbData(onDone);
@@ -406,7 +409,10 @@ window.GencineUI = {
 
     if (!_dbLoaded) {
       this._draw();
-      _initDbData(function(){ self._draw(); });
+      _initDbData(function(){
+        self._homeEl = null; // rebuild with DB sort order
+        self._draw();
+      });
     } else {
       /* Already loaded — just redraw, no background re-fetch */
       this._draw();
