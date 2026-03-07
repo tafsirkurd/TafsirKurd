@@ -1375,124 +1375,81 @@ window.GencineUI = {
     if (!book) { self._view = 'books'; self._draw(); return; }
     var T = window.t || function(k,d){ return d||k; };
 
-    /* Back row */
-    container.appendChild(this._backRow(book.title_ku || book.title_ar || T('gencine.books','کتێب'), function(){
-      self._view = 'books';
-      self._draw();
+    container.appendChild(this._backRow(book.title_ku || book.title_ar || T('gencine.books', 'کتێب'), function(){
+      self._view = 'books'; self._draw();
     }));
 
-    /* Reader wrap */
-    var wrap = document.createElement('div');
-    wrap.className = 'book-reader-wrap';
-
-    /* Canvas for PDF rendering */
-    var canvas = document.createElement('canvas');
-    canvas.id = 'bookReaderCanvas';
-    canvas.className = 'book-reader-canvas';
-    wrap.appendChild(canvas);
-
-    /* Loading indicator */
     var loadingEl = document.createElement('div');
     loadingEl.className = 'book-reader-loading';
-    loadingEl.id = 'bookReaderLoading';
-    var spinner = document.createElement('i');
-    spinner.className = 'fas fa-spinner fa-spin';
+    var spinner = document.createElement('i'); spinner.className = 'fas fa-spinner fa-spin';
     loadingEl.appendChild(spinner);
-    loadingEl.appendChild(document.createTextNode(' ' + T('gencine.books_loading','باركردن...')));
-    wrap.appendChild(loadingEl);
+    loadingEl.appendChild(document.createTextNode(' ' + T('gencine.books_loading', 'باركردن...')));
+    container.appendChild(loadingEl);
 
-    /* Nav bar */
-    var nav = document.createElement('div');
-    nav.className = 'book-reader-nav';
+    var pagesWrap = document.createElement('div');
+    pagesWrap.style.cssText = 'padding:4px 2px 80px;display:flex;flex-direction:column;gap:3px;';
+    container.appendChild(pagesWrap);
 
-    var prevBtn = document.createElement('button');
-    prevBtn.className = 'book-nav-btn';
-    prevBtn.id = 'bookNavPrev';
-    var pi = document.createElement('i'); pi.className = 'fas fa-chevron-right';
-    prevBtn.appendChild(pi);
-    prevBtn.onclick = function(){ if(self._pdfPage > 1) self._goBookPage(self._pdfPage - 1); };
-    nav.appendChild(prevBtn);
-
-    var pageInfo = document.createElement('div');
-    pageInfo.className = 'book-nav-page';
-    pageInfo.id = 'bookNavPage';
-    pageInfo.textContent = '...';
-    nav.appendChild(pageInfo);
-
-    var nextBtn = document.createElement('button');
-    nextBtn.className = 'book-nav-btn';
-    nextBtn.id = 'bookNavNext';
-    var ni = document.createElement('i'); ni.className = 'fas fa-chevron-left';
-    nextBtn.appendChild(ni);
-    nextBtn.onclick = function(){ if(self._pdfDoc && self._pdfPage < self._pdfDoc.numPages) self._goBookPage(self._pdfPage + 1); };
-    nav.appendChild(nextBtn);
-
-    wrap.appendChild(nav);
-    container.appendChild(wrap);
-
-    /* Load PDF */
-    if (self._pdfDoc) {
-      /* Already loaded — just render current page */
-      self._goBookPage(self._pdfPage);
-    } else {
-      var pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
-      if (!pdfjsLib) {
-        loadingEl.textContent = 'PDF.js not loaded';
-        return;
-      }
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      var pdfSrc = 'https://tafsirkurd.com/pdf-proxy?url=' + encodeURIComponent(book.pdf_url);
-      pdfjsLib.getDocument({ url: pdfSrc, cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/', cMapPacked: true, standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/', disableFontFace: true })
-        .promise.then(function(pdf){
-          self._pdfDoc = pdf;
-          self._goBookPage(self._pdfPage);
-        }).catch(function(e){
-          loadingEl.textContent = T('gencine.books_error','هەلەیەک هەیە');
-          console.error('PDF load error:', e);
+    var renderPage = function(pageNum, slot, pdf) {
+      if (slot._rendered || slot._rendering) return;
+      slot._rendering = true;
+      pdf.getPage(pageNum).then(function(page) {
+        var dpr = window.devicePixelRatio || 1;
+        var w = (pagesWrap.offsetWidth || window.innerWidth) - 4;
+        var uv = page.getViewport({ scale: 1 });
+        var vp = page.getViewport({ scale: (w / uv.width) * dpr });
+        var cv = document.createElement('canvas');
+        cv.width = vp.width; cv.height = vp.height;
+        cv.style.cssText = 'display:block;width:' + w + 'px;height:' + Math.floor(vp.height / dpr) + 'px;';
+        page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise.then(function() {
+          slot.style.minHeight = '';
+          while (slot.firstChild) slot.removeChild(slot.firstChild);
+          slot.appendChild(cv);
+          slot._rendered = true; slot._rendering = false;
         });
-    }
-  },
-
-  _goBookPage: function(pageNum){
-    var self = this;
-    var pdf = self._pdfDoc;
-    if (!pdf || self._pdfRendering) return;
-    var canvas = document.getElementById('bookReaderCanvas');
-    var loadingEl = document.getElementById('bookReaderLoading');
-    var pageInfo = document.getElementById('bookNavPage');
-    var prevBtn = document.getElementById('bookNavPrev');
-    var nextBtn = document.getElementById('bookNavNext');
-    if (!canvas) return;
-
-    self._pdfRendering = true;
-    if (loadingEl) { loadingEl.style.display = 'flex'; }
-    if (canvas) canvas.style.opacity = '0.4';
-
-    pdf.getPage(pageNum).then(function(page){
-      var dpr = window.devicePixelRatio || 1;
-      var containerWidth = (canvas.parentElement ? canvas.parentElement.offsetWidth : window.innerWidth) - 4;
-      var unscaledViewport = page.getViewport({ scale: 1 });
-      var scale = containerWidth / unscaledViewport.width;
-      var viewport = page.getViewport({ scale: scale * dpr });
-      canvas.width  = viewport.width;
-      canvas.height = viewport.height;
-      canvas.style.width  = containerWidth + 'px';
-      canvas.style.height = Math.floor(viewport.height / dpr) + 'px';
-
-      var ctx = canvas.getContext('2d');
-      page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function(){
-        self._pdfPage = pageNum;
-        self._pdfRendering = false;
-        if (loadingEl) loadingEl.style.display = 'none';
-        if (canvas) canvas.style.opacity = '1';
-        if (pageInfo) pageInfo.textContent = pageNum + ' / ' + pdf.numPages;
-        if (prevBtn) prevBtn.disabled = (pageNum <= 1);
-        if (nextBtn) nextBtn.disabled = (pageNum >= pdf.numPages);
       });
-    }).catch(function(){
-      self._pdfRendering = false;
-      if (loadingEl) loadingEl.style.display = 'none';
-      if (canvas) canvas.style.opacity = '1';
+    };
+
+    var doLoad = function(pdf) {
+      self._pdfDoc = pdf;
+      loadingEl.style.display = 'none';
+      var slots = [];
+      for (var i = 1; i <= pdf.numPages; i++) {
+        var slot = document.createElement('div');
+        slot.setAttribute('data-page', i);
+        slot.style.cssText = 'width:100%;background:#fff;min-height:300px;';
+        pagesWrap.appendChild(slot);
+        slots.push(slot);
+      }
+      var obs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+          if (!e.isIntersecting) return;
+          var n = parseInt(e.target.getAttribute('data-page'));
+          renderPage(n, e.target, pdf);
+          if (n > 1 && slots[n - 2]) renderPage(n - 1, slots[n - 2], pdf);
+          if (n < pdf.numPages && slots[n]) renderPage(n + 1, slots[n], pdf);
+        });
+      }, { rootMargin: '400px 0px', threshold: 0 });
+      slots.forEach(function(s) { obs.observe(s); });
+      renderPage(1, slots[0], pdf);
+      if (slots[1]) renderPage(2, slots[1], pdf);
+    };
+
+    if (self._pdfDoc) { doLoad(self._pdfDoc); return; }
+
+    var pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+    if (!pdfjsLib) { loadingEl.textContent = 'PDF.js not loaded'; return; }
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    var pdfSrc = 'https://tafsirkurd.com/pdf-proxy?url=' + encodeURIComponent(book.pdf_url);
+    pdfjsLib.getDocument({
+      url: pdfSrc,
+      cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+      cMapPacked: true,
+      standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/',
+      disableFontFace: true
+    }).promise.then(doLoad).catch(function(e) {
+      loadingEl.textContent = T('gencine.books_error', 'هەلەیەک هەیە');
+      console.error('PDF load error:', e);
     });
   },
 
