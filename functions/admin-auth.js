@@ -343,6 +343,38 @@ export async function onRequest(context) {
             return jsonResponse({ success: true }, 200, corsHeaders);
         }
 
+        // ===== GET-MY-SESSIONS =====
+        if (action === 'get-my-sessions') {
+            if (!token) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: sess } = await supabase.from('admin_sessions').select('user_id').eq('token', token).gt('expires_at', new Date().toISOString()).single();
+            if (!sess) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: sessions } = await supabase.from('admin_sessions').select('id,ip_address,user_agent,created_at,last_activity,expires_at,token').eq('user_id', sess.user_id).gt('expires_at', new Date().toISOString()).order('created_at', { ascending: false });
+            // Mark which one is current
+            const result = (sessions || []).map(s => ({ ...s, isCurrent: s.token === token, token: undefined }));
+            return jsonResponse({ sessions: result }, 200, corsHeaders);
+        }
+
+        // ===== REVOKE-SESSION =====
+        if (action === 'revoke-session') {
+            if (!token) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: sess } = await supabase.from('admin_sessions').select('user_id').eq('token', token).gt('expires_at', new Date().toISOString()).single();
+            if (!sess) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { sessionId } = body;
+            await supabase.from('admin_sessions').delete().eq('id', sessionId).eq('user_id', sess.user_id);
+            await logAudit(supabase, sess.user_id, null, 'session_revoked', { sessionId }, clientIP, userAgent, null, null, null, 'info');
+            return jsonResponse({ success: true }, 200, corsHeaders);
+        }
+
+        // ===== REVOKE-ALL-OTHER-SESSIONS =====
+        if (action === 'revoke-all-other-sessions') {
+            if (!token) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: sess } = await supabase.from('admin_sessions').select('user_id').eq('token', token).gt('expires_at', new Date().toISOString()).single();
+            if (!sess) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            await supabase.from('admin_sessions').delete().eq('user_id', sess.user_id).neq('token', token);
+            await logAudit(supabase, sess.user_id, null, 'all_other_sessions_revoked', {}, clientIP, userAgent, null, null, null, 'warning');
+            return jsonResponse({ success: true }, 200, corsHeaders);
+        }
+
         // ===== GET-AUDIT-LOGS =====
         if (action === 'get-audit-logs') {
             if (!token) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
