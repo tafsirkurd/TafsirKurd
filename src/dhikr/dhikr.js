@@ -386,15 +386,14 @@ window.GencineUI = {
   render: function(){
     var self = this;
     this._loadState();
+    this._view = 'home';
+    this._hadithDetailIdx = null;
 
-    /* First load only — show home and fetch data */
     if (!_dbLoaded) {
-      this._view = 'home';
-      this._hadithDetailIdx = null;
       this._draw();
       _initDbData(function(){ self._draw(); });
     } else {
-      /* Already loaded — redraw current view, no re-fetch */
+      /* Already loaded — just redraw, no background re-fetch */
       this._draw();
     }
   },
