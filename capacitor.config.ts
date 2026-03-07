@@ -22,11 +22,13 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchAutoHide: true,
+      launchAutoHide: false,
+      launchShowDuration: 0,
       androidScaleType: 'CENTER_CROP',
       splashFullScreen: true,
       splashImmersive: true,
       backgroundColor: '#ffffff',
+      fadeOutDuration: 300,
     },
     LocalNotifications: {
       smallIcon: 'ic_notification',
