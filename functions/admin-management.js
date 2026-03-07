@@ -167,6 +167,11 @@ export async function onRequest(context) {
                 return jsonResponse({ error: 'Failed to update account' }, 500, corsHeaders);
             }
 
+            // Invalidate ALL sessions for target user when password is changed
+            if (password) {
+                await supabase.from('admin_sessions').delete().eq('user_id', targetUserId);
+            }
+
             // Log action
             await supabase
                 .from('admin_audit_logs')

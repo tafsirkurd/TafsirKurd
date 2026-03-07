@@ -298,6 +298,10 @@
                 <div class="totp-sub">Enter the 6-digit code from your authenticator app,<br>or a backup code.</div>
                 <input type="text" id="totpCode" class="form-input totp-input"
                     placeholder="000000" maxlength="10" autocomplete="one-time-code" inputmode="numeric">
+                <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:.85rem;color:var(--text-muted);cursor:pointer;user-select:none">
+                    <input type="checkbox" id="trustDevice" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer">
+                    Trust this device for 30 days
+                </label>
                 <div class="error-message" id="totpError" style="margin-top:10px">
                     <i data-lucide="alert-circle" style="width:16px;height:16px"></i>
                     <span id="totpErrorText"></span>
@@ -432,7 +436,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     // token = tempToken, email field reused for totpCode (server reads it)
-                    body: JSON.stringify({ action: 'verify-totp', token: window._totpTempToken, email: code, deviceFingerprint: window.deviceFingerprint ? await window.deviceFingerprint.get() : null })
+                    body: JSON.stringify({ action: 'verify-totp', token: window._totpTempToken, email: code, deviceFingerprint: window.deviceFingerprint ? await window.deviceFingerprint.get() : null, trustDevice: document.getElementById('trustDevice').checked })
                 });
                 const data = await res.json();
                 if (data.success) {
