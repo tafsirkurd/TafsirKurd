@@ -386,19 +386,16 @@ window.GencineUI = {
   render: function(){
     var self = this;
     this._loadState();
-    this._view = 'home';
-    this._hadithDetailIdx = null;
 
-    /* If DB data not loaded yet, kick off load then redraw */
+    /* First load only — show home and fetch data */
     if (!_dbLoaded) {
+      this._view = 'home';
+      this._hadithDetailIdx = null;
       this._draw();
       _initDbData(function(){ self._draw(); });
     } else {
+      /* Already loaded — redraw current view, no re-fetch */
       this._draw();
-      /* Background refresh — re-render hadith list if new data arrives */
-      _fetchDbData(function() {
-        if (self._view === 'hadith' && self._hadithDetailIdx === null) self._draw();
-      });
     }
   },
 
