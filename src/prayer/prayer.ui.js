@@ -1506,50 +1506,134 @@
     document.body.appendChild(overlay);
   }
 
+  var PRAYER_EMOJI = { Fajr: '🌙', Dhuhr: '☀️', Asr: '🌤️', Maghrib: '🌆', Isha: '🌃' };
+
   function updateAthanSettings(timings, city, dateISO) {
     var container = document.getElementById('prayerAthanSettings');
     if (!container) return;
     clearEl(container);
 
-    var masterCard = cel('div', 'prayer-master-toggle');
-    buildToggleRow(masterCard, tStr('prayer.enable_athan'), getAthan(), function(val) {
-      onAthanMasterToggle(val, timings, city, dateISO);
-    }, '');
-    container.appendChild(masterCard);
+    var isOn = getAthan();
 
-    var athanWrap = cel('div', 'prayer-per-toggles' + (getAthan() ? '' : ' prayer-per-toggles--dim'));
-    athanWrap.id = 'prayerTogglesWrap';
+    // ── Master toggle banner ──
+    var banner = cel('div', 'prayer-master-banner prayer-master-banner--' + (isOn ? 'on' : 'off'));
+    banner.id = 'prayerMasterBanner';
 
-    // ── Per-prayer toggles ──
-    var toggles = getToggles();
-    window.PrayerLogic.NOTIF_PRAYERS.forEach(function(name) {
-      var isOn = toggles[name] !== false;
-      buildToggleRow(athanWrap, tStr(PRAYER_I18N[name] || name), isOn, function(val) {
-        onPrayerToggle(name, val, timings, city, dateISO);
-      });
+    var bannerIcon = cel('div', 'prayer-master-banner-icon');
+    var bannerIconI = document.createElement('i');
+    bannerIconI.className = isOn ? 'fas fa-bell' : 'fas fa-bell-slash';
+    bannerIcon.appendChild(bannerIconI);
+
+    var bannerText = cel('div', 'prayer-master-banner-text');
+    var bannerTitle = cel('div', 'prayer-master-banner-title');
+    bannerTitle.textContent = tStr('prayer.enable_athan');
+    var bannerSub = cel('div', 'prayer-master-banner-sub');
+    bannerSub.textContent = tStr('prayer.athan_section');
+    bannerText.appendChild(bannerTitle);
+    bannerText.appendChild(bannerSub);
+
+    var tog = cel('div', 'toggle' + (isOn ? ' on' : ''));
+    var knob = cel('div', 'toggle-knob');
+    tog.appendChild(knob);
+    tog.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var newVal = !tog.classList.contains('on');
+      tog.classList.toggle('on', newVal);
+      banner.className = 'prayer-master-banner prayer-master-banner--' + (newVal ? 'on' : 'off');
+      bannerIconI.className = newVal ? 'fas fa-bell' : 'fas fa-bell-slash';
+      var grid = document.getElementById('prayerPrayersGrid');
+      var testCard = document.getElementById('prayerTestCard');
+      if (grid)     grid.classList.toggle('prayer-prayers-grid--dim', !newVal);
+      if (testCard) testCard.classList.toggle('prayer-test-card--dim', !newVal);
+      onAthanMasterToggle(newVal, timings, city, dateISO);
     });
 
-    // ── Voice picker ──
-    var voiceLabel = cel('div', 'prayer-settings-section-label prayer-voice-label');
-    voiceLabel.textContent = tStr('prayer.voice_label');
-    athanWrap.appendChild(voiceLabel);
+    banner.appendChild(bannerIcon);
+    banner.appendChild(bannerText);
+    banner.appendChild(tog);
+    container.appendChild(banner);
 
+    // ── Per-prayer grid ──
+    var grid = cel('div', 'prayer-prayers-grid' + (isOn ? '' : ' prayer-prayers-grid--dim'));
+    grid.id = 'prayerPrayersGrid';
+    var toggles = getToggles();
+    window.PrayerLogic.NOTIF_PRAYERS.forEach(function(name) {
+      var cardOn = toggles[name] !== false;
+      var card = cel('div', 'prayer-prayer-card' + (cardOn ? ' on' : ''));
+      card.dataset.prayer = name;
+
+      var top = cel('div', 'prayer-prayer-card-top');
+      var emoji = cel('span', 'prayer-prayer-card-icon');
+      emoji.textContent = PRAYER_EMOJI[name] || '🕌';
+      var check = cel('div', 'prayer-prayer-card-check');
+      var checkI = document.createElement('i');
+      checkI.className = 'fas fa-check';
+      check.appendChild(checkI);
+      top.appendChild(emoji);
+      top.appendChild(check);
+
+      var nameEl = cel('div', 'prayer-prayer-card-name');
+      nameEl.textContent = tStr(PRAYER_I18N[name] || name);
+
+      card.appendChild(top);
+      card.appendChild(nameEl);
+
+      card.addEventListener('click', function() {
+        var nowOn = !card.classList.contains('on');
+        card.classList.toggle('on', nowOn);
+        onPrayerToggle(name, nowOn, timings, city, dateISO);
+      });
+
+      grid.appendChild(card);
+    });
+    container.appendChild(grid);
+
+    // ── Voice section label ──
+    var voiceLabel = cel('div', 'prayer-settings-section-label');
+    voiceLabel.textContent = tStr('prayer.voice_label');
+    container.appendChild(voiceLabel);
+
+    // ── Voice picker ──
     var voiceListWrap = cel('div', 'prayer-voice-list');
     buildVoicePicker(voiceListWrap, city);
-    athanWrap.appendChild(voiceListWrap);
+    container.appendChild(voiceListWrap);
+
+    // ── Duration label ──
+    var durLabel = cel('div', 'prayer-settings-section-label');
+    durLabel.textContent = tStr('prayer.duration_label');
+    container.appendChild(durLabel);
 
     // ── Duration picker ──
-    var durLabel = cel('div', 'prayer-settings-section-label prayer-duration-label');
-    durLabel.textContent = tStr('prayer.duration_label');
-    athanWrap.appendChild(durLabel);
+    buildDurationPicker(container);
 
-    buildDurationPicker(athanWrap);
+    // ── Test notification card ──
+    var testCard = cel('div', 'prayer-test-card' + (isOn ? '' : ' prayer-test-card--dim'));
+    testCard.id = 'prayerTestCard';
 
-    // ── Action buttons: Test + Reschedule ──
-    var btnRow = cel('div', 'prayer-athan-btn-row');
+    // Notification preview mockup
+    var preview = cel('div', 'prayer-test-preview');
+    var prevIcon = cel('div', 'prayer-test-preview-icon');
+    var prevIconI = document.createElement('i');
+    prevIconI.className = 'fas fa-mosque';
+    prevIcon.appendChild(prevIconI);
+    var prevText = cel('div', 'prayer-test-preview-text');
+    var prevTitle = cel('div', 'prayer-test-preview-title');
+    prevTitle.textContent = tStr('prayer.notif_title');
+    var prevSub = cel('div', 'prayer-test-preview-sub');
+    prevSub.textContent = tStr('prayer.test_notif_body');
+    prevText.appendChild(prevTitle);
+    prevText.appendChild(prevSub);
+    preview.appendChild(prevIcon);
+    preview.appendChild(prevText);
+    testCard.appendChild(preview);
 
-    var testBtn = cel('button', 'prayer-athan-action-btn');
-    testBtn.innerHTML = '<i class="fas fa-bell"></i> ' + tStr('prayer.test_btn');
+    var btnRow = cel('div', 'prayer-test-btn-row');
+
+    var testBtn = cel('button', 'prayer-test-btn');
+    var testBtnI = document.createElement('i');
+    testBtnI.className = 'fas fa-bell';
+    testBtn.appendChild(testBtnI);
+    testBtn.appendChild(document.createTextNode(' ' + tStr('prayer.test_btn')));
     testBtn.onclick = function() {
       testBtn.disabled = true;
       testBtn.style.opacity = '0.5';
@@ -1567,8 +1651,11 @@
     };
     btnRow.appendChild(testBtn);
 
-    var reschedBtn = cel('button', 'prayer-athan-action-btn prayer-athan-action-btn--secondary');
-    reschedBtn.innerHTML = '<i class="fas fa-redo-alt"></i> ' + tStr('prayer.resched_btn');
+    var reschedBtn = cel('button', 'prayer-resched-btn');
+    var reschedI = document.createElement('i');
+    reschedI.className = 'fas fa-redo-alt';
+    reschedBtn.appendChild(reschedI);
+    reschedBtn.appendChild(document.createTextNode(' ' + tStr('prayer.resched_btn')));
     reschedBtn.onclick = function() {
       reschedBtn.disabled = true;
       reschedBtn.style.opacity = '0.5';
@@ -1596,9 +1683,8 @@
     };
     btnRow.appendChild(reschedBtn);
 
-    athanWrap.appendChild(btnRow);
-
-    container.appendChild(athanWrap);
+    testCard.appendChild(btnRow);
+    container.appendChild(testCard);
   }
 
   /**
