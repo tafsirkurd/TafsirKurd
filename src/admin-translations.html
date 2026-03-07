@@ -213,6 +213,31 @@
             font-weight: 700;
             opacity: 0.5;
         }
+        .page-chip.has-results {
+            border-color: var(--primary, #3b82f6);
+            color: var(--primary, #3b82f6);
+            background: rgba(59,130,246,.07);
+        }
+        .page-chip.has-results .chip-count { opacity: 0.9; }
+        .page-chip.no-results { opacity: 0.35; pointer-events: none; }
+        .search-hint {
+            padding: 8px 14px;
+            font-size: 12px;
+            color: var(--text-tertiary);
+            background: var(--bg-surface);
+            border: 1px dashed var(--border-light);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .search-hint a {
+            color: var(--primary, #3b82f6);
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 600;
+        }
 
         /* ===== Context line ===== */
         .t-context {
@@ -1613,29 +1638,37 @@
 
         var activePageFilter = '';
 
-        function populatePageFilter() {
+        function populatePageFilter(filteredData) {
             var platformData = getPlatformData();
-            var pageCounts = {};
+            var pageCounts = {};      // total per chip
+            var matchCounts = {};     // filtered per chip (during search)
+            var isSearching = Array.isArray(filteredData);
 
-            if (activePlatform === 'android' || activePlatform === 'ios') {
-                // For app platforms, use category as filter chips
-                platformData.forEach(function(t) {
-                    var c = t.category || 'general';
-                    pageCounts[c] = (pageCounts[c] || 0) + 1;
+            function getChipKey(t) {
+                return (activePlatform === 'android' || activePlatform === 'ios')
+                    ? (t.category || 'general')
+                    : normalizePage(t.page);
+            }
+
+            platformData.forEach(function(t) {
+                var k = getChipKey(t);
+                pageCounts[k] = (pageCounts[k] || 0) + 1;
+            });
+
+            if (isSearching) {
+                filteredData.forEach(function(t) {
+                    var k = getChipKey(t);
+                    matchCounts[k] = (matchCounts[k] || 0) + 1;
                 });
-            } else {
-                // For web, use page as filter chips
-                platformData.forEach(function(t) {
-                    var p = normalizePage(t.page);
-                    pageCounts[p] = (pageCounts[p] || 0) + 1;
-                });
-                // Merge known web pages
+            }
+
+            if (activePlatform !== 'android' && activePlatform !== 'ios') {
                 WEB_PAGES.forEach(function(p) {
                     if (p !== 'all' && !(p in pageCounts)) pageCounts[p] = 0;
                 });
             }
-            var pages = Object.keys(pageCounts).sort();
 
+            var pages = Object.keys(pageCounts).sort();
             var container = document.getElementById('pageChips');
             container.textContent = '';
 
@@ -1645,18 +1678,23 @@
             allChip.textContent = 'All';
             var allCount = document.createElement('span');
             allCount.className = 'chip-count';
-            allCount.textContent = platformData.length;
+            allCount.textContent = isSearching ? filteredData.length : platformData.length;
             allChip.appendChild(allCount);
             allChip.addEventListener('click', function() { setPageFilter(''); });
             container.appendChild(allChip);
 
             pages.forEach(function(p) {
                 var chip = document.createElement('button');
-                chip.className = 'page-chip' + (activePageFilter === p ? ' active' : '');
+                var displayCount = isSearching ? (matchCounts[p] || 0) : pageCounts[p];
+                var cls = 'page-chip';
+                if (activePageFilter === p) cls += ' active';
+                else if (isSearching && matchCounts[p] > 0) cls += ' has-results';
+                else if (isSearching && !matchCounts[p]) cls += ' no-results';
+                chip.className = cls;
                 chip.textContent = p;
                 var count = document.createElement('span');
                 count.className = 'chip-count';
-                count.textContent = pageCounts[p];
+                count.textContent = displayCount;
                 chip.appendChild(count);
                 chip.addEventListener('click', function() { setPageFilter(p); });
                 container.appendChild(chip);
@@ -1692,22 +1730,22 @@
             var search = document.getElementById('searchInput').value.toLowerCase().trim();
             var platformData = getPlatformData();
 
-            // Filter within active platform
-            var matches = platformData.filter(function(t) {
-                var matchSearch = !search ||
-                    t.key_id.toLowerCase().indexOf(search) !== -1 ||
+            function chipKey(t) {
+                return (activePlatform === 'android' || activePlatform === 'ios')
+                    ? (t.category || 'general') : normalizePage(t.page);
+            }
+
+            // First pass: search-only matches (ignoring chip filter)
+            var searchMatches = search ? platformData.filter(function(t) {
+                return t.key_id.toLowerCase().indexOf(search) !== -1 ||
                     t.kurdish_text.toLowerCase().indexOf(search) !== -1 ||
                     (t.context && t.context.toLowerCase().indexOf(search) !== -1);
+            }) : platformData;
 
-                var matchChip;
-                if (activePlatform === 'android' || activePlatform === 'ios') {
-                    // For app platforms, filter by category
-                    matchChip = !activePageFilter || (t.category || 'general') === activePageFilter;
-                } else {
-                    matchChip = !activePageFilter || normalizePage(t.page) === activePageFilter;
-                }
-                return matchSearch && matchChip;
-            });
+            // Second pass: apply chip filter
+            var matches = activePageFilter
+                ? searchMatches.filter(function(t) { return chipKey(t) === activePageFilter; })
+                : searchMatches;
 
             // Smart rank when searching
             if (search) {
@@ -1716,9 +1754,35 @@
                 });
             }
 
+            // Live-update chip counts based on search results (no chip filter applied)
+            populatePageFilter(search ? searchMatches : null);
+
+            // If chip filter is active and returns 0 results but search has results elsewhere, show hint
+            _renderSearchHint(search, matches.length, activePageFilter ? searchMatches.length : 0);
+
             filteredList = matches;
             currentPage = 1;
             renderPage();
+        }
+
+        function _renderSearchHint(search, matchCount, totalWithoutChip) {
+            var existing = document.getElementById('search-hint-bar');
+            if (existing) existing.remove();
+            if (!search || !activePageFilter || matchCount > 0 || totalWithoutChip === 0) return;
+            var hint = document.createElement('div');
+            hint.id = 'search-hint-bar';
+            hint.className = 'search-hint';
+            var msg = document.createTextNode(
+                'No results in "' + activePageFilter + '". ' +
+                totalWithoutChip + ' result' + (totalWithoutChip !== 1 ? 's' : '') + ' found in other categories. '
+            );
+            var link = document.createElement('a');
+            link.textContent = 'Search all';
+            link.onclick = function() { setPageFilter(''); };
+            hint.appendChild(msg);
+            hint.appendChild(link);
+            var listEl = document.getElementById('translationList');
+            if (listEl) listEl.parentNode.insertBefore(hint, listEl);
         }
 
         function getSearchScore(t, search) {

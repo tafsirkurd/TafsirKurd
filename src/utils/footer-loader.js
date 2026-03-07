@@ -58,8 +58,8 @@
                     <h3 class="footer-section-title" data-t="footer_connect_title">پەیوەندی</h3>
                     <div class="footer-links">
                         <p class="footer-contact-text" data-t="footer_connect_desc">ئەگەر تە پرسیارەک یان پێشنیارەک هەبیت، پەیوەندییێ ب مە بکە و ب زووترین دەم دێ بەرسڤا تە هێتە دان!</p>
-                        <a href="mailto:info@tafsirkurd.com" class="footer-link">
-                            <i class="fas fa-envelope"></i> info@tafsirkurd.com
+                        <a href="mailto:tefsirkurd@gmail.com" class="footer-link">
+                            <i class="fas fa-envelope"></i> tefsirkurd@gmail.com
                         </a>
                         <a href="/#contact" class="footer-link" data-t="footer_link_form">
                             <i class="fas fa-paper-plane"></i> فۆرمێ پڕ بکە

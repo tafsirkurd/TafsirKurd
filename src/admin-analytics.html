@@ -578,7 +578,10 @@
             try {
                 console.log(`Loading analytics for ${currentDateRange} days...`);
 
-                const response = await fetch(`/google-analytics?days=${currentDateRange}`);
+                const token = sessionStorage.getItem('adminToken') || '';
+                const response = await fetch(`/google-analytics?days=${currentDateRange}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
 
                 if (!response.ok) {
                     throw new Error(`API Error: ${response.status}`);

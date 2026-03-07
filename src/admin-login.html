@@ -8,6 +8,7 @@
     <title>Admin Login - TafsirKurd</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
         * {
             margin: 0;
@@ -202,6 +203,15 @@
             color: #856404;
             opacity: 0.8;
         }
+        /* ── 2FA screen ── */
+        .totp-screen { display: none; }
+        .totp-screen.active { display: block; }
+        .totp-icon { font-size: 2.4rem; text-align: center; margin-bottom: 6px; }
+        .totp-title { font-size: 16px; font-weight: 700; text-align: center; color: var(--text-primary, #1a1a1a); margin-bottom: 4px; }
+        .totp-sub { font-size: 12px; text-align: center; color: #888; margin-bottom: 20px; }
+        .totp-input { letter-spacing: .35em; font-size: 1.5rem; font-weight: 700; text-align: center; }
+        .totp-back { background: none; border: none; color: #888; font-size: 12px; cursor: pointer; margin-top: 10px; width: 100%; text-align: center; }
+        .totp-back:hover { color: #555; }
     </style>
     <script>
         // Early role-based sidebar hiding - runs before body renders
@@ -257,6 +267,13 @@
                     >
                 </div>
 
+                <div class="cf-turnstile" id="turnstileWidget"
+                     data-sitekey="0x4AAAAAACns__hRPm3UKqjW"
+                     data-theme="auto"
+                     data-callback="onTurnstileSuccess"
+                     data-expired-callback="onTurnstileExpired"
+                     style="margin-bottom:8px"></div>
+
                 <button type="submit" class="btn-login" id="loginBtn">
                     <i data-lucide="log-in"></i>
                     <span>Sign In</span>
@@ -273,6 +290,24 @@
                     <div class="lockout-sub">Try again when the timer reaches 00:00:00</div>
                 </div>
             </form>
+
+            <!-- 2FA step — shown after correct password -->
+            <div class="totp-screen" id="totpScreen">
+                <div class="totp-icon">🔐</div>
+                <div class="totp-title">Two-Factor Authentication</div>
+                <div class="totp-sub">Enter the 6-digit code from your authenticator app,<br>or a backup code.</div>
+                <input type="text" id="totpCode" class="form-input totp-input"
+                    placeholder="000000" maxlength="10" autocomplete="one-time-code" inputmode="numeric">
+                <div class="error-message" id="totpError" style="margin-top:10px">
+                    <i data-lucide="alert-circle" style="width:16px;height:16px"></i>
+                    <span id="totpErrorText"></span>
+                </div>
+                <button class="btn-login" id="totpBtn" onclick="submitTOTP()" style="margin-top:14px">
+                    <i data-lucide="shield-check"></i>
+                    <span>Verify</span>
+                </button>
+                <button class="totp-back" onclick="cancelTOTP()">← Back to login</button>
+            </div>
         </div>
 
         <div class="login-footer">
@@ -382,6 +417,69 @@
             }
         })();
 
+        var _turnstileToken = '';
+        function onTurnstileSuccess(token) { _turnstileToken = token; }
+        function onTurnstileExpired() { _turnstileToken = ''; }
+
+        async function submitTOTP() {
+            const code = document.getElementById('totpCode').value.trim();
+            if (!code) return;
+            const btn = document.getElementById('totpBtn');
+            btn.disabled = true;
+            document.getElementById('totpError').classList.remove('active');
+            try {
+                const res = await fetch('/admin-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    // token = tempToken, email field reused for totpCode (server reads it)
+                    body: JSON.stringify({ action: 'verify-totp', token: window._totpTempToken, email: code, deviceFingerprint: window.deviceFingerprint ? await window.deviceFingerprint.get() : null })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.removeItem('adminLoginLockoutUntil');
+                    localStorage.removeItem('adminLoginFailedAttempts');
+                    sessionStorage.setItem('adminToken', data.token);
+                    sessionStorage.setItem('adminSessionStart', new Date().toISOString());
+                    if (data.user) {
+                        sessionStorage.setItem('adminRole', data.user.role);
+                        sessionStorage.setItem('adminPermissions', JSON.stringify(data.permissions || []));
+                    }
+                    var landingPage = '/admin-dashboard.html';
+                    if (data.user && data.user.role === 'custom' && data.permissions && data.permissions.length > 0) {
+                        var first = data.permissions.find(function(p) { return p.can_view; });
+                        if (first) landingPage = '/admin-' + first.page_slug + '.html';
+                    }
+                    window.location.href = landingPage;
+                } else {
+                    if (data.expired) {
+                        cancelTOTP();
+                        errorText.textContent = 'Too many failed attempts. Please log in again.';
+                        errorMessage.classList.add('active');
+                        lucide.createIcons();
+                        return;
+                    }
+                    document.getElementById('totpErrorText').textContent = data.error || 'Invalid code.';
+                    document.getElementById('totpError').classList.add('active');
+                    lucide.createIcons();
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                document.getElementById('totpErrorText').textContent = 'Connection error. Try again.';
+                document.getElementById('totpError').classList.add('active');
+                btn.disabled = false;
+            }
+        }
+
+        document.getElementById('totpCode').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') submitTOTP();
+        });
+
+        function cancelTOTP() {
+            window._totpTempToken = null;
+            document.getElementById('totpScreen').classList.remove('active');
+            loginForm.style.display = '';
+        }
+
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -398,13 +496,24 @@
             errorMessage.classList.remove('active');
 
             try {
+                const turnstileToken = _turnstileToken || document.querySelector('[name="cf-turnstile-response"]')?.value || '';
                 const response = await fetch('/admin-auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, deviceFingerprint })
+                    body: JSON.stringify({ email, password, deviceFingerprint, turnstileToken })
                 });
 
                 const data = await response.json();
+
+                if (data.requiresTOTP) {
+                    window._totpTempToken = data.tempToken;
+                    loginForm.style.display = 'none';
+                    document.getElementById('totpScreen').classList.add('active');
+                    document.getElementById('totpCode').focus();
+                    lucide.createIcons();
+                    resetBtn();
+                    return;
+                }
 
                 if (data.success) {
                     localStorage.removeItem('adminLoginLockoutUntil');
@@ -422,14 +531,18 @@
                     }
                     window.location.href = landingPage;
                 } else {
+                    if (data.turnstileFailed) {
+                        _turnstileToken = '';
+                        if (window.turnstile) turnstile.reset('#turnstileWidget');
+                    }
                     if (data.locked && data.lockedUntil) {
                         localStorage.removeItem('adminLoginFailedAttempts');
                         applyLockout(data.lockedUntil);
                         return;
                     }
 
-                    // Client-side attempt counter covers wrong-email cases too
-                    if (!data.deviceBlocked) {
+                    // Only count actual credential failures, not Turnstile/IP/rate-limit errors
+                    if (!data.deviceBlocked && !data.turnstileFailed && !data.ipBlocked) {
                         var attempts = parseInt(localStorage.getItem('adminLoginFailedAttempts') || '0', 10) + 1;
                         localStorage.setItem('adminLoginFailedAttempts', String(attempts));
                         if (attempts >= 3) {

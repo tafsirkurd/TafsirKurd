@@ -22,6 +22,11 @@ if(window.isNativePlatform&&window.Capacitor.Plugins.StatusBar){
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
+<link rel="preload" href="/assets/icons/genc-hadith-bg.webp" as="image" type="image/webp">
+<link rel="preload" href="/assets/icons/genc-dua-bg.webp" as="image" type="image/webp">
+<link rel="preload" href="/assets/icons/genc-tasbih-bg.webp" as="image" type="image/webp">
+<link rel="preload" href="/assets/icons/genc-asma-bg.webp" as="image" type="image/webp">
+<link rel="preload" href="/assets/icons/genc-books-bg.webp" as="image" type="image/webp">
 <link rel="preload" href="/assets/fonts/hafs.woff2?v=16" as="font" type="font/woff2" crossorigin="">
 <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin="">
 <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
@@ -1102,8 +1107,7 @@ body{background:var(--bg);color:var(--text)}
 .genc-home{display:flex;flex-direction:column;gap:14px;padding:20px 16px 32px}
 /* Base card — fully theme-aware */
 .genc-card-btn{position:relative;width:100%;height:150px;border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,.08);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s;display:block;background:linear-gradient(135deg,#1c3a5e 0%,#0d1f35 100%);box-shadow:0 4px 20px rgba(0,0,0,.25)}
-.genc-card-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s ease;z-index:0;border-radius:inherit}
-.genc-card-btn.has-image .genc-card-img{opacity:1}
+.genc-card-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;border-radius:inherit}
 .genc-card-btn:active{transform:scale(.97)}
 /* Top accent bar */
 .genc-card-topbar{position:absolute;top:0;left:0;right:0;height:2px;z-index:3;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);opacity:.7}

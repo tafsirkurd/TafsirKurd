@@ -460,6 +460,21 @@
             border-color: var(--border-medium);
         }
         .section-toggle-btn:hover { opacity: .8; }
+        .section-sort-btns { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
+        .section-sort-btn {
+            width: 26px; height: 22px;
+            border-radius: 5px;
+            border: 1px solid var(--border-medium);
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px;
+            line-height: 1;
+            transition: all 0.15s;
+        }
+        .section-sort-btn:disabled { opacity: 0.25; cursor: default; }
+        .section-sort-btn:not(:disabled):hover { background: var(--bg-active); }
 
         /* ── 99 Names grid ── */
         .asma-search-row { padding: 0 0 14px 0; }
@@ -1417,11 +1432,19 @@ async function deleteHadith(id) {
 
 /* ── SECTIONS ── */
 var SECTION_META = {
-    hadith: { label: 'Hadith', icon: 'scroll-text' },
-    dua:    { label: 'Dua',    icon: 'hand-heart'  },
-    tasbih: { label: 'Tasbih', icon: 'rotate-cw'   },
-    asma:   { label: '99 Names', icon: 'star'       }
+    hadith: { label: 'Hadith',    icon: 'scroll-text' },
+    dua:    { label: 'Dua',       icon: 'hand-heart'  },
+    tasbih: { label: 'Tasbih',    icon: 'rotate-cw'   },
+    asma:   { label: '99 Names',  icon: 'star'        },
+    books:  { label: 'Books',     icon: 'book-open'   }
 };
+var SECTION_KEYS = ['hadith','dua','tasbih','asma','books'];
+function _orderedSections() {
+    return SECTION_KEYS.map(function(k, i) {
+        var s = allSections.find(function(x){ return x.key === k; });
+        return { key: k, sort_order: s ? s.sort_order : (i + 1) * 10, active: s ? s.active : true };
+    }).sort(function(a, b){ return a.sort_order - b.sort_order; });
+}
 async function loadSections() {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
     var r = await supabase.from('gencine_sections').select('*').order('sort_order');
@@ -1433,12 +1456,23 @@ function renderSections() {
     var list = document.getElementById('sections-list');
     if (!list) return;
     list.textContent = '';
-    var keys = ['hadith','dua','tasbih','asma'];
-    keys.forEach(function(key) {
-        var sec = allSections.find(function(s){ return s.key === key; });
-        var isActive = sec ? sec.active : true;
+    var ordered = _orderedSections();
+    ordered.forEach(function(item, idx) {
+        var key = item.key;
+        var isActive = item.active;
         var meta = SECTION_META[key] || { label: key, icon: 'circle' };
         var row = mke('div', 'section-row');
+
+        /* Sort up/down buttons */
+        var sortBtns = mke('div', 'section-sort-btns');
+        var upBtn = mke('button', 'section-sort-btn'); upBtn.textContent = '↑'; upBtn.title = 'Move up';
+        if (idx === 0) upBtn.disabled = true;
+        upBtn.onclick = (function(k){ return function(){ moveSection(k, -1); }; })(key);
+        var downBtn = mke('button', 'section-sort-btn'); downBtn.textContent = '↓'; downBtn.title = 'Move down';
+        if (idx === ordered.length - 1) downBtn.disabled = true;
+        downBtn.onclick = (function(k){ return function(){ moveSection(k, 1); }; })(key);
+        sortBtns.appendChild(upBtn); sortBtns.appendChild(downBtn);
+
         var iconWrap = mke('div', 'section-row-icon');
         var ico = mke('i'); ico.setAttribute('data-lucide', meta.icon);
         iconWrap.appendChild(ico);
@@ -1449,10 +1483,27 @@ function renderSections() {
         var btn = mke('button', 'section-toggle-btn ' + (isActive ? 'active' : 'inactive'));
         btn.textContent = isActive ? 'Visible' : 'Hidden';
         btn.onclick = (function(k, a){ return function(){ toggleSection(k, !a); }; })(key, isActive);
-        row.appendChild(iconWrap); row.appendChild(body); row.appendChild(btn);
+        row.appendChild(sortBtns); row.appendChild(iconWrap); row.appendChild(body); row.appendChild(btn);
         list.appendChild(row);
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+async function moveSection(key, dir) {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var ordered = _orderedSections();
+    var idx = ordered.findIndex(function(s){ return s.key === key; });
+    var swapIdx = idx + dir;
+    if (swapIdx < 0 || swapIdx >= ordered.length) return;
+    var a = ordered[idx], b = ordered[swapIdx];
+    /* Ensure distinct sort_order values before swap */
+    ordered.forEach(function(s, i){ if (s.sort_order === ordered[i > 0 ? i-1 : 0].sort_order && i > 0) s.sort_order = i * 10; });
+    var tmp = a.sort_order; a.sort_order = b.sort_order; b.sort_order = tmp;
+    if (a.sort_order === b.sort_order) { a.sort_order = idx * 10; b.sort_order = swapIdx * 10; }
+    var r1 = await supabase.from('gencine_sections').upsert({ key: a.key, sort_order: a.sort_order }, { onConflict: 'key' });
+    var r2 = await supabase.from('gencine_sections').upsert({ key: b.key, sort_order: b.sort_order }, { onConflict: 'key' });
+    if (r1.error || r2.error) { showNotification('Sort update failed', 'error'); return; }
+    localStorage.removeItem('gencine_sections_v1');
+    await loadSections();
 }
 async function toggleSection(key, newActive) {
     var supabase = window.adminAuth.getSupabase(); if (!supabase) return;

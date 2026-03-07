@@ -12,9 +12,15 @@ function _sections(){
     { name:'books',  label:T('gencine.books','کتێب'),        sub:T('gencine.books_sub','کتێبێن ئیسلامی'),                       icon:'fas fa-book-open' }
   ];
   if (!_dbSections || !_dbSections.length) return all;
-  var activeMap = {};
-  _dbSections.forEach(function(s){ activeMap[s.key] = s.active; });
-  return all.filter(function(sec){ return activeMap[sec.name] !== false; });
+  var activeMap = {}, orderMap = {};
+  _dbSections.forEach(function(s){ activeMap[s.key] = s.active; if (s.sort_order != null) orderMap[s.key] = s.sort_order; });
+  return all
+    .filter(function(sec){ return activeMap[sec.name] !== false; })
+    .sort(function(a, b){
+      var oa = orderMap[a.name] != null ? orderMap[a.name] : 999;
+      var ob = orderMap[b.name] != null ? orderMap[b.name] : 999;
+      return oa - ob;
+    });
 }
 
 /* ── 99 Names of Allah ── */
@@ -352,6 +358,7 @@ function $(id){return document.getElementById(id)}
 
 window.GencineUI = {
   _view:            'home',   /* 'home' | 'dua' | 'tasbih' | 'hadith' */
+  _homeEl:          null,     /* cached home grid — built once, reused */
   _duaCat:          'morning',
   _tasbihCount:     0,
   _tasbihTarget:    33,
@@ -386,6 +393,14 @@ window.GencineUI = {
   render: function(){
     var self = this;
     this._loadState();
+
+    /* If already showing home with content rendered, skip redraw to avoid
+       image reload flicker. DB sections won't change during a session. */
+    var el = $('gencineContent');
+    if (_dbLoaded && this._view === 'home' && el && el.firstChild) {
+      return;
+    }
+
     this._view = 'home';
     this._hadithDetailIdx = null;
 
@@ -404,8 +419,10 @@ window.GencineUI = {
     localStorage.removeItem('gencine_cats_v1');
     localStorage.removeItem('gencine_duas_v1');
     localStorage.removeItem('gencine_hadiths_v2');
+    localStorage.removeItem('gencine_sections_v1');
     _dbLoaded  = false;
     _loadingDb = false;
+    this._homeEl = null;
     _fetchDbData(function(){ self._draw(); });
   },
 
@@ -433,6 +450,7 @@ window.GencineUI = {
 
   /* ═══════════════════ HOME ═══════════════════ */
   _renderHome: function(container){
+    if (this._homeEl) { container.appendChild(this._homeEl); return; }
     var self = this;
     var home = document.createElement('div');
     home.className = 'genc-home';
@@ -501,11 +519,12 @@ window.GencineUI = {
       home.appendChild(btn);
     });
 
+    this._homeEl = home;
     container.appendChild(home);
   },
 
   /* ── back row shared by all sections ── */
-  _backRow: function(label){
+  _backRow: function(label, onBack){
     var self = this;
     var row = document.createElement('div');
     row.className = 'genc-back-row';
@@ -514,7 +533,7 @@ window.GencineUI = {
     var i = document.createElement('i');
     i.className = 'fas fa-arrow-right';
     btn.appendChild(i);
-    btn.onclick = function(){ self.render(); };
+    btn.onclick = onBack ? onBack : function(){ self.render(); };
     row.appendChild(btn);
     if(label){
       var t = document.createElement('span');
