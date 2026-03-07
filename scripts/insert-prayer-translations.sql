@@ -1,4 +1,5 @@
 -- Insert ALL prayer-times translation keys into kurdish_translations (page = android)
+-- Already executed 2026-03-05 via Supabase MCP. All 47 keys upserted successfully.
 -- Run this in your Supabase SQL editor to make all prayer texts editable
 -- from the admin translations panel → Android tab → prayer / notification category.
 --

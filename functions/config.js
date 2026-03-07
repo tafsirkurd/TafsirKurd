@@ -9,14 +9,14 @@ export async function onRequest(context) {
     const referer = request.headers.get('Referer') || '';
     const allowedDomains = ['tafsirkurd.com', 'localhost', '127.0.0.1'];
 
-    // Use only Origin for access decisions — Referer is spoofable and not a security boundary
-    const isAllowed = allowedDomains.some(domain => origin.includes(domain));
+    // Check Origin first; fall back to Referer when Origin is absent (common on mobile browsers
+    // for same-site fetches). The anon key is public-facing so this is a soft guard only.
+    const isAllowed = allowedDomains.some(domain => origin.includes(domain) || referer.includes(domain));
 
     // Allow Capacitor mobile app (origin: capacitor://localhost or https://localhost)
     const isCapacitor = origin === 'capacitor://localhost' || origin === 'https://localhost';
 
-    // Block direct browser access (no origin/referer = someone typing URL directly)
-    // But allow Capacitor WebView which may send no referer
+    // Block only when both Origin and Referer are absent (direct URL access / curl with no headers)
     const isDirectAccess = !origin && !referer;
 
     if ((!isAllowed && !isCapacitor) || (isDirectAccess && !isCapacitor)) {
