@@ -38,7 +38,7 @@ export async function onRequest(context) {
     );
 
     try {
-        const { action, email, password, token, deviceFingerprint, page_slug, permission_type, turnstileToken } = await request.json();
+        const { action, email, password, token, deviceFingerprint, page_slug, permission_type, turnstileToken, trustDevice, deviceId, currentPassword, newPassword } = await request.json();
         const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
         const userAgent = request.headers.get('User-Agent') || 'unknown';
 
@@ -262,7 +262,18 @@ export async function onRequest(context) {
             const sessionToken = generateSecureToken();
             const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
             await supabase.from('admin_sessions').insert({ user_id: user2.id, token: sessionToken, ip_address: clientIP, user_agent: userAgent, device_fingerprint: deviceFingerprint, expires_at: expiresAt.toISOString() });
-            await logAudit(supabase, user2.id, user2.email, 'login_success_2fa', { usedBackup }, clientIP, userAgent, null, null, null, 'info');
+            // Trust device for 30 days if requested
+            if (trustDevice && deviceFingerprint) {
+                const trustedExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                await supabase.from('admin_trusted_devices').upsert({
+                    user_id: user2.id,
+                    device_fingerprint: deviceFingerprint,
+                    device_name: userAgent ? userAgent.substring(0, 120) : 'Unknown device',
+                    ip_address: clientIP,
+                    expires_at: trustedExpiry.toISOString()
+                }, { onConflict: 'user_id,device_fingerprint' }).catch(() => {});
+            }
+            await logAudit(supabase, user2.id, user2.email, 'login_success_2fa', { usedBackup, trustedDevice: !!(trustDevice && deviceFingerprint) }, clientIP, userAgent, null, null, null, 'info');
             await sendSecurityAlert(env, { type: 'login_success', email: user2.email, ip: clientIP, detail: usedBackup ? 'Signed in with backup code' : 'Signed in with 2FA' });
             await cleanupOldSessions(supabase, user2.id);
             const { data: perms2 } = await supabase.from('admin_permissions').select('page_slug,can_view,can_edit,can_delete').eq('user_id', user2.id);
@@ -329,6 +340,56 @@ export async function onRequest(context) {
             const targetId = email; // 'email' field reused for targetUserId
             await supabase.from('admin_users').update({ totp_secret: null, totp_enabled: false, totp_backup_codes: null }).eq('id', targetId);
             await logAudit(supabase, sess.user_id, caller.email, 'totp_reset_by_admin', { target: targetId }, clientIP, userAgent, null, null, null, 'warning');
+            return jsonResponse({ success: true }, 200, corsHeaders);
+        }
+
+        // ===== GET-AUDIT-LOGS =====
+        if (action === 'get-audit-logs') {
+            if (!token) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: sess } = await supabase.from('admin_sessions').select('user_id').eq('token', token).gt('expires_at', new Date().toISOString()).single();
+            if (!sess) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: caller } = await supabase.from('admin_users').select('role').eq('id', sess.user_id).single();
+            if (!caller || !['super_admin', 'editor'].includes(caller.role)) return jsonResponse({ error: 'Forbidden' }, 403, corsHeaders);
+            const { data: logs } = await supabase.from('admin_audit_logs').select('*').order('created_at', { ascending: false }).limit(2000);
+            return jsonResponse({ logs: logs || [] }, 200, corsHeaders);
+        }
+
+        // ===== GET-TRUSTED-DEVICES =====
+        if (action === 'get-trusted-devices') {
+            if (!token) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: sess } = await supabase.from('admin_sessions').select('user_id').eq('token', token).gt('expires_at', new Date().toISOString()).single();
+            if (!sess) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: devices } = await supabase.from('admin_trusted_devices').select('id,device_name,ip_address,created_at,expires_at,device_fingerprint').eq('user_id', sess.user_id).gt('expires_at', new Date().toISOString()).order('created_at', { ascending: false });
+            return jsonResponse({ devices: devices || [] }, 200, corsHeaders);
+        }
+
+        // ===== REVOKE-TRUSTED-DEVICE =====
+        if (action === 'revoke-trusted-device') {
+            if (!token) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: sess } = await supabase.from('admin_sessions').select('user_id').eq('token', token).gt('expires_at', new Date().toISOString()).single();
+            if (!sess) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            await supabase.from('admin_trusted_devices').delete().eq('id', deviceId).eq('user_id', sess.user_id);
+            await logAudit(supabase, sess.user_id, null, 'trusted_device_revoked', { deviceId }, clientIP, userAgent, null, null, null, 'info');
+            return jsonResponse({ success: true }, 200, corsHeaders);
+        }
+
+        // ===== CHANGE-PASSWORD (self) =====
+        if (action === 'change-password') {
+            if (!token) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            const { data: sess } = await supabase.from('admin_sessions').select('user_id').eq('token', token).gt('expires_at', new Date().toISOString()).single();
+            if (!sess) return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+            if (!currentPassword || !newPassword) return jsonResponse({ error: 'Missing fields' }, 400, corsHeaders);
+            if (newPassword.length < 8) return jsonResponse({ error: 'Password must be at least 8 characters' }, 400, corsHeaders);
+            const { data: u } = await supabase.from('admin_users').select('email,password_hash').eq('id', sess.user_id).single();
+            if (!u) return jsonResponse({ error: 'User not found' }, 404, corsHeaders);
+            const match = await compare(currentPassword, u.password_hash);
+            if (!match) return jsonResponse({ error: 'Current password is incorrect' }, 401, corsHeaders);
+            const newHash = await hash(newPassword, 10);
+            await supabase.from('admin_users').update({ password_hash: newHash }).eq('id', sess.user_id);
+            // Invalidate all OTHER sessions (keep current)
+            await supabase.from('admin_sessions').delete().eq('user_id', sess.user_id).neq('token', token);
+            await sendSecurityAlert(env, { type: 'password_changed', email: u.email, ip: clientIP, detail: 'All other sessions have been logged out' });
+            await logAudit(supabase, sess.user_id, u.email, 'password_changed', {}, clientIP, userAgent, null, null, null, 'warning');
             return jsonResponse({ success: true }, 200, corsHeaders);
         }
 
@@ -505,17 +566,31 @@ export async function onRequest(context) {
             }, clientIP, userAgent, null, null, deviceFingerprint, 'info');
         }
 
-        // 8. If 2FA enabled — issue a short-lived temp token instead of a full session
+        // 8. If 2FA enabled — check trusted device first, then issue temp token
         if (user.totp_enabled) {
-            const tempToken = generateSecureToken();
-            if (env.ADMIN_KV) {
-                await env.ADMIN_KV.put(
-                    `totp_pending:${tempToken}`,
-                    JSON.stringify({ userId: user.id, email: user.email }),
-                    { expirationTtl: 300 } // 5 minutes
-                );
+            let skipTOTP = false;
+            if (deviceFingerprint) {
+                const { data: trusted } = await supabase
+                    .from('admin_trusted_devices')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('device_fingerprint', deviceFingerprint)
+                    .gt('expires_at', new Date().toISOString())
+                    .single();
+                if (trusted) skipTOTP = true;
             }
-            return jsonResponse({ requiresTOTP: true, tempToken }, 200, corsHeaders);
+            if (!skipTOTP) {
+                const tempToken = generateSecureToken();
+                if (env.ADMIN_KV) {
+                    await env.ADMIN_KV.put(
+                        `totp_pending:${tempToken}`,
+                        JSON.stringify({ userId: user.id, email: user.email }),
+                        { expirationTtl: 300 } // 5 minutes
+                    );
+                }
+                return jsonResponse({ requiresTOTP: true, tempToken }, 200, corsHeaders);
+            }
+            // Trusted device — fall through to session creation
         }
 
         // 8b. Clear IP rate limit on success
@@ -645,6 +720,7 @@ async function sendSecurityAlert(env, { type, email, ip, detail = '' }) {
         totp_brute_force: '🚨',
         totp_disabled:    '⚠️',
         new_device:       '📱',
+        password_changed: '🔑',
     };
     const labels = {
         login_success:    'Successful Login',
@@ -656,6 +732,7 @@ async function sendSecurityAlert(env, { type, email, ip, detail = '' }) {
         totp_brute_force: '2FA Brute Force Detected',
         totp_disabled:    '2FA Disabled',
         new_device:       'New Device Logged In',
+        password_changed: 'Password Changed',
     };
     const icon  = icons[type]  || '🔔';
     const label = labels[type] || type;

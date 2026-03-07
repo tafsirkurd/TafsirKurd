@@ -300,6 +300,7 @@
                     <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
                     <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
                     <a href="/admin-activity-feed.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">Activity Feed</span></a>
+                    <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
                 </div>
             </nav>
             <div class="sidebar-footer">
@@ -341,6 +342,40 @@
                     <i data-lucide="shield-alert"></i>
                     <span>You do not have permission to manage admin accounts. Only Super Admins can access this feature.</span>
                 </div>
+                <!-- Change Password -->
+                <div class="card" style="margin-bottom:20px;padding:20px">
+                    <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:14px">
+                        <i data-lucide="key-round" style="width:16px;height:16px"></i>
+                        Change My Password
+                    </div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+                        <div style="flex:1;min-width:180px">
+                            <label style="font-size:11px;color:var(--text-tertiary);display:block;margin-bottom:4px">Current Password</label>
+                            <input type="password" id="cpCurrent" class="form-input" placeholder="Current password" style="width:100%">
+                        </div>
+                        <div style="flex:1;min-width:180px">
+                            <label style="font-size:11px;color:var(--text-tertiary);display:block;margin-bottom:4px">New Password</label>
+                            <input type="password" id="cpNew" class="form-input" placeholder="Min 8 characters" style="width:100%">
+                        </div>
+                        <div style="flex:1;min-width:180px">
+                            <label style="font-size:11px;color:var(--text-tertiary);display:block;margin-bottom:4px">Confirm New Password</label>
+                            <input type="password" id="cpConfirm" class="form-input" placeholder="Repeat new password" style="width:100%">
+                        </div>
+                        <button class="btn btn-primary" onclick="changeMyPassword()" style="white-space:nowrap"><i data-lucide="save"></i>Update Password</button>
+                    </div>
+                    <div id="cpMsg" style="margin-top:10px;font-size:13px;display:none"></div>
+                </div>
+
+                <!-- Trusted Devices -->
+                <div class="card" style="margin-bottom:20px;padding:20px">
+                    <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:14px">
+                        <i data-lucide="monitor-smartphone" style="width:16px;height:16px"></i>
+                        Trusted Devices
+                        <span style="font-size:11px;color:var(--text-tertiary);font-weight:400">— devices that skip 2FA for 30 days</span>
+                    </div>
+                    <div id="trustedDevicesList"><div style="color:var(--text-tertiary);font-size:13px">Loading...</div></div>
+                </div>
+
                 <!-- My 2FA -->
                 <div class="card" id="my2faCard" style="margin-bottom:20px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
                     <div>
@@ -645,7 +680,7 @@
             checkboxes.forEach(function(cb) { cb.checked = state; });
         }
 
-        (async () => { const auth = await window.adminAuth.checkAuth(); if (auth) { await loadAccounts(); load2faStatus(); } })();
+        (async () => { const auth = await window.adminAuth.checkAuth(); if (auth) { await loadAccounts(); load2faStatus(); loadTrustedDevices(); } })();
         document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
         document.getElementById('mobile-menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
         const themeToggle = document.getElementById('theme-toggle'), themeIcon = document.getElementById('theme-icon');
@@ -1087,6 +1122,81 @@
                 accounts = allAccounts.filter(a => a.email.toLowerCase().includes(query) || (a.full_name && a.full_name.toLowerCase().includes(query)));
             }
             renderAccountsTable();
+        }
+
+        // ===== CHANGE PASSWORD =====
+        async function changeMyPassword() {
+            var cur = document.getElementById('cpCurrent').value;
+            var nw  = document.getElementById('cpNew').value;
+            var cfm = document.getElementById('cpConfirm').value;
+            var msg = document.getElementById('cpMsg');
+            if (!cur || !nw || !cfm) { showMsg(msg, 'All fields are required.', 'error'); return; }
+            if (nw.length < 8)       { showMsg(msg, 'New password must be at least 8 characters.', 'error'); return; }
+            if (nw !== cfm)          { showMsg(msg, 'New passwords do not match.', 'error'); return; }
+            var token = sessionStorage.getItem('adminToken');
+            var res = await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ action:'change-password', token, currentPassword: cur, newPassword: nw }) });
+            var data = await res.json();
+            if (data.success) {
+                showMsg(msg, 'Password updated. All other sessions have been logged out.', 'success');
+                document.getElementById('cpCurrent').value = '';
+                document.getElementById('cpNew').value = '';
+                document.getElementById('cpConfirm').value = '';
+            } else {
+                showMsg(msg, data.error || 'Failed to update password.', 'error');
+            }
+        }
+        function showMsg(el, text, type) {
+            el.textContent = text;
+            el.style.display = 'block';
+            el.style.color = type === 'success' ? '#16a34a' : '#dc2626';
+        }
+
+        // ===== TRUSTED DEVICES =====
+        async function loadTrustedDevices() {
+            var token = sessionStorage.getItem('adminToken');
+            var container = document.getElementById('trustedDevicesList');
+            var res = await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ action:'get-trusted-devices', token }) });
+            var data = await res.json();
+            while (container.firstChild) container.removeChild(container.firstChild);
+            if (!data.devices || data.devices.length === 0) {
+                var empty = document.createElement('div');
+                empty.style.cssText = 'color:var(--text-tertiary);font-size:13px';
+                empty.textContent = 'No trusted devices. Check "Trust this device" when logging in with 2FA.';
+                container.appendChild(empty);
+                return;
+            }
+            data.devices.forEach(function(d) {
+                var row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-color);flex-wrap:wrap';
+                var info = document.createElement('div');
+                var name = document.createElement('div');
+                name.style.cssText = 'font-size:13px;font-weight:600;color:var(--text-primary)';
+                name.textContent = (d.device_name || 'Unknown device').substring(0, 80);
+                var meta = document.createElement('div');
+                meta.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:2px';
+                var added = new Date(d.created_at).toLocaleDateString('en-GB');
+                var exp   = new Date(d.expires_at).toLocaleDateString('en-GB');
+                meta.textContent = 'IP: ' + (d.ip_address || '-') + '  ·  Added: ' + added + '  ·  Expires: ' + exp;
+                info.appendChild(name);
+                info.appendChild(meta);
+                var btn = document.createElement('button');
+                btn.className = 'btn btn-danger';
+                btn.style.cssText = 'font-size:12px;padding:5px 12px';
+                btn.textContent = 'Revoke';
+                btn.onclick = (function(id){ return function(){ revokeDevice(id); }; })(d.id);
+                row.appendChild(info);
+                row.appendChild(btn);
+                container.appendChild(row);
+            });
+        }
+        async function revokeDevice(deviceId) {
+            if (!confirm('Revoke this trusted device? It will need 2FA on next login.')) return;
+            var token = sessionStorage.getItem('adminToken');
+            await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ action:'revoke-trusted-device', token, deviceId }) });
+            loadTrustedDevices();
         }
     </script>
 </body>
