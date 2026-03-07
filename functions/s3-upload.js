@@ -68,7 +68,10 @@ export async function onRequest(context) {
             const secretAccessKey = env.R2_SECRET_ACCESS_KEY;
             const accountId = env.CF_ACCOUNT_ID;
             const bucket = bucketOverride || env.R2_BUCKET || 'tafsirkurd-videos';
-            const publicDomain = env.R2_PUBLIC_DOMAIN; // Custom domain or r2.dev subdomain
+            /* Each R2 bucket has its own r2.dev public subdomain */
+            const publicDomain = bucket === 'tafsirkurd-books'
+                ? (env.R2_BOOKS_PUBLIC_DOMAIN || env.R2_PUBLIC_DOMAIN)
+                : env.R2_PUBLIC_DOMAIN;
 
             if (!accessKeyId || !secretAccessKey || !accountId) {
                 console.error('Missing R2 credentials');
