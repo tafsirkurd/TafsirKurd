@@ -386,17 +386,19 @@ function init(){
     next();
   },900);
 
-  // Hide splash — waits for Quran data to be ready (fast if cached, slow if fetching)
+  // Hide splash — waits for Quran data + i18n, minimum 2s, max 6s
   var _splashStart = Date.now();
-  function _hideSplash(){
+  var _splashMinMs = 2000; // always show at least 2 seconds
+  var _splashReady = { quran: false, i18n: false };
+  function _checkSplashReady(){
+    if(!_splashReady.quran || !_splashReady.i18n) return;
     var elapsed = Date.now() - _splashStart;
-    var delay = Math.max(0, 400 - elapsed); // min 400ms on screen
+    var delay = Math.max(0, _splashMinMs - elapsed);
     setTimeout(function(){
       var sp=$('splash');
       if(sp){sp.classList.add('hide')}
       var app=$('app');
       if(app){app.style.display='flex'}
-      // Hide native Capacitor splash too
       try{
         var sp2=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.SplashScreen;
         if(sp2)sp2.hide({fadeOutDuration:300});
@@ -404,10 +406,14 @@ function init(){
       setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp)},350);
     }, delay);
   }
-  window._hideSplash = _hideSplash;
-  // If Quran data already cached → hide immediately after min delay
-  // Otherwise wait for loadQuranData() to call _hideSplash(), with 5s failsafe
-  if(S.quranData){ _hideSplash(); } else { setTimeout(_hideSplash, 5000); }
+  window._splashReadyQuran = function(){ _splashReady.quran=true; _checkSplashReady(); };
+  window._splashReadyI18n  = function(){ _splashReady.i18n=true;  _checkSplashReady(); };
+  // Failsafe — force show app after 6s regardless
+  setTimeout(function(){
+    _splashReady.quran=true; _splashReady.i18n=true; _checkSplashReady();
+  }, 6000);
+  // If already cached, mark quran ready immediately
+  if(S.quranData){ _splashReady.quran=true; }
 }
 
 /* ===== LIVE TRANSLATION UPDATE ===== */
@@ -442,8 +448,7 @@ function loadQuranData(){
     try{localStorage.setItem('quran_data_cache',JSON.stringify(d))}catch(e){
       console.warn('Quran cache failed (storage full?)');
     }
-    // Data ready — hide splash now
-    if(window._hideSplash){window._hideSplash();window._hideSplash=null;}
+    if(window._splashReadyQuran){ window._splashReadyQuran(); window._splashReadyQuran=null; }
     // Re-render current surah if one is open
     if(S.surah)renderAyahs(S.surah);
   }).catch(function(e){
@@ -5086,9 +5091,14 @@ function startApp(){
   document.documentElement.style.setProperty('--mushaf-size',(S.mushafFontSize||22)+'px');
   document.documentElement.style.setProperty('--mushaf-lh',String(S.mushafLineH||1.8));
   if(window.i18n){
-    i18n.initLang().then(function(){ init(); i18n.applyTranslations(); });
+    i18n.initLang().then(function(){
+      init();
+      i18n.applyTranslations();
+      if(window._splashReadyI18n){ window._splashReadyI18n(); window._splashReadyI18n=null; }
+    });
   } else {
     init();
+    if(window._splashReadyI18n){ window._splashReadyI18n(); window._splashReadyI18n=null; }
   }
   // Re-render current tab whenever background translation merge completes
   document.addEventListener('i18n:updated',function(){ renderCurrentTab(); });
