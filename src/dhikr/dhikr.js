@@ -1442,7 +1442,7 @@ window.GencineUI = {
       }
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       var pdfSrc = 'https://tafsirkurd.com/pdf-proxy?url=' + encodeURIComponent(book.pdf_url);
-      pdfjsLib.getDocument({ url: pdfSrc, cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/', cMapPacked: true, standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/', disableFontFace: false, useSystemFonts: false })
+      pdfjsLib.getDocument({ url: pdfSrc, cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/', cMapPacked: true, standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/', disableFontFace: true })
         .promise.then(function(pdf){
           self._pdfDoc = pdf;
           self._goBookPage(self._pdfPage);
@@ -1470,13 +1470,13 @@ window.GencineUI = {
 
     pdf.getPage(pageNum).then(function(page){
       var dpr = window.devicePixelRatio || 1;
-      var containerWidth = canvas.parentElement ? canvas.parentElement.offsetWidth : window.innerWidth;
+      var containerWidth = (canvas.parentElement ? canvas.parentElement.offsetWidth : window.innerWidth) - 4;
       var unscaledViewport = page.getViewport({ scale: 1 });
-      var scale = Math.max((containerWidth - 4) / unscaledViewport.width, 1.5);
+      var scale = containerWidth / unscaledViewport.width;
       var viewport = page.getViewport({ scale: scale * dpr });
       canvas.width  = viewport.width;
       canvas.height = viewport.height;
-      canvas.style.width  = Math.floor(viewport.width  / dpr) + 'px';
+      canvas.style.width  = containerWidth + 'px';
       canvas.style.height = Math.floor(viewport.height / dpr) + 'px';
 
       var ctx = canvas.getContext('2d');
