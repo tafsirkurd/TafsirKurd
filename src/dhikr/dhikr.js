@@ -1320,11 +1320,14 @@ window.GencineUI = {
       var card = document.createElement('button');
       card.className = 'book-card';
       card.onclick = function(){
-        self._currentBook = book;
-        self._pdfDoc = null;
-        self._pdfPage = 1;
-        self._view = 'book-reader';
-        self._draw();
+        if (book.pdf_url) {
+          var Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+          if (Browser) {
+            Browser.open({ url: book.pdf_url });
+          } else {
+            window.open(book.pdf_url, '_blank');
+          }
+        }
       };
 
       var coverWrap = document.createElement('div');
