@@ -1256,6 +1256,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "gencine.books_loading",    kurdish_text: "بارکرن...",                                category: "gencine",    page: "android" },
     { key_id: "gencine.books_error",      kurdish_text: "هەلەیەکێ هەبوو",                          category: "gencine",    page: "android" },
     { key_id: "gencine.cat_all",          kurdish_text: "هەمی",                                     category: "gencine",    page: "android" },
+    { key_id: "gencine.cat_quran",        kurdish_text: "لە قورئانەوە",                               category: "gencine",    page: "android" },
     { key_id: "gencine.cat_morning",      kurdish_text: "بەیانیکردن",                               category: "gencine",    page: "android" },
     { key_id: "gencine.cat_evening",      kurdish_text: "ئێواربوون",                                category: "gencine",    page: "android" },
     { key_id: "gencine.cat_travel",       kurdish_text: "گەشت",                                     category: "gencine",    page: "android" },
