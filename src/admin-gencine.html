@@ -1710,35 +1710,11 @@ function onPdfFilePicked(input) {
 }
 
 async function uploadPdf(file) {
-    var token = sessionStorage.getItem('adminToken');
-    if (!token) { showNotification('Not authenticated', 'error'); return null; }
     var statusEl = document.getElementById('book-pdf-upload-status');
     if (statusEl) statusEl.textContent = 'Uploading PDF... (this may take a moment)';
-
-    var presignRes = await fetch('/s3-upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ filename: file.name, contentType: 'application/pdf', folder: 'pdfs', bucket: 'tafsirkurd-books' })
-    });
-    if (!presignRes.ok) {
-        var err = await presignRes.json().catch(function(){ return {}; });
-        showNotification('PDF presign failed: ' + (err.error || presignRes.status), 'error');
-        return null;
-    }
-    var presign = await presignRes.json();
-
-    var putRes = await fetch(presign.uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/pdf' },
-        body: file
-    });
-    if (!putRes.ok) {
-        showNotification('PDF upload to R2 failed: ' + putRes.status, 'error');
-        if (statusEl) statusEl.textContent = 'Upload failed.';
-        return null;
-    }
-    if (statusEl) statusEl.textContent = 'PDF uploaded ✓';
-    return presign.publicUrl;
+    var url = await uploadToR2(file, 'pdfs', 'tafsirkurd-books');
+    if (statusEl) statusEl.textContent = url ? 'PDF uploaded ✓' : 'Upload failed.';
+    return url;
 }
 
 function previewCover(input) {
@@ -1758,35 +1734,29 @@ function previewCover(input) {
     document.getElementById('book-cover-url').value = '';
 }
 
-async function uploadCover(file) {
+async function uploadToR2(file, folder, bucket) {
     var token = sessionStorage.getItem('adminToken');
     if (!token) { showNotification('Not authenticated', 'error'); return null; }
-
-    /* 1. Get a presigned R2 URL from our Pages Function */
-    var presignRes = await fetch('/s3-upload', {
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('folder', folder);
+    fd.append('bucket', bucket);
+    var res = await fetch('/s3-upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ filename: file.name, contentType: file.type, folder: 'book-covers', bucket: 'tafsirkurd-books' })
+        headers: { 'Authorization': 'Bearer ' + token },
+        body: fd
     });
-    if (!presignRes.ok) {
-        var err = await presignRes.json().catch(function(){ return {}; });
-        showNotification('Cover presign failed: ' + (err.error || presignRes.status), 'error');
+    if (!res.ok) {
+        var err = await res.json().catch(function(){ return {}; });
+        showNotification('Upload failed: ' + (err.error || res.status), 'error');
         return null;
     }
-    var presign = await presignRes.json();
+    var data = await res.json();
+    return data.publicUrl || null;
+}
 
-    /* 2. PUT the file directly to R2 via the presigned URL */
-    var putRes = await fetch(presign.uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file
-    });
-    if (!putRes.ok) {
-        showNotification('Cover upload to R2 failed: ' + putRes.status, 'error');
-        return null;
-    }
-
-    return presign.publicUrl;
+async function uploadCover(file) {
+    return await uploadToR2(file, 'book-covers', 'tafsirkurd-books');
 }
 
 async function saveBook() {
