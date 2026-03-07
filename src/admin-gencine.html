@@ -955,8 +955,18 @@
                             </div>
                             <div class="form-row">
                                 <div class="form-group" style="flex:2">
-                                    <label class="form-label">PDF URL (paste Cloudflare R2 link)</label>
-                                    <input type="url" id="book-pdf-url" class="form-input" placeholder="https://pub-xxx.r2.dev/books/book.pdf">
+                                    <label class="form-label">PDF File</label>
+                                    <div style="display:flex;flex-direction:column;gap:8px">
+                                        <label style="cursor:pointer">
+                                            <input type="file" id="book-pdf-file" accept="application/pdf" style="display:none" onchange="onPdfFilePicked(this)">
+                                            <span class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+                                                <i data-lucide="file-up" style="width:14px;height:14px"></i>
+                                                Pick PDF from PC
+                                            </span>
+                                        </label>
+                                        <input type="url" id="book-pdf-url" class="form-input" placeholder="or paste Cloudflare R2 URL directly">
+                                        <div id="book-pdf-upload-status" style="font-size:12px;color:var(--text-tertiary)"></div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-row">
@@ -1676,6 +1686,8 @@ function cancelBookEdit() {
     document.getElementById('book-sort').value = '0';
     document.getElementById('book-active').checked = true;
     document.getElementById('book-cover-file').value = '';
+    document.getElementById('book-pdf-file').value = '';
+    document.getElementById('book-pdf-upload-status').textContent = '';
     var preview = document.getElementById('book-cover-preview');
     if (preview) {
         preview.textContent = '';
@@ -1687,6 +1699,46 @@ function cancelBookEdit() {
     document.getElementById('book-cover-upload-status').textContent = '';
     document.getElementById('book-form-toggle-label').textContent = 'Add Book';
     closeForm('book');
+}
+
+function onPdfFilePicked(input) {
+    var file = input.files && input.files[0]; if (!file) return;
+    var statusEl = document.getElementById('book-pdf-upload-status');
+    if (statusEl) statusEl.textContent = '📄 ' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + ' MB) — will upload on Save';
+    /* Clear direct URL field when file is chosen */
+    document.getElementById('book-pdf-url').value = '';
+}
+
+async function uploadPdf(file) {
+    var token = sessionStorage.getItem('adminToken');
+    if (!token) { showNotification('Not authenticated', 'error'); return null; }
+    var statusEl = document.getElementById('book-pdf-upload-status');
+    if (statusEl) statusEl.textContent = 'Uploading PDF... (this may take a moment)';
+
+    var presignRes = await fetch('/s3-upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ filename: file.name, contentType: 'application/pdf', folder: 'pdfs', bucket: 'tafsirkurd-books' })
+    });
+    if (!presignRes.ok) {
+        var err = await presignRes.json().catch(function(){ return {}; });
+        showNotification('PDF presign failed: ' + (err.error || presignRes.status), 'error');
+        return null;
+    }
+    var presign = await presignRes.json();
+
+    var putRes = await fetch(presign.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/pdf' },
+        body: file
+    });
+    if (!putRes.ok) {
+        showNotification('PDF upload to R2 failed: ' + putRes.status, 'error');
+        if (statusEl) statusEl.textContent = 'Upload failed.';
+        return null;
+    }
+    if (statusEl) statusEl.textContent = 'PDF uploaded ✓';
+    return presign.publicUrl;
 }
 
 function previewCover(input) {
@@ -1754,6 +1806,14 @@ async function saveBook() {
         if (statusEl) statusEl.textContent = uploaded ? 'Cover uploaded.' : 'Upload failed — using URL field.';
     }
 
+    /* Upload PDF file if one was picked */
+    var pdfFileInput = document.getElementById('book-pdf-file');
+    var pdfUrl = document.getElementById('book-pdf-url').value.trim() || null;
+    if (pdfFileInput && pdfFileInput.files && pdfFileInput.files[0]) {
+        var uploadedPdf = await uploadPdf(pdfFileInput.files[0]);
+        if (uploadedPdf) pdfUrl = uploadedPdf;
+    }
+
     var payload = {
         title_ku:    titleKu || null,
         title_ar:    titleAr || null,
@@ -1761,7 +1821,7 @@ async function saveBook() {
         author_ar:   document.getElementById('book-author-ar').value.trim() || null,
         category:    document.getElementById('book-category').value.trim() || null,
         pages:       parseInt(document.getElementById('book-pages').value) || null,
-        pdf_url:     document.getElementById('book-pdf-url').value.trim() || null,
+        pdf_url:     pdfUrl,
         description: document.getElementById('book-description').value.trim() || null,
         cover_url:   coverUrl,
         sort_order:  parseInt(document.getElementById('book-sort').value) || 0,
