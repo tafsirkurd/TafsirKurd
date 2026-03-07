@@ -366,6 +366,20 @@
                     <div id="cpMsg" style="margin-top:10px;font-size:13px;display:none"></div>
                 </div>
 
+                <!-- Active Sessions -->
+                <div class="card" style="margin-bottom:20px;padding:20px">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+                        <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">
+                            <i data-lucide="monitor" style="width:16px;height:16px"></i>
+                            My Active Sessions
+                        </div>
+                        <button class="btn btn-danger" onclick="revokeAllOtherSessions()" style="font-size:12px;padding:6px 14px">
+                            <i data-lucide="log-out" style="width:13px;height:13px"></i> Kill All Other Sessions
+                        </button>
+                    </div>
+                    <div id="activeSessionsList"><div style="color:var(--text-tertiary);font-size:13px">Loading...</div></div>
+                </div>
+
                 <!-- Trusted Devices -->
                 <div class="card" style="margin-bottom:20px;padding:20px">
                     <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:14px">
@@ -680,7 +694,7 @@
             checkboxes.forEach(function(cb) { cb.checked = state; });
         }
 
-        (async () => { const auth = await window.adminAuth.checkAuth(); if (auth) { await loadAccounts(); load2faStatus(); loadTrustedDevices(); } })();
+        (async () => { const auth = await window.adminAuth.checkAuth(); if (auth) { await loadAccounts(); load2faStatus(); loadTrustedDevices(); loadActiveSessions(); } })();
         document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
         document.getElementById('mobile-menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
         const themeToggle = document.getElementById('theme-toggle'), themeIcon = document.getElementById('theme-icon');
@@ -1122,6 +1136,70 @@
                 accounts = allAccounts.filter(a => a.email.toLowerCase().includes(query) || (a.full_name && a.full_name.toLowerCase().includes(query)));
             }
             renderAccountsTable();
+        }
+
+        // ===== ACTIVE SESSIONS =====
+        async function loadActiveSessions() {
+            var token = sessionStorage.getItem('adminToken');
+            var container = document.getElementById('activeSessionsList');
+            var res = await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ action:'get-my-sessions', token }) });
+            var data = await res.json();
+            while (container.firstChild) container.removeChild(container.firstChild);
+            if (!data.sessions || data.sessions.length === 0) {
+                var empty = document.createElement('div');
+                empty.style.cssText = 'color:var(--text-tertiary);font-size:13px';
+                empty.textContent = 'No active sessions found.';
+                container.appendChild(empty);
+                return;
+            }
+            data.sessions.forEach(function(s) {
+                var row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-color);flex-wrap:wrap';
+                var info = document.createElement('div');
+                var nameRow = document.createElement('div');
+                nameRow.style.cssText = 'display:flex;align-items:center;gap:8px';
+                var name = document.createElement('div');
+                name.style.cssText = 'font-size:13px;font-weight:600;color:var(--text-primary)';
+                name.textContent = (s.user_agent || 'Unknown device').substring(0, 60);
+                nameRow.appendChild(name);
+                if (s.isCurrent) {
+                    var badge = document.createElement('span');
+                    badge.style.cssText = 'font-size:10px;font-weight:700;background:rgba(34,197,94,.15);color:#16a34a;padding:2px 8px;border-radius:20px';
+                    badge.textContent = 'CURRENT';
+                    nameRow.appendChild(badge);
+                }
+                var meta = document.createElement('div');
+                meta.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:2px';
+                var created = new Date(s.created_at).toLocaleString('en-GB', { timeZone:'Asia/Baghdad', hour12:false });
+                var expires = new Date(s.expires_at).toLocaleString('en-GB', { timeZone:'Asia/Baghdad', hour12:false });
+                meta.textContent = 'IP: ' + (s.ip_address || '-') + '  ·  Started: ' + created + '  ·  Expires: ' + expires;
+                info.appendChild(nameRow);
+                info.appendChild(meta);
+                var btn = document.createElement('button');
+                btn.className = 'btn btn-danger';
+                btn.style.cssText = 'font-size:12px;padding:5px 12px' + (s.isCurrent ? ';opacity:.4;cursor:not-allowed' : '');
+                btn.textContent = s.isCurrent ? 'Current' : 'Kill';
+                btn.disabled = s.isCurrent;
+                if (!s.isCurrent) btn.onclick = (function(id){ return function(){ revokeSession(id); }; })(s.id);
+                row.appendChild(info);
+                row.appendChild(btn);
+                container.appendChild(row);
+            });
+        }
+        async function revokeSession(sessionId) {
+            if (!confirm('Kill this session?')) return;
+            var token = sessionStorage.getItem('adminToken');
+            await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ action:'revoke-session', token, sessionId }) });
+            loadActiveSessions();
+        }
+        async function revokeAllOtherSessions() {
+            if (!confirm('Kill ALL other sessions? Only your current session will remain.')) return;
+            var token = sessionStorage.getItem('adminToken');
+            await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ action:'revoke-all-other-sessions', token }) });
+            loadActiveSessions();
         }
 
         // ===== CHANGE PASSWORD =====
