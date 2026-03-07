@@ -1592,10 +1592,19 @@ function renderAsma99() {
 function filterAsma(q) { renderAsma99(); }
 
 /* ── BOOKS ── */
+function _booksToken() { return sessionStorage.getItem('adminToken') || ''; }
+async function _booksApi(body) {
+    var r = await fetch('/admin-books', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.assign({ token: _booksToken() }, body))
+    });
+    return r.json();
+}
+
 async function loadBooks() {
-    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
-    var r = await supabase.from('gencine_books').select('*').order('sort_order');
-    if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+    var r = await _booksApi({ action: 'list' });
+    if (r.error) { showNotification('Error loading books: ' + JSON.stringify(r.error), 'error'); return; }
     allBooks = r.data || [];
     renderBooksList(); updateStats();
 }
@@ -1798,11 +1807,10 @@ async function saveBook() {
         active:      document.getElementById('book-active').checked
     };
 
-    var supabase = window.adminAuth.getSupabase();
     var editId = document.getElementById('book-edit-id').value;
-    var r = editId ? await supabase.from('gencine_books').update(payload).eq('id', editId)
-                   : await supabase.from('gencine_books').insert(payload);
-    if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
+    var r = editId ? await _booksApi({ action: 'update', id: editId, payload: payload })
+                   : await _booksApi({ action: 'insert', payload: payload });
+    if (r.error) { showNotification('Save failed: ' + JSON.stringify(r.error), 'error'); return; }
     showNotification(editId ? 'Book updated.' : 'Book added.', 'success');
     cancelBookEdit(); await loadBooks(); localStorage.removeItem('gencine_books_v1');
 }
@@ -1810,8 +1818,8 @@ async function saveBook() {
 async function deleteBook(id) {
     var book = allBooks.find(function(b){ return b.id === id; });
     if (!confirm('Delete "' + (book ? (book.title_ku || book.title_ar || id) : id) + '"?')) return;
-    var r = await window.adminAuth.getSupabase().from('gencine_books').delete().eq('id', id);
-    if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
+    var r = await _booksApi({ action: 'delete', id: id });
+    if (r.error) { showNotification('Delete failed: ' + JSON.stringify(r.error), 'error'); return; }
     showNotification('Book deleted.', 'success'); await loadBooks(); localStorage.removeItem('gencine_books_v1');
 }
 
