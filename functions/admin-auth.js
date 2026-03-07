@@ -263,6 +263,7 @@ export async function onRequest(context) {
             const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
             await supabase.from('admin_sessions').insert({ user_id: user2.id, token: sessionToken, ip_address: clientIP, user_agent: userAgent, device_fingerprint: deviceFingerprint, expires_at: expiresAt.toISOString() });
             await logAudit(supabase, user2.id, user2.email, 'login_success_2fa', { usedBackup }, clientIP, userAgent, null, null, null, 'info');
+            await sendSecurityAlert(env, { type: 'login_success', email: user2.email, ip: clientIP, detail: usedBackup ? 'Signed in with backup code' : 'Signed in with 2FA' });
             await cleanupOldSessions(supabase, user2.id);
             const { data: perms2 } = await supabase.from('admin_permissions').select('page_slug,can_view,can_edit,can_delete').eq('user_id', user2.id);
             return jsonResponse({ success: true, token: sessionToken, expiresAt: expiresAt.toISOString(), user: { email: user2.email, fullName: user2.full_name, role: user2.role }, permissions: perms2 || [] }, 200, corsHeaders);
