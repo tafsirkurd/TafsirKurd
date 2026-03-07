@@ -1320,14 +1320,11 @@ window.GencineUI = {
       var card = document.createElement('button');
       card.className = 'book-card';
       card.onclick = function(){
-        if (book.pdf_url) {
-          var Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
-          if (Browser) {
-            Browser.open({ url: book.pdf_url });
-          } else {
-            window.open(book.pdf_url, '_blank');
-          }
-        }
+        self._currentBook = book;
+        self._pdfDoc = null;
+        self._pdfPage = 1;
+        self._view = 'book-reader';
+        self._draw();
       };
 
       var coverWrap = document.createElement('div');
@@ -1444,7 +1441,8 @@ window.GencineUI = {
         return;
       }
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      pdfjsLib.getDocument({ url: book.pdf_url, cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/', cMapPacked: true })
+      var pdfSrc = 'https://tafsirkurd.com/pdf-proxy?url=' + encodeURIComponent(book.pdf_url);
+      pdfjsLib.getDocument({ url: pdfSrc, cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/', cMapPacked: true })
         .promise.then(function(pdf){
           self._pdfDoc = pdf;
           self._goBookPage(self._pdfPage);
