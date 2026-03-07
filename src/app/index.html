@@ -1060,23 +1060,36 @@ body{background:var(--bg);color:var(--text)}
 .prayer-fmt-btn:active{transform:scale(.93)}
 /* Athan section */
 .prayer-settings-athan{padding:0 16px}
-.prayer-athan-card{background:var(--bg2);border-radius:16px;border:1px solid var(--border);overflow:hidden;margin-bottom:4px}
-.prayer-per-toggles{background:var(--bg2);border-radius:16px;border:1px solid var(--border);overflow:hidden;transition:opacity .2s}
-.prayer-per-toggles--dim{opacity:.35;pointer-events:none}
-.prayer-toggle-row{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid var(--border)}
-.prayer-toggle-row:last-child{border-bottom:none}
-.prayer-master-toggle{background:var(--bg2);border-radius:16px;border:1px solid var(--border);margin-bottom:8px;overflow:hidden}
-.prayer-master-toggle .prayer-toggle-row{border-bottom:none;padding:14px 16px}
-.prayer-master-toggle .prayer-toggle-label{font-size:.95rem;font-weight:600}
-.prayer-toggle-label{font-size:.88rem;color:var(--text)}
 .prayer-settings-spacer{height:32px}
+/* Master toggle banner */
+.prayer-master-banner{border-radius:18px;padding:18px 18px 18px 20px;display:flex;align-items:center;gap:14px;margin-bottom:10px;cursor:pointer;transition:all .2s;border:1.5px solid transparent}
+.prayer-master-banner--on{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3)}
+.prayer-master-banner--off{background:var(--bg2);border-color:var(--border)}
+.prayer-master-banner-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;transition:all .2s}
+.prayer-master-banner--on .prayer-master-banner-icon{background:var(--accent);color:var(--accent-t)}
+.prayer-master-banner--off .prayer-master-banner-icon{background:var(--bg3);color:var(--text3)}
+.prayer-master-banner-text{flex:1;min-width:0}
+.prayer-master-banner-title{font-size:.95rem;font-weight:700;color:var(--text);direction:rtl}
+.prayer-master-banner-sub{font-size:.75rem;color:var(--text3);margin-top:2px;direction:rtl}
+.prayer-master-banner--on .prayer-master-banner-title{color:var(--accent)}
+/* Per-prayer grid */
+.prayer-prayers-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;transition:opacity .2s}
+.prayer-prayers-grid--dim{opacity:.3;pointer-events:none}
+.prayer-prayer-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:16px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:all .2s;position:relative}
+.prayer-prayer-card.on{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.35)}
+.prayer-prayer-card:active{transform:scale(.96)}
+.prayer-prayer-card-top{display:flex;justify-content:space-between;align-items:flex-start}
+.prayer-prayer-card-icon{font-size:1.3rem;line-height:1}
+.prayer-prayer-card-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:.6rem;color:transparent;transition:all .2s;flex-shrink:0}
+.prayer-prayer-card.on .prayer-prayer-card-check{background:var(--accent);border-color:var(--accent);color:#fff}
+.prayer-prayer-card-name{font-size:.92rem;font-weight:700;color:var(--text);direction:rtl}
+.prayer-prayer-card.on .prayer-prayer-card-name{color:var(--accent)}
 /* Voice picker */
-.prayer-voice-label{padding-top:0}
-.prayer-voice-list{border-radius:16px;border:1px solid var(--border);overflow:hidden}
-.prayer-voice-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--bg2);transition:background .12s}
+.prayer-voice-list{border-radius:16px;border:1px solid var(--border);overflow:hidden;margin-bottom:10px}
+.prayer-voice-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--bg2);transition:background .12s}
 .prayer-voice-row:last-child{border-bottom:none}
 .prayer-voice-row:active{background:var(--bg3)}
-.prayer-voice-row.on .prayer-voice-name-ar{color:var(--text);font-weight:600}
+.prayer-voice-row.on .prayer-voice-name-ar{color:var(--text);font-weight:700}
 .prayer-voice-radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;position:relative;transition:border-color .15s}
 .prayer-voice-radio.on{border-color:var(--accent)}
 .prayer-voice-radio.on::after{content:'';position:absolute;inset:4px;border-radius:50%;background:var(--accent)}
@@ -1087,16 +1100,23 @@ body{background:var(--bg);color:var(--text)}
 .prayer-voice-row.playing .prayer-voice-preview-btn{background:var(--accent);color:#fff}
 .prayer-voice-row.playing .prayer-voice-preview-btn:active{filter:brightness(.82);transform:scale(.9)}
 /* Duration picker */
-.prayer-duration-label{padding-top:0}
-.prayer-duration-wrap{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0 8px}
-.prayer-duration-btn{padding:9px 20px;border-radius:100px;background:var(--bg2);border:1.5px solid var(--border);color:var(--text2);font-size:.88rem;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
-.prayer-duration-btn.on{background:var(--accent);color:var(--accent-t);border-color:var(--accent);font-weight:700}
+.prayer-duration-wrap{display:flex;gap:6px;padding:4px 0 10px}
+.prayer-duration-btn{flex:1;padding:10px 4px;border-radius:12px;background:var(--bg2);border:1.5px solid var(--border);color:var(--text2);font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center}
+.prayer-duration-btn.on{background:var(--accent);color:var(--accent-t);border-color:var(--accent)}
 .prayer-duration-btn:active{transform:scale(.9)}
-/* Action buttons row (Test + Reschedule) */
-.prayer-athan-btn-row{display:flex;gap:8px;padding:16px 0 6px;flex-wrap:wrap}
-.prayer-athan-action-btn{flex:1;padding:12px 12px;border-radius:14px;background:var(--accent);color:var(--accent-t);border:none;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s,transform .12s;min-width:120px}
-.prayer-athan-action-btn--secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
-.prayer-athan-action-btn:active{transform:scale(.95)}
+/* Test notification card */
+.prayer-test-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:18px;padding:16px;margin-bottom:10px;transition:opacity .2s}
+.prayer-test-card--dim{opacity:.3;pointer-events:none}
+.prayer-test-preview{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg3);border-radius:12px;margin-bottom:12px}
+.prayer-test-preview-icon{width:38px;height:38px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:var(--accent-t);font-size:.95rem;flex-shrink:0}
+.prayer-test-preview-text{flex:1;min-width:0}
+.prayer-test-preview-title{font-size:.82rem;font-weight:700;color:var(--text);direction:rtl}
+.prayer-test-preview-sub{font-size:.72rem;color:var(--text3);margin-top:2px;direction:rtl}
+.prayer-test-btn-row{display:flex;gap:8px}
+.prayer-test-btn{flex:1;padding:11px 12px;border-radius:12px;background:var(--accent);color:var(--accent-t);border:none;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .15s,transform .12s}
+.prayer-test-btn:active{transform:scale(.96)}
+.prayer-resched-btn{flex:1;padding:11px 12px;border-radius:12px;background:var(--bg3);color:var(--text);border:1.5px solid var(--border);font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .15s,transform .12s}
+.prayer-resched-btn:active{transform:scale(.96)}
 /* Status / error */
 .prayer-status{padding:80px 16px;text-align:center;color:var(--text3);font-size:.95rem}
 .prayer-error{color:var(--danger)}
