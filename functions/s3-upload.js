@@ -24,6 +24,12 @@ export async function onRequest(context) {
     }
 
     try {
+        /* ── Detect proxy-upload mode (FormData) vs presign mode (JSON) ── */
+        const ct = request.headers.get('Content-Type') || '';
+        if (ct.includes('multipart/form-data')) {
+            return await handleProxyUpload(request, env, corsHeaders);
+        }
+
         const body = await request.json();
         const { filename, contentType, folder = 'videos', bucket: bucketOverride } = body;
 
@@ -146,6 +152,68 @@ export async function onRequest(context) {
             { status: 500, headers: corsHeaders }
         );
     }
+}
+
+/* ── Proxy upload: browser sends file to this function, function PUTs to R2 ──
+   Avoids CORS issues since the browser never talks to r2.cloudflarestorage.com */
+async function handleProxyUpload(request, env, corsHeaders) {
+    const adminToken = request.headers.get('Authorization')?.replace('Bearer ', '');
+    if (!adminToken) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+    }
+    const isValid = await verifyAdminToken(adminToken, env);
+    if (!isValid) {
+        return new Response(JSON.stringify({ error: 'Invalid admin token' }), { status: 401, headers: corsHeaders });
+    }
+
+    const formData = await request.formData();
+    const file        = formData.get('file');
+    const folder      = formData.get('folder') || 'uploads';
+    const bucketName  = formData.get('bucket') || env.R2_BUCKET || 'tafsirkurd-videos';
+
+    if (!file || typeof file === 'string') {
+        return new Response(JSON.stringify({ error: 'No file provided' }), { status: 400, headers: corsHeaders });
+    }
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const contentType = file.type || 'application/octet-stream';
+
+    /* Generate presigned PUT URL and execute it server-side */
+    const accessKeyId     = env.R2_ACCESS_KEY_ID;
+    const secretAccessKey = env.R2_SECRET_ACCESS_KEY;
+    const accountId       = env.CF_ACCOUNT_ID;
+
+    if (!accessKeyId || !secretAccessKey || !accountId) {
+        return new Response(JSON.stringify({ error: 'R2 credentials missing' }), { status: 500, headers: corsHeaders });
+    }
+
+    const presignedUrl = await generateR2PresignedUrl({
+        accessKeyId, secretAccessKey, accountId,
+        bucket: bucketName, key, contentType, expiresIn: 300
+    });
+
+    const fileBuffer = await file.arrayBuffer();
+    const putRes = await fetch(presignedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': contentType },
+        body: fileBuffer
+    });
+
+    if (!putRes.ok) {
+        const errText = await putRes.text();
+        console.error('R2 PUT failed:', putRes.status, errText);
+        return new Response(JSON.stringify({ error: 'R2 upload failed: ' + putRes.status }), { status: 502, headers: corsHeaders });
+    }
+
+    const publicDomain = bucketName === 'tafsirkurd-books'
+        ? (env.R2_BOOKS_PUBLIC_DOMAIN || env.R2_PUBLIC_DOMAIN)
+        : env.R2_PUBLIC_DOMAIN;
+    const publicUrl = publicDomain
+        ? `https://${publicDomain}/${key}`
+        : `https://pub-${accountId}.r2.dev/${key}`;
+
+    return new Response(JSON.stringify({ success: true, publicUrl, key }), { status: 200, headers: corsHeaders });
 }
 
 // Verify admin token against your auth system
