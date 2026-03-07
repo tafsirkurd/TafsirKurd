@@ -247,8 +247,6 @@ function _fetchDbData(onDone) {
   var tasbihPromise   = sb.from('gencine_tasbih').select('*').eq('active', true).order('sort_order');
   var asma99Promise   = sb.from('gencine_asma99').select('n,ku');
   var booksPromise    = sb.from('gencine_books').select('*').eq('active', true).order('sort_order');
-
-  var booksPromise    = sb.from('gencine_books').select('*').eq('active', true).order('sort_order');
   Promise.all([catsPromise, duasPromise, hadithsPromise, sectionsPromise, booksPromise]).then(function(results) {
     _loadingDb = false;
     var catRes = results[0], duaRes = results[1], hadithRes = results[2], secRes = results[3], bookRes = results[4];
