@@ -88,7 +88,7 @@
     if (window.S && S.prayerToggles) return S.prayerToggles;
     try { return JSON.parse(localStorage.getItem('prayerToggles') || '{}'); } catch(e) { return {}; }
   }
-  function getFormat()  { return localStorage.getItem('prayerTimeFormat') || '24'; }
+  function getFormat()  { return localStorage.getItem('prayerTimeFormat') || '12'; }
 
   function setCity(v)    { if (window.S) S.prayerCity = v;         localStorage.setItem('prayerCity', v); }
   function setAthan(v)   { if (window.S) S.prayerAthanEnabled = v; localStorage.setItem('prayerAthanEnabled', String(v)); }
@@ -1432,15 +1432,26 @@
     var sheet = cel('div', 'prayer-settings-sheet');
     sheet.id = 'prayerSettingsSheet';
 
+    // Drag handle
+    var handle = cel('div', 'prayer-sheet-handle');
+    sheet.appendChild(handle);
+
     // Header
     var sheetHdr = cel('div', 'prayer-settings-hdr');
+    var hdrIcon = cel('div', 'prayer-settings-hdr-icon');
+    var hdrIconI = document.createElement('i');
+    hdrIconI.className = 'fas fa-mosque';
+    hdrIcon.appendChild(hdrIconI);
     var sheetTitle = cel('span', 'prayer-settings-title');
     sheetTitle.textContent = tStr('prayer.settings_title');
     var closeBtn = cel('button', 'prayer-settings-close');
-    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    var closeBtnI = document.createElement('i');
+    closeBtnI.className = 'fas fa-times';
+    closeBtn.appendChild(closeBtnI);
     closeBtn.onclick = closeSettings;
-    sheetHdr.appendChild(sheetTitle);
     sheetHdr.appendChild(closeBtn);
+    sheetHdr.appendChild(sheetTitle);
+    sheetHdr.appendChild(hdrIcon);
     sheet.appendChild(sheetHdr);
 
     // City section
@@ -1466,9 +1477,9 @@
     sheet.appendChild(fmtLabel);
 
     var fmtWrap = cel('div', 'prayer-fmt-wrap');
-    var fmtSeg = cel('div', 'prayer-fmt-seg');
+    var fmtSeg = cel('div', 'prayer-fmt-card');
     var fmt = getFormat();
-    ['24', '12'].forEach(function(f) {
+    ['12', '24'].forEach(function(f) {
       var btn = cel('button', 'prayer-fmt-btn' + (f === fmt ? ' on' : ''));
       btn.dataset.fmt = f;
       btn.textContent = f === '24' ? '24h' : '12h';
@@ -1500,9 +1511,11 @@
     if (!container) return;
     clearEl(container);
 
-    buildToggleRow(container, tStr('prayer.enable_athan'), getAthan(), function(val) {
+    var masterCard = cel('div', 'prayer-master-toggle');
+    buildToggleRow(masterCard, tStr('prayer.enable_athan'), getAthan(), function(val) {
       onAthanMasterToggle(val, timings, city, dateISO);
-    }, 'prayer-master-toggle');
+    }, '');
+    container.appendChild(masterCard);
 
     var athanWrap = cel('div', 'prayer-per-toggles' + (getAthan() ? '' : ' prayer-per-toggles--dim'));
     athanWrap.id = 'prayerTogglesWrap';
@@ -1521,7 +1534,9 @@
     voiceLabel.textContent = tStr('prayer.voice_label');
     athanWrap.appendChild(voiceLabel);
 
-    buildVoicePicker(athanWrap, city);
+    var voiceListWrap = cel('div', 'prayer-voice-list');
+    buildVoicePicker(voiceListWrap, city);
+    athanWrap.appendChild(voiceListWrap);
 
     // ── Duration picker ──
     var durLabel = cel('div', 'prayer-settings-section-label prayer-duration-label');
