@@ -362,7 +362,7 @@ function $(id){return document.getElementById(id)}
 window.GencineUI = {
   _view:            'home',   /* 'home' | 'dua' | 'tasbih' | 'hadith' */
   _homeEl:          null,     /* cached home grid — built once, reused */
-  _duaCat:          'morning',
+  _duaCat:          'quran',
   _tasbihCount:     0,
   _tasbihTarget:    33,
   _tasbihDhikrIdx:  0,
@@ -580,7 +580,27 @@ window.GencineUI = {
 
         var ar = document.createElement('div');
         ar.className = 'dua-card-ar';
-        ar.textContent = dua.ar;
+        var arText = dua.ar || '';
+        var ayahs = arText.split('۝');
+        if (ayahs.length > 1) {
+          ayahs.forEach(function(ayah, idx) {
+            ayah = ayah.trim();
+            if (!ayah) return;
+            var row = document.createElement('div');
+            row.className = 'dua-ayah-row';
+            var numEl = document.createElement('span');
+            numEl.className = 'dua-ayah-num';
+            numEl.textContent = '\u06dd' + String(idx + 1);
+            var textEl = document.createElement('span');
+            textEl.className = 'dua-ayah-text';
+            textEl.textContent = ayah;
+            row.appendChild(textEl);
+            row.appendChild(numEl);
+            ar.appendChild(row);
+          });
+        } else {
+          ar.textContent = arText;
+        }
         card.appendChild(ar);
 
         var ku = document.createElement('div');
