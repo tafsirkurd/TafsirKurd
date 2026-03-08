@@ -445,6 +445,8 @@ window.GencineUI = {
     if(!el) return;
     if(this._view !== 'tasbih' && this._voiceActive) this._stopVoice();
     while(el.firstChild) el.removeChild(el.firstChild);
+    var panel = document.getElementById('panelGencine');
+    if(panel) panel.scrollTop = 0;
     if(this._view === 'home')        this._renderHome(el);
     else if(this._view === 'dua')    this._renderDua(el);
     else if(this._view === 'tasbih') this._renderTasbih(el);
