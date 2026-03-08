@@ -583,20 +583,19 @@ window.GencineUI = {
         var arText = dua.ar || '';
         var ayahs = arText.split('۝');
         if (ayahs.length > 1) {
+          var ARABIC_NUMS = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+          function toArabicNum(n) {
+            return String(n).split('').map(function(d){ return ARABIC_NUMS[+d] || d; }).join('');
+          }
           ayahs.forEach(function(ayah, idx) {
             ayah = ayah.trim();
             if (!ayah) return;
-            var row = document.createElement('div');
-            row.className = 'dua-ayah-row';
+            ar.appendChild(document.createTextNode(ayah + ' '));
             var numEl = document.createElement('span');
             numEl.className = 'dua-ayah-num';
-            numEl.textContent = '\u06dd' + String(idx + 1);
-            var textEl = document.createElement('span');
-            textEl.className = 'dua-ayah-text';
-            textEl.textContent = ayah;
-            row.appendChild(textEl);
-            row.appendChild(numEl);
-            ar.appendChild(row);
+            numEl.textContent = toArabicNum(idx + 1);
+            ar.appendChild(numEl);
+            ar.appendChild(document.createTextNode(' '));
           });
         } else {
           ar.textContent = arText;
