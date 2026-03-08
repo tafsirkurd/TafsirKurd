@@ -198,8 +198,8 @@ function _getSupabase() {
 
 /* Load from cache instantly, then re-fetch in background */
 function _initDbData(onDone) {
-  var cachedCats     = _readCache('gencine_cats_v1');
-  var cachedDuas     = _readCache('gencine_duas_v1');
+  var cachedCats     = _readCache('gencine_cats_v2');
+  var cachedDuas     = _readCache('gencine_duas_v2');
   var cachedHadiths  = _readCache('gencine_hadiths_v2');
   var cachedSections = _readCache('gencine_sections_v1');
   var cachedBooks    = _readCache('gencine_books_v1');
@@ -261,11 +261,11 @@ function _fetchDbData(onDone) {
     var catRes = results[0], duaRes = results[1], hadithRes = results[2], secRes = results[3], bookRes = results[4];
     if (!catRes.error && catRes.data) {
       _dbCats = catRes.data;
-      _writeCache('gencine_cats_v1', _dbCats);
+      _writeCache('gencine_cats_v2', _dbCats);
     }
     if (!duaRes.error && duaRes.data) {
       _dbDuas = duaRes.data;
-      _writeCache('gencine_duas_v1', _dbDuas);
+      _writeCache('gencine_duas_v2', _dbDuas);
     }
     if (!hadithRes.error && hadithRes.data) {
       _dbHadiths = hadithRes.data;
@@ -422,8 +422,8 @@ window.GencineUI = {
   /* ── pull-to-refresh: clear cache + re-fetch + re-render ── */
   refresh: function(){
     var self = this;
-    localStorage.removeItem('gencine_cats_v1');
-    localStorage.removeItem('gencine_duas_v1');
+    localStorage.removeItem('gencine_cats_v2');
+    localStorage.removeItem('gencine_duas_v2');
     localStorage.removeItem('gencine_hadiths_v2');
     localStorage.removeItem('gencine_sections_v1');
     _dbLoaded  = false;
