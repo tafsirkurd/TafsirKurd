@@ -38,7 +38,7 @@ export async function onRequest(context) {
     );
 
     try {
-        const { action, email, password, token, deviceFingerprint, page_slug, permission_type, turnstileToken, trustDevice, deviceId, currentPassword, newPassword } = await request.json();
+        const { action, email, password, token, deviceFingerprint, page_slug, permission_type, turnstileToken, trustDevice, trustToken, deviceId, currentPassword, newPassword } = await request.json();
         const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
         const userAgent = request.headers.get('User-Agent') || 'unknown';
 
@@ -217,8 +217,6 @@ export async function onRequest(context) {
 
         // ===== VERIFY-TOTP (login step 2) =====
         if (action === 'verify-totp') {
-            const { tempToken, totpCode } = await Promise.resolve({ tempToken: token, totpCode: email }); // reuse vars
-            const rawBody = { tempToken: token, totpCode: email }; // already destructured above
             const pendingRaw = env.ADMIN_KV ? await env.ADMIN_KV.get(`totp_pending:${token}`, 'json') : null;
             if (!pendingRaw) return jsonResponse({ error: 'Session expired. Please log in again.' }, 401, corsHeaders);
 
@@ -238,7 +236,9 @@ export async function onRequest(context) {
                 }
             }
             if (!usedBackup) {
-                const valid = await verifyTOTP(user2.totp_secret, codeInput);
+                let valid = false;
+                try { valid = await verifyTOTP(user2.totp_secret, codeInput); }
+                catch(totpErr) { console.error('TOTP verify error:', totpErr); return jsonResponse({ error: 'Invalid code. Try again.' }, 401, corsHeaders); }
                 if (!valid) {
                     // Track TOTP failures separately in KV (max 5 per temp token)
                     const failKey = `totp_fail:${token}`;
@@ -255,29 +255,40 @@ export async function onRequest(context) {
                 }
             }
 
-            await env.ADMIN_KV.delete(`totp_pending:${token}`);
-            if (env.ADMIN_KV) await env.ADMIN_KV.delete(`ip_attempts:${clientIP}`);
+            try {
+                if (env.ADMIN_KV) await env.ADMIN_KV.delete(`totp_pending:${token}`);
+                if (env.ADMIN_KV) await env.ADMIN_KV.delete(`ip_attempts:${clientIP}`);
 
-            await supabase.from('admin_users').update({ failed_attempts: 0, last_login: new Date().toISOString(), status: 'online', last_heartbeat: new Date().toISOString() }).eq('id', user2.id);
-            const sessionToken = generateSecureToken();
-            const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-            await supabase.from('admin_sessions').insert({ user_id: user2.id, token: sessionToken, ip_address: clientIP, user_agent: userAgent, device_fingerprint: deviceFingerprint, expires_at: expiresAt.toISOString() });
-            // Trust device for 30 days if requested
-            if (trustDevice && deviceFingerprint) {
-                const trustedExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-                await supabase.from('admin_trusted_devices').upsert({
-                    user_id: user2.id,
-                    device_fingerprint: deviceFingerprint,
-                    device_name: userAgent ? userAgent.substring(0, 120) : 'Unknown device',
-                    ip_address: clientIP,
-                    expires_at: trustedExpiry.toISOString()
-                }, { onConflict: 'user_id,device_fingerprint' }).catch(() => {});
+                await supabase.from('admin_users').update({ failed_attempts: 0, last_login: new Date().toISOString(), status: 'online', last_heartbeat: new Date().toISOString() }).eq('id', user2.id);
+                const sessionToken = generateSecureToken();
+                const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                const { error: sessionErr } = await supabase.from('admin_sessions').insert({ user_id: user2.id, token: sessionToken, ip_address: clientIP, user_agent: userAgent, device_fingerprint: deviceFingerprint, expires_at: expiresAt.toISOString() });
+                if (sessionErr) throw new Error(sessionErr.message);
+                // Trust device for 30 days if requested
+                let newTrustToken = null;
+                if (trustDevice) {
+                    const trustedExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                    newTrustToken = generateSecureToken();
+                    try {
+                        await supabase.from('admin_trusted_devices').insert({
+                            user_id: user2.id,
+                            device_fingerprint: deviceFingerprint || newTrustToken,
+                            trust_token: newTrustToken,
+                            device_name: userAgent ? userAgent.substring(0, 120) : 'Unknown device',
+                            ip_address: clientIP,
+                            expires_at: trustedExpiry.toISOString()
+                        });
+                    } catch(e) { console.error('Trust device insert error:', e); newTrustToken = null; }
+                }
+                await logAudit(supabase, user2.id, user2.email, 'login_success_2fa', { usedBackup, trustedDevice: !!(trustDevice && deviceFingerprint) }, clientIP, userAgent, null, null, null, 'info');
+                await sendSecurityAlert(env, { type: 'login_success', email: user2.email, ip: clientIP, detail: usedBackup ? 'Signed in with backup code' : 'Signed in with 2FA' });
+                await cleanupOldSessions(supabase, user2.id);
+                const { data: perms2 } = await supabase.from('admin_permissions').select('page_slug,can_view,can_edit,can_delete').eq('user_id', user2.id);
+                return jsonResponse({ success: true, token: sessionToken, expiresAt: expiresAt.toISOString(), user: { email: user2.email, fullName: user2.full_name, role: user2.role }, permissions: perms2 || [], trustToken: newTrustToken }, 200, corsHeaders);
+            } catch(sessionCreationErr) {
+                console.error('TOTP session creation error:', sessionCreationErr);
+                return jsonResponse({ error: 'Login error. Please try again.' }, 500, corsHeaders);
             }
-            await logAudit(supabase, user2.id, user2.email, 'login_success_2fa', { usedBackup, trustedDevice: !!(trustDevice && deviceFingerprint) }, clientIP, userAgent, null, null, null, 'info');
-            await sendSecurityAlert(env, { type: 'login_success', email: user2.email, ip: clientIP, detail: usedBackup ? 'Signed in with backup code' : 'Signed in with 2FA' });
-            await cleanupOldSessions(supabase, user2.id);
-            const { data: perms2 } = await supabase.from('admin_permissions').select('page_slug,can_view,can_edit,can_delete').eq('user_id', user2.id);
-            return jsonResponse({ success: true, token: sessionToken, expiresAt: expiresAt.toISOString(), user: { email: user2.email, fullName: user2.full_name, role: user2.role }, permissions: perms2 || [] }, 200, corsHeaders);
         }
 
         // ===== SETUP-TOTP (step 1: generate secret + QR) =====
@@ -601,7 +612,19 @@ export async function onRequest(context) {
         // 8. If 2FA enabled — check trusted device first, then issue temp token
         if (user.totp_enabled) {
             let skipTOTP = false;
-            if (deviceFingerprint) {
+            // Check trust token (localStorage-based, reliable across sessions)
+            if (trustToken) {
+                const { data: trusted } = await supabase
+                    .from('admin_trusted_devices')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('trust_token', trustToken)
+                    .gt('expires_at', new Date().toISOString())
+                    .single();
+                if (trusted) skipTOTP = true;
+            }
+            // Fallback: check device fingerprint
+            if (!skipTOTP && deviceFingerprint) {
                 const { data: trusted } = await supabase
                     .from('admin_trusted_devices')
                     .select('id')

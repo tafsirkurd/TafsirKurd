@@ -460,6 +460,14 @@
             border-color: var(--border-medium);
         }
         .section-toggle-btn:hover { opacity: .8; }
+        /* Drag-and-drop */
+        .item-card[draggable]{cursor:grab}
+        .item-card[draggable]:active{cursor:grabbing}
+        .item-card.dragging{opacity:.35;background:var(--bg-active)}
+        .item-card.drag-over-top{border-top:2px solid var(--primary)!important}
+        .item-card.drag-over-bot{border-bottom:2px solid var(--primary)!important}
+        .drag-handle{display:flex;align-items:center;padding:0 6px 0 2px;color:var(--text-tertiary);cursor:grab;font-size:14px;flex-shrink:0}
+        .drag-handle:active{cursor:grabbing}
         .section-sort-btns { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
         .section-sort-btn {
             width: 26px; height: 22px;
@@ -952,17 +960,20 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Author (Kurdish)</label>
-                                    <input type="text" id="book-author-ku" class="form-input" placeholder="ناڤێ نووسەر" dir="rtl">
+                                    <input type="text" id="book-author-ku" class="form-input" placeholder="ناڤێ نووسەر" dir="rtl" list="dl-author-ku" autocomplete="off">
+                                    <datalist id="dl-author-ku"></datalist>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Author (Arabic)</label>
-                                    <input type="text" id="book-author-ar" class="form-input" placeholder="اسم المؤلف" dir="rtl">
+                                    <input type="text" id="book-author-ar" class="form-input" placeholder="اسم المؤلف" dir="rtl" list="dl-author-ar" autocomplete="off">
+                                    <datalist id="dl-author-ar"></datalist>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Category</label>
-                                    <input type="text" id="book-category" class="form-input" placeholder="e.g. فقه, تفسیر, سیرە">
+                                    <input type="text" id="book-category" class="form-input" placeholder="e.g. فقه, تفسیر, سیرە" list="dl-book-category" autocomplete="off">
+                                    <datalist id="dl-book-category"></datalist>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Pages</label>
@@ -1016,7 +1027,7 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Sort Order</label>
-                                    <input type="number" id="book-sort" class="form-input" placeholder="0" value="0">
+                                    <input type="number" id="book-sort" class="form-input" placeholder="0" value="0" onchange="autoSaveBookSort(this.value)">
                                 </div>
                                 <div class="form-group" style="align-self:flex-end;padding-bottom:4px">
                                     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-secondary)">
@@ -1087,6 +1098,22 @@ function toggleForm(prefix) {
     var isOpen = body.classList.contains('open');
     body.classList.toggle('open', !isOpen);
     toggle.classList.toggle('editing', !isOpen);
+    /* Auto-set sort order for new items */
+    if (!isOpen) {
+        if (prefix === 'book') {
+            var editId = document.getElementById('book-edit-id').value;
+            if (!editId) {
+                var maxSort = allBooks.reduce(function(m, b){ return Math.max(m, b.sort_order || 0); }, 0);
+                document.getElementById('book-sort').value = maxSort + 1;
+            }
+        } else if (prefix === 'cat') {
+            var catEditId = document.getElementById('cat-edit-id').value;
+            if (!catEditId) {
+                var maxCatSort = allCategories.reduce(function(m, c){ return Math.max(m, c.sort_order || 0); }, 0);
+                document.getElementById('cat-sort').value = maxCatSort + 1;
+            }
+        }
+    }
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 function openForm(prefix) {
@@ -1158,6 +1185,60 @@ async function loadHadiths() {
     if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
     allHadiths = r.data || [];
     renderHadithList(); updateStats();
+}
+
+/* ── Drag-and-drop reorder helper ──
+   arr      : the data array (will be reordered in-place)
+   getCards : function() returns NodeList/Array of .item-card elements
+   onDrop   : async function(arr) called after drop to save new order
+*/
+function initDrag(getCards, arr, onDrop) {
+    var dragged = null;
+    function cards() { return getCards(); }
+
+    function handle(card, idx) {
+        card.setAttribute('draggable', 'true');
+
+        card.addEventListener('dragstart', function(e) {
+            dragged = idx;
+            setTimeout(function(){ card.classList.add('dragging'); }, 0);
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        card.addEventListener('dragend', function() {
+            card.classList.remove('dragging');
+            cards().forEach(function(c){ c.classList.remove('drag-over-top','drag-over-bot'); });
+        });
+        card.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            if (dragged === null || dragged === idx) return;
+            cards().forEach(function(c){ c.classList.remove('drag-over-top','drag-over-bot'); });
+            var rect = card.getBoundingClientRect();
+            var mid = rect.top + rect.height / 2;
+            card.classList.add(e.clientY < mid ? 'drag-over-top' : 'drag-over-bot');
+        });
+        card.addEventListener('drop', function(e) {
+            e.preventDefault();
+            if (dragged === null || dragged === idx) return;
+            cards().forEach(function(c){ c.classList.remove('drag-over-top','drag-over-bot'); });
+            var rect = card.getBoundingClientRect();
+            var mid = rect.top + rect.height / 2;
+            var insertBefore = e.clientY < mid;
+            var item = arr.splice(dragged, 1)[0];
+            var newIdx = arr.indexOf(arr[idx > dragged ? idx - 1 : idx]);
+            var targetIdx = arr.indexOf(arr[idx > dragged ? idx - 1 : idx]);
+            /* recalculate target after splice */
+            var tIdx = idx > dragged ? (insertBefore ? idx - 1 : idx) : (insertBefore ? idx : idx + 1);
+            if (tIdx < 0) tIdx = 0;
+            if (tIdx > arr.length) tIdx = arr.length;
+            arr.splice(tIdx, 0, item);
+            dragged = null;
+            /* reassign sort_order 1..n */
+            arr.forEach(function(a, i){ a.sort_order = i + 1; });
+            onDrop(arr);
+        });
+    }
+
+    cards().forEach(function(card, idx){ handle(card, idx); });
 }
 
 /* ── DOM helpers ── */
@@ -1275,6 +1356,7 @@ function renderDuaList() {
     }
     filtered.forEach(function(dua) {
         var card = mke('div', 'item-card');
+        var handle = mke('div', 'drag-handle'); handle.textContent = '⠿';
         var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','hand-heart'); icon.appendChild(ico);
         var body = mke('div', 'item-card-body');
         var arEl = mke('div', 'item-card-ar'); arEl.textContent = dua.ar; body.appendChild(arEl);
@@ -1285,12 +1367,26 @@ function renderDuaList() {
         if (dua.source) { var sb = mke('span', 'badge badge-source'); sb.textContent = dua.source; meta.appendChild(sb); }
         body.appendChild(meta);
         var acts = mke('div', 'item-card-actions');
-        acts.appendChild(mkIconBtn('pencil', 'Edit', false, function() { editDua(dua.id); }));
-        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, function() { deleteDua(dua.id); }));
-        card.appendChild(icon); card.appendChild(body); card.appendChild(acts);
+        acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(d){ return function(){ editDua(d.id); }; })(dua)));
+        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, (function(d){ return function(){ deleteDua(d.id); }; })(dua)));
+        card.appendChild(handle); card.appendChild(icon); card.appendChild(body); card.appendChild(acts);
         list.appendChild(card);
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
+    /* Init drag on the filtered subset */
+    initDrag(
+        function(){ return Array.prototype.slice.call(list.querySelectorAll('.item-card')); },
+        filtered,
+        async function(reordered) {
+            /* sync sort_order back into allDuas */
+            reordered.forEach(function(d){ var orig = allDuas.find(function(x){ return x.id === d.id; }); if(orig) orig.sort_order = d.sort_order; });
+            renderDuaList();
+            var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+            await Promise.all(reordered.map(function(d){ return supabase.from('gencine_duas').update({ sort_order: d.sort_order }).eq('id', d.id); }));
+            localStorage.removeItem('gencine_duas_v1');
+            showNotification('Order saved.', 'success');
+        }
+    );
 }
 function editDua(id) {
     var dua = allDuas.find(function(d) { return d.id === id; }); if (!dua) return;
@@ -1661,9 +1757,24 @@ async function loadBooks() {
     renderBooksList(); updateStats();
 }
 
+function updateBookDataLists() {
+    var authorKu = Array.from(new Set(allBooks.map(function(b){ return b.author_ku; }).filter(Boolean)));
+    var authorAr = Array.from(new Set(allBooks.map(function(b){ return b.author_ar; }).filter(Boolean)));
+    var cats = Array.from(new Set(allBooks.map(function(b){ return b.category; }).filter(Boolean)));
+    function fill(id, vals) {
+        var dl = document.getElementById(id); if (!dl) return;
+        dl.textContent = '';
+        vals.forEach(function(v){ var o = document.createElement('option'); o.value = v; dl.appendChild(o); });
+    }
+    fill('dl-author-ku', authorKu);
+    fill('dl-author-ar', authorAr);
+    fill('dl-book-category', cats);
+}
+
 function renderBooksList() {
     var list = document.getElementById('book-list'); if (!list) return;
     list.textContent = '';
+    updateBookDataLists();
     var countEl = document.getElementById('book-count');
     if (countEl) countEl.textContent = allBooks.length + ' books';
     if (!allBooks.length) {
@@ -1697,13 +1808,25 @@ function renderBooksList() {
         var ab = mke('span', 'badge'); ab.style.cssText = book.active ? 'background:rgba(34,197,94,.1);color:#16a34a' : 'background:var(--bg-active);color:var(--text-tertiary)';
         ab.textContent = book.active ? 'Active' : 'Hidden'; meta.appendChild(ab);
         body.appendChild(meta);
+        var handle = mke('div', 'drag-handle'); handle.textContent = '⠿';
         var acts = mke('div', 'item-card-actions');
         acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(b){ return function(){ editBook(b.id); }; })(book)));
         acts.appendChild(mkIconBtn('trash-2', 'Delete', true, (function(id){ return function(){ deleteBook(id); }; })(book.id)));
-        card.appendChild(thumb); card.appendChild(body); card.appendChild(acts);
+        card.appendChild(handle); card.appendChild(thumb); card.appendChild(body); card.appendChild(acts);
         list.appendChild(card);
     });
     if (typeof lucide !== 'undefined') lucide.createIcons();
+    initDrag(
+        function(){ return Array.prototype.slice.call(list.querySelectorAll('.item-card')); },
+        allBooks,
+        async function(reordered) {
+            renderBooksList();
+            var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+            await Promise.all(reordered.map(function(b){ return supabase.from('gencine_books').update({ sort_order: b.sort_order }).eq('id', b.id); }));
+            localStorage.removeItem('gencine_books_v1');
+            showNotification('Order saved.', 'success');
+        }
+    );
 }
 
 function editBook(id) {
@@ -1744,7 +1867,8 @@ function cancelBookEdit() {
      'book-pages','book-pdf-url','book-description','book-cover-url'].forEach(function(id) {
         var el = document.getElementById(id); if (el) el.value = '';
     });
-    document.getElementById('book-sort').value = '0';
+    var maxSort = allBooks.reduce(function(m, b){ return Math.max(m, b.sort_order || 0); }, 0);
+    document.getElementById('book-sort').value = maxSort + 1;
     document.getElementById('book-active').checked = true;
     document.getElementById('book-cover-file').value = '';
     document.getElementById('book-pdf-file').value = '';
@@ -1865,6 +1989,38 @@ async function saveBook() {
     if (r.error) { showNotification('Save failed: ' + JSON.stringify(r.error), 'error'); return; }
     showNotification(editId ? 'Book updated.' : 'Book added.', 'success');
     cancelBookEdit(); await loadBooks(); localStorage.removeItem('gencine_books_v1');
+}
+
+async function autoSaveBookSort(val) {
+    var editId = document.getElementById('book-edit-id').value;
+    if (!editId) return; // new book — will be saved on Save Book click
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    try {
+        await supabase.from('gencine_books').update({ sort_order: parseInt(val) || 0 }).eq('id', editId);
+        var book = allBooks.find(function(b){ return b.id === editId; });
+        if (book) { book.sort_order = parseInt(val) || 0; allBooks.sort(function(x,y){ return y.sort_order - x.sort_order; }); renderBooksList(); }
+        localStorage.removeItem('gencine_books_v1');
+        showNotification('Sort order updated.', 'success');
+    } catch(e) { showNotification('Failed to update sort order', 'error'); }
+}
+
+async function moveBook(idx, dir) {
+    var a = allBooks[idx], b = allBooks[idx + dir];
+    if (!a || !b) return;
+    var sa = a.sort_order, sb = b.sort_order;
+    /* swap sort_order values */
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    try {
+        await Promise.all([
+            supabase.from('gencine_books').update({ sort_order: sb }).eq('id', a.id),
+            supabase.from('gencine_books').update({ sort_order: sa }).eq('id', b.id)
+        ]);
+    } catch(e) { showNotification('Sort failed', 'error'); return; }
+    /* optimistic local swap — no full reload needed */
+    a.sort_order = sb; b.sort_order = sa;
+    allBooks.sort(function(x,y){ return y.sort_order - x.sort_order; });
+    localStorage.removeItem('gencine_books_v1');
+    renderBooksList();
 }
 
 async function deleteBook(id) {

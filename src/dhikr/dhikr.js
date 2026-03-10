@@ -175,16 +175,14 @@ var _dbBooks    = [];
 var _loadingDb  = false;
 var _dbLoaded   = false;
 
-var CACHE_TTL_MS = 6 * 60 * 60 * 1000; /* 6 hours */
-
 function _readCache(key) {
   try {
     var raw = localStorage.getItem(key);
     if (!raw) return null;
     var parsed = JSON.parse(raw);
-    // Never expire cache when offline — keep data usable forever without internet
-    if (navigator.onLine && Date.now() - parsed.ts > CACHE_TTL_MS) { localStorage.removeItem(key); return null; }
-    return parsed.data;
+    /* Cache never expires — background refresh keeps it fresh silently.
+       User can pull-to-refresh to force a reload. */
+    return parsed.data || parsed; /* support both {ts,data} and raw formats */
   } catch(e) { return null; }
 }
 function _writeCache(key, data) {
@@ -196,18 +194,22 @@ function _getSupabase() {
   return window._appSupabase || null;
 }
 
-/* Load from cache instantly, then re-fetch in background */
+var _bgRefreshDone = false; /* only refresh once per app session */
+
+/* Load from cache instantly, then re-fetch once in background per session */
 function _initDbData(onDone) {
-  var cachedCats     = _readCache('gencine_cats_v2');
+  var cachedCats     = _readCache('gencine_cats_v4');
   var cachedDuas     = _readCache('gencine_duas_v2');
   var cachedHadiths  = _readCache('gencine_hadiths_v2');
   var cachedSections = _readCache('gencine_sections_v1');
-  var cachedBooks    = _readCache('gencine_books_v1');
+  var cachedBooks    = _readCache('gencine_books_v3');
   var cachedTasbih   = _readCache('gencine_tasbih_v1');
   var cachedAsma99   = _readCache('gencine_asma99_v1');
 
   if (cachedSections) _dbSections = cachedSections;
   if (cachedBooks)    _dbBooks    = cachedBooks;
+  if (cachedTasbih)   _dbTasbih   = cachedTasbih;
+  if (cachedAsma99)   _dbAsma99   = cachedAsma99;
 
   if (cachedCats && cachedDuas && cachedHadiths) {
     _dbCats    = cachedCats;
@@ -215,29 +217,46 @@ function _initDbData(onDone) {
     _dbHadiths = cachedHadiths;
     _dbLoaded  = true;
     if (onDone) onDone();
-    /* background refresh — rebuild home (sort may have changed) + hadith list */
-    _fetchDbData(function() {
-      var ui = window.GencineUI;
-      if (!ui) return;
-      ui._homeEl = null; // always rebuild home grid with fresh sort order
-      if (ui._view === 'home') ui._draw();
-      else if (ui._view === 'hadith' && ui._hadithDetailIdx === null) ui._draw();
-    });
+    if (window._splashReadyGencine) window._splashReadyGencine();
+    /* One silent background refresh per session to pick up admin changes */
+    if (!_bgRefreshDone && navigator.onLine) {
+      _bgRefreshDone = true;
+      _fetchDbData(function() {
+        var ui = window.GencineUI;
+        if (!ui) return;
+        ui._homeEl = null;
+        if (ui._view === 'home') ui._draw();
+        else if (ui._view === 'hadith' && ui._hadithDetailIdx === null) ui._draw();
+        else if (ui._view === 'books') ui._draw();
+      });
+    }
   } else {
     _fetchDbData(onDone);
   }
 }
 
 var _sbRetries = 0;
+var _fetchQueue = []; /* callbacks waiting for _fetchDbData to complete */
 
 function _fetchDbData(onDone) {
-  if (_loadingDb) { if (onDone) onDone(); return; }
+  if (_loadingDb) {
+    /* Already in-flight — queue callback, don't call it prematurely */
+    if (onDone) _fetchQueue.push(onDone);
+    return;
+  }
   var sb = _getSupabase();
   if (!sb) {
     /* Supabase not initialised yet — retry every 700ms, give up after 8s */
     if (_sbRetries < 12) {
       _sbRetries++;
-      setTimeout(function() { _fetchDbData(onDone); }, 700);
+      if (onDone) _fetchQueue.push(onDone);
+      setTimeout(function() {
+        var cbs = _fetchQueue.splice(0);
+        _fetchDbData(function(){
+          _dbLoaded = true;
+          cbs.forEach(function(cb){ try{cb();}catch(e){} });
+        });
+      }, 700);
     } else {
       _sbRetries = 0;
       _dbLoaded = true;
@@ -246,22 +265,23 @@ function _fetchDbData(onDone) {
     return;
   }
   _sbRetries = 0;
+  if (onDone) _fetchQueue.push(onDone);
 
   _loadingDb = true;
 
-  var catsPromise     = sb.from('gencine_categories').select('*').eq('active', true).order('sort_order');
+  var catsPromise     = sb.from('gencine_categories').select('*').eq('active', true).order('sort_order', { ascending: true });
   var duasPromise     = sb.from('gencine_duas').select('*').eq('active', true).order('category_key').order('sort_order');
   var hadithsPromise  = sb.from('gencine_hadiths').select('*').eq('active', true).order('sort_order');
   var sectionsPromise = sb.from('gencine_sections').select('*').order('sort_order');
   var tasbihPromise   = sb.from('gencine_tasbih').select('*').eq('active', true).order('sort_order');
   var asma99Promise   = sb.from('gencine_asma99').select('n,ku');
-  var booksPromise    = sb.from('gencine_books').select('*').eq('active', true).order('sort_order');
-  Promise.all([catsPromise, duasPromise, hadithsPromise, sectionsPromise, booksPromise]).then(function(results) {
+  var booksPromise    = sb.from('gencine_books').select('*').eq('active', true).order('sort_order', { ascending: false }).order('created_at', { ascending: false });
+  Promise.all([catsPromise, duasPromise, hadithsPromise, sectionsPromise, booksPromise, tasbihPromise, asma99Promise]).then(function(results) {
     _loadingDb = false;
-    var catRes = results[0], duaRes = results[1], hadithRes = results[2], secRes = results[3], bookRes = results[4];
+    var catRes = results[0], duaRes = results[1], hadithRes = results[2], secRes = results[3], bookRes = results[4], tasbihRes = results[5], asma99Res = results[6];
     if (!catRes.error && catRes.data) {
       _dbCats = catRes.data;
-      _writeCache('gencine_cats_v2', _dbCats);
+      _writeCache('gencine_cats_v4', _dbCats);
     }
     if (!duaRes.error && duaRes.data) {
       _dbDuas = duaRes.data;
@@ -275,14 +295,36 @@ function _fetchDbData(onDone) {
       _dbSections = secRes.data;
       _writeCache('gencine_sections_v1', _dbSections);
     }
-    if (!bookRes.error && bookRes.data) { _dbBooks = bookRes.data; _writeCache('gencine_books_v1', _dbBooks); }
+    if (!bookRes.error && bookRes.data) {
+      _dbBooks = bookRes.data;
+      _writeCache('gencine_books_v3', _dbBooks);
+      /* Pre-cache all book cover images in the HTTP cache */
+      _dbBooks.forEach(function(b){ if(b.cover_url){ var img=new Image(); img.src=b.cover_url; } });
+    }
+    if (tasbihRes && !tasbihRes.error && tasbihRes.data) { _dbTasbih = tasbihRes.data; _writeCache('gencine_tasbih_v1', _dbTasbih); }
+    if (asma99Res && !asma99Res.error && asma99Res.data) { _dbAsma99 = asma99Res.data; _writeCache('gencine_asma99_v1', _dbAsma99); }
     _dbLoaded = true;
-    if (onDone) onDone();
+    if (window._splashReadyGencine) window._splashReadyGencine();
+    var cbs = _fetchQueue.splice(0);
+    cbs.forEach(function(cb){ try{cb();}catch(e){} });
   }).catch(function() {
     _loadingDb = false;
     _dbLoaded  = true;
-    if (onDone) onDone();
+    if (window._splashReadyGencine) window._splashReadyGencine();
+    var cbs = _fetchQueue.splice(0);
+    cbs.forEach(function(cb){ try{cb();}catch(e){} });
   });
+}
+
+/* ── Book save/favourite helpers ── */
+function _bookGetSaved(){ try{ return JSON.parse(localStorage.getItem('book_saved')||'[]'); }catch(e){ return []; } }
+function _bookIsSaved(id){ return _bookGetSaved().some(function(b){ return String(b.id)===String(id); }); }
+function _bookToggleSave(id, book){
+  var saved = _bookGetSaved();
+  var idx = saved.findIndex(function(b){ return String(b.id)===String(id); });
+  if (idx >= 0) { saved.splice(idx, 1); }
+  else { saved.unshift({ id: book.id, title_ku: book.title_ku, title_ar: book.title_ar, author_ku: book.author_ku, cover_url: book.cover_url }); }
+  localStorage.setItem('book_saved', JSON.stringify(saved));
 }
 
 /* Return category keys+labels from DB or fallback */
@@ -372,6 +414,8 @@ window.GencineUI = {
   _recognition:     null,
   _voiceListener:   null,
   _bookCat:         'all',
+  _bookSearch:      '',
+  _bookAuthor:      '',
   _currentBook:     null,
   _pdfDoc:          null,
   _pdfPage:         1,
@@ -397,15 +441,17 @@ window.GencineUI = {
     var self = this;
     this._loadState();
 
-    /* If already showing home with content rendered, skip redraw to avoid
-       image reload flicker. DB sections won't change during a session. */
+    /* Skip redraw only if home is already rendered with DB-sourced content */
     var el = $('gencineContent');
-    if (_dbLoaded && this._view === 'home' && el && el.firstChild) {
+    if (_dbLoaded && this._view === 'home' && el && el.firstChild && this._homeEl) {
       return;
     }
 
     this._view = 'home';
     this._hadithDetailIdx = null;
+    /* Hide books header buttons when returning to home */
+    var _hb = document.getElementById('booksHdrBtns');
+    if (_hb) _hb.style.display = 'none';
 
     if (!_dbLoaded) {
       this._draw();
@@ -417,6 +463,12 @@ window.GencineUI = {
       /* Already loaded — just redraw, no background re-fetch */
       this._draw();
     }
+  },
+
+  /* ── background data prefetch — warms cache with no DOM work ── */
+  prefetch: function(){
+    if(_dbLoaded||_loadingDb)return;
+    _initDbData(null);
   },
 
   /* ── pull-to-refresh: clear cache + re-fetch + re-render ── */
@@ -459,6 +511,14 @@ window.GencineUI = {
   /* ═══════════════════ HOME ═══════════════════ */
   _renderHome: function(container){
     if (this._homeEl) { container.appendChild(this._homeEl); return; }
+    /* Show spinner until DB sections arrive — never show hardcoded sort */
+    if (!_dbSections) {
+      var ld = document.createElement('div');
+      ld.style.cssText = 'display:flex;align-items:center;justify-content:center;padding:80px 0;color:var(--text3)';
+      ld.appendChild(Object.assign(document.createElement('i'), {className:'fas fa-spinner fa-spin'}));
+      container.appendChild(ld);
+      return;
+    }
     var self = this;
     var home = document.createElement('div');
     home.className = 'genc-home';
@@ -1322,93 +1382,240 @@ window.GencineUI = {
   _renderBooks: function(container){
     var self = this;
     var T = window.t || function(k,d){ return d||k; };
-    container.appendChild(this._backRow(T('gencine.books','کتێب')));
 
     var books = _dbBooks.filter(function(b){ return b.active !== false; });
 
-    /* Category filter */
-    var cats = ['all'];
-    books.forEach(function(b){ if(b.category && cats.indexOf(b.category) === -1) cats.push(b.category); });
+    /* ── Back row ── */
+    var hdrRow = document.createElement('div');
+    hdrRow.className = 'genc-back-row';
+    var backBtn = document.createElement('button'); backBtn.className = 'genc-back-btn';
+    var backIco = document.createElement('i'); backIco.className = 'fas fa-arrow-right';
+    backBtn.appendChild(backIco);
+    backBtn.onclick = function(){
+      /* Hide header buttons, reset search bar */
+      var hdrBtns = document.getElementById('booksHdrBtns');
+      if (hdrBtns) hdrBtns.style.display = 'none';
+      self.render();
+    };
+    hdrRow.appendChild(backBtn);
+    var hdrTitle = document.createElement('span'); hdrTitle.className = 'genc-back-label';
+    hdrTitle.textContent = T('gencine.books','کتێب');
+    hdrRow.appendChild(hdrTitle);
+    container.appendChild(hdrRow);
 
+    /* ── Show header buttons in the panel hdr ── */
+    var sheikhBtn = document.getElementById('bookSheikhBtn');
+    var savedBtn  = document.getElementById('bookSavedBtn');
+    var searchTogBtn = document.getElementById('bookSearchBtn');
+    var hdrBtnsWrap = document.getElementById('booksHdrBtns');
+    if (hdrBtnsWrap) hdrBtnsWrap.style.display = 'flex';
+    if (sheikhBtn) sheikhBtn.classList.toggle('on', !!self._bookAuthor);
+    if (savedBtn)  savedBtn.classList.toggle('on', self._bookCat === 'saved');
+
+    /* ── Collapsible search bar ── */
+    var searchBar = document.createElement('div');
+    searchBar.className = 'book-search-bar' + (self._bookSearch ? ' open' : '');
+    var searchWrapInner = document.createElement('div'); searchWrapInner.className = 'book-search-wrap-inner';
+    var searchIcoEl = document.createElement('i'); searchIcoEl.className = 'fas fa-search book-search-ico';
+    var searchInp = document.createElement('input');
+    searchInp.type = 'text'; searchInp.className = 'book-search-inp';
+    searchInp.placeholder = T('gencine.search_books','گەڕان...');
+    searchInp.value = self._bookSearch || '';
+    var searchClear = document.createElement('button'); searchClear.className = 'book-search-clear' + (self._bookSearch ? ' visible' : '');
+    var scx = document.createElement('i'); scx.className = 'fas fa-times'; searchClear.appendChild(scx);
+    searchInp.oninput = function(){
+      self._bookSearch = searchInp.value;
+      searchClear.classList.toggle('visible', !!searchInp.value);
+      renderGrid();
+    };
+    searchClear.onclick = function(){ self._bookSearch = ''; searchInp.value = ''; searchClear.classList.remove('visible'); renderGrid(); searchInp.focus(); };
+    searchWrapInner.appendChild(searchIcoEl); searchWrapInner.appendChild(searchInp); searchWrapInner.appendChild(searchClear);
+    searchBar.appendChild(searchWrapInner);
+    container.appendChild(searchBar);
+
+    /* ── Sheikh filter overlay ── */
+    var sheikhOverlay = document.createElement('div'); sheikhOverlay.className = 'book-overlay';
+    var sheikhPanel = document.createElement('div'); sheikhPanel.className = 'book-overlay-panel';
+    /* Pill handle */
+    var pill = document.createElement('div'); pill.className = 'book-overlay-pill'; sheikhPanel.appendChild(pill);
+    var sheikhHdr = document.createElement('div'); sheikhHdr.className = 'book-overlay-hdr';
+    var sheikhTitle = document.createElement('span'); sheikhTitle.textContent = T('gencine.sheikh_filter','ماموستا');
+    var sheikhClose = document.createElement('button'); sheikhClose.className = 'book-hdr-btn';
+    var scIco = document.createElement('i'); scIco.className = 'fas fa-times'; sheikhClose.appendChild(scIco);
+    sheikhClose.onclick = function(){ sheikhOverlay.classList.remove('open'); };
+    sheikhHdr.appendChild(sheikhClose); sheikhHdr.appendChild(sheikhTitle);
+    sheikhPanel.appendChild(sheikhHdr);
+
+    /* Build author → book count map */
+    var authorCount = {};
+    books.forEach(function(b){ var a = b.author_ku || b.author_ar; if(a){ authorCount[a] = (authorCount[a]||0)+1; } });
+    var authors = Object.keys(authorCount);
+
+    var sheikhList = document.createElement('div'); sheikhList.className = 'book-overlay-list';
+    var allAuthorCards = []; /* keep refs to update .on state */
+
+    function updateCardStates() {
+      allAuthorCards.forEach(function(c){
+        var isAll = c._isAll;
+        c.classList.toggle('on', isAll ? !self._bookAuthor : self._bookAuthor === c._authorName);
+      });
+    }
+
+    function makeAuthorCard(name, count, isAll) {
+      var card = document.createElement('button');
+      card._isAll = isAll; card._authorName = name;
+      card.className = 'book-author-card' + ((isAll ? !self._bookAuthor : self._bookAuthor === name) ? ' on' : '');
+      var avatar = document.createElement('div'); avatar.className = 'book-author-avatar';
+      var avIco = document.createElement('i'); avIco.className = isAll ? 'fas fa-layer-group' : 'fas fa-user-tie';
+      avatar.appendChild(avIco); card.appendChild(avatar);
+      var nameEl = document.createElement('span'); nameEl.className = 'book-author-name';
+      nameEl.textContent = name; nameEl.dir = 'rtl'; card.appendChild(nameEl);
+      var countEl = document.createElement('span'); countEl.className = 'book-author-count';
+      countEl.textContent = count + ' کتێب'; card.appendChild(countEl);
+      card.onclick = function(){
+        if (isAll) { self._bookAuthor = ''; if(sheikhBtn)sheikhBtn.classList.remove('on'); }
+        else        { self._bookAuthor = name; if(sheikhBtn)sheikhBtn.classList.add('on'); }
+        updateCardStates();
+        sheikhOverlay.classList.remove('open'); renderGrid();
+      };
+      allAuthorCards.push(card);
+      return card;
+    }
+
+    sheikhList.appendChild(makeAuthorCard(T('gencine.cat_all','هەمێ'), books.length, true));
+    authors.forEach(function(name){ sheikhList.appendChild(makeAuthorCard(name, authorCount[name], false)); });
+
+
+    sheikhPanel.appendChild(sheikhList);
+    sheikhOverlay.appendChild(sheikhPanel);
+    sheikhOverlay.onclick = function(e){ if(e.target===sheikhOverlay) sheikhOverlay.classList.remove('open'); };
+    container.appendChild(sheikhOverlay);
+
+    /* ── Wire header buttons ── */
+    if (sheikhBtn) sheikhBtn.onclick = function(){ updateCardStates(); sheikhOverlay.classList.add('open'); };
+    if (savedBtn) savedBtn.onclick = function(){
+      self._bookCat = self._bookCat === 'saved' ? 'all' : 'saved';
+      savedBtn.classList.toggle('on', self._bookCat === 'saved');
+      renderGrid();
+    };
+    if (searchTogBtn) searchTogBtn.onclick = function(){
+      var isOpen = searchBar.classList.toggle('open');
+      searchTogBtn.classList.toggle('on', isOpen);
+      if (isOpen) { setTimeout(function(){ searchInp.focus(); }, 50); }
+      else { self._bookSearch = ''; searchInp.value = ''; renderGrid(); }
+    };
+
+    /* ── Category filter chips ── */
+    var catMap = {};
+    books.forEach(function(b){
+      if (!b.category) return;
+      if (catMap[b.category] === undefined || b.sort_order < catMap[b.category]) catMap[b.category] = b.sort_order;
+    });
+    var cats = ['all'].concat(Object.keys(catMap).sort(function(a,b){ return catMap[a] - catMap[b]; }));
     if (cats.length > 1) {
-      var catRow = document.createElement('div');
-      catRow.className = 'book-cat-row';
+      var catRow = document.createElement('div'); catRow.className = 'book-cat-row';
       cats.forEach(function(cat){
         var btn = document.createElement('button');
         btn.className = 'book-cat-btn' + (cat === self._bookCat ? ' on' : '');
         btn.textContent = cat === 'all' ? T('gencine.cat_all','هەمێ') : cat;
-        btn.onclick = function(){ self._bookCat = cat; self._draw(); };
+        btn.onclick = function(){ self._bookCat = cat; renderGrid(); };
         catRow.appendChild(btn);
       });
       container.appendChild(catRow);
     }
 
-    var filtered = self._bookCat === 'all' ? books : books.filter(function(b){ return b.category === self._bookCat; });
+    /* ── Grid + empty state ── */
+    var grid = document.createElement('div'); grid.className = 'book-grid';
+    var emptyState = document.createElement('div'); emptyState.className = 'genc-coming'; emptyState.style.display = 'none';
+    var ei = document.createElement('i'); ei.className = 'fas fa-book-open genc-coming-icon';
+    var et = document.createElement('div'); et.className = 'genc-coming-title';
+    emptyState.appendChild(ei); emptyState.appendChild(et);
+    container.appendChild(grid);
+    container.appendChild(emptyState);
 
-    if (!filtered.length) {
-      var empty = document.createElement('div');
-      empty.className = 'genc-coming';
-      var ei = document.createElement('i'); ei.className = 'fas fa-book-open genc-coming-icon';
-      var et = document.createElement('div'); et.className = 'genc-coming-title'; et.textContent = T('gencine.books_empty','کتێبەكە نیە');
-      empty.appendChild(ei); empty.appendChild(et);
-      container.appendChild(empty);
-      return;
+    function renderGrid() {
+      while (grid.firstChild) grid.removeChild(grid.firstChild);
+      emptyState.style.display = 'none';
+      var q = (self._bookSearch || '').trim().toLowerCase();
+      var pool = self._bookCat === 'saved'
+        ? books.filter(function(b){ return _bookIsSaved(b.id); })
+        : self._bookCat === 'all' ? books
+        : books.filter(function(b){ return b.category === self._bookCat; });
+      if (self._bookAuthor) pool = pool.filter(function(b){ return (b.author_ku||b.author_ar) === self._bookAuthor; });
+      /* Smart search: every word in query must appear somewhere in the book */
+      var filtered = q ? (function(){
+        var words = q.split(/\s+/).filter(Boolean);
+        return pool.filter(function(b){
+          var haystack = [b.title_ku, b.title_ar, b.author_ku, b.author_ar, b.category]
+            .map(function(s){ return (s||'').toLowerCase(); }).join(' ');
+          return words.every(function(w){ return haystack.indexOf(w) !== -1; });
+        });
+      })() : pool;
+
+      if (!filtered.length) {
+        et.textContent = T('gencine.books_empty','کتێبەکە نیە');
+        emptyState.style.display = 'flex'; return;
+      }
+
+      filtered.forEach(function(book){
+        var card = document.createElement('div'); card.className = 'book-card';
+
+        var coverWrap = document.createElement('div'); coverWrap.className = 'book-cover-wrap';
+        if (book.cover_url) {
+          var img = document.createElement('img');
+          img.className = 'book-cover'; img.alt = book.title_ku || '';
+          img.onload = function(){ img.classList.add('loaded'); };
+          img.onerror = function(){ img.classList.add('loaded'); };
+          img.src = book.cover_url;
+          if (img.complete) img.classList.add('loaded');
+          coverWrap.appendChild(img);
+        } else {
+          var ph = document.createElement('div'); ph.className = 'book-cover-placeholder';
+          var pi = document.createElement('i'); pi.className = 'fas fa-book'; ph.appendChild(pi); coverWrap.appendChild(ph);
+        }
+        card.appendChild(coverWrap);
+
+        /* NEW badge */
+        if (book.created_at && (Date.now() - new Date(book.created_at).getTime()) < 86400000) {
+          var nb = document.createElement('div'); nb.className = 'new-badge'; nb.textContent = 'نوی'; card.appendChild(nb);
+        }
+
+        /* Bookmark — bottom-right of info area */
+        var saveBtn = document.createElement('button');
+        saveBtn.className = 'book-save-btn' + (_bookIsSaved(book.id) ? ' saved' : '');
+        var sIco = document.createElement('i'); sIco.className = 'fas fa-bookmark'; saveBtn.appendChild(sIco);
+        saveBtn.onclick = function(e){
+          e.stopPropagation(); _bookToggleSave(book.id, book);
+          saveBtn.classList.toggle('saved', _bookIsSaved(book.id));
+          if (window.Capacitor && window.Capacitor.Plugins.Haptics) window.Capacitor.Plugins.Haptics.impact({style:'LIGHT'});
+        };
+
+        var info = document.createElement('div'); info.className = 'book-info';
+        var titleEl = document.createElement('div'); titleEl.className = 'book-title';
+        titleEl.textContent = book.title_ku || book.title_ar || ''; info.appendChild(titleEl);
+        if (book.author_ku || book.author_ar) {
+          var auth = document.createElement('div'); auth.className = 'book-author';
+          auth.textContent = book.author_ku || book.author_ar; info.appendChild(auth);
+        }
+        var infoFoot = document.createElement('div'); infoFoot.className = 'book-info-foot';
+        if (book.pages) {
+          var pg = document.createElement('div'); pg.className = 'book-pages';
+          pg.textContent = book.pages + ' ڕۆپەل'; infoFoot.appendChild(pg);
+        }
+        infoFoot.appendChild(saveBtn);
+        info.appendChild(infoFoot);
+        card.appendChild(info);
+
+        card.onclick = function(e){
+          if (e.target.closest('.book-save-btn')) return;
+          self._currentBook = book; self._pdfDoc = null; self._pdfPage = 1;
+          self._view = 'book-reader'; self._draw();
+        };
+        grid.appendChild(card);
+      });
     }
 
-    var grid = document.createElement('div');
-    grid.className = 'book-grid';
-
-    filtered.forEach(function(book){
-      var card = document.createElement('button');
-      card.className = 'book-card';
-      card.onclick = function(){
-        self._currentBook = book;
-        self._pdfDoc = null;
-        self._pdfPage = 1;
-        self._view = 'book-reader';
-        self._draw();
-      };
-
-      var coverWrap = document.createElement('div');
-      coverWrap.className = 'book-cover-wrap';
-      if (book.cover_url) {
-        var img = document.createElement('img');
-        img.className = 'book-cover';
-        img.src = book.cover_url;
-        img.alt = book.title_ku || '';
-        coverWrap.appendChild(img);
-      } else {
-        var placeholder = document.createElement('div');
-        placeholder.className = 'book-cover-placeholder';
-        var pi = document.createElement('i'); pi.className = 'fas fa-book';
-        placeholder.appendChild(pi);
-        coverWrap.appendChild(placeholder);
-      }
-      card.appendChild(coverWrap);
-
-      var info = document.createElement('div');
-      info.className = 'book-info';
-      var title = document.createElement('div');
-      title.className = 'book-title';
-      title.textContent = book.title_ku || book.title_ar || '';
-      info.appendChild(title);
-      if (book.author_ku || book.author_ar) {
-        var author = document.createElement('div');
-        author.className = 'book-author';
-        author.textContent = book.author_ku || book.author_ar;
-        info.appendChild(author);
-      }
-      if (book.pages) {
-        var pages = document.createElement('div');
-        pages.className = 'book-pages';
-        pages.textContent = book.pages + ' ڕۆپەل';
-        info.appendChild(pages);
-      }
-      card.appendChild(info);
-      grid.appendChild(card);
-    });
-
-    container.appendChild(grid);
+    renderGrid();
   },
 
   _renderBookReader: function(container){

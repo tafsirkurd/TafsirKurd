@@ -65,3 +65,21 @@
   font-display: swap;
   src: url('/assets/fonts/surah-name-v4.woff2?v=16') format('woff2');
 }
+
+/* SurahName v2 - Tarteel surah name calligraphy (used in reader header) */
+@font-face {
+  font-family: 'SurahNameV2';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/fonts/surah-name-v2.woff2?v=1') format('woff2');
+}
+
+/* QuranCommon - Tarteel juz names, surah header decoration */
+@font-face {
+  font-family: 'QuranCommon';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/fonts/quran-common.woff2?v=1') format('woff2');
+}

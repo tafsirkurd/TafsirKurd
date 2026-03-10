@@ -42,7 +42,8 @@ export async function onRequest(context) {
             );
         }
 
-        // Combine client data with server data and secret
+        // Use only stable characteristics — canvas/webgl excluded (vary between browser restarts)
+        // IP and userAgent excluded (change on network switch / browser update)
         const components = [
             SECRET_SALT,
             deviceData.screen || '',
@@ -51,12 +52,7 @@ export async function onRequest(context) {
             deviceData.platform || '',
             deviceData.cores || '',
             deviceData.memory || '',
-            deviceData.canvas || '',
-            deviceData.webgl || '',
             deviceData.touch || '',
-            // Server-side additions (harder to spoof)
-            userAgent,
-            // Note: We don't include IP because it can change
         ];
 
         // Generate secure hash using Web Crypto API

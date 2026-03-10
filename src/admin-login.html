@@ -38,20 +38,15 @@
         }
 
         .login-logo {
-            width: 48px;
-            height: 48px;
-            background: #000000;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 88px;
+            height: 88px;
             margin: 0 auto 16px;
         }
 
-        .login-logo svg {
-            width: 28px;
-            height: 28px;
-            color: #FFFFFF;
+        .login-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .login-title {
@@ -236,7 +231,7 @@
     <div class="login-container">
         <div class="login-header">
             <div class="login-logo">
-                <i data-lucide="shield-check"></i>
+                <img src="/assets/images/logo.png" alt="TafsirKurd">
             </div>
             <h1 class="login-title">Admin Login</h1>
             <p class="login-subtitle">TafsirKurd Dashboard</p>
@@ -442,6 +437,10 @@
                 if (data.success) {
                     localStorage.removeItem('adminLoginLockoutUntil');
                     localStorage.removeItem('adminLoginFailedAttempts');
+                    if (data.trustToken) {
+                        localStorage.setItem('adminTrustToken', data.trustToken);
+                        localStorage.setItem('adminTrustExpiry', Date.now() + 30*24*60*60*1000);
+                    }
                     sessionStorage.setItem('adminToken', data.token);
                     sessionStorage.setItem('adminSessionStart', new Date().toISOString());
                     if (data.user) {
@@ -495,6 +494,8 @@
             const password = document.getElementById('password').value;
 
             const deviceFingerprint = window.deviceFingerprint ? await window.deviceFingerprint.get() : null;
+            const _tt = localStorage.getItem('adminTrustToken'), _te = localStorage.getItem('adminTrustExpiry');
+            const trustToken = (_tt && _te && Date.now() < +_te) ? _tt : null;
 
             setBtnLoading();
             errorMessage.classList.remove('active');
@@ -504,7 +505,7 @@
                 const response = await fetch('/admin-auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, deviceFingerprint, turnstileToken })
+                    body: JSON.stringify({ email, password, deviceFingerprint, trustToken, turnstileToken })
                 });
 
                 const data = await response.json();
