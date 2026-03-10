@@ -2061,7 +2061,7 @@
    * Fetches & caches prayer times for ALL 20 cities for the current month.
    * Also pre-fetches next month in the last 7 days of current month.
    * Skips any city-month that is already cached.
-   * Tracks completion with 'prayerPrefetchDone' so it doesn't re-run each open.
+   * Skips cities already cached for the month — safe to call on every app open.
    */
   async function prefetchAllCities() {
     var API   = window.PrayerAPI;
@@ -2071,10 +2071,6 @@
     var today  = window.PrayerLogic.todayBaghdad();
     var parts  = today.split('-').map(Number);
     var year   = parts[0], month = parts[1], day = parts[2];
-
-    // Only run once per calendar month
-    var doneTag = year + '-' + month;
-    if (localStorage.getItem('prayerPrefetchDone') === doneTag) return;
 
     // Which months to cover: always current, plus next if last 7 days of month
     var months = [{ year: year, month: month }];
@@ -2086,31 +2082,26 @@
     }
 
     var cities = Object.keys(API.CITY_COORDS || {});
-    var allOk  = true;
 
     for (var mi = 0; mi < months.length; mi++) {
       var ym = months[mi];
       for (var ci = 0; ci < cities.length; ci++) {
         var city = cities[ci];
         var mkey = Cache.monthKey(city, ym.year, ym.month);
-        if (Cache.read(mkey)) continue; // already cached
+        if (Cache.read(mkey)) continue; // already cached — skip
         try {
           var url = 'https://tafsirkurd.com/prayer-kurd?city=' +
                     encodeURIComponent(city) + '&year=' + ym.year + '&month=' + ym.month;
           var res = await fetch(url);
-          if (!res.ok) { allOk = false; continue; }
+          if (!res.ok) continue;
           var data = await res.json();
           if (data && !data.error && data.days && Object.keys(data.days).length > 0) {
             Cache.write(mkey, data);
-          } else {
-            allOk = false;
           }
-        } catch(e) { allOk = false; }
+        } catch(e) { /* network error — will retry next foreground */ }
       }
     }
 
-    // Only mark done if every city succeeded — retry next app open if any failed
-    if (allOk) localStorage.setItem('prayerPrefetchDone', doneTag);
   }
 
   // ─── Auto-schedule on start/foreground ────────────────────────────────────

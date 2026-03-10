@@ -97,8 +97,9 @@ window.deviceFingerprint = (function() {
     }
 
     // Fallback fingerprint (only used if server is unreachable)
+    // Only stable fields — canvas/webgl excluded (vary between browser restarts)
     function fallbackFingerprint(data) {
-        const str = Object.values(data).join('|');
+        const str = [data.screen, data.timezone, data.language, data.platform, data.cores, data.memory, data.touch].join('|');
         let hash = 2166136261;
         for (let i = 0; i < str.length; i++) {
             hash ^= str.charCodeAt(i);

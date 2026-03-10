@@ -154,13 +154,15 @@ var S={
   arSize:parseFloat(localStorage.getItem('app_arSize'))||2.0,
   tfSize:parseFloat(localStorage.getItem('app_tfSize'))||1.0,
   lineH:parseFloat(localStorage.getItem('app_lineH'))||2.2,
-  ivSupabase:null,ivSeries:null,ivEpisodes:null,ivCurrentSeries:null,ivLoading:false,ivInited:false,ivSearchQuery:'',
+  ivSupabase:null,ivSeries:null,ivEpisodes:null,ivCurrentSeries:null,ivLoading:false,ivInited:false,ivSearchQuery:'',ivSpeakerFilter:null,
   rm:{mode:'single',playCount:2,verseRepeat:1,delay:0,isPlaying:false,currentPlay:0},
   readSession:null,
   todayVerses:null,
   supabase:null,user:null,syncInterval:null,isSyncing:false,lastSyncTime:0,realtimeChannel:null,
-  mushafFont:localStorage.getItem('mushafFont')||'qcf1',
-  mushafFontSize:(function(){var f=localStorage.getItem('mushafFont')||'qcf1';return parseInt(localStorage.getItem('mushafFontSize_'+f))||(f==='qcf1'?22:20);}()),
+  readerFont:localStorage.getItem('readerFont')||'hafs',
+  glyphVerses:{},
+  mushafFont:localStorage.getItem('mushafFont')||'qcf4',
+  mushafFontSize:(function(){var f=localStorage.getItem('mushafFont')||'qcf4';return parseInt(localStorage.getItem('mushafFontSize_'+f))||(f==='qcf1'?22:20);}()),
   mushafLineH:parseFloat(localStorage.getItem('mushafLineH'))||1.8,
   renderedAyahs:[],renderedTafsirs:{},
   copy:{surah:0,ayah:0,rangeFmt:'both'}
@@ -241,6 +243,8 @@ function init(){
             // App came to foreground — reschedule athan + daily verse if new day
             if(window.PrayerUI)PrayerUI.initScheduleOnStart();
             initDailyVerse();
+            // Re-run prefetch in case any city cache is missing (e.g. first open was offline)
+            if(window.PrayerUI&&PrayerUI.prefetchAllCities)PrayerUI.prefetchAllCities();
           }
         });
       }
@@ -365,11 +369,19 @@ function init(){
         (function(n){
           if(S.mushafFont==='qcf1')injectQCFFont(n);
           else if(S.mushafFont==='qcf2')injectQCFV2Font(n);
-          getMushafPageData(n,pf.fields,pf.cache).catch(function(){});
+          else if(S.mushafFont==='qcf4')injectQCFV4Font(n);
+          getMushafPageData(n,pf.fields,pf.cache,pf.mushafId).catch(function(){});
         })(pn);
       }
     }).catch(function(){});
   },1500);
+
+  // Early data prefetch — warm all API/DB caches before user taps any tab.
+  // No DOM work here — just fires network requests so cache is hot when tab opens.
+  setTimeout(function(){
+    if(window.GencineUI&&GencineUI.prefetch)GencineUI.prefetch();
+    if(window.PrayerUI&&PrayerUI.prefetchAllCities)PrayerUI.prefetchAllCities();
+  },200);
 
   // Pre-render all tabs in background so every tab is already built before user taps.
   // Splash hides at ~800ms; start at 900ms then stagger 80ms each to avoid jank.
@@ -379,41 +391,59 @@ function init(){
       function(){renderGoals();_renderHash.goals=_tabHash('goals');},
       function(){renderSettings();_renderHash.settings=_tabHash('settings');},
       function(){if(window.PrayerUI)PrayerUI.render();},
-      function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}
+      function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');},
+      function(){if(window.GencineUI)GencineUI.render();}
     ];
     var i=0;
-    function next(){if(i>=jobs.length)return;jobs[i++]();setTimeout(next,80);}
+    function next(){
+      if(i>=jobs.length){if(window._splashReadyTabs)window._splashReadyTabs();return;}
+      jobs[i++]();setTimeout(next,80);
+    }
     next();
   },900);
 
-  // Hide splash — waits for Quran data + i18n, minimum 2s, max 6s
+  // Smart splash — 5 stages: quran → i18n → gencine → islamvoice → tabs
+  // Progress bar fills as each stage completes. Dismisses only when all ready.
   var _splashStart = Date.now();
-  var _splashMinMs = 2000; // always show at least 2 seconds
-  var _splashReady = { quran: false, i18n: false };
-  function _checkSplashReady(){
-    if(!_splashReady.quran || !_splashReady.i18n) return;
-    var elapsed = Date.now() - _splashStart;
-    var delay = Math.max(0, _splashMinMs - elapsed);
-    setTimeout(function(){
-      var sp=$('splash');
-      if(sp){sp.classList.add('hide')}
-      var app=$('app');
-      if(app){app.style.display='flex'}
-      try{
-        var sp2=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.SplashScreen;
-        if(sp2)sp2.hide({fadeOutDuration:300});
-      }catch(e){}
-      setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp)},350);
-    }, delay);
+  var _splashMinMs = 1600;
+  var _splashReady = {quran:false,i18n:false,gencine:false,islamvoice:false,tabs:false};
+  var _splashDismissed = false;
+  function _setSplashProgress(pct){
+    var fill=document.getElementById('splashBarFill');
+    if(fill)fill.style.width=pct+'%';
   }
-  window._splashReadyQuran = function(){ _splashReady.quran=true; _checkSplashReady(); };
-  window._splashReadyI18n  = function(){ _splashReady.i18n=true;  _checkSplashReady(); };
-  // Failsafe — force show app after 6s regardless
-  setTimeout(function(){
-    _splashReady.quran=true; _splashReady.i18n=true; _checkSplashReady();
-  }, 6000);
-  // If already cached, mark quran ready immediately
-  if(S.quranData){ _splashReady.quran=true; }
+  function _checkSplashReady(){
+    if(_splashDismissed)return;
+    if(!_splashReady.quran||!_splashReady.i18n||!_splashReady.gencine||!_splashReady.islamvoice||!_splashReady.tabs)return;
+    _splashDismissed=true;
+    var elapsed=Date.now()-_splashStart;
+    var delay=Math.max(0,_splashMinMs-elapsed);
+    setTimeout(function(){
+      _setSplashProgress(100);
+      setTimeout(function(){
+        var sp=$('splash');
+        if(sp)sp.classList.add('hide');
+        var app=$('app');
+        if(app)app.style.display='flex';
+        try{var sp2=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.SplashScreen;if(sp2)sp2.hide({fadeOutDuration:300});}catch(e){}
+        setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},450);
+        // Pre-cache V4 fonts 3s after splash — silent background download
+        setTimeout(precacheV4Fonts,3000);
+      },350);
+    },delay);
+  }
+  window._splashReadyQuran      =function(){if(_splashReady.quran)return;_splashReady.quran=true;_setSplashProgress(20);_checkSplashReady();};
+  window._splashReadyI18n       =function(){if(_splashReady.i18n)return;_splashReady.i18n=true;_setSplashProgress(40);_checkSplashReady();};
+  window._splashReadyGencine    =function(){if(_splashReady.gencine)return;_splashReady.gencine=true;_setSplashProgress(60);_checkSplashReady();};
+  window._splashReadyIslamvoice =function(){if(_splashReady.islamvoice)return;_splashReady.islamvoice=true;_setSplashProgress(80);_checkSplashReady();};
+  window._splashReadyTabs       =function(){if(_splashReady.tabs)return;_splashReady.tabs=true;_setSplashProgress(100);_checkSplashReady();};
+  // Gencine failsafe — unblock if Supabase is slow after 15s
+  setTimeout(function(){if(window._splashReadyGencine)window._splashReadyGencine();},15000);
+  // IslamVoice failsafe — unblock if Supabase is slow after 12s
+  setTimeout(function(){if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();},12000);
+  // Overall failsafe — force app visible after 25s no matter what
+  setTimeout(function(){_splashReady.quran=_splashReady.i18n=_splashReady.gencine=_splashReady.islamvoice=_splashReady.tabs=true;_checkSplashReady();},25000);
+  // Data always loads async now (no localStorage cache) — splash waits for both files
 }
 
 /* ===== LIVE TRANSLATION UPDATE ===== */
@@ -436,21 +466,20 @@ document.addEventListener('i18n:updated', function(){
 });
 
 /* ===== DATA LOADING ===== */
+var _dataReady={quran:false,tafsir:false};
+function _checkDataReady(){
+  if(!_dataReady.quran||!_dataReady.tafsir)return;
+  if(window._splashReadyQuran){window._splashReadyQuran();window._splashReadyQuran=null;}
+  if(S.surah)renderAyahs(S.surah);
+}
 function loadQuranData(){
-  var cached=null;
-  try{cached=JSON.parse(localStorage.getItem('quran_data_cache'))}catch(e){}
-  if(cached){S.quranData=cached;return}
   fetch('/data/quran.json').then(function(r){
     if(!r.ok)throw new Error('HTTP '+r.status);
     return r.json();
   }).then(function(d){
     S.quranData=d;
-    try{localStorage.setItem('quran_data_cache',JSON.stringify(d))}catch(e){
-      console.warn('Quran cache failed (storage full?)');
-    }
-    if(window._splashReadyQuran){ window._splashReadyQuran(); window._splashReadyQuran=null; }
-    // Re-render current surah if one is open
-    if(S.surah)renderAyahs(S.surah);
+    _dataReady.quran=true;
+    _checkDataReady();
   }).catch(function(e){
     console.error('Quran load error:',e);
     toast(t('error.data_load'));
@@ -480,27 +509,13 @@ function groupTafsirBySurah(data){
 }
 
 function loadTafsirData(){
-  // v3: clear old cache format
-  if(localStorage.getItem('tafsir_cache_v')!=='3'){
-    localStorage.removeItem('tafsir_data_cache');
-    localStorage.setItem('tafsir_cache_v','3');
-  }
-  var cached=null;
-  try{cached=JSON.parse(localStorage.getItem('tafsir_data_cache'))}catch(e){}
-  if(cached){
-    S.tafsirData=groupTafsirBySurah(cached);
-    return;
-  }
   fetch('/data/kurdish_tafsir.json').then(function(r){
     if(!r.ok)throw new Error('HTTP '+r.status);
     return r.json();
   }).then(function(d){
     S.tafsirData=groupTafsirBySurah(d);
-    try{localStorage.setItem('tafsir_data_cache',JSON.stringify(d))}catch(e){
-      console.warn('Tafsir cache failed (storage full?)');
-    }
-    // Re-render current surah if one is open
-    if(S.surah)renderAyahs(S.surah);
+    _dataReady.tafsir=true;
+    _checkDataReady();
   }).catch(function(e){
     console.error('Tafsir load error:',e);
     toast(t('error.tafsir_load'));
@@ -509,8 +524,8 @@ function loadTafsirData(){
       if(S.tafsirData)return;
       fetch('/data/kurdish_tafsir.json').then(function(r){return r.json()}).then(function(d){
         S.tafsirData=groupTafsirBySurah(d);
-        try{localStorage.setItem('tafsir_data_cache',JSON.stringify(d))}catch(e2){}
-        if(S.surah)renderAyahs(S.surah);
+        _dataReady.tafsir=true;
+        _checkDataReady();
         toast(t('toast.tafsir_loaded'));
       }).catch(function(){});
     },3000);
@@ -532,6 +547,8 @@ function applySizes(){
   document.documentElement.style.setProperty('--ar-size',S.arSize+'rem');
   document.documentElement.style.setProperty('--tf-size',S.tfSize+'rem');
   document.documentElement.style.setProperty('--line-h',String(S.lineH));
+  var fontVal=S.readerFont==='amiri'?"'Amiri Quran',serif":"'KFGQPC Hafs','Scheherazade New',serif";
+  document.documentElement.style.setProperty('--font-ar',fontVal);
 }
 var _qsDimTimer=null;
 function dimQsSheet(){
@@ -570,7 +587,7 @@ function _tabHash(name){
     return (S.user?S.user.email:'')+S.darkMode+S.hapticFeedback+S.fontSize+S.keepAwake+S.reminderEnabled+S.reminderTime;
   }
   if(name==='islamvoice'){
-    return (S.ivSeries?S.ivSeries.length:0)+':'+(S.ivSearchQuery||'');
+    return (S.ivSeries?S.ivSeries.length:0)+':'+(S.ivSearchQuery||'')+(S.ivSpeakerFilter||'');
   }
   return null;
 }
@@ -882,23 +899,56 @@ App.onSearch=function(v){
 };
 
 /* ===== SURAH GRID ===== */
+var _surahGridReady=false;
 function renderSurahGrid(){
   var grid=$('surahGrid');
-  clear(grid);
-  SURAHS.forEach(function(s){
-    var card=el('div','surah-card');
-    var numBox=el('div','surah-num');
-    numBox.appendChild(el('span','surah-num-n',String(s.n)));
-    var orig=el('span','surah-num-origin');orig.appendChild(icon(s.t==='Meccan'?'fas fa-kaaba':'fas fa-mosque'));numBox.appendChild(orig);
-    card.appendChild(numBox);
-    var info=el('div','surah-info');
-    var deco=el('div','surah-name-ar no-kurdish-convert','surah'+String(s.n).padStart(3,'0'));info.appendChild(deco);
-    info.appendChild(el('div','surah-name-en',s.en));
-    info.appendChild(el('div','surah-ayahs',s.a+' '+t('surah.card.ayah_count')));
-    card.appendChild(info);
-    on(card,'click',function(){App.openSurah(s.n)});
-    grid.appendChild(card);
-  });
+  var ayahLbl=t('surah.card.ayah_count');
+  var frag=document.createDocumentFragment();
+  for(var i=0;i<SURAHS.length;i++){
+    var s=SURAHS[i];
+    var card=document.createElement('div');
+    card.className='surah-card';
+    card.dataset.n=s.n;
+    var imgPanel=document.createElement('div');
+    imgPanel.className='surah-img-panel '+(s.t==='Meccan'?'meccan':'maddinah');
+    var badge=document.createElement('div');
+    badge.className='surah-num-badge';
+    badge.textContent=s.n;
+    var info=document.createElement('div');
+    info.className='surah-info';
+    var deco=document.createElement('div');
+    deco.className='surah-name-ar no-kurdish-convert';
+    deco.textContent='surah'+String(s.n).padStart(3,'0');
+    var nameEn=document.createElement('div');
+    nameEn.className='surah-name-en';
+    nameEn.textContent=s.en;
+    var ayahsEl=document.createElement('div');
+    ayahsEl.className='surah-ayahs';
+    ayahsEl.textContent=s.a+' '+ayahLbl;
+    info.appendChild(deco);info.appendChild(nameEn);info.appendChild(ayahsEl);
+    card.appendChild(imgPanel);card.appendChild(badge);card.appendChild(info);
+    frag.appendChild(card);
+  }
+  grid.textContent='';
+  grid.appendChild(frag);
+  if(!_surahGridReady){
+    _surahGridReady=true;
+    grid.addEventListener('click',function(e){
+      var card=e.target.closest('.surah-card');
+      if(card)App.openSurah(+card.dataset.n);
+    });
+    // Apply backdrop-filter only to visible cards — keeps GPU layers bounded to ~8 instead of 114
+    var _badgeObs=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var badge=entry.target.querySelector('.surah-num-badge');
+        if(!badge)return;
+        var bf=entry.isIntersecting?'blur(10px) saturate(160%)':'none';
+        badge.style.backdropFilter=bf;
+        badge.style.webkitBackdropFilter=bf;
+      });
+    },{rootMargin:'120px'});
+    grid.querySelectorAll('.surah-card').forEach(function(card){_badgeObs.observe(card);});
+  }
 }
 
 /* ===== CONTINUE READING ===== */
@@ -911,9 +961,14 @@ function renderContinue(){
   var s=SURAHS[last.surah-1];
   if(!s)return;
   var card=el('div','continue-card');
-  card.appendChild(el('div','continue-label',t('reader.continue')));
-  card.appendChild(el('div','continue-title',s.en+' - '+s.ar));
-  card.appendChild(el('div','continue-sub',t('reader.ayah')+' '+last.ayah));
+  card.style.backgroundImage="url('/assets/icons/"+(s.t==='Meccan'?'Makkah':'Maddinah')+".webp')";
+  var deco=el('div','continue-surah-deco no-kurdish-convert','surah'+String(s.n).padStart(3,'0'));
+  card.appendChild(deco);
+  var info=el('div','continue-info');
+  info.appendChild(el('div','continue-label',t('reader.continue')));
+  info.appendChild(el('div','continue-title',s.en+' - '+s.ar));
+  info.appendChild(el('div','continue-sub',t('reader.ayah')+' '+last.ayah));
+  card.appendChild(info);
   on(card,'click',function(){App.openSurah(last.surah,last.ayah)});
   c.appendChild(card);
 }
@@ -940,7 +995,7 @@ App.openSurah=function(num,scrollTo){
 App.backToList=function(){
   haptic([8]);
   if(S.surah){
-    try{localStorage.setItem('surah_scroll_'+S.surah,String($('panelQuran').scrollTop))}catch(e){}
+    try{localStorage.setItem('surah_scroll_'+S.surah,String($('ayahList').scrollTop))}catch(e){}
   }
   // Clean up mushaf DOM — keep mode preference so next surah reopens in mushaf
   var mv=$('mushafView');if(mv){mv.style.display='none';clear(mv);}
@@ -949,13 +1004,14 @@ App.backToList=function(){
   S.surah=null;
   $('quranReader').classList.remove('on');
   $('quranHome').style.display='';
-  $('panelQuran').scrollTop=0;
+  $('ayahList').scrollTop=0;
   renderContinue();
 };
 
 /* ===== MUSHAF MODE ===== */
 var _qcfFontInjected={};
 var _qcfV2FontInjected={};
+var _qcfV4FontInjected={};
 function toArabicNum(n){return String(n).replace(/\d/g,function(d){return'٠١٢٣٤٥٦٧٨٩'[+d];});}
 
 function injectQCFFont(pageNum){
@@ -974,6 +1030,34 @@ function injectQCFV2Font(pageNum){
   s.textContent="@font-face{font-family:'QCFv2p"+pageNum+"';src:url('https://raw.githubusercontent.com/alquran-foundation/qpc-fonts/master/mushaf-v2/QCF2"+pad+".ttf') format('truetype');font-display:block}";
   document.head.appendChild(s);
 }
+function injectQCFV4Font(pageNum){
+  if(_qcfV4FontInjected[pageNum])return;
+  _qcfV4FontInjected[pageNum]=true;
+  var s=document.createElement('style');
+  s.textContent="@font-face{font-family:'QCFv4p"+pageNum+"';src:url('https://qpc-v4-fonts.tefsirkurd.workers.dev/p"+pageNum+".woff2') format('woff2');font-display:block}";
+  document.head.appendChild(s);
+}
+
+// Pre-cache V4 fonts for pages 1-50 silently in background (runs once after first install)
+function precacheV4Fonts(){
+  if(localStorage.getItem('qcfV4Precached')==='1')return;
+  var PAGES=50,BATCH=3,delay=0;
+  for(var p=1;p<=PAGES;p+=BATCH){
+    (function(start){
+      setTimeout(function(){
+        for(var i=start;i<Math.min(start+BATCH,PAGES+1);i++){
+          injectQCFV4Font(i);
+          if(document.fonts&&document.fonts.load){
+            document.fonts.load('1em "QCFv4p'+i+'"').catch(function(){});
+          }
+        }
+      },delay);
+      delay+=400;
+    })(p);
+  }
+  // Mark done after all batches finish
+  setTimeout(function(){localStorage.setItem('qcfV4Precached','1');},PAGES/BATCH*400+2000);
+}
 
 function getMushafPageRange(surahNum){
   var key='qcfRange_'+surahNum;
@@ -988,11 +1072,13 @@ function getMushafPageRange(surahNum){
     });
 }
 
-function getMushafPageData(pageNum,fields,cachePrefix){
+function getMushafPageData(pageNum,fields,cachePrefix,mushafId){
   fields=fields||'code_v1';cachePrefix=cachePrefix||'qcfV1p_';
   var key=cachePrefix+pageNum;
   try{var c=JSON.parse(localStorage.getItem(key)||'null');if(c&&c.verses)return Promise.resolve(c);}catch(e){}
-  return fetch('https://api.quran.com/api/v4/verses/by_page/'+pageNum+'?words=true&word_fields='+fields+'&per_page=50')
+  var url='https://api.quran.com/api/v4/verses/by_page/'+pageNum+'?words=true&word_fields='+fields+'&per_page=50';
+  if(mushafId)url+='&mushaf='+mushafId;
+  return fetch(url)
     .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
     .then(function(json){
       try{localStorage.setItem(key,JSON.stringify(json));}catch(e){}
@@ -1001,6 +1087,7 @@ function getMushafPageData(pageNum,fields,cachePrefix){
 }
 function _getPageFields(){
   if(S.mushafFont==='qcf2')return{fields:'code_v2',cache:'qcfV2p_'};
+  if(S.mushafFont==='qcf4')return{fields:'code_v2',cache:'qcfV4p_',mushafId:19};
   return{fields:'code_v1',cache:'qcfV1p_'};
 }
 
@@ -1048,6 +1135,7 @@ function renderMushafView(){
     for(var pi=pages.start;pi<=Math.min(pages.end,pages.start+2);pi++){
       if(S.mushafFont==='qcf1')injectQCFFont(pi);
       else if(S.mushafFont==='qcf2')injectQCFV2Font(pi);
+      else if(S.mushafFont==='qcf4')injectQCFV4Font(pi);
     }
 
     for(var p=pages.start;p<=pages.end;p++){
@@ -1063,19 +1151,50 @@ function renderMushafView(){
 
     // Load first page immediately — no waiting for intersection
     var firstPage=view.querySelector('.mushaf-text-page');
+    var targetSurah=S.surah;
+    // Trim a page so it only contains content belonging to targetSurah
+    function trimPageToSurah(pageEl){
+      if(!pageEl)return;
+      var kids=Array.prototype.slice.call(pageEl.childNodes);
+      var keepFrom=0,keepTo=kids.length,foundTarget=false;
+      for(var i=0;i<kids.length;i++){
+        var k=kids[i];
+        if(k.classList&&k.classList.contains('mushaf-surah-banner')){
+          var bn=parseInt(k.dataset.surah);
+          if(bn===targetSurah){keepFrom=i;foundTarget=true;}
+          else{keepTo=i;break;}
+        }
+      }
+      // Remove trailing other-surah content (from end down to keepTo)
+      for(var j=kids.length-1;j>=keepTo;j--){if(kids[j].parentNode===pageEl)pageEl.removeChild(kids[j]);}
+      // Remove leading other-surah content (only when this page starts mid-surah)
+      if(keepFrom>0){for(var m=keepFrom-1;m>=0;m--){if(kids[m].parentNode===pageEl)pageEl.removeChild(kids[m]);}}
+    }
+    function trimToTargetSurah(){
+      // First page: trim leading previous-surah content, then reset scroll
+      var banner=view.querySelector('.mushaf-surah-banner[data-surah="'+targetSurah+'"]');
+      if(!banner)return false;
+      var pageEl=banner.closest?banner.closest('.mushaf-text-page'):banner.parentNode;
+      trimPageToSurah(pageEl);
+      view.scrollTop=0;
+      var panelEl=document.getElementById('panelQuran');
+      if(panelEl)panelEl.scrollTop=0;
+      return true;
+    }
     if(firstPage){
       firstPage.dataset.loaded='1';
       loadMushafPageQCF(firstPage,pages.start).then(function(){
-        // Find banner for this surah and scroll to it via offset (avoids scrollIntoView overshooting)
-        var targetBanner=view.querySelector('.mushaf-surah-banner[data-surah="'+S.surah+'"]');
-        if(targetBanner){
-          var viewRect=view.getBoundingClientRect();
-          var bannerRect=targetBanner.getBoundingClientRect();
-          var offset=bannerRect.top-viewRect.top+view.scrollTop;
-          view.scrollTop=Math.max(0,offset-8);
-        } else {
-          view.scrollTop=0;
-        }
+        setTimeout(function(){
+          if(trimToTargetSurah())return;
+          // Banner not on first page — load next page and try again
+          var p2=view.querySelector('.mushaf-text-page[data-page="'+(pages.start+1)+'"]');
+          if(p2&&!p2.dataset.loaded){
+            p2.dataset.loaded='1';
+            loadMushafPageQCF(p2,pages.start+1).then(function(){
+              setTimeout(trimToTargetSurah,100);
+            }).catch(function(){});
+          }
+        },150);
       }).catch(function(){});
     }
 
@@ -1087,7 +1206,7 @@ function renderMushafView(){
         if(pageEl.dataset.loaded)return;
         pageEl.dataset.loaded='1';
         obs.unobserve(pageEl);
-        loadMushafPageQCF(pageEl,parseInt(pageEl.dataset.page));
+        (function(pe){loadMushafPageQCF(pe,parseInt(pe.dataset.page)).then(function(){trimPageToSurah(pe);}).catch(function(){});})(pageEl);
       });
     },{root:view,rootMargin:'1200px 0px'});
     view.querySelectorAll('.mushaf-text-page:not([data-loaded])').forEach(function(p){obs.observe(p);});
@@ -1129,9 +1248,10 @@ function loadMushafPageQCF(pageEl,pageNum){
   var font=S.mushafFont||'qcf1';
   if(font==='qcf1')injectQCFFont(pageNum);
   else if(font==='qcf2')injectQCFV2Font(pageNum);
+  else if(font==='qcf4')injectQCFV4Font(pageNum);
   var pf=_getPageFields();
 
-  return getMushafPageData(pageNum,pf.fields,pf.cache).then(function(json){
+  return getMushafPageData(pageNum,pf.fields,pf.cache,pf.mushafId).then(function(json){
     var verses=json.verses||[];
     if(!verses.length){clear(pageEl);pageEl.appendChild(el('div','mushaf-page-ph','—'));return;}
 
@@ -1158,10 +1278,10 @@ function loadMushafPageQCF(pageEl,pageNum){
       }
     }
 
-    if(font==='qcf1'||font==='qcf2'){
-      // ── QCF line-by-line rendering (V1 or V2) ──
-      var fontFam=(font==='qcf2')?"'QCFv2p"+pageNum+"'":"'QCFv1p"+pageNum+"'";
-      var codeField=(font==='qcf2')?'code_v2':'code_v1';
+    if(font==='qcf1'||font==='qcf2'||font==='qcf4'){
+      // ── QCF line-by-line rendering (V1, V2, or V4 tajweed) ──
+      var fontFam=(font==='qcf2')?"'QCFv2p"+pageNum+"'":(font==='qcf4')?"'QCFv4p"+pageNum+"'":"'QCFv1p"+pageNum+"'";
+      var codeField=(font==='qcf2'||font==='qcf4')?'code_v2':'code_v1';
       var lineWords={};var lineVerse={};var lineOrder=[];var lineStartsSurah={};var lineAllVerses={};
 
       verses.forEach(function(verse){
@@ -1293,12 +1413,14 @@ function loadMushafPageQCF(pageEl,pageNum){
     if(pageNum+1<=maxP){
       if(font==='qcf1')injectQCFFont(pageNum+1);
       else if(font==='qcf2')injectQCFV2Font(pageNum+1);
-      getMushafPageData(pageNum+1,pf2.fields,pf2.cache).catch(function(){});
+      else if(font==='qcf4')injectQCFV4Font(pageNum+1);
+      getMushafPageData(pageNum+1,pf2.fields,pf2.cache,pf2.mushafId).catch(function(){});
     }
     if(pageNum+2<=maxP){
       if(font==='qcf1')injectQCFFont(pageNum+2);
       else if(font==='qcf2')injectQCFV2Font(pageNum+2);
-      getMushafPageData(pageNum+2,pf2.fields,pf2.cache).catch(function(){});
+      else if(font==='qcf4')injectQCFV4Font(pageNum+2);
+      getMushafPageData(pageNum+2,pf2.fields,pf2.cache,pf2.mushafId).catch(function(){});
     }
 
     // Wait for QCF font to finish downloading before revealing content.
@@ -1314,7 +1436,7 @@ function loadMushafPageQCF(pageEl,pageNum){
         });
       }
     };
-    var fontFamName=(font==='qcf1')?('QCFv1p'+pageNum):(font==='qcf2'?'QCFv2p'+pageNum:'');
+    var fontFamName=(font==='qcf1')?('QCFv1p'+pageNum):(font==='qcf2'?'QCFv2p'+pageNum:(font==='qcf4'?'QCFv4p'+pageNum:''));
     if(fontFamName&&document.fonts&&document.fonts.load){
       return document.fonts.load('1em "'+fontFamName+'"').catch(function(){return[];}).then(showContent);
     }
@@ -1330,9 +1452,44 @@ function renderAyahs(surahNum,scrollTo){
   var list=$('ayahList');
   clear(list);
   // Always reset scroll to top when opening a new surah (unless scrollTo is specified)
-  if(!scrollTo){var panel=$('panelQuran');if(panel)panel.scrollTop=0;}
+  if(!scrollTo){var ayahListEl=$('ayahList');if(ayahListEl)ayahListEl.scrollTop=0;}
   var s=SURAHS[surahNum-1];
   if(!s)return;
+
+  // Glyph font mode: fetch per-page word codes from API
+  var glyphMode=(S.readerFont==='qpcv2'||S.readerFont==='v4tajweed');
+  if(glyphMode&&!S.glyphVerses[surahNum]){
+    var _isV4=S.readerFont==='v4tajweed';
+    var _gkey='rfGlyph_'+(_isV4?'v4':'v2')+'_'+surahNum;
+    var _gc=null;try{_gc=JSON.parse(localStorage.getItem(_gkey));}catch(e){}
+    if(_gc){S.glyphVerses[surahNum]=_gc;}
+    else{
+      var sp=el('div','prayer-status');sp.textContent=t('prayer.loading')||'چاوبیرکرن...';
+      list.appendChild(sp);
+      fetch('https://api.quran.com/api/v4/verses/by_chapter/'+surahNum+'?words=true&word_fields=code_v2,page_number,char_type_name&per_page=300'+(_isV4?'&mushaf=19':''))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var vs=d.verses||[];
+          S.glyphVerses[surahNum]=vs;
+          try{localStorage.setItem(_gkey,JSON.stringify(vs));}catch(e){}
+          renderAyahs(surahNum,scrollTo);
+        })
+        .catch(function(){
+          clear(list);
+          var e2=el('div','prayer-status prayer-error');e2.textContent=t('prayer.error')||'هەلە — دووباره هەوڵبدە';list.appendChild(e2);
+        });
+      return;
+    }
+  }
+
+  // Inject per-page fonts upfront when in glyph mode
+  if(glyphMode&&S.glyphVerses[surahNum]){
+    var _pages={};
+    S.glyphVerses[surahNum].forEach(function(v){(v.words||[]).forEach(function(w){if(w.page_number)_pages[w.page_number]=true;});});
+    Object.keys(_pages).forEach(function(pn){
+      if(S.readerFont==='v4tajweed')injectQCFV4Font(+pn);else injectQCFV2Font(+pn);
+    });
+  }
 
   var ayahs=[];
   if(S.quranData){
@@ -1372,49 +1529,34 @@ function renderAyahs(surahNum,scrollTo){
 
   var total=ayahs.length||s.a;
 
-  for(var i=1;i<=total;i++){
-    (function(ayahNum){
-      var card=el('div','ayah-card');
-      if(bmSet[ayahNum])card.classList.add('bookmarked');
-
-      // header
-      var head=el('div','ayah-head');
-      head.appendChild(el('div','ayah-badge',String(ayahNum)));
-      var actions=el('div','ayah-actions');
-
-      // bookmark btn
-      var bmBtn=el('button','ayah-act'+(bmSet[ayahNum]?' active':''));
-      bmBtn.appendChild(icon('fas fa-bookmark'));
-      on(bmBtn,'click',function(){toggleBookmark(surahNum,ayahNum);renderAyahs(surahNum)});
-      actions.appendChild(bmBtn);
-
-      // copy btn
-      var copyBtn=el('button','ayah-act');
-      copyBtn.appendChild(icon('fas fa-copy'));
-      on(copyBtn,'click',function(){App.openCopyModal(surahNum,ayahNum)});
-      actions.appendChild(copyBtn);
-
-
-head.appendChild(actions);
-      card.appendChild(head);
-
-      // Arabic text
-      var arabic=el('div','ayah-arabic');
-      arabic.textContent=ayahs[ayahNum-1]?(ayahs[ayahNum-1].text||ayahs[ayahNum-1]):t('reader.ayah')+' '+ayahNum;
-      card.appendChild(arabic);
-
-      // Tafsir
-      if(tafsirs[ayahNum]){
-        var taf=el('div','ayah-tafsir'+(S.showTafsir?'':' hide'));
-        taf.textContent=typeof tafsirs[ayahNum]==='string'?tafsirs[ayahNum]:'';
-        card.appendChild(taf);
-      }
-
-      list.appendChild(card);
-    })(i);
+  // Surah header
+  var hdr=el('div','surah-reader-header');
+  // Giant faded number as background watermark
+  hdr.appendChild(el('div','surah-reader-num-bg no-kurdish-convert',toArabicNum(surahNum)));
+  // Calligraphy name
+  hdr.appendChild(el('div','surah-reader-name no-kurdish-convert','surah'+String(surahNum).padStart(3,'0')));
+  // Bismillah
+  if(surahNum!==1&&surahNum!==9){
+    hdr.appendChild(el('div','surah-reader-bismillah','بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ'));
   }
+  list.appendChild(hdr);
 
-  // Surah navigation
+  // Single delegated click handler — replaces 2 listeners per card
+  on(list,'click',function(e){
+    var plBtn=e.target.closest('[data-play]');
+    var bmBtn=e.target.closest('[data-bm]');
+    var cpBtn=e.target.closest('[data-cp]');
+    if(plBtn){
+      var an=+plBtn.dataset.play;
+      haptic([8]);
+      if(S.audio.playing&&S.audio.surah===surahNum&&S.audio.ayah===an){App.audioToggle();}
+      else{playAyah(surahNum,an);}
+    }
+    if(bmBtn){var an2=+bmBtn.dataset.bm;toggleBookmark(surahNum,an2);renderAyahs(surahNum);}
+    if(cpBtn){App.openCopyModal(surahNum,+cpBtn.dataset.cp);}
+  });
+
+  // Nav buttons (always at bottom — batches insert before them)
   var nav=el('div','surah-nav');
   var prevBtn=el('button','surah-nav-btn');
   prevBtn.appendChild(icon('fas fa-arrow-right'));
@@ -1422,7 +1564,6 @@ head.appendChild(actions);
   if(surahNum<=1)prevBtn.disabled=true;
   on(prevBtn,'click',function(){App.openSurah(surahNum-1)});
   nav.appendChild(prevBtn);
-
   var nextBtn=el('button','surah-nav-btn');
   nextBtn.appendChild(document.createTextNode(t('reader.next_surah')+' '));
   nextBtn.appendChild(icon('fas fa-arrow-left'));
@@ -1430,6 +1571,107 @@ head.appendChild(actions);
   on(nextBtn,'click',function(){App.openSurah(surahNum+1)});
   nav.appendChild(nextBtn);
   list.appendChild(nav);
+
+  // Batch rendering — keeps DOM small for smooth scroll
+  var BATCH=25;
+  var _renderedTo=0;
+  var _sentinel=null;
+  var _sentinelObs=null;
+
+  function buildCard(ayahNum){
+    var card=el('div','ayah-card');
+    if(bmSet[ayahNum])card.classList.add('bookmarked');
+    card.dataset.ayah=String(ayahNum);
+    var head=el('div','ayah-head');
+    head.appendChild(el('div','ayah-badge',String(ayahNum)));
+    var actions=el('div','ayah-actions');
+    var isPlayingThis=S.audio.playing&&S.audio.surah===surahNum&&S.audio.ayah===ayahNum;
+    var playBtn=el('button','ayah-act'+(isPlayingThis?' playing':''));
+    playBtn.dataset.play=String(ayahNum);
+    playBtn.appendChild(icon(isPlayingThis?'fas fa-pause':'fas fa-play'));
+    actions.appendChild(playBtn);
+    var bmBtn=el('button','ayah-act'+(bmSet[ayahNum]?' active':''));
+    bmBtn.dataset.bm=String(ayahNum);
+    bmBtn.appendChild(icon('fas fa-bookmark'));
+    actions.appendChild(bmBtn);
+    var copyBtn=el('button','ayah-act');
+    copyBtn.dataset.cp=String(ayahNum);
+    copyBtn.appendChild(icon('fas fa-copy'));
+    actions.appendChild(copyBtn);
+    head.appendChild(actions);
+    card.appendChild(head);
+    var arabic=el('div','ayah-arabic');
+    if(glyphMode&&S.glyphVerses[surahNum]&&S.glyphVerses[surahNum][ayahNum-1]){
+      arabic.style.wordSpacing='normal';
+      var _isV4g=S.readerFont==='v4tajweed';
+      var _vd=S.glyphVerses[surahNum][ayahNum-1];
+      var _curPg=null,_curCodes=[];
+      var _flush=function(pg,codes){
+        if(!codes.length)return;
+        var sp=document.createElement('span');
+        sp.style.fontFamily=_isV4g?"'QCFv4p"+pg+"',serif":"'QCFv2p"+pg+"',serif";
+        sp.textContent=codes.join('\u200c');
+        arabic.appendChild(sp);
+      };
+      (_vd.words||[]).forEach(function(w){
+        if(!w.code_v2||w.char_type_name==='end')return;
+        if(w.page_number!==_curPg){if(_curPg!==null)_flush(_curPg,_curCodes);_curPg=w.page_number;_curCodes=[w.code_v2];}
+        else{_curCodes.push(w.code_v2);}
+      });
+      if(_curPg!==null)_flush(_curPg,_curCodes);
+    }else{
+      arabic.textContent=ayahs[ayahNum-1]?(ayahs[ayahNum-1].text||ayahs[ayahNum-1]):'';
+    }
+    card.appendChild(arabic);
+    if(tafsirs[ayahNum]&&S.showTafsir){
+      var taf=el('div','ayah-tafsir');
+      taf.textContent=typeof tafsirs[ayahNum]==='string'?tafsirs[ayahNum]:'';
+      card.appendChild(taf);
+    }
+    return card;
+  }
+
+  function setupSentinel(){
+    if(_renderedTo>=total)return;
+    _sentinel=document.createElement('div');
+    _sentinel.className='ayah-load-sentinel';
+    list.insertBefore(_sentinel,nav);
+    _sentinelObs=new IntersectionObserver(function(entries){
+      if(entries[0].isIntersecting){
+        _sentinelObs.disconnect();_sentinelObs=null;
+        if(_sentinel&&_sentinel.parentNode)_sentinel.parentNode.removeChild(_sentinel);_sentinel=null;
+        appendBatch(_renderedTo+1,_renderedTo+BATCH,false);
+      }
+    },{root:$('ayahList'),rootMargin:'500px'});
+    _sentinelObs.observe(_sentinel);
+  }
+
+  function appendBatch(from,to,sync){
+    var end=Math.min(to,total);
+    if(sync===false){
+      // rAF staggered: 12 cards per frame for subsequent batches
+      var SUB=12,cur=from;
+      (function renderFrame(){
+        var frameEnd=Math.min(cur+SUB-1,end);
+        var frag=document.createDocumentFragment();
+        for(var i=cur;i<=frameEnd;i++){var c=buildCard(i);if(window._onNewAyahCard)window._onNewAyahCard(c);frag.appendChild(c);}
+        list.insertBefore(frag,nav);
+        cur=frameEnd+1;
+        if(cur<=end)requestAnimationFrame(renderFrame);
+        else{_renderedTo=end;setupSentinel();}
+      })();
+    }else{
+      // Synchronous for first batch — fast initial render
+      var frag=document.createDocumentFragment();
+      for(var i=from;i<=end;i++){var c=buildCard(i);if(window._onNewAyahCard)window._onNewAyahCard(c);frag.appendChild(c);}
+      _renderedTo=end;
+      list.insertBefore(frag,nav);
+      setupSentinel();
+    }
+  }
+
+  var initialBatch=scrollTo&&scrollTo>BATCH?scrollTo:BATCH;
+  appendBatch(1,initialBatch,true);
 
   // Progress
   updateProgress(list,total);
@@ -1439,7 +1681,7 @@ head.appendChild(actions);
     setTimeout(function(){
       var cards=list.querySelectorAll('.ayah-card');
       if(cards[scrollTo-1])cards[scrollTo-1].scrollIntoView({behavior:'smooth',block:'center'});
-    },100);
+    },80);
   }
 }
 
@@ -1451,7 +1693,7 @@ function updateProgress(list,total){
 
   var progressEl=document.querySelector('.sticky-progress');
   var surahId=S.surah;
-  var scrollEl=$('panelQuran');
+  var scrollEl=$('ayahList');
   var saveTimer=null;
   var destroyed=false;
 
@@ -1476,8 +1718,9 @@ function updateProgress(list,total){
         }
       },300);
     }
-    scrollEl.addEventListener('scroll',onScrollNoGoal);
-    _progressCleanup=function(){destroyed=true;clearTimeout(saveTimer);scrollEl.removeEventListener('scroll',onScrollNoGoal);};
+    window._onNewAyahCard=null;
+    scrollEl.addEventListener('scroll',onScrollNoGoal,{passive:true});
+    _progressCleanup=function(){destroyed=true;clearTimeout(saveTimer);scrollEl.removeEventListener('scroll',onScrollNoGoal,{passive:true})};
     return;
   }
 
@@ -1485,25 +1728,33 @@ function updateProgress(list,total){
   if(progressEl)progressEl.style.display='';
 
   var seenAyahs=new Set();
+  var maxSeen=0;
   try{
     var saved=JSON.parse(localStorage.getItem('surah_progress_'+surahId)||'[]');
-    saved.forEach(function(n){if(n>=1&&n<=total)seenAyahs.add(n)});
+    saved.forEach(function(n){if(n>=1&&n<=total){seenAyahs.add(n);if(n>maxSeen)maxSeen=n;}});
   }catch(e){}
 
+  var _rafPending=false;
   function updateHeader(){
     if(destroyed||S.surah!==surahId)return;
-    var count=Math.min(seenAyahs.size,total);
-    var max=0;seenAyahs.forEach(function(n){if(n>max)max=n});
-    if(max>0){try{localStorage.setItem('lastRead',JSON.stringify({surah:surahId,ayah:max}))}catch(e){}}
-    var pct=Math.min(100,Math.round(count/total*100));
-    $('readerProgressFill').style.width=pct+'%';
-    $('readerAyahLabel').textContent=count+'/'+total+' '+t('reader.ayah');
-    $('readerPct').textContent=pct+'%';
+    if(_rafPending)return;
+    _rafPending=true;
+    requestAnimationFrame(function(){
+      _rafPending=false;
+      if(destroyed||S.surah!==surahId)return;
+      var count=Math.min(seenAyahs.size,total);
+      if(maxSeen>0){try{localStorage.setItem('lastRead',JSON.stringify({surah:surahId,ayah:maxSeen}))}catch(e){}}
+      var pct=Math.min(100,Math.round(count/total*100));
+      $('readerProgressFill').style.width=pct+'%';
+      $('readerAyahLabel').textContent=count+'/'+total+' '+t('reader.ayah');
+      $('readerPct').textContent=pct+'%';
+    });
   }
 
   function markSeen(idx){
     if(seenAyahs.has(idx))return false;
     seenAyahs.add(idx);
+    if(idx>maxSeen)maxSeen=idx;
     trackVerse(surahId,idx);
     return true;
   }
@@ -1537,20 +1788,21 @@ function updateProgress(list,total){
         if(markSeen(idx))changed=true;
       }
     });
-    updateHeader();
-    if(changed)scheduleSave();
+    if(changed){updateHeader();scheduleSave();}
   },{root:scrollEl,threshold:[0,0.4,1.0]});
 
+  // Observe already-rendered cards (first batch)
   var cards=list.querySelectorAll('.ayah-card');
-  cards.forEach(function(card,i){
-    card.dataset.ayah=String(i+1);
-    observer.observe(card);
-  });
+  cards.forEach(function(card){observer.observe(card);});
+
+  // Hook for incremental batches — observe new cards as they're appended
+  window._onNewAyahCard=function(card){if(!destroyed)observer.observe(card);};
 
   _progressCleanup=function(){
     destroyed=true;
     clearTimeout(saveTimer);
     observer.disconnect();
+    window._onNewAyahCard=null;
   };
 }
 
@@ -1784,6 +2036,35 @@ function renderReaderSettings(){
   kaRow.appendChild(kaToggle);
   body.appendChild(kaRow);
 
+  /* ---- ARABIC FONT ---- */
+  body.appendChild(el('div','qs-section-title','خەتی قورئانی'));
+  var rfFonts=[
+    {id:'hafs',  label:'KFGQPC Hafs', family:"'KFGQPC Hafs',serif"},
+    {id:'amiri', label:'Amiri Quran', family:"'Amiri Quran',serif"}
+  ];
+  var rfBar=el('div','qs-font-cards');
+  rfFonts.forEach(function(f){
+    var card=el('div','qs-font-card'+(S.readerFont===f.id?' on':''));
+    var sample=el('div','qs-font-card-sample');
+    sample.textContent='بِسْمِ اللَّهِ';
+    sample.style.fontFamily=f.family;
+    var lbl=el('div','qs-font-card-label',f.label);
+    card.appendChild(sample);
+    card.appendChild(lbl);
+    on(card,'click',function(){
+      if(S.readerFont===f.id)return;
+      S.readerFont=f.id;
+      S.glyphVerses={};
+      localStorage.setItem('readerFont',f.id);
+      applySizes();
+      haptic([6]);
+      if(S.surah)renderAyahs(S.surah);
+      renderReaderSettings();
+    });
+    rfBar.appendChild(card);
+  });
+  body.appendChild(rfBar);
+
   /* ---- TEXT SIZE ---- */
   body.appendChild(el('div','qs-section-title',t('qs.text_size')));
 
@@ -1964,6 +2245,23 @@ function scrollToAyah(ayahNum){
   }
 }
 
+function updateReaderPlayState(surah,ayah,playing){
+  var list=$('ayahList');
+  if(!list)return;
+  // Clear previous
+  list.querySelectorAll('[data-play].playing').forEach(function(b){
+    b.classList.remove('playing');
+    var i=b.querySelector('i');if(i)i.className='fas fa-play';
+  });
+  if(!playing||!surah)return;
+  var card=list.querySelector('.ayah-card[data-ayah="'+ayah+'"]');
+  if(!card)return;
+  var btn=card.querySelector('[data-play]');
+  if(!btn)return;
+  btn.classList.add('playing');
+  var i=btn.querySelector('i');if(i)i.className='fas fa-pause';
+}
+
 function playAyah(surah,ayah){
   var url=audioUrl(surah,ayah);
   // Use prefetched blob if ready — zero-gap playback
@@ -1984,6 +2282,7 @@ function playAyah(surah,ayah){
   S.audio.el.playbackRate=S.audio.speed;
   S.audio.el.play().catch(function(){});
   S.audio.playing=true;
+  updateReaderPlayState(surah,ayah,true);
   showAudioBar();
   // Auto-scroll if same surah is open and scroll-follows-audio is on
   if(S.surah===surah&&S.scrollFollowsAudio)scrollToAyah(ayah);
@@ -2011,8 +2310,8 @@ function showAudioBar(){
 
 App.audioToggle=function(){
   haptic([8]);
-  if(S.audio.playing){S.audio.el.pause();S.audio.playing=false;setAudioIcon('play');}
-  else{S.audio.el.play().catch(function(){});S.audio.playing=true;setAudioIcon('pause');}
+  if(S.audio.playing){S.audio.el.pause();S.audio.playing=false;setAudioIcon('play');updateReaderPlayState(0,0,false);}
+  else{S.audio.el.play().catch(function(){});S.audio.playing=true;setAudioIcon('pause');updateReaderPlayState(S.audio.surah,S.audio.ayah,true);}
 };
 
 App.audioNext=function(){
@@ -2051,7 +2350,7 @@ App.audioClose=function(){
   S.audio.currentRepeat=0;
   clearPrefetch();
   $('audioBar').classList.remove('on');
-  // Remove playing highlights (normal mode + mushaf mode)
+  updateReaderPlayState(0,0,false);
   var cards=document.querySelectorAll('.ayah-card.playing');
   cards.forEach(function(c){c.classList.remove('playing')});
   updateMushafHighlight(0,0);
@@ -2110,7 +2409,7 @@ App.openMushafSettings=function(){
 
   // Font Style segmented
   body.appendChild(el('div','ms-section-label','ستایلی فونت'));
-  var fonts=[{id:'qcf1',label:'مەدینی کلاسیک'},{id:'qcf2',label:'مەدینی نوێ'}];
+  var fonts=[{id:'qcf4',label:'تاجویدی V4'},{id:'qcf1',label:'مەدینی کلاسیک'},{id:'qcf2',label:'مەدینی نوێ'}];
   var seg=el('div','ms-seg');
   fonts.forEach(function(f){
     var btn=el('button','ms-seg-btn'+(S.mushafFont===f.id?' on':''),f.label);
@@ -2119,7 +2418,7 @@ App.openMushafSettings=function(){
       localStorage.setItem('mushafFontSize_'+S.mushafFont,String(S.mushafFontSize));
       S.mushafFont=f.id;
       localStorage.setItem('mushafFont',f.id);
-      var newSize=parseInt(localStorage.getItem('mushafFontSize_'+f.id))||(f.id==='qcf1'?22:20);
+      var newSize=parseInt(localStorage.getItem('mushafFontSize_'+f.id))||(f.id==='qcf1'?22:20);// qcf2/qcf4 default 20
       S.mushafFontSize=newSize;
       document.documentElement.style.setProperty('--mushaf-size',newSize+'px');
       setFsSize(newSize);
@@ -3469,9 +3768,8 @@ function renderSettings(){
   // Clear cache
   g4.appendChild(mkBtnRow(t('settings.clear_cache'),t('settings.clear_btn'),'fas fa-trash',function(){
     if(confirm(t('settings.clear_confirm'))){
-      localStorage.removeItem('quran_data_cache');
-      localStorage.removeItem('tafsir_data_cache');
       S.quranData=null;S.tafsirData=null;
+      _dataReady.quran=false;_dataReady.tafsir=false;
       loadQuranData();loadTafsirData();
       toast(t('toast.cache_cleared'));
     }
@@ -4583,12 +4881,16 @@ function loadIslamVoiceData(force){
         S.ivSeries=JSON.parse(cs);
         S.ivEpisodes=JSON.parse(ce);
         renderIvGrid();
+        if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();
       }
     }catch(e){}
   }
 
   // If offline and we already have something to show, stop here
-  if(!navigator.onLine&&S.ivSeries){return;}
+  if(!navigator.onLine&&S.ivSeries){
+    if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();
+    return;
+  }
 
   // Fetch fresh from Supabase
   if(!S.ivSupabase){
@@ -4615,6 +4917,7 @@ function ivFetchFresh(force){
       if(!S.ivSeries||!S.ivSeries.length){
         renderIvError(t('iv.error.load'));
       }
+      if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();
       return;
     }
 
@@ -4629,12 +4932,14 @@ function ivFetchFresh(force){
 
     renderIvGrid();
     if(S.ivCurrentSeries)renderIvEpisodes(S.ivCurrentSeries);
+    if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();
   }).catch(function(e){
     S.ivLoading=false;
     console.error('IV fetch error:',e);
     if(!S.ivSeries||!S.ivSeries.length){
       renderIvError(t('iv.error.load_retry'));
     }
+    if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();
   });
 }
 
@@ -4684,11 +4989,19 @@ function renderIvGrid(){
   });
 
   var q=S.ivSearchQuery||'';
+  var spkFilter=S.ivSpeakerFilter||null;
+
+  // Update filter button active state
+  var spkBtn=document.getElementById('ivSpeakerFilterBtn');
+  if(spkBtn)spkBtn.classList.toggle('on',!!spkFilter);
 
   sorted.forEach(function(series){
     var eps=S.ivEpisodes?S.ivEpisodes.filter(function(ep){return ep.series_id===series.id}):[];
     var epCount=eps.length;
     if(epCount===0)return;
+
+    // Filter by speaker
+    if(spkFilter&&(series.speaker||'')!==spkFilter)return;
 
     // Filter by search query
     if(q){
@@ -4838,6 +5151,11 @@ function renderIvEpisodes(seriesId){
       info.appendChild(pBar);
     }
     item.appendChild(info);
+
+    // NEW badge — show for 24h after created_at
+    if(ep.created_at&&(Date.now()-new Date(ep.created_at).getTime())<86400000){
+      var newBadge=el('div','iv-new-badge');newBadge.textContent='نوی';item.appendChild(newBadge);
+    }
 
     // Save button
     var saved=ivIsSaved(ep.id);
@@ -5074,6 +5392,62 @@ App.ivClearSearch=function(){
   $('ivSearchInput').value='';
   App.ivSearch('');
   $('ivSearchInput').focus();
+};
+
+App.ivShowSpeakerFilter=function(){
+  if(!S.ivSeries)return;
+  // Collect unique speakers
+  var seen={};
+  var speakers=[];
+  S.ivSeries.forEach(function(s){
+    if(s.speaker&&!seen[s.speaker]){seen[s.speaker]=true;speakers.push(s.speaker);}
+  });
+  if(!speakers.length)return;
+
+  // Build bottom sheet
+  var overlay=el('div','iv-spk-overlay');
+  var sheet=el('div','iv-spk-sheet');
+
+  // Header
+  var sheetHdr=el('div','iv-spk-hdr');
+  sheetHdr.appendChild(el('span','iv-spk-title','ماموستا'));
+  var closeBtn=el('button','iv-spk-close');
+  closeBtn.appendChild(icon('fas fa-times'));
+  on(closeBtn,'click',function(){if(overlay.parentNode)overlay.parentNode.removeChild(overlay);});
+  sheetHdr.appendChild(closeBtn);
+  sheet.appendChild(sheetHdr);
+
+  // "All" option
+  var list=el('div','iv-spk-list');
+  var allBtn=el('button','iv-spk-item'+(S.ivSpeakerFilter===null?' on':''));
+  allBtn.appendChild(icon('fas fa-users'));
+  allBtn.appendChild(document.createTextNode(' هەمی'));
+  on(allBtn,'click',function(){
+    S.ivSpeakerFilter=null;
+    renderIvGrid();
+    if(overlay.parentNode)overlay.parentNode.removeChild(overlay);
+  });
+  list.appendChild(allBtn);
+
+  // Each speaker
+  speakers.forEach(function(spk){
+    var btn=el('button','iv-spk-item'+(S.ivSpeakerFilter===spk?' on':''));
+    btn.appendChild(icon('fas fa-user'));
+    btn.appendChild(document.createTextNode(' '+spk));
+    on(btn,'click',function(){
+      S.ivSpeakerFilter=spk;
+      renderIvGrid();
+      if(overlay.parentNode)overlay.parentNode.removeChild(overlay);
+    });
+    list.appendChild(btn);
+  });
+
+  sheet.appendChild(list);
+  overlay.appendChild(sheet);
+  on(overlay,'click',function(e){if(e.target===overlay&&overlay.parentNode)overlay.parentNode.removeChild(overlay);});
+  document.body.appendChild(overlay);
+  // Animate in
+  requestAnimationFrame(function(){overlay.classList.add('on');});
 };
 
 function ivTrackView(episodeId){
