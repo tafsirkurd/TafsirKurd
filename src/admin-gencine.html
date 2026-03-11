@@ -25,10 +25,10 @@
 
         /* ── Stats row ── */
         .stats-row {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 12px;
             margin-bottom: 28px;
-            flex-wrap: wrap;
         }
         .stat-pill {
             display: flex;
@@ -542,8 +542,7 @@
             .cat-grid { grid-template-columns: 1fr; }
 
             /* Stat pills full-width */
-            .stats-row { flex-direction: column; }
-            .stat-pill { flex: unset; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
 
             /* Form actions stack vertically */
             .form-actions { flex-direction: column-reverse; }
@@ -685,8 +684,8 @@
             <!-- Stats row -->
             <div class="stats-row">
                 <div class="stat-pill">
-                    <div class="stat-pill-icon"><i data-lucide="folder"></i></div>
-                    <div><strong id="stat-cats">—</strong>Categories</div>
+                    <div class="stat-pill-icon"><i data-lucide="layout-dashboard"></i></div>
+                    <div><strong id="stat-cats">—</strong>Sections</div>
                 </div>
                 <div class="stat-pill">
                     <div class="stat-pill-icon"><i data-lucide="hand-heart"></i></div>
@@ -696,16 +695,23 @@
                     <div class="stat-pill-icon"><i data-lucide="scroll-text"></i></div>
                     <div><strong id="stat-hadiths">—</strong>Hadiths</div>
                 </div>
+                <div class="stat-pill">
+                    <div class="stat-pill-icon"><i data-lucide="book-open"></i></div>
+                    <div><strong id="stat-books">—</strong>Books</div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-pill-icon"><i data-lucide="circle-dot"></i></div>
+                    <div><strong id="stat-tasbih">—</strong>Tasbih</div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-pill-icon"><i data-lucide="star"></i></div>
+                    <div><strong id="stat-asma99">99</strong>Asma99</div>
+                </div>
             </div>
 
             <!-- Tabs -->
             <div class="platform-tabs">
-                <button class="platform-tab active" onclick="switchTab('categories')">
-                    <i data-lucide="folder" style="width:15px;height:15px"></i>
-                    Categories
-                    <span class="tab-count" id="tab-count-cats">0</span>
-                </button>
-                <button class="platform-tab" onclick="switchTab('duas')">
+                <button class="platform-tab active" onclick="switchTab('duas')">
                     <i data-lucide="hand-heart" style="width:15px;height:15px"></i>
                     Duas
                     <span class="tab-count" id="tab-count-duas">0</span>
@@ -730,50 +736,14 @@
                     Books
                     <span class="tab-count" id="tab-count-books">0</span>
                 </button>
+                <button class="platform-tab" onclick="switchTab('sections')">
+                    <i data-lucide="layout-dashboard" style="width:15px;height:15px"></i>
+                    Sections
+                </button>
             </div>
 
-            <!-- ── CATEGORIES ── -->
-            <div id="panel-categories" class="view-panel active">
-                <input type="hidden" id="cat-edit-id">
-                <div class="add-form-wrap">
-                    <button class="add-form-toggle" id="cat-form-toggle" onclick="toggleForm('cat')">
-                        <i data-lucide="plus"></i>
-                        <span id="cat-form-toggle-label">Add Category</span>
-                    </button>
-                    <div class="add-form-body" id="cat-form-body">
-                        <div class="form-grid">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Key (slug)</label>
-                                    <input type="text" id="cat-key" class="form-input" placeholder="e.g. morning" style="font-family:monospace">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Kurdish Label</label>
-                                    <input type="text" id="cat-label" class="form-input" placeholder="&#x628;&#x6D5;&#x06CC;&#x0627;&#x0646;&#x06CC;&#x06A9;&#x0631;&#x062F;&#x0646;" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Image Filename</label>
-                                    <input type="text" id="cat-image" class="form-input" placeholder="genc-morning-bg.webp" style="font-family:monospace">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Sort Order</label>
-                                    <input type="number" id="cat-sort" class="form-input" value="10" min="0">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Description</label>
-                                <input type="text" id="cat-desc" class="form-input" placeholder="Short description shown on card" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
-                            </div>
-                            <div class="form-actions">
-                                <button class="btn btn-secondary" onclick="cancelCatEdit()">Cancel</button>
-                                <button class="btn btn-primary" onclick="saveCat()">Save Category</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- App Home Sections visibility -->
+            <!-- ── SECTIONS ── -->
+            <div id="panel-sections" class="view-panel">
                 <div class="sections-panel">
                     <div class="sections-panel-hdr">
                         <div class="sections-panel-title">App Home Sections</div>
@@ -781,8 +751,6 @@
                     </div>
                     <div id="sections-list"><!-- rendered by JS --></div>
                 </div>
-
-                <div id="cat-list" class="cat-grid"></div>
             </div>
 
             <!-- ── TASBIH ── -->
@@ -840,7 +808,52 @@
             </div>
 
             <!-- ── DUAS ── -->
-            <div id="panel-duas" class="view-panel">
+            <div id="panel-duas" class="view-panel active">
+                <!-- ── Categories (inside Duas tab) ── -->
+                <input type="hidden" id="cat-edit-id">
+                <div class="add-form-wrap">
+                    <button class="add-form-toggle" id="cat-form-toggle" onclick="toggleForm('cat')">
+                        <i data-lucide="plus"></i>
+                        <span id="cat-form-toggle-label">Add Category</span>
+                    </button>
+                    <div class="add-form-body" id="cat-form-body">
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Key (slug)</label>
+                                    <input type="text" id="cat-key" class="form-input" placeholder="e.g. morning" style="font-family:monospace">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Kurdish Label</label>
+                                    <input type="text" id="cat-label" class="form-input" placeholder="&#x628;&#x6D5;&#x06CC;&#x0627;&#x0646;&#x06CC;&#x06A9;&#x0631;&#x062F;&#x0646;" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Image Filename</label>
+                                    <input type="text" id="cat-image" class="form-input" placeholder="genc-morning-bg.webp" style="font-family:monospace">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Sort Order</label>
+                                    <input type="number" id="cat-sort" class="form-input" value="10" min="0">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Description</label>
+                                <input type="text" id="cat-desc" class="form-input" placeholder="Short description shown on card" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-secondary" onclick="cancelCatEdit()">Cancel</button>
+                                <button class="btn btn-primary" onclick="saveCat()">Save Category</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-toolbar"><span class="list-count" id="cat-count-label"></span></div>
+                <div id="cat-list" class="cat-grid"></div>
+                <div style="height:1px;background:var(--border);margin:8px 0 16px"></div>
+
+                <!-- ── Duas ── -->
                 <input type="hidden" id="dua-edit-id">
                 <div class="add-form-wrap">
                     <button class="add-form-toggle" id="dua-form-toggle" onclick="toggleForm('dua')">
@@ -1062,9 +1075,9 @@
 'use strict';
 
 /* ── Tab switching ── */
-var currentTab = 'categories';
-var TAB_NAMES = ['categories','duas','hadiths','tasbih','asma99','books'];
-var addLabels = { categories: 'Add Category', duas: 'Add Dua', hadiths: 'Add Hadith', tasbih: 'Add Dhikr', asma99: '', books: 'Add Book' };
+var currentTab = 'duas';
+var TAB_NAMES = ['duas','hadiths','tasbih','asma99','books','sections'];
+var addLabels = { duas: 'Add Dua', hadiths: 'Add Hadith', tasbih: 'Add Dhikr', asma99: '', books: 'Add Book' };
 
 function switchTab(name) {
     currentTab = name;
@@ -1074,7 +1087,7 @@ function switchTab(name) {
     document.querySelectorAll('.view-panel').forEach(function(p) { p.classList.remove('active'); });
     document.getElementById('panel-' + name).classList.add('active');
     var addBtn = document.getElementById('top-add-btn');
-    if (addBtn) addBtn.style.display = name === 'asma99' ? 'none' : '';
+    if (addBtn) addBtn.style.display = (name === 'asma99' || name === 'sections') ? 'none' : '';
     if (name === 'tasbih') renderTasbihList();
     if (name === 'books') renderBooksList();
     document.getElementById('top-add-label').textContent = addLabels[name] || 'Add';
@@ -1085,7 +1098,7 @@ function switchTab(name) {
 /* ── Top Add button — opens the relevant form ── */
 function topAddClick() {
     if (currentTab === 'asma99') return;
-    var prefixMap = { categories: 'cat', duas: 'dua', hadiths: 'hadith', tasbih: 'tasbih', books: 'book' };
+    var prefixMap = { duas: 'dua', hadiths: 'hadith', tasbih: 'tasbih', books: 'book' };
     var prefix = prefixMap[currentTab] || currentTab;
     toggleForm(prefix);
 }
@@ -1157,10 +1170,12 @@ function updateStats() {
     document.getElementById('stat-cats').textContent    = allCategories.length;
     document.getElementById('stat-duas').textContent    = allDuas.length;
     document.getElementById('stat-hadiths').textContent = allHadiths.length;
-    document.getElementById('tab-count-cats').textContent    = allCategories.length;
+    document.getElementById('stat-books').textContent   = allBooks.length;
+    document.getElementById('stat-tasbih').textContent  = allTasbih.length;
     document.getElementById('tab-count-duas').textContent    = allDuas.length;
     document.getElementById('tab-count-hadiths').textContent = allHadiths.length;
     document.getElementById('tab-count-books').textContent   = allBooks.length;
+    document.getElementById('tab-count-tasbih').textContent  = allTasbih.length;
 }
 
 async function loadAll() { await Promise.all([loadCategories(), loadDuas(), loadHadiths(), loadSections(), loadTasbih(), loadBooks()]); }
@@ -1969,6 +1984,12 @@ async function saveBook() {
         if (uploadedPdf) pdfUrl = uploadedPdf;
     }
 
+    var editId = document.getElementById('book-edit-id').value;
+    var manualSort = parseInt(document.getElementById('book-sort').value);
+    var autoSort = !editId && !manualSort
+        ? (allBooks.length ? Math.max.apply(null, allBooks.map(function(b){ return b.sort_order || 0; })) + 1 : 1)
+        : (manualSort || 0);
+
     var payload = {
         title_ku:    titleKu || null,
         title_ar:    titleAr || null,
@@ -1979,16 +2000,19 @@ async function saveBook() {
         pdf_url:     pdfUrl,
         description: document.getElementById('book-description').value.trim() || null,
         cover_url:   coverUrl,
-        sort_order:  parseInt(document.getElementById('book-sort').value) || 0,
+        sort_order:  autoSort,
         active:      document.getElementById('book-active').checked
     };
-
-    var editId = document.getElementById('book-edit-id').value;
     var r = editId ? await _booksApi({ action: 'update', id: editId, payload: payload })
                    : await _booksApi({ action: 'insert', payload: payload });
     if (r.error) { showNotification('Save failed: ' + JSON.stringify(r.error), 'error'); return; }
+    var isNew = !editId;
     showNotification(editId ? 'Book updated.' : 'Book added.', 'success');
     cancelBookEdit(); await loadBooks(); localStorage.removeItem('gencine_books_v1');
+    if (isNew) {
+        var bookList = document.getElementById('book-list');
+        if (bookList && bookList.firstChild) bookList.firstChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 async function autoSaveBookSort(val) {

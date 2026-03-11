@@ -58,6 +58,27 @@ export async function onRequest(context) {
 
         const adminEmail = session.admin_users.email;
 
+        // ===== LIST ACCOUNTS =====
+        if (action === 'list_accounts') {
+            const { data, error } = await supabase
+                .from('admin_users')
+                .select('*')
+                .order('created_at', { ascending: false });
+            if (error) return jsonResponse({ error: error.message }, 500, corsHeaders);
+            return jsonResponse({ data }, 200, corsHeaders);
+        }
+
+        // ===== RESET DEVICE BY EMAIL =====
+        if (action === 'reset_device_by_email') {
+            const { email } = body;
+            if (!email) return jsonResponse({ error: 'Email required' }, 400, corsHeaders);
+            const { data: target, error: fe } = await supabase
+                .from('admin_users').select('id, email').eq('email', email).single();
+            if (fe || !target) return jsonResponse({ error: 'User not found' }, 404, corsHeaders);
+            await supabase.from('admin_users').update({ device_fingerprint: null }).eq('id', target.id);
+            return jsonResponse({ success: true, message: 'Device lock cleared for ' + email }, 200, corsHeaders);
+        }
+
         // ===== CREATE ACCOUNT =====
         if (action === 'create_account') {
             const { email, password, full_name, role } = body;

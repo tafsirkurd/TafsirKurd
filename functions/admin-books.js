@@ -53,7 +53,7 @@ export async function onRequest(context) {
 
     try {
         if (action === 'list') {
-            const r = await fetch(`${base}?select=*&order=sort_order`, { headers: hdrs });
+            const r = await fetch(`${base}?select=*&order=sort_order.desc`, { headers: hdrs });
             const data = await r.json();
             return new Response(JSON.stringify({ data }), { headers: corsHeaders });
         }

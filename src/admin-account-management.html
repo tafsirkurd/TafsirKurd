@@ -335,6 +335,7 @@
                     <h1 class="page-title">Admin Account Management</h1>
                     <div class="page-actions">
                         <button class="btn btn-secondary" onclick="loadAccounts()"><i data-lucide="refresh-cw"></i>Refresh</button>
+                        <button class="btn btn-secondary" onclick="quickResetDevice()" id="resetDeviceBtn"><i data-lucide="smartphone"></i>Reset Device Lock</button>
                         <button class="btn btn-primary" onclick="openCreateModal()" id="createBtn"><i data-lucide="user-plus"></i>Create Account</button>
                     </div>
                 </div>
@@ -343,27 +344,35 @@
                     <span>You do not have permission to manage admin accounts. Only Super Admins can access this feature.</span>
                 </div>
                 <!-- Change Password -->
-                <div class="card" style="margin-bottom:20px;padding:20px">
-                    <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:14px">
-                        <i data-lucide="key-round" style="width:16px;height:16px"></i>
-                        Change My Password
+                <div class="card" style="margin-bottom:20px;padding:24px 28px">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+                        <div style="width:36px;height:36px;border-radius:10px;background:var(--bg-active);display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0">
+                            <i data-lucide="key-round" style="width:17px;height:17px"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:700;font-size:15px;line-height:1.2">Change My Password</div>
+                            <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px">Update your login password</div>
+                        </div>
                     </div>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
-                        <div style="flex:1;min-width:180px">
-                            <label style="font-size:11px;color:var(--text-tertiary);display:block;margin-bottom:4px">Current Password</label>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+                        <div>
+                            <label style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Current Password</label>
                             <input type="password" id="cpCurrent" class="form-input" placeholder="Current password" style="width:100%">
                         </div>
-                        <div style="flex:1;min-width:180px">
-                            <label style="font-size:11px;color:var(--text-tertiary);display:block;margin-bottom:4px">New Password</label>
+                        <div>
+                            <label style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">New Password</label>
                             <input type="password" id="cpNew" class="form-input" placeholder="Min 8 characters" style="width:100%">
                         </div>
-                        <div style="flex:1;min-width:180px">
-                            <label style="font-size:11px;color:var(--text-tertiary);display:block;margin-bottom:4px">Confirm New Password</label>
+                        <div>
+                            <label style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Confirm New Password</label>
                             <input type="password" id="cpConfirm" class="form-input" placeholder="Repeat new password" style="width:100%">
                         </div>
-                        <button class="btn btn-primary" onclick="changeMyPassword()" style="white-space:nowrap"><i data-lucide="save"></i>Update Password</button>
                     </div>
-                    <div id="cpMsg" style="margin-top:10px;font-size:13px;display:none"></div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+                        <div id="cpMsg" style="font-size:13px;display:none"></div>
+                        <div style="flex:1"></div>
+                        <button class="btn btn-primary" onclick="changeMyPassword()"><i data-lucide="save"></i>Update Password</button>
+                    </div>
                 </div>
 
                 <!-- Active Sessions -->
@@ -728,9 +737,14 @@
                 lucide.createIcons();
                 return;
             }
-            const { data, error } = await supabase.from('admin_users').select('*').order('created_at', { ascending: false });
-            if (error) { console.error(error); alert('Error loading accounts'); return; }
-            allAccounts = data || [];
+            const listRes = await fetch('/admin-management', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'list_accounts', token })
+            });
+            const listData = await listRes.json();
+            if (listData.error) { console.error(listData.error); alert('Error loading accounts: ' + listData.error); return; }
+            allAccounts = listData.data || [];
             accounts = allAccounts.slice();
             document.getElementById('totalAdmins').textContent = accounts.length;
             document.getElementById('activeAdmins').textContent = accounts.filter(a => a.is_active).length;
@@ -1269,6 +1283,21 @@
                 container.appendChild(row);
             });
         }
+        async function quickResetDevice() {
+            var email = prompt('Enter the email of the locked account:');
+            if (!email) return;
+            var token = sessionStorage.getItem('adminToken');
+            var res = await fetch('/admin-management', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'reset_device_by_email', token, email: email.trim() })
+            });
+            var data = await res.json();
+            if (data.error) { alert('Error: ' + data.error); return; }
+            alert('Device lock cleared. They can now log in from any device.');
+            loadAccounts();
+        }
+
         async function revokeDevice(deviceId) {
             if (!confirm('Revoke this trusted device? It will need 2FA on next login.')) return;
             var token = sessionStorage.getItem('adminToken');

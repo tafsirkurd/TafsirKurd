@@ -1205,8 +1205,18 @@
     }
 
     buildLoading(container);
+    /* Poll for cache every 600ms (prefetchAllCities may be in-flight) */
+    var _pollStart = Date.now();
+    var _pollTimer = setInterval(function(){
+      var fresh = readCacheNow(city, today);
+      if (fresh || Date.now() - _pollStart > 12000) {
+        clearInterval(_pollTimer);
+        if (fresh) { _currentTimings = fresh.timings; _currentDateISO = today; _currentData = fresh; buildPanel(container, fresh, city, today); startCountdown(); }
+      }
+    }, 600);
     try {
       var data = await window.PrayerAPI.fetchPrayerTimes(city, today);
+      clearInterval(_pollTimer);
       _currentTimings = data.timings;
       _currentDateISO = today;
       _currentData    = data;
@@ -1214,6 +1224,7 @@
       startCountdown();
       pushWidgetData(data, city, today);
     } catch(e) {
+      clearInterval(_pollTimer);
       // Network error — try any cached data as fallback
       var fallback = readAnyCacheNow(city);
       if (fallback) {
@@ -2081,7 +2092,10 @@
       months.push({ year: ny, month: nm });
     }
 
-    var cities = Object.keys(API.CITY_COORDS || {});
+    /* Put current city first so it's cached before user taps the tab */
+    var currentCity = getCity();
+    var allCities = Object.keys(API.CITY_COORDS || {});
+    var cities = [currentCity].concat(allCities.filter(function(c){ return c !== currentCity; }));
 
     for (var mi = 0; mi < months.length; mi++) {
       var ym = months[mi];
