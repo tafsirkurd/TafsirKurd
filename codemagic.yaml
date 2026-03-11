@@ -25,6 +25,13 @@ workflows:
       - name: Set up keychain and signing
         script: |
           keychain initialize
+          echo "=== Existing certificates ==="
+          app-store-connect certificates list --type IOS_DISTRIBUTION || true
+          echo "=== Revoking old certificates ==="
+          app-store-connect certificates list --type IOS_DISTRIBUTION --json 2>/dev/null | \
+            python3 -c "import sys,json; [print(c['id']) for c in json.load(sys.stdin)]" 2>/dev/null | \
+            xargs -I{} app-store-connect certificates revoke {} 2>/dev/null || true
+          echo "=== Fetching fresh signing files ==="
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
             --create
