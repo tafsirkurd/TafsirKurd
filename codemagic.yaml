@@ -8,6 +8,9 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.tafsirkurd.app
+        api_key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        api_issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        api_private_key: $APP_STORE_CONNECT_PRIVATE_KEY
       vars:
         XCODE_WORKSPACE: ios/App/App.xcworkspace
         XCODE_SCHEME: App
