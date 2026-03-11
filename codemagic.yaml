@@ -8,12 +8,11 @@ workflows:
       groups:
         - app_store
       vars:
-        XCODE_WORKSPACE: ios/App/App.xcworkspace
+        XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
         BUNDLE_ID: com.tafsirkurd.app
       node: latest
       xcode: latest
-      cocoapods: default
 
     scripts:
       - name: Set up keychain
@@ -36,15 +35,10 @@ workflows:
       - name: Capacitor sync iOS
         script: npx cap sync ios
 
-      - name: Install CocoaPods
-        script: |
-          cd ios/App
-          pod install
-
       - name: Build iOS
         script: |
           xcode-project build-ipa \
-            --workspace "$XCODE_WORKSPACE" \
+            --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
 
     artifacts:
