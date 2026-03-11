@@ -3,6 +3,8 @@ workflows:
     name: TafsirKurd iOS — App Store
     max_build_duration: 60
     environment:
+      groups:
+        - app_store
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.tafsirkurd.app
