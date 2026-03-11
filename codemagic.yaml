@@ -25,7 +25,9 @@ workflows:
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --private-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
-            --create
+            --create \
+            --save \
+            -v
           keychain add-certificates
           xcode-project use-profiles --project "$XCODE_PROJECT"
 
@@ -37,13 +39,9 @@ workflows:
 
       - name: Build iOS
         script: |
-          PROFILE_UUID=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -1 | xargs -I{} /usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin 2>/dev/null || \
-            security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | /usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin)
-          echo "Using profile UUID: $PROFILE_UUID"
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME" \
-            --xcode-build-args "PROVISIONING_PROFILE=$PROFILE_UUID"
+            --scheme "$XCODE_SCHEME"
 
     artifacts:
       - build/ios/ipa/*.ipa
