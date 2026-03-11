@@ -25,8 +25,13 @@ workflows:
       - name: Write API key to file
         script: |
           mkdir -p ~/.appstoreconnect/private_keys
-          printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8
-          cat ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8
+          python3 -c "
+          import os
+          key = os.environ['APP_STORE_CONNECT_PRIVATE_KEY'].replace('\\\\n', '\n')
+          path = os.path.expanduser('~/.appstoreconnect/private_keys/AuthKey_' + os.environ['APP_STORE_CONNECT_KEY_IDENTIFIER'] + '.p8')
+          open(path, 'w').write(key)
+          print('Key written, length:', len(key))
+          "
 
       - name: Archive app
         script: |
