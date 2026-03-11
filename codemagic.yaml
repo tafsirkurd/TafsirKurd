@@ -7,17 +7,37 @@ workflows:
     environment:
       groups:
         - app_store
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.tafsirkurd.app
       vars:
         XCODE_WORKSPACE: ios/App/App.xcworkspace
         XCODE_SCHEME: App
+        BUNDLE_ID: com.tafsirkurd.app
       node: latest
       xcode: latest
       cocoapods: default
 
     scripts:
+      - name: Set up keychain
+        script: keychain initialize
+
+      - name: Fetch signing certificate
+        script: |
+          app-store-connect certificates list --type IOS_DISTRIBUTION || \
+          app-store-connect certificates create --type IOS_DISTRIBUTION
+
+      - name: Fetch or create provisioning profile
+        script: |
+          app-store-connect profiles list \
+            --bundle-id-identifier "$BUNDLE_ID" \
+            --type IOS_APP_STORE || \
+          app-store-connect profiles create \
+            --name "TafsirKurd AppStore" \
+            --bundle-id-identifier "$BUNDLE_ID" \
+            --type IOS_APP_STORE
+
+      - name: Set up signing
+        script: |
+          xcode-project use-profiles
+
       - name: Install dependencies
         script: npm install
 
@@ -28,11 +48,6 @@ workflows:
         script: |
           cd ios/App
           pod install
-
-      - name: Set app version
-        script: |
-          LATEST_BUILD=$(app-store-connect get-latest-app-store-build-number "$APP_APPLE_ID" || echo 0)
-          agvtool new-version -all $(($LATEST_BUILD + 1))
 
       - name: Build iOS
         script: |
