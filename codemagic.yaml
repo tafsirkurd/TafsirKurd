@@ -27,17 +27,7 @@ workflows:
           keychain initialize
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            --private-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
-            --create \
-            --save
-          echo "=== Profiles ==="
-          find ~/Library/MobileDevice/Provisioning\ Profiles/ -name "*.mobileprovision" 2>/dev/null || echo "No profiles in default location"
-          find /tmp -name "*.mobileprovision" 2>/dev/null | head -5 || true
-          find "$CM_BUILD_DIR" -name "*.mobileprovision" 2>/dev/null | head -5 || true
-          echo "=== Certs ==="
-          security find-identity -v -p codesigning
+            --create
           keychain add-certificates
           xcode-project use-profiles --project "$XCODE_PROJECT"
 
