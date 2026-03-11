@@ -19,23 +19,15 @@ workflows:
       - name: Set up keychain
         script: keychain initialize
 
-      - name: Fetch signing certificate
+      - name: Fetch signing files
         script: |
-          app-store-connect certificates list --type IOS_DISTRIBUTION || \
-          app-store-connect certificates create --type IOS_DISTRIBUTION
-
-      - name: Fetch or create provisioning profile
-        script: |
-          app-store-connect profiles list \
-            --bundle-id-identifier "$BUNDLE_ID" \
-            --type IOS_APP_STORE || \
-          app-store-connect profiles create \
-            --name "TafsirKurd AppStore" \
-            --bundle-id-identifier "$BUNDLE_ID" \
-            --type IOS_APP_STORE
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
 
       - name: Set up signing
         script: |
+          keychain add-certificates
           xcode-project use-profiles
 
       - name: Install dependencies
