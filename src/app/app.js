@@ -380,7 +380,6 @@ function init(){
   // No DOM work here — just fires network requests so cache is hot when tab opens.
   setTimeout(function(){
     if(window.GencineUI&&GencineUI.prefetch)GencineUI.prefetch();
-    if(window.PrayerUI&&PrayerUI.prefetchAllCities)PrayerUI.prefetchAllCities();
   },200);
 
   // Pre-render all tabs in background so every tab is already built before user taps.

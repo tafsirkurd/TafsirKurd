@@ -1518,7 +1518,7 @@ window.GencineUI = {
         var btn = document.createElement('button');
         btn.className = 'book-cat-btn' + (cat === self._bookCat ? ' on' : '');
         btn.textContent = cat === 'all' ? T('gencine.cat_all','هەمێ') : cat;
-        btn.onclick = function(){ self._bookCat = cat; renderGrid(); };
+        btn.onclick = function(){ self._bookCat = cat; catRow.querySelectorAll('.book-cat-btn').forEach(function(b){ b.classList.toggle('on', b === btn); }); renderGrid(); };
         catRow.appendChild(btn);
       });
       container.appendChild(catRow);
