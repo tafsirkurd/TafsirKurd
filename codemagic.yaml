@@ -27,9 +27,6 @@ workflows:
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --private-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
             --create
-
-      - name: Set up signing
-        script: |
           keychain add-certificates
           xcode-project use-profiles
 
