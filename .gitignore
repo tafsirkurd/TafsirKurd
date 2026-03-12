@@ -105,4 +105,9 @@ testers.csv
 # Temp / generated files
 duplicate_report.txt
 scripts/test.txt
-scripts/scan-results.json
+scripts/scan-results.jsondistribution.key
+distribution.p12
+distribution.pem
+distribution.csr
+distribution_p12_b64.txt
+profile_b64.txt

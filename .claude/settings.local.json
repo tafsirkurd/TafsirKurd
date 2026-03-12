@@ -319,7 +319,14 @@
       "Bash(cd C:/TafsirKurd && JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" npx cap sync android 2>&1 | tail -3 && cd android && JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" ./gradlew assembleDebug 2>&1 | tail -3)",
       "Bash(cd C:/TafsirKurd && JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" npx cap sync android 2>&1 | tail -2 && cd android && JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" ./gradlew assembleDebug 2>&1 | tail -2)",
       "Bash(cd C:/TafsirKurd/scripts && rm -f \\\\\n  add-data-t.js add-voice-channels.js \\\\\n  analyze_doc.py copy_doc.py gen.py gen_batch_sql.py gen_insert_sql.py gen_islah_batches.py parse_hadiths.py parse_islah.py read_doc.py \\\\\n  batch1.sql batch2.sql batch3.sql batch4.sql batch5.sql \\\\\n  islah_batch1.sql islah_batch2.sql islah_batch3.sql islah_batch4.sql islah_batch5.sql islah_insert.sql islah_parsed.json islah_raw.txt \\\\\n  hadiths_insert.sql hadiths_parsed.json hadiths_manual.json hadiths_raw.txt hadiths_import.doc \\\\\n  delete-android-js-entries.sql delete-duplicates.sql reset-translations.sql \\\\\n  setup-discord-server.js setup-private-server.js setup-professional-server.js register-discord-commands.js \\\\\n  clean-and-setup-private.js clean-duplicates.js restore-android.js \\\\\n  add-data-t.js add-voice-channels.js \\\\\n  deep-scan.js full-scan.js find-xss-vulnerabilities.js compress-hero-image.js \\\\\n  founder-db.json scan-results.json keys-to-delete.json test.txt\n\necho \"Done\" && ls)",
-      "Bash(cd C:/TafsirKurd && JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" npx cap sync android 2>&1 | tail -3 && cd android && JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" ./gradlew clean assembleDebug 2>&1 | tail -3)"
+      "Bash(cd C:/TafsirKurd && JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" npx cap sync android 2>&1 | tail -3 && cd android && JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" ./gradlew clean assembleDebug 2>&1 | tail -3)",
+      "mcp__cloudflare__secret_list",
+      "Read(//c/Users/Ferminus/AppData/Roaming/xdg.config/.wrangler/config/**)",
+      "Read(//c/Users/Ferminus/**)",
+      "Bash(start notepad:*)",
+      "Bash(magick -version 2>/dev/null || convert -version 2>/dev/null || echo \"not found\")",
+      "Bash(JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" npx cap sync android 2>&1 | tail -5)",
+      "Bash(ADB=\"C:/Users/Ferminus/AppData/Local/Android/Sdk/platform-tools/adb.exe\" && \"$ADB\" uninstall com.tafsirkurd.app && \"$ADB\" install -t android/app/build/outputs/apk/debug/app-debug.apk 2>&1)"
     ],
     "deny": [],
     "ask": []
