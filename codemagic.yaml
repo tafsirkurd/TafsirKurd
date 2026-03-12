@@ -25,7 +25,18 @@ workflows:
       - name: Set up keychain and signing
         script: |
           keychain initialize
-          keychain add-certificates
+
+          # Install certificate
+          echo "$CM_CERTIFICATE" | base64 --decode > /tmp/distribution.p12
+          keychain add-certificates --certificate /tmp/distribution.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
+
+          # Install provisioning profile
+          echo "$CM_PROVISIONING_PROFILE" | base64 --decode > /tmp/profile.mobileprovision
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          UUID=$(security cms -D -i /tmp/profile.mobileprovision 2>/dev/null | plutil -extract UUID raw - 2>/dev/null || python3 -c "import plistlib,sys; d=plistlib.loads(open('/tmp/profile.mobileprovision','rb').read()); print(d['UUID'])" 2>/dev/null)
+          cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/"$UUID".mobileprovision
+          echo "Installed profile UUID: $UUID"
+
           xcode-project use-profiles --project "$XCODE_PROJECT"
 
       - name: Build iOS
