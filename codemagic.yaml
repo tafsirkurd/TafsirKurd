@@ -5,6 +5,9 @@ workflows:
     integrations:
       app_store_connect: TafsirKurd
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.tafsirkurd.app
       groups:
         - app_store
       vars:
@@ -21,24 +24,6 @@ workflows:
 
       - name: Capacitor sync iOS
         script: npx cap sync ios
-
-      - name: Set up keychain and signing
-        script: |
-          keychain initialize
-          echo "=== Existing IOS_DISTRIBUTION certificates ==="
-          app-store-connect certificates list --type IOS_DISTRIBUTION --json 2>/dev/null || true
-          echo "=== Existing APPLE_DISTRIBUTION certificates ==="
-          app-store-connect certificates list --type APPLE_DISTRIBUTION --json 2>/dev/null || true
-          echo "=== Revoking old APPLE_DISTRIBUTION certificates ==="
-          app-store-connect certificates list --type APPLE_DISTRIBUTION --json 2>/dev/null | \
-            python3 -c "import sys,json; data=json.load(sys.stdin); [print(c['id']) for c in (data if isinstance(data,list) else [])]" 2>/dev/null | \
-            xargs -I{} app-store-connect certificates revoke {} 2>/dev/null || true
-          echo "=== Fetching fresh signing files ==="
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create
-          keychain add-certificates
-          xcode-project use-profiles --project "$XCODE_PROJECT"
 
       - name: Build iOS
         script: |
