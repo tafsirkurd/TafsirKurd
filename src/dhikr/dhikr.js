@@ -491,6 +491,19 @@ window.GencineUI = {
     this._draw();
   },
 
+  goHome: function(){
+    this._view = 'home';
+    this._draw();
+  },
+
+  _updateHeader: function(){
+    var backBtn = document.getElementById('gencineBackBtn');
+    var title   = document.getElementById('gencineHdrTitle');
+    var isHome  = (this._view === 'home');
+    if(backBtn) backBtn.style.display = isHome ? 'none' : 'flex';
+    if(title)   title.style.display   = isHome ? '' : 'none';
+  },
+
   /* ── main dispatcher ── */
   _draw: function(){
     var el = $('gencineContent');
@@ -499,6 +512,7 @@ window.GencineUI = {
     while(el.firstChild) el.removeChild(el.firstChild);
     var panel = document.getElementById('panelGencine');
     if(panel) panel.scrollTop = 0;
+    this._updateHeader();
     if(this._view === 'home')        this._renderHome(el);
     else if(this._view === 'dua')    this._renderDua(el);
     else if(this._view === 'tasbih') this._renderTasbih(el);
