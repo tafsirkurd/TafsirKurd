@@ -5,9 +5,6 @@ workflows:
     integrations:
       app_store_connect: TafsirKurd
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.tafsirkurd.app
       groups:
         - app_store
       vars:
@@ -24,6 +21,12 @@ workflows:
 
       - name: Capacitor sync iOS
         script: npx cap sync ios
+
+      - name: Set up keychain and signing
+        script: |
+          keychain initialize
+          keychain add-certificates
+          xcode-project use-profiles --project "$XCODE_PROJECT"
 
       - name: Build iOS
         script: |
