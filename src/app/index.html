@@ -1504,7 +1504,8 @@ body{background:var(--bg);color:var(--text)}
 <!-- TAB: GENCINE (Religious Treasure) -->
 <section class="panel" id="panelGencine" data-tab="gencine">
   <div class="hdr">
-    <div class="hdr-title"><i class="fas fa-gem"></i> <span data-i18n="header.gencine">گەنجینەیا ئایینی</span></div>
+    <button class="hdr-btn" id="gencineBackBtn" style="display:none;margin-inline-end:4px" onclick="GencineUI.goHome()"><i class="fas fa-arrow-right"></i></button>
+    <div class="hdr-title" id="gencineHdrTitle"><i class="fas fa-gem"></i> <span data-i18n="header.gencine">گەنجینەیا ئایینی</span></div>
     <div id="booksHdrBtns" style="display:none;gap:2px">
       <button class="hdr-btn" id="bookSheikhBtn" title="ماموستا"><i class="fas fa-user-tie"></i></button>
       <button class="hdr-btn" id="bookSavedBtn" title="پاراستە"><i class="fas fa-bookmark"></i></button>
