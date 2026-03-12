@@ -198,7 +198,7 @@ var _bgRefreshDone = false; /* only refresh once per app session */
 
 /* Load from cache instantly, then re-fetch once in background per session */
 function _initDbData(onDone) {
-  var cachedCats     = _readCache('gencine_cats_v4');
+  var cachedCats     = _readCache('gencine_cats_v5');
   var cachedDuas     = _readCache('gencine_duas_v2');
   var cachedHadiths  = _readCache('gencine_hadiths_v2');
   var cachedSections = _readCache('gencine_sections_v1');
@@ -281,7 +281,7 @@ function _fetchDbData(onDone) {
     var catRes = results[0], duaRes = results[1], hadithRes = results[2], secRes = results[3], bookRes = results[4], tasbihRes = results[5], asma99Res = results[6];
     if (!catRes.error && catRes.data) {
       _dbCats = catRes.data;
-      _writeCache('gencine_cats_v4', _dbCats);
+      _writeCache('gencine_cats_v5', _dbCats);
     }
     if (!duaRes.error && duaRes.data) {
       _dbDuas = duaRes.data;
