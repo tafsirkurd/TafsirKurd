@@ -6,7 +6,6 @@ workflows:
       app_store_connect: TafsirKurd
     environment:
       groups:
-        - app_store
         - ios_signing
       vars:
         XCODE_PROJECT: ios/App/App.xcodeproj
