@@ -1285,11 +1285,15 @@ function renderCategoryList() {
         var keyEl = mke('span', 'cat-card-key'); keyEl.textContent = cat.key;
         var labelEl = mke('span', 'cat-card-label'); labelEl.textContent = cat.label_ku;
         left.appendChild(keyEl); left.appendChild(labelEl);
+        if (cat.is_hidden) card.style.opacity = '0.45';
         var acts = mke('div', 'item-card-actions');
+        var eyeBtn = mkIconBtn(cat.is_hidden ? 'eye-off' : 'eye', cat.is_hidden ? 'Show' : 'Hide', false, function() { toggleCatHidden(cat.id, cat.is_hidden); });
+        acts.appendChild(eyeBtn);
         acts.appendChild(mkIconBtn('pencil', 'Edit', false, function() { editCat(cat.id); }));
         acts.appendChild(mkIconBtn('trash-2', 'Delete', true, function() { deleteCat(cat.id); }));
         top.appendChild(left); top.appendChild(acts);
         card.appendChild(top);
+        if (cat.is_hidden) { var hb = mke('span', 'badge badge-warn'); hb.textContent = 'hidden'; card.appendChild(hb); }
         if (cat.description) { var d = mke('div', 'cat-card-desc'); d.textContent = cat.description; card.appendChild(d); }
         if (cat.image_name) { var img = mke('div', 'cat-card-image'); img.textContent = cat.image_name; card.appendChild(img); }
         list.appendChild(card);
@@ -1343,6 +1347,12 @@ async function deleteCat(id) {
     var r = await window.adminAuth.getSupabase().from('gencine_categories').delete().eq('id', id);
     if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
     showNotification('Category deleted.', 'success'); await loadCategories(); localStorage.removeItem('gencine_cats_v1');
+}
+async function toggleCatHidden(id, currentHidden) {
+    var r = await window.adminAuth.getSupabase().from('gencine_categories').update({ is_hidden: !currentHidden }).eq('id', id);
+    if (r.error) { showNotification('Update failed: ' + r.error.message, 'error'); return; }
+    showNotification(currentHidden ? 'Category shown.' : 'Category hidden.', 'success');
+    await loadCategories(); localStorage.removeItem('gencine_cats_v1');
 }
 
 /* ── DUAS ── */
