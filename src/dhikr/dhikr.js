@@ -269,7 +269,7 @@ function _fetchDbData(onDone) {
 
   _loadingDb = true;
 
-  var catsPromise     = sb.from('gencine_categories').select('*').eq('active', true).order('sort_order', { ascending: true });
+  var catsPromise     = sb.from('gencine_categories').select('*').eq('active', true).eq('is_hidden', false).order('sort_order', { ascending: true });
   var duasPromise     = sb.from('gencine_duas').select('*').eq('active', true).order('category_key').order('sort_order');
   var hadithsPromise  = sb.from('gencine_hadiths').select('*').eq('active', true).order('sort_order');
   var sectionsPromise = sb.from('gencine_sections').select('*').order('sort_order');
