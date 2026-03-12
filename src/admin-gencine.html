@@ -1339,20 +1339,20 @@ async function saveCat() {
                    : await supabase.from('gencine_categories').insert(payload);
     if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
     showNotification(editId ? 'Category updated.' : 'Category added.', 'success');
-    cancelCatEdit(); await loadCategories(); localStorage.removeItem('gencine_cats_v4');
+    cancelCatEdit(); await loadCategories(); localStorage.removeItem('gencine_cats_v5');
 }
 async function deleteCat(id) {
     var cat = allCategories.find(function(c) { return c.id === id; });
     if (!confirm('Delete "' + (cat ? cat.key : id) + '"? Duas in this category will be orphaned.')) return;
     var r = await window.adminAuth.getSupabase().from('gencine_categories').delete().eq('id', id);
     if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
-    showNotification('Category deleted.', 'success'); await loadCategories(); localStorage.removeItem('gencine_cats_v4');
+    showNotification('Category deleted.', 'success'); await loadCategories(); localStorage.removeItem('gencine_cats_v5');
 }
 async function toggleCatHidden(id, currentHidden) {
     var r = await window.adminAuth.getSupabase().from('gencine_categories').update({ is_hidden: !currentHidden }).eq('id', id);
     if (r.error) { showNotification('Update failed: ' + r.error.message, 'error'); return; }
     showNotification(currentHidden ? 'Category shown.' : 'Category hidden.', 'success');
-    await loadCategories(); localStorage.removeItem('gencine_cats_v4');
+    await loadCategories(); localStorage.removeItem('gencine_cats_v5');
 }
 
 /* ── DUAS ── */
