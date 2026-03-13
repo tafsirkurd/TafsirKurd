@@ -1772,23 +1772,51 @@ function updateProgress(list,total){
   // Show saved progress immediately — no delay
   if(seenAyahs.size>0)updateHeader();
 
-  // IntersectionObserver: fires instantly, no scroll loop, no debounce lag
+  // Mark ayah only when it scrolls completely off the top — never on initial visible check
   var observer=new IntersectionObserver(function(entries){
     if(destroyed||S.surah!==surahId)return;
     var changed=false;
     entries.forEach(function(entry){
       var idx=parseInt(entry.target.dataset.ayah)||0;
       if(!idx||idx>total)return;
-      if(entry.isIntersecting&&entry.intersectionRatio>=0.4){
-        // 40%+ visible → user is reading this ayah
-        if(markSeen(idx))changed=true;
-      } else if(!entry.isIntersecting&&entry.boundingClientRect.bottom<0){
-        // Scrolled fully past top → definitely read
+      // Only mark when the ayah has been scrolled completely above the viewport
+      if(!entry.isIntersecting&&entry.boundingClientRect.bottom<0){
         if(markSeen(idx))changed=true;
       }
     });
     if(changed){updateHeader();scheduleSave();}
-  },{root:scrollEl,threshold:[0,0.4,1.0]});
+  },{root:scrollEl,threshold:[0,1.0]});
+
+  // When user reaches the bottom of the surah (nav visible + actually scrolled),
+  // mark any remaining visible-but-unread ayahs after a 2s dwell at the bottom
+  var _endTimer=null;
+  var nav=list.querySelector('.surah-nav');
+  if(nav){
+    var endObs=new IntersectionObserver(function(entries){
+      if(destroyed||S.surah!==surahId)return;
+      if(entries[0].isIntersecting&&scrollEl.scrollTop>50){
+        if(!_endTimer){
+          _endTimer=setTimeout(function(){
+            _endTimer=null;
+            if(destroyed||S.surah!==surahId)return;
+            var listR=scrollEl.getBoundingClientRect();
+            var changed=false;
+            list.querySelectorAll('.ayah-card').forEach(function(c){
+              var r=c.getBoundingClientRect();
+              if(r.bottom>listR.top&&r.top<listR.bottom){
+                var i=parseInt(c.dataset.ayah)||0;
+                if(i&&markSeen(i))changed=true;
+              }
+            });
+            if(changed){updateHeader();scheduleSave();}
+          },2000);
+        }
+      }else{
+        clearTimeout(_endTimer);_endTimer=null;
+      }
+    },{root:scrollEl,threshold:0.3});
+    endObs.observe(nav);
+  }
 
   // Observe already-rendered cards (first batch)
   var cards=list.querySelectorAll('.ayah-card');
@@ -1800,7 +1828,9 @@ function updateProgress(list,total){
   _progressCleanup=function(){
     destroyed=true;
     clearTimeout(saveTimer);
+    clearTimeout(_endTimer);
     observer.disconnect();
+    if(nav&&typeof endObs!=='undefined')endObs.disconnect();
     window._onNewAyahCard=null;
   };
 }
@@ -4708,7 +4738,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
   if(!panel)return;
   ensurePtrSpinner();
 
-  var startY=0,pulling=false,refreshing=false,threshold=90,maxPull=160,panelOrigTop=0;
+  var startY=0,pulling=false,refreshing=false,threshold=130,maxPull=200,panelOrigTop=0;
 
   on(panel,'touchstart',function(e){
     if(refreshing)return;
@@ -4735,7 +4765,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
       panel.classList.remove('ptr-pulling');
       return;
     }
-    if(dy>5&&panel.scrollTop<=2){
+    if(dy>18&&panel.scrollTop<=2){
       e.preventDefault();
       var pull=dy<threshold?dy:threshold+((dy-threshold)*0.3);
       pull=Math.min(pull,maxPull);
@@ -4760,7 +4790,7 @@ function setupPullToRefresh(panelId,refreshFn,checkFn){
     ptrSpinner.classList.add('ptr-snapping');
     var currentY=parseFloat(panel.style.transform.replace('translateY(','').replace('px)',''))||0;
 
-    if(currentY>=threshold*0.6){
+    if(currentY>=threshold*0.75){
       // Refresh — hold spinner in place, page slides back to 55px
       refreshing=true;
       panel.style.transform='translateY(55px)';
