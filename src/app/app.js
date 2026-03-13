@@ -2392,6 +2392,8 @@ App.audioPrev=function(){
 
 App.audioClose=function(){
   S.audio.el.pause();S.audio.el.src='';
+  // Revoke any deferred blob that never reached the playing event
+  if(_blobToRevoke){URL.revokeObjectURL(_blobToRevoke);_blobToRevoke=null;}
   S.audio.playing=false;S.audio.surah=0;S.audio.ayah=0;
   S.audio.currentRepeat=0;
   clearPrefetch();
