@@ -492,7 +492,9 @@ window.GencineUI = {
   },
 
   goHome: function(){
-    this._view = 'home';
+    if (this._view === 'book-reader') { this._view = 'books'; }
+    else if (this._view === 'hadith' && this._hadithDetailIdx !== null) { this._hadithDetailIdx = null; }
+    else { this._view = 'home'; }
     this._draw();
   },
 
@@ -500,8 +502,8 @@ window.GencineUI = {
     var backBtn = document.getElementById('gencineBackBtn');
     var title   = document.getElementById('gencineHdrTitle');
     var isHome  = (this._view === 'home');
-    if(backBtn) backBtn.style.display = isHome ? 'none' : 'flex';
-    if(title)   title.style.display   = isHome ? '' : 'none';
+    if(backBtn) backBtn.style.display    = isHome ? 'none' : 'flex';
+    if(title)   title.style.visibility  = isHome ? '' : 'hidden';
   },
 
   /* ── main dispatcher ── */
@@ -630,7 +632,7 @@ window.GencineUI = {
   _renderDua: function(container){
     var self = this;
     var T = window.t || function(k,d){ return d||k; };
-    container.appendChild(this._backRow(T('gencine.dua','دوعا')));
+    
 
     var catKeys = _getCatKeys();
 
@@ -728,7 +730,7 @@ window.GencineUI = {
   _renderTasbih: function(container){
     var self = this;
     var T = window.t || function(k,d){ return d||k; };
-    container.appendChild(this._backRow(T('gencine.tasbih','تاسبیح')));
+    
 
     var wrap = document.createElement('div');
     wrap.className = 'tasbih-wrap';
@@ -913,26 +915,6 @@ window.GencineUI = {
       var h = hadiths[this._hadithDetailIdx];
       if (!h) { this._hadithDetailIdx = null; this._renderHadith(container); return; }
 
-      var backRow = document.createElement('div');
-      backRow.className = 'genc-back-row';
-      var backBtn = document.createElement('button');
-      backBtn.className = 'genc-back-btn';
-      var backIco = document.createElement('i');
-      backIco.className = 'fas fa-arrow-right';
-      backBtn.appendChild(backIco);
-      backBtn.onclick = function(){
-        var savedScroll = self._hadithListScroll || 0;
-        self._hadithDetailIdx = null;
-        self._draw();
-        var p = document.getElementById('panelGencine');
-        if (p) p.scrollTop = savedScroll;
-      };
-      backRow.appendChild(backBtn);
-      var backLbl = document.createElement('span');
-      backLbl.className = 'genc-back-label';
-      backLbl.textContent = T('gencine.hadith','حەدیس');
-      backRow.appendChild(backLbl);
-      container.appendChild(backRow);
 
       var detail = document.createElement('div');
       detail.className = 'hadith-detail-card';
@@ -1029,7 +1011,7 @@ window.GencineUI = {
     }
 
     /* ── List view ── */
-    container.appendChild(this._backRow(T('gencine.hadith','حەدیس')));
+    
 
     if (!hadiths.length) {
       _fetchDbData(function() {
@@ -1168,7 +1150,7 @@ window.GencineUI = {
   /* ═══════════════════ 99 NAMES ═══════════════════ */
   _renderAsma: function(container){
     var T = window.t || function(k,d){ return d||k; };
-    container.appendChild(this._backRow(T('gencine.asma','ناوێن خوا')));
+    
 
     /* sticky search bar */
     var searchWrap = document.createElement('div');
@@ -1399,23 +1381,6 @@ window.GencineUI = {
 
     var books = _dbBooks.filter(function(b){ return b.active !== false; });
 
-    /* ── Back row ── */
-    var hdrRow = document.createElement('div');
-    hdrRow.className = 'genc-back-row';
-    var backBtn = document.createElement('button'); backBtn.className = 'genc-back-btn';
-    var backIco = document.createElement('i'); backIco.className = 'fas fa-arrow-right';
-    backBtn.appendChild(backIco);
-    backBtn.onclick = function(){
-      /* Hide header buttons, reset search bar */
-      var hdrBtns = document.getElementById('booksHdrBtns');
-      if (hdrBtns) hdrBtns.style.display = 'none';
-      self.render();
-    };
-    hdrRow.appendChild(backBtn);
-    var hdrTitle = document.createElement('span'); hdrTitle.className = 'genc-back-label';
-    hdrTitle.textContent = T('gencine.books','کتێب');
-    hdrRow.appendChild(hdrTitle);
-    container.appendChild(hdrRow);
 
     /* ── Show header buttons in the panel hdr ── */
     var sheikhBtn = document.getElementById('bookSheikhBtn');
@@ -1638,9 +1603,6 @@ window.GencineUI = {
     if (!book) { self._view = 'books'; self._draw(); return; }
     var T = window.t || function(k,d){ return d||k; };
 
-    container.appendChild(this._backRow(book.title_ku || book.title_ar || T('gencine.books', 'کتێب'), function(){
-      self._view = 'books'; self._draw();
-    }));
 
     var loadingEl = document.createElement('div');
     loadingEl.className = 'book-reader-loading';
