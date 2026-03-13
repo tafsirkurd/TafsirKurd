@@ -598,6 +598,10 @@ App.tab=function(name){
   }
   haptic([8]);
   if(S.surah&&name==='quran'){App.backToList();return}
+  // Stop prayer countdown when leaving prayer tab
+  if(S.tab==='prayer'&&name!=='prayer'&&window.PrayerUI)PrayerUI.stopCountdown();
+  // Clear quran search when leaving quran tab
+  if(S.tab==='quran'&&name!=='quran'){var _sb=document.getElementById('searchBar');if(_sb)_sb.classList.remove('on');App.clearSearch();}
   S.tabHistory.push(S.tab);
   S.tab=name;
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on')});
@@ -1118,6 +1122,8 @@ function juzForPage(p){for(var j=JUZ_PAGES.length-1;j>=0;j--){if(p>=JUZ_PAGES[j]
 function renderMushafView(){
   var view=$('mushafView');
   if(!view||!S.surah)return;
+  // Disconnect previous lazy-load observer to prevent accumulation
+  if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
   window._mushafVerseElements={};
   clear(view);
   view.scrollTop=0;
@@ -1125,8 +1131,9 @@ function renderMushafView(){
   spinner.appendChild(icon('fas fa-spinner fa-spin'));
   view.appendChild(spinner);
 
+  var _renderSurah=S.surah; // capture at render time — abort if surah changes during async
   getMushafPageRange(S.surah).then(function(pages){
-    if(!S.mushafMode)return;
+    if(!S.mushafMode||S.surah!==_renderSurah)return;
     clear(view);
     view.scrollTop=0;
 
@@ -1198,17 +1205,24 @@ function renderMushafView(){
     }
 
     // Lazy-load the rest with a large preload margin
-    var obs=new IntersectionObserver(function(entries){
+    var capturedSurah=targetSurah;
+    _mushafLazyObs=new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
         if(!entry.isIntersecting)return;
         var pageEl=entry.target;
         if(pageEl.dataset.loaded)return;
         pageEl.dataset.loaded='1';
-        obs.unobserve(pageEl);
-        (function(pe){loadMushafPageQCF(pe,parseInt(pe.dataset.page)).then(function(){trimPageToSurah(pe);}).catch(function(){});})(pageEl);
+        _mushafLazyObs&&_mushafLazyObs.unobserve(pageEl);
+        (function(pe){
+          if(S.surah!==capturedSurah)return; // surah changed, discard
+          loadMushafPageQCF(pe,parseInt(pe.dataset.page)).then(function(){
+            if(S.surah!==capturedSurah)return;
+            trimPageToSurah(pe);
+          }).catch(function(){});
+        })(pageEl);
       });
     },{root:view,rootMargin:'1200px 0px'});
-    view.querySelectorAll('.mushaf-text-page:not([data-loaded])').forEach(function(p){obs.observe(p);});
+    view.querySelectorAll('.mushaf-text-page:not([data-loaded])').forEach(function(p){_mushafLazyObs.observe(p);});
     updateMushafProgress(view);
 
     // Prev / Next surah nav at end of mushaf pages
@@ -1686,8 +1700,11 @@ function renderAyahs(surahNum,scrollTo){
 
 // Track active progress listener so we can clean up on surah switch
 var _progressCleanup=null;
+// Track mushaf lazy-load observer so we can disconnect on re-render
+var _mushafLazyObs=null;
 
 function updateProgress(list,total){
+  window._onNewAyahCard=null; // clear immediately so old hook can't fire on new surah's cards
   if(_progressCleanup){_progressCleanup();_progressCleanup=null}
 
   var progressEl=document.querySelector('.sticky-progress');
@@ -2699,7 +2716,10 @@ App.startRepeat=function(){
   rmPlaySequence(verses);
 };
 
+var _rmActiveOnEnd=null; // track active ended listener to prevent duplication
 function rmPlaySequence(verses){
+  // Remove any lingering ended listener from a previous sequence
+  if(_rmActiveOnEnd&&S.audio.el){S.audio.el.removeEventListener('ended',_rmActiveOnEnd);_rmActiveOnEnd=null;}
   S.rm.isPlaying=true;
   S.rm.currentPlay=0;
   $('repeatStatus').classList.add('on');
@@ -2741,7 +2761,10 @@ function rmPlaySequence(verses){
         vr++;
         rmUpdateStatus();
         var aud=S.audio.el;
+        // Remove any previous ended listener before adding a new one
+        if(_rmActiveOnEnd){aud.removeEventListener('ended',_rmActiveOnEnd);_rmActiveOnEnd=null;}
         var onEnd=function(){
+          _rmActiveOnEnd=null;
           aud.removeEventListener('ended',onEnd);
           if(vr<S.rm.verseRepeat){
             setTimeout(repeatV,S.rm.delay*1000);
@@ -2750,6 +2773,7 @@ function rmPlaySequence(verses){
             setTimeout(playVerse,S.rm.delay*1000);
           }
         };
+        _rmActiveOnEnd=onEnd;
         aud.addEventListener('ended',onEnd);
       }
       repeatV();
@@ -2765,6 +2789,7 @@ function rmUpdateStatus(){
 
 App.stopRepeat=function(){
   S.rm.isPlaying=false;
+  if(_rmActiveOnEnd&&S.audio.el){S.audio.el.removeEventListener('ended',_rmActiveOnEnd);_rmActiveOnEnd=null;}
   $('repeatStatus').classList.remove('on');
   toast(t('toast.repeat_stopped'));
 };

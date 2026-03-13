@@ -2188,6 +2188,7 @@
     render: render,
     refresh: refresh,
     redraw: redraw,
+    stopCountdown: stopCountdown,
     invalidate: function(){ _renderedKey = null; },
     openSettings: openSettings,
     openQibla: openQibla,
