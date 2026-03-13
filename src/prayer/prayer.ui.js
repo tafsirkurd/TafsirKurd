@@ -747,7 +747,8 @@
     var dateInfo = data.date;
     var dateLines = [];
     if (dateInfo && dateInfo.gregorian) {
-      dateLines.push(dateInfo.gregorian.weekday.en + ' ' + dateInfo.gregorian.day + ' ' + dateInfo.gregorian.month.en + ' ' + dateInfo.gregorian.year);
+      var _wd = dateInfo.gregorian.weekday && dateInfo.gregorian.weekday.en ? dateInfo.gregorian.weekday.en + ' ' : '';
+      dateLines.push(_wd + dateInfo.gregorian.day + ' ' + (dateInfo.gregorian.month && dateInfo.gregorian.month.en || '') + ' ' + dateInfo.gregorian.year);
     } else {
       var gd = new Date(today + 'T12:00:00+03:00');
       dateLines.push(gd.toLocaleDateString('en-US', { weekday:'long', day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Baghdad' }));
@@ -1725,7 +1726,7 @@
     var ctx = getAudioCtx();
     voices.forEach(function(voice) {
       if (_voiceBuffers[voice.id]) return;
-      fetch('https://localhost/audio/athan_' + voice.id + '.ogg')
+      fetch(voice.previewUrl || ('/audio/athan_' + voice.id + '.ogg'))
         .then(function(r) { return r.arrayBuffer(); })
         .then(function(buf) { return ctx.decodeAudioData(buf); })
         .then(function(decoded) { _voiceBuffers[voice.id] = decoded; })
@@ -1805,7 +1806,7 @@
     var abort = new AbortController();
     _previewAbort = abort;
     var ctx = getAudioCtx();
-    fetch('https://localhost/audio/athan_' + voice.id + '.ogg', { signal: abort.signal })
+    fetch(voice.previewUrl || ('/audio/athan_' + voice.id + '.ogg'), { signal: abort.signal })
       .then(function(r) { return r.arrayBuffer(); })
       .then(function(buf) { return ctx.decodeAudioData(buf); })
       .then(function(decoded) {
