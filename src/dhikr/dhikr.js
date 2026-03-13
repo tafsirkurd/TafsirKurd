@@ -499,11 +499,14 @@ window.GencineUI = {
   },
 
   _updateHeader: function(){
-    var backBtn = document.getElementById('gencineBackBtn');
-    var title   = document.getElementById('gencineHdrTitle');
-    var isHome  = (this._view === 'home');
-    if(backBtn) backBtn.style.display    = isHome ? 'none' : 'flex';
-    if(title)   title.style.visibility  = isHome ? '' : 'hidden';
+    var backBtn  = document.getElementById('gencineBackBtn');
+    var title    = document.getElementById('gencineHdrTitle');
+    var booksBtns = document.getElementById('booksHdrBtns');
+    var isHome   = (this._view === 'home');
+    var isBooks  = (this._view === 'books');
+    if(backBtn)   backBtn.style.display   = isHome ? 'none' : 'flex';
+    if(title)     title.style.visibility  = isHome ? '' : 'hidden';
+    if(booksBtns) booksBtns.style.display = isBooks ? 'flex' : 'none';
   },
 
   /* ── main dispatcher ── */
