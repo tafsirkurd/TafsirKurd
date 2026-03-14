@@ -84,6 +84,19 @@ var RECITERS=[
   {id:'Mohammad_al_Tablaway_128kbps', name:'محمد الطبلاوي',              flag:'🇪🇬',style:'murattal'}
 ];
 var RECITER=localStorage.getItem('app_reciter')||'Alafasy_128kbps';
+var RECITER_PHOTOS={}; // keyed by reciter id, value = R2 image URL
+
+function loadReciterPhotos(){
+  if(!S.supabase)return;
+  S.supabase.from('site_settings').select('key,value').like('key','reciter_photo_%')
+    .then(function(res){
+      if(res.error||!res.data)return;
+      res.data.forEach(function(row){
+        var id=row.key.replace('reciter_photo_','');
+        if(row.value)RECITER_PHOTOS[id]=row.value;
+      });
+    }).catch(function(){});
+}
 
 /* ===== AUDIO HELPERS ===== */
 function audioUrl(surah,ayah){
@@ -218,7 +231,7 @@ function init(){
     loadTafsirData();
 
     // Init shared Supabase client and check auth
-    initSupabase();
+    initSupabase(function(){ loadReciterPhotos(); });
 
     // Pause audio when app goes to background (unless bgAudio is enabled)
     document.addEventListener('visibilitychange',function(){
@@ -1574,29 +1587,38 @@ function renderAyahs(surahNum,scrollTo){
     if(cpBtn){App.openCopyModal(surahNum,+cpBtn.dataset.cp);}
   });
 
-  // Hold detection via touchstart→touchend duration. One-time setup per list element.
+  // Hold detection via 400ms timer in touchstart (fires before touchend/touchcancel).
+  // This is reliable on Android WebView where long-press triggers touchcancel, not touchend.
   if(!list._markSetup){
     list._markSetup=true;
-    var _lpStart=0,_lpCard=null,_lpX=0,_lpY=0;
+    var _lpTimer=null,_lpCard=null,_lpX=0,_lpY=0;
     list.addEventListener('touchstart',function(e){
       var mc=e.target.closest('.ayah-card');
       if(!mc||e.target.closest('[data-play],[data-bm],[data-cp]'))return;
-      _lpStart=Date.now();_lpCard=mc;_lpX=e.touches[0].clientX;_lpY=e.touches[0].clientY;
+      _lpCard=mc;_lpX=e.touches[0].clientX;_lpY=e.touches[0].clientY;
       mc.classList.add('ayah-card--pressing');
+      clearTimeout(_lpTimer);
+      _lpTimer=setTimeout(function(){
+        if(!_lpCard)return;
+        var c=_lpCard;_lpCard=null;
+        c.classList.remove('ayah-card--pressing');
+        _ayahMarkLpAt=Date.now();
+        _setAyahMark(S.surah,+c.dataset.ayah);
+      },1000);
     },{passive:true});
     list.addEventListener('touchmove',function(e){
       if(!_lpCard)return;
       var dx=e.touches[0].clientX-_lpX,dy=e.touches[0].clientY-_lpY;
-      if(dx*dx+dy*dy>80){_lpCard.classList.remove('ayah-card--pressing');_lpCard=null;}
+      if(dx*dx+dy*dy>80){clearTimeout(_lpTimer);_lpTimer=null;_lpCard.classList.remove('ayah-card--pressing');_lpCard=null;}
     },{passive:true});
     list.addEventListener('touchend',function(){
-      if(!_lpCard)return;
-      var held=Date.now()-_lpStart;
-      _lpCard.classList.remove('ayah-card--pressing');
-      if(held>=400){_ayahMarkLpAt=Date.now();_setAyahMark(S.surah,+_lpCard.dataset.ayah);}
-      _lpCard=null;
+      clearTimeout(_lpTimer);_lpTimer=null;
+      if(_lpCard){_lpCard.classList.remove('ayah-card--pressing');_lpCard=null;}
     },{passive:true});
-    list.addEventListener('touchcancel',function(){if(_lpCard)_lpCard.classList.remove('ayah-card--pressing');_lpCard=null;},{passive:true});
+    list.addEventListener('touchcancel',function(){
+      clearTimeout(_lpTimer);_lpTimer=null;
+      if(_lpCard){_lpCard.classList.remove('ayah-card--pressing');_lpCard=null;}
+    },{passive:true});
     list.addEventListener('contextmenu',function(e){if(e.target.closest('.ayah-card'))e.preventDefault();});
   }
 
@@ -1647,16 +1669,21 @@ function renderAyahs(surahNum,scrollTo){
     card.appendChild(head);
     var arabic=el('div','ayah-arabic');
     if(glyphMode&&S.glyphVerses[surahNum]&&S.glyphVerses[surahNum][ayahNum-1]){
-      arabic.style.wordSpacing='normal';
       var _isV4g=S.readerFont==='v4tajweed';
       var _vd=S.glyphVerses[surahNum][ayahNum-1];
-      var _curPg=null,_curCodes=[];
+      // Show normal Hafs text immediately — no blank box while glyph font loads
+      arabic.textContent=ayahs[ayahNum-1]?(ayahs[ayahNum-1].text||ayahs[ayahNum-1]):'';
+      // Build glyph spans in detached container
+      var _glyphDiv=document.createElement('div');
+      _glyphDiv.style.wordSpacing='normal';
+      var _pageNums=[],_curPg=null,_curCodes=[];
       var _flush=function(pg,codes){
         if(!codes.length)return;
+        if(_pageNums.indexOf(pg)<0)_pageNums.push(pg);
         var sp=document.createElement('span');
         sp.style.fontFamily=_isV4g?"'QCFv4p"+pg+"',serif":"'QCFv2p"+pg+"',serif";
         sp.textContent=codes.join('\u200c');
-        arabic.appendChild(sp);
+        _glyphDiv.appendChild(sp);
       };
       (_vd.words||[]).forEach(function(w){
         if(!w.code_v2||w.char_type_name==='end')return;
@@ -1664,6 +1691,20 @@ function renderAyahs(surahNum,scrollTo){
         else{_curCodes.push(w.code_v2);}
       });
       if(_curPg!==null)_flush(_curPg,_curCodes);
+      // Swap to glyphs once all page fonts are loaded
+      if(_pageNums.length&&document.fonts){
+        var _fp=_isV4g?'QCFv4p':'QCFv2p';
+        Promise.all(_pageNums.map(function(pg){return document.fonts.load("1em '"+_fp+pg+"'");}))
+          .then(function(){
+            arabic.textContent='';
+            arabic.style.wordSpacing='normal';
+            while(_glyphDiv.firstChild)arabic.appendChild(_glyphDiv.firstChild);
+          }).catch(function(){});
+      }else{
+        arabic.textContent='';
+        arabic.style.wordSpacing='normal';
+        while(_glyphDiv.firstChild)arabic.appendChild(_glyphDiv.firstChild);
+      }
     }else{
       arabic.textContent=ayahs[ayahNum-1]?(ayahs[ayahNum-1].text||ayahs[ayahNum-1]):'';
     }
@@ -1790,48 +1831,22 @@ function updateProgress(list,total){
   var saveTimer=null;
   var destroyed=false;
 
-  // No goal — hide bar, just track lastRead position
-  if(!getGoal()){
-    if(progressEl)progressEl.style.display='none';
-    function onScrollNoGoal(){
-      if(destroyed)return;
-      clearTimeout(saveTimer);
-      saveTimer=setTimeout(function(){
-        if(destroyed||S.surah!==surahId)return;
-        var cards=list.querySelectorAll('.ayah-card');
-        var viewTop=scrollEl.getBoundingClientRect().top;
-        var viewBot=scrollEl.getBoundingClientRect().bottom;
-        for(var i=0;i<cards.length;i++){
-          var r=cards[i].getBoundingClientRect();
-          if(r.bottom>=viewTop&&r.top<=viewBot){
-            try{localStorage.setItem('lastRead',JSON.stringify({surah:surahId,ayah:i+1}))}catch(e){}
-            try{localStorage.setItem('surah_scroll_'+surahId,String(scrollEl.scrollTop))}catch(e){}
-            break;
-          }
-        }
-      },300);
-    }
-    window._onNewAyahCard=null;
-    scrollEl.addEventListener('scroll',onScrollNoGoal,{passive:true});
-    _progressCleanup=function(){destroyed=true;clearTimeout(saveTimer);scrollEl.removeEventListener('scroll',onScrollNoGoal,{passive:true})};
-    return;
-  }
-
-  // Goal active — show progress bar
+  // Always show progress bar
   if(progressEl)progressEl.style.display='';
 
   // One-time migration: clear all old incorrectly-saved progress data
-  if(localStorage.getItem('surah_progress_ver')!=='4'){
+  if(localStorage.getItem('surah_progress_ver')!=='10'){
     var _pk=[];for(var _pi=0;_pi<localStorage.length;_pi++){var _k=localStorage.key(_pi);if(_k)_pk.push(_k);}
     _pk.forEach(function(k){if(k.indexOf('surah_progress_')===0||k.indexOf('surah_read_')===0)localStorage.removeItem(k);});
-    localStorage.setItem('surah_progress_ver','4');
+    localStorage.setItem('surah_progress_ver','10');
   }
 
-  var seenAyahs=new Set();
+  // Progress = highest ayah number that's been visible on screen.
+  // Scroll to ayah 1 → 1/total. Scroll further → count increases naturally.
   var maxSeen=0;
   try{
-    var saved=JSON.parse(localStorage.getItem('surah_read_v3_'+surahId)||'[]');
-    saved.forEach(function(n){if(n>=1&&n<=total){seenAyahs.add(n);if(n>maxSeen)maxSeen=n;}});
+    var saved=parseInt(localStorage.getItem('surah_read_v3_'+surahId))||0;
+    if(saved>=1&&saved<=total)maxSeen=saved;
   }catch(e){}
 
   var _rafPending=false;
@@ -1842,92 +1857,62 @@ function updateProgress(list,total){
     requestAnimationFrame(function(){
       _rafPending=false;
       if(destroyed||S.surah!==surahId)return;
-      var count=Math.min(seenAyahs.size,total);
       if(maxSeen>0){try{localStorage.setItem('lastRead',JSON.stringify({surah:surahId,ayah:maxSeen}))}catch(e){}}
-      var pct=Math.min(100,Math.round(count/total*100));
+      var pct=Math.min(100,Math.round(maxSeen/total*100));
       $('readerProgressFill').style.width=pct+'%';
-      $('readerAyahLabel').textContent=count+'/'+total+' '+t('reader.ayah');
+      $('readerAyahLabel').textContent=maxSeen+'/'+total+' '+t('reader.ayah');
       $('readerPct').textContent=pct+'%';
     });
-  }
-
-  function markSeen(idx){
-    if(seenAyahs.has(idx))return false;
-    seenAyahs.add(idx);
-    if(idx>maxSeen)maxSeen=idx;
-    trackVerse(surahId,idx);
-    return true;
   }
 
   function scheduleSave(){
     clearTimeout(saveTimer);
     saveTimer=setTimeout(function(){
       if(destroyed||S.surah!==surahId)return;
-      var valid=[];seenAyahs.forEach(function(n){if(n>=1&&n<=total)valid.push(n)});
-      try{localStorage.setItem('surah_read_v3_'+surahId,JSON.stringify(valid))}catch(e){}
+      try{localStorage.setItem('surah_read_v3_'+surahId,String(maxSeen))}catch(e){}
       try{localStorage.setItem('surah_scroll_'+surahId,String(scrollEl.scrollTop))}catch(e){}
       debouncedSync();
     },300);
   }
 
-  // Show saved progress immediately — no delay
-  if(seenAyahs.size>0)updateHeader();
-
-  // Scroll-based tracking — more reliable than IntersectionObserver on Android WebView.
-  // enteredSet: ayahs that have been visible at least once (prevents false marks on resume).
-  var enteredSet=new Set();
-  var _endTimer=null;
+  // Show saved progress on open
+  if(maxSeen>0)updateHeader();
 
   function onAyahScroll(){
     if(destroyed||S.surah!==surahId)return;
-    var listRect=scrollEl.getBoundingClientRect();
-    var listTop=listRect.top,listBot=listRect.bottom;
-    var changed=false;
+    // Use clientHeight (not getBoundingClientRect().bottom) — avoids Android WebView
+    // reporting content height instead of visible height for scrollable elements.
+    var listTop=scrollEl.getBoundingClientRect().top;
+    var listBot=listTop+scrollEl.clientHeight;
+    var highest=0;
     list.querySelectorAll('.ayah-card').forEach(function(c){
       var idx=parseInt(c.dataset.ayah)||0;
       if(!idx||idx>total)return;
       var r=c.getBoundingClientRect();
-      // Visible in list viewport → mark as entered
-      if(r.bottom>listTop&&r.top<listBot)enteredSet.add(idx);
-      // Completely scrolled past the top of the list AND was previously visible
-      if(r.bottom<=listTop&&enteredSet.has(idx)){
-        if(markSeen(idx))changed=true;
-      }
+      // Any part of the card visible within the container's visible area
+      if(r.bottom>listTop&&r.top<listBot&&idx>highest)highest=idx;
     });
-    // At bottom of surah (and user has actually scrolled): mark remaining visible+entered ayahs
-    var atBottom=scrollEl.scrollTop>50&&scrollEl.scrollTop+scrollEl.clientHeight>=scrollEl.scrollHeight-40;
-    if(atBottom){
-      if(!_endTimer){
-        _endTimer=setTimeout(function(){
-          _endTimer=null;
-          if(destroyed||S.surah!==surahId)return;
-          var lr=scrollEl.getBoundingClientRect();
-          list.querySelectorAll('.ayah-card').forEach(function(c){
-            var i=parseInt(c.dataset.ayah)||0;
-            var r=c.getBoundingClientRect();
-            if(i&&enteredSet.has(i)&&r.bottom>lr.top&&r.top<lr.bottom){
-              if(markSeen(i))changed=true;
-            }
-          });
-          if(changed){updateHeader();scheduleSave();}
-        },1500);
-      }
-    }else{
-      clearTimeout(_endTimer);_endTimer=null;
+    if(highest>maxSeen){
+      maxSeen=highest;
+      trackVerse(surahId,maxSeen);
+      updateHeader();
+      scheduleSave();
     }
-    if(changed){updateHeader();scheduleSave();}
   }
 
+  // Poll every 300ms — works even when scroll events lag on Android WebView
+  var _pollId=setInterval(function(){
+    if(destroyed){clearInterval(_pollId);return;}
+    onAyahScroll();
+  },300);
   scrollEl.addEventListener('scroll',onAyahScroll,{passive:true});
-  // Run once after render to populate enteredSet for cards already on screen
-  setTimeout(function(){if(!destroyed)onAyahScroll();},150);
 
-  window._onNewAyahCard=null; // scroll-based; no per-card hook needed
+  window._onNewAyahCard=null;
 
   _progressCleanup=function(){
     destroyed=true;
+    clearInterval(_pollId);
     clearTimeout(saveTimer);
-    clearTimeout(_endTimer);
     scrollEl.removeEventListener('scroll',onAyahScroll);
     window._onNewAyahCard=null;
   };
@@ -2673,21 +2658,54 @@ function renderAudioSettings(){
   var body=$('audioSettingsBody');
   clear(body);
 
-  // Reciter section
+  // ── Speed section (top) ──
+  body.appendChild(el('div','audio-settings-title',t('audio.speed')));
+  var speedSeg=el('div','speed-seg');
+  [0.5,0.75,1,1.25,1.5,2].forEach(function(sp){
+    var lbl=sp+'x';
+    var btn=el('button','speed-seg-btn'+(S.audio.speed===sp?' on':''),lbl);
+    on(btn,'click',function(){
+      S.audio.speed=sp;
+      S.audio.el.playbackRate=sp;
+      localStorage.setItem('app_speed',String(sp));
+      renderAudioSettings();
+    });
+    speedSeg.appendChild(btn);
+  });
+  body.appendChild(speedSeg);
+
+  // ── Reciter section ──
   body.appendChild(el('div','audio-settings-title',t('audio.reciter')));
-  var recList=el('div','reciter-list');
+  var recGrid=el('div','reciter-grid');
   var styleLbls={murattal:'مورتل',mujawwad:'مجود',hadr:'حدر'};
   RECITERS.forEach(function(r){
-    var item=el('div','reciter-item'+(r.id===RECITER?' on':''));
-    if(r.flag){var flagEl;if(r.flag.charAt(0)==='/'){flagEl=document.createElement('img');flagEl.src=r.flag;flagEl.className='reciter-flag-img';flagEl.alt='';}else{flagEl=el('span','reciter-flag',r.flag);}item.appendChild(flagEl);}
-    var info=el('div','reciter-info');
-    var nameRow=el('div','reciter-name-row');
-    nameRow.appendChild(el('span','reciter-name',r.name));
-    if(r.style){nameRow.appendChild(el('span','reciter-style-badge',styleLbls[r.style]||r.style));}
-    info.appendChild(nameRow);
-    item.appendChild(info);
-    if(r.id===RECITER){var ck=el('i','fas fa-check reciter-check');item.appendChild(ck);}
-    on(item,'click',function(){
+    var isOn=r.id===RECITER;
+    var card=el('div','reciter-card'+(isOn?' on':''));
+
+    // Avatar circle
+    var avatar=el('div','reciter-avatar');
+    var photo=RECITER_PHOTOS[r.id];
+    if(photo){
+      var img=document.createElement('img');
+      img.src=photo;img.alt=r.name;img.className='reciter-avatar-img';
+      avatar.appendChild(img);
+    } else {
+      var initials=r.name.trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join('');
+      avatar.appendChild(el('span','reciter-avatar-initials',initials));
+    }
+    if(isOn){var ckDot=el('span','reciter-avatar-check');ckDot.appendChild(el('i','fas fa-check'));avatar.appendChild(ckDot);}
+    card.appendChild(avatar);
+
+    // Info
+    var info=el('div','reciter-card-info');
+    info.appendChild(el('div','reciter-card-name',r.name));
+    var meta=el('div','reciter-card-meta');
+    if(r.flag)meta.appendChild(el('span','reciter-card-flag',r.flag));
+    if(r.style)meta.appendChild(el('span','reciter-card-style',styleLbls[r.style]||r.style));
+    info.appendChild(meta);
+    card.appendChild(info);
+
+    on(card,'click',function(){
       RECITER=r.id;
       localStorage.setItem('app_reciter',r.id);
       clearPrefetch();
@@ -2697,25 +2715,9 @@ function renderAudioSettings(){
       else showAudioBar();
       toast(r.name);
     });
-    recList.appendChild(item);
+    recGrid.appendChild(card);
   });
-  body.appendChild(recList);
-
-  // Speed section
-  body.appendChild(el('div','audio-settings-title',t('audio.speed')));
-  var speeds=el('div','speed-options');
-  [0.5,0.75,1,1.25,1.5,2].forEach(function(sp){
-    var btn=el('button','speed-btn'+(S.audio.speed===sp?' on':''),sp+'x');
-    on(btn,'click',function(){
-      S.audio.speed=sp;
-      S.audio.el.playbackRate=sp;
-      localStorage.setItem('app_speed',String(sp));
-      renderAudioSettings();
-    });
-    speeds.appendChild(btn);
-  });
-  body.appendChild(speeds);
-
+  body.appendChild(recGrid);
 }
 
 /* ===== REPEAT MANAGER ===== */

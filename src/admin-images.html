@@ -166,6 +166,37 @@
             .crop-modal-content { width: 98%; max-height: 95vh; }
             .crop-preview { min-height: 200px; }
         }
+        .reciter-photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 16px;
+        }
+        .reciter-photo-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .reciter-photo-preview {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            margin: 16px auto 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--border-light);
+        }
+        .reciter-photo-preview img { width:100%; height:100%; object-fit:cover; }
+        .reciter-photo-preview .placeholder { color:var(--text-tertiary); font-size:1.8rem; }
+        .reciter-photo-body { padding: 10px 14px 14px; }
+        .reciter-photo-flag { text-align:center; font-size:1.3rem; margin-bottom:4px; }
+        .reciter-photo-name { font-size:.85rem; font-weight:600; color:var(--text-primary); margin-bottom:8px; direction:rtl; text-align:center; }
+        .reciter-photo-actions { display:flex; gap:5px; margin-top:8px; }
+        .reciter-photo-actions .btn { flex:1; font-size:.78rem; padding:6px 8px; }
+        .r2-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(247,130,8,.1); color:#f78208; border-radius:4px; padding:2px 8px; font-size:.72rem; font-weight:600; margin-bottom:16px; }
     </style>
 
     <style id="early-sidebar-hide">
@@ -406,6 +437,10 @@
                         </div>
                     </div>
                 </div>
+
+                <h3 class="section-divider">Qari Profile Photos</h3>
+                <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Circular profile pictures shown in the audio player. Upload a 1:1 square photo — stored in Cloudflare R2. <span class="r2-badge"><i data-lucide="cloud" style="width:12px;height:12px"></i> R2</span></p>
+                <div id="reciterPhotosGrid" class="reciter-photos-grid"></div>
             </div>
         </main>
 
@@ -432,13 +467,43 @@
     <script>
         lucide.createIcons();
 
+        const R2_WORKER_URL = 'https://tafsirkurd-images.tefsirkurd.workers.dev';
+        const R2_UPLOAD_SECRET = 'tk_r2_img_2026_K8mX3pW7nR9vJ4sQ';
+
         const IMAGE_KEYS = ['founder_avatar_url', 'hero_card_quran_image', 'hero_card_islamvoice_image', 'login_hero_default_image', 'login_hero_quran_image', 'login_hero_islamvoice_image', 'tafsir_book_image'];
         let supabase = null;
+
+        const RECITERS_ADMIN = [
+            {id:'Alafasy_128kbps',                          name:'مشاري العفاسي',             flag:'🇰🇼'},
+            {id:'Nasser_Alqatami_128kbps',                  name:'ناصر القطامي',              flag:'🇰🇼'},
+            {id:'Ahmed_ibn_Ali_al-Ajamy_128kbps-almanar',   name:'أحمد العجمي',               flag:'🇰🇼'},
+            {id:'MaherAlMuaiqly128kbps',                    name:'ماهر المعيقلي',             flag:'🇸🇦'},
+            {id:'Abdurrahmaan_As-Sudais_192kbps',           name:'عبد الرحمن السديس',         flag:'🇸🇦'},
+            {id:'Saood_ash-Shuraym_128kbps',                name:'سعود الشريم',               flag:'🇸🇦'},
+            {id:'Yasser_Ad-Dussary_128kbps',                name:'ياسر الدوسري',              flag:'🇸🇦'},
+            {id:'Hudhaify_128kbps',                         name:'علي الحذيفي',               flag:'🇸🇦'},
+            {id:'Abu_Bakr_Ash-Shaatree_128kbps',            name:'أبو بكر الشاطري',           flag:'🇸🇦'},
+            {id:'Muhammad_Jibreel_128kbps',                 name:'محمد جبريل',                flag:'🇸🇦'},
+            {id:'Hani_Rifai_192kbps',                       name:'هاني الرفاعي',              flag:'🇸🇦'},
+            {id:'Muhammad_Ayyoub_128kbps',                  name:'محمد أيوب',                 flag:'🇸🇦'},
+            {id:'Ghamadi_40kbps',                           name:'سعد الغامدي',               flag:'🇸🇦'},
+            {id:'Abdullaah_3awwaad_Al-Juhaynee_128kbps',    name:'عبد الله الجهني',           flag:'🇸🇦'},
+            {id:'Sahl_Yassin_128kbps',                      name:'سهل ياسين',                 flag:'🇸🇦'},
+            {id:'Abdullah_Basfar_192kbps',                  name:'عبد الله بصفر',             flag:'🇸🇦'},
+            {id:'Fares_Abbad_64kbps',                       name:'فارس عباد',                 flag:'🇩🇿'},
+            {id:'Abdul_Basit_Murattal_192kbps',             name:'عبد الباسط (مورتل)',         flag:'🇪🇬'},
+            {id:'Abdul_Basit_Mujawwad_128kbps',             name:'عبد الباسط (مجود)',          flag:'🇪🇬'},
+            {id:'Minshawy_Murattal_128kbps',                name:'محمد المنشاوي',             flag:'🇪🇬'},
+            {id:'Husary_128kbps',                           name:'محمود الحصري',              flag:'🇪🇬'},
+            {id:'Mustafa_Ismail_48kbps',                    name:'مصطفى إسماعيل',            flag:'🇪🇬'},
+            {id:'Mohammad_al_Tablaway_128kbps',             name:'محمد الطبلاوي',             flag:'🇪🇬'}
+        ];
 
         (async () => {
             const isAuth = await window.adminAuth.checkAuth();
             if (isAuth) {
                 supabase = window.adminAuth.getSupabase();
+                buildReciterGrid();
                 await loadAllImages();
             }
         })();
@@ -474,6 +539,18 @@
                     .in('key', IMAGE_KEYS);
                 if (error) throw error;
                 (data || []).forEach(row => {
+                    if (row.value) {
+                        updatePreview(row.key, row.value);
+                        const urlInput = document.getElementById('url-' + row.key);
+                        if (urlInput) urlInput.value = row.value;
+                    }
+                });
+                // Load reciter photos
+                const { data: rData } = await supabase
+                    .from('site_settings')
+                    .select('key, value')
+                    .like('key', 'reciter_photo_%');
+                (rData || []).forEach(row => {
                     if (row.value) {
                         updatePreview(row.key, row.value);
                         const urlInput = document.getElementById('url-' + row.key);
@@ -548,7 +625,7 @@
                 const cropImage = document.getElementById('cropImage');
                 cropImage.src = e.target.result;
 
-                document.getElementById('cropTitle').textContent = CROP_TITLES[key] || 'Crop Image';
+                document.getElementById('cropTitle').textContent = CROP_TITLES[key] || (key.startsWith('reciter_photo_') ? 'Crop Reciter Photo (1:1)' : 'Crop Image');
                 document.getElementById('cropDimensions').textContent = '';
                 document.getElementById('cropModal').style.display = 'flex';
 
@@ -556,7 +633,7 @@
                 if (cropper) { cropper.destroy(); cropper = null; }
 
                 cropper = new Cropper(cropImage, {
-                    aspectRatio: ASPECT_RATIOS[key] || NaN,
+                    aspectRatio: ASPECT_RATIOS[key] !== undefined ? ASPECT_RATIOS[key] : (key.startsWith('reciter_photo_') ? 1 : NaN),
                     viewMode: 1,
                     dragMode: 'move',
                     autoCropArea: 0.85,
@@ -590,26 +667,33 @@
                     canvas.toBlob(resolve, 'image/jpeg', 0.9);
                 });
 
-                var fileName = currentCropKey + '-' + Date.now() + '.jpg';
-                var filePath = 'site-images/' + fileName;
+                // Determine R2 key based on type
+                var r2Key = currentCropKey.startsWith('reciter_photo_')
+                    ? 'reciter_photos/' + currentCropKey.replace('reciter_photo_', '') + '.jpg'
+                    : 'site-images/' + currentCropKey + '-' + Date.now() + '.jpg';
 
-                var uploadResult = await supabase.storage
-                    .from('site-images')
-                    .upload(filePath, blob, { contentType: 'image/jpeg', cacheControl: '3600', upsert: true });
+                var form = new FormData();
+                form.append('file', blob, r2Key.split('/').pop());
+                form.append('key', r2Key);
 
-                if (uploadResult.error) throw uploadResult.error;
+                var res = await fetch(R2_WORKER_URL + '/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + R2_UPLOAD_SECRET },
+                    body: form
+                });
+                if (!res.ok) {
+                    var errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.error || 'Upload failed: HTTP ' + res.status);
+                }
+                var data = await res.json();
+                var url = data.url;
 
-                var urlData = supabase.storage
-                    .from('site-images')
-                    .getPublicUrl(filePath);
-
-                var url = urlData.data.publicUrl;
                 document.getElementById('url-' + currentCropKey).value = url;
                 updatePreview(currentCropKey, url);
                 await saveToDb(currentCropKey, url);
 
                 closeCropModal();
-                alert('Image cropped and saved!');
+                alert('Saved to R2!');
             } catch (e) {
                 console.error('Upload failed:', e);
                 alert('Upload failed: ' + e.message);
@@ -643,6 +727,93 @@
             document.getElementById('url-' + key).value = '';
             updatePreview(key, '');
             alert('Image removed.');
+        }
+
+        function buildReciterGrid() {
+            const grid = document.getElementById('reciterPhotosGrid');
+            if (!grid) return;
+            RECITERS_ADMIN.forEach(r => {
+                const key = 'reciter_photo_' + r.id;
+                const card = document.createElement('div');
+                card.className = 'reciter-photo-card';
+
+                const preview = document.createElement('div');
+                preview.className = 'reciter-photo-preview';
+                preview.id = 'preview-' + key;
+                const ph = document.createElement('div');
+                ph.className = 'placeholder';
+                const ico = document.createElement('i');
+                ico.setAttribute('data-lucide', 'user');
+                ph.appendChild(ico);
+                preview.appendChild(ph);
+                card.appendChild(preview);
+
+                const body = document.createElement('div');
+                body.className = 'reciter-photo-body';
+
+                const flagDiv = document.createElement('div');
+                flagDiv.className = 'reciter-photo-flag';
+                flagDiv.textContent = r.flag;
+                body.appendChild(flagDiv);
+
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'reciter-photo-name';
+                nameDiv.textContent = r.name;
+                body.appendChild(nameDiv);
+
+                const badge = document.createElement('span');
+                badge.className = 'status-badge empty';
+                badge.id = 'status-' + key;
+                badge.textContent = 'Not Set';
+                body.appendChild(badge);
+
+                const urlInput = document.createElement('input');
+                urlInput.type = 'url';
+                urlInput.className = 'image-card-url';
+                urlInput.id = 'url-' + key;
+                urlInput.placeholder = 'Paste URL or upload...';
+                urlInput.style.marginTop = '8px';
+                body.appendChild(urlInput);
+
+                const actions = document.createElement('div');
+                actions.className = 'reciter-photo-actions';
+
+                const upBtn = document.createElement('button');
+                upBtn.className = 'btn btn-secondary';
+                upBtn.textContent = 'Upload';
+                upBtn.onclick = () => pickFile(key);
+
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'btn btn-primary';
+                saveBtn.textContent = 'Save URL';
+                saveBtn.onclick = () => saveImage(key);
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn btn-danger';
+                delBtn.style.cssText = 'flex:0;padding:6px 10px';
+                const trashIco = document.createElement('i');
+                trashIco.setAttribute('data-lucide', 'trash-2');
+                trashIco.style.cssText = 'width:14px;height:14px';
+                delBtn.appendChild(trashIco);
+                delBtn.onclick = () => removeImage(key);
+
+                actions.appendChild(upBtn);
+                actions.appendChild(saveBtn);
+                actions.appendChild(delBtn);
+                body.appendChild(actions);
+
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.className = 'upload-input';
+                fileInput.id = 'file-' + key;
+                fileInput.accept = 'image/*';
+                fileInput.onchange = function() { handleUpload(key, this); };
+                body.appendChild(fileInput);
+
+                card.appendChild(body);
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
         }
 
         async function saveToDb(key, value) {
