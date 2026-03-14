@@ -423,7 +423,7 @@ function init(){
         var sp=$('splash');
         if(sp)sp.classList.add('hide');
         var app=$('app');
-        if(app)app.style.display='flex';
+        if(app){app.style.display='flex';requestAnimationFrame(function(){requestAnimationFrame(function(){app.classList.add('visible');});});}
         try{var sp2=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.SplashScreen;if(sp2)sp2.hide({fadeOutDuration:300});}catch(e){}
         setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},450);
         // Pre-cache V4 fonts 3s after splash — silent background download
@@ -793,6 +793,7 @@ function scheduleDailyVerse(enabled,time){
 /* Show a one-time battery-optimization guidance dialog on Samsung/Android */
 window._showNotifSetupHint=function _showNotifSetupHint(force){
   if(!window.Capacitor)return; // web — skip
+  if(window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios')return; // iOS — no Samsung hint
   if(!force&&localStorage.getItem('notifHintShown'))return;
   localStorage.setItem('notifHintShown','1');
   // Build modal using DOM (no innerHTML)

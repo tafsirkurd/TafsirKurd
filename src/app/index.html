@@ -110,7 +110,8 @@ body{background:var(--bg);color:var(--text)}
 .splash.hide{opacity:0;pointer-events:none}
 
 /* ===== APP CONTAINER ===== */
-.app{display:none;flex-direction:column;width:100%;height:100%;padding-top:var(--safe-t)}
+.app{display:none;flex-direction:column;width:100%;height:100%;padding-top:var(--safe-t);opacity:0;transition:opacity .35s ease}
+.app.visible{opacity:1}
 
 /* ===== TAB PANELS ===== */
 .panel{display:none;flex:1;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tab-h) + var(--safe-b) + 100px)}
