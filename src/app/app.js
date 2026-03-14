@@ -1572,20 +1572,34 @@ function renderAyahs(surahNum,scrollTo){
     }
     if(bmBtn){var an2=+bmBtn.dataset.bm;toggleBookmark(surahNum,an2);renderAyahs(surahNum);}
     if(cpBtn){App.openCopyModal(surahNum,+cpBtn.dataset.cp);}
-    // Tap on card body (not action buttons) → mark position for 2 min
-    if(!plBtn&&!bmBtn&&!cpBtn){
-      var mc=e.target.closest('.ayah-card');
-      if(mc&&mc.dataset.ayah)_setAyahMark(surahNum,+mc.dataset.ayah);
-    }
   });
 
-  // Long-press → contextmenu is what Android dispatches on hold; preventDefault kills the popup
-  list.addEventListener('contextmenu',function(e){
-    var mc=e.target.closest('.ayah-card');
-    if(!mc)return;
-    e.preventDefault();
-    if(!e.target.closest('[data-play],[data-bm],[data-cp]'))_setAyahMark(surahNum,+mc.dataset.ayah);
-  });
+  // Tap OR hold on card body → mark position for 2 min.
+  // Guard with list._markSetup so listeners are added only once even after
+  // multiple renderAyahs calls (e.g. after bookmark toggle).
+  if(!list._markSetup){
+    list._markSetup=true;
+    var _lp={timer:null,card:null,x:0,y:0};
+    list.addEventListener('touchstart',function(e){
+      var mc=e.target.closest('.ayah-card');
+      if(!mc||e.target.closest('[data-play],[data-bm],[data-cp]'))return;
+      _lp.card=mc;_lp.x=e.touches[0].clientX;_lp.y=e.touches[0].clientY;
+      mc.classList.add('ayah-card--pressing');
+      _lp.timer=setTimeout(function(){
+        _lp.timer=null;
+        if(_lp.card){_setAyahMark(S.surah,+_lp.card.dataset.ayah);}
+      },400);
+    },{passive:true});
+    list.addEventListener('touchmove',function(e){
+      if(!_lp.card)return;
+      var dx=e.touches[0].clientX-_lp.x,dy=e.touches[0].clientY-_lp.y;
+      if(dx*dx+dy*dy>80){clearTimeout(_lp.timer);_lp.timer=null;if(_lp.card)_lp.card.classList.remove('ayah-card--pressing');_lp.card=null;}
+    },{passive:true});
+    function _lpEnd(){clearTimeout(_lp.timer);_lp.timer=null;if(_lp.card)_lp.card.classList.remove('ayah-card--pressing');_lp.card=null;}
+    list.addEventListener('touchend',_lpEnd,{passive:true});
+    list.addEventListener('touchcancel',_lpEnd,{passive:true});
+    list.addEventListener('contextmenu',function(e){if(e.target.closest('.ayah-card'))e.preventDefault();});
+  }
 
   // Nav buttons (always at bottom — batches insert before them)
   var nav=el('div','surah-nav');
@@ -1849,77 +1863,62 @@ function updateProgress(list,total){
   // Show saved progress immediately — no delay
   if(seenAyahs.size>0)updateHeader();
 
-  // Track ayahs that have actually appeared in the viewport at least once.
-  // This prevents the initial observer callback (fired for elements already above
-  // the fold when resuming a surah mid-way) from incorrectly marking them as read.
+  // Scroll-based tracking — more reliable than IntersectionObserver on Android WebView.
+  // enteredSet: ayahs that have been visible at least once (prevents false marks on resume).
   var enteredSet=new Set();
+  var _endTimer=null;
 
-  var observer=new IntersectionObserver(function(entries){
+  function onAyahScroll(){
     if(destroyed||S.surah!==surahId)return;
+    var listRect=scrollEl.getBoundingClientRect();
+    var listTop=listRect.top,listBot=listRect.bottom;
     var changed=false;
-    entries.forEach(function(entry){
-      var idx=parseInt(entry.target.dataset.ayah)||0;
+    list.querySelectorAll('.ayah-card').forEach(function(c){
+      var idx=parseInt(c.dataset.ayah)||0;
       if(!idx||idx>total)return;
-      if(entry.isIntersecting){
-        enteredSet.add(idx); // ayah was visible — remember it
-      }else if(enteredSet.has(idx)){
-        // Exited the list — only mark if it left from the TOP (scrolled past),
-        // not from the bottom. Compare against rootBounds.top (the list's viewport y),
-        // because the list doesn't start at y=0 (there's a header above it).
-        var listTop=entry.rootBounds?entry.rootBounds.top:0;
-        if(entry.boundingClientRect.bottom<=listTop+2){
-          if(markSeen(idx))changed=true;
-        }
+      var r=c.getBoundingClientRect();
+      // Visible in list viewport → mark as entered
+      if(r.bottom>listTop&&r.top<listBot)enteredSet.add(idx);
+      // Completely scrolled past the top of the list AND was previously visible
+      if(r.bottom<=listTop&&enteredSet.has(idx)){
+        if(markSeen(idx))changed=true;
       }
     });
-    if(changed){updateHeader();scheduleSave();}
-  },{root:scrollEl,threshold:0});
-
-  // When the surah-nav (bottom buttons) becomes visible, the user has reached the end.
-  // After a 2s dwell, mark any remaining visible ayahs that were already seen.
-  var _endTimer=null;
-  var nav=list.querySelector('.surah-nav');
-  if(nav){
-    var endObs=new IntersectionObserver(function(entries){
-      if(destroyed||S.surah!==surahId)return;
-      if(entries[0].isIntersecting&&seenAyahs.size>0){
-        if(!_endTimer){
-          _endTimer=setTimeout(function(){
-            _endTimer=null;
-            if(destroyed||S.surah!==surahId)return;
-            var listR=scrollEl.getBoundingClientRect();
-            var changed=false;
-            list.querySelectorAll('.ayah-card').forEach(function(c){
-              var r=c.getBoundingClientRect();
-              if(r.bottom>listR.top&&r.top<listR.bottom){
-                var i=parseInt(c.dataset.ayah)||0;
-                // only mark if this ayah was actually visible (entered the viewport)
-                if(i&&enteredSet.has(i)&&markSeen(i))changed=true;
-              }
-            });
-            if(changed){updateHeader();scheduleSave();}
-          },2000);
-        }
-      }else{
-        clearTimeout(_endTimer);_endTimer=null;
+    // At bottom of surah: after 1.5s dwell mark remaining visible+entered ayahs
+    var atBottom=scrollEl.scrollTop+scrollEl.clientHeight>=scrollEl.scrollHeight-40;
+    if(atBottom&&seenAyahs.size>0){
+      if(!_endTimer){
+        _endTimer=setTimeout(function(){
+          _endTimer=null;
+          if(destroyed||S.surah!==surahId)return;
+          var lr=scrollEl.getBoundingClientRect();
+          list.querySelectorAll('.ayah-card').forEach(function(c){
+            var i=parseInt(c.dataset.ayah)||0;
+            var r=c.getBoundingClientRect();
+            if(i&&enteredSet.has(i)&&r.bottom>lr.top&&r.top<lr.bottom){
+              if(markSeen(i))changed=true;
+            }
+          });
+          if(changed){updateHeader();scheduleSave();}
+        },1500);
       }
-    },{root:scrollEl,threshold:0.3});
-    endObs.observe(nav);
+    }else{
+      clearTimeout(_endTimer);_endTimer=null;
+    }
+    if(changed){updateHeader();scheduleSave();}
   }
 
-  // Observe already-rendered cards (first batch)
-  var cards=list.querySelectorAll('.ayah-card');
-  cards.forEach(function(card){observer.observe(card);});
+  scrollEl.addEventListener('scroll',onAyahScroll,{passive:true});
+  // Run once after render to populate enteredSet for cards already on screen
+  setTimeout(function(){if(!destroyed)onAyahScroll();},150);
 
-  // Hook for incremental batches — observe new cards as they're appended
-  window._onNewAyahCard=function(card){if(!destroyed)observer.observe(card);};
+  window._onNewAyahCard=null; // scroll-based; no per-card hook needed
 
   _progressCleanup=function(){
     destroyed=true;
     clearTimeout(saveTimer);
     clearTimeout(_endTimer);
-    observer.disconnect();
-    if(nav&&typeof endObs!=='undefined')endObs.disconnect();
+    scrollEl.removeEventListener('scroll',onAyahScroll);
     window._onNewAyahCard=null;
   };
 }
