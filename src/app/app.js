@@ -1579,6 +1579,27 @@ function renderAyahs(surahNum,scrollTo){
     }
   });
 
+  // Long-press on card body → mark position (hold doesn't fire click on Android)
+  var _lpTimer=null,_lpCard=null,_lpX=0,_lpY=0;
+  list.addEventListener('touchstart',function(e){
+    var mc=e.target.closest('.ayah-card');
+    if(!mc||e.target.closest('[data-play],[data-bm],[data-cp]'))return;
+    _lpCard=mc;_lpX=e.touches[0].clientX;_lpY=e.touches[0].clientY;
+    _lpTimer=setTimeout(function(){
+      _lpTimer=null;
+      if(_lpCard)_setAyahMark(surahNum,+_lpCard.dataset.ayah);
+      _lpCard=null;
+    },400);
+  },{passive:true});
+  list.addEventListener('touchmove',function(e){
+    if(!_lpTimer)return;
+    var dx=e.touches[0].clientX-_lpX,dy=e.touches[0].clientY-_lpY;
+    if(dx*dx+dy*dy>64){clearTimeout(_lpTimer);_lpTimer=null;_lpCard=null;}
+  },{passive:true});
+  list.addEventListener('touchend',function(){clearTimeout(_lpTimer);_lpTimer=null;_lpCard=null;},{passive:true});
+  // Suppress context menu popup that appears on long press
+  list.addEventListener('contextmenu',function(e){if(e.target.closest('.ayah-card'))e.preventDefault();});
+
   // Nav buttons (always at bottom — batches insert before them)
   var nav=el('div','surah-nav');
   var prevBtn=el('button','surah-nav-btn');
@@ -1727,6 +1748,10 @@ var _mushafLazyObs=null;
 // Ayah position marker — 2-minute highlight so user knows where they are
 var _ayahMarkTimer=null;
 function _setAyahMark(surahNum,ayahNum){
+  // Guard against double-firing when multiple stacked listeners exist on #ayahList
+  if(_setAyahMark._busy)return;
+  _setAyahMark._busy=true;
+  requestAnimationFrame(function(){_setAyahMark._busy=false;});
   clearTimeout(_ayahMarkTimer);
   // Remove existing highlight
   var prev=document.querySelector('.ayah-card--marked');
@@ -1837,29 +1862,35 @@ function updateProgress(list,total){
   // Show saved progress immediately — no delay
   if(seenAyahs.size>0)updateHeader();
 
-  // Mark ayah only when it scrolls completely off the top — never on initial visible check
+  // Track ayahs that have actually appeared in the viewport at least once.
+  // This prevents the initial observer callback (fired for elements already above
+  // the fold when resuming a surah mid-way) from incorrectly marking them as read.
+  var enteredSet=new Set();
+
   var observer=new IntersectionObserver(function(entries){
     if(destroyed||S.surah!==surahId)return;
     var changed=false;
     entries.forEach(function(entry){
       var idx=parseInt(entry.target.dataset.ayah)||0;
       if(!idx||idx>total)return;
-      // Only mark when the ayah has been scrolled completely above the viewport
-      if(!entry.isIntersecting&&entry.boundingClientRect.bottom<0){
+      if(entry.isIntersecting){
+        enteredSet.add(idx); // ayah was visible — remember it
+      }else if(entry.boundingClientRect.bottom<0&&enteredSet.has(idx)){
+        // scrolled completely above the top AND was previously visible → mark read
         if(markSeen(idx))changed=true;
       }
     });
     if(changed){updateHeader();scheduleSave();}
-  },{root:scrollEl,threshold:[0,1.0]});
+  },{root:scrollEl,threshold:0});
 
-  // When user reaches the bottom of the surah (nav visible + actually scrolled),
-  // mark any remaining visible-but-unread ayahs after a 2s dwell at the bottom
+  // When the surah-nav (bottom buttons) becomes visible, the user has reached the end.
+  // After a 2s dwell, mark any remaining visible ayahs that were already seen.
   var _endTimer=null;
   var nav=list.querySelector('.surah-nav');
   if(nav){
     var endObs=new IntersectionObserver(function(entries){
       if(destroyed||S.surah!==surahId)return;
-      if(entries[0].isIntersecting&&scrollEl.scrollTop>50){
+      if(entries[0].isIntersecting){
         if(!_endTimer){
           _endTimer=setTimeout(function(){
             _endTimer=null;
@@ -1870,7 +1901,8 @@ function updateProgress(list,total){
               var r=c.getBoundingClientRect();
               if(r.bottom>listR.top&&r.top<listR.bottom){
                 var i=parseInt(c.dataset.ayah)||0;
-                if(i&&markSeen(i))changed=true;
+                // only mark if this ayah was actually visible (entered the viewport)
+                if(i&&enteredSet.has(i)&&markSeen(i))changed=true;
               }
             });
             if(changed){updateHeader();scheduleSave();}
