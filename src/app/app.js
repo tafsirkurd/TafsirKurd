@@ -1541,6 +1541,10 @@ function renderAyahs(surahNum,scrollTo){
   var bmSet={};
   bms.forEach(function(b){if(b.surah===surahNum)bmSet[b.ayah]=true});
 
+  // Read active position mark for this surah (used in buildCard + to restore timer)
+  var _markState=null;
+  try{var _mk=JSON.parse(localStorage.getItem('ayahMark'));if(_mk&&_mk.surah===surahNum&&_mk.expiresAt>Date.now())_markState=_mk;}catch(e){}
+
   var total=ayahs.length||s.a;
 
   // Surah header
@@ -1568,6 +1572,11 @@ function renderAyahs(surahNum,scrollTo){
     }
     if(bmBtn){var an2=+bmBtn.dataset.bm;toggleBookmark(surahNum,an2);renderAyahs(surahNum);}
     if(cpBtn){App.openCopyModal(surahNum,+cpBtn.dataset.cp);}
+    // Tap on card body (not action buttons) → mark position for 2 min
+    if(!plBtn&&!bmBtn&&!cpBtn){
+      var mc=e.target.closest('.ayah-card');
+      if(mc&&mc.dataset.ayah)_setAyahMark(surahNum,+mc.dataset.ayah);
+    }
   });
 
   // Nav buttons (always at bottom — batches insert before them)
@@ -1595,6 +1604,7 @@ function renderAyahs(surahNum,scrollTo){
   function buildCard(ayahNum){
     var card=el('div','ayah-card');
     if(bmSet[ayahNum])card.classList.add('bookmarked');
+    if(_markState&&_markState.ayah===ayahNum)card.classList.add('ayah-card--marked');
     card.dataset.ayah=String(ayahNum);
     var head=el('div','ayah-head');
     head.appendChild(el('div','ayah-badge',String(ayahNum)));
@@ -1690,6 +1700,17 @@ function renderAyahs(surahNum,scrollTo){
   // Progress
   updateProgress(list,total);
 
+  // Restore position mark timer if there's an active mark for this surah
+  if(_markState){
+    clearTimeout(_ayahMarkTimer);
+    var _remaining=_markState.expiresAt-Date.now();
+    _ayahMarkTimer=setTimeout(function(){
+      var c=document.querySelector('.ayah-card--marked');
+      if(c)c.classList.remove('ayah-card--marked');
+      localStorage.removeItem('ayahMark');
+    },_remaining);
+  }
+
   // Scroll to ayah
   if(scrollTo){
     setTimeout(function(){
@@ -1703,6 +1724,32 @@ function renderAyahs(surahNum,scrollTo){
 var _progressCleanup=null;
 // Track mushaf lazy-load observer so we can disconnect on re-render
 var _mushafLazyObs=null;
+// Ayah position marker — 2-minute highlight so user knows where they are
+var _ayahMarkTimer=null;
+function _setAyahMark(surahNum,ayahNum){
+  clearTimeout(_ayahMarkTimer);
+  // Remove existing highlight
+  var prev=document.querySelector('.ayah-card--marked');
+  if(prev)prev.classList.remove('ayah-card--marked');
+  // Toggle off if tapping the same already-marked ayah
+  var cur=null;
+  try{cur=JSON.parse(localStorage.getItem('ayahMark'));}catch(e){}
+  if(cur&&cur.surah===surahNum&&cur.ayah===ayahNum&&cur.expiresAt>Date.now()){
+    localStorage.removeItem('ayahMark');
+    return;
+  }
+  // Set new mark
+  var expiresAt=Date.now()+2*60*1000;
+  try{localStorage.setItem('ayahMark',JSON.stringify({surah:surahNum,ayah:ayahNum,expiresAt:expiresAt}));}catch(e){}
+  var card=document.querySelector('.ayah-card[data-ayah="'+ayahNum+'"]');
+  if(card)card.classList.add('ayah-card--marked');
+  haptic([8]);
+  _ayahMarkTimer=setTimeout(function(){
+    var c=document.querySelector('.ayah-card--marked');
+    if(c)c.classList.remove('ayah-card--marked');
+    localStorage.removeItem('ayahMark');
+  },expiresAt-Date.now());
+}
 
 function updateProgress(list,total){
   window._onNewAyahCard=null; // clear immediately so old hook can't fire on new surah's cards

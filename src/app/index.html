@@ -328,6 +328,8 @@ body{background:var(--bg);color:var(--text)}
 
 /* ===== PLAYING AYAH HIGHLIGHT ===== */
 .ayah-card.playing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.ayah-card--marked{border-right:4px solid #e6a817;background:rgba(230,168,23,.09);transition:background .3s,border-color .3s}
+[data-theme=dark] .ayah-card--marked{background:rgba(230,168,23,.13)}
 
 /* ===== BOTTOM TAB BAR ===== */
 .tabbar{position:fixed;bottom:0;left:0;right:0;height:calc(var(--tab-h) + var(--safe-b));padding-bottom:var(--safe-b);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:stretch;z-index:300;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);background:rgba(255,255,255,.92)}
