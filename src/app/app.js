@@ -1572,6 +1572,12 @@ function renderAyahs(surahNum,scrollTo){
     }
     if(bmBtn){var an2=+bmBtn.dataset.bm;toggleBookmark(surahNum,an2);renderAyahs(surahNum);}
     if(cpBtn){App.openCopyModal(surahNum,+cpBtn.dataset.cp);}
+    // Tap card body → mark position. Skip if a long-press just fired (Android fires
+    // click after touchend even for holds, which would immediately toggle the mark off).
+    if(!plBtn&&!bmBtn&&!cpBtn&&Date.now()-_ayahMarkLpAt>700){
+      var mc=e.target.closest('.ayah-card');
+      if(mc&&mc.dataset.ayah)_setAyahMark(surahNum,+mc.dataset.ayah);
+    }
   });
 
   // Tap OR hold on card body → mark position for 2 min.
@@ -1587,7 +1593,7 @@ function renderAyahs(surahNum,scrollTo){
       mc.classList.add('ayah-card--pressing');
       _lp.timer=setTimeout(function(){
         _lp.timer=null;
-        if(_lp.card){_setAyahMark(S.surah,+_lp.card.dataset.ayah);}
+        if(_lp.card){_ayahMarkLpAt=Date.now();_setAyahMark(S.surah,+_lp.card.dataset.ayah);}
       },400);
     },{passive:true});
     list.addEventListener('touchmove',function(e){
@@ -1748,11 +1754,8 @@ var _progressCleanup=null;
 var _mushafLazyObs=null;
 // Ayah position marker — 2-minute highlight so user knows where they are
 var _ayahMarkTimer=null;
+var _ayahMarkLpAt=0; // timestamp of last long-press mark, to suppress following click event
 function _setAyahMark(surahNum,ayahNum){
-  // Guard against double-firing when multiple stacked listeners exist on #ayahList
-  if(_setAyahMark._busy)return;
-  _setAyahMark._busy=true;
-  requestAnimationFrame(function(){_setAyahMark._busy=false;});
   clearTimeout(_ayahMarkTimer);
   // Remove existing highlight
   var prev=document.querySelector('.ayah-card--marked');
@@ -1817,10 +1820,17 @@ function updateProgress(list,total){
   // Goal active — show progress bar
   if(progressEl)progressEl.style.display='';
 
+  // One-time migration: clear all old incorrectly-saved progress data
+  if(localStorage.getItem('surah_progress_ver')!=='4'){
+    var _pk=[];for(var _pi=0;_pi<localStorage.length;_pi++){var _k=localStorage.key(_pi);if(_k)_pk.push(_k);}
+    _pk.forEach(function(k){if(k.indexOf('surah_progress_')===0||k.indexOf('surah_read_')===0)localStorage.removeItem(k);});
+    localStorage.setItem('surah_progress_ver','4');
+  }
+
   var seenAyahs=new Set();
   var maxSeen=0;
   try{
-    var saved=JSON.parse(localStorage.getItem('surah_read_v2_'+surahId)||'[]');
+    var saved=JSON.parse(localStorage.getItem('surah_read_v3_'+surahId)||'[]');
     saved.forEach(function(n){if(n>=1&&n<=total){seenAyahs.add(n);if(n>maxSeen)maxSeen=n;}});
   }catch(e){}
 
@@ -1854,7 +1864,7 @@ function updateProgress(list,total){
     saveTimer=setTimeout(function(){
       if(destroyed||S.surah!==surahId)return;
       var valid=[];seenAyahs.forEach(function(n){if(n>=1&&n<=total)valid.push(n)});
-      try{localStorage.setItem('surah_read_v2_'+surahId,JSON.stringify(valid))}catch(e){}
+      try{localStorage.setItem('surah_read_v3_'+surahId,JSON.stringify(valid))}catch(e){}
       try{localStorage.setItem('surah_scroll_'+surahId,String(scrollEl.scrollTop))}catch(e){}
       debouncedSync();
     },300);
@@ -1884,9 +1894,9 @@ function updateProgress(list,total){
         if(markSeen(idx))changed=true;
       }
     });
-    // At bottom of surah: after 1.5s dwell mark remaining visible+entered ayahs
-    var atBottom=scrollEl.scrollTop+scrollEl.clientHeight>=scrollEl.scrollHeight-40;
-    if(atBottom&&seenAyahs.size>0){
+    // At bottom of surah (and user has actually scrolled): mark remaining visible+entered ayahs
+    var atBottom=scrollEl.scrollTop>50&&scrollEl.scrollTop+scrollEl.clientHeight>=scrollEl.scrollHeight-40;
+    if(atBottom){
       if(!_endTimer){
         _endTimer=setTimeout(function(){
           _endTimer=null;
