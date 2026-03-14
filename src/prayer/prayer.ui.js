@@ -1139,7 +1139,8 @@
       var t = data.timings;
       var hijriStr = '';
       if (data.date && data.date.hijri) {
-        hijriStr = data.date.hijri.day + ' ' + data.date.hijri.month.en + ' ' + data.date.hijri.year + ' هـ';
+        var _hm = data.date.hijri.month && (data.date.hijri.month.en || data.date.hijri.month) || '';
+        hijriStr = data.date.hijri.day + ' ' + _hm + ' ' + data.date.hijri.year + ' هـ';
       } else if (data.date && data.date.hijriStr) {
         hijriStr = data.date.hijriStr;
       }

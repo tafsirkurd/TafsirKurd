@@ -2977,7 +2977,7 @@ function trackVerse(surah,ayah){
   saveReadLog(l);
   // Haptic on goal completion
   var g=getGoal();
-  if(g&&l[today]===g.pages){haptic([50]);}
+  if(g&&l[today]>=g.pages){haptic([50]);}
 }
 
 function calcBestStreak(log){
@@ -2986,7 +2986,7 @@ function calcBestStreak(log){
   var best=1,cur=1;
   for(var i=1;i<keys.length;i++){
     var prev=new Date(keys[i-1]);var curr=new Date(keys[i]);
-    var diff=(curr-prev)/(86400000);
+    var diff=Math.round((curr-prev)/86400000);
     if(diff===1){cur++;if(cur>best)best=cur}
     else{cur=1}
   }
