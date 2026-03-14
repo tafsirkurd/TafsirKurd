@@ -1806,7 +1806,7 @@ function updateProgress(list,total){
   var seenAyahs=new Set();
   var maxSeen=0;
   try{
-    var saved=JSON.parse(localStorage.getItem('surah_progress_'+surahId)||'[]');
+    var saved=JSON.parse(localStorage.getItem('surah_read_v2_'+surahId)||'[]');
     saved.forEach(function(n){if(n>=1&&n<=total){seenAyahs.add(n);if(n>maxSeen)maxSeen=n;}});
   }catch(e){}
 
@@ -1840,7 +1840,7 @@ function updateProgress(list,total){
     saveTimer=setTimeout(function(){
       if(destroyed||S.surah!==surahId)return;
       var valid=[];seenAyahs.forEach(function(n){if(n>=1&&n<=total)valid.push(n)});
-      try{localStorage.setItem('surah_progress_'+surahId,JSON.stringify(valid))}catch(e){}
+      try{localStorage.setItem('surah_read_v2_'+surahId,JSON.stringify(valid))}catch(e){}
       try{localStorage.setItem('surah_scroll_'+surahId,String(scrollEl.scrollTop))}catch(e){}
       debouncedSync();
     },300);
@@ -1882,7 +1882,7 @@ function updateProgress(list,total){
   if(nav){
     var endObs=new IntersectionObserver(function(entries){
       if(destroyed||S.surah!==surahId)return;
-      if(entries[0].isIntersecting){
+      if(entries[0].isIntersecting&&seenAyahs.size>0){
         if(!_endTimer){
           _endTimer=setTimeout(function(){
             _endTimer=null;
