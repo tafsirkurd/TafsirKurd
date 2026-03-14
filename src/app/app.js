@@ -1579,26 +1579,13 @@ function renderAyahs(surahNum,scrollTo){
     }
   });
 
-  // Long-press on card body → mark position (hold doesn't fire click on Android)
-  var _lpTimer=null,_lpCard=null,_lpX=0,_lpY=0;
-  list.addEventListener('touchstart',function(e){
+  // Long-press → contextmenu is what Android dispatches on hold; preventDefault kills the popup
+  list.addEventListener('contextmenu',function(e){
     var mc=e.target.closest('.ayah-card');
-    if(!mc||e.target.closest('[data-play],[data-bm],[data-cp]'))return;
-    _lpCard=mc;_lpX=e.touches[0].clientX;_lpY=e.touches[0].clientY;
-    _lpTimer=setTimeout(function(){
-      _lpTimer=null;
-      if(_lpCard)_setAyahMark(surahNum,+_lpCard.dataset.ayah);
-      _lpCard=null;
-    },400);
-  },{passive:true});
-  list.addEventListener('touchmove',function(e){
-    if(!_lpTimer)return;
-    var dx=e.touches[0].clientX-_lpX,dy=e.touches[0].clientY-_lpY;
-    if(dx*dx+dy*dy>64){clearTimeout(_lpTimer);_lpTimer=null;_lpCard=null;}
-  },{passive:true});
-  list.addEventListener('touchend',function(){clearTimeout(_lpTimer);_lpTimer=null;_lpCard=null;},{passive:true});
-  // Suppress context menu popup that appears on long press
-  list.addEventListener('contextmenu',function(e){if(e.target.closest('.ayah-card'))e.preventDefault();});
+    if(!mc)return;
+    e.preventDefault();
+    if(!e.target.closest('[data-play],[data-bm],[data-cp]'))_setAyahMark(surahNum,+mc.dataset.ayah);
+  });
 
   // Nav buttons (always at bottom — batches insert before them)
   var nav=el('div','surah-nav');
@@ -1875,9 +1862,14 @@ function updateProgress(list,total){
       if(!idx||idx>total)return;
       if(entry.isIntersecting){
         enteredSet.add(idx); // ayah was visible — remember it
-      }else if(entry.boundingClientRect.bottom<0&&enteredSet.has(idx)){
-        // scrolled completely above the top AND was previously visible → mark read
-        if(markSeen(idx))changed=true;
+      }else if(enteredSet.has(idx)){
+        // Exited the list — only mark if it left from the TOP (scrolled past),
+        // not from the bottom. Compare against rootBounds.top (the list's viewport y),
+        // because the list doesn't start at y=0 (there's a header above it).
+        var listTop=entry.rootBounds?entry.rootBounds.top:0;
+        if(entry.boundingClientRect.bottom<=listTop+2){
+          if(markSeen(idx))changed=true;
+        }
       }
     });
     if(changed){updateHeader();scheduleSave();}
