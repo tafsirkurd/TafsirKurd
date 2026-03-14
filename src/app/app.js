@@ -1572,38 +1572,31 @@ function renderAyahs(surahNum,scrollTo){
     }
     if(bmBtn){var an2=+bmBtn.dataset.bm;toggleBookmark(surahNum,an2);renderAyahs(surahNum);}
     if(cpBtn){App.openCopyModal(surahNum,+cpBtn.dataset.cp);}
-    // Tap card body → mark position. Skip if a long-press just fired (Android fires
-    // click after touchend even for holds, which would immediately toggle the mark off).
-    if(!plBtn&&!bmBtn&&!cpBtn&&Date.now()-_ayahMarkLpAt>700){
-      var mc=e.target.closest('.ayah-card');
-      if(mc&&mc.dataset.ayah)_setAyahMark(surahNum,+mc.dataset.ayah);
-    }
   });
 
-  // Tap OR hold on card body → mark position for 2 min.
-  // Guard with list._markSetup so listeners are added only once even after
-  // multiple renderAyahs calls (e.g. after bookmark toggle).
+  // Hold detection via touchstart→touchend duration. One-time setup per list element.
   if(!list._markSetup){
     list._markSetup=true;
-    var _lp={timer:null,card:null,x:0,y:0};
+    var _lpStart=0,_lpCard=null,_lpX=0,_lpY=0;
     list.addEventListener('touchstart',function(e){
       var mc=e.target.closest('.ayah-card');
       if(!mc||e.target.closest('[data-play],[data-bm],[data-cp]'))return;
-      _lp.card=mc;_lp.x=e.touches[0].clientX;_lp.y=e.touches[0].clientY;
+      _lpStart=Date.now();_lpCard=mc;_lpX=e.touches[0].clientX;_lpY=e.touches[0].clientY;
       mc.classList.add('ayah-card--pressing');
-      _lp.timer=setTimeout(function(){
-        _lp.timer=null;
-        if(_lp.card){_ayahMarkLpAt=Date.now();_setAyahMark(S.surah,+_lp.card.dataset.ayah);}
-      },400);
     },{passive:true});
     list.addEventListener('touchmove',function(e){
-      if(!_lp.card)return;
-      var dx=e.touches[0].clientX-_lp.x,dy=e.touches[0].clientY-_lp.y;
-      if(dx*dx+dy*dy>80){clearTimeout(_lp.timer);_lp.timer=null;if(_lp.card)_lp.card.classList.remove('ayah-card--pressing');_lp.card=null;}
+      if(!_lpCard)return;
+      var dx=e.touches[0].clientX-_lpX,dy=e.touches[0].clientY-_lpY;
+      if(dx*dx+dy*dy>80){_lpCard.classList.remove('ayah-card--pressing');_lpCard=null;}
     },{passive:true});
-    function _lpEnd(){clearTimeout(_lp.timer);_lp.timer=null;if(_lp.card)_lp.card.classList.remove('ayah-card--pressing');_lp.card=null;}
-    list.addEventListener('touchend',_lpEnd,{passive:true});
-    list.addEventListener('touchcancel',_lpEnd,{passive:true});
+    list.addEventListener('touchend',function(){
+      if(!_lpCard)return;
+      var held=Date.now()-_lpStart;
+      _lpCard.classList.remove('ayah-card--pressing');
+      if(held>=400){_ayahMarkLpAt=Date.now();_setAyahMark(S.surah,+_lpCard.dataset.ayah);}
+      _lpCard=null;
+    },{passive:true});
+    list.addEventListener('touchcancel',function(){if(_lpCard)_lpCard.classList.remove('ayah-card--pressing');_lpCard=null;},{passive:true});
     list.addEventListener('contextmenu',function(e){if(e.target.closest('.ayah-card'))e.preventDefault();});
   }
 
@@ -1680,6 +1673,13 @@ function renderAyahs(surahNum,scrollTo){
       taf.textContent=typeof tafsirs[ayahNum]==='string'?tafsirs[ayahNum]:'';
       card.appendChild(taf);
     }
+    // Tap to mark: per-card onclick avoids stacking across renderAyahs calls.
+    // Skips action buttons; skips if a hold just fired (suppresses Android's post-hold click).
+    card.onclick=function(e){
+      if(e.target.closest('[data-play],[data-bm],[data-cp]'))return;
+      if(Date.now()-_ayahMarkLpAt<700)return;
+      _setAyahMark(surahNum,ayahNum);
+    };
     return card;
   }
 
