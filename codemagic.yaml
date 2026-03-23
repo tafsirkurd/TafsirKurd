@@ -51,7 +51,7 @@ workflows:
                       if !title.isEmpty { ac.setValue(title, forKey: "subject") }
                       ac.completionWithItemsHandler = { _, _, _, _ in call.resolve([:]) }
                       self?.setCenteredPopover(ac)
-                      self?.viewController?.present(ac, animated: true, completion: nil)
+                      self?.bridge?.viewController?.present(ac, animated: true)
                   }
               }
           }
@@ -72,6 +72,13 @@ workflows:
               t = re.sub(r'(guard|if) let (\w+) = call\.getString\("([^"]+)"\)', r'\1 let \2 = Optional(call.getString("\3","")).filter({!$0.isEmpty})', t)
               t = re.sub(r'(guard|if) let (\w+) = call\.getObject\("([^"]+)"\)', r'\1 let \2 = Optional(call.getObject("\3",[:]) ).filter({!$0.isEmpty})', t)
               t = re.sub(r'(guard|if) let (\w+) = call\.getArray\("([^"]+)"\)', r'\1 let \2 = Optional(call.getArray("\3",[]) ).filter({!$0.isEmpty})', t)
+              # 5a. Typed getArray/getObject with .self arg (8.0.x API; guard-let form first)
+              t = re.sub(r'(guard|if) let (\w+) = call\.getArray\("([^"]+)",\s*\w+\.self\)', r'\1 let \2 = Optional(call.getArray("\3",[])).filter({!$0.isEmpty})', t)
+              t = re.sub(r'(guard|if) let (\w+) = call\.getObject\("([^"]+)",\s*\w+\.self\)', r'\1 let \2 = Optional(call.getObject("\3",[:]) ).filter({!$0.isEmpty})', t)
+              t = re.sub(r'call\.getArray\("([^"]+)",\s*\w+\.self\)', r'call.getArray("\1",[])', t)
+              t = re.sub(r'call\.getObject\("([^"]+)",\s*\w+\.self\)', r'call.getObject("\1",[:])', t)
+              # 5b. JSTypes.coerceDictionaryToJSObject removed in 8.2.0
+              t = re.sub(r'JSTypes\.coerceDictionaryToJSObject\(([^)]+)\)', r'(\1 as? JSObject)', t)
               t = re.sub(r'call\.getString\("([^"]+)"\)(?!,)', r'call.getString("\1","")', t)
               t = re.sub(r'call\.getArray\("([^"]+)"\)(?!,)', r'call.getArray("\1",[])', t)
               t = re.sub(r'call\.getObject\("([^"]+)"\)(?!,)', r'call.getObject("\1",[:])', t)
