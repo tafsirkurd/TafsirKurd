@@ -1,0 +1,4 @@
+# Block old /tv routes - return 404
+/tv /404.html 404
+/tv.html /404.html 404
+/admin-tv-management.html /404.html 404

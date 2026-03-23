@@ -1,0 +1,65 @@
+# 🎬 Admin page - FFmpeg MOV conversion requires these headers
+/admin-islamvoice-management.html
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: credentialless
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# 🚀 HTML FILES - NO CACHE (always fetch fresh from server)
+# This prevents Cloudflare from serving stale HTML after deployments
+/*.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+# 📦 JS & CSS - Short cache, must revalidate (cache busted via ?v= param)
+/*.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.css
+  Cache-Control: public, max-age=0, must-revalidate
+
+/utils/*.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+# 🔒 GLOBAL SECURITY HEADERS - 100/100 Score
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(self), payment=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://cdn.jsdelivr.net https://unpkg.com https://sdk.amazonaws.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://ssl.google-analytics.com https://static.cloudflareinsights.com https://challenges.cloudflare.com https://www.youtube.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' blob: https://everyayah.com https://quranicaudio.com https://server8.mp3quran.net https://tafsirkurd-videos.s3.eu-north-1.amazonaws.com https://*.cloudfront.net https://pub-7b6d902dec9b444d89801c190c3f856c.r2.dev https://*.r2.dev; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://accounts.google.com https://www.googleapis.com https://oauth2.googleapis.com https://lh3.googleusercontent.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://static.cloudflareinsights.com https://cloudflareinsights.com https://images.unsplash.com https://cdn.jsdelivr.net https://unpkg.com https://sdk.amazonaws.com https://challenges.cloudflare.com https://quranicaudio.com https://server8.mp3quran.net https://everyayah.com https://get.geojs.io https://ipapi.co https://freegeoip.app https://tafsirkurd-videos.s3.eu-north-1.amazonaws.com https://*.s3.eu-north-1.amazonaws.com https://pub-7b6d902dec9b444d89801c190c3f856c.r2.dev https://*.r2.dev https://*.r2.cloudflarestorage.com https://tafsirkurd-images.tefsirkurd.workers.dev; frame-src 'self' https://accounts.google.com https://www.instagram.com https://challenges.cloudflare.com https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;
+
+# Sitemap - MUST be indexable by Google
+/sitemap.xml
+  X-Robots-Tag: all
+  Content-Type: application/xml
+  Cache-Control: public, max-age=3600
+
+# Allow social media bots to access images for link previews
+/assets/images/*
+  Access-Control-Allow-Origin: *
+  X-Robots-Tag: all
+  Cache-Control: public, max-age=31536000
+
+# Specific rule for social card images - must be accessible to all bots
+/assets/images/social-card.png
+  Access-Control-Allow-Origin: *
+  X-Robots-Tag: all
+  Cache-Control: public, max-age=31536000
+
+/assets/images/social-card.jpg
+  Access-Control-Allow-Origin: *
+  X-Robots-Tag: all
+  Cache-Control: public, max-age=31536000
+
+/assets/images/quran-social-card.png
+  Access-Control-Allow-Origin: *
+  X-Robots-Tag: all
+  Cache-Control: public, max-age=31536000
+
+/assets/images/quran-social-card.jpg
+  Access-Control-Allow-Origin: *
+  X-Robots-Tag: all
+  Cache-Control: public, max-age=31536000

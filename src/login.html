@@ -1,0 +1,3136 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+    <script src="/utils/theme-loader.js"></script>
+    <script src="/utils/translations.js?v=20260225"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="چوونە ژوورڤە بۆ تەفسیر کورد">
+    <meta name="theme-color" content="#000000">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <title data-t="login_title_1">چوونە ژوورڤە | TafsirKurd</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+
+    <!-- Resource Hints -->
+    <link rel="dns-prefetch" href="https://gijupzejtbpifjzwadee.supabase.co">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+    <!-- Fonts -->
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=16" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
+    <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Secure Storage System -->
+    <script src="/utils/secure-storage.js"></script>
+
+    <!-- Cloud Sync Manager -->
+    <script src="/utils/cloud-sync.js"></script>
+
+    <!-- Auth Redirect Handler -->
+    <script src="/utils/auth-redirect.js" defer></script>
+
+    <style>
+        :root {
+            --primary: #000000;
+            --primary-light: #333333;
+            --accent: #ffffff;
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #000000;
+            --text-muted: #666666;
+            --border: #e8e8e8;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --primary: #ffffff;
+            --primary-light: #cccccc;
+            --accent: #000000;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #ffffff;
+            --text-muted: #b0b0b0;
+            --border: #2a2a2a;
+            --shadow: 0 4px 20px rgba(255, 255, 255, 0.05);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* Animated canvas background */
+        #animatedBg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Two-column layout */
+        .login-page {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Hero panel (left side in LTR, right in RTL) */
+        .hero-panel {
+            width: 50%;
+            position: relative;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            background-color: #111;
+        }
+
+        .hero-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.2) 100%);
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 3rem;
+            z-index: 2;
+            color: #fff;
+            text-align: center;
+        }
+
+        .hero-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            display: block;
+            opacity: 0;
+            animation: scaleIn 0.6s ease-out 0.4s forwards;
+        }
+
+        .hero-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            opacity: 0;
+            animation: heroTextReveal 0.7s ease-out 0.6s forwards;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            opacity: 0;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.7;
+            animation: heroTextReveal 0.7s ease-out 0.8s forwards;
+        }
+
+        /* Form panel */
+        .form-panel {
+            width: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            z-index: 2;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        .auth-container {
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: slideUp 0.5s ease-out 0.2s forwards;
+        }
+
+        .logo {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 0.75rem;
+            display: none;
+        }
+
+        .logo.mobile-visible {
+            display: block;
+        }
+
+        [data-theme="dark"] .logo {
+            filter: invert(1) brightness(1.2);
+        }
+
+        .auth-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+            color: var(--text);
+        }
+
+        .auth-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .auth-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            opacity: 0;
+            animation: slideUp 0.5s ease-out 0.35s forwards;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--bg);
+            padding: 0.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .tab:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] .tab:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab.active {
+            background: var(--card-bg);
+            color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        /* Form sections with smooth cross-fade */
+        .form-section {
+            display: none;
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        .form-section.active {
+            display: block;
+            animation: formReveal 0.35s ease-out forwards;
+        }
+
+        .form-section.fading-out {
+            display: block;
+            animation: formFadeOut 0.2s ease-in forwards;
+        }
+
+        @keyframes formReveal {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes formFadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-8px); }
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            color: var(--text);
+            transition: all var(--transition);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] .form-input:focus {
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .password-toggle {
+            position: relative;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .auth-button {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: var(--accent);
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .auth-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .auth-button:active {
+            transform: translateY(0);
+        }
+
+        .auth-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--accent);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            display: none;
+        }
+
+        .auth-button.loading .spinner {
+            display: block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .google-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--card-bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .google-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .google-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .forgot-password {
+            text-align: left;
+            margin-top: -0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .forgot-password a {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .back-link a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color var(--transition);
+            cursor: pointer;
+        }
+
+        .back-link a:hover {
+            color: var(--primary);
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .message strong {
+            font-weight: 600;
+        }
+
+        .message.success {
+            background: rgba(46, 204, 113, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+            display: block;
+        }
+
+        .message.error {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+            display: block;
+        }
+
+        .message.info {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid #3498db;
+            color: #3498db;
+            display: block;
+        }
+
+        /* OTP Verification Styles */
+        .otp-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .otp-header h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .otp-header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .otp-input-container {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            margin: 2rem 0;
+            direction: ltr;
+        }
+
+        .otp-input {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg);
+            color: var(--text);
+            transition: all var(--transition);
+        }
+
+        .otp-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+            transform: scale(1.05);
+        }
+
+        [data-theme="dark"] .otp-input:focus {
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+
+        .resend-container {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .resend-container p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .resend-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.5rem;
+            transition: all var(--transition);
+        }
+
+        .resend-btn:hover {
+            text-decoration: underline;
+        }
+
+        .resend-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Password Strength Meter — Monochrome */
+        .password-strength-container {
+            margin-top: 0.75rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .password-strength-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .password-strength-fill {
+            height: 100%;
+            transition: all 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .password-strength-fill.weak {
+            width: 25%;
+            background: var(--text-muted);
+            opacity: 0.4;
+        }
+
+        .password-strength-fill.fair {
+            width: 50%;
+            background: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        .password-strength-fill.good {
+            width: 75%;
+            background: var(--primary);
+            opacity: 0.75;
+        }
+
+        .password-strength-fill.strong {
+            width: 100%;
+            background: var(--primary);
+            opacity: 1;
+        }
+
+        .password-strength-text {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .password-strength-text.weak {
+            color: var(--text-muted);
+        }
+
+        .password-strength-text.fair {
+            color: var(--text-muted);
+        }
+
+        .password-strength-text.good {
+            color: var(--primary);
+        }
+
+        .password-strength-text.strong {
+            color: var(--primary);
+        }
+
+        .password-requirements {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .requirement {
+            padding: 0.4rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            color: var(--text-muted);
+        }
+
+        .requirement.met {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Success overlay */
+        .success-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .success-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .success-overlay .check-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            animation: scaleIn 0.4s ease-out;
+        }
+
+        .success-overlay .success-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        /* Top back button - positioned on form panel side */
+        .top-back-btn {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 1rem;
+            z-index: 100;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .top-back-btn:hover {
+            background: var(--bg);
+            transform: translateX(-3px);
+        }
+
+        @media (max-width: 1024px) {
+            .top-back-btn {
+                top: 0.75rem;
+                left: 0.75rem;
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Keyframe animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.7); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes heroTextReveal {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive: tablet & below — stack vertically */
+        @media (max-width: 1024px) {
+            body {
+                overflow: auto;
+            }
+
+            .login-page {
+                flex-direction: column;
+            }
+
+            .hero-panel {
+                width: 100%;
+                height: 220px;
+                min-height: 180px;
+            }
+
+            .hero-content {
+                padding: 1.5rem;
+            }
+
+            .hero-logo {
+                width: 48px;
+                height: 48px;
+                margin-bottom: 0.75rem;
+            }
+
+            .hero-title {
+                font-size: 1.5rem;
+                margin-bottom: 0.4rem;
+            }
+
+            .hero-subtitle {
+                font-size: 0.9rem;
+            }
+
+            .form-panel {
+                width: 100%;
+                max-height: none;
+                padding: 1.5rem;
+            }
+
+            .logo.mobile-visible {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-panel {
+                height: 180px;
+            }
+
+            .hero-title {
+                font-size: 1.25rem;
+            }
+
+            .hero-subtitle {
+                font-size: 0.8rem;
+            }
+
+            .form-panel {
+                padding: 1rem;
+            }
+
+            .auth-card {
+                padding: 1.75rem 1.25rem;
+            }
+
+            .auth-title {
+                font-size: 1.4rem;
+            }
+
+            .form-input,
+            .auth-button,
+            .google-btn {
+                padding: 0.875rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="animatedBg"></canvas>
+
+    <!-- Success overlay (shown after login success) -->
+    <div class="success-overlay" id="successOverlay">
+        <div class="check-icon"><i class="fas fa-check"></i></div>
+        <div class="success-text" data-t="login_success_text">سەرکەفتی!</div>
+    </div>
+
+    <div class="login-page">
+        <!-- Top back button -->
+        <a href="#" class="top-back-btn" id="topBackBtn" onclick="goBack(); return false;">
+            <i class="fas fa-arrow-right"></i>
+        </a>
+
+        <!-- Hero panel -->
+        <div class="hero-panel" id="heroPanel">
+            <div class="hero-content">
+                <h2 class="hero-title" id="heroTitle" data-t="login_hero_title">تەفسیر کورد</h2>
+                <p class="hero-subtitle" id="heroSubtitle" data-t="login_hero_subtitle">بەردەوام بە بو لێگەڕیانا زانیاریێن ئایینی</p>
+            </div>
+        </div>
+
+        <!-- Form panel -->
+        <div class="form-panel">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="logo mobile-visible">
+                    <h1 class="auth-title" data-t="login_auth_title">تەفسیر کورد</h1>
+                    <p class="auth-subtitle" data-t="login_auth_subtitle">ب خێر بێی بۆ پلاتفۆرما تەفسیرا قورئانێ</p>
+                </div>
+
+                <div class="auth-card">
+            <div id="messageContainer"></div>
+
+            <!-- Tabs (only shown for signin/signup) -->
+            <div class="tabs" id="authTabs">
+                <button class="tab active" onclick="showForm('signin')" data-t="login_tab_signin">چوونە ژوورڤە</button>
+                <button class="tab" onclick="showForm('signup')" data-t="login_tab_signup">حسابێ نوی</button>
+            </div>
+
+            <!-- Sign In Form -->
+            <div class="form-section active" id="signinForm">
+                <form onsubmit="return handleEmailSignIn(event)">
+                    <div class="form-group">
+                        <label class="form-label" data-t="login_email_label">ئیمەیل</label>
+                        <input
+                            type="email"
+                            class="form-input"
+                            id="signInEmail"
+                            placeholder="ئیمەیلا خوە بنڤیسە"
+                            data-t-placeholder="login_email_placeholder"
+                            autocomplete="email"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" data-t="login_password_label">پاسوۆرد</label>
+                        <div class="password-toggle">
+                            <input
+                                type="password"
+                                class="form-input"
+                                id="signInPassword"
+                                placeholder="پاسوۆردا خوە بنڤیسە"
+                                data-t-placeholder="login_password_placeholder"
+                                autocomplete="current-password"
+                                required
+                            >
+                            <button type="button" class="password-toggle-btn" onclick="togglePassword('signInPassword')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="forgot-password">
+                        <a onclick="showForm('forgot')" data-t="login_forgot_password">پاسوۆردا خوە ژبیرکری؟</a>
+                    </div>
+
+                    <button type="submit" class="auth-button" id="signInBtn">
+                        <span class="spinner"></span>
+                        <span data-t="login_signin_btn">چوونە ژوورڤە</span>
+                    </button>
+                </form>
+
+                <div class="divider" data-t="login_divider_or">یان</div>
+
+                <button class="google-btn" onclick="signInWithGoogle()">
+                    <svg class="google-icon" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    <span data-t="login_signin_google_btn">چوونە ژوورڤە ب Google</span>
+                </button>
+            </div>
+
+            <!-- Sign Up Form -->
+            <div class="form-section" id="signupForm">
+                <form onsubmit="return handleEmailSignUp(event)">
+                    <div class="form-group">
+                        <label class="form-label" data-t="login_name_label">ناڤ</label>
+                        <input
+                            type="text"
+                            class="form-input"
+                            id="signUpName"
+                            placeholder="ناڤا خوە بنڤیسە"
+                            data-t-placeholder="login_name_placeholder"
+                            autocomplete="name"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" data-t="login_signup_email_label">ئیمەیل</label>
+                        <input
+                            type="email"
+                            class="form-input"
+                            id="signUpEmail"
+                            placeholder="ئیمەیلا خوە بنڤیسە"
+                            data-t-placeholder="login_signup_email_placeholder"
+                            autocomplete="email"
+                            required
+                        >
+                    </div>
+
+                    <!-- Honeypot field for bot detection (hidden from humans) -->
+                    <div style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;" aria-hidden="true" tabindex="-1">
+                        <input type="text" id="website" name="website" autocomplete="off" tabindex="-1">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" data-t="login_signup_password_label">پاسوۆرد</label>
+                        <div class="password-toggle">
+                            <input
+                                type="password"
+                                class="form-input"
+                                id="signUpPassword"
+                                placeholder="پاسوۆردێ بهێز دروستکە (کەمتر ٦ پیت)"
+                                data-t-placeholder="login_signup_password_placeholder"
+                                autocomplete="new-password"
+                                minlength="6"
+                                required
+                            >
+                            <button type="button" class="password-toggle-btn" onclick="togglePassword('signUpPassword')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <!-- Password Strength Meter -->
+                        <div class="password-strength-container" id="passwordStrengthContainer" style="display: none;">
+                            <div class="password-strength-bar">
+                                <div class="password-strength-fill" id="passwordStrengthFill"></div>
+                            </div>
+                            <div class="password-strength-text" id="passwordStrengthText"></div>
+                            <div class="password-requirements">
+                                <div class="requirement" id="req-length" data-t="login_req_length">✗ کەمتر ٨ پیت</div>
+                                <div class="requirement" id="req-uppercase" data-t="login_req_uppercase">✗ پیتێن گەورە (A-Z)</div>
+                                <div class="requirement" id="req-lowercase" data-t="login_req_lowercase">✗ پیتێن بچوک (a-z)</div>
+                                <div class="requirement" id="req-number" data-t="login_req_number">✗ ژمارە (0-9)</div>
+                                <div class="requirement" id="req-special" data-t="login_req_special">✗ پیتێن تایبەت (!@#$%)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="auth-button" id="signUpBtn">
+                        <span class="spinner"></span>
+                        <span data-t="login_signup_btn">دروستکرنا حساب</span>
+                    </button>
+                </form>
+
+                <div class="divider" data-t="login_signup_divider_or">یان</div>
+
+                <button class="google-btn" onclick="signInWithGoogle()">
+                    <svg class="google-icon" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    <span data-t="login_signup_google_btn">دروستکرنا حساب ب Google</span>
+                </button>
+
+                <div class="back-link">
+                    <a onclick="showForm('signin')" data-t="login_have_account">ژبەر حساب هەیە؟ چوونە ژوورڤە</a>
+                </div>
+            </div>
+
+            <!-- OTP Verification Form -->
+            <div class="form-section" id="otpForm">
+                <div class="otp-header">
+                    <h3 data-t="login_otp_title">پشتڕاستکردنەوەی ئیمەیل</h3>
+                    <p><span data-t="login_otp_instruction">کۆدی ٦ ژمارەیی کە نێردراوە بۆ</span> <strong id="otpEmail"></strong> <span data-t="login_otp_instruction_suffix">بنووسە</span></p>
+                </div>
+
+                <form onsubmit="return handleOTPVerification(event)">
+                    <div class="form-group">
+                        <div class="otp-input-container">
+                            <input type="text" class="otp-input" id="otp1" maxlength="1" pattern="[0-9]" required>
+                            <input type="text" class="otp-input" id="otp2" maxlength="1" pattern="[0-9]" required>
+                            <input type="text" class="otp-input" id="otp3" maxlength="1" pattern="[0-9]" required>
+                            <input type="text" class="otp-input" id="otp4" maxlength="1" pattern="[0-9]" required>
+                            <input type="text" class="otp-input" id="otp5" maxlength="1" pattern="[0-9]" required>
+                            <input type="text" class="otp-input" id="otp6" maxlength="1" pattern="[0-9]" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="auth-button" id="verifyOtpBtn">
+                        <span class="spinner"></span>
+                        <span data-t="login_verify_otp_btn">پشتڕاستکردنەوە</span>
+                    </button>
+                </form>
+
+                <div class="resend-container">
+                    <p data-t="login_otp_not_received">کۆدەکەت وەرنەگرت؟</p>
+                    <button class="resend-btn" id="resendOtpBtn" onclick="resendOTP()">
+                        <span id="resendText" data-t="login_resend_otp">نێردنەوەی کۆد</span>
+                        <span id="resendTimer" style="display:none;"></span>
+                    </button>
+                </div>
+
+                <div class="back-link">
+                    <a onclick="showForm('signup')">
+                        <i class="fas fa-arrow-right"></i>
+                        <span data-t="login_back_to_signup">گەڕانەوە</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Forgot Password Form -->
+            <div class="form-section" id="forgotForm">
+                <form onsubmit="return handleForgotPassword(event)">
+                    <div class="form-group">
+                        <label class="form-label" data-t="login_forgot_email_label">ئیمەیل</label>
+                        <input
+                            type="email"
+                            class="form-input"
+                            id="forgotEmail"
+                            placeholder="ئیمەیلا خوە بنڤیسە"
+                            data-t-placeholder="login_forgot_email_placeholder"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" class="auth-button" id="forgotBtn">
+                        <span class="spinner"></span>
+                        <span data-t="login_send_reset_link_btn">شاندنا لینکا ڤەگەهاندن</span>
+                    </button>
+                </form>
+
+                <div class="back-link">
+                    <a onclick="showForm('signin')">
+                        <i class="fas fa-arrow-right"></i>
+                        <span data-t="login_back_to_signin">گەڕیان ڤە بۆ چوونە ژوورڤە</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="back-link">
+                <a href="#" onclick="goBack(); return false;" id="bottomBackLink">
+                    <i class="fas fa-arrow-right"></i>
+                    <span data-t="login_back_to_home">گەڕیان ڤە بۆ سەرەکی</span>
+                </a>
+            </div>
+        </div>
+    </div><!-- .auth-container -->
+    </div><!-- .form-panel -->
+    </div><!-- .login-page -->
+
+    <script>
+        // Go back to where user came from
+        function goBack() {
+            // Check URL params for redirect source
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect') || urlParams.get('from') || urlParams.get('source');
+
+            // If we have a redirect param, go there
+            if (redirect) {
+                // Handle relative paths — /^\/[^/]/ rejects protocol-relative URLs like //evil.com
+                if (/^\/[^/]/.test(redirect)) {
+                    window.location.href = redirect;
+                } else if (redirect === 'islamvoice') {
+                    window.location.href = '/islamvoice.html';
+                } else if (redirect === 'quran') {
+                    window.location.href = '/quran.html';
+                } else {
+                    window.location.href = '/' + redirect + '.html';
+                }
+                return;
+            }
+
+            // Check referrer
+            const referrer = document.referrer;
+            if (referrer && referrer.includes(window.location.host)) {
+                window.location.href = referrer;
+                return;
+            }
+
+            // Check stored redirect destination
+            const storedRedirect = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination');
+            if (storedRedirect && /^\/[^/]/.test(storedRedirect)) {
+                window.location.href = storedRedirect;
+                return;
+            }
+
+            // Default to home
+            window.location.href = '/';
+        }
+
+        // Supabase client (initialized securely)
+        let supabaseClient = null;
+
+        // Security: Rate limiting and brute force protection
+        const MAX_LOGIN_ATTEMPTS = 5;
+        const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+        const ATTEMPT_WINDOW = 5 * 60 * 1000; // 5 minutes window for attempts
+
+        function checkRateLimit(type = 'login') {
+            const storageKey = `rateLimit_${type}`;
+            const attempts = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            const now = Date.now();
+
+            // Clean old attempts outside the window
+            const recentAttempts = attempts.filter(timestamp => now - timestamp < ATTEMPT_WINDOW);
+
+            // Check if locked out
+            if (recentAttempts.length >= MAX_LOGIN_ATTEMPTS) {
+                const oldestAttempt = recentAttempts[0];
+                const lockoutEnd = oldestAttempt + LOCKOUT_DURATION;
+
+                if (now < lockoutEnd) {
+                    const remainingMinutes = Math.ceil((lockoutEnd - now) / 60000);
+                    return {
+                        allowed: false,
+                        message: `حسابا تە هاتیە بلۆککرن. دووبارە هەوڵبدە پاش ${remainingMinutes} خولەکان.`,
+                        remainingTime: lockoutEnd - now
+                    };
+                }
+            }
+
+            return { allowed: true };
+        }
+
+        function recordAttempt(type = 'login') {
+            const storageKey = `rateLimit_${type}`;
+            const attempts = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            const now = Date.now();
+
+            // Add new attempt
+            attempts.push(now);
+
+            // Keep only recent attempts
+            const recentAttempts = attempts.filter(timestamp => now - timestamp < ATTEMPT_WINDOW);
+
+            localStorage.setItem(storageKey, JSON.stringify(recentAttempts));
+
+            // Log security event
+            logSecurityEvent('login_attempt', {
+                attemptsCount: recentAttempts.length,
+                timestamp: now
+            });
+        }
+
+        function clearAttempts(type = 'login') {
+            const storageKey = `rateLimit_${type}`;
+            localStorage.removeItem(storageKey);
+        }
+
+        // Security event logging
+        function logSecurityEvent(eventType, details = {}) {
+            const events = JSON.parse(localStorage.getItem('securityEvents') || '[]');
+
+            const event = {
+                type: eventType,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                ...details
+            };
+
+            events.push(event);
+
+            // Keep last 100 events only
+            if (events.length > 100) {
+                events.shift();
+            }
+
+            localStorage.setItem('securityEvents', JSON.stringify(events));
+
+            // Log to console in development
+            console.log('🔒 Security Event:', event);
+        }
+
+        // 🔥 NUCLEAR SECURITY: Session Fingerprinting
+        function generateFingerprint() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillText('🔒', 2, 2);
+
+            const fingerprint = {
+                canvas: canvas.toDataURL().slice(-50),
+                screen: `${screen.width}x${screen.height}x${screen.colorDepth}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                language: navigator.language,
+                platform: navigator.platform,
+                hardwareConcurrency: navigator.hardwareConcurrency || 0,
+                deviceMemory: navigator.deviceMemory || 0,
+                plugins: Array.from(navigator.plugins || []).map(p => p.name).join(',').slice(0, 100),
+                timestamp: Date.now()
+            };
+
+            return btoa(JSON.stringify(fingerprint)).slice(0, 64);
+        }
+
+        function validateSession() {
+            const storedFingerprint = sessionStorage.getItem('securityFingerprint');
+            const currentFingerprint = generateFingerprint();
+
+            if (storedFingerprint && storedFingerprint !== currentFingerprint) {
+                logSecurityEvent('session_hijack_attempt', {
+                    stored: storedFingerprint.slice(0, 20),
+                    current: currentFingerprint.slice(0, 20)
+                });
+
+                // Clear session
+                sessionStorage.clear();
+                localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('user');
+
+                alert('⚠️ گۆڕانکارییەک د سیشنا تە دا هاتە دیتن. تکایە دووبارە بچە ژوورڤە.');
+                window.location.href = '/login.html';
+                return false;
+            }
+
+            if (!storedFingerprint) {
+                sessionStorage.setItem('securityFingerprint', currentFingerprint);
+            }
+
+            return true;
+        }
+
+        // 🔥 NUCLEAR SECURITY: DevTools Detection
+        let devtoolsOpen = false;
+        const devtoolsCheck = () => {
+            const threshold = 160;
+            const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+            const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+
+            if (widthThreshold || heightThreshold) {
+                if (!devtoolsOpen) {
+                    devtoolsOpen = true;
+                    logSecurityEvent('devtools_opened', {
+                        outerWidth: window.outerWidth,
+                        innerWidth: window.innerWidth,
+                        outerHeight: window.outerHeight,
+                        innerHeight: window.innerHeight
+                    });
+                }
+            } else {
+                devtoolsOpen = false;
+            }
+        };
+
+        setInterval(devtoolsCheck, 1000);
+
+        // 🔥 NUCLEAR SECURITY: Behavioral Analysis
+        const behaviorTracker = {
+            mouseMovements: 0,
+            keystrokes: 0,
+            startTime: Date.now(),
+            suspiciousScore: 0,
+
+            trackMouse: function() {
+                this.mouseMovements++;
+            },
+
+            trackKeyboard: function() {
+                this.keystrokes++;
+            },
+
+            calculateScore: function() {
+                const timeElapsed = (Date.now() - this.startTime) / 1000; // seconds
+
+                // Human behavior: ~30-100 mouse movements per minute, ~20-60 keystrokes per minute
+                const mouseRate = (this.mouseMovements / timeElapsed) * 60;
+                const keystrokeRate = (this.keystrokes / timeElapsed) * 60;
+
+                let score = 0;
+
+                // Too fast = likely bot
+                if (mouseRate > 200) score += 30;
+                if (keystrokeRate > 150) score += 30;
+
+                // Too slow/perfect = likely bot
+                if (timeElapsed > 5 && mouseRate < 5) score += 20;
+                if (timeElapsed > 5 && this.mouseMovements === 0) score += 40;
+
+                // Perfect timing = likely bot
+                if (this.keystrokes > 10 && this.keystrokes % 10 === 0) score += 10;
+
+                this.suspiciousScore = score;
+
+                if (score > 50) {
+                    logSecurityEvent('suspicious_behavior', {
+                        score: score,
+                        mouseRate: mouseRate.toFixed(2),
+                        keystrokeRate: keystrokeRate.toFixed(2),
+                        timeElapsed: timeElapsed.toFixed(2)
+                    });
+                }
+
+                return score;
+            }
+        };
+
+        document.addEventListener('mousemove', () => behaviorTracker.trackMouse(), { passive: true });
+        document.addEventListener('keydown', () => behaviorTracker.trackKeyboard(), { passive: true });
+
+        // 🔥 NUCLEAR SECURITY: Clipboard Protection for Passwords
+        function protectPasswordField(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+
+            // Prevent copy
+            field.addEventListener('copy', (e) => {
+                e.preventDefault();
+                logSecurityEvent('password_copy_attempt', { field: fieldId });
+                return false;
+            });
+
+            // Prevent cut
+            field.addEventListener('cut', (e) => {
+                e.preventDefault();
+                logSecurityEvent('password_cut_attempt', { field: fieldId });
+                return false;
+            });
+
+            // Warn on paste (common bot behavior)
+            field.addEventListener('paste', (e) => {
+                logSecurityEvent('password_paste', { field: fieldId });
+                behaviorTracker.suspiciousScore += 15;
+            });
+        }
+
+        // 🔥 NUCLEAR SECURITY: Screenshot Protection
+        document.addEventListener('keyup', (e) => {
+            // Detect PrintScreen (limited browser support)
+            if (e.key === 'PrintScreen') {
+                logSecurityEvent('screenshot_attempt', {
+                    page: window.location.pathname
+                });
+            }
+        });
+
+        // 🔥 NUCLEAR SECURITY: Time-based Anomaly Detection
+        const loginTimingTracker = {
+            formFocusTime: null,
+            submitTime: null,
+
+            onFormFocus: function() {
+                if (!this.formFocusTime) {
+                    this.formFocusTime = Date.now();
+                }
+            },
+
+            onSubmit: function() {
+                this.submitTime = Date.now();
+                const timeTaken = (this.submitTime - this.formFocusTime) / 1000;
+
+                // Suspicious if too fast (< 0.5 seconds = likely bot) — add to score instead of hard-block
+                if (timeTaken < 0.5) {
+                    logSecurityEvent('suspicious_fast_login', {
+                        timeTaken: timeTaken.toFixed(2),
+                        type: 'too_fast'
+                    });
+                    behaviorTracker.suspiciousScore += 25;
+                }
+
+                // Suspicious if unrealistically slow (> 10 minutes = likely automated)
+                if (timeTaken > 600) {
+                    logSecurityEvent('suspicious_slow_login', {
+                        timeTaken: timeTaken.toFixed(2),
+                        type: 'too_slow'
+                    });
+                }
+
+                return true;
+            }
+        };
+
+        // 🔥 NUCLEAR SECURITY: Content Integrity Check
+        function verifyPageIntegrity() {
+            const criticalElements = [
+                'signInEmail',
+                'signInPassword',
+                'signUpEmail',
+                'signUpPassword'
+            ];
+
+            for (const elementId of criticalElements) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    // Check if element has been tampered with
+                    const originalType = element.getAttribute('data-original-type');
+                    if (originalType && element.type !== originalType) {
+                        logSecurityEvent('dom_tampering', {
+                            element: elementId,
+                            expected: originalType,
+                            actual: element.type
+                        });
+                    }
+                }
+            }
+        }
+
+        setInterval(verifyPageIntegrity, 5000);
+
+        // 🔥 NUCLEAR SECURITY: Right-click Protection (Disable on sensitive pages)
+        document.addEventListener('contextmenu', (e) => {
+            logSecurityEvent('right_click_attempt', {
+                target: e.target.id || e.target.className || 'unknown',
+                x: e.clientX,
+                y: e.clientY
+            });
+            // Optionally prevent (uncomment to enable)
+            // e.preventDefault();
+            // return false;
+        });
+
+        // 🔥 NUCLEAR SECURITY: Drag & Drop Protection
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                logSecurityEvent('drag_attempt', {
+                    element: e.target.id
+                });
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // 🔥 NUCLEAR SECURITY: View Security Dashboard (Ctrl+Shift+S)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+                e.preventDefault();
+                showSecurityDashboard();
+            }
+        });
+
+        function showSecurityDashboard() {
+            const events = JSON.parse(localStorage.getItem('securityEvents') || '[]');
+            const rateLimit = JSON.parse(localStorage.getItem('rateLimit_login') || '[]');
+
+            let dashboard = `
+🔒 SECURITY DASHBOARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 STATISTICS:
+- Total Events: ${events.length}
+- Login Attempts: ${rateLimit.length}
+- Suspicious Score: ${behaviorTracker.suspiciousScore}
+- DevTools: ${devtoolsOpen ? '⚠️ OPEN' : '✓ Closed'}
+
+📝 RECENT EVENTS (Last 10):
+${events.slice(-10).reverse().map(e => `
+• ${e.type}
+  Time: ${new Date(e.timestamp).toLocaleString()}
+  ${JSON.stringify(e, null, 2).slice(0, 200)}
+`).join('\n')}
+
+🎯 BEHAVIORAL ANALYSIS:
+- Mouse Movements: ${behaviorTracker.mouseMovements}
+- Keystrokes: ${behaviorTracker.keystrokes}
+- Session Age: ${((Date.now() - behaviorTracker.startTime) / 1000).toFixed(0)}s
+
+🔑 SESSION INFO:
+- Fingerprint: ${generateFingerprint().slice(0, 30)}...
+- User Agent: ${navigator.userAgent.slice(0, 80)}...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Press Ctrl+Shift+C to copy this report
+            `.trim();
+
+            console.log(dashboard);
+            alert('🔒 Security Dashboard logged to console!\n\nPress F12 to view detailed security analytics.');
+
+            // Auto-copy to clipboard
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(dashboard).then(() => {
+                    console.log('✅ Dashboard copied to clipboard!');
+                });
+            }
+        }
+
+        // 🔥🔥🔥 ULTIMATE: Advanced Entropy Analysis
+        function calculatePasswordEntropy(password) {
+            if (!password) return 0;
+
+            const charsets = {
+                lowercase: /[a-z]/.test(password) ? 26 : 0,
+                uppercase: /[A-Z]/.test(password) ? 26 : 0,
+                digits: /[0-9]/.test(password) ? 10 : 0,
+                special: /[^a-zA-Z0-9]/.test(password) ? 32 : 0
+            };
+
+            const poolSize = Object.values(charsets).reduce((a, b) => a + b, 0);
+            const entropy = password.length * Math.log2(poolSize);
+
+            return entropy; // bits of entropy
+        }
+
+        function checkPasswordQuality(password) {
+            const entropy = calculatePasswordEntropy(password);
+            const commonPatterns = [
+                /^(.)\1+$/, // Repeated character
+                /^(012|123|234|345|456|567|678|789|890)+/, // Sequential numbers
+                /^(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)+/i, // Sequential letters
+                /^(qwerty|asdfgh|zxcvbn)+/i, // Keyboard patterns
+                /^(password|admin|user|login|welcome)+/i // Common words
+            ];
+
+            let qualityScore = 100;
+
+            // Deduct for low entropy
+            if (entropy < 28) qualityScore -= 30;
+            else if (entropy < 36) qualityScore -= 20;
+            else if (entropy < 50) qualityScore -= 10;
+
+            // Deduct for patterns
+            for (const pattern of commonPatterns) {
+                if (pattern.test(password)) {
+                    qualityScore -= 40;
+                    break;
+                }
+            }
+
+            // Deduct for lack of variety
+            const uniqueChars = new Set(password).size;
+            if (uniqueChars < password.length * 0.5) qualityScore -= 20;
+
+            return {
+                score: Math.max(0, qualityScore),
+                entropy: entropy.toFixed(1),
+                crackTime: estimateCrackTime(entropy)
+            };
+        }
+
+        function estimateCrackTime(entropy) {
+            // Assuming 1 billion guesses per second
+            const guessesPerSecond = 1e9;
+            const possibleCombinations = Math.pow(2, entropy);
+            const seconds = possibleCombinations / (2 * guessesPerSecond); // Average time
+
+            if (seconds < 1) return 'Instant';
+            if (seconds < 60) return `${Math.round(seconds)} seconds`;
+            if (seconds < 3600) return `${Math.round(seconds / 60)} minutes`;
+            if (seconds < 86400) return `${Math.round(seconds / 3600)} hours`;
+            if (seconds < 31536000) return `${Math.round(seconds / 86400)} days`;
+            if (seconds < 3153600000) return `${Math.round(seconds / 31536000)} years`;
+            return `${Math.round(seconds / 31536000000)} centuries`;
+        }
+
+        // 🔥🔥🔥 ULTIMATE: Tab Visibility & Focus Tracking
+        let tabAwayCount = 0;
+        let tabAwayTime = 0;
+        let lastVisibilityChange = Date.now();
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                lastVisibilityChange = Date.now();
+            } else {
+                const awayDuration = Date.now() - lastVisibilityChange;
+                tabAwayCount++;
+                tabAwayTime += awayDuration;
+
+                // Suspicious if user switches tabs too much during login
+                if (tabAwayCount > 5 && tabAwayTime < 30000) {
+                    logSecurityEvent('suspicious_tab_switching', {
+                        count: tabAwayCount,
+                        totalTime: tabAwayTime
+                    });
+                    behaviorTracker.suspiciousScore += 20;
+                }
+            }
+        });
+
+        // 🔥🔥🔥 ULTIMATE: Form Field Sequence Validation
+        const fieldSequenceTracker = {
+            sequence: [],
+            expectedSequences: {
+                signin: ['signInEmail', 'signInPassword'],
+                signup: ['signUpName', 'signUpEmail', 'signUpPassword']
+            },
+
+            track: function(fieldId) {
+                this.sequence.push({
+                    field: fieldId,
+                    timestamp: Date.now()
+                });
+            },
+
+            validate: function(formType) {
+                const expected = this.expectedSequences[formType];
+                const actual = this.sequence.map(s => s.field);
+
+                // Check if fields were filled in unusual order
+                let violations = 0;
+                for (let i = 0; i < expected.length - 1; i++) {
+                    const expectedIndex = actual.indexOf(expected[i]);
+                    const nextIndex = actual.indexOf(expected[i + 1]);
+
+                    if (expectedIndex > nextIndex && nextIndex !== -1) {
+                        violations++;
+                    }
+                }
+
+                if (violations > 0) {
+                    logSecurityEvent('unusual_field_sequence', {
+                        formType: formType,
+                        violations: violations,
+                        sequence: actual
+                    });
+                    return false;
+                }
+
+                return true;
+            }
+        };
+
+        // 🔥🔥🔥 ULTIMATE: Network Connection Monitoring
+        function detectConnectionType() {
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+
+            if (connection) {
+                logSecurityEvent('connection_info', {
+                    effectiveType: connection.effectiveType,
+                    downlink: connection.downlink,
+                    rtt: connection.rtt,
+                    saveData: connection.saveData
+                });
+
+                // Suspicious if using VPN/Tor (very high RTT)
+                if (connection.rtt && connection.rtt > 500) {
+                    logSecurityEvent('high_latency_connection', {
+                        rtt: connection.rtt,
+                        possibleVPN: true
+                    });
+                }
+            }
+        }
+
+        // 🔥🔥🔥 ULTIMATE: WebRTC Leak Detection
+        async function detectWebRTCLeaks() {
+            if (!window.RTCPeerConnection) return;
+
+            try {
+                const pc = new RTCPeerConnection({
+                    iceServers: [{urls: 'stun:stun.l.google.com:19302'}]
+                });
+
+                pc.createDataChannel('');
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+
+                const ips = [];
+                pc.onicecandidate = (e) => {
+                    if (e.candidate) {
+                        const ipRegex = /([0-9]{1,3}\.){3}[0-9]{1,3}/;
+                        const match = ipRegex.exec(e.candidate.candidate);
+                        if (match) {
+                            ips.push(match[0]);
+                            logSecurityEvent('webrtc_ip_detected', {
+                                ip: match[0].replace(/\d+$/, 'XXX') // Partial anonymization
+                            });
+                        }
+                    }
+                };
+
+                setTimeout(() => pc.close(), 1000);
+            } catch (error) {
+                // WebRTC blocked or not available
+                logSecurityEvent('webrtc_blocked', {
+                    possibleVPN: true
+                });
+            }
+        }
+
+        // 🔥🔥🔥 ULTIMATE: Memory-based Challenge (Alternative CAPTCHA)
+        const memoryChallenge = {
+            pattern: null,
+            shown: false,
+
+            generate: function() {
+                // Generate random pattern for user to remember
+                const patterns = ['🔴🔵🟢', '🌙⭐☀️', '🔒🔑🛡️', '💎💰👑'];
+                this.pattern = patterns[Math.floor(Math.random() * patterns.length)];
+                return this.pattern;
+            },
+
+            verify: function(userInput) {
+                return userInput === this.pattern;
+            }
+        };
+
+        // 🔥🔥🔥 ULTIMATE: Advanced Bot Detection - Pointer Events
+        const pointerAnalyzer = {
+            events: [],
+
+            track: function(e) {
+                this.events.push({
+                    type: e.type,
+                    x: e.clientX,
+                    y: e.clientY,
+                    timestamp: Date.now(),
+                    pressure: e.pressure || 0,
+                    pointerType: e.pointerType || 'unknown'
+                });
+
+                // Keep last 50 events
+                if (this.events.length > 50) this.events.shift();
+            },
+
+            analyze: function() {
+                if (this.events.length < 10) return { isSuspicious: false, score: 0 };
+
+                let suspiciousScore = 0;
+
+                // Check for perfect straight lines (bot behavior)
+                let straightLines = 0;
+                for (let i = 2; i < this.events.length; i++) {
+                    const dx1 = this.events[i-1].x - this.events[i-2].x;
+                    const dy1 = this.events[i-1].y - this.events[i-2].y;
+                    const dx2 = this.events[i].x - this.events[i-1].x;
+                    const dy2 = this.events[i].y - this.events[i-1].y;
+
+                    // Check if vectors are perfectly aligned
+                    if (dx1 !== 0 && dy1 !== 0 && Math.abs(dx2/dx1 - dy2/dy1) < 0.01) {
+                        straightLines++;
+                    }
+                }
+
+                if (straightLines > 5) suspiciousScore += 30;
+
+                // Check for impossible speed
+                for (let i = 1; i < this.events.length; i++) {
+                    const distance = Math.sqrt(
+                        Math.pow(this.events[i].x - this.events[i-1].x, 2) +
+                        Math.pow(this.events[i].y - this.events[i-1].y, 2)
+                    );
+                    const time = this.events[i].timestamp - this.events[i-1].timestamp;
+                    const speed = time > 0 ? distance / time : 0;
+
+                    // Impossible for human (>5 pixels per millisecond)
+                    if (speed > 5) suspiciousScore += 20;
+                }
+
+                // Check for touch vs mouse inconsistency
+                const types = new Set(this.events.map(e => e.pointerType));
+                if (types.size > 1 && this.events.length < 20) {
+                    // Switching input types too quickly is suspicious
+                    suspiciousScore += 15;
+                }
+
+                return {
+                    isSuspicious: suspiciousScore > 40,
+                    score: suspiciousScore,
+                    straightLines: straightLines
+                };
+            }
+        };
+
+        // Track pointer events
+        ['pointermove', 'pointerdown', 'pointerup'].forEach(eventType => {
+            document.addEventListener(eventType, (e) => pointerAnalyzer.track(e), { passive: true });
+        });
+
+        // 🔥🔥🔥 ULTIMATE: Automated Form Filler Detection
+        function detectAutofill() {
+            const inputs = document.querySelectorAll('input');
+            let autofilledCount = 0;
+
+            inputs.forEach(input => {
+                // Check if browser autofilled
+                if (input.matches(':-webkit-autofill')) {
+                    autofilledCount++;
+                }
+
+                // Monitor for instant value changes (automation)
+                let lastValue = input.value;
+                const observer = new MutationObserver(() => {
+                    if (input.value !== lastValue && input.value.length > 5) {
+                        const timeSinceFocus = Date.now() - (input.dataset.lastFocus || 0);
+                        if (timeSinceFocus < 50) {
+                            logSecurityEvent('instant_fill_detected', {
+                                field: input.id,
+                                timeSinceFocus: timeSinceFocus
+                            });
+                            behaviorTracker.suspiciousScore += 25;
+                        }
+                    }
+                    lastValue = input.value;
+                });
+
+                input.addEventListener('focus', () => {
+                    input.dataset.lastFocus = Date.now();
+                });
+
+                observer.observe(input, { attributes: true, attributeFilter: ['value'] });
+            });
+
+            if (autofilledCount > 2) {
+                logSecurityEvent('multiple_autofill', {
+                    count: autofilledCount
+                });
+            }
+        }
+
+        // 🔥🔥🔥 ULTIMATE: Initialize ALL Security Systems
+        document.addEventListener('DOMContentLoaded', function() {
+            // Detect where user came from and store redirect destination
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect') || urlParams.get('from');
+            const referrer = document.referrer;
+
+            let redirectDestination = '/quran.html'; // Default
+
+            // Check URL parameter first (highest priority)
+            // Validate to prevent open redirect — reject protocol-relative URLs like //evil.com
+            if (redirect && /^\/[^/]/.test(redirect)) {
+                redirectDestination = redirect;
+            }
+            // Check referrer if no explicit redirect parameter
+            else if (referrer && referrer.includes(window.location.hostname)) {
+                // Extract path from referrer (if it's from our domain)
+                try {
+                    const referrerUrl = new URL(referrer);
+                    const referrerPath = referrerUrl.pathname;
+                    // Don't redirect back to login or index
+                    if (referrerPath !== '/login.html' && referrerPath !== '/' && referrerPath !== '/index.html') {
+                        redirectDestination = referrerPath;
+                    }
+                } catch (e) {
+                    // Invalid referrer, use default
+                }
+            }
+
+            // Store for later use (both sessionStorage AND localStorage to survive OAuth round-trips)
+            sessionStorage.setItem('login_redirect_destination', redirectDestination);
+            localStorage.setItem('login_redirect_destination', redirectDestination);
+            console.log('🎯 Login redirect destination set to:', redirectDestination);
+
+            // Set fingerprint
+            sessionStorage.setItem('securityFingerprint', generateFingerprint());
+
+            // Protect password fields
+            protectPasswordField('signInPassword');
+            protectPasswordField('signUpPassword');
+
+            // Store original input types
+            const inputs = document.querySelectorAll('input[type="password"], input[type="email"]');
+            inputs.forEach(input => {
+                input.setAttribute('data-original-type', input.type);
+
+                // Track field sequence
+                input.addEventListener('input', () => {
+                    fieldSequenceTracker.track(input.id);
+                });
+            });
+
+            // Track form focus time
+            const signInForm = document.querySelector('#signinForm form');
+            const signUpForm = document.querySelector('#signupForm form');
+
+            if (signInForm) {
+                signInForm.addEventListener('focusin', () => loginTimingTracker.onFormFocus(), { once: true });
+            }
+            if (signUpForm) {
+                signUpForm.addEventListener('focusin', () => loginTimingTracker.onFormFocus(), { once: true });
+            }
+
+            // Initialize advanced detection
+            detectConnectionType();
+            detectWebRTCLeaks();
+            setTimeout(detectAutofill, 1000);
+
+            // Monitor network changes
+            if (navigator.connection) {
+                navigator.connection.addEventListener('change', detectConnectionType);
+            }
+
+            logSecurityEvent('security_initialized', {
+                fingerprint: generateFingerprint().slice(0, 20),
+                features: [
+                    'fingerprinting', 'devtools', 'behavioral', 'clipboard',
+                    'integrity', 'entropy', 'tab-tracking', 'sequence-validation',
+                    'network-monitoring', 'webrtc', 'pointer-analysis', 'autofill-detection'
+                ],
+                securityLevel: 'NUCLEAR_MAXIMUM'
+            });
+
+            // Final comprehensive check every 30 seconds
+            setInterval(() => {
+                const pointerAnalysis = pointerAnalyzer.analyze();
+                if (pointerAnalysis.isSuspicious) {
+                    logSecurityEvent('suspicious_pointer_behavior', pointerAnalysis);
+                }
+
+                // Check overall threat level
+                const totalScore = behaviorTracker.suspiciousScore + pointerAnalysis.score;
+                if (totalScore > 100) {
+                    logSecurityEvent('CRITICAL_THREAT_DETECTED', {
+                        behaviorScore: behaviorTracker.suspiciousScore,
+                        pointerScore: pointerAnalysis.score,
+                        totalScore: totalScore,
+                        recommendation: 'BLOCK_USER'
+                    });
+                }
+            }, 30000);
+
+            console.log('🔥🔥🔥 NUCLEAR SECURITY: 100% ARMED AND OPERATIONAL 🔥🔥🔥');
+        });
+
+        // XSS Protection: HTML escape function
+        function escapeHtml(unsafe) {
+            if (unsafe === null || unsafe === undefined) return '';
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Initialize Supabase with secure credentials
+        async function initializeSupabase() {
+            try {
+                // Fetch credentials from secure endpoint
+                const response = await fetch('/config');
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch auth configuration');
+                }
+
+                const config = await response.json();
+
+                if (!config.supabaseUrl || !config.supabaseKey) {
+                    throw new Error('Invalid auth configuration');
+                }
+
+                // Initialize Supabase client
+                supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                window.supabaseClient = supabaseClient;
+                console.log('✅ Supabase initialized securely');
+                return true;
+
+            } catch (error) {
+                console.error('❌ Failed to initialize Supabase:', error);
+                showMessage('خەتایەک ڕوویدا لە دامەزراندنی سیستەم. تکایە دواتر هەوڵ بدەرەوە.', 'error');
+                return false;
+            }
+        }
+
+        // Form switching — smooth cross-fade transitions
+        let _formSwitching = false;
+        function showForm(formName) {
+            if (_formSwitching) return;
+            console.log('Switching to form:', formName);
+
+            const currentActive = document.querySelector('.form-section.active');
+            const targetForm = document.getElementById(formName + 'Form');
+            if (!targetForm || targetForm === currentActive) return;
+
+            // Update tabs (hide tabs for forgot/otp)
+            const tabsContainer = document.getElementById('authTabs');
+            if (formName === 'forgot' || formName === 'otp') {
+                tabsContainer.style.display = 'none';
+            } else {
+                tabsContainer.style.display = 'flex';
+                document.querySelectorAll('.tab').forEach((tab, index) => {
+                    tab.classList.remove('active');
+                    if ((formName === 'signin' && index === 0) || (formName === 'signup' && index === 1)) {
+                        tab.classList.add('active');
+                    }
+                });
+            }
+
+            clearMessage();
+
+            // Cross-fade: fade out current, then fade in target
+            if (currentActive) {
+                _formSwitching = true;
+                currentActive.classList.remove('active');
+                currentActive.classList.add('fading-out');
+                setTimeout(() => {
+                    currentActive.classList.remove('fading-out');
+                    currentActive.style.display = 'none';
+                    targetForm.style.display = '';
+                    targetForm.classList.add('active');
+                    _formSwitching = false;
+                }, 200);
+            } else {
+                targetForm.classList.add('active');
+            }
+
+            // Update hero panel context if applicable
+            updateHeroForForm(formName);
+        }
+
+        function updateHeroForForm(formName) {
+            // No-op for most forms; hero is set by redirect param
+        }
+
+        // Toggle password visibility
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const btn = input.parentElement.querySelector('.password-toggle-btn i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.classList.remove('fa-eye');
+                btn.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                btn.classList.remove('fa-eye-slash');
+                btn.classList.add('fa-eye');
+            }
+        }
+
+        // Password Strength Meter
+        function checkPasswordStrength(password) {
+            const container = document.getElementById('passwordStrengthContainer');
+            const fill = document.getElementById('passwordStrengthFill');
+            const text = document.getElementById('passwordStrengthText');
+
+            // Requirements elements
+            const reqLength = document.getElementById('req-length');
+            const reqUppercase = document.getElementById('req-uppercase');
+            const reqLowercase = document.getElementById('req-lowercase');
+            const reqNumber = document.getElementById('req-number');
+            const reqSpecial = document.getElementById('req-special');
+
+            if (!password) {
+                container.style.display = 'none';
+                return false;
+            }
+
+            container.style.display = 'block';
+
+            // Check requirements
+            const hasLength = password.length >= 8;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+            // Update requirement indicators
+            updateRequirement(reqLength, hasLength, '✓ کەمتر ٨ پیت');
+            updateRequirement(reqUppercase, hasUppercase, '✓ پیتێن گەورە (A-Z)');
+            updateRequirement(reqLowercase, hasLowercase, '✓ پیتێن بچوک (a-z)');
+            updateRequirement(reqNumber, hasNumber, '✓ ژمارە (0-9)');
+            updateRequirement(reqSpecial, hasSpecial, '✓ پیتێن تایبەت (!@#$%)');
+
+            // Calculate strength
+            let strength = 0;
+            if (hasLength) strength++;
+            if (hasUppercase) strength++;
+            if (hasLowercase) strength++;
+            if (hasNumber) strength++;
+            if (hasSpecial) strength++;
+
+            // Update UI based on strength
+            fill.className = 'password-strength-fill';
+            text.className = 'password-strength-text';
+
+            if (strength <= 2) {
+                fill.classList.add('weak');
+                text.classList.add('weak');
+                text.textContent = '⚠️ لاواز';
+                return false;
+            } else if (strength === 3) {
+                fill.classList.add('fair');
+                text.classList.add('fair');
+                text.textContent = '🔸 ناڤەند';
+                return true;
+            } else if (strength === 4) {
+                fill.classList.add('good');
+                text.classList.add('good');
+                text.textContent = '✓ باش';
+                return true;
+            } else {
+                fill.classList.add('strong');
+                text.classList.add('strong');
+                text.textContent = '🔒 زۆر بهێز';
+                return true;
+            }
+        }
+
+        function updateRequirement(element, isMet, metText) {
+            if (isMet) {
+                element.classList.add('met');
+                element.textContent = metText;
+            } else {
+                element.classList.remove('met');
+                element.textContent = element.textContent.replace('✓', '✗');
+            }
+        }
+
+        // Add event listener for password input
+        document.addEventListener('DOMContentLoaded', function() {
+            const signUpPassword = document.getElementById('signUpPassword');
+            if (signUpPassword) {
+                signUpPassword.addEventListener('input', function(e) {
+                    checkPasswordStrength(e.target.value);
+                });
+            }
+        });
+
+        // Show message
+        function showMessage(message, type = 'info') {
+            const container = document.getElementById('messageContainer');
+            container.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => clearMessage(), 5000);
+        }
+
+        function clearMessage() {
+            document.getElementById('messageContainer').innerHTML = '';
+        }
+
+        // Set loading state
+        function setLoading(buttonId, isLoading) {
+            const btn = document.getElementById(buttonId);
+            if (isLoading) {
+                btn.classList.add('loading');
+                btn.disabled = true;
+            } else {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        // Email Sign In
+        async function handleEmailSignIn(event) {
+            event.preventDefault();
+            clearMessage();
+
+            // Security: Check rate limiting
+            const rateLimitCheck = checkRateLimit('login');
+            if (!rateLimitCheck.allowed) {
+                showMessage(rateLimitCheck.message, 'error');
+                logSecurityEvent('login_blocked', {
+                    reason: 'rate_limit',
+                    remainingTime: rateLimitCheck.remainingTime
+                });
+                return false;
+            }
+
+            // Check if Supabase is initialized
+            if (!supabaseClient) {
+                showMessage('سیستەم ئامادە نییە. تکایە پەڕە نوێبکەرەوە.', 'error');
+                return false;
+            }
+
+            const email = document.getElementById('signInEmail').value.trim();
+            const password = document.getElementById('signInPassword').value;
+
+            // Validation
+            if (!email || !password) {
+                showMessage('تکایە ئیمەیل و پاسوۆرد بنڤیسە', 'error');
+                return false;
+            }
+
+            // 🔥 NUCLEAR: Check timing anomalies (adds to score, no hard block)
+            loginTimingTracker.onSubmit();
+
+            // 🔥 NUCLEAR: Check behavioral score
+            const behaviorScore = behaviorTracker.calculateScore();
+            if (behaviorScore > 70) {
+                logSecurityEvent('login_blocked_behavior', {
+                    score: behaviorScore,
+                    reason: 'suspicious_bot_behavior'
+                });
+                showMessage('هەڵەیەک ڕوویدا. تکایە دواتر هەوڵ بدەرەوە.', 'error');
+                return false;
+            }
+
+            // Record login attempt
+            recordAttempt('login');
+
+            setLoading('signInBtn', true);
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                // Build user data object
+                const userData = {
+                    sub: data.user.id,
+                    name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email.split('@')[0],
+                    email: data.user.email,
+                    picture: data.user.user_metadata?.avatar_url || null
+                };
+
+                // Save to secure multi-layer storage
+                try {
+                    const saved = await window.secureStorage.saveUser(userData);
+                    if (!saved) {
+                        console.error('Failed to save user data');
+                    }
+                } catch (storageError) {
+                    console.error('Storage error:', storageError);
+                }
+
+                // Initialize cloud sync - loads all user data from cloud
+                try {
+                    if (window.cloudSync && supabaseClient) {
+                        await window.cloudSync.initialize(supabaseClient, data.user.id);
+                    }
+                } catch (e) {
+                    console.error('Cloud sync init error:', e);
+                }
+
+                showMessage('سەرکەفتی! تو هاتی ژوورڤە...', 'success');
+
+                // Clear login attempts after successful login
+                clearAttempts('login');
+                logSecurityEvent('login_success', {
+                    email: email,
+                    method: 'password'
+                });
+
+                // Wait for storage to persist and cloud sync to complete
+                // Show success overlay
+                showSuccessOverlay();
+
+                setTimeout(async () => {
+                    const redirectDest = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination') || '/quran.html';
+                    cleanupRedirectStorage();
+                    if (window.authRedirect) {
+                        await window.authRedirect.handlePostLoginRedirect(redirectDest);
+                    } else {
+                        window.location.href = redirectDest;
+                    }
+                }, 1500);
+
+            } catch (error) {
+                console.error('Sign in error:', error);
+                let errorMessage = 'هەلە د چوونە ژوورڤە دا';
+
+                if (error.message.includes('Invalid login credentials')) {
+                    errorMessage = 'ئیمەیل یان پاسوۆردا نادروست';
+                } else if (error.message.includes('Email not confirmed')) {
+                    errorMessage = 'تکایە ئیمەیلا خوە پشتڕاستکە!<br><br>ئێمە لینکێن پشتڕاستکرنێ نارینە بۆ ئیمەیلا تە. چاڤێ ئیمەیلا خوە بکە و لینکێ کلیک بکە بۆ چالاککرنا ئەژمارێ.';
+                } else if (error.message) {
+                    errorMessage = escapeHtml(error.message);
+                }
+
+                showMessage(errorMessage, 'error');
+            } finally {
+                setLoading('signInBtn', false);
+            }
+
+            return false;
+        }
+
+        // Store signup data temporarily for OTP verification
+        let signupData = null;
+
+        // Email Sign Up - Send OTP
+        async function handleEmailSignUp(event) {
+            event.preventDefault();
+            clearMessage();
+
+            // Security: Check honeypot field for bot detection
+            const honeypot = document.getElementById('website');
+            if (honeypot && honeypot.value) {
+                // Bot detected - honeypot field was filled
+                logSecurityEvent('bot_detected', {
+                    type: 'honeypot',
+                    field: 'website',
+                    value: honeypot.value.substring(0, 50)
+                });
+                // Silently fail - don't let bot know they were detected
+                showMessage('هەڵە د دروستکرنا حسابێ دا. تکایە دووبارە هەوڵبدە.', 'error');
+                setTimeout(() => {
+                    setLoading('signUpBtn', false);
+                }, 2000);
+                return false;
+            }
+
+            const name = document.getElementById('signUpName').value.trim();
+            const email = document.getElementById('signUpEmail').value.trim();
+            const password = document.getElementById('signUpPassword').value;
+
+            // Validation
+            if (!name || !email || !password) {
+                showMessage('تکایە هەمی خانەیان پڕبکە', 'error');
+                return false;
+            }
+
+            if (password.length < 6) {
+                showMessage('پاسوۆرد دڤێ کەمتر ٦ پیت بیت', 'error');
+                return false;
+            }
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showMessage('تکایە ئیمەیلەکا دروست بنڤیسە', 'error');
+                return false;
+            }
+
+            setLoading('signUpBtn', true);
+
+            try {
+                // Check if email already exists with different auth method
+                console.log('Checking if email already exists:', email);
+
+                try {
+                    const { data: existingProfiles } = await supabaseClient
+                        .from('profiles')
+                        .select('email, registration_source')
+                        .eq('email', email)
+                        .limit(1);
+
+                    if (existingProfiles && existingProfiles.length > 0) {
+                        const existingProfile = existingProfiles[0];
+                        const registrationMethod = existingProfile.registration_source;
+
+                        if (registrationMethod === 'google') {
+                            showMessage(
+                                '⚠️ تو ژبەر ئەژمارەکا خوە هەیە!<br><br>' +
+                                'ئیمەیلا تە پەیوەستە ب ئەژمارەکا Google. تکایە ب Google بچۆ ژوورەوە.',
+                                'error'
+                            );
+                            setLoading('signUpBtn', false);
+                            return false;
+                        } else if (registrationMethod === 'email') {
+                            showMessage(
+                                '⚠️ تو ژبەر ئەژمارەکا خوە هەیە!<br><br>' +
+                                'ئیمەیلا تە پەیوەستە ب ئەژمارەکا ئیمەیل. تکایە بچۆ ژوورەوە.',
+                                'error'
+                            );
+                            setLoading('signUpBtn', false);
+                            return false;
+                        }
+                    }
+                } catch (checkError) {
+                    console.warn('Failed to check existing email:', checkError);
+                    // Continue with signup if check fails
+                }
+
+                console.log('Sending OTP to:', email);
+
+                // Send OTP
+                const response = await fetch('/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, name })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'Failed to send OTP');
+                }
+
+                // Store signup data for later use (memory + sessionStorage for refresh survival)
+                signupData = { name, email, password };
+                sessionStorage.setItem('pending_signup_data', JSON.stringify(signupData));
+
+                // Show OTP form
+                document.getElementById('otpEmail').textContent = email;
+                showForm('otp');
+
+                showMessage('✅ کۆدی پشتڕاستکردنەوە نێردرا!<br><br>چاڤێ ئیمەیلەکەت بکە بۆ <strong>' + escapeHtml(email) + '</strong>', 'success');
+
+                // Start resend timer
+                startResendTimer();
+
+                // Focus first OTP input
+                setTimeout(() => {
+                    document.getElementById('otp1').focus();
+                }, 300);
+
+            } catch (error) {
+                console.error('Send OTP error:', error);
+                showMessage('هەڵە لە ناردنی کۆد: ' + escapeHtml(error.message), 'error');
+            } finally {
+                setLoading('signUpBtn', false);
+            }
+
+            return false;
+        }
+
+        // Google Sign In
+        async function signInWithGoogle() {
+            clearMessage();
+
+            // Check if Supabase is initialized
+            if (!supabaseClient) {
+                showMessage('سیستەم ئامادە نییە. تکایە پەڕە نوێبکەرەوە.', 'error');
+                return;
+            }
+
+            showMessage('ڤەگوهاستنا تە بۆ Google...', 'info');
+
+            try {
+                // Get redirect destination and encode into OAuth return URL
+                const redirectDest = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination') || '/quran.html';
+                const oauthReturnUrl = window.location.origin + '/login.html?redirect=' + encodeURIComponent(redirectDest);
+
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: oauthReturnUrl,
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent'
+                        }
+                    }
+                });
+
+                if (error) throw error;
+
+            } catch (error) {
+                console.error('Google sign in error:', error);
+                showMessage('هەلە د چوونە ژوورڤە ب Google: ' + escapeHtml(error.message), 'error');
+            }
+        }
+
+        // Forgot Password
+        async function handleForgotPassword(event) {
+            event.preventDefault();
+            clearMessage();
+
+            // Check if Supabase is initialized
+            if (!supabaseClient) {
+                showMessage('سیستەم ئامادە نییە. تکایە پەڕە نوێبکەرەوە.', 'error');
+                return false;
+            }
+
+            const email = document.getElementById('forgotEmail').value.trim();
+
+            if (!email) {
+                showMessage('تکایە ئیمەیلا خوە بنڤیسە', 'error');
+                return false;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showMessage('تکایە ئیمەیلەکا دروست بنڤیسە', 'error');
+                return false;
+            }
+
+            setLoading('forgotBtn', true);
+
+            try {
+                console.log('Sending password reset to:', email);
+
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + '/login.html'
+                });
+
+                if (error) throw error;
+
+                showMessage(
+                    '✅ لینکا ڤەگەهاندنا پاسوۆردێ هاتە شاندن!<br><br>' +
+                    'چاڤێ ئیمەیلا خوە بکە بۆ <strong>' + escapeHtml(email) + '</strong> و لینکێ کلیک بکە بۆ ڤەگەهاندنا پاسوۆردا خوە.',
+                    'success'
+                );
+                document.getElementById('forgotEmail').value = '';
+
+                // Switch to sign in form after 3 seconds
+                setTimeout(() => {
+                    showForm('signin');
+                }, 3000);
+
+            } catch (error) {
+                console.error('Password reset error:', error);
+                showMessage('هەلە د شاندنا لینکا ڤەگەهاندنا پاسوۆردێ: ' + escapeHtml(error.message), 'error');
+            } finally {
+                setLoading('forgotBtn', false);
+            }
+
+            return false;
+        }
+
+        // OTP Input Handling
+        document.addEventListener('DOMContentLoaded', () => {
+            const otpInputs = document.querySelectorAll('.otp-input');
+
+            otpInputs.forEach((input, index) => {
+                // Auto-focus next input on keyup
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1 && index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+                });
+
+                // Handle backspace
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        otpInputs[index - 1].focus();
+                    }
+                });
+
+                // Only allow numbers
+                input.addEventListener('keypress', (e) => {
+                    if (!/[0-9]/.test(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+
+                // Handle paste
+                input.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const paste = e.clipboardData.getData('text');
+                    const digits = paste.replace(/\D/g, '').split('').slice(0, 6);
+
+                    digits.forEach((digit, i) => {
+                        if (otpInputs[i]) {
+                            otpInputs[i].value = digit;
+                        }
+                    });
+
+                    if (digits.length > 0) {
+                        const lastIndex = Math.min(digits.length, otpInputs.length - 1);
+                        otpInputs[lastIndex].focus();
+                    }
+                });
+            });
+        });
+
+        // Handle OTP Verification
+        async function handleOTPVerification(event) {
+            event.preventDefault();
+            clearMessage();
+
+            if (!signupData) {
+                showMessage('داتای تۆمارکردن نەدۆزرایەوە. تکایە دووبارە هەوڵ بدەرەوە.', 'error');
+                showForm('signup');
+                return false;
+            }
+
+            // Get OTP code from inputs
+            const otp = Array.from(document.querySelectorAll('.otp-input'))
+                .map(input => input.value)
+                .join('');
+
+            if (otp.length !== 6) {
+                showMessage('تکایە کۆدی ٦ ژمارەیی بنووسە', 'error');
+                return false;
+            }
+
+            setLoading('verifyOtpBtn', true);
+
+            try {
+                console.log('Verifying OTP for:', signupData.email);
+
+                // Verify OTP and create account
+                const response = await fetch('/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: signupData.email,
+                        otp: otp,
+                        password: signupData.password,
+                        name: signupData.name
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'Verification failed');
+                }
+
+                // Success!
+                showMessage(
+                    '🎉 سەرکەفتی!<br><br>' +
+                    'ئەژمارەکەت دروستکرا و چالاککرا. دەتوانیت ئێستا بچیتە ژوورەوە.',
+                    'success'
+                );
+
+                // Store password before clearing signup data
+                const userPassword = signupData.password;
+                const userEmail = data.user.email;
+
+                // Clear signup data
+                signupData = null;
+                sessionStorage.removeItem('pending_signup_data');
+
+                // Clear OTP inputs
+                document.querySelectorAll('.otp-input').forEach(input => input.value = '');
+
+                // Clear signup form
+                document.getElementById('signUpName').value = '';
+                document.getElementById('signUpEmail').value = '';
+                document.getElementById('signUpPassword').value = '';
+
+                // Auto sign in the user after account creation
+                setTimeout(async () => {
+                    try {
+                        const { data, error: signInError } = await supabaseClient.auth.signInWithPassword({
+                            email: userEmail,
+                            password: userPassword
+                        });
+
+                        if (signInError) {
+                            console.error('Auto sign-in failed:', signInError);
+                            showForm('signin');
+                            showMessage('حسابەکەت دروستکرا. تکایە بچۆ ژوورەوە.', 'info');
+                        } else {
+                            // Build user data object
+                            const userData = {
+                                sub: data.user.id,
+                                name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email.split('@')[0],
+                                email: data.user.email,
+                                picture: data.user.user_metadata?.avatar_url || null
+                            };
+
+                            // Save to secure multi-layer storage
+                            try {
+                                const saved = await window.secureStorage.saveUser(userData);
+                                if (!saved) {
+                                    console.error('Failed to save user data');
+                                }
+                            } catch (storageError) {
+                                console.error('Storage error:', storageError);
+                            }
+
+                            // Initialize cloud sync - loads all user data from cloud
+                            try {
+                                if (window.cloudSync && supabaseClient) {
+                                    await window.cloudSync.initialize(supabaseClient, data.user.id);
+                                }
+                            } catch (e) {
+                                console.error('Cloud sync init error:', e);
+                            }
+
+                            // Wait for storage to persist and cloud sync to complete
+                            await new Promise(resolve => setTimeout(resolve, 1500));
+
+                            // Redirect to destination
+                            const redirectDest = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination') || '/quran.html';
+                            cleanupRedirectStorage();
+                            if (window.authRedirect) {
+                                await window.authRedirect.handlePostLoginRedirect(redirectDest);
+                            } else {
+                                window.location.href = redirectDest;
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Auto sign-in error:', e);
+                        showForm('signin');
+                    }
+                }, 2000);
+
+            } catch (error) {
+                console.error('OTP verification error:', error);
+                showMessage('هەڵە: ' + escapeHtml(error.message), 'error');
+
+                // If attempts left is in error, show it
+                if (error.attemptsLeft !== undefined) {
+                    showMessage(`کۆدی هەڵە. ${error.attemptsLeft} هەوڵی ماوە.`, 'error');
+                }
+            } finally {
+                setLoading('verifyOtpBtn', false);
+            }
+
+            return false;
+        }
+
+        // Resend OTP
+        let resendTimer = null;
+        async function resendOTP() {
+            if (!signupData) {
+                showMessage('داتای تۆمارکردن نەدۆزرایەوە. تکایە دووبارە تۆمار بکە.', 'error');
+                showForm('signup');
+                return;
+            }
+
+            clearMessage();
+
+            try {
+                console.log('Resending OTP to:', signupData.email);
+
+                const response = await fetch('/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: signupData.email,
+                        name: signupData.name
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || data.error || 'Failed to resend OTP');
+                }
+
+                showMessage('✅ کۆدێکی نوێ نێردرا بۆ ئیمەیلەکەت', 'success');
+
+                // Clear OTP inputs
+                document.querySelectorAll('.otp-input').forEach(input => input.value = '');
+                document.getElementById('otp1').focus();
+
+                // Start timer
+                startResendTimer();
+
+            } catch (error) {
+                console.error('Resend OTP error:', error);
+                showMessage('هەڵە لە ناردنەوەی کۆد: ' + escapeHtml(error.message), 'error');
+            }
+        }
+
+        // Start resend timer (60 seconds)
+        function startResendTimer() {
+            const resendBtn = document.getElementById('resendOtpBtn');
+            const resendText = document.getElementById('resendText');
+            const resendTimerSpan = document.getElementById('resendTimer');
+
+            let seconds = 60;
+
+            resendBtn.disabled = true;
+            resendText.style.display = 'none';
+            resendTimerSpan.style.display = 'inline';
+
+            if (resendTimer) clearInterval(resendTimer);
+
+            resendTimer = setInterval(() => {
+                seconds--;
+                resendTimerSpan.textContent = `نێردنەوە (${seconds})`;
+
+                if (seconds <= 0) {
+                    clearInterval(resendTimer);
+                    resendBtn.disabled = false;
+                    resendText.style.display = 'inline';
+                    resendTimerSpan.style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Initializing login page...');
+
+            // Initialize Supabase first
+            const initialized = await initializeSupabase();
+
+            if (!initialized) {
+                console.error('Failed to initialize Supabase');
+                return;
+            }
+
+            // Check if coming from logout (skip auto-redirect)
+            const urlParams = new URLSearchParams(window.location.search);
+            const isLogout = urlParams.get('logout') === 'true';
+
+            if (isLogout) {
+                console.log('🚪 [DEBUG LOGIN] User just logged out, skipping auto-redirect');
+
+                // AGGRESSIVE session clearing
+                try {
+                    // Sign out from Supabase
+                    await supabaseClient.auth.signOut();
+
+                    // Clear ALL Supabase-related items from localStorage
+                    const keysToRemove = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key.includes('supabase') || key.includes('sb-')) {
+                            keysToRemove.push(key);
+                        }
+                    }
+                    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+                    // Clear sessionStorage
+                    sessionStorage.clear();
+
+                    console.log('✅ [DEBUG LOGIN] All session data cleared');
+                } catch (e) {
+                    console.error('Error clearing session:', e);
+                }
+
+                // Clear URL parameter
+                window.history.replaceState({}, document.title, '/login.html');
+
+                // Show message
+                showMessage('ب سەرکەفتی دەرچویت. دشێیت ژ نوێڤە بچیتە ژوورەوە.', 'success');
+                return;
+            }
+
+            // Check if user is already logged in
+            try {
+                console.log('🔍 [DEBUG LOGIN] Checking for existing session...');
+                const sessionResponse = await supabaseClient.auth.getSession();
+                console.log('🔍 [DEBUG LOGIN] Full getSession response:', sessionResponse);
+                console.log('🔍 [DEBUG LOGIN] sessionResponse.data:', sessionResponse.data);
+                console.log('🔍 [DEBUG LOGIN] sessionResponse.data.session:', sessionResponse.data?.session);
+
+                const { data: { session }, error } = sessionResponse;
+
+                if (error) {
+                    console.error('❌ [DEBUG LOGIN] Session check error:', error);
+                    return;
+                }
+
+                if (session) {
+                    console.log('✅ [DEBUG LOGIN] User already logged in, session found:', session.user.email);
+                    console.log('🔍 [DEBUG LOGIN] Session expires at:', new Date(session.expires_at * 1000));
+                    console.log('🔍 [DEBUG LOGIN] Current time:', new Date());
+
+                    // Check if session is expired
+                    const isExpired = session.expires_at * 1000 < Date.now();
+                    console.log('🔍 [DEBUG LOGIN] Session expired?', isExpired);
+
+                    if (isExpired) {
+                        console.warn('⚠️ [DEBUG LOGIN] Session is expired, clearing it...');
+                        await supabaseClient.auth.signOut();
+                        console.log('✅ [DEBUG LOGIN] Expired session cleared');
+                        return;
+                    }
+
+                    const redirectDest = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination') || '/quran.html';
+                    cleanupRedirectStorage();
+                    showMessage('تو ژبەر د ژوورڤە دایی. ڤەگوهاستن...', 'info');
+                    setTimeout(() => {
+                        window.location.href = redirectDest;
+                    }, 1000);
+                } else {
+                    console.log('ℹ️ [DEBUG LOGIN] No session found, user can log in');
+                }
+            } catch (error) {
+                console.error('❌ [DEBUG LOGIN] Error checking session:', error);
+            }
+
+            // Listen for auth state changes
+            supabaseClient.auth.onAuthStateChange(async (event, session) => {
+                if (event === 'SIGNED_IN' && session) {
+                    // Build user data object
+                    const userData = {
+                        name: session.user.user_metadata?.full_name ||
+                              session.user.user_metadata?.name ||
+                              session.user.email?.split('@')[0] ||
+                              'User',
+                        email: session.user.email,
+                        picture: session.user.user_metadata?.avatar_url ||
+                                session.user.user_metadata?.picture ||
+                                `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(session.user.email)}`,
+                        sub: session.user.id
+                    };
+
+                    // Save to secure multi-layer storage
+                    try {
+                        const saved = await window.secureStorage.saveUser(userData);
+                        if (!saved) {
+                            console.error('Failed to save user data');
+                        }
+                    } catch (e) {
+                        console.error('Storage error:', e);
+                    }
+
+                    // Initialize cloud sync - loads all user data from cloud
+                    try {
+                        if (window.cloudSync && supabaseClient) {
+                            await window.cloudSync.initialize(supabaseClient, session.user.id);
+                        }
+                    } catch (e) {
+                        console.error('Cloud sync init error:', e);
+                    }
+
+                    const redirectDest = sessionStorage.getItem('login_redirect_destination') || localStorage.getItem('login_redirect_destination') || '/quran.html';
+                    cleanupRedirectStorage();
+                    showMessage('سەرکەفتی! ڤەگوهاستن...', 'success');
+                    showSuccessOverlay();
+
+                    // Wait for storage to persist and cloud sync to complete
+                    setTimeout(() => {
+                        window.location.href = redirectDest;
+                    }, 1500);
+                }
+            });
+
+            // Restore pending signup data from sessionStorage (Bug 2 fix)
+            const pendingSignup = sessionStorage.getItem('pending_signup_data');
+            if (pendingSignup && !signupData) {
+                try {
+                    signupData = JSON.parse(pendingSignup);
+                    if (signupData && signupData.email) {
+                        console.log('🔄 Restored pending signup data for:', signupData.email);
+                        document.getElementById('otpEmail').textContent = signupData.email;
+                        showForm('otp');
+                    }
+                } catch (e) {
+                    sessionStorage.removeItem('pending_signup_data');
+                }
+            }
+
+            // Setup hero panel based on redirect destination
+            setupHeroPanel();
+
+            console.log('✅ Login page ready');
+        });
+
+        // Cleanup redirect storage after successful redirect
+        function cleanupRedirectStorage() {
+            localStorage.removeItem('login_redirect_destination');
+            // Don't remove sessionStorage one — it gets cleared naturally
+        }
+
+        // Show success overlay animation
+        function showSuccessOverlay() {
+            const overlay = document.getElementById('successOverlay');
+            if (overlay) {
+                overlay.classList.add('visible');
+            }
+        }
+
+        // Context-aware hero panel - based on URL params only, not stored redirect
+        function setupHeroPanel() {
+            const heroPanel = document.getElementById('heroPanel');
+            const heroTitle = document.getElementById('heroTitle');
+            const heroSubtitle = document.getElementById('heroSubtitle');
+            if (!heroPanel) return;
+
+            // Check URL params directly for hero content
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect') || urlParams.get('from') || urlParams.get('source') || '';
+
+            if (redirect.includes('quran')) {
+                // Quran context
+                const cached = localStorage.getItem('login_hero_quran_image');
+                if (cached) heroPanel.style.backgroundImage = "url('" + cached + "')";
+                heroTitle.textContent = 'قورئانا پیرۆز';
+                heroSubtitle.textContent = 'بەردەوامکرنا خواندنا قورئانا پیرۆز';
+                fetchHeroImage('login_hero_quran_image', heroPanel, '/assets/images/quran-social-card-v3.jpg');
+            } else if (redirect.includes('islamvoice')) {
+                // IslamVoice context
+                const cached = localStorage.getItem('login_hero_islamvoice_image');
+                if (cached) heroPanel.style.backgroundImage = "url('" + cached + "')";
+                heroTitle.textContent = 'دەنگێ ئیسلامێ';
+                heroSubtitle.textContent = 'گوهدارکرنا دەنگێ ئیسلامێ';
+                fetchHeroImage('login_hero_islamvoice_image', heroPanel, '/assets/images/social-card-final.jpg');
+            } else {
+                // Default: show TafsirKurd hero (general/index)
+                const cached = localStorage.getItem('login_hero_default_image');
+                if (cached) heroPanel.style.backgroundImage = "url('" + cached + "')";
+                heroTitle.textContent = 'تەفسیر کورد';
+                heroSubtitle.textContent = 'بەردەوام بە بو لێگەڕیانا زانیاریێن ئایینی';
+                fetchHeroImage('login_hero_default_image', heroPanel, '/assets/images/social-card-final.jpg');
+            }
+        }
+
+        // Fetch hero image URL from site_settings via Supabase REST API
+        async function fetchHeroImage(settingKey, panel, fallbackUrl) {
+            try {
+                const cfg = await fetch('/config').then(function(r) { return r.json(); });
+                if (!cfg.supabaseUrl || !cfg.supabaseKey) return;
+                const res = await fetch(cfg.supabaseUrl + '/rest/v1/site_settings?key=eq.' + settingKey + '&select=value', {
+                    headers: { 'apikey': cfg.supabaseKey, 'Authorization': 'Bearer ' + cfg.supabaseKey }
+                });
+                const rows = await res.json();
+                if (rows && rows[0] && rows[0].value) {
+                    panel.style.backgroundImage = "url('" + rows[0].value + "')";
+                    localStorage.setItem(settingKey, rows[0].value);
+                } else {
+                    // No admin image set — use fallback
+                    panel.style.backgroundImage = "url('" + fallbackUrl + "')";
+                    localStorage.removeItem(settingKey);
+                }
+            } catch (e) {
+                // On error, use fallback if no cached image is showing
+                if (!panel.style.backgroundImage || panel.style.backgroundImage === 'none') {
+                    panel.style.backgroundImage = "url('" + fallbackUrl + "')";
+                }
+            }
+        }
+
+        // Animated particle background
+        (function initParticles() {
+            const canvas = document.getElementById('animatedBg');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            let animId = null;
+            const isMobile = window.innerWidth < 768;
+            const PARTICLE_COUNT = isMobile ? 30 : 50;
+            const CONNECT_DISTANCE = 120;
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            function getColor() {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                return isDark ? '255,255,255' : '0,0,0';
+            }
+
+            function createParticle() {
+                return {
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4,
+                    r: Math.random() * 2.5 + 1,
+                    opacity: Math.random() * 0.1 + 0.03,
+                    shape: Math.random() > 0.7 ? 'diamond' : 'circle'
+                };
+            }
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(createParticle());
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const c = getColor();
+
+                // Draw connections
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < CONNECT_DISTANCE) {
+                            const alpha = (1 - dist / CONNECT_DISTANCE) * 0.06;
+                            ctx.strokeStyle = `rgba(${c},${alpha})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // Draw particles
+                for (const p of particles) {
+                    ctx.fillStyle = `rgba(${c},${p.opacity})`;
+                    if (p.shape === 'diamond') {
+                        ctx.save();
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate(Math.PI / 4);
+                        ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
+                        ctx.restore();
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Move
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    // Wrap around
+                    if (p.x < -10) p.x = canvas.width + 10;
+                    if (p.x > canvas.width + 10) p.x = -10;
+                    if (p.y < -10) p.y = canvas.height + 10;
+                    if (p.y > canvas.height + 10) p.y = -10;
+                }
+
+                animId = requestAnimationFrame(draw);
+            }
+
+            // Pause when tab hidden
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    cancelAnimationFrame(animId);
+                } else {
+                    draw();
+                }
+            });
+
+            draw();
+        })();
+    </script>
+</body>
+</html>

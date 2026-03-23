@@ -1,0 +1,5650 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <!-- Theme loader inline to prevent flash - no network request -->
+    <script>(function(){var t=localStorage.getItem('theme'),p=JSON.parse(localStorage.getItem('userPreferences')||'{}');document.documentElement.setAttribute('data-theme',t||(p.darkMode?'dark':'light'))})();</script>
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2?v=16" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/css/islamvoice.css?v=202601290342" as="style">
+
+    <title data-t="islamvoice_title_1">دەنگێ ئیسلامێ | TafsirKurd</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="TafsirKurd | تەفسیر کورد - دەنگێ ئیسلامێ - ببینە زنجیرەیێن ڤیدیویی یێن ئیسلامی ب زمانێ کوردی. Tafsir Kurd IslamVoice.">
+    <meta name="keywords" content="tafsirkurd, tafsir kurd, تەفسیر کورد, دەنگێ ئیسلامێ, قورئان, کوردی, ئیسلام, ڤیدیۆ">
+    <meta name="author" content="Tafsir Kurd - Saman Abdulrahman">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://tafsirkurd.com/islamvoice.html">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="دەنگێ ئیسلامێ | TafsirKurd">
+    <meta property="og:description" content="TafsirKurd | تەفسیر کورد - کەناڵا ڤیدیویی یا ئیسلامی ب زمانێ کوردی">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tafsirkurd.com/islamvoice.html">
+    <meta property="og:site_name" content="TafsirKurd">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="دەنگێ ئیسلامێ | TafsirKurd">
+    <meta name="twitter:description" content="TafsirKurd | تەفسیر کورد - کەناڵا ڤیدیویی یا ئیسلامی ب زمانێ کوردی">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "IslamVoice - TafsirKurd",
+        "alternateName": ["تەفسیر کورد", "Tafsir Kurd", "tafsirkurd", "دەنگێ ئیسلامێ"],
+        "description": "Islamic video content in Kurdish on TafsirKurd",
+        "url": "https://tafsirkurd.com/islamvoice.html",
+        "inLanguage": "ku",
+        "isPartOf": {
+            "@type": "WebSite",
+            "name": "TafsirKurd",
+            "alternateName": "Tafsir Kurd",
+            "url": "https://tafsirkurd.com"
+        }
+    }
+    </script>
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#000000">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+
+    <!-- Critical CSS - layout must load first -->
+    <link rel="stylesheet" href="/css/islamvoice.css?v=202601290342">
+
+    <!-- Fonts - async load, has font-display: swap -->
+    <link rel="stylesheet" href="/assets/fonts/fonts.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="/assets/fonts/fonts.css"></noscript>
+
+    <!-- FontAwesome - async load -->
+    <link rel="stylesheet" href="/assets/fontawesome/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="/assets/fontawesome/all.min.css"></noscript>
+
+    <!-- Defer non-critical scripts -->
+    <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co">
+  <script src="/utils/translations.js?v=20260225" defer></script>
+    <script src="/utils/security.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+
+    <style>
+        /* v2.1 - Black/White Theme */
+        /* ===== CSS VARIABLES ===== */
+        /* Light mode (default) */
+        :root {
+            --primary: #ffffff;
+            --primary-light: #f3f4f6;
+            --accent: #000000;
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #3498db;
+            --purple: #9b59b6;
+            --pink: #e91e63;
+
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+
+            --transition-fast: 0.2s;
+            --transition-medium: 0.4s;
+            --cubic: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Video Loading Spinner */
+        .video-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .video-loading.hidden {
+            display: none;
+        }
+
+        .video-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .video-loading p {
+            margin-top: 15px;
+            color: #ffffff;
+            font-size: 0.9rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Loading States */
+        .loading-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            width: 100%;
+            min-height: 300px;
+            grid-column: 1 / -1; /* Span all grid columns */
+            text-align: center;
+            margin: 0 auto;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-content p {
+            margin-top: 20px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* Body scroll lock when sidebar is open - only on desktop */
+        @media (min-width: 769px) {
+            html.sidebar-open,
+            body.sidebar-open {
+                overflow: hidden !important;
+                height: 100% !important;
+            }
+
+            body.sidebar-open .islamvoice-container {
+                overflow: hidden;
+            }
+        }
+        /* Mobile: allow scrolling when sidebar is open */
+
+        /* Skeleton Loading Cards - better LCP */
+        .skeleton-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .skeleton-image {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: linear-gradient(90deg, var(--border) 25%, var(--primary-light) 50%, var(--border) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-shimmer 1.5s infinite;
+        }
+
+        .skeleton-content {
+            padding: 16px;
+        }
+
+        .skeleton-title {
+            height: 20px;
+            background: var(--border);
+            border-radius: 4px;
+            margin-bottom: 12px;
+            width: 80%;
+        }
+
+        .skeleton-text {
+            height: 14px;
+            background: var(--border);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            width: 100%;
+        }
+
+        .skeleton-meta {
+            height: 12px;
+            background: var(--border);
+            border-radius: 4px;
+            width: 50%;
+        }
+
+        @keyframes skeleton-shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* Dark mode */
+        [data-theme="dark"] {
+            --primary: #000000;
+            --primary-light: #333333;
+            --accent: #ffffff;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #ffffff;
+            --text-muted: #b3b3b3;
+            --border: #2a2a2a;
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Dark mode nav styles */
+        [data-theme="dark"] .nav {
+            background: rgba(0, 0, 0, 0.85);
+            border-bottom-color: rgba(255, 255, 255, 0.08);
+        }
+
+        [data-theme="dark"] .nav.scrolled {
+            background: rgba(0, 0, 0, 0.95);
+        }
+
+        [data-theme="dark"] .nav-logo .header-title {
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .nav-logo .logo-image {
+            filter: invert(1) brightness(1.2);
+        }
+
+        [data-theme="dark"] .nav-link {
+            color: #e5e5e5;
+        }
+
+        [data-theme="dark"] .nav-link::before {
+            background: #fff;
+        }
+
+        [data-theme="dark"] .nav-link:hover,
+        [data-theme="dark"] .nav-link.active {
+            color: #000;
+        }
+
+        [data-theme="dark"] .icon-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="dark"] .nav-search-input {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .nav-search-input:focus {
+            background: #2a2a2a;
+            border-color: #444;
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .nav-search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        [data-theme="dark"] .search-icon {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Dark mode sidebar styles */
+        [data-theme="dark"] .sidebar {
+            background: #1a1a1a;
+            border-left-color: #2a2a2a;
+        }
+
+        [data-theme="dark"] .sidebar-btn {
+            color: #b3b3b3;
+        }
+
+        [data-theme="dark"] .sidebar-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .sidebar-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .sidebar-btn.active::before {
+            background: #ffffff;
+        }
+
+        /* Light mode sidebar (default) - FORCE BLACK v2 */
+        .sidebar-btn.active {
+            background: #1a1a1a !important;
+            color: #ffffff !important;
+        }
+
+        .sidebar-btn.active::before {
+            background: #000000 !important;
+        }
+
+        /* Sidebar Badge Styling */
+        .sidebar-btn {
+            position: relative;
+        }
+
+        .sidebar-btn .badge {
+            position: absolute;
+            top: 50%;
+            left: 12px;
+            transform: translateY(-50%);
+            background: #000;
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 600;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-btn .badge:empty,
+        .sidebar-btn .badge[data-count="0"] {
+            display: none !important;
+        }
+
+        .sidebar-btn:hover .badge {
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        [data-theme="dark"] .sidebar-btn .badge {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Sidebar Sections (Categories, Sheikhs) */
+        .sidebar-section {
+            margin: 4px 0;
+        }
+
+        .sidebar-section-header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: right;
+        }
+
+        .sidebar-section-header:hover {
+            background: var(--primary-light);
+            color: var(--text);
+        }
+
+        .sidebar-section-header .section-arrow {
+            margin-right: auto;
+            font-size: 0.75rem;
+            transition: transform 0.3s;
+        }
+
+        .sidebar-section-header.open .section-arrow {
+            transform: rotate(180deg);
+        }
+
+        .sidebar-section-content {
+            padding: 0 8px 8px 8px;
+        }
+
+        .filter-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: right;
+            width: 100%;
+        }
+
+        .filter-item:hover {
+            background: var(--primary-light);
+            color: var(--text);
+        }
+
+        .filter-item.active {
+            background: rgba(0, 0, 0, 0.08);
+            color: #1a1a1a;
+            font-weight: 500;
+        }
+
+        .filter-item .filter-count {
+            margin-right: auto;
+            font-size: 0.75rem;
+            background: var(--bg);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .sidebar-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 12px 16px;
+            flex-shrink: 0;
+        }
+
+        /* Sidebar Navigation Links */
+        .sidebar-nav-links {
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-nav-link:hover {
+            background: var(--card-bg);
+        }
+
+        .sidebar-nav-link.active {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .sidebar-nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Sidebar Actions (user profile, notifications, theme, search) */
+        /* Hidden on desktop - only shown on mobile via media query */
+        .sidebar-actions {
+            display: none;
+            flex-direction: column;
+            padding: 12px;
+            gap: 8px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        /* Sidebar nav-links also hidden on desktop */
+        .sidebar-nav-links {
+            display: none;
+        }
+
+        /* Hide dividers that separate mobile-only sections on desktop */
+        .sidebar-actions + .sidebar-divider,
+        .sidebar-nav-links + .sidebar-divider {
+            display: none;
+        }
+
+        .sidebar-actions-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .sidebar-actions .icon-btn {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            border-radius: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+            font-size: 1.1rem;
+            position: relative;
+        }
+
+        .sidebar-actions .icon-btn:hover {
+            background: var(--accent);
+            color: var(--primary);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar-actions .icon-btn:active {
+            transform: scale(0.95);
+        }
+
+        [data-theme="dark"] .sidebar-actions .icon-btn:hover {
+            background: var(--accent);
+            color: var(--primary);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Sidebar notification dropdown - full width on mobile */
+        /* Mobile notification dropdown - positioned outside sidebar */
+        .mobile-notification-dropdown {
+            display: none;
+            position: fixed !important;
+            top: auto !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 100% !important;
+            margin: 0 !important;
+            border-radius: 20px 20px 0 0 !important;
+            max-height: 60vh;
+            overflow-y: auto;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+            z-index: 10002;
+            background: var(--card-bg);
+            border: none;
+            /* Safe area for iPhone Safari bottom bar */
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .mobile-notification-dropdown.show {
+            display: block;
+            animation: slideUpMobile 0.3s ease-out;
+        }
+
+        @keyframes slideUpMobile {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .mobile-notification-dropdown .notification-dropdown-header {
+            padding: 16px 20px;
+            font-size: 1.1rem;
+            position: sticky;
+            top: 0;
+            background: var(--card-bg);
+            z-index: 1;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mobile-notification-dropdown .notification-list {
+            padding: 8px;
+        }
+
+        .mobile-notification-dropdown .notification-item {
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-bottom: 6px;
+        }
+
+        /* Mobile notification overlay */
+        .notification-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10001;
+            backdrop-filter: blur(2px);
+        }
+
+        .notification-overlay.active {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        /* Sidebar notification badge */
+        .sidebar-actions .icon-btn .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 18px;
+            height: 18px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--card-bg);
+        }
+
+        .sidebar-actions .icon-btn .notification-badge:empty,
+        .sidebar-actions .icon-btn .notification-badge[data-count="0"] {
+            display: none;
+        }
+
+        .sidebar-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-user-profile:hover {
+            background: rgba(0, 0, 0, 0.03);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        [data-theme="dark"] .sidebar-user-profile:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar-user-profile .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .sidebar-user-profile .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sidebar-user-profile .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-user-profile .user-email {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-search-input {
+            flex: 1;
+            min-width: 0;
+            max-width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--card-bg);
+            color: var(--text);
+            font-size: 0.9rem;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .sidebar-search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .sidebar-login-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px;
+            background: #1a1a1a;
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .sidebar-login-btn:hover {
+            background: #000000;
+            transform: translateY(-1px);
+        }
+
+        [data-theme="dark"] .sidebar-login-btn {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        [data-theme="dark"] .sidebar-login-btn:hover {
+            background: #f0f0f0;
+        }
+
+        /* Sidebar Dropdowns */
+        .sidebar-dropdown-container {
+            position: relative;
+        }
+
+        /* Profile dropdown - pushes content down with animation */
+        .sidebar-profile-dropdown {
+            max-height: 0;
+            overflow: hidden;
+            background: var(--card-bg);
+            border-radius: 12px;
+            margin-top: 0;
+            transition: max-height 0.3s ease, margin-top 0.3s ease, padding 0.3s ease;
+            padding: 0 8px;
+        }
+
+        .sidebar-profile-dropdown.active {
+            max-height: 200px;
+            margin-top: 8px;
+            padding: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .sidebar-profile-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            color: var(--text);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.2s, transform 0.2s;
+            cursor: pointer;
+        }
+
+        .sidebar-profile-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+            transform: translateX(-4px);
+        }
+
+        [data-theme="dark"] .sidebar-profile-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar-profile-item.logout {
+            color: #e74c3c;
+        }
+
+        .sidebar-profile-item.logout:hover {
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        .sidebar-profile-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Mobile Sidebar Actions */
+        @media (max-width: 768px) {
+            .sidebar-actions {
+                padding: 16px;
+                gap: 12px;
+            }
+
+            .sidebar-user-profile {
+                padding: 14px;
+            }
+
+            .sidebar-user-profile .user-avatar {
+                width: 48px;
+                height: 48px;
+            }
+
+            .sidebar-user-profile .user-name {
+                font-size: 1rem;
+            }
+
+            .sidebar-actions-row {
+                gap: 10px;
+            }
+
+            .sidebar-search-input {
+                padding: 12px 16px;
+                font-size: 1rem;
+            }
+
+            .sidebar-login-btn {
+                padding: 14px;
+                font-size: 1rem;
+            }
+
+            .sidebar-profile-item {
+                padding: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar-actions {
+                padding: 12px;
+            }
+
+            .sidebar-nav-links {
+                padding: 8px;
+            }
+
+            .sidebar-nav-link {
+                padding: 14px 12px;
+                font-size: 1rem;
+            }
+        }
+
+        /* Touch feedback for mobile - active states */
+        @media (hover: none) and (pointer: coarse) {
+            .icon-btn:active,
+            .sidebar-btn:active,
+            .sidebar-nav-link:active,
+            .sidebar-profile-item:active,
+            .action-btn:active {
+                transform: scale(0.95);
+                opacity: 0.8;
+            }
+
+            .sidebar-user-profile:active {
+                transform: scale(0.98);
+                opacity: 0.9;
+            }
+
+            .sidebar-login-btn:active {
+                transform: scale(0.98);
+                opacity: 0.85;
+            }
+        }
+
+        [data-theme="dark"] .sidebar-section-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="dark"] .filter-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="dark"] .filter-item.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+        }
+
+        /* Active Filter Indicator */
+        .active-filter-indicator {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.03));
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .active-filter-indicator span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+
+        .active-filter-indicator button {
+            margin-right: auto;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border: none;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .active-filter-indicator button:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        [data-theme="dark"] .active-filter-indicator {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="dark"] .active-filter-indicator span {
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .active-filter-indicator button {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ===== RESET ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+            max-width: 100vw;
+            margin: 0;
+            padding: 0;
+            /* Safe area for notched devices and iPhone Safari bottom bar */
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* ===== NAVIGATION ===== */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid #e5e7eb;
+            z-index: 1000;
+            transition: background var(--transition-medium), border-color var(--transition-medium);
+            width: 100%;
+            max-width: 100vw;
+            overflow: visible;
+            box-sizing: border-box;
+        }
+
+        .nav.scrolled {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            max-width: 1920px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .nav-logo:hover {
+            transform: scale(1.03);
+        }
+
+        .nav-logo .logo-image {
+            width: 55px;
+            height: 55px;
+            object-fit: contain;
+            border-radius: 50%;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .nav-logo:hover .logo-image {
+            transform: rotate(-5deg) scale(1.1);
+        }
+
+        .nav-logo .header-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary, #111827);
+            transition: letter-spacing 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .nav-logo:hover .header-title {
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 4px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            color: #111827;
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            background: #000;
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: -1;
+        }
+
+        .nav-link:hover::before,
+        .nav-link.active::before {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: #fff;
+        }
+
+        .nav-link i {
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-link:hover i,
+        .nav-link.active i {
+            transform: scale(1.1);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            color: #6b7280;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .nav-search-input {
+            width: 280px;
+            padding: 10px 35px 10px 15px;
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 25px;
+            color: #111827;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: all var(--transition-medium);
+        }
+
+        .nav-search-input::placeholder {
+            color: #6b7280;
+        }
+
+        .nav-search-input:focus {
+            outline: none;
+            width: 350px;
+            background: #ffffff;
+            border-color: #1a1a1a;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .icon-btn {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #374151;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            position: relative;
+        }
+
+        .icon-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+            transform: scale(1.1);
+        }
+
+        /* Mobile search button - hidden by default, shown on mobile */
+        .mobile-search-btn {
+            display: none;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .notification-badge:empty,
+        .notification-badge[data-count="0"] {
+            display: none;
+        }
+
+        /* Notification Dropdown */
+        .notification-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            left: auto;
+            width: 320px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            z-index: 10001;
+            display: none;
+            overflow: hidden;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .notification-dropdown-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .mark-all-read {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .mark-all-read:hover {
+            text-decoration: underline;
+        }
+
+        .notification-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+            background: var(--bg);
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item.unread {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .notification-icon.new-episode {
+            background: rgba(0, 0, 0, 0.1);
+            color: #000;
+        }
+        [data-theme="dark"] .notification-icon.new-episode {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .notification-icon.new-series {
+            background: rgba(52, 152, 219, 0.2);
+            color: var(--info);
+        }
+
+        .notification-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .notification-dropdown-footer {
+            padding: 0.75rem 1rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .notification-dropdown-footer a {
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .notification-dropdown-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .notification-empty {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .notification-empty i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.5;
+        }
+
+        /* ===== VIDEO PLAYER ===== */
+        .player-section {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            direction: rtl;
+        }
+
+        .player-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Video wrapper - contains video centered */
+        .video-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+
+        .video-player {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            background: #000;
+            display: block;
+            margin: auto;
+        }
+
+        /* Portrait/Reel video - centered with animation */
+        .player-container.portrait {
+            animation: fadeInCenter 0.4s ease-out;
+        }
+
+        .player-container.portrait .video-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .player-container.portrait .video-player {
+            width: auto;
+            height: 100%;
+            max-height: 100vh;
+            max-width: 100%;
+            object-fit: contain;
+            display: block;
+            margin: auto;
+        }
+
+        @keyframes fadeInCenter {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Landscape video */
+        .player-container.landscape .video-wrapper {
+            width: 100%;
+            height: 100%;
+        }
+
+        .player-container.landscape .video-player {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Portrait/Reel video - optimized controls */
+        .player-container.portrait .player-overlay {
+            padding: 0.5rem 0.75rem;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, transparent 100%);
+        }
+
+        .player-container.portrait .video-info {
+            display: none; /* Hide info on portrait for clean look */
+        }
+
+        .player-container.portrait .video-controls {
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: nowrap;
+        }
+
+        .player-container.portrait .control-btn {
+            font-size: 1.25rem;
+            padding: 0.5rem;
+        }
+
+        .player-container.portrait #fullscreenBtn {
+            display: flex !important; /* Always show fullscreen */
+            font-size: 1.25rem;
+        }
+
+        .player-container.portrait .progress-bar {
+            min-width: 100px;
+            flex: 1;
+            height: 4px;
+        }
+
+        .player-container.portrait .time-display {
+            font-size: 0.75rem;
+            min-width: auto;
+        }
+
+        .player-container.portrait .volume-control,
+        .player-container.portrait .advanced-controls,
+        .player-container.portrait #rewindBtn,
+        .player-container.portrait #forwardBtn {
+            display: none; /* Hide extra controls on portrait */
+        }
+
+        .player-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
+            padding: 2rem;
+            opacity: 0;
+            transition: opacity var(--transition-medium);
+            z-index: 10;
+        }
+
+        .player-container:hover .player-overlay,
+        .player-overlay.show {
+            opacity: 1;
+        }
+
+        /* Fullscreen mode fixes */
+        .player-container:fullscreen {
+            background: #000;
+        }
+
+        .player-container:fullscreen .player-overlay {
+            z-index: 2147483647; /* Max z-index for fullscreen */
+        }
+
+        .player-container:fullscreen .video-controls {
+            z-index: 2147483647;
+        }
+
+        /* Webkit fullscreen (Safari) */
+        .player-container:-webkit-full-screen {
+            background: #000;
+        }
+
+        .player-container:-webkit-full-screen .player-overlay {
+            z-index: 2147483647;
+        }
+
+        .video-info {
+            margin-bottom: 1rem;
+            direction: rtl;
+            text-align: right;
+        }
+
+        .video-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .video-meta {
+            display: flex;
+            gap: 1rem;
+            color: #b3b3b3;
+            font-size: 0.9rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .rating-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .view-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+            direction: rtl;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .action-btn.active {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+
+        #audioOnlyBtn.active {
+            background: #1ab7ea;
+            border-color: #1ab7ea;
+        }
+
+        /* Audio Only Mode Overlay */
+        .audio-only-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .audio-only-overlay.active {
+            display: flex;
+        }
+
+        .audio-visualizer {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1ab7ea 0%, #0d5d7a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 60px rgba(26, 183, 234, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .audio-visualizer i {
+            font-size: 5rem;
+            color: #ffffff;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 60px rgba(26, 183, 234, 0.5);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 80px rgba(26, 183, 234, 0.8);
+            }
+        }
+
+        .audio-only-text {
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .audio-only-text h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .audio-only-text p {
+            font-size: 1.2rem;
+            color: #b3b3b3;
+        }
+
+        .video-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            direction: ltr; /* Controls stay LTR for universal usability */
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+            min-width: 200px;
+            direction: ltr; /* Progress always left-to-right */
+        }
+
+        .progress-filled {
+            height: 100%;
+            background: var(--danger);
+            border-radius: 5px;
+            transition: width 0.1s linear;
+            position: relative;
+        }
+
+        .progress-handle {
+            position: absolute;
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background: #ffffff;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+
+        .progress-bar:hover .progress-handle {
+            opacity: 1;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform var(--transition-fast);
+            padding: 0.5rem;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .time-display {
+            color: #ffffff;
+            font-size: 0.9rem;
+            min-width: 100px;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .volume-slider {
+            width: 80px;
+        }
+
+        /* Advanced Controls */
+        .advanced-controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .speed-selector,
+        .quality-selector,
+        .subtitle-selector {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            display: none;
+            min-width: 150px;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: #ffffff;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .dropdown-item.active {
+            color: var(--danger);
+        }
+
+        .dropdown-item.active::after {
+            content: '✓';
+            font-weight: 700;
+        }
+
+        /* Chapter Markers */
+        .chapter-markers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .chapter-marker {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* ===== CONTENT SECTIONS ===== */
+        .content {
+            padding: 2rem;
+            padding-top: 120px;
+            max-width: 1920px;
+            margin: 0 auto;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .content .section:first-child {
+            padding-top: 160px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .view-all {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color var(--transition-fast);
+        }
+
+        .view-all:hover {
+            color: var(--text);
+        }
+
+        /* ===== EPISODE GRID ===== */
+        .episodes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .episode-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all var(--transition-medium) var(--cubic);
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .episode-card:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--text);
+        }
+
+        .episode-card .episode-thumbnail {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            overflow: hidden;
+        }
+
+        .episode-card .episode-thumbnail img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .episode-duration {
+            position: absolute;
+            bottom: 0.5rem;
+            left: 0.5rem;
+            background: rgba(0, 0, 0, 0.85);
+            color: #ffffff;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 5;
+        }
+
+        /* Episode item (list view) */
+        .episode-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .episode-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .episode-item .episode-thumbnail {
+            position: relative;
+            width: 220px;
+            min-width: 220px;
+            height: 124px;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .episode-item .episode-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Duration inside play overlay */
+        .episode-play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            cursor: pointer;
+        }
+
+        .episode-item:hover .episode-play-overlay,
+        .episode-card:hover .episode-play-overlay,
+        .episode-thumbnail:hover .episode-play-overlay {
+            opacity: 1;
+        }
+
+        .episode-play-overlay .episode-play-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .episode-play-overlay .episode-play-icon i {
+            color: #000;
+            font-size: 1.2rem;
+            margin-right: -2px;
+        }
+
+        .episode-play-overlay .episode-duration {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            opacity: 1;
+            font-size: 0.8rem;
+            padding: 2px 6px;
+        }
+
+        .episode-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: var(--danger);
+            transition: width var(--transition-medium);
+        }
+
+        /* ===== WATCHED VIDEO TRACKING STYLES ===== */
+
+        /* Small badge showing "هاتیە دیتن" on watched videos */
+        .watched-overlay {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #000;
+            padding: 4px 10px;
+            border-radius: 4px;
+            z-index: 8;
+            pointer-events: none;
+        }
+
+        .watched-overlay span {
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        [data-theme="dark"] .watched-overlay {
+            background: #fff;
+        }
+        [data-theme="dark"] .watched-overlay span {
+            color: #000;
+        }
+
+        /* Progress bar - matches badge color */
+        .episode-progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 5;
+        }
+
+        .episode-progress-fill {
+            height: 100%;
+            background: #000;
+            transition: width 0.3s ease;
+        }
+        [data-theme="dark"] .episode-progress-fill {
+            background: #fff;
+        }
+
+        .play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity var(--transition-medium);
+        }
+
+        .episode-card:hover .play-overlay {
+            opacity: 1;
+        }
+
+        .play-overlay i {
+            color: #000;
+            font-size: 1.5rem;
+            margin-right: -3px;
+        }
+
+        /* Locked/Scheduled Episode Styles */
+        .episode-card.locked {
+            opacity: 0.7;
+        }
+
+        .episode-card.locked .play-overlay {
+            background: rgba(0, 0, 0, 0.7);
+            opacity: 1;
+        }
+
+        .episode-card.locked .play-overlay i {
+            color: #ffc107;
+        }
+
+        .episode-card.locked:hover {
+            transform: none;
+        }
+
+        .locked-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffc107;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            z-index: 5;
+        }
+
+        .locked-time {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            text-align: center;
+            z-index: 5;
+        }
+
+        /* Shake animation for locked episodes */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .episode-card.shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .quick-actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity var(--transition-medium);
+        }
+
+        .episode-card:hover .quick-actions {
+            opacity: 1;
+        }
+
+        .quick-btn {
+            width: 32px;
+            height: 32px;
+            background: rgba(0, 0, 0, 0.8);
+            border: none;
+            border-radius: 50%;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .quick-btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            transform: scale(1.1);
+        }
+
+        .quick-btn-delete {
+            background: rgba(231, 76, 60, 0.8);
+        }
+
+        .quick-btn-delete:hover {
+            background: #e74c3c;
+            color: #ffffff;
+        }
+
+        .episode-info {
+            padding: 1rem;
+        }
+
+        .episode-number {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .episode-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .episode-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .episode-stats {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .episode-stat {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .episode-meta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .episode-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .episode-meta i {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        /* ===== SERIES SELECTOR ===== */
+        .series-selector {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding: 1rem 0;
+            scrollbar-width: thin;
+        }
+
+        .series-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            color: var(--text);
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all var(--transition-medium);
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .series-btn:hover,
+        .series-btn.active {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
+            transform: translateY(-2px);
+        }
+
+        /* ===== CATEGORIES ===== */
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .category-card {
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+        }
+
+        .category-card:hover {
+            background: var(--text);
+            color: var(--bg);
+            transform: scale(1.05);
+        }
+
+        .category-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .category-name {
+            font-weight: 600;
+        }
+
+        /* ===== MODALS ===== */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        /* Search Modal */
+        .search-container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            font-size: 1.5rem;
+            color: var(--text);
+            font-family: inherit;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--text);
+        }
+
+        .search-results {
+            margin-top: 2rem;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            #searchModal {
+                align-items: flex-start;
+                padding: 1rem;
+                padding-top: 15vh;
+            }
+
+            .search-input {
+                font-size: 1.1rem;
+                padding: 1rem 1.25rem;
+                border-radius: 14px;
+            }
+
+            .search-results {
+                margin-top: 1rem;
+                max-height: 55vh;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #searchModal {
+                padding: 0.75rem;
+                padding-top: 10vh;
+            }
+
+            .search-input {
+                font-size: 1rem;
+                padding: 0.85rem 1rem;
+                border-radius: 12px;
+            }
+
+            .search-results {
+                margin-top: 0.75rem;
+                max-height: 60vh;
+            }
+        }
+
+        /* Share Modal */
+        .share-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .share-btn {
+            padding: 1rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text);
+        }
+
+        .share-btn:hover {
+            background: var(--text);
+            color: var(--bg);
+            transform: translateY(-3px);
+        }
+
+        .share-btn i {
+            font-size: 1.5rem;
+        }
+
+        /* Playlist Modal */
+        .playlist-items {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .playlist-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+        }
+
+        .playlist-item:hover {
+            background: var(--border);
+        }
+
+        .playlist-item.playing {
+            border: 2px solid var(--danger);
+        }
+
+        .playlist-thumb {
+            width: 80px;
+            height: 45px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .playlist-info {
+            flex: 1;
+        }
+
+        .playlist-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .playlist-duration {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== FLOATING ELEMENTS ===== */
+        .floating-player {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 400px;
+            height: 225px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            z-index: 1500;
+            display: none;
+        }
+
+        .floating-player.active {
+            display: block;
+        }
+
+        .floating-player video {
+            width: 100%;
+            height: 100%;
+        }
+
+        .floating-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border: none;
+            color: #ffffff;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        /* ===== NOTIFICATIONS ===== */
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 30px;
+            background: var(--card-bg);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            gap: 1rem;
+            min-width: 300px;
+        }
+
+        .notification.show {
+            display: flex;
+            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification-icon {
+            font-size: 1.5rem;
+        }
+
+        /* ===== NEW BADGE ===== */
+        .new-badge {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: var(--danger);
+            color: #ffffff;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .trending-badge {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .top-badge {
+            background: linear-gradient(135deg, #ffd700, #ffa500);
+            color: #000;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .nav-search-input {
+                width: 220px;
+            }
+
+            .nav-search-input:focus {
+                width: 280px;
+            }
+        }
+
+        /* Mobile Hamburger Menu */
+        .hamburger-menu {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            cursor: pointer;
+            padding: 10px;
+            z-index: 1001;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .hamburger-menu:hover {
+            transform: scale(1.08);
+        }
+
+        .hamburger-menu:active {
+            transform: scale(0.95);
+        }
+
+        .hamburger-menu span {
+            width: 26px;
+            height: 2.5px;
+            background: var(--accent);
+            border-radius: 4px;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-origin: center;
+        }
+
+        .hamburger-menu span:nth-child(2) {
+            width: 20px;
+            margin-right: auto;
+        }
+
+        .hamburger-menu.active span:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+
+        .hamburger-menu.active span:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+
+        .hamburger-menu.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        .nav-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .nav-overlay.active {
+            display: block;
+        }
+
+        /* Tablet/Mobile breakpoint - aligned with sidebar 1024px breakpoint */
+        @media (max-width: 1024px) {
+            .nav-container {
+                padding: 0.75rem 1rem;
+                flex-wrap: nowrap;
+                gap: 0.75rem;
+            }
+
+            .hamburger-menu {
+                display: flex;
+                order: 3;
+            }
+
+            .nav-logo {
+                order: 1;
+                flex: 0 0 auto;
+            }
+
+            /* Hide nav-links on mobile - use sidebar for navigation */
+            .nav-links {
+                display: none !important;
+            }
+
+            /* Hide search input on tablets/mobile, show search button */
+            .nav-search-container {
+                display: none;
+            }
+
+            .mobile-search-btn {
+                display: flex;
+            }
+
+            /* Hide nav-actions on mobile - use sidebar-actions instead */
+            .nav-actions {
+                display: none !important;
+            }
+
+            /* Show sidebar-actions on mobile */
+            .sidebar-actions {
+                display: flex !important;
+            }
+
+            /* Show sidebar nav-links on mobile */
+            .sidebar-nav-links {
+                display: flex !important;
+                flex-direction: column;
+                padding: 0 12px;
+                gap: 4px;
+            }
+
+            /* Show sidebar dividers on mobile */
+            .sidebar-actions + .sidebar-divider,
+            .sidebar-nav-links + .sidebar-divider {
+                display: block !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 0.75rem 1rem;
+            }
+
+            .nav-logo span {
+                font-size: 1.1rem;
+            }
+
+            .nav-logo img {
+                height: 32px;
+            }
+
+            .icon-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+
+            /* Hide search in nav on mobile - use inline search toggle */
+            .nav-search-container {
+                display: none !important;
+            }
+
+            .notification-badge {
+                width: 16px;
+                height: 16px;
+                font-size: 0.65rem;
+            }
+
+            .player-section {
+                height: 60vh;
+            }
+
+            .video-title {
+                font-size: 1.5rem;
+            }
+
+            .content {
+                padding: 1rem;
+                padding-top: 1.5rem;
+            }
+
+            .episodes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .categories {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .video-controls {
+                flex-wrap: wrap;
+            }
+
+            .volume-control,
+            .advanced-controls {
+                display: none;
+            }
+
+            .floating-player {
+                width: 300px;
+                height: 169px;
+                bottom: 80px;
+                left: 10px;
+            }
+
+            .video-actions {
+                flex-wrap: wrap;
+            }
+
+            .action-btn {
+                font-size: 0.9rem;
+                padding: 0.75rem 1.25rem;
+                min-height: 44px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-container {
+                padding: 0.75rem 1rem;
+            }
+
+            .nav-logo {
+                font-size: 1.2rem;
+            }
+
+            .nav-logo span {
+                display: none;
+            }
+
+            .nav-logo img {
+                height: 32px;
+            }
+
+            .nav-actions {
+                gap: 0.5rem;
+            }
+
+            .icon-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1rem;
+            }
+
+            .search-icon {
+                font-size: 0.85rem;
+                right: 10px;
+            }
+
+            .nav-search-input {
+                font-size: 0.85rem;
+                padding: 8px 30px 8px 10px;
+            }
+
+            .notification-badge {
+                width: 18px;
+                height: 18px;
+                font-size: 0.7rem;
+                top: -4px;
+                left: -4px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .nav-container {
+                padding: 0.65rem 0.75rem;
+            }
+
+            .nav-logo {
+                font-size: 1.1rem;
+            }
+
+            .nav-logo img {
+                height: 28px;
+            }
+
+            .icon-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1rem;
+            }
+
+            .nav-search-input {
+                font-size: 0.8rem;
+                padding: 7px 28px 7px 8px;
+            }
+        }
+
+        /* ===== AUTH MODAL ===== */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-modal.active {
+            display: flex;
+        }
+
+        .auth-modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-modal-container {
+            position: relative;
+            max-width: 950px;
+            width: 95%;
+            max-height: 85vh;
+            background: linear-gradient(145deg, #2d2d2d 0%, #1f1f1f 100%);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 50px 120px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: rgba(255, 255, 255, 0.9);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .auth-close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            transform: scale(1.1);
+        }
+
+        .auth-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 85vh;
+            max-height: 650px;
+        }
+
+        .auth-form-side {
+            padding: 50px 45px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: #2a2a2a;
+            position: relative;
+            z-index: 2;
+        }
+
+        .auth-image-side {
+            position: relative;
+            background: linear-gradient(135deg, #d4a574 0%, #c8956a 30%, #b8805c 70%, #a67050 100%);
+            overflow: hidden;
+            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-image-side::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('/assets/images/islamic-pattern.svg');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.08;
+            z-index: 0;
+            animation: subtle-move 20s ease-in-out infinite;
+        }
+
+        @keyframes subtle-move {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.05) rotate(1deg); }
+        }
+
+        .auth-image-content {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .auth-hero-image {
+            width: 100%;
+            max-width: 450px;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.3));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .auth-hero-text {
+            display: none;
+        }
+
+        .auth-stats {
+            display: none;
+        }
+
+        .auth-logo {
+            margin-bottom: 1.8rem;
+            text-align: center;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        .auth-logo img {
+            height: 50px;
+            filter: brightness(0) invert(1);
+            transition: transform 0.3s;
+        }
+
+        .auth-logo img:hover {
+            transform: scale(1.05);
+        }
+
+        .auth-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 2rem;
+            text-align: left;
+            letter-spacing: -0.3px;
+            animation: fadeInUp 0.6s ease-in-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-subtitle {
+            display: none;
+        }
+
+        .auth-social-buttons {
+            display: flex;
+            flex-direction: row;
+            gap: 12px;
+            margin-bottom: 1.8rem;
+        }
+
+        .auth-social-btn {
+            flex: 1;
+            padding: 16px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-social-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .auth-social-btn:hover::before {
+            left: 100%;
+        }
+
+        .auth-social-btn i {
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .google-btn {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+        }
+
+        .google-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .google-btn:hover i {
+            transform: scale(1.1);
+        }
+
+        .auth-divider {
+            text-align: center;
+            margin: 1.3rem 0;
+            position: relative;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 42%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .auth-divider::before {
+            left: 0;
+        }
+
+        .auth-divider::after {
+            right: 0;
+        }
+
+        .auth-divider span {
+            color: rgba(255, 255, 255, 0.7);
+            background: #2a2a2a;
+            padding: 0 1rem;
+            font-size: 0.85rem;
+        }
+
+        .auth-input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-input-group label {
+            display: block;
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 0.6rem;
+            font-size: 0.9rem;
+        }
+
+        .auth-input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .auth-input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .auth-input-group input:focus {
+            outline: none;
+            border-color: rgba(255, 100, 120, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(255, 100, 120, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .auth-submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #ff1744 0%, #f50057 50%, #e91e63 100%);
+            border: none;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(255, 23, 68, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .auth-submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .auth-submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 23, 68, 0.6);
+            background: linear-gradient(135deg, #ff1744 0%, #ff4569 50%, #ff0844 100%);
+        }
+
+        .auth-submit-btn:active {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(255, 23, 68, 0.5);
+        }
+
+        .auth-signin-link {
+            text-align: center;
+            margin-top: 1.3rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.95rem;
+        }
+
+        .auth-signin-link a {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 600;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .auth-signin-link a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #ff1744, #e91e63);
+            transition: width 0.3s;
+        }
+
+        .auth-signin-link a:hover {
+            color: #ff1744;
+        }
+
+        .auth-signin-link a:hover::after {
+            width: 100%;
+        }
+
+        .auth-terms {
+            margin-top: 1.5rem;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .auth-terms a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: underline;
+        }
+
+        .auth-terms a:hover {
+            color: #ffffff;
+        }
+
+        @media (max-width: 968px) {
+            .auth-content {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-image-side {
+                display: none;
+            }
+
+            .auth-modal-container {
+                max-width: 550px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .auth-form-side {
+                padding: 40px 30px;
+            }
+
+            .auth-title {
+                font-size: 2.2rem;
+            }
+
+            .auth-subtitle {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-form-side {
+                padding: 30px 20px;
+            }
+
+            .auth-title {
+                font-size: 1.8rem;
+            }
+
+            .auth-subtitle {
+                font-size: 0.95rem;
+            }
+        }
+
+        /* ===== USER PROFILE DROPDOWN ===== */
+        .user-profile-btn {
+            position: relative; /* Important for dropdown positioning */
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 100; /* Ensure dropdown appears above other elements */
+        }
+
+        .user-profile-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .user-name {
+            color: #ffffff;
+            font-weight: 500;
+            font-size: 0.9rem;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            min-width: 220px;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            z-index: 10000; /* Very high to ensure it appears on top */
+            overflow: hidden;
+        }
+
+        .profile-dropdown.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .profile-dropdown-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        .profile-dropdown-name {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-dropdown-email {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .profile-dropdown-item {
+            padding: 0.875rem 1rem;
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: background 0.3s;
+            cursor: pointer;
+        }
+
+        .profile-dropdown-item:hover {
+            background: var(--bg);
+        }
+
+        .profile-dropdown-item i {
+            width: 20px;
+            font-size: 1.1rem;
+        }
+
+        .profile-dropdown-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 0.5rem 0;
+        }
+
+        .profile-dropdown-item.logout {
+            color: var(--danger);
+        }
+
+        @media (max-width: 768px) {
+            .user-name {
+                display: none;
+            }
+
+            .user-profile-btn {
+                padding: 0.3rem;
+            }
+
+            .profile-dropdown {
+                position: fixed;
+                top: 60px;
+                left: 1rem;
+                right: auto;
+                min-width: 220px;
+                max-width: calc(100vw - 2rem);
+            }
+        }
+
+        /* ===== LIGHT MODE PROFILE/NOTIFICATION FIXES ===== */
+        /* Light mode: user profile button needs dark styling for contrast */
+        [data-theme="light"] .user-profile-btn,
+        :root:not([data-theme="dark"]) .user-profile-btn {
+            background: rgba(0, 0, 0, 0.08);
+            border-color: rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="light"] .user-profile-btn:hover,
+        :root:not([data-theme="dark"]) .user-profile-btn:hover {
+            background: rgba(0, 0, 0, 0.12);
+        }
+
+        [data-theme="light"] .user-name,
+        :root:not([data-theme="dark"]) .user-name {
+            color: #111827;
+        }
+
+        [data-theme="light"] .user-avatar,
+        :root:not([data-theme="dark"]) .user-avatar {
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+
+        [data-theme="light"] .user-profile-btn .fa-chevron-down,
+        :root:not([data-theme="dark"]) .user-profile-btn .fa-chevron-down {
+            color: rgba(0, 0, 0, 0.5) !important;
+        }
+
+        /* Notification dropdown position fix - prevent overflow in RTL */
+        .notification-dropdown {
+            right: auto;
+            left: -50px;
+        }
+
+        @media (max-width: 600px) {
+            .notification-dropdown {
+                position: fixed;
+                top: 70px;
+                left: 1rem;
+                right: 1rem;
+                width: auto;
+                max-width: 320px;
+                margin: 0 auto;
+            }
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease;
+        }
+
+        /* Skip Buttons */
+        .skip-btn {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+            padding: 1rem 2rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            display: none;
+            transition: all var(--transition-medium);
+        }
+
+        .skip-btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+        }
+
+        .skip-btn.show {
+            display: block;
+        }
+
+        /* Next Episode Countdown */
+        .next-episode-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            display: none;
+        }
+
+        .next-episode-overlay.show {
+            display: block;
+        }
+
+        .countdown {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--danger);
+            margin: 1rem 0;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            margin-top: 80px;
+            margin-right: var(--sidebar-width);
+            padding: 60px 30px 40px;
+            text-align: right;
+            width: calc(100% - var(--sidebar-width));
+            max-width: calc(100vw - var(--sidebar-width));
+            overflow-x: hidden;
+            box-sizing: border-box;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            direction: rtl;
+            width: 100%;
+            padding: 0 1.5rem;
+            box-sizing: border-box;
+        }
+
+        .footer-main {
+            display: grid !important;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr !important;
+            gap: 50px !important;
+            margin-bottom: 50px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            padding: 0 0.5rem;
+        }
+
+        .footer-brand {
+            display: flex !important;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 100%;
+            overflow: visible;
+            padding-right: 0.5rem;
+        }
+
+        .footer-brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: nowrap;
+        }
+
+        .footer-logo-img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+            transition: transform var(--transition-medium), filter 0.3s ease;
+        }
+
+        [data-theme="light"] .footer-logo-img {
+            filter: none;
+        }
+
+        .footer-logo-img:hover {
+            transform: scale(1.1) rotate(10deg);
+        }
+
+        .footer-brand-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            white-space: nowrap;
+        }
+
+        .footer-brand-tagline {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+            margin-top: 5px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            padding-right: 0.5rem;
+        }
+
+        .footer-social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            max-width: 100%;
+        }
+
+        .footer-social-icons a {
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            transition: all var(--transition-medium);
+            flex-shrink: 0;
+        }
+
+        .footer-social-icons a:hover {
+            color: #111827;
+            transform: translateY(-3px);
+        }
+
+        [data-theme="dark"] .footer-social-icons a:hover {
+            color: #ffffff;
+        }
+
+        .footer-section {
+            display: flex !important;
+            flex-direction: column;
+            gap: 18px;
+            text-align: right;
+            max-width: 100%;
+            overflow: visible;
+            padding-right: 0.5rem;
+        }
+
+        .footer-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            text-align: right;
+            white-space: nowrap;
+            padding-right: 0.25rem;
+        }
+
+        .footer-links {
+            display: flex !important;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+            max-width: 100%;
+            overflow: visible;
+            padding-right: 0.25rem;
+        }
+
+        .footer-contact-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.7;
+            margin-bottom: 12px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            padding-right: 0.25rem;
+        }
+
+        .footer-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all var(--transition-medium);
+            width: fit-content;
+            white-space: nowrap;
+            display: inline-block;
+            overflow: visible;
+            padding: 2px 4px 2px 0;
+        }
+
+        .footer-link i {
+            margin-left: 8px;
+            font-size: 0.85rem;
+        }
+
+        .footer-link:hover {
+            color: #111827;
+            transform: translateX(-5px);
+        }
+
+        [data-theme="dark"] .footer-link:hover {
+            color: #ffffff;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            padding-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            direction: rtl;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: visible;
+            padding-right: 0.5rem;
+            padding-left: 0.5rem;
+        }
+
+        .footer-copyright {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-align: right;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            line-height: 1.6;
+            max-width: 100%;
+            padding: 0 0.5rem;
+        }
+
+        .footer-meta-links {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            max-width: 100%;
+        }
+
+        .footer-meta-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color var(--transition-medium);
+            white-space: nowrap;
+            overflow: visible;
+        }
+
+        .footer-meta-link:hover {
+            color: #111827;
+        }
+
+        [data-theme="dark"] .footer-meta-link:hover {
+            color: #ffffff;
+        }
+
+        @media (max-width: 1024px) {
+            .footer-main {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 35px !important;
+                padding: 0 1rem;
+            }
+
+            .footer-brand {
+                grid-column: 1 / -1;
+                padding-right: 1rem;
+            }
+
+            .footer-section {
+                padding-right: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            footer {
+                padding: 50px 20px 35px;
+                margin-top: 60px;
+                margin-right: 0;
+                width: 100%;
+                max-width: 100vw;
+            }
+
+            .footer-container {
+                padding: 0 1rem;
+            }
+
+            .footer-main {
+                grid-template-columns: 1fr !important;
+                gap: 35px !important;
+                margin-bottom: 40px;
+                padding: 0 1rem;
+            }
+
+            .footer-brand {
+                grid-column: 1;
+                gap: 18px;
+                padding-right: 1rem;
+            }
+
+            .footer-brand-name {
+                font-size: 1.3rem;
+            }
+
+            .footer-brand-tagline {
+                font-size: 0.9rem;
+                line-height: 1.6;
+                padding-right: 1rem;
+            }
+
+            .footer-section {
+                gap: 16px;
+                padding-right: 1rem;
+            }
+
+            .footer-section-title {
+                font-size: 0.95rem;
+                margin-bottom: 10px;
+                padding-right: 0.5rem;
+            }
+
+            .footer-links {
+                gap: 10px;
+                padding-right: 0.5rem;
+            }
+
+            .footer-link,
+            .footer-contact-text {
+                font-size: 0.85rem;
+                padding-right: 0.5rem;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+                padding-top: 35px;
+                padding-right: 1rem;
+                padding-left: 1rem;
+            }
+
+            .footer-copyright {
+                text-align: center;
+                padding: 0 1rem;
+            }
+
+            .footer-meta-links {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            footer {
+                padding: 40px 15px 30px;
+                margin-top: 40px;
+            }
+
+            .footer-container {
+                padding: 0 0.75rem;
+            }
+
+            .footer-main {
+                gap: 30px !important;
+                margin-bottom: 35px;
+                padding: 0 0.75rem;
+            }
+
+            .footer-brand {
+                gap: 16px;
+                padding-right: 0.75rem;
+            }
+
+            .footer-brand-name {
+                font-size: 1.2rem;
+            }
+
+            .footer-brand-tagline {
+                font-size: 0.85rem;
+                line-height: 1.5;
+                padding-right: 0.75rem;
+            }
+
+            .footer-logo-img {
+                width: 38px;
+                height: 38px;
+            }
+
+            .footer-social-icons {
+                gap: 12px;
+            }
+
+            .footer-social-icons a {
+                font-size: 1.1rem;
+            }
+
+            .footer-section {
+                gap: 14px;
+                padding-right: 0.75rem;
+            }
+
+            .footer-section-title {
+                font-size: 0.9rem;
+                padding-right: 0.5rem;
+            }
+
+            .footer-links {
+                gap: 9px;
+                padding-right: 0.5rem;
+            }
+
+            .footer-link,
+            .footer-contact-text {
+                font-size: 0.8rem;
+                padding-right: 0.5rem;
+            }
+
+            .footer-bottom {
+                padding-top: 30px;
+                gap: 12px;
+                padding-right: 0.75rem;
+                padding-left: 0.75rem;
+            }
+
+            .footer-copyright {
+                font-size: 0.8rem;
+                line-height: 1.5;
+                padding: 0 0.75rem;
+            }
+
+            .footer-meta-link {
+                font-size: 0.8rem;
+            }
+
+            .footer-brand-seo {
+                font-size: 0.8rem !important;
+                padding: 0 0.75rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            footer {
+                padding: 35px 12px 25px;
+            }
+
+            .footer-container {
+                padding: 0 0.5rem;
+            }
+
+            .footer-main {
+                gap: 25px !important;
+                margin-bottom: 30px;
+                padding: 0 0.5rem;
+            }
+
+            .footer-brand {
+                gap: 14px;
+                padding-right: 0.5rem;
+            }
+
+            .footer-brand-name {
+                font-size: 1.1rem;
+            }
+
+            .footer-brand-tagline {
+                font-size: 0.8rem;
+                line-height: 1.4;
+                padding-right: 0.5rem;
+            }
+
+            .footer-logo-img {
+                width: 35px;
+                height: 35px;
+            }
+
+            .footer-social-icons {
+                gap: 10px;
+            }
+
+            .footer-section {
+                gap: 12px;
+                padding-right: 0.5rem;
+            }
+
+            .footer-section-title {
+                font-size: 0.85rem;
+                padding-right: 0.35rem;
+            }
+
+            .footer-links {
+                gap: 8px;
+                padding-right: 0.35rem;
+            }
+
+            .footer-link,
+            .footer-contact-text {
+                font-size: 0.75rem;
+                padding-right: 0.35rem;
+            }
+
+            .footer-bottom {
+                padding-top: 25px;
+                gap: 12px;
+                padding-right: 0.5rem;
+                padding-left: 0.5rem;
+            }
+
+            .footer-copyright {
+                font-size: 0.75rem;
+                line-height: 1.4;
+                padding: 0 0.5rem;
+            }
+
+            .footer-meta-link {
+                font-size: 0.75rem;
+            }
+
+            .footer-meta-links {
+                gap: 12px;
+            }
+
+            .footer-brand-seo {
+                font-size: 0.75rem !important;
+                padding: 0 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav" id="nav">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="/" style="display: flex; align-items: center;">
+                    <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="logo-image" width="40" height="40">
+                </a>
+                <div class="header-title" data-t="iv_header_title">تەفسیر کورد</div>
+            </div>
+
+            <!-- Nav Links (visible on desktop) -->
+            <ul class="nav-links" id="navMenu">
+                <li><a href="/" class="nav-link"><i class="fas fa-home"></i><span data-t="iv_nav_home">سەرەکی</span></a></li>
+                <li><a href="/quran" class="nav-link"><i class="fas fa-book-open"></i><span data-t="iv_nav_quran">قورئان</span></a></li>
+                <li><a href="/islamvoice" class="nav-link active"><i class="fas fa-play-circle"></i><span data-t="iv_nav_islamvoice">دەنگێ ئیسلامێ</span></a></li>
+            </ul>
+
+            <div class="hamburger-menu" id="hamburgerMenu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div class="nav-actions" id="navActions">
+                <!-- Mobile Search Button (visible only on mobile) -->
+                <button class="icon-btn mobile-search-btn" id="mobileSearchBtn" aria-label="گەڕان" title="گەڕان" onclick="openSearchModal()">
+                    <i class="fas fa-search"></i>
+                </button>
+                <div class="nav-search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="nav-search-input" id="navSearchInput" placeholder="بگەڕێ بۆ بەش، زنجیرە، یان بابەت..." autocomplete="off" aria-label="گەڕان">
+                </div>
+                <div class="notification-container" style="position: relative;">
+                    <button class="icon-btn" id="notificationBtn" aria-label="Notifications" title="ئاگادارکرنەوە" onclick="toggleNotificationDropdown(event)">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="navNotificationBadge">0</span>
+                    </button>
+                    <div class="notification-dropdown" id="navNotificationDropdown">
+                        <div class="notification-dropdown-header">
+                            <span data-t="iv_notifications_title">ئاگادارکرنەوەکان</span>
+                            <button class="mark-all-read" onclick="markAllNotificationsRead(event)" data-t="iv_mark_all_read">هەموو بخوێنەوە</button>
+                        </div>
+                        <div class="notification-list" id="navNotificationList">
+                            <!-- Notifications will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                <button class="icon-btn" id="themeToggle" aria-label="Toggle theme" title="گۆڕینی ڕووناکی">
+                    <i class="fas fa-moon"></i>
+                </button>
+
+                <!-- Login Button (shown when not authenticated) -->
+                <a href="/login.html?source=islamvoice" class="icon-btn" id="loginBtn" aria-label="Login" title="چوونەژوورەوە" style="display: none;">
+                    <i class="fas fa-sign-in-alt"></i>
+                </a>
+
+                <!-- User Profile (shown when authenticated) -->
+                <div class="user-profile-btn" id="userProfileBtn" style="display: none;" onclick="toggleProfileDropdown(event)">
+                    <img id="userAvatar" class="user-avatar" src="" alt="User" width="32" height="32">
+                    <span id="userName" class="user-name"></span>
+                    <i class="fas fa-chevron-down" style="color: rgba(255,255,255,0.7); font-size: 0.8rem;"></i>
+
+                    <!-- Profile Dropdown -->
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="profile-dropdown-header">
+                            <div class="profile-dropdown-name" id="dropdownName"></div>
+                            <div class="profile-dropdown-email" id="dropdownEmail"></div>
+                        </div>
+                        <a href="/profile.html" class="profile-dropdown-item">
+                            <i class="fas fa-user"></i>
+                            پرۆفایل
+                        </a>
+                        <div class="profile-dropdown-divider"></div>
+                        <div class="profile-dropdown-item logout" onclick="event.stopPropagation(); logoutUser()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            دەرچوون
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-overlay" id="navOverlay"></div>
+        </div>
+    </nav>
+
+    <!-- Main Container with Sidebar -->
+    <div class="islamvoice-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <!-- User Actions Section -->
+            <div class="sidebar-actions">
+                <!-- User Profile (shown when authenticated) -->
+                <div class="sidebar-dropdown-container">
+                    <div class="sidebar-user-profile" id="sidebarUserProfile" style="display: none;" onclick="toggleSidebarProfileDropdown(event)">
+                        <img id="sidebarUserAvatar" class="user-avatar" src="" alt="User" width="40" height="40">
+                        <div class="user-info">
+                            <div class="user-name" id="sidebarUserName"></div>
+                            <div class="user-email" id="sidebarUserEmail"></div>
+                        </div>
+                        <i class="fas fa-chevron-down" style="color: var(--text-secondary); font-size: 0.8rem;"></i>
+                    </div>
+                    <!-- Profile Dropdown -->
+                    <div class="sidebar-profile-dropdown" id="sidebarProfileDropdown">
+                        <a href="/profile.html" class="sidebar-profile-item">
+                            <i class="fas fa-user"></i>
+                            پرۆفایل
+                        </a>
+                        <a href="/settings.html" class="sidebar-profile-item">
+                            <i class="fas fa-cog"></i>
+                            ڕێکخستنەکان
+                        </a>
+                        <div class="sidebar-profile-item logout" onclick="logoutUser()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            دەرچوون
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Login Button (shown when not authenticated) -->
+                <a href="/login.html?source=islamvoice" class="sidebar-login-btn" id="sidebarLoginBtn" style="display: none;">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span data-t="iv_login_btn">چوونە ژوورڤە</span>
+                </a>
+
+                <!-- Search & Actions Row -->
+                <div class="sidebar-actions-row">
+                    <input type="text" class="sidebar-search-input" id="sidebarSearchInput" placeholder="گەڕان..." autocomplete="off">
+                    <button class="icon-btn" id="sidebarNotificationBtn" title="ئاگادارکرنەوە" onclick="toggleNotificationDropdown(event)">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notificationBadge">0</span>
+                    </button>
+                    <button class="icon-btn" id="sidebarThemeToggle" title="گۆڕینی ڕووناکی">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- Site Navigation Links -->
+            <div class="sidebar-nav-links">
+                <a href="/" class="sidebar-nav-link">
+                    <i class="fas fa-home"></i>
+                    <span data-t="iv_sb_home">سەرەکی</span>
+                </a>
+                <a href="/quran" class="sidebar-nav-link">
+                    <i class="fas fa-book-open"></i>
+                    <span data-t="iv_sb_quran">قورئان</span>
+                </a>
+                <a href="/islamvoice" class="sidebar-nav-link active">
+                    <i class="fas fa-play-circle"></i>
+                    <span data-t="iv_sb_islamvoice">دەنگێ ئیسلامێ</span>
+                </a>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="sidebar-header">
+                <h1 class="sidebar-title" data-t="iv_sb_title">دەنگێ ئیسلامێ</h1>
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- All Series -->
+                <button class="sidebar-btn active" data-view="topics">
+                    <i class="fas fa-tv"></i>
+                    <span data-t="iv_all_series">هەموو زنجیرەکان</span>
+                </button>
+
+                <!-- Teachers/Speakers Filter -->
+                <div class="sidebar-section">
+                    <button class="sidebar-section-header" onclick="toggleSidebarSection('sheikhs')">
+                        <i class="fas fa-user-tie"></i>
+                        <span data-t="iv_teacher">ماموستا</span>
+                        <i class="fas fa-chevron-down section-arrow" id="sheikhsArrow"></i>
+                    </button>
+                    <div class="sidebar-section-content" id="sheikhsSection" style="display:none;">
+                        <div id="sheikhList" class="filter-list">
+                            <!-- Sheikhs loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-divider"></div>
+
+                <!-- Other nav items -->
+                <button class="sidebar-btn" data-view="bookmarks">
+                    <i class="fas fa-bookmark"></i>
+                    <span data-t="iv_saved">خەزنکراو</span>
+                    <span class="badge" id="bookmarkCount" style="display:none;"></span>
+                </button>
+                <button class="sidebar-btn" data-view="history">
+                    <i class="fas fa-history"></i>
+                    <span data-t="iv_history">مێژوو</span>
+                    <span class="badge" id="historyCount" style="display:none;"></span>
+                </button>
+                <button class="sidebar-btn" data-view="continue">
+                    <i class="fas fa-play-circle"></i>
+                    <span data-t="iv_continue">بەردەوام ببە</span>
+                    <span class="badge" id="continueCount" style="display:none;"></span>
+                </button>
+            </nav>
+
+        </aside>
+
+        <!-- Mobile Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Mobile Notification Overlay -->
+        <div class="notification-overlay" id="notificationOverlay" onclick="event.stopPropagation(); closeNotificationDropdown();"></div>
+
+        <!-- Mobile Notification Dropdown (outside sidebar for proper z-index stacking) -->
+        <div class="notification-dropdown mobile-notification-dropdown" id="notificationDropdown">
+            <div class="notification-dropdown-header">
+                <span data-t="iv_notifications_title">ئاگادارکرنەوەکان</span>
+                <button class="mark-all-read" onclick="markAllNotificationsRead(event)" data-t="iv_mark_all_read">هەموو بخوێنەوە</button>
+            </div>
+            <div class="notification-list" id="notificationList">
+                <!-- Notifications will be loaded here -->
+            </div>
+        </div>
+
+    <!-- Video Player Modal (Fullscreen Overlay) -->
+    <div class="player-modal" id="playerModal">
+        <button class="close-player" id="closePlayerBtn" aria-label="داخستنا لێدەرێ">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <!-- Video Player Section -->
+        <section class="player-section" id="playerSection">
+        <div class="player-container">
+            <!-- Video Loading Spinner -->
+            <div class="video-loading" id="videoLoading">
+                <div class="video-spinner"></div>
+                <p data-t="iv_loading">چاڤەڕێبە...</p>
+            </div>
+
+            <div class="video-wrapper">
+                <video class="video-player" id="videoPlayer" poster="/assets/images/video-placeholder.jpg">
+                    <source src="" type="video/mp4">
+                    <track kind="subtitles" src="" srclang="ku" label="کوردی">
+                    <track kind="subtitles" src="" srclang="ar" label="عربی">
+                    پشتگیری یا بروزەر تە بۆ ڤیدیۆ نینە.
+                </video>
+            </div>
+
+            <!-- Audio Only Mode Overlay -->
+            <div class="audio-only-overlay" id="audioOnlyOverlay">
+                <div class="audio-visualizer">
+                    <i class="fas fa-headphones"></i>
+                </div>
+                <div class="audio-only-text">
+                    <h2 data-t="iv_audio_only">دەنگ تەنێ</h2>
+                    <p data-t="iv_audio_desc">گوهدارکرن ب تەنێ - ڤیدیۆ ڤەمرا یە</p>
+                </div>
+            </div>
+
+            <!-- Skip Intro Button -->
+            <button class="skip-btn" id="skipIntroBtn">
+                <i class="fas fa-forward"></i>
+                هەڵبەزینا پێشوتریێ
+            </button>
+
+            <!-- Next Episode Countdown -->
+            <div class="next-episode-overlay" id="nextEpisodeOverlay">
+                <h2 data-t="iv_next_starts">بەشا داهاتی دەستپێدکەت د</h2>
+                <div class="countdown" id="countdown">5</div>
+                <button class="action-btn" onclick="cancelAutoPlay()" data-t="iv_cancel">بەتاڵکرن</button>
+            </div>
+
+            <div class="player-overlay" id="playerOverlay">
+                <div class="video-info">
+                    <h2 class="video-title" id="currentVideoTitle" data-t="islamvoice_h2_9">تەفسیرا سورەتا الفاتحة</h2>
+                    <div class="video-meta">
+                        <span data-t="islamvoice_span_10">بەشا ١ - زنجیرەیا تەفسیر</span>
+                        <span>•</span>
+                        <span data-t="islamvoice_span_11">٤٥ خولەک</span>
+                        <span>•</span>
+                        <span data-t="islamvoice_span_12">٢٠٢٥</span>
+                        <span>•</span>
+                        <span class="rating-badge">
+                            <i class="fas fa-star"></i>
+                            ٤.٩
+                        </span>
+                        <span>•</span>
+                        <span class="view-count">
+                            <i class="fas fa-eye"></i>
+                            ٦٥٠ھ بینەر
+                        </span>
+                    </div>
+
+                    <div class="video-actions">
+                        <button class="action-btn" id="addToListBtn">
+                            <i class="fas fa-plus"></i>
+                            زێدەبکە لیستێ
+                        </button>
+                        <button class="action-btn" id="likeBtn">
+                            <i class="far fa-thumbs-up"></i>
+                            حەزلێبکە
+                        </button>
+                        <button class="action-btn" id="shareBtn">
+                            <i class="fas fa-share-alt"></i>
+                            پارڤەبکە
+                        </button>
+                        <button class="action-btn" id="playlistBtn">
+                            <i class="fas fa-list"></i>
+                            لیستا لێدانێ
+                        </button>
+                        <button class="action-btn" id="pipBtn">
+                            <i class="fas fa-window-restore"></i>
+                            PiP
+                        </button>
+                        <button class="action-btn" id="audioOnlyBtn" title="دەنگ تەنێ">
+                            <i class="fas fa-headphones"></i>
+                            دەنگ تەنێ
+                        </button>
+                    </div>
+                </div>
+
+                <div class="video-controls">
+                    <button class="control-btn" id="playPauseBtn" aria-label="پێکردن/وەستان">
+                        <i class="fas fa-play"></i>
+                    </button>
+
+                    <button class="control-btn" id="rewindBtn" title="10 چرکە پاشڤە" aria-label="10 چرکە پاشڤە">
+                        <i class="fas fa-backward"></i>
+                    </button>
+
+                    <button class="control-btn" id="forwardBtn" title="10 چرکە پێشڤە" aria-label="10 چرکە پێشڤە">
+                        <i class="fas fa-forward"></i>
+                    </button>
+
+                    <div class="progress-bar" id="progressBar">
+                        <div class="chapter-markers" id="chapterMarkers"></div>
+                        <div class="progress-filled" id="progressFilled">
+                            <div class="progress-handle"></div>
+                        </div>
+                    </div>
+
+                    <span class="time-display" id="timeDisplay" data-t="islamvoice_span_20">٠:٠٠ / ٠:٠٠</span>
+
+                    <div class="volume-control">
+                        <button class="control-btn" id="muteBtn" aria-label="بێدەنگکرن/دەنگکرن">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100" aria-label="دەنگ">
+                    </div>
+
+                    <div class="advanced-controls">
+                        <!-- Speed Control -->
+                        <div class="speed-selector">
+                            <button class="control-btn" id="speedBtn" title="خێرایی" aria-label="خێرایی">
+                                <span style="font-size: 0.8rem; font-weight: 700;">1x</span>
+                            </button>
+                            <div class="dropdown-menu" id="speedMenu">
+                                <div class="dropdown-item" data-speed="0.5" data-t="islamvoice_div_21">٠.٥x</div>
+                                <div class="dropdown-item" data-speed="0.75" data-t="islamvoice_div_22">٠.٧٥x</div>
+                                <div class="dropdown-item active" data-speed="1" data-t="islamvoice_div_23">١x</div>
+                                <div class="dropdown-item" data-speed="1.25" data-t="islamvoice_div_24">١.٢٥x</div>
+                                <div class="dropdown-item" data-speed="1.5" data-t="islamvoice_div_25">١.٥x</div>
+                                <div class="dropdown-item" data-speed="2" data-t="islamvoice_div_26">٢x</div>
+                            </div>
+                        </div>
+
+                        <!-- Quality Control -->
+                        <div class="quality-selector">
+                            <button class="control-btn" id="qualityBtn" title="کواڵتی" aria-label="کواڵتی">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <div class="dropdown-menu" id="qualityMenu">
+                                <div class="dropdown-item" data-quality="360">360p</div>
+                                <div class="dropdown-item" data-quality="480">480p</div>
+                                <div class="dropdown-item" data-quality="720">720p HD</div>
+                                <div class="dropdown-item active" data-quality="1080">1080p Full HD</div>
+                                <div class="dropdown-item" data-quality="2160">4K Ultra HD</div>
+                                <div class="dropdown-item" data-quality="auto" data-t="iv_quality_auto">خودکار</div>
+                            </div>
+                        </div>
+
+                        <!-- Subtitle Control -->
+                        <div class="subtitle-selector">
+                            <button class="control-btn" id="subtitleBtn" title="ژێرنڤیس" aria-label="ژێرنڤیس">
+                                <i class="fas fa-closed-captioning"></i>
+                            </button>
+                            <div class="dropdown-menu" id="subtitleMenu">
+                                <div class="dropdown-item active" data-subtitle="off" data-t="iv_sub_off">داگرتی</div>
+                                <div class="dropdown-item" data-subtitle="ku" data-t="iv_sub_ku">کوردی</div>
+                                <div class="dropdown-item" data-subtitle="ar" data-t="iv_sub_ar">عربی</div>
+                                <div class="dropdown-item" data-subtitle="en" data-t="iv_sub_en">ئینگلیزی</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="control-btn" id="fullscreenBtn" aria-label="پڕ شاشە">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+    </div>
+    <!-- End Player Modal -->
+
+    <!-- Floating Picture-in-Picture Player -->
+    <div class="floating-player" id="floatingPlayer">
+        <button class="floating-close" onclick="closePiP()" aria-label="داخستن">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="mainContent">
+            <span id="categories"></span>
+            <!-- Topics View (Default) -->
+            <div class="view-container active" id="topicsView">
+                <div class="view-header">
+                    <h2 data-t="iv_topics">بابەت</h2>
+                    <p data-t="iv_topics_desc">ھەڵبژێرە بابەتەکێ بۆ ببینینا ڤیدیۆیان</p>
+                </div>
+
+                <!-- Topic Cards Grid -->
+                <div class="topics-grid" id="topicsGrid">
+                    <!-- Skeleton Loading State (Better LCP) -->
+                    <div class="skeleton-card" aria-hidden="true">
+                        <div class="skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton-title"></div>
+                            <div class="skeleton-text"></div>
+                            <div class="skeleton-meta"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card" aria-hidden="true">
+                        <div class="skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton-title"></div>
+                            <div class="skeleton-text"></div>
+                            <div class="skeleton-meta"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card" aria-hidden="true">
+                        <div class="skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton-title"></div>
+                            <div class="skeleton-text"></div>
+                            <div class="skeleton-meta"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card" aria-hidden="true">
+                        <div class="skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton-title"></div>
+                            <div class="skeleton-text"></div>
+                            <div class="skeleton-meta"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Episode List View (Hidden by default, shown when topic clicked) -->
+            <div class="view-container" id="episodesView">
+                <div class="view-header">
+                    <button class="back-btn" id="backToTopicsBtn">
+                        <i class="fas fa-arrow-right"></i>
+                        ڤەگەڕە بۆ بابەت
+                    </button>
+                    <div>
+                        <h2 id="topicTitle" data-t="iv_selected_topic">بابەتا ھەڵبژارتی</h2>
+                        <p id="topicDescription" data-t="iv_select_part">ھەڵبژێرە بەشەکێ بۆ بینینێ</p>
+                    </div>
+                </div>
+
+                <!-- Episodes List -->
+                <div class="episodes-list" id="episodesList">
+                    <!-- Loading State -->
+                    <div class="loading-content" id="episodesLoader">
+                        <div class="loading-spinner"></div>
+                        <p data-t="islamvoice_p_28">چاڤەڕێبە...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bookmarks View -->
+            <div class="view-container" id="bookmarksView">
+                <div class="view-header">
+                    <h2 data-t="iv_saved_title">خەزنکراو</h2>
+                    <p data-t="iv_saved_desc">ڤیدیۆیێن کو تو خەزنکرینە بۆ بینینا پاشێ</p>
+                </div>
+
+                <div class="episodes-list" id="bookmarksListContainer">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+
+            <!-- History View -->
+            <div class="view-container" id="historyView">
+                <div class="view-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h2 data-t="iv_history_title">مێژوو</h2>
+                        <p data-t="iv_history_desc">ھەمی ڤیدیۆیێن کو تو دیتینە</p>
+                    </div>
+                    <button onclick="window.tvApp.clearAllHistory()" style="background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-family: inherit; white-space: nowrap;">
+                        <i class="fas fa-trash-alt"></i> پاککرنەوە
+                    </button>
+                </div>
+
+                <div class="history-list" id="historyListContainer">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Continue Watching View -->
+            <div class="view-container" id="continueView">
+                <div class="view-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h2 data-t="iv_continue_title">بەردەوام ببە ل بینینێ</h2>
+                        <p data-t="iv_continue_desc">ڤیدیۆیێن کو تو نیڤ تەواھیکرینە</p>
+                    </div>
+                    <button onclick="window.tvApp.clearAllContinue()" style="background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-family: inherit; white-space: nowrap;">
+                        <i class="fas fa-trash-alt"></i> پاککرنەوە
+                    </button>
+                </div>
+
+                <div class="episodes-list" id="continueListContainer">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+        </main>
+    </div> <!-- End .islamvoice-container -->
+
+    <!-- Search Modal -->
+    <div class="modal" id="searchModal" onclick="if(event.target === this) closeSearchModal()">
+        <div class="search-container">
+            <input
+                type="text"
+                class="search-input"
+                id="searchInput"
+                placeholder="بگەڕێ بۆ بەش، زنجیرە، یان بابەت..."
+                autocomplete="off"
+                aria-label="گەڕان"
+            >
+            <div class="search-results" id="searchResults"></div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal" id="shareModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" data-t="iv_share">پارڤەبکە</h2>
+                <button class="close-btn" onclick="closeShareModal()" aria-label="داخستن">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="share-options">
+                <button class="share-btn" onclick="shareOn('whatsapp')">
+                    <i class="fab fa-whatsapp" style="color: #25D366;"></i>
+                    <span>WhatsApp</span>
+                </button>
+                <button class="share-btn" onclick="shareOn('telegram')">
+                    <i class="fab fa-telegram" style="color: #0088cc;"></i>
+                    <span>Telegram</span>
+                </button>
+                <button class="share-btn" onclick="shareOn('facebook')">
+                    <i class="fab fa-facebook" style="color: #1877F2;"></i>
+                    <span>Facebook</span>
+                </button>
+                <button class="share-btn" onclick="shareOn('twitter')">
+                    <i class="fab fa-twitter" style="color: #1DA1F2;"></i>
+                    <span>Twitter</span>
+                </button>
+                <button class="share-btn" onclick="copyLink()">
+                    <i class="fas fa-link"></i>
+                    <span data-t="iv_copy_link">کۆپیکرنا لینکێ</span>
+                </button>
+                <button class="share-btn" onclick="shareOn('email')">
+                    <i class="fas fa-envelope"></i>
+                    <span data-t="iv_email">ئیمەیل</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Playlist Modal -->
+    <div class="modal" id="playlistModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" data-t="iv_playlist">لیستا لێدانێ</h2>
+                <button class="close-btn" onclick="closePlaylistModal()" aria-label="داخستن">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="playlist-items" id="playlistItems">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth now redirects to login.html instead of using modal -->
+
+    <!-- Notification Toast -->
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle notification-icon" style="color: #2ecc71;"></i>
+        <span id="notificationText" data-t="iv_added_msg">زێدەکری بۆ لیستا تە!</span>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-main">
+                <!-- Brand Section -->
+                <div class="footer-brand">
+                    <div class="footer-brand-header">
+                        <img src="assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image" loading="lazy" width="50" height="50">
+                        <h2 class="footer-brand-name" data-t="islamvoice_h2_31">تەفسیر کورد</h2>
+                    </div>
+                    <p class="footer-brand-tagline" data-t="islamvoice_p_32">
+                        دەنگێ ئیسلامێ - ببینە زنجیرەیێن ڤیدیویی یێن ئیسلامی ب زمانێ کوردی. ناڤەرۆکا کواڵیتیا بەرز بۆ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
+                    </p>
+                    <div class="footer-social-icons">
+                        <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://www.youtube.com/@tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="https://t.me/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                            <i class="fab fa-telegram"></i>
+                        </a>
+                        <a href="https://www.pinterest.com/tafsirkurd/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest">
+                            <i class="fab fa-pinterest"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Navigate Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title" data-t="islamvoice_h3_33">گەڕان</h3>
+                    <div class="footer-links">
+                        <a href="/profile" class="footer-link" data-t="islamvoice_a_2">پرۆفایل</a>
+                        <a href="/goals" class="footer-link" data-t="islamvoice_a_35">ئامانجەکان</a>
+                        <a href="/bookmarks" class="footer-link" data-t="islamvoice_a_36">نیشانەکراوەکان</a>
+                        <a href="/settings" class="footer-link" data-t="islamvoice_a_5">ڕێکخستنەکان</a>
+                    </div>
+                </div>
+
+                <!-- Resources Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title" data-t="islamvoice_h3_38">رۆژپەڕا دیکە</h3>
+                    <div class="footer-links">
+                        <a href="/quran" class="footer-link" data-t="islamvoice_a_39">قورئانا پیرۆز</a>
+                        <a href="/islamvoice" class="footer-link" data-t="islamvoice_a_40">دەنگێ ئیسلامێ</a>
+                        <a href="/" class="footer-link" data-t="islamvoice_a_41">سەرەکی</a>
+                    </div>
+                </div>
+
+                <!-- Connect Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title" data-t="islamvoice_h3_42">پەیوەندی</h3>
+                    <div class="footer-links">
+                        <p class="footer-contact-text" data-t="islamvoice_p_43">ئەگەر تە پسیارەک یان پێشنیارەک هەیە، پەیوەندیێ ب مە بکە و ب زویترین دەم دێ بەرسڤا تە هێتە دان!</p>
+                        <a href="mailto:tefsirkurd@gmail.com" class="footer-link">
+                            <i class="fas fa-envelope"></i> tefsirkurd@gmail.com
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <p class="footer-copyright">
+                    &copy; <span id="year"></span> تەفسیر کورد. هەمی ماف د پاراستینە. خودایێ مەزن بەرەکەتێ بێخیتە هەوڵ و ماندیبوونا مە.
+                </p>
+                <p class="footer-brand-seo" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; opacity: 0.7; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%; line-height: 1.5;" data-t="islamvoice_p_45">
+                    دەنگێ ئیسلامێ - ببینە زنجیرەیێن ڤیدیویی یێن ئیسلامی ب زمانێ کوردی
+                </p>
+                <div class="footer-meta-links">
+                    <a href="/privacy-policy" class="footer-meta-link" data-t="islamvoice_a_46">پارێزراوی تایبەتمەندی</a>
+                    <a href="/terms-and-conditions" class="footer-meta-link" data-t="islamvoice_a_47">مەرج و ڕێسا</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Kurdish Number Utility -->
+    <script src="/utils/kurdish-numbers.js?v=202601290342" defer></script>
+    <script src="/utils/auto-kurdish-numbers.js?v=202601290342" defer></script>
+
+    <!-- JavaScript -->
+    <!-- Native HTML5 Video Player (AWS S3) -->
+    <script src="/islamvoice-player.js?v=202602032342" defer></script>
+    <script>
+        // Set current year in footer (Kurdish numerals)
+        const yearEl = document.getElementById('year');
+        const currentYear = new Date().getFullYear();
+        yearEl.textContent = window.KurdishNumbers ? window.KurdishNumbers.toKurdish(currentYear) : currentYear;
+
+        // ===== AUTHENTICATION SYSTEM =====
+        let supabaseClient = null;
+        let currentUser = null;
+
+        // Initialize Supabase with config endpoint (secure!)
+        async function initSupabase() {
+            if (typeof window.supabase !== 'undefined') {
+                try {
+                    const response = await fetch('/config');
+                    if (!response.ok) throw new Error('Failed to fetch config');
+                    const config = await response.json();
+                    if (!config.supabaseUrl || !config.supabaseKey) throw new Error('Invalid config');
+
+                    supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                    window.islamvoiceSupabase = supabaseClient; // Expose for islamvoice-player.js
+                    console.log('✅ Supabase initialized securely on TV page');
+                    return true;
+                } catch (error) {
+                    console.error('Supabase init error:', error);
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        // Check authentication status
+        async function checkAuth() {
+            await initSupabase();
+
+            // Check localStorage first
+            const user = localStorage.getItem('user');
+            const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+
+            if (user && isAuthenticated) {
+                currentUser = JSON.parse(user);
+                displayUserProfile();
+                return true;
+            }
+
+            // Check Supabase session
+            if (supabaseClient) {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) {
+                    currentUser = {
+                        sub: session.user.id,
+                        email: session.user.email,
+                        name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email,
+                        picture: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture
+                    };
+                    localStorage.setItem('user', JSON.stringify(currentUser));
+                    localStorage.setItem('isAuthenticated', 'true');
+                    displayUserProfile();
+                    return true;
+                }
+            }
+
+            // No authentication found
+            displayLoginButton();
+            return false;
+        }
+
+        // Display user profile in nav
+        function displayUserProfile() {
+            const avatar = currentUser.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${currentUser.name}`;
+
+            // Update nav elements (desktop)
+            const loginBtn = document.getElementById('loginBtn');
+            const userProfileBtn = document.getElementById('userProfileBtn');
+            const userAvatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
+            const dropdownName = document.getElementById('dropdownName');
+            const dropdownEmail = document.getElementById('dropdownEmail');
+
+            if (loginBtn) loginBtn.style.display = 'none';
+            if (userProfileBtn) userProfileBtn.style.display = 'flex';
+            if (userAvatar) userAvatar.src = avatar;
+            if (userName) userName.textContent = currentUser.name;
+            if (dropdownName) dropdownName.textContent = currentUser.name;
+            if (dropdownEmail) dropdownEmail.textContent = currentUser.email;
+
+            // Update sidebar elements (mobile)
+            document.getElementById('sidebarLoginBtn').style.display = 'none';
+            document.getElementById('sidebarUserProfile').style.display = 'flex';
+            document.getElementById('sidebarUserAvatar').src = avatar;
+            document.getElementById('sidebarUserName').textContent = currentUser.name;
+            document.getElementById('sidebarUserEmail').textContent = currentUser.email;
+        }
+
+        // Display login button
+        function displayLoginButton() {
+            // Update nav elements (desktop)
+            const loginBtn = document.getElementById('loginBtn');
+            const userProfileBtn = document.getElementById('userProfileBtn');
+            if (loginBtn) loginBtn.style.display = 'flex';
+            if (userProfileBtn) userProfileBtn.style.display = 'none';
+
+            // Update sidebar elements (mobile)
+            document.getElementById('sidebarLoginBtn').style.display = 'flex';
+            document.getElementById('sidebarUserProfile').style.display = 'none';
+        }
+
+        // Toggle sidebar profile dropdown
+        function toggleSidebarProfileDropdown(event) {
+            if (event) event.stopPropagation();
+            const dropdown = document.getElementById('sidebarProfileDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('active');
+            }
+        }
+
+        // Close sidebar dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            const profileDropdown = document.getElementById('sidebarProfileDropdown');
+            const userProfile = document.getElementById('sidebarUserProfile');
+            if (profileDropdown && !userProfile.contains(e.target)) {
+                profileDropdown.classList.remove('active');
+            }
+        });
+
+        // ===== NOTIFICATION FUNCTIONS =====
+        function toggleNotificationDropdown(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+
+            // Determine which dropdown to toggle based on which button was clicked
+            const clickedBtn = event ? event.currentTarget : null;
+            const isNavBtn = clickedBtn && clickedBtn.id === 'notificationBtn';
+
+            // Get elements
+            const navDropdown = document.getElementById('navNotificationDropdown');
+            const sidebarDropdown = document.getElementById('notificationDropdown');
+            const profileDropdown = document.getElementById('profileDropdown');
+            const overlay = document.getElementById('notificationOverlay');
+
+            // Close profile dropdown if open
+            if (profileDropdown) {
+                profileDropdown.classList.remove('show');
+            }
+
+            // Toggle the appropriate dropdown
+            if (isNavBtn && navDropdown) {
+                // Close sidebar dropdown and overlay
+                if (sidebarDropdown) sidebarDropdown.classList.remove('show');
+                if (overlay) overlay.classList.remove('active');
+                navDropdown.classList.toggle('show');
+                if (navDropdown.classList.contains('show')) {
+                    loadNotifications('nav');
+                }
+            } else if (sidebarDropdown) {
+                // Close nav dropdown
+                if (navDropdown) navDropdown.classList.remove('show');
+                sidebarDropdown.classList.toggle('show');
+                const isOpen = sidebarDropdown.classList.contains('show');
+                // Toggle overlay for mobile
+                if (overlay) {
+                    overlay.classList.toggle('active', isOpen);
+                }
+                if (isOpen) {
+                    loadNotifications('sidebar');
+                }
+            }
+        }
+
+        // Close notification dropdown (called from overlay click)
+        function closeNotificationDropdown() {
+            const sidebarDropdown = document.getElementById('notificationDropdown');
+            const navDropdown = document.getElementById('navNotificationDropdown');
+            const overlay = document.getElementById('notificationOverlay');
+
+            if (sidebarDropdown) sidebarDropdown.classList.remove('show');
+            if (navDropdown) navDropdown.classList.remove('show');
+            if (overlay) overlay.classList.remove('active');
+        }
+
+        // Get read notification IDs from localStorage
+        function getReadNotifications() {
+            try {
+                return JSON.parse(localStorage.getItem('readNotifications') || '[]');
+            } catch {
+                return [];
+            }
+        }
+
+        // Save read notification IDs to localStorage
+        function saveReadNotifications(ids) {
+            localStorage.setItem('readNotifications', JSON.stringify(ids));
+        }
+
+        // Mark a single notification as read
+        function markNotificationRead(episodeId) {
+            const readIds = getReadNotifications();
+            if (!readIds.includes(episodeId)) {
+                readIds.push(episodeId);
+                saveReadNotifications(readIds);
+                updateNotificationBadge();
+            }
+        }
+
+        // Update notification badge count (both nav and sidebar)
+        function updateNotificationBadge() {
+            const sidebarBadge = document.getElementById('notificationBadge');
+            const navBadge = document.getElementById('navNotificationBadge');
+            const unreadItems = document.querySelectorAll('.notification-item.unread');
+            const count = unreadItems.length;
+            const toKu = window.KurdishNumbers ? window.KurdishNumbers.toKurdish : String;
+            const badgeText = count > 0 ? toKu(count) : '٠';
+            const badgeDisplay = count > 0 ? 'flex' : 'none';
+
+            // Update sidebar badge
+            if (sidebarBadge) {
+                sidebarBadge.textContent = badgeText;
+                sidebarBadge.style.display = badgeDisplay;
+            }
+
+            // Update nav badge
+            if (navBadge) {
+                navBadge.textContent = badgeText;
+                navBadge.style.display = badgeDisplay;
+            }
+        }
+
+        // Create empty notification message
+        function createEmptyNotification(icon, message) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'notification-empty';
+            const iconEl = document.createElement('i');
+            iconEl.className = 'fas fa-' + icon;
+            const textEl = document.createElement('p');
+            textEl.textContent = message;
+            emptyDiv.appendChild(iconEl);
+            emptyDiv.appendChild(textEl);
+            return emptyDiv;
+        }
+
+        async function loadNotifications(target) {
+            // Get both notification lists
+            const sidebarList = document.getElementById('notificationList');
+            const navList = document.getElementById('navNotificationList');
+            const sidebarBadge = document.getElementById('notificationBadge');
+            const navBadge = document.getElementById('navNotificationBadge');
+
+            // Determine which list(s) to update
+            const lists = [];
+            if (target === 'nav' && navList) lists.push(navList);
+            else if (target === 'sidebar' && sidebarList) lists.push(sidebarList);
+            else {
+                if (navList) lists.push(navList);
+                if (sidebarList) lists.push(sidebarList);
+            }
+
+            // Helper to update both badges
+            function updateBadges(text, display) {
+                if (sidebarBadge) {
+                    sidebarBadge.textContent = text;
+                    sidebarBadge.style.display = display;
+                }
+                if (navBadge) {
+                    navBadge.textContent = text;
+                    navBadge.style.display = display;
+                }
+            }
+
+            if (!supabaseClient) {
+                lists.forEach(list => {
+                    list.textContent = '';
+                    list.appendChild(createEmptyNotification('bell-slash', 'چوونەژوورەوە بکە بۆ دیتنی ئاگادارکرنەوەکان'));
+                });
+                updateBadges('0', 'none');
+                return;
+            }
+
+            try {
+                // Fetch recent episodes as notifications (last 10)
+                const { data: episodes, error } = await supabaseClient
+                    .from('islamvoice_episodes')
+                    .select('id, title, created_at, islamvoice_series(name_ku)')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                // Clear all lists
+                lists.forEach(list => list.textContent = '');
+
+                if (!episodes || episodes.length === 0) {
+                    lists.forEach(list => list.appendChild(createEmptyNotification('bell-slash', 'هیچ ئاگادارکرنەوەیەک نییە')));
+                    updateBadges('0', 'none');
+                    return;
+                }
+
+                // Get read notifications from localStorage
+                const readIds = getReadNotifications();
+
+                // Only consider episodes from last 30 days as potential notifications
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+                let unreadCount = 0;
+                episodes.forEach(ep => {
+                    const episodeDate = new Date(ep.created_at);
+                    const isRecent = episodeDate > thirtyDaysAgo;
+                    const isRead = readIds.includes(ep.id);
+                    const isUnread = isRecent && !isRead;
+
+                    if (isUnread) unreadCount++;
+
+                    // Create notification item for each list
+                    lists.forEach(list => {
+                        const item = document.createElement('div');
+                        item.className = 'notification-item' + (isUnread ? ' unread' : '');
+                        item.dataset.episodeId = ep.id;
+                        item.onclick = () => {
+                            markNotificationRead(ep.id);
+                            // Remove unread class from all matching items
+                            document.querySelectorAll(`.notification-item[data-episode-id="${ep.id}"]`).forEach(el => el.classList.remove('unread'));
+                            playEpisodeFromNotification(ep.id);
+                        };
+
+                        const iconDiv = document.createElement('div');
+                        iconDiv.className = 'notification-icon new-episode';
+                        const playIcon = document.createElement('i');
+                        playIcon.className = 'fas fa-play-circle';
+                        iconDiv.appendChild(playIcon);
+
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'notification-content';
+
+                        const titleDiv = document.createElement('div');
+                        titleDiv.className = 'notification-title';
+                        titleDiv.textContent = ep.title;
+
+                        const timeDiv = document.createElement('div');
+                        timeDiv.className = 'notification-time';
+                        timeDiv.textContent = (ep.islamvoice_series?.name_ku || '') + ' • ' + formatTimeAgo(ep.created_at);
+
+                        contentDiv.appendChild(titleDiv);
+                        contentDiv.appendChild(timeDiv);
+                        item.appendChild(iconDiv);
+                        item.appendChild(contentDiv);
+                        list.appendChild(item);
+                    });
+                });
+
+                updateBadges(unreadCount > 0 ? String(unreadCount) : '0', unreadCount > 0 ? 'flex' : 'none');
+
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                lists.forEach(list => {
+                    list.textContent = '';
+                    list.appendChild(createEmptyNotification('exclamation-circle', 'هەڵەیەک ڕوویدا'));
+                });
+            }
+        }
+
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'ئێستا';
+            if (diffMins < 60) return diffMins + ' خولەک پێش';
+            if (diffHours < 24) return diffHours + ' کاتژمێر پێش';
+            if (diffDays < 7) return diffDays + ' ڕۆژ پێش';
+            return date.toLocaleDateString('ku');
+        }
+
+        function playEpisodeFromNotification(episodeId) {
+            // Close the dropdown
+            document.getElementById('notificationDropdown').classList.remove('show');
+            // Play the episode (use existing function if available)
+            if (typeof playEpisode === 'function') {
+                playEpisode(episodeId);
+            }
+        }
+
+        function markAllNotificationsRead(event) {
+            if (event) event.stopPropagation();
+
+            // Get all unread items and mark them as read in localStorage
+            const readIds = getReadNotifications();
+            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                const episodeId = item.dataset.episodeId;
+                if (episodeId && !readIds.includes(episodeId)) {
+                    readIds.push(episodeId);
+                }
+                item.classList.remove('unread');
+            });
+            saveReadNotifications(readIds);
+
+            // Hide both badges (nav and sidebar)
+            const sidebarBadge = document.getElementById('notificationBadge');
+            const navBadge = document.getElementById('navNotificationBadge');
+            if (sidebarBadge) {
+                sidebarBadge.textContent = '٠';
+                sidebarBadge.style.display = 'none';
+            }
+            if (navBadge) {
+                navBadge.textContent = '٠';
+                navBadge.style.display = 'none';
+            }
+        }
+
+        // Close notification dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            const sidebarDropdown = document.getElementById('notificationDropdown');
+            const navDropdown = document.getElementById('navNotificationDropdown');
+            const sidebarBtn = document.getElementById('sidebarNotificationBtn');
+            const navBtn = document.getElementById('notificationBtn');
+            const overlay = document.getElementById('notificationOverlay');
+
+            // Close sidebar dropdown if clicking outside
+            if (sidebarDropdown && sidebarBtn && !sidebarBtn.contains(event.target) && !sidebarDropdown.contains(event.target)) {
+                sidebarDropdown.classList.remove('show');
+                if (overlay) overlay.classList.remove('active');
+            }
+
+            // Close nav dropdown if clicking outside
+            if (navDropdown && navBtn && !navBtn.contains(event.target) && !navDropdown.contains(event.target)) {
+                navDropdown.classList.remove('show');
+            }
+        });
+
+        // Load notifications on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(loadNotifications, 1000);
+        });
+
+        // Toggle profile dropdown
+        function toggleProfileDropdown(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            const dropdown = document.getElementById('profileDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('profileDropdown');
+            const profileBtn = document.getElementById('userProfileBtn');
+
+            if (dropdown && !profileBtn.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Redirect to login page (instead of modal)
+        function openAuthModal() {
+            // Store redirect destination so user comes back after login
+            sessionStorage.setItem('login_redirect_destination', '/islamvoice.html');
+            window.location.href = '/login.html?redirect=/islamvoice.html';
+        }
+
+        // Close auth modal (legacy, kept for compatibility)
+        function closeAuthModal() {
+            const modal = document.getElementById('authModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        // Open search modal
+        function openSearchModal() {
+            const modal = document.getElementById('searchModal');
+            if (modal) {
+                modal.classList.add('active');
+                const input = document.getElementById('searchInput');
+                if (input) {
+                    setTimeout(() => input.focus(), 100);
+                }
+            }
+        }
+
+        // Close search modal
+        function closeSearchModal() {
+            const modal = document.getElementById('searchModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        // Google Sign In
+        async function signInWithGoogle() {
+            if (!supabaseClient) {
+                alert('هەلە: Supabase نەهاتە دەستپێکرن');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/islamvoice.html',
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent',
+                        }
+                    }
+                });
+
+                if (error) throw error;
+            } catch (error) {
+                console.error('Google sign in error:', error);
+                alert('هەلە د چوونەژوورەوە دا: ' + error.message);
+            }
+        }
+
+        // Email Sign Up
+        async function signUpWithEmail(event) {
+            event.preventDefault();
+            const email = document.getElementById('authEmail').value;
+
+            if (!supabaseClient) {
+                alert('هەلە: Supabase نەهاتە دەستپێکرن');
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient.auth.signInWithOtp({
+                    email: email,
+                    options: {
+                        emailRedirectTo: window.location.origin + '/islamvoice.html',
+                    }
+                });
+
+                if (error) throw error;
+
+                alert('لینکەکا چوونەژوورەوە هاتە ناردنەڤە بۆ ئیمەیلێ تە. تکایە ئیمەیلا خوە بسەلمێنە.');
+                closeAuthModal();
+            } catch (error) {
+                console.error('Email signup error:', error);
+                alert('هەلە: ' + error.message);
+            }
+        }
+
+        // Logout
+        async function logoutUser() {
+            try {
+                if (supabaseClient) {
+                    await supabaseClient.auth.signOut({ scope: 'global' });
+                }
+
+                // Clear localStorage (except Quran data)
+                localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('user');
+
+                // Clear Supabase keys
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.includes('supabase') || key.startsWith('sb-')) && !key.includes('quran_data')) {
+                        keysToRemove.push(key);
+                    }
+                }
+                keysToRemove.forEach(key => localStorage.removeItem(key));
+
+                sessionStorage.clear();
+
+                // Redirect to home or show login button
+                displayLoginButton();
+                alert('ب سەرکەفتی دەرچوویت');
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        // Show sign in form (for future implementation)
+        function showSignIn() {
+            // Could toggle between sign up and sign in forms
+            console.log('Show sign in form');
+        }
+
+        // ===== MISSING FUNCTIONS FIX =====
+
+        // Toggle sidebar section (collapse/expand)
+        function toggleSidebarSection(sectionId) {
+            const section = document.getElementById(sectionId + 'Section');
+            const arrow = document.getElementById(sectionId + 'Arrow');
+            if (section) {
+                const isHidden = section.style.display === 'none';
+                section.style.display = isHidden ? 'block' : 'none';
+                if (arrow) {
+                    arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+                }
+            }
+        }
+
+        // Show notification toast
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            if (notification && notificationText) {
+                notificationText.textContent = message;
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        // Cancel auto-play next episode countdown
+        let autoPlayTimer = null;
+        function cancelAutoPlay() {
+            const overlay = document.getElementById('nextEpisodeOverlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+            if (autoPlayTimer) {
+                clearInterval(autoPlayTimer);
+                autoPlayTimer = null;
+            }
+        }
+
+        // Close floating Picture-in-Picture player
+        function closePiP() {
+            const floatingPlayer = document.getElementById('floatingPlayer');
+            if (floatingPlayer) {
+                floatingPlayer.classList.remove('active');
+            }
+            // Exit browser PiP if active
+            if (document.pictureInPictureElement) {
+                document.exitPictureInPicture().catch(() => {});
+            }
+        }
+
+        // Close share modal
+        function closeShareModal() {
+            const modal = document.getElementById('shareModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        // Close playlist modal
+        function closePlaylistModal() {
+            const modal = document.getElementById('playlistModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        // Copy video link to clipboard
+        function copyLink() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                showNotification(window.t&&window.t('iv.link_copied')||'لینک هاتە کۆپیکرن!');
+                closeShareModal();
+            }).catch(() => {
+                // Fallback for older browsers
+                const input = document.createElement('input');
+                input.value = url;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                showNotification(window.t&&window.t('iv.link_copied')||'لینک هاتە کۆپیکرن!');
+                closeShareModal();
+            });
+        }
+
+        // Share on social platforms
+        function shareOn(platform) {
+            const url = encodeURIComponent(window.location.href);
+            const title = encodeURIComponent(document.title);
+            let shareUrl = '';
+
+            switch (platform) {
+                case 'whatsapp':
+                    shareUrl = `https://wa.me/?text=${title}%20${url}`;
+                    break;
+                case 'telegram':
+                    shareUrl = `https://t.me/share/url?url=${url}&text=${title}`;
+                    break;
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+                    break;
+                case 'twitter':
+                    shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
+                    break;
+                case 'email':
+                    shareUrl = `mailto:?subject=${title}&body=${url}`;
+                    break;
+            }
+
+            if (shareUrl) {
+                window.open(shareUrl, '_blank', 'width=600,height=400');
+                closeShareModal();
+            }
+        }
+
+        // ===== THEME TOGGLE =====
+        // window.toggleTVTheme is defined in <head> for early availability
+
+        // Initialize theme icons on page load
+        (function() {
+            function updateThemeIcons() {
+                const theme = document.documentElement.getAttribute('data-theme') || 'light';
+                const iconClass = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+
+                // Update sidebar icon
+                const sidebarBtn = document.getElementById('sidebarThemeToggle');
+                if (sidebarBtn) {
+                    const icon = sidebarBtn.querySelector('i');
+                    if (icon) icon.className = iconClass;
+                }
+
+                // Update nav icon
+                const navBtn = document.getElementById('themeToggle');
+                if (navBtn) {
+                    const icon = navBtn.querySelector('i');
+                    if (icon) icon.className = iconClass;
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', updateThemeIcons);
+            } else {
+                updateThemeIcons();
+            }
+        })();
+
+        // Sidebar search - opens search modal and transfers value
+        (function() {
+            function initSidebarSearch() {
+                const sidebarSearch = document.getElementById('sidebarSearchInput');
+                if (sidebarSearch) {
+                    sidebarSearch.addEventListener('focus', function() {
+                        const value = this.value;
+                        openSearchModal();
+                        const modalInput = document.getElementById('searchInput');
+                        if (modalInput && value) {
+                            modalInput.value = value;
+                        }
+                        this.blur();
+                    });
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initSidebarSearch);
+            } else {
+                initSidebarSearch();
+            }
+        })();
+
+        // Mobile Menu Toggle - Opens the SIDEBAR
+        const hamburgerMenu = document.getElementById('hamburgerMenu');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.querySelector('.sidebar-overlay');
+
+        // Helper to lock/unlock body scroll (desktop only - mobile can scroll freely)
+        let scrollPosition = 0;
+        function lockBodyScroll() {
+            // Only lock scroll on desktop (> 768px)
+            if (window.innerWidth > 768) {
+                scrollPosition = window.pageYOffset;
+            }
+            document.body.classList.add('sidebar-open');
+            document.documentElement.classList.add('sidebar-open');
+        }
+        function unlockBodyScroll() {
+            document.body.classList.remove('sidebar-open');
+            document.documentElement.classList.remove('sidebar-open');
+            // Only restore scroll position on desktop
+            if (window.innerWidth > 768) {
+                window.scrollTo(0, scrollPosition);
+            }
+        }
+
+        if (hamburgerMenu) {
+            hamburgerMenu.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.classList.toggle('active');
+                if (sidebar) sidebar.classList.toggle('active');
+                if (sidebarOverlay) sidebarOverlay.classList.toggle('active');
+                // Lock/unlock body scroll based on sidebar state
+                if (sidebar && sidebar.classList.contains('active')) {
+                    lockBodyScroll();
+                } else {
+                    unlockBodyScroll();
+                }
+            });
+        }
+
+        if (sidebar) {
+            // Close sidebar when clicking on a sidebar button
+            sidebar.querySelectorAll('.sidebar-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (hamburgerMenu) hamburgerMenu.classList.remove('active');
+                    sidebar.classList.remove('active');
+                    if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+                    unlockBodyScroll();
+                });
+            });
+
+            // Close sidebar when clicking outside (but not on notification overlay/dropdown)
+            document.addEventListener('click', function(event) {
+                const notificationOverlay = document.getElementById('notificationOverlay');
+                const notificationDropdown = document.getElementById('notificationDropdown');
+                // Don't close sidebar if clicking on notification elements
+                if (notificationOverlay && (notificationOverlay.contains(event.target) || event.target === notificationOverlay)) return;
+                if (notificationDropdown && (notificationDropdown.contains(event.target) || event.target === notificationDropdown)) return;
+
+                // Only close sidebar if it's actually open
+                if (sidebar && sidebar.classList.contains('active') && hamburgerMenu && !hamburgerMenu.contains(event.target) && !sidebar.contains(event.target)) {
+                    hamburgerMenu.classList.remove('active');
+                    sidebar.classList.remove('active');
+                    if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+                    unlockBodyScroll();
+                }
+            });
+
+            // Close sidebar when clicking overlay
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function() {
+                    if (hamburgerMenu) hamburgerMenu.classList.remove('active');
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                    unlockBodyScroll();
+                });
+            }
+        }
+        // Initialize auth on page load
+        window.addEventListener('load', async () => {
+            // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
+            if (window.TafsirKurdSecurity) {
+                window.TafsirKurdSecurity.init({
+                    criticalElements: [],
+                    protectedFields: [],
+                    validateSession: true,
+                    securityLevel: 'nuclear'
+                });
+            }
+
+            await checkAuth();
+
+            // Listen for auth state changes
+            if (supabaseClient) {
+                supabaseClient.auth.onAuthStateChange((event, session) => {
+                    console.log('Auth state changed:', event);
+                    if (event === 'SIGNED_IN' && session) {
+                        currentUser = {
+                            sub: session.user.id,
+                            email: session.user.email,
+                            name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email,
+                            picture: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture
+                        };
+                        localStorage.setItem('user', JSON.stringify(currentUser));
+                        localStorage.setItem('isAuthenticated', 'true');
+                        displayUserProfile();
+                        closeAuthModal();
+                    } else if (event === 'SIGNED_OUT') {
+                        displayLoginButton();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,2400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>Gencine - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2" as="font" type="font/woff2" crossorigin="">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        @font-face {
+            font-family: 'IBM Plex Sans Arabic';
+            src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2') format('woff2');
+            font-weight: 400; font-style: normal; font-display: swap;
+        }
+        @font-face {
+            font-family: 'IBM Plex Sans Arabic';
+            src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2') format('woff2');
+            font-weight: 500 700; font-style: normal; font-display: swap;
+        }
+
+        /* ── Adhkar filter chips ── */
+        .adhkar-filter-btn{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;background:var(--bg-surface);color:var(--text-secondary);border:1px solid var(--border-light);cursor:pointer;white-space:nowrap;transition:all .15s}
+        .adhkar-filter-btn.active{background:var(--primary);color:#fff;border-color:transparent}
+        /* ── Stats row ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        .stat-pill {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            flex: 1;
+            min-width: 120px;
+        }
+        .stat-pill-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: var(--bg-active);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+        .stat-pill-icon svg { width: 16px; height: 16px; }
+        .stat-pill strong {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+            display: block;
+        }
+
+        /* ── Platform tabs ── */
+        .platform-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border-light);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .platform-tabs::-webkit-scrollbar { display: none; }
+        .platform-tab {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            color: var(--text-tertiary);
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .platform-tab:hover { color: var(--text-primary); }
+        .platform-tab.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--text-primary);
+        }
+        .platform-tab .tab-count {
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+            padding: 2px 8px;
+            border-radius: 10px;
+            min-width: 22px;
+            text-align: center;
+        }
+        .platform-tab.active .tab-count {
+            background: var(--text-primary);
+            color: var(--bg-app);
+        }
+
+        /* ── View panels ── */
+        .view-panel { display: none; }
+        .view-panel.active { display: block; }
+
+        /* ── Add form panel ── */
+        .add-form-wrap {
+            margin-bottom: 24px;
+        }
+        .add-form-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        .add-form-toggle:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border-color: var(--border-medium);
+        }
+        .add-form-toggle svg { width: 16px; height: 16px; }
+        .add-form-body {
+            display: none;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            padding: 20px;
+        }
+        .add-form-body.open { display: block; }
+        .form-grid { display: flex; flex-direction: column; gap: 14px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid var(--border-medium);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            font-size: 14px;
+            transition: border-color 0.15s;
+            box-sizing: border-box;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+            direction: rtl;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+            font-size: 15px;
+            line-height: 1.9;
+        }
+        .form-textarea.ku {
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+            font-size: 14px;
+            min-height: 68px;
+        }
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            padding-top: 4px;
+        }
+
+        /* ── Item list ── */
+        .items-list { display: flex; flex-direction: column; gap: 8px; }
+        .item-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px 16px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .item-card:hover {
+            border-color: var(--border-medium);
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+        .item-card-icon {
+            width: 38px; height: 38px;
+            border-radius: 10px;
+            background: var(--bg-active);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+        .item-card-body { flex: 1; min-width: 0; }
+        .item-card-title { font-size:13px; font-weight:700; color:var(--text-primary); direction:rtl; margin-bottom:4px; font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; }
+        .item-card-ar {
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+            font-size: 15px;
+            direction: rtl;
+            line-height: 1.9;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .item-card-ku {
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+            font-size: 13px;
+            direction: rtl;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 6px;
+        }
+        .item-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-cat { background: rgba(59,130,246,.1); color: #3b82f6; }
+        .badge-repeat { background: var(--bg-active); color: var(--text-secondary); }
+        .badge-source { background: var(--bg-active); color: var(--text-tertiary); font-weight: 400; }
+        .badge-num { background: var(--accent-light, rgba(99,102,241,.12)); color: var(--accent, #6366f1); font-weight: 700; margin-bottom: 4px; }
+        .source-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; min-height: 4px; }
+        .source-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--bg-active); border: 1px solid var(--border-light); border-radius: 20px; font-size: 12px; direction: rtl; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+        .source-tag-remove { background: none; border: none; cursor: pointer; font-size: 14px; line-height: 1; padding: 0; color: var(--text-tertiary); margin-right: 2px; }
+        .source-tag-remove:hover { color: var(--danger, #ef4444); }
+        .source-add-row { display: flex; gap: 8px; align-items: center; }
+        .source-add-row .form-input { flex: 1; }
+        .item-card-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .icon-action {
+            width: 30px; height: 30px;
+            border-radius: 7px;
+            border: 1px solid var(--border-light);
+            background: transparent;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+        }
+        .icon-action:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-medium); }
+        .icon-action.danger:hover { background: rgba(220,38,38,.08); color: #dc2626; border-color: rgba(220,38,38,.25); }
+        .icon-action svg { width: 13px; height: 13px; }
+
+        /* ── Category cards ── */
+        .cat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 12px;
+        }
+        .cat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 16px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .cat-card:hover {
+            border-color: var(--border-medium);
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+        .cat-card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .cat-card-left { display: flex; align-items: center; gap: 10px; }
+        .cat-card-key {
+            font-size: 11px;
+            font-weight: 700;
+            font-family: monospace;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: rgba(59,130,246,.1);
+            color: #3b82f6;
+        }
+        .cat-card-label {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-primary);
+            direction: rtl;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+        }
+        .cat-card-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            direction: rtl;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+            margin-bottom: 6px;
+        }
+        .cat-card-image {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            font-family: monospace;
+        }
+
+        /* ── Dua filter chips ── */
+        .filter-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .filter-chip {
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border-medium);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            direction: rtl;
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+        }
+        .filter-chip:hover { border-color: var(--border-dark); color: var(--text-primary); }
+        .filter-chip.on { background: var(--text-primary); color: var(--bg-app); border-color: var(--text-primary); }
+
+        /* ── Toolbar ── */
+        .list-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        .list-count {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            padding: 56px 24px;
+            text-align: center;
+            color: var(--text-tertiary);
+            background: var(--bg-surface);
+            border: 1px dashed var(--border-medium);
+            border-radius: 12px;
+        }
+        .empty-state-icon {
+            width: 48px; height: 48px;
+            margin: 0 auto 14px;
+            border-radius: 14px;
+            background: var(--bg-active);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .empty-state-icon svg { width: 22px; height: 22px; color: var(--text-tertiary); }
+        .empty-state p { font-size: 14px; margin: 0; }
+
+        /* ── Edit mode highlight ── */
+        .add-form-toggle.editing {
+            background: rgba(59,130,246,.06);
+            border-color: rgba(59,130,246,.3);
+            color: var(--primary);
+        }
+
+        /* ── App sections panel ── */
+        .sections-panel {
+            margin-bottom: 24px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .sections-panel-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .sections-panel-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .sections-panel-hint {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+        .section-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .section-row:last-child { border-bottom: none; }
+        .section-row-icon {
+            width: 34px; height: 34px;
+            border-radius: 9px;
+            background: var(--bg-active);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .section-row-body { flex: 1; min-width: 0; }
+        .section-row-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .section-row-key { font-size: 11px; color: var(--text-tertiary); font-family: monospace; }
+        .section-toggle-btn {
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid transparent;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .section-toggle-btn.active {
+            background: rgba(34,197,94,.12);
+            color: #16a34a;
+            border-color: rgba(34,197,94,.3);
+        }
+        .section-toggle-btn.inactive {
+            background: var(--bg-hover);
+            color: var(--text-tertiary);
+            border-color: var(--border-medium);
+        }
+        .section-toggle-btn:hover { opacity: .8; }
+        /* Drag-and-drop */
+        .item-card[draggable]{cursor:grab}
+        .item-card[draggable]:active{cursor:grabbing}
+        .item-card.dragging{opacity:.35;background:var(--bg-active)}
+        .item-card.drag-over-top{border-top:2px solid var(--primary)!important}
+        .item-card.drag-over-bot{border-bottom:2px solid var(--primary)!important}
+        .drag-handle{display:flex;align-items:center;padding:0 6px 0 2px;color:var(--text-tertiary);cursor:grab;font-size:14px;flex-shrink:0}
+        .drag-handle:active{cursor:grabbing}
+        .section-sort-btns { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
+        .section-sort-btn {
+            width: 26px; height: 22px;
+            border-radius: 5px;
+            border: 1px solid var(--border-medium);
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px;
+            line-height: 1;
+            transition: all 0.15s;
+        }
+        .section-sort-btn:disabled { opacity: 0.25; cursor: default; }
+        .section-sort-btn:not(:disabled):hover { background: var(--bg-active); }
+
+        /* ── 99 Names grid ── */
+        .asma-search-row { padding: 0 0 14px 0; }
+        .asma-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 10px;
+        }
+        .asma-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            padding: 12px 14px;
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .asma-card:hover { border-color: var(--border-medium); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+        .asma-card-num {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-tertiary);
+            font-family: monospace;
+            margin-bottom: 4px;
+        }
+        .asma-card-ar {
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+            font-size: 17px;
+            direction: rtl;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+        .asma-card-tr {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-style: italic;
+        }
+        .asma-card-ku {
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+            font-size: 12px;
+            direction: rtl;
+            color: var(--text-tertiary);
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 768px) {
+            /* Stack 2-col form rows into 1 col */
+            .form-row { grid-template-columns: 1fr; }
+
+            /* Narrower tab padding so all 4 tabs fit */
+            .platform-tab { padding: 10px 8px; font-size: 12px; gap: 4px; }
+            .platform-tab .tab-count { display: none; }
+
+            /* Toolbar wraps on small screens */
+            .list-toolbar { flex-wrap: wrap; gap: 8px; }
+
+            /* Category grid single column */
+            .cat-grid { grid-template-columns: 1fr; }
+
+            /* Stat pills full-width */
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+
+            /* Form actions stack vertically */
+            .form-actions { flex-direction: column-reverse; }
+            .form-actions .btn { width: 100%; justify-content: center; }
+
+            /* Item card: push actions to bottom-right */
+            .item-card { flex-wrap: wrap; }
+            .item-card-actions { width: 100%; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--border-light); margin-top: 4px; }
+            .icon-action { width: 36px; height: 36px; }
+
+            /* Source add row */
+            .source-add-row { flex-wrap: wrap; }
+            .source-add-row .btn { width: 100%; justify-content: center; }
+
+            /* Topbar padding */
+            .topbar { padding: 12px 16px; }
+            .page-title { font-size: 16px; }
+        }
+    </style>
+    <style id="early-sidebar-hide">
+        .sidebar-nav{visibility:hidden}
+    </style>
+    <script>
+        (function(){
+            var role=sessionStorage.getItem('adminRole');
+            var style=document.getElementById('early-sidebar-hide');
+            var css='.sidebar-nav{visibility:visible}';
+            if(role==='super_admin'){
+                css='.sidebar-nav{visibility:visible}';
+            }else if(role==='analyst'){
+                css='.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            }else if(role==='editor'){
+                css='.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            }else if(role==='custom'){
+                css='.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            }
+            if(role)style.textContent=css;
+        })();
+    </script>
+</head>
+<body>
+<div class="dashboard-container">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <i data-lucide="play-circle"></i>
+                <span class="sidebar-logo-text">TafsirKurd</span>
+            </div>
+            <button class="sidebar-toggle" id="menu-toggle">
+                <i data-lucide="chevron-left"></i>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-header">Overview</div>
+                <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span></a>
+                <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Content</div>
+                <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span></a>
+                <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                <a href="/admin-gencine.html" class="nav-item active"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Users</div>
+                <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                <a href="/admin-reading-stats.html" class="nav-item"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">System</div>
+                <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+                <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+                <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
+                <a href="/admin-activity-feed.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">Activity Feed</span></a>
+                    <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-profile">
+                <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                <div class="sidebar-profile-info">
+                    <div class="sidebar-profile-name"></div>
+                    <div class="sidebar-profile-email"></div>
+                </div>
+                <button onclick="window.adminAuth.logout()" style="background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;transition:color .2s;" title="Logout">
+                    <i data-lucide="log-out"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+        <header class="topbar">
+            <button class="topbar-menu-toggle" id="mobile-menu-toggle">
+                <i data-lucide="menu"></i>
+            </button>
+            <div class="topbar-search">
+                <i data-lucide="search"></i>
+                <input type="text" placeholder="Search Gencine..." id="search-input">
+            </div>
+            <div class="topbar-actions">
+                <div class="session-timer" id="sessionTimer" title="Session expires after 20 minutes">
+                    <i data-lucide="clock"></i>
+                    <span id="sessionTimerText">20:00</span>
+                </div>
+                <button class="topbar-btn" style="position: relative;">
+                    <i data-lucide="bell"></i>
+                    <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span>
+                </button>
+                <button class="topbar-btn" id="theme-toggle">
+                    <i data-lucide="moon" id="theme-icon"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <!-- Page header -->
+            <div class="page-header">
+                <h1 class="page-title">Gencine</h1>
+                <div class="page-actions">
+                    <button class="btn btn-primary" id="top-add-btn" onclick="topAddClick()">
+                        <i data-lucide="plus"></i>
+                        <span id="top-add-label">Add</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats row -->
+            <div class="stats-row">
+                <div class="stat-pill">
+                    <div class="stat-pill-icon"><i data-lucide="layout-dashboard"></i></div>
+                    <div><strong id="stat-cats">—</strong>Sections</div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-pill-icon"><i data-lucide="hand-heart"></i></div>
+                    <div><strong id="stat-duas">—</strong>Duas</div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-pill-icon"><i data-lucide="scroll-text"></i></div>
+                    <div><strong id="stat-hadiths">—</strong>Hadiths</div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-pill-icon"><i data-lucide="book-open"></i></div>
+                    <div><strong id="stat-books">—</strong>Books</div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-pill-icon"><i data-lucide="circle-dot"></i></div>
+                    <div><strong id="stat-tasbih">—</strong>Tasbih</div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-pill-icon"><i data-lucide="star"></i></div>
+                    <div><strong id="stat-asma99">99</strong>Asma99</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="platform-tabs">
+                <button class="platform-tab active" onclick="switchTab('duas')">
+                    <i data-lucide="hand-heart" style="width:15px;height:15px"></i>
+                    Duas
+                    <span class="tab-count" id="tab-count-duas">0</span>
+                </button>
+                <button class="platform-tab" onclick="switchTab('hadiths')">
+                    <i data-lucide="scroll-text" style="width:15px;height:15px"></i>
+                    Hadiths
+                    <span class="tab-count" id="tab-count-hadiths">0</span>
+                </button>
+                <button class="platform-tab" onclick="switchTab('tasbih')">
+                    <i data-lucide="rotate-cw" style="width:15px;height:15px"></i>
+                    Tasbih
+                    <span class="tab-count" id="tab-count-tasbih">0</span>
+                </button>
+                <button class="platform-tab" onclick="switchTab('asma99')">
+                    <i data-lucide="star" style="width:15px;height:15px"></i>
+                    99 Names
+                    <span class="tab-count" id="tab-count-asma99">99</span>
+                </button>
+                <button class="platform-tab" onclick="switchTab('books')">
+                    <i data-lucide="book-open" style="width:15px;height:15px"></i>
+                    Books
+                    <span class="tab-count" id="tab-count-books">0</span>
+                </button>
+                <button class="platform-tab" onclick="switchTab('sections')">
+                    <i data-lucide="layout-dashboard" style="width:15px;height:15px"></i>
+                    Sections
+                </button>
+                <button class="platform-tab" onclick="switchTab('adhkar')">
+                    <i data-lucide="wind" style="width:15px;height:15px"></i>
+                    Adhkar
+                    <span class="tab-count" id="tab-count-adhkar">0</span>
+                </button>
+            </div>
+
+            <!-- ── SECTIONS ── -->
+            <div id="panel-sections" class="view-panel">
+                <div class="sections-panel">
+                    <div class="sections-panel-hdr">
+                        <div class="sections-panel-title">App Home Sections</div>
+                        <div class="sections-panel-hint">Show or hide sections on the app's Gencine home screen</div>
+                    </div>
+                    <div id="sections-list"><!-- rendered by JS --></div>
+                </div>
+            </div>
+
+            <!-- ── ADHKAR ── -->
+            <div id="panel-adhkar" class="view-panel">
+                <input type="hidden" id="adhkar-edit-id">
+                <div class="add-form-wrap">
+                    <button class="add-form-toggle" id="adhkar-form-toggle" onclick="toggleForm('adhkar')">
+                        <i data-lucide="plus"></i>
+                        <span id="adhkar-form-toggle-label">Add Adhkar</span>
+                    </button>
+                    <div class="add-form-body" id="adhkar-form-body">
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Category Key</label>
+                                    <select id="adhkar-cat" class="form-select">
+                                        <option value="morning">morning — زکرێن بەیانیکردن</option>
+                                        <option value="evening">evening — زکرێن ئێواربوون</option>
+                                        <option value="sleep">sleep — دوای خەوکردن</option>
+                                        <option value="waking">waking — دوای هاتنا خوو</option>
+                                        <option value="house_enter">house_enter — چونا ماڵ</option>
+                                        <option value="house_exit">house_exit — دەرچوونا ماڵ</option>
+                                        <option value="masjid_enter">masjid_enter — چونا مزگەوت</option>
+                                        <option value="masjid_exit">masjid_exit — دەرچوونا مزگەوت</option>
+                                        <option value="wudu">wudu — وەزوو</option>
+                                        <option value="opening_prayer">opening_prayer — دوعای دەستپێکردنا نوێژ</option>
+                                        <option value="ruku">ruku — زکرێن ڕکووع</option>
+                                        <option value="rising_ruku">rising_ruku — ڕاستبوونا ڕکووعێ</option>
+                                        <option value="sujood">sujood — زکرێن سەجدەیێ</option>
+                                        <option value="between_sujood">between_sujood — نێو دووسەجدەیێ</option>
+                                        <option value="tashahhud">tashahhud — تەشەهود</option>
+                                        <option value="eating_before">eating_before — بەرا خواردن</option>
+                                        <option value="eating_after">eating_after — دوای خواردن</option>
+                                        <option value="breaking_fast">breaking_fast — کاتا ئیفتارێ</option>
+                                        <option value="fasting">fasting — نیەتا ڕۆژوو</option>
+                                        <option value="travel">travel — گەشت</option>
+                                        <option value="travel_return">travel_return — گەرانا ماڵ</option>
+                                        <option value="vehicle">vehicle — سواربوونا نەقلیەتێ</option>
+                                        <option value="marketplace">marketplace — چونا بازارێ</option>
+                                        <option value="charity">charity — کاتا سەدەقەیێ</option>
+                                        <option value="distress">distress — پەریشانی</option>
+                                        <option value="debt">debt — کاتا قەرزێ</option>
+                                        <option value="fear">fear — کاتا تیرسێ</option>
+                                        <option value="forgiveness">forgiveness — داواکاری لێبوردن</option>
+                                        <option value="protection">protection — پاراستن</option>
+                                        <option value="rain">rain — باران</option>
+                                        <option value="wind">wind — کاتا هەوایی</option>
+                                        <option value="after_prayer">after_prayer — دوای نوێژ</option>
+                                        <option value="adhan">adhan — دوای ئەزان</option>
+                                        <option value="salawat">salawat — سەلاوات</option>
+                                        <option value="qunut">qunut — دوعای قونووت</option>
+                                        <option value="lailat_qadr">lailat_qadr — شەوا قەدرێ</option>
+                                        <option value="dhul_hijjah">dhul_hijjah — دەیا ذولحیجەیێ</option>
+                                        <option value="talbiyah">talbiyah — تەلبیەی حەج</option>
+                                        <option value="safa_marwa">safa_marwa — سەفا و مەروە</option>
+                                        <option value="zamzam">zamzam — ئاوا زەمزەمێ</option>
+                                        <option value="entering_makkah">entering_makkah — چونا مەکەیێ</option>
+                                        <option value="arafat">arafat — دوعای عەرەفاتێ</option>
+                                        <option value="grave">grave — سەردانی گۆرستانێ</option>
+                                        <option value="eclipse">eclipse — کاتا کووسووفێ</option>
+                                        <option value="illness">illness — نەخۆشی</option>
+                                        <option value="pain">pain — کاتا ئازارێ</option>
+                                        <option value="ruqyah">ruqyah — ڕووقیای شەرعی</option>
+                                        <option value="visiting_sick">visiting_sick — سەردانی نەخۆش</option>
+                                        <option value="condolence">condolence — سووزداری</option>
+                                        <option value="newborn">newborn — زێدەبوونا منداڵ</option>
+                                        <option value="new_clothes">new_clothes — جلێن نوێ</option>
+                                        <option value="anger">anger — کاتا هەرسێ</option>
+                                        <option value="sneeze">sneeze — کاتا بزنکوی</option>
+                                        <option value="dressing">dressing — کاتا جلوبەرگکردنێ</option>
+                                        <option value="mirror">mirror — دیتنا ئاوینێ</option>
+                                        <option value="nightmare">nightmare — خەوا خراپ</option>
+                                        <option value="istikhara">istikhara — دوعای ئیستیخارە</option>
+                                        <option value="wedding">wedding — تەبریکا زاوایێ</option>
+                                        <option value="kaffarah">kaffarah — کەفارەتا کۆمەلکردنێ</option>
+                                        <option value="before_quran">before_quran — بەرا خوێندنا قورئانێ</option>
+                                        <option value="bathroom_enter">bathroom_enter — چونا دەستشوینکێ</option>
+                                        <option value="bathroom_exit">bathroom_exit — دەرچوونا دەستشوینکێ</option>
+                                        <option value="thunder">thunder — کاتا برووسکێ</option>
+                                        <option value="new_moon">new_moon — دیتنا مانگا نوێ</option>
+                                        <option value="friday">friday — ڕۆژا ئینانێ</option>
+                                        <option value="gratitude">gratitude — سوپاسگوزاری</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Source</label>
+                                    <input type="text" id="adhkar-source" class="form-input" placeholder="البخاري" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Arabic Text</label>
+                                <textarea id="adhkar-ar" class="form-textarea" placeholder="سُبْحَانَ اللَّهِ..." dir="rtl" style="min-height:80px;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;font-size:16px;line-height:2"></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Repeat</label>
+                                    <input type="number" id="adhkar-repeat" class="form-input" value="1" min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Sort Order</label>
+                                    <input type="number" id="adhkar-sort" class="form-input" value="10" min="0">
+                                </div>
+                                <div class="form-group" style="justify-content:flex-end;align-items:flex-end">
+                                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                                        <input type="checkbox" id="adhkar-active" checked>
+                                        <span class="form-label" style="margin:0">Active</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-secondary" onclick="cancelAdhkarEdit()">Cancel</button>
+                                <button class="btn btn-primary" onclick="saveAdhkar()">Save Adhkar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- filter by category -->
+                <div style="display:flex;gap:8px;padding:12px 0 4px;overflow-x:auto;scrollbar-width:none">
+                    <button class="adhkar-filter-btn active" data-cat="" onclick="filterAdhkarCat(this,'')">All</button>
+                    <button class="adhkar-filter-btn" data-cat="morning" onclick="filterAdhkarCat(this,'morning')">Morning</button>
+                    <button class="adhkar-filter-btn" data-cat="evening" onclick="filterAdhkarCat(this,'evening')">Evening</button>
+                    <button class="adhkar-filter-btn" data-cat="sleep" onclick="filterAdhkarCat(this,'sleep')">Sleep</button>
+                    <button class="adhkar-filter-btn" data-cat="waking" onclick="filterAdhkarCat(this,'waking')">Waking</button>
+                    <button class="adhkar-filter-btn" data-cat="house_enter" onclick="filterAdhkarCat(this,'house_enter')">House In</button>
+                    <button class="adhkar-filter-btn" data-cat="house_exit" onclick="filterAdhkarCat(this,'house_exit')">House Out</button>
+                    <button class="adhkar-filter-btn" data-cat="masjid_enter" onclick="filterAdhkarCat(this,'masjid_enter')">Masjid In</button>
+                    <button class="adhkar-filter-btn" data-cat="masjid_exit" onclick="filterAdhkarCat(this,'masjid_exit')">Masjid Out</button>
+                    <button class="adhkar-filter-btn" data-cat="wudu" onclick="filterAdhkarCat(this,'wudu')">Wudu</button>
+                    <button class="adhkar-filter-btn" data-cat="opening_prayer" onclick="filterAdhkarCat(this,'opening_prayer')">Opening Prayer</button>
+                    <button class="adhkar-filter-btn" data-cat="ruku" onclick="filterAdhkarCat(this,'ruku')">Ruku</button>
+                    <button class="adhkar-filter-btn" data-cat="rising_ruku" onclick="filterAdhkarCat(this,'rising_ruku')">Rising Ruku</button>
+                    <button class="adhkar-filter-btn" data-cat="sujood" onclick="filterAdhkarCat(this,'sujood')">Sujood</button>
+                    <button class="adhkar-filter-btn" data-cat="between_sujood" onclick="filterAdhkarCat(this,'between_sujood')">Between Sujood</button>
+                    <button class="adhkar-filter-btn" data-cat="tashahhud" onclick="filterAdhkarCat(this,'tashahhud')">Tashahhud</button>
+                    <button class="adhkar-filter-btn" data-cat="eating_before" onclick="filterAdhkarCat(this,'eating_before')">Before Eat</button>
+                    <button class="adhkar-filter-btn" data-cat="eating_after" onclick="filterAdhkarCat(this,'eating_after')">After Eat</button>
+                    <button class="adhkar-filter-btn" data-cat="breaking_fast" onclick="filterAdhkarCat(this,'breaking_fast')">Iftar</button>
+                    <button class="adhkar-filter-btn" data-cat="fasting" onclick="filterAdhkarCat(this,'fasting')">Fasting</button>
+                    <button class="adhkar-filter-btn" data-cat="travel" onclick="filterAdhkarCat(this,'travel')">Travel</button>
+                    <button class="adhkar-filter-btn" data-cat="travel_return" onclick="filterAdhkarCat(this,'travel_return')">Travel Return</button>
+                    <button class="adhkar-filter-btn" data-cat="vehicle" onclick="filterAdhkarCat(this,'vehicle')">Vehicle</button>
+                    <button class="adhkar-filter-btn" data-cat="marketplace" onclick="filterAdhkarCat(this,'marketplace')">Marketplace</button>
+                    <button class="adhkar-filter-btn" data-cat="charity" onclick="filterAdhkarCat(this,'charity')">Charity</button>
+                    <button class="adhkar-filter-btn" data-cat="distress" onclick="filterAdhkarCat(this,'distress')">Distress</button>
+                    <button class="adhkar-filter-btn" data-cat="debt" onclick="filterAdhkarCat(this,'debt')">Debt</button>
+                    <button class="adhkar-filter-btn" data-cat="fear" onclick="filterAdhkarCat(this,'fear')">Fear</button>
+                    <button class="adhkar-filter-btn" data-cat="forgiveness" onclick="filterAdhkarCat(this,'forgiveness')">Forgiveness</button>
+                    <button class="adhkar-filter-btn" data-cat="protection" onclick="filterAdhkarCat(this,'protection')">Protection</button>
+                    <button class="adhkar-filter-btn" data-cat="rain" onclick="filterAdhkarCat(this,'rain')">Rain</button>
+                    <button class="adhkar-filter-btn" data-cat="wind" onclick="filterAdhkarCat(this,'wind')">Wind</button>
+                    <button class="adhkar-filter-btn" data-cat="after_prayer" onclick="filterAdhkarCat(this,'after_prayer')">After Prayer</button>
+                    <button class="adhkar-filter-btn" data-cat="adhan" onclick="filterAdhkarCat(this,'adhan')">Adhan</button>
+                    <button class="adhkar-filter-btn" data-cat="salawat" onclick="filterAdhkarCat(this,'salawat')">Salawat</button>
+                    <button class="adhkar-filter-btn" data-cat="qunut" onclick="filterAdhkarCat(this,'qunut')">Qunut</button>
+                    <button class="adhkar-filter-btn" data-cat="lailat_qadr" onclick="filterAdhkarCat(this,'lailat_qadr')">Lailat Qadr</button>
+                    <button class="adhkar-filter-btn" data-cat="dhul_hijjah" onclick="filterAdhkarCat(this,'dhul_hijjah')">Dhul Hijjah</button>
+                    <button class="adhkar-filter-btn" data-cat="talbiyah" onclick="filterAdhkarCat(this,'talbiyah')">Talbiyah</button>
+                    <button class="adhkar-filter-btn" data-cat="safa_marwa" onclick="filterAdhkarCat(this,'safa_marwa')">Safa Marwa</button>
+                    <button class="adhkar-filter-btn" data-cat="zamzam" onclick="filterAdhkarCat(this,'zamzam')">Zamzam</button>
+                    <button class="adhkar-filter-btn" data-cat="entering_makkah" onclick="filterAdhkarCat(this,'entering_makkah')">Entering Makkah</button>
+                    <button class="adhkar-filter-btn" data-cat="arafat" onclick="filterAdhkarCat(this,'arafat')">Arafat</button>
+                    <button class="adhkar-filter-btn" data-cat="grave" onclick="filterAdhkarCat(this,'grave')">Grave</button>
+                    <button class="adhkar-filter-btn" data-cat="eclipse" onclick="filterAdhkarCat(this,'eclipse')">Eclipse</button>
+                    <button class="adhkar-filter-btn" data-cat="illness" onclick="filterAdhkarCat(this,'illness')">Illness</button>
+                    <button class="adhkar-filter-btn" data-cat="pain" onclick="filterAdhkarCat(this,'pain')">Pain</button>
+                    <button class="adhkar-filter-btn" data-cat="ruqyah" onclick="filterAdhkarCat(this,'ruqyah')">Ruqyah</button>
+                    <button class="adhkar-filter-btn" data-cat="visiting_sick" onclick="filterAdhkarCat(this,'visiting_sick')">Visiting Sick</button>
+                    <button class="adhkar-filter-btn" data-cat="condolence" onclick="filterAdhkarCat(this,'condolence')">Condolence</button>
+                    <button class="adhkar-filter-btn" data-cat="newborn" onclick="filterAdhkarCat(this,'newborn')">Newborn</button>
+                    <button class="adhkar-filter-btn" data-cat="new_clothes" onclick="filterAdhkarCat(this,'new_clothes')">New Clothes</button>
+                    <button class="adhkar-filter-btn" data-cat="anger" onclick="filterAdhkarCat(this,'anger')">Anger</button>
+                    <button class="adhkar-filter-btn" data-cat="sneeze" onclick="filterAdhkarCat(this,'sneeze')">Sneeze</button>
+                    <button class="adhkar-filter-btn" data-cat="dressing" onclick="filterAdhkarCat(this,'dressing')">Dressing</button>
+                    <button class="adhkar-filter-btn" data-cat="mirror" onclick="filterAdhkarCat(this,'mirror')">Mirror</button>
+                    <button class="adhkar-filter-btn" data-cat="nightmare" onclick="filterAdhkarCat(this,'nightmare')">Nightmare</button>
+                    <button class="adhkar-filter-btn" data-cat="istikhara" onclick="filterAdhkarCat(this,'istikhara')">Istikhara</button>
+                    <button class="adhkar-filter-btn" data-cat="wedding" onclick="filterAdhkarCat(this,'wedding')">Wedding</button>
+                    <button class="adhkar-filter-btn" data-cat="kaffarah" onclick="filterAdhkarCat(this,'kaffarah')">Kaffarah</button>
+                    <button class="adhkar-filter-btn" data-cat="before_quran" onclick="filterAdhkarCat(this,'before_quran')">Before Quran</button>
+                    <button class="adhkar-filter-btn" data-cat="bathroom_enter" onclick="filterAdhkarCat(this,'bathroom_enter')">Bathroom In</button>
+                    <button class="adhkar-filter-btn" data-cat="bathroom_exit" onclick="filterAdhkarCat(this,'bathroom_exit')">Bathroom Out</button>
+                    <button class="adhkar-filter-btn" data-cat="thunder" onclick="filterAdhkarCat(this,'thunder')">Thunder</button>
+                    <button class="adhkar-filter-btn" data-cat="new_moon" onclick="filterAdhkarCat(this,'new_moon')">New Moon</button>
+                    <button class="adhkar-filter-btn" data-cat="friday" onclick="filterAdhkarCat(this,'friday')">Friday</button>
+                    <button class="adhkar-filter-btn" data-cat="gratitude" onclick="filterAdhkarCat(this,'gratitude')">Gratitude</button>
+                </div>
+                <div class="list-toolbar">
+                    <span class="list-count" id="adhkar-count"></span>
+                </div>
+                <div id="adhkar-list" class="items-list"></div>
+            </div>
+
+            <!-- ── TASBIH ── -->
+            <div id="panel-tasbih" class="view-panel">
+                <input type="hidden" id="tasbih-edit-id">
+                <div class="add-form-wrap">
+                    <button class="add-form-toggle" id="tasbih-form-toggle" onclick="toggleForm('tasbih')">
+                        <i data-lucide="plus"></i>
+                        <span id="tasbih-form-toggle-label">Add Dhikr</span>
+                    </button>
+                    <div class="add-form-body" id="tasbih-form-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Arabic Text</label>
+                                <textarea id="tasbih-ar" class="form-textarea" placeholder="سُبْحَانَ اللَّهِ" dir="rtl" style="min-height:60px"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Kurdish / Short Label</label>
+                                <input type="text" id="tasbih-ku" class="form-input" placeholder="سبحان الله" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Sort Order</label>
+                                    <input type="number" id="tasbih-sort" class="form-input" value="10" min="0">
+                                </div>
+                                <div class="form-group" style="justify-content:flex-end;align-items:flex-end">
+                                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                                        <input type="checkbox" id="tasbih-active" checked>
+                                        <span class="form-label" style="margin:0">Active</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-secondary" onclick="cancelTasbihEdit()">Cancel</button>
+                                <button class="btn btn-primary" onclick="saveTasbih()">Save Dhikr</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-toolbar">
+                    <span class="list-count" id="tasbih-count"></span>
+                </div>
+                <div id="tasbih-list" class="items-list"></div>
+            </div>
+
+            <!-- ── 99 NAMES ── -->
+            <div id="panel-asma99" class="view-panel">
+                <div class="asma-search-row">
+                    <input type="text" id="asma-search" class="form-input" placeholder="Search names..." oninput="filterAsma(this.value)">
+                </div>
+                <div class="list-toolbar">
+                    <span class="list-count" id="asma-count">99 names</span>
+                </div>
+                <div id="asma-grid" class="asma-grid"></div>
+            </div>
+
+            <!-- ── DUAS ── -->
+            <div id="panel-duas" class="view-panel active">
+                <!-- ── Duas ── -->
+                <input type="hidden" id="dua-edit-id">
+                <div class="add-form-wrap">
+                    <button class="add-form-toggle" id="dua-form-toggle" onclick="toggleForm('dua')">
+                        <i data-lucide="plus"></i>
+                        <span id="dua-form-toggle-label">Add Dua</span>
+                    </button>
+                    <div class="add-form-body" id="dua-form-body">
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Category</label>
+                                    <select id="dua-cat" class="form-select"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Source</label>
+                                    <input type="text" id="dua-source" class="form-input" placeholder="&#x628;&#x62E;&#x627;&#x631;&#x06CC;" dir="rtl">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Arabic Text</label>
+                                <textarea id="dua-ar" class="form-textarea" placeholder="&#x627;&#x643;&#x62A;&#x628; &#x627;&#x644;&#x62F;&#x639;&#x627;&#x621;..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Kurdish Translation</label>
+                                <textarea id="dua-ku" class="form-textarea ku" placeholder="&#x698;&#x6D5;&#x648;&#x062C;&#x6D5;&#x0631;&#x0627; &#x06A9;&#x0648;&#x0631;&#x062F;&#x06CC;..."></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Repeat Count</label>
+                                    <input type="number" id="dua-repeat" class="form-input" value="1" min="1" max="1000">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Sort Order</label>
+                                    <input type="number" id="dua-sort" class="form-input" value="10" min="0">
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-secondary" onclick="cancelDuaEdit()">Cancel</button>
+                                <button class="btn btn-primary" onclick="saveDua()">Save Dua</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-chips" id="dua-cat-filter"></div>
+                <div class="list-toolbar">
+                    <span class="list-count" id="dua-count"></span>
+                </div>
+                <div id="dua-list" class="items-list"></div>
+            </div>
+
+            <!-- ── HADITHS ── -->
+            <div id="panel-hadiths" class="view-panel">
+                <input type="hidden" id="hadith-edit-id">
+                <div class="add-form-wrap">
+                    <button class="add-form-toggle" id="hadith-form-toggle" onclick="toggleForm('hadith')">
+                        <i data-lucide="plus"></i>
+                        <span id="hadith-form-toggle-label">Add Hadith</span>
+                    </button>
+                    <div class="add-form-body" id="hadith-form-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Title (Kurdish)</label>
+                                <input type="text" id="hadith-title" class="form-input" placeholder="&#x28;&#x66F;&#x6CE;;&#x648;&#x646;&#x6D5;&#x62A;&#x29; &#x646;&#x627;&#x648;&#x06CE; &#x628;&#x627;&#x628;" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Arabic Text</label>
+                                <textarea id="hadith-ar" class="form-textarea" placeholder="&#x627;&#x643;&#x62A;&#x628; &#x627;&#x644;&#x62D;&#x62F;&#x64A;&#x62B;..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Kurdish Translation</label>
+                                <textarea id="hadith-ku" class="form-textarea ku" placeholder="&#x698;&#x6D5;&#x648;&#x062C;&#x6D5;&#x0631;&#x0627; &#x06A9;&#x0648;&#x0631;&#x062F;&#x06CC;..."></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Sources</label>
+                                    <div class="source-tags" id="hadith-source-tags"></div>
+                                    <div class="source-add-row">
+                                        <input type="text" id="hadith-source-input" class="form-input" placeholder="&#x628;&#x62E;&#x627;&#x631;&#x06CC;" dir="rtl" style="font-family:'IBM Plex Sans Arabic',system-ui,sans-serif" onkeydown="if(event.key==='Enter'){event.preventDefault();addHadithSource();}">
+                                        <button type="button" class="btn btn-secondary" onclick="addHadithSource()">+</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="hadith-sort" value="0">
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-secondary" onclick="cancelHadithEdit()">Cancel</button>
+                                <button class="btn btn-primary" onclick="saveHadith()">Save Hadith</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-toolbar">
+                    <span class="list-count" id="hadith-count"></span>
+                </div>
+                <div id="hadith-list" class="items-list"></div>
+            </div>
+
+            <!-- ── BOOKS ── -->
+            <div id="panel-books" class="view-panel">
+                <input type="hidden" id="book-edit-id">
+                <div class="add-form-wrap">
+                    <button class="add-form-toggle" id="book-form-toggle" onclick="toggleForm('book')">
+                        <i data-lucide="plus"></i>
+                        <span id="book-form-toggle-label">Add Book</span>
+                    </button>
+                    <div class="add-form-body" id="book-form-body">
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Kurdish Title *</label>
+                                    <input type="text" id="book-title-ku" class="form-input" placeholder="ناڤێ کتێبێ" dir="rtl">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Arabic Title</label>
+                                    <input type="text" id="book-title-ar" class="form-input" placeholder="عنوان الكتاب" dir="rtl">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Author (Kurdish)</label>
+                                    <input type="text" id="book-author-ku" class="form-input" placeholder="ناڤێ نووسەر" dir="rtl" list="dl-author-ku" autocomplete="off">
+                                    <datalist id="dl-author-ku"></datalist>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Author (Arabic)</label>
+                                    <input type="text" id="book-author-ar" class="form-input" placeholder="اسم المؤلف" dir="rtl" list="dl-author-ar" autocomplete="off">
+                                    <datalist id="dl-author-ar"></datalist>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Category</label>
+                                    <input type="text" id="book-category" class="form-input" placeholder="e.g. فقه, تفسیر, سیرە" list="dl-book-category" autocomplete="off">
+                                    <datalist id="dl-book-category"></datalist>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Pages</label>
+                                    <input type="number" id="book-pages" class="form-input" placeholder="320" min="1">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group" style="flex:2">
+                                    <label class="form-label">PDF File</label>
+                                    <div style="display:flex;flex-direction:column;gap:8px">
+                                        <label style="cursor:pointer">
+                                            <input type="file" id="book-pdf-file" accept="application/pdf" style="display:none" onchange="onPdfFilePicked(this)">
+                                            <span class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+                                                <i data-lucide="file-up" style="width:14px;height:14px"></i>
+                                                Pick PDF from PC
+                                            </span>
+                                        </label>
+                                        <input type="url" id="book-pdf-url" class="form-input" placeholder="or paste Cloudflare R2 URL directly">
+                                        <div id="book-pdf-upload-status" style="font-size:12px;color:var(--text-tertiary)"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group" style="flex:2">
+                                    <label class="form-label">Description</label>
+                                    <textarea id="book-description" class="form-input" rows="2" placeholder="Short description..." dir="rtl" style="resize:vertical"></textarea>
+                                </div>
+                            </div>
+                            <!-- Cover image upload -->
+                            <div class="form-row">
+                                <div class="form-group" style="flex:2">
+                                    <label class="form-label">Cover Image (pick from your PC)</label>
+                                    <div style="display:flex;gap:12px;align-items:flex-start">
+                                        <div id="book-cover-preview" style="width:80px;height:110px;border-radius:8px;background:var(--bg-active);border:2px dashed var(--border-medium);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+                                            <i data-lucide="image" style="width:24px;height:24px;color:var(--text-tertiary)"></i>
+                                        </div>
+                                        <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+                                            <label style="cursor:pointer">
+                                                <input type="file" id="book-cover-file" accept="image/*" style="display:none" onchange="previewCover(this)">
+                                                <span class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+                                                    <i data-lucide="upload" style="width:14px;height:14px"></i>
+                                                    Pick Image
+                                                </span>
+                                            </label>
+                                            <input type="url" id="book-cover-url" class="form-input" placeholder="or paste URL directly" style="font-size:12px">
+                                            <div id="book-cover-upload-status" style="font-size:12px;color:var(--text-tertiary)"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Sort Order</label>
+                                    <input type="number" id="book-sort" class="form-input" placeholder="0" value="0" onchange="autoSaveBookSort(this.value)">
+                                </div>
+                                <div class="form-group" style="align-self:flex-end;padding-bottom:4px">
+                                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text-secondary)">
+                                        <input type="checkbox" id="book-active" checked style="width:16px;height:16px;accent-color:var(--primary)">
+                                        Active (visible in app)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="saveBook()">
+                                <i data-lucide="save"></i> Save Book
+                            </button>
+                            <button class="btn btn-secondary" onclick="cancelBookEdit()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-toolbar">
+                    <span class="list-count" id="book-count"></span>
+                </div>
+                <div id="book-list" class="items-list"></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="notification-container" style="position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:340px;pointer-events:none;"></div>
+
+<script src="/utils/admin-session-timer-ui.js?v=5"></script>
+<script src="/utils/admin-auth.js?v=4"></script>
+<script>
+'use strict';
+
+/* ── Tab switching ── */
+var currentTab = 'duas';
+var TAB_NAMES = ['duas','hadiths','tasbih','asma99','books','sections','adhkar'];
+var addLabels = { duas: 'Add Dua', hadiths: 'Add Hadith', tasbih: 'Add Dhikr', asma99: '', books: 'Add Book', adhkar: 'Add Adhkar' };
+
+function switchTab(name) {
+    currentTab = name;
+    document.querySelectorAll('.platform-tab').forEach(function(b, i) {
+        b.classList.toggle('active', TAB_NAMES[i] === name);
+    });
+    document.querySelectorAll('.view-panel').forEach(function(p) { p.classList.remove('active'); });
+    document.getElementById('panel-' + name).classList.add('active');
+    var addBtn = document.getElementById('top-add-btn');
+    if (addBtn) addBtn.style.display = (name === 'asma99' || name === 'sections') ? 'none' : '';
+    if (name === 'tasbih') renderTasbihList();
+    if (name === 'books') renderBooksList();
+    if (name === 'adhkar') renderAdhkarList();
+    document.getElementById('top-add-label').textContent = addLabels[name] || 'Add';
+    if (name === 'asma99') renderAsma99();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+/* ── Top Add button — opens the relevant form ── */
+function topAddClick() {
+    if (currentTab === 'asma99') return;
+    var prefixMap = { duas: 'dua', hadiths: 'hadith', tasbih: 'tasbih', books: 'book', adhkar: 'adhkar' };
+    var prefix = prefixMap[currentTab] || currentTab;
+    toggleForm(prefix);
+}
+
+/* ── Collapsible forms ── */
+function toggleForm(prefix) {
+    var body = document.getElementById(prefix + '-form-body');
+    var toggle = document.getElementById(prefix + '-form-toggle');
+    if (!body) return;
+    var isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    toggle.classList.toggle('editing', !isOpen);
+    /* Auto-set sort order for new items */
+    if (!isOpen) {
+        if (prefix === 'book') {
+            var editId = document.getElementById('book-edit-id').value;
+            if (!editId) {
+                var maxSort = allBooks.reduce(function(m, b){ return Math.max(m, b.sort_order || 0); }, 0);
+                document.getElementById('book-sort').value = maxSort + 1;
+            }
+        } else if (prefix === 'cat') {
+            var catEditId = document.getElementById('cat-edit-id').value;
+            if (!catEditId) {
+                var maxCatSort = allCategories.reduce(function(m, c){ return Math.max(m, c.sort_order || 0); }, 0);
+                document.getElementById('cat-sort').value = maxCatSort + 1;
+            }
+        }
+    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+function openForm(prefix) {
+    var body = document.getElementById(prefix + '-form-body');
+    var toggle = document.getElementById(prefix + '-form-toggle');
+    if (!body) return;
+    body.classList.add('open');
+    toggle.classList.add('editing');
+    body.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+function closeForm(prefix) {
+    var body = document.getElementById(prefix + '-form-body');
+    var toggle = document.getElementById(prefix + '-form-toggle');
+    if (!body) return;
+    body.classList.remove('open');
+    toggle.classList.remove('editing');
+}
+
+/* ── Toast ── */
+function showNotification(msg, type) {
+    type = type || 'info';
+    var colors = { success:'#22c55e', error:'#ef4444', info:'#3b82f6', warning:'#f59e0b' };
+    var container = document.getElementById('notification-container');
+    var el = document.createElement('div');
+    el.style.cssText = 'background:var(--bg-surface);border:1px solid var(--border-medium);border-left:4px solid ' + (colors[type]||colors.info) + ';border-radius:8px;padding:12px 16px;font-size:13px;color:var(--text-primary);pointer-events:auto;box-shadow:0 4px 16px rgba(0,0,0,.15);animation:fadeIn .2s ease;';
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(function() { el.remove(); }, 3500);
+}
+
+/* ── State ── */
+var allCategories = [];
+var allDuas = [];
+var allHadiths = [];
+var allSections = [];
+var allBooks = [];
+var duaFilterCat = 'all';
+
+function updateStats() {
+    document.getElementById('stat-cats').textContent    = allCategories.length;
+    document.getElementById('stat-duas').textContent    = allDuas.length;
+    document.getElementById('stat-hadiths').textContent = allHadiths.length;
+    document.getElementById('stat-books').textContent   = allBooks.length;
+    document.getElementById('stat-tasbih').textContent  = allTasbih.length;
+    document.getElementById('tab-count-duas').textContent    = allDuas.length;
+    document.getElementById('tab-count-hadiths').textContent = allHadiths.length;
+    document.getElementById('tab-count-books').textContent   = allBooks.length;
+    document.getElementById('tab-count-tasbih').textContent  = allTasbih.length;
+}
+
+async function loadAll() { await Promise.all([loadCategories(), loadDuas(), loadHadiths(), loadSections(), loadTasbih(), loadBooks(), loadAdhkar()]); }
+
+async function loadCategories() {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_categories').select('*').order('sort_order');
+    if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+    allCategories = r.data || [];
+    renderCategoryList(); populateCatDropdown(); renderDuaCatFilter(); updateStats();
+}
+async function loadDuas() {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_duas').select('*').order('category_key').order('sort_order');
+    if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+    allDuas = r.data || [];
+    renderDuaList(); updateStats();
+}
+async function loadHadiths() {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_hadiths').select('*').order('sort_order');
+    if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+    allHadiths = r.data || [];
+    renderHadithList(); updateStats();
+}
+
+/* ── Drag-and-drop reorder helper ──
+   arr      : the data array (will be reordered in-place)
+   getCards : function() returns NodeList/Array of .item-card elements
+   onDrop   : async function(arr) called after drop to save new order
+*/
+function initDrag(getCards, arr, onDrop) {
+    var dragged = null;
+    function cards() { return getCards(); }
+
+    function handle(card, idx) {
+        card.setAttribute('draggable', 'true');
+
+        card.addEventListener('dragstart', function(e) {
+            dragged = idx;
+            setTimeout(function(){ card.classList.add('dragging'); }, 0);
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        card.addEventListener('dragend', function() {
+            card.classList.remove('dragging');
+            cards().forEach(function(c){ c.classList.remove('drag-over-top','drag-over-bot'); });
+        });
+        card.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            if (dragged === null || dragged === idx) return;
+            cards().forEach(function(c){ c.classList.remove('drag-over-top','drag-over-bot'); });
+            var rect = card.getBoundingClientRect();
+            var mid = rect.top + rect.height / 2;
+            card.classList.add(e.clientY < mid ? 'drag-over-top' : 'drag-over-bot');
+        });
+        card.addEventListener('drop', function(e) {
+            e.preventDefault();
+            if (dragged === null || dragged === idx) return;
+            cards().forEach(function(c){ c.classList.remove('drag-over-top','drag-over-bot'); });
+            var rect = card.getBoundingClientRect();
+            var mid = rect.top + rect.height / 2;
+            var insertBefore = e.clientY < mid;
+            var item = arr.splice(dragged, 1)[0];
+            var newIdx = arr.indexOf(arr[idx > dragged ? idx - 1 : idx]);
+            var targetIdx = arr.indexOf(arr[idx > dragged ? idx - 1 : idx]);
+            /* recalculate target after splice */
+            var tIdx = idx > dragged ? (insertBefore ? idx - 1 : idx) : (insertBefore ? idx : idx + 1);
+            if (tIdx < 0) tIdx = 0;
+            if (tIdx > arr.length) tIdx = arr.length;
+            arr.splice(tIdx, 0, item);
+            dragged = null;
+            /* reassign sort_order 1..n */
+            arr.forEach(function(a, i){ a.sort_order = i + 1; });
+            onDrop(arr);
+        });
+    }
+
+    cards().forEach(function(card, idx){ handle(card, idx); });
+}
+
+/* ── DOM helpers ── */
+function mke(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
+function mkIconBtn(lucideIcon, title, danger, cb) {
+    var btn = mke('button', 'icon-action' + (danger ? ' danger' : ''));
+    btn.title = title;
+    btn.onclick = cb;
+    var ico = mke('i'); ico.setAttribute('data-lucide', lucideIcon);
+    btn.appendChild(ico);
+    return btn;
+}
+
+/* ── CATEGORIES ── */
+function renderCategoryList() {
+    var list = document.getElementById('cat-list');
+    list.textContent = '';
+    if (!allCategories.length) {
+        var es = mke('div', 'empty-state');
+        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','folder'); eico.appendChild(ei);
+        var ep = mke('p'); ep.textContent = 'No categories yet. Add one above.';
+        es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
+        if (typeof lucide !== 'undefined') lucide.createIcons(); return;
+    }
+    allCategories.forEach(function(cat) {
+        var card = mke('div', 'cat-card');
+        var top = mke('div', 'cat-card-top');
+        var left = mke('div', 'cat-card-left');
+        var keyEl = mke('span', 'cat-card-key'); keyEl.textContent = cat.key;
+        var labelEl = mke('span', 'cat-card-label'); labelEl.textContent = cat.label_ku;
+        left.appendChild(keyEl); left.appendChild(labelEl);
+        if (cat.is_hidden) card.style.opacity = '0.45';
+        var acts = mke('div', 'item-card-actions');
+        var eyeBtn = mkIconBtn(cat.is_hidden ? 'eye-off' : 'eye', cat.is_hidden ? 'Show' : 'Hide', false, function() { toggleCatHidden(cat.id, cat.is_hidden); });
+        acts.appendChild(eyeBtn);
+        acts.appendChild(mkIconBtn('pencil', 'Edit', false, function() { editCat(cat.id); }));
+        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, function() { deleteCat(cat.id); }));
+        top.appendChild(left); top.appendChild(acts);
+        card.appendChild(top);
+        if (cat.is_hidden) { var hb = mke('span', 'badge badge-warn'); hb.textContent = 'hidden'; card.appendChild(hb); }
+        if (cat.description) { var d = mke('div', 'cat-card-desc'); d.textContent = cat.description; card.appendChild(d); }
+        if (cat.image_name) { var img = mke('div', 'cat-card-image'); img.textContent = cat.image_name; card.appendChild(img); }
+        list.appendChild(card);
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+function populateCatDropdown() {
+    var sel = document.getElementById('dua-cat'); sel.textContent = '';
+    allCategories.forEach(function(cat) {
+        var opt = document.createElement('option');
+        opt.value = cat.key; opt.textContent = cat.key + ' \u2014 ' + cat.label_ku;
+        sel.appendChild(opt);
+    });
+}
+function editCat(id) {
+    var cat = allCategories.find(function(c) { return c.id === id; }); if (!cat) return;
+    document.getElementById('cat-edit-id').value = id;
+    document.getElementById('cat-key').value = cat.key;
+    document.getElementById('cat-label').value = cat.label_ku;
+    document.getElementById('cat-image').value = cat.image_name || '';
+    document.getElementById('cat-desc').value = cat.description || '';
+    document.getElementById('cat-sort').value = cat.sort_order;
+    document.getElementById('cat-form-toggle-label').textContent = 'Editing: ' + cat.key;
+    openForm('cat');
+}
+function cancelCatEdit() {
+    ['cat-edit-id','cat-key','cat-label','cat-image','cat-desc'].forEach(function(id) { document.getElementById(id).value = ''; });
+    document.getElementById('cat-sort').value = '10';
+    document.getElementById('cat-form-toggle-label').textContent = 'Add Category';
+    closeForm('cat');
+}
+async function saveCat() {
+    var key = document.getElementById('cat-key').value.trim();
+    var label = document.getElementById('cat-label').value.trim();
+    if (!key || !label) { showNotification('Key and Kurdish label are required.', 'warning'); return; }
+    var payload = { key: key, label_ku: label,
+        image_name: document.getElementById('cat-image').value.trim() || null,
+        description: document.getElementById('cat-desc').value.trim() || null,
+        sort_order: parseInt(document.getElementById('cat-sort').value) || 0 };
+    var supabase = window.adminAuth.getSupabase();
+    var editId = document.getElementById('cat-edit-id').value;
+    var r = editId ? await supabase.from('gencine_categories').update(payload).eq('id', editId)
+                   : await supabase.from('gencine_categories').insert(payload);
+    if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
+    showNotification(editId ? 'Category updated.' : 'Category added.', 'success');
+    cancelCatEdit(); await loadCategories(); localStorage.removeItem('gencine_cats_v5');
+}
+async function deleteCat(id) {
+    var cat = allCategories.find(function(c) { return c.id === id; });
+    if (!confirm('Delete "' + (cat ? cat.key : id) + '"? Duas in this category will be orphaned.')) return;
+    var r = await window.adminAuth.getSupabase().from('gencine_categories').delete().eq('id', id);
+    if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
+    showNotification('Category deleted.', 'success'); await loadCategories(); localStorage.removeItem('gencine_cats_v5');
+}
+async function toggleCatHidden(id, currentHidden) {
+    var r = await window.adminAuth.getSupabase().from('gencine_categories').update({ is_hidden: !currentHidden }).eq('id', id);
+    if (r.error) { showNotification('Update failed: ' + r.error.message, 'error'); return; }
+    showNotification(currentHidden ? 'Category shown.' : 'Category hidden.', 'success');
+    await loadCategories(); localStorage.removeItem('gencine_cats_v5');
+}
+
+/* ── DUAS ── */
+function renderDuaCatFilter() {
+    var bar = document.getElementById('dua-cat-filter'); bar.textContent = '';
+    var allBtn = mke('button', 'filter-chip' + (duaFilterCat === 'all' ? ' on' : ''));
+    allBtn.textContent = 'All'; allBtn.onclick = function() { duaFilterCat = 'all'; renderDuaList(); renderDuaCatFilter(); };
+    bar.appendChild(allBtn);
+    allCategories.forEach(function(cat) {
+        var btn = mke('button', 'filter-chip' + (duaFilterCat === cat.key ? ' on' : ''));
+        btn.textContent = cat.label_ku;
+        btn.onclick = function() { duaFilterCat = cat.key; renderDuaList(); renderDuaCatFilter(); };
+        bar.appendChild(btn);
+    });
+}
+function renderDuaList() {
+    var list = document.getElementById('dua-list'); list.textContent = '';
+    var filtered = duaFilterCat === 'all' ? allDuas : allDuas.filter(function(d) { return d.category_key === duaFilterCat; });
+    document.getElementById('dua-count').textContent = filtered.length + ' duas' + (duaFilterCat !== 'all' ? ' in "' + duaFilterCat + '"' : '');
+    if (!filtered.length) {
+        var es = mke('div', 'empty-state');
+        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','hand-heart'); eico.appendChild(ei);
+        var ep = mke('p'); ep.textContent = 'No duas found. Add one above.';
+        es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
+        if (typeof lucide !== 'undefined') lucide.createIcons(); return;
+    }
+    filtered.forEach(function(dua) {
+        var card = mke('div', 'item-card');
+        var handle = mke('div', 'drag-handle'); handle.textContent = '⠿';
+        var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','hand-heart'); icon.appendChild(ico);
+        var body = mke('div', 'item-card-body');
+        var arEl = mke('div', 'item-card-ar'); arEl.textContent = dua.ar; body.appendChild(arEl);
+        var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = dua.ku; body.appendChild(kuEl);
+        var meta = mke('div', 'item-card-meta');
+        var cb = mke('span', 'badge badge-cat'); cb.textContent = dua.category_key; meta.appendChild(cb);
+        if (dua.repeat > 1) { var rb = mke('span', 'badge badge-repeat'); rb.textContent = '\u00D7 ' + dua.repeat; meta.appendChild(rb); }
+        if (dua.source) { var sb = mke('span', 'badge badge-source'); sb.textContent = dua.source; meta.appendChild(sb); }
+        body.appendChild(meta);
+        var acts = mke('div', 'item-card-actions');
+        acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(d){ return function(){ editDua(d.id); }; })(dua)));
+        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, (function(d){ return function(){ deleteDua(d.id); }; })(dua)));
+        card.appendChild(handle); card.appendChild(icon); card.appendChild(body); card.appendChild(acts);
+        list.appendChild(card);
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    /* Init drag on the filtered subset */
+    initDrag(
+        function(){ return Array.prototype.slice.call(list.querySelectorAll('.item-card')); },
+        filtered,
+        async function(reordered) {
+            /* sync sort_order back into allDuas */
+            reordered.forEach(function(d){ var orig = allDuas.find(function(x){ return x.id === d.id; }); if(orig) orig.sort_order = d.sort_order; });
+            renderDuaList();
+            var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+            await Promise.all(reordered.map(function(d){ return supabase.from('gencine_duas').update({ sort_order: d.sort_order }).eq('id', d.id); }));
+            localStorage.removeItem('gencine_duas_v1');
+            showNotification('Order saved.', 'success');
+        }
+    );
+}
+function editDua(id) {
+    var dua = allDuas.find(function(d) { return d.id === id; }); if (!dua) return;
+    document.getElementById('dua-edit-id').value = id;
+    document.getElementById('dua-ar').value = dua.ar; document.getElementById('dua-ku').value = dua.ku;
+    document.getElementById('dua-source').value = dua.source || '';
+    document.getElementById('dua-repeat').value = dua.repeat || 1;
+    document.getElementById('dua-sort').value = dua.sort_order || 10;
+    document.getElementById('dua-cat').value = dua.category_key;
+    document.getElementById('dua-form-toggle-label').textContent = 'Editing dua';
+    switchTab('duas'); openForm('dua');
+}
+function cancelDuaEdit() {
+    ['dua-edit-id','dua-ar','dua-ku','dua-source'].forEach(function(id) { document.getElementById(id).value = ''; });
+    document.getElementById('dua-repeat').value = '1'; document.getElementById('dua-sort').value = '10';
+    document.getElementById('dua-form-toggle-label').textContent = 'Add Dua';
+    closeForm('dua');
+}
+async function saveDua() {
+    var ar = document.getElementById('dua-ar').value.trim(); var ku = document.getElementById('dua-ku').value.trim();
+    if (!ar || !ku) { showNotification('Arabic and Kurdish text are required.', 'warning'); return; }
+    var payload = { category_key: document.getElementById('dua-cat').value, ar: ar, ku: ku,
+        source: document.getElementById('dua-source').value.trim() || null,
+        repeat: parseInt(document.getElementById('dua-repeat').value) || 1,
+        sort_order: parseInt(document.getElementById('dua-sort').value) || 0 };
+    var supabase = window.adminAuth.getSupabase();
+    var editId = document.getElementById('dua-edit-id').value;
+    var r = editId ? await supabase.from('gencine_duas').update(payload).eq('id', editId)
+                   : await supabase.from('gencine_duas').insert(payload);
+    if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
+    showNotification(editId ? 'Dua updated.' : 'Dua added.', 'success');
+    cancelDuaEdit(); await loadDuas(); localStorage.removeItem('gencine_duas_v1');
+}
+async function deleteDua(id) {
+    if (!confirm('Delete this dua?')) return;
+    var r = await window.adminAuth.getSupabase().from('gencine_duas').delete().eq('id', id);
+    if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
+    showNotification('Dua deleted.', 'success'); await loadDuas(); localStorage.removeItem('gencine_duas_v1');
+}
+
+/* ── HADITHS ── */
+function renderHadithList() {
+    var list = document.getElementById('hadith-list'); list.textContent = '';
+    document.getElementById('hadith-count').textContent = allHadiths.length + ' hadiths';
+    if (!allHadiths.length) {
+        var es = mke('div', 'empty-state');
+        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','scroll-text'); eico.appendChild(ei);
+        var ep = mke('p'); ep.textContent = 'No hadiths yet. Add one above.';
+        es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
+        if (typeof lucide !== 'undefined') lucide.createIcons(); return;
+    }
+    allHadiths.forEach(function(h, idx) {
+        var card = mke('div', 'item-card');
+        var icon = mke('div', 'item-card-icon'); var ico = mke('i'); ico.setAttribute('data-lucide','scroll-text'); icon.appendChild(ico);
+        var body = mke('div', 'item-card-body');
+        var numBadge = mke('span', 'badge badge-num'); numBadge.textContent = '#' + (idx + 1); body.appendChild(numBadge);
+        if (h.title) { var titleEl = mke('div', 'item-card-title'); titleEl.textContent = h.title; body.appendChild(titleEl); }
+        var arEl = mke('div', 'item-card-ar'); arEl.textContent = h.ar; body.appendChild(arEl);
+        var kuEl = mke('div', 'item-card-ku'); kuEl.textContent = h.ku; body.appendChild(kuEl);
+        if (h.source) { var meta = mke('div', 'item-card-meta'); h.source.split('\n').filter(Boolean).forEach(function(s){ var sb = mke('span', 'badge badge-source'); sb.textContent = s; meta.appendChild(sb); }); body.appendChild(meta); }
+        var acts = mke('div', 'item-card-actions');
+        acts.appendChild(mkIconBtn('pencil', 'Edit', false, function() { editHadith(h.id); }));
+        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, function() { deleteHadith(h.id); }));
+        card.appendChild(icon); card.appendChild(body); card.appendChild(acts);
+        list.appendChild(card);
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+var hadithSources = [];
+function _renderSourceTags() {
+    var container = document.getElementById('hadith-source-tags');
+    if (!container) return;
+    container.textContent = '';
+    hadithSources.forEach(function(src, i) {
+        var tag = document.createElement('span');
+        tag.className = 'source-tag';
+        var rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'source-tag-remove';
+        rm.textContent = '×';
+        rm.onclick = (function(idx){ return function(){ hadithSources.splice(idx,1); _renderSourceTags(); }; })(i);
+        tag.appendChild(rm);
+        tag.appendChild(document.createTextNode(src));
+        container.appendChild(tag);
+    });
+}
+function addHadithSource() {
+    var input = document.getElementById('hadith-source-input');
+    var val = input.value.trim();
+    if (!val) return;
+    hadithSources.push(val);
+    _renderSourceTags();
+    input.value = '';
+    input.focus();
+}
+function editHadith(id) {
+    var h = allHadiths.find(function(x) { return x.id === id; }); if (!h) return;
+    document.getElementById('hadith-edit-id').value = id;
+    document.getElementById('hadith-title').value = h.title || '';
+    document.getElementById('hadith-ar').value = h.ar; document.getElementById('hadith-ku').value = h.ku;
+    hadithSources = h.source ? h.source.split('\n').filter(Boolean) : [];
+    _renderSourceTags();
+    document.getElementById('hadith-source-input').value = '';
+    document.getElementById('hadith-sort').value = h.sort_order || 0;
+    document.getElementById('hadith-form-toggle-label').textContent = 'Editing hadith';
+    switchTab('hadiths'); openForm('hadith');
+}
+function cancelHadithEdit() {
+    ['hadith-edit-id','hadith-title','hadith-ar','hadith-ku'].forEach(function(id) { document.getElementById(id).value = ''; });
+    document.getElementById('hadith-source-input').value = '';
+    hadithSources = []; _renderSourceTags();
+    document.getElementById('hadith-sort').value = '0';
+    document.getElementById('hadith-form-toggle-label').textContent = 'Add Hadith';
+    closeForm('hadith');
+}
+async function saveHadith() {
+    var ar = document.getElementById('hadith-ar').value.trim(); var ku = document.getElementById('hadith-ku').value.trim();
+    if (!ar || !ku) { showNotification('Arabic and Kurdish text are required.', 'warning'); return; }
+    var editId = document.getElementById('hadith-edit-id').value;
+    /* Auto sort_order: keep existing on edit; for new hadiths use max+10 */
+    var sortVal = editId
+        ? (parseInt(document.getElementById('hadith-sort').value) || 0)
+        : (allHadiths.reduce(function(m,h){ return Math.max(m, h.sort_order||0); }, 0) + 10);
+    var payload = { title: document.getElementById('hadith-title').value.trim() || null, ar: ar, ku: ku,
+        source: hadithSources.length ? hadithSources.join('\n') : null,
+        sort_order: sortVal };
+    var supabase = window.adminAuth.getSupabase();
+    var r = editId ? await supabase.from('gencine_hadiths').update(payload).eq('id', editId)
+                   : await supabase.from('gencine_hadiths').insert(payload);
+    if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
+    showNotification(editId ? 'Hadith updated.' : 'Hadith added.', 'success');
+    cancelHadithEdit(); await loadHadiths(); localStorage.removeItem('gencine_hadiths_v1');
+}
+async function deleteHadith(id) {
+    if (!confirm('Delete this hadith?')) return;
+    var r = await window.adminAuth.getSupabase().from('gencine_hadiths').delete().eq('id', id);
+    if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
+    showNotification('Hadith deleted.', 'success'); await loadHadiths(); localStorage.removeItem('gencine_hadiths_v1');
+}
+
+/* ── SECTIONS ── */
+var SECTION_META = {
+    hadith: { label: 'Hadith',    icon: 'scroll-text'   },
+    adhkar: { label: 'Adhkar',    icon: 'wind'          },
+    dua:    { label: 'Dua',       icon: 'hand-heart'    },
+    tasbih: { label: 'Tasbih',    icon: 'rotate-cw'     },
+    asma:   { label: '99 Names',  icon: 'star'          },
+    books:  { label: 'Books',     icon: 'book-open'     }
+};
+var SECTION_KEYS = ['hadith','adhkar','dua','tasbih','asma','books'];
+function _orderedSections() {
+    return SECTION_KEYS.map(function(k, i) {
+        var s = allSections.find(function(x){ return x.key === k; });
+        return { key: k, sort_order: s ? s.sort_order : (i + 1) * 10, active: s ? s.active : true };
+    }).sort(function(a, b){ return a.sort_order - b.sort_order; });
+}
+async function loadSections() {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_sections').select('*').order('sort_order');
+    if (r.error) { showNotification('Sections load error: ' + r.error.message, 'error'); return; }
+    allSections = r.data || [];
+    renderSections();
+}
+function renderSections() {
+    var list = document.getElementById('sections-list');
+    if (!list) return;
+    list.textContent = '';
+    var ordered = _orderedSections();
+    ordered.forEach(function(item, idx) {
+        var key = item.key;
+        var isActive = item.active;
+        var meta = SECTION_META[key] || { label: key, icon: 'circle' };
+        var row = mke('div', 'section-row');
+
+        /* Sort up/down buttons */
+        var sortBtns = mke('div', 'section-sort-btns');
+        var upBtn = mke('button', 'section-sort-btn'); upBtn.textContent = '↑'; upBtn.title = 'Move up';
+        if (idx === 0) upBtn.disabled = true;
+        upBtn.onclick = (function(k){ return function(){ moveSection(k, -1); }; })(key);
+        var downBtn = mke('button', 'section-sort-btn'); downBtn.textContent = '↓'; downBtn.title = 'Move down';
+        if (idx === ordered.length - 1) downBtn.disabled = true;
+        downBtn.onclick = (function(k){ return function(){ moveSection(k, 1); }; })(key);
+        sortBtns.appendChild(upBtn); sortBtns.appendChild(downBtn);
+
+        var iconWrap = mke('div', 'section-row-icon');
+        var ico = mke('i'); ico.setAttribute('data-lucide', meta.icon);
+        iconWrap.appendChild(ico);
+        var body = mke('div', 'section-row-body');
+        var lbl = mke('div', 'section-row-label'); lbl.textContent = meta.label;
+        var keyEl = mke('div', 'section-row-key'); keyEl.textContent = key;
+        body.appendChild(lbl); body.appendChild(keyEl);
+        var btn = mke('button', 'section-toggle-btn ' + (isActive ? 'active' : 'inactive'));
+        btn.textContent = isActive ? 'Visible' : 'Hidden';
+        btn.onclick = (function(k, a){ return function(){ toggleSection(k, !a); }; })(key, isActive);
+        row.appendChild(sortBtns); row.appendChild(iconWrap); row.appendChild(body); row.appendChild(btn);
+        list.appendChild(row);
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+async function moveSection(key, dir) {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var ordered = _orderedSections();
+    var idx = ordered.findIndex(function(s){ return s.key === key; });
+    var swapIdx = idx + dir;
+    if (swapIdx < 0 || swapIdx >= ordered.length) return;
+    var a = ordered[idx], b = ordered[swapIdx];
+    /* Ensure distinct sort_order values before swap */
+    ordered.forEach(function(s, i){ if (s.sort_order === ordered[i > 0 ? i-1 : 0].sort_order && i > 0) s.sort_order = i * 10; });
+    var tmp = a.sort_order; a.sort_order = b.sort_order; b.sort_order = tmp;
+    if (a.sort_order === b.sort_order) { a.sort_order = idx * 10; b.sort_order = swapIdx * 10; }
+    var r1 = await supabase.from('gencine_sections').upsert({ key: a.key, sort_order: a.sort_order }, { onConflict: 'key' });
+    var r2 = await supabase.from('gencine_sections').upsert({ key: b.key, sort_order: b.sort_order }, { onConflict: 'key' });
+    if (r1.error || r2.error) { showNotification('Sort update failed', 'error'); return; }
+    localStorage.removeItem('gencine_sections_v1');
+    await loadSections();
+}
+async function toggleSection(key, newActive) {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_sections').upsert({ key: key, active: newActive }, { onConflict: 'key' });
+    if (r.error) { showNotification('Toggle failed: ' + r.error.message, 'error'); return; }
+    showNotification((SECTION_META[key]||{label:key}).label + ' section ' + (newActive ? 'shown' : 'hidden') + '.', 'success');
+    await loadSections();
+    localStorage.removeItem('gencine_sections_v1');
+}
+
+
+/* ── TASBIH ── */
+var allTasbih = [];
+
+async function loadTasbih() {
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    var r = await supabase.from('gencine_tasbih').select('*').order('sort_order');
+    if (r.error) { showNotification('Error: ' + r.error.message, 'error'); return; }
+    allTasbih = r.data || [];
+    renderTasbihList(); updateStats();
+}
+
+function renderTasbihList() {
+    var list = document.getElementById('tasbih-list');
+    if (!list) return;
+    list.textContent = '';
+    var countEl = document.getElementById('tasbih-count');
+    if (countEl) countEl.textContent = allTasbih.length + ' dhikr items';
+    if (!allTasbih.length) {
+        var es = mke('div', 'empty-state');
+        var ep = mke('p'); ep.textContent = 'No tasbih items yet.';
+        es.appendChild(ep); list.appendChild(es); return;
+    }
+    allTasbih.forEach(function(item) {
+        var card = mke('div', 'item-card');
+        var body = mke('div', 'item-card-body');
+        var arEl = mke('div', 'item-card-ar'); arEl.textContent = item.ar;
+        arEl.style.cssText = 'direction:rtl;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:1rem';
+        var sortEl = mke('div','item-card-meta'); sortEl.textContent = 'order: ' + item.sort_order + (item.active ? '' : ' · hidden');
+        body.appendChild(arEl); body.appendChild(sortEl);
+        var acts = mke('div', 'item-card-actions');
+        acts.appendChild(mkIconBtn('pencil', 'Edit', false, function(id){ return function(){ editTasbih(id); }; }(item.id)));
+        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, function(id){ return function(){ deleteTasbih(id); }; }(item.id)));
+        card.appendChild(body); card.appendChild(acts);
+        list.appendChild(card);
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function editTasbih(id) {
+    var item = allTasbih.find(function(x){ return x.id === id; });
+    if (!item) return;
+    document.getElementById('tasbih-edit-id').value = id;
+    document.getElementById('tasbih-ar').value = item.ar || '';
+    document.getElementById('tasbih-ku').value = item.ku || '';
+    document.getElementById('tasbih-sort').value = item.sort_order || 10;
+    document.getElementById('tasbih-active').checked = item.active !== false;
+    var body = document.getElementById('tasbih-form-body');
+    body.classList.add('open');
+    document.getElementById('tasbih-form-toggle-label').textContent = 'Editing Dhikr';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function cancelTasbihEdit() {
+    document.getElementById('tasbih-edit-id').value = '';
+    document.getElementById('tasbih-ar').value = '';
+    document.getElementById('tasbih-ku').value = '';
+    document.getElementById('tasbih-sort').value = 10;
+    document.getElementById('tasbih-active').checked = true;
+    document.getElementById('tasbih-form-body').classList.remove('open');
+    document.getElementById('tasbih-form-toggle-label').textContent = 'Add Dhikr';
+}
+
+async function saveTasbih() {
+    var ar = document.getElementById('tasbih-ar').value.trim();
+    if (!ar) { showNotification('Arabic text is required.', 'warning'); return; }
+    var editId = document.getElementById('tasbih-edit-id').value;
+    var payload = {
+        ar: ar,
+        ku: document.getElementById('tasbih-ku').value.trim(),
+        sort_order: parseInt(document.getElementById('tasbih-sort').value) || 10,
+        active: document.getElementById('tasbih-active').checked
+    };
+    var supabase = window.adminAuth.getSupabase();
+    var r = editId
+        ? await supabase.from('gencine_tasbih').update(payload).eq('id', editId).select()
+        : await supabase.from('gencine_tasbih').insert(payload).select();
+    if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
+    if (editId && (!r.data || r.data.length === 0)) {
+        showNotification('Update blocked — no rows changed. Check Supabase RLS permissions.', 'error');
+        return;
+    }
+    var savedRow = (r.data && r.data[0]) || null;
+    showNotification(editId ? 'Dhikr updated.' : 'Dhikr added.', 'success');
+    if (editId && savedRow) {
+        var idx = allTasbih.findIndex(function(x){ return String(x.id) === String(editId); });
+        if (idx !== -1) { allTasbih[idx] = savedRow; }
+    } else if (!editId && savedRow) {
+        allTasbih.push(savedRow);
+    }
+    renderTasbihList();
+    cancelTasbihEdit();
+    localStorage.removeItem('gencine_tasbih_v1');
+}
+
+async function deleteTasbih(id) {
+    if (!confirm('Delete this dhikr item?')) return;
+    var r = await window.adminAuth.getSupabase().from('gencine_tasbih').delete().eq('id', id);
+    if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
+    showNotification('Dhikr deleted.', 'success');
+    await loadTasbih();
+    localStorage.removeItem('gencine_tasbih_v1');
+}
+
+/* ── ADHKAR ── */
+var allAdhkar = [];
+var adhkarCatFilter = '';
+
+async function loadAdhkar() {
+    var r = await window.adminAuth.getSupabase().from('gencine_adhkar').select('*').order('category_key').order('sort_order');
+    if (!r.error && r.data) {
+        allAdhkar = r.data;
+        var countEl = document.getElementById('tab-count-adhkar');
+        if (countEl) countEl.textContent = allAdhkar.length;
+    }
+}
+
+function filterAdhkarCat(btn, cat) {
+    adhkarCatFilter = cat;
+    document.querySelectorAll('.adhkar-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    renderAdhkarList();
+}
+
+function renderAdhkarList() {
+    var list = document.getElementById('adhkar-list');
+    if (!list) return;
+    list.textContent = '';
+    var items = adhkarCatFilter ? allAdhkar.filter(function(a){ return a.category_key === adhkarCatFilter; }) : allAdhkar;
+    var countEl = document.getElementById('adhkar-count');
+    if (countEl) countEl.textContent = items.length + ' adhkar items';
+    if (!items.length) {
+        var es = mke('div', 'empty-state');
+        var ep = mke('p'); ep.textContent = 'No adhkar yet.';
+        es.appendChild(ep); list.appendChild(es); return;
+    }
+    items.forEach(function(item) {
+        var card = mke('div', 'item-card');
+        var body = mke('div', 'item-card-body');
+        var catBadge = mke('span');
+        catBadge.style.cssText = 'font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;display:block';
+        catBadge.textContent = item.category_key;
+        var arEl = mke('div', 'item-card-ar');
+        arEl.textContent = item.ar;
+        arEl.style.cssText = 'direction:rtl;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:1rem;line-height:1.8;margin-bottom:4px';
+        var meta = mke('div','item-card-meta');
+        meta.textContent = (item.source || '') + (item.repeat > 1 ? ' · ×' + item.repeat : '') + ' · order: ' + item.sort_order + (item.active ? '' : ' · hidden');
+        body.appendChild(catBadge); body.appendChild(arEl); body.appendChild(meta);
+        var acts = mke('div', 'item-card-actions');
+        acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(id){ return function(){ editAdhkar(id); }; })(item.id)));
+        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, (function(id){ return function(){ deleteAdhkar(id); }; })(item.id)));
+        card.appendChild(body); card.appendChild(acts);
+        list.appendChild(card);
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function editAdhkar(id) {
+    var item = allAdhkar.find(function(x){ return x.id === id; });
+    if (!item) return;
+    document.getElementById('adhkar-edit-id').value = id;
+    document.getElementById('adhkar-cat').value = item.category_key || 'morning';
+    document.getElementById('adhkar-ar').value = item.ar || '';
+    document.getElementById('adhkar-source').value = item.source || '';
+    document.getElementById('adhkar-repeat').value = item.repeat || 1;
+    document.getElementById('adhkar-sort').value = item.sort_order || 10;
+    document.getElementById('adhkar-active').checked = item.active !== false;
+    var body = document.getElementById('adhkar-form-body');
+    body.classList.add('open');
+    document.getElementById('adhkar-form-toggle-label').textContent = 'Editing Adhkar';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function cancelAdhkarEdit() {
+    document.getElementById('adhkar-edit-id').value = '';
+    document.getElementById('adhkar-ar').value = '';
+    document.getElementById('adhkar-source').value = '';
+    document.getElementById('adhkar-repeat').value = 1;
+    document.getElementById('adhkar-sort').value = 10;
+    document.getElementById('adhkar-active').checked = true;
+    document.getElementById('adhkar-form-body').classList.remove('open');
+    document.getElementById('adhkar-form-toggle-label').textContent = 'Add Adhkar';
+}
+
+async function saveAdhkar() {
+    var ar = document.getElementById('adhkar-ar').value.trim();
+    if (!ar) { showNotification('Arabic text is required.', 'warning'); return; }
+    var editId = document.getElementById('adhkar-edit-id').value;
+    var payload = {
+        category_key: document.getElementById('adhkar-cat').value,
+        ar: ar,
+        source: document.getElementById('adhkar-source').value.trim() || null,
+        repeat: parseInt(document.getElementById('adhkar-repeat').value) || 1,
+        sort_order: parseInt(document.getElementById('adhkar-sort').value) || 10,
+        active: document.getElementById('adhkar-active').checked
+    };
+    var supabase = window.adminAuth.getSupabase();
+    var r = editId
+        ? await supabase.from('gencine_adhkar').update(payload).eq('id', editId).select()
+        : await supabase.from('gencine_adhkar').insert(payload).select();
+    if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
+    var savedRow = (r.data && r.data[0]) || null;
+    showNotification(editId ? 'Adhkar updated.' : 'Adhkar added.', 'success');
+    if (editId && savedRow) {
+        var idx = allAdhkar.findIndex(function(x){ return String(x.id) === String(editId); });
+        if (idx !== -1) allAdhkar[idx] = savedRow;
+    } else if (!editId && savedRow) {
+        allAdhkar.push(savedRow);
+    }
+    renderAdhkarList();
+    cancelAdhkarEdit();
+    localStorage.removeItem('gencine_adhkar_v1');
+    var countEl = document.getElementById('tab-count-adhkar');
+    if (countEl) countEl.textContent = allAdhkar.length;
+}
+
+async function deleteAdhkar(id) {
+    if (!confirm('Delete this adhkar item?')) return;
+    var r = await window.adminAuth.getSupabase().from('gencine_adhkar').delete().eq('id', id);
+    if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
+    showNotification('Adhkar deleted.', 'success');
+    allAdhkar = allAdhkar.filter(function(x){ return x.id !== id; });
+    renderAdhkarList();
+    localStorage.removeItem('gencine_adhkar_v1');
+    var countEl = document.getElementById('tab-count-adhkar');
+    if (countEl) countEl.textContent = allAdhkar.length;
+}
+
+/* ── 99 NAMES ── */
+var ASMA_DATA_ADMIN = [
+  {n:1,ar:'الرَّحْمَنُ',tr:'Ar-Rahmaan',ku:'ئەو زۆر بەزەیی کار'},{n:2,ar:'الرَّحِيمُ',tr:'Ar-Raheem',ku:'ئەو هەمیشە بەزەیی کار'},{n:3,ar:'الْمَلِكُ',tr:'Al-Malik',ku:'پاشا'},{n:4,ar:'الْقُدُّوسُ',tr:'Al-Quddoos',ku:'پیرۆز'},{n:5,ar:'السَّلَامُ',tr:'As-Salaam',ku:'ئاشتی بەخش'},{n:6,ar:'الْمُؤْمِنُ',tr:"Al-Mu'min",ku:'باوەڕداری دەر'},{n:7,ar:'الْمُهَيْمِنُ',tr:'Al-Muhaimin',ku:'پاراستووار'},{n:8,ar:'الْعَزِيزُ',tr:'Al-Azeez',ku:'بەهێز'},{n:9,ar:'الْجَبَّارُ',tr:'Al-Jabbaar',ku:'سەروەر'},{n:10,ar:'الْمُتَكَبِّرُ',tr:'Al-Mutakabbir',ku:'گەورەیی خاوەن'},
+  {n:11,ar:'الْخَالِقُ',tr:'Al-Khaaliq',ku:'دروستکار'},{n:12,ar:'الْبَارِئُ',tr:"Al-Baari'",ku:'بوونی دەر هێنەر'},{n:13,ar:'الْمُصَوِّرُ',tr:'Al-Musawwir',ku:'شێوەدەر'},{n:14,ar:'الْغَفَّارُ',tr:'Al-Ghaffaar',ku:'زۆر بەخشینکار'},{n:15,ar:'الْقَهَّارُ',tr:'Al-Qahhaar',ku:'زەبردەست'},{n:16,ar:'الْوَهَّابُ',tr:'Al-Wahhaab',ku:'بەخشینکارێ گەورە'},{n:17,ar:'الرَّزَّاقُ',tr:'Ar-Razzaaq',ku:'رزگاری دەر'},{n:18,ar:'الْفَتَّاحُ',tr:'Al-Fattaah',ku:'کردنەوەر'},{n:19,ar:'الْعَلِيمُ',tr:"Al-'Aleem",ku:'زاناس'},{n:20,ar:'الْقَابِضُ',tr:'Al-Qaabid',ku:'گرتنکار'},
+  {n:21,ar:'الْبَاسِطُ',tr:'Al-Baasit',ku:'فراخکار'},{n:22,ar:'الْخَافِضُ',tr:'Al-Khaafid',ku:'دەخوازینەر'},{n:23,ar:'الرَّافِعُ',tr:"Ar-Raafi'",ku:'برزکار'},{n:24,ar:'الْمُعِزُّ',tr:"Al-Mu'izz",ku:'بریزدارکار'},{n:25,ar:'الْمُذِلُّ',tr:'Al-Mudhill',ku:'بێبریزی دەر'},{n:26,ar:'السَّمِيعُ',tr:"As-Samee'",ku:'بیستکار'},{n:27,ar:'الْبَصِيرُ',tr:'Al-Baseer',ku:'بینەر'},{n:28,ar:'الْحَكَمُ',tr:'Al-Hakam',ku:'دادوەر'},{n:29,ar:'الْعَدْلُ',tr:"Al-'Adl",ku:'دادپەروەر'},{n:30,ar:'اللَّطِيفُ',tr:'Al-Lateef',ku:'نەرمدڵ'},
+  {n:31,ar:'الْخَبِيرُ',tr:'Al-Khabeer',ku:'ئاگادار'},{n:32,ar:'الْحَلِيمُ',tr:'Al-Haleem',ku:'بردبار'},{n:33,ar:'الْعَظِيمُ',tr:"Al-'Azeem",ku:'گەورە'},{n:34,ar:'الْغَفُورُ',tr:'Al-Ghafoor',ku:'بەخشینکار'},{n:35,ar:'الشَّكُورُ',tr:'Ash-Shakoor',ku:'سوپاسگوزار'},{n:36,ar:'الْعَلِيُّ',tr:"Al-'Aliyy",ku:'برز'},{n:37,ar:'الْكَبِيرُ',tr:'Al-Kabeer',ku:'گەورە'},{n:38,ar:'الْحَفِيظُ',tr:'Al-Hafeez',ku:'پاراستووار'},{n:39,ar:'الْمُقِيتُ',tr:'Al-Muqeet',ku:'خواردن دەر'},{n:40,ar:'الْحَسِيبُ',tr:'Al-Haseeb',ku:'هەژمارکار'},
+  {n:41,ar:'الْجَلِيلُ',tr:'Al-Jaleel',ku:'شکۆمەند'},{n:42,ar:'الْكَرِيمُ',tr:'Al-Kareem',ku:'بەخشاو'},{n:43,ar:'الرَّقِيبُ',tr:'Ar-Raqeeb',ku:'چاودێر'},{n:44,ar:'الْمُجِيبُ',tr:'Al-Mujeeb',ku:'وەڵامدەر'},{n:45,ar:'الْوَاسِعُ',tr:'Al-Waasi',ku:'فراخ'},{n:46,ar:'الْحَكِيمُ',tr:'Al-Hakeem',ku:'پوخت'},{n:47,ar:'الْوَدُودُ',tr:'Al-Wadood',ku:'خۆشەویست'},{n:48,ar:'الْمَجِيدُ',tr:'Al-Majeed',ku:'شکۆمەند'},{n:49,ar:'الْبَاعِثُ',tr:'Al-Baaith',ku:'هەڵداگرتنکار'},{n:50,ar:'الشَّهِيدُ',tr:'Ash-Shaheed',ku:'شاهید'},
+  {n:51,ar:'الْحَقُّ',tr:'Al-Haqq',ku:'ڕاستی'},{n:52,ar:'الْوَكِيلُ',tr:'Al-Wakeel',ku:'باڵغایەتی'},{n:53,ar:'الْقَوِيُّ',tr:'Al-Qawiyy',ku:'بەهێز'},{n:54,ar:'الْمَتِينُ',tr:'Al-Mateen',ku:'بەهێزی قایم'},{n:55,ar:'الْوَلِيُّ',tr:'Al-Waliyy',ku:'دۆست'},{n:56,ar:'الْحَمِيدُ',tr:'Al-Hameed',ku:'ستوودراو'},{n:57,ar:'الْمُحْصِي',tr:'Al-Muhsee',ku:'ژمێرکار'},{n:58,ar:'الْمُبْدِئُ',tr:"Al-Mubdi'",ku:'دەستپێکردنکار'},{n:59,ar:'الْمُعِيدُ',tr:"Al-Mu'eed",ku:'گەڕاندنەوەکار'},{n:60,ar:'الْمُحْيِي',tr:'Al-Muhyee',ku:'ژیانی دەر'},
+  {n:61,ar:'الْمُمِيتُ',tr:'Al-Mumeet',ku:'مردن دەر'},{n:62,ar:'الْحَيُّ',tr:'Al-Hayy',ku:'ژیان'},{n:63,ar:'الْقَيُّومُ',tr:'Al-Qayyoom',ku:'هەمیشەیی'},{n:64,ar:'الْوَاجِدُ',tr:'Al-Waajid',ku:'دۆزینەوەکار'},{n:65,ar:'الْمَاجِدُ',tr:'Al-Maajid',ku:'شکۆمەند'},{n:66,ar:'الْوَاحِدُ',tr:'Al-Waahid',ku:'یەکێ'},{n:67,ar:'الْأَحَدُ',tr:"Al-Ahad",ku:'یەکتا'},{n:68,ar:'الصَّمَدُ',tr:'As-Samad',ku:'بێنیاز'},{n:69,ar:'الْقَادِرُ',tr:'Al-Qaadir',ku:'توانادار'},{n:70,ar:'الْمُقْتَدِرُ',tr:'Al-Muqtadir',ku:'توانادارێ گەورە'},
+  {n:71,ar:'الْمُقَدِّمُ',tr:'Al-Muqaddim',ku:'پێشخستنکار'},{n:72,ar:'الْمُؤَخِّرُ',tr:"Al-Mu'akhkhir",ku:'پشتخستنکار'},{n:73,ar:'الْأَوَّلُ',tr:"Al-Awwal",ku:'یەکەم'},{n:74,ar:'الْآخِرُ',tr:"Al-Aakhir",ku:'دوایی'},{n:75,ar:'الظَّاهِرُ',tr:'Az-Zaahir',ku:'ئاشکرا'},{n:76,ar:'الْبَاطِنُ',tr:'Al-Baatin',ku:'نهێنی'},{n:77,ar:'الْوَالِي',tr:'Al-Waali',ku:'والی'},{n:78,ar:'الْمُتَعَالِي',tr:"Al-Muta'aali",ku:'بەرزترین'},{n:79,ar:'الْبَرُّ',tr:'Al-Barr',ku:'چاکەکار'},{n:80,ar:'التَّوَّابُ',tr:'At-Tawwaab',ku:'تۆبەپەسەندکار'},
+  {n:81,ar:'الْمُنْتَقِمُ',tr:'Al-Muntaqim',ku:'تۆڵەستانکار'},{n:82,ar:'الْعَفُوُّ',tr:"Al-'Afuww",ku:'بەخشینکار'},{n:83,ar:'الرَّؤُوفُ',tr:"Ar-Ra'oof",ku:'نەرمدڵ'},{n:84,ar:'مَالِكُ الْمُلْكِ',tr:'Maalik-ul-Mulk',ku:'خاوەنی پاشایەتی'},{n:85,ar:'ذُو الْجَلَالِ وَالْإِكْرَامِ',tr:'Dhul-Jalaali wal-Ikraam',ku:'خاوەنی شکۆ و ئیکرام'},{n:86,ar:'الْمُقْسِطُ',tr:'Al-Muqsit',ku:'دادگەر'},{n:87,ar:'الْجَامِعُ',tr:'Al-Jaami',ku:'کۆکردنەوەکار'},{n:88,ar:'الْغَنِيُّ',tr:'Al-Ghaniyy',ku:'بێنیاز'},{n:89,ar:'الْمُغْنِي',tr:'Al-Mughnee',ku:'دەوڵەمەند دەکات'},{n:90,ar:'الْمَانِعُ',tr:'Al-Maani',ku:'بازدارنکار'},
+  {n:91,ar:'الضَّارُّ',tr:'Ad-Daarr',ku:'زیان دەر'},{n:92,ar:'النَّافِعُ',tr:'An-Naafi',ku:'سوود دەر'},{n:93,ar:'النُّورُ',tr:'An-Noor',ku:'ڕووناکی'},{n:94,ar:'الْهَادِي',tr:'Al-Haadee',ku:'ڕێنیشاندەر'},{n:95,ar:'الْبَدِيعُ',tr:"Al-Badee'",ku:'دروستکارێ نوێ'},{n:96,ar:'الْبَاقِي',tr:'Al-Baaqee',ku:'هەمیشە مایەوە'},{n:97,ar:'الْوَارِثُ',tr:'Al-Waarith',ku:'وارس'},{n:98,ar:'الرَّشِيدُ',tr:'Ar-Rasheed',ku:'ڕێنیشاندەر'},{n:99,ar:'الصَّبُورُ',tr:'As-Saboor',ku:'بردبار'}
+];
+function renderAsma99() {
+    var q = (document.getElementById('asma-search') || {value:''}).value.toLowerCase();
+    var filtered = q ? ASMA_DATA_ADMIN.filter(function(a){
+        return a.ar.includes(q) || a.tr.toLowerCase().includes(q) || a.ku.includes(q);
+    }) : ASMA_DATA_ADMIN;
+    var grid = document.getElementById('asma-grid'); if (!grid) return;
+    grid.textContent = '';
+    var countEl = document.getElementById('asma-count');
+    if (countEl) countEl.textContent = filtered.length + ' / 99 names';
+    filtered.forEach(function(a) {
+        var card = mke('div', 'asma-card');
+        var num = mke('div', 'asma-card-num'); num.textContent = '#' + a.n;
+        var ar  = mke('div', 'asma-card-ar');  ar.textContent  = a.ar;
+        var tr  = mke('div', 'asma-card-tr');  tr.textContent  = a.tr;
+        var ku  = mke('div', 'asma-card-ku');  ku.textContent  = a.ku;
+        card.appendChild(num); card.appendChild(ar); card.appendChild(tr); card.appendChild(ku);
+        grid.appendChild(card);
+    });
+}
+function filterAsma(q) { renderAsma99(); }
+
+/* ── BOOKS ── */
+function _booksToken() { return sessionStorage.getItem('adminToken') || ''; }
+async function _booksApi(body) {
+    var r = await fetch('/admin-books', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.assign({ token: _booksToken() }, body))
+    });
+    return r.json();
+}
+
+async function loadBooks() {
+    var r = await _booksApi({ action: 'list' });
+    if (r.error) { showNotification('Error loading books: ' + JSON.stringify(r.error), 'error'); return; }
+    allBooks = r.data || [];
+    renderBooksList(); updateStats();
+}
+
+function updateBookDataLists() {
+    var authorKu = Array.from(new Set(allBooks.map(function(b){ return b.author_ku; }).filter(Boolean)));
+    var authorAr = Array.from(new Set(allBooks.map(function(b){ return b.author_ar; }).filter(Boolean)));
+    var cats = Array.from(new Set(allBooks.map(function(b){ return b.category; }).filter(Boolean)));
+    function fill(id, vals) {
+        var dl = document.getElementById(id); if (!dl) return;
+        dl.textContent = '';
+        vals.forEach(function(v){ var o = document.createElement('option'); o.value = v; dl.appendChild(o); });
+    }
+    fill('dl-author-ku', authorKu);
+    fill('dl-author-ar', authorAr);
+    fill('dl-book-category', cats);
+}
+
+function renderBooksList() {
+    var list = document.getElementById('book-list'); if (!list) return;
+    list.textContent = '';
+    updateBookDataLists();
+    var countEl = document.getElementById('book-count');
+    if (countEl) countEl.textContent = allBooks.length + ' books';
+    if (!allBooks.length) {
+        var es = mke('div', 'empty-state');
+        var eico = mke('div', 'empty-state-icon'); var ei = mke('i'); ei.setAttribute('data-lucide','book-open'); eico.appendChild(ei);
+        var ep = mke('p'); ep.textContent = 'No books yet. Add one above.';
+        es.appendChild(eico); es.appendChild(ep); list.appendChild(es);
+        if (typeof lucide !== 'undefined') lucide.createIcons(); return;
+    }
+    allBooks.forEach(function(book) {
+        var card = mke('div', 'item-card');
+        /* Thumbnail */
+        var thumb = mke('div', 'item-card-icon');
+        thumb.style.cssText = 'width:52px;height:70px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--bg-active);';
+        if (book.cover_url) {
+            var img = document.createElement('img');
+            img.src = book.cover_url; img.alt = '';
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+            thumb.appendChild(img);
+        } else {
+            var ico = mke('i'); ico.setAttribute('data-lucide','book'); thumb.appendChild(ico);
+        }
+        var body = mke('div', 'item-card-body');
+        var titleEl = mke('div', 'item-card-title'); titleEl.textContent = book.title_ku || book.title_ar || '(no title)'; body.appendChild(titleEl);
+        if (book.author_ku || book.author_ar) {
+            var auth = mke('div', 'item-card-ku'); auth.textContent = book.author_ku || book.author_ar; body.appendChild(auth);
+        }
+        var meta = mke('div', 'item-card-meta');
+        if (book.category) { var cb = mke('span', 'badge badge-cat'); cb.textContent = book.category; meta.appendChild(cb); }
+        if (book.pages) { var pb = mke('span', 'badge badge-repeat'); pb.textContent = book.pages + ' pages'; meta.appendChild(pb); }
+        var ab = mke('span', 'badge'); ab.style.cssText = book.active ? 'background:rgba(34,197,94,.1);color:#16a34a' : 'background:var(--bg-active);color:var(--text-tertiary)';
+        ab.textContent = book.active ? 'Active' : 'Hidden'; meta.appendChild(ab);
+        body.appendChild(meta);
+        var handle = mke('div', 'drag-handle'); handle.textContent = '⠿';
+        var acts = mke('div', 'item-card-actions');
+        acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(b){ return function(){ editBook(b.id); }; })(book)));
+        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, (function(id){ return function(){ deleteBook(id); }; })(book.id)));
+        card.appendChild(handle); card.appendChild(thumb); card.appendChild(body); card.appendChild(acts);
+        list.appendChild(card);
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    initDrag(
+        function(){ return Array.prototype.slice.call(list.querySelectorAll('.item-card')); },
+        allBooks,
+        async function(reordered) {
+            renderBooksList();
+            var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+            await Promise.all(reordered.map(function(b){ return supabase.from('gencine_books').update({ sort_order: b.sort_order }).eq('id', b.id); }));
+            localStorage.removeItem('gencine_books_v1');
+            showNotification('Order saved.', 'success');
+        }
+    );
+}
+
+function editBook(id) {
+    var book = allBooks.find(function(b){ return b.id === id; }); if (!book) return;
+    document.getElementById('book-edit-id').value = id;
+    document.getElementById('book-title-ku').value = book.title_ku || '';
+    document.getElementById('book-title-ar').value = book.title_ar || '';
+    document.getElementById('book-author-ku').value = book.author_ku || '';
+    document.getElementById('book-author-ar').value = book.author_ar || '';
+    document.getElementById('book-category').value = book.category || '';
+    document.getElementById('book-pages').value = book.pages || '';
+    document.getElementById('book-pdf-url').value = book.pdf_url || '';
+    document.getElementById('book-description').value = book.description || '';
+    document.getElementById('book-cover-url').value = book.cover_url || '';
+    document.getElementById('book-sort').value = book.sort_order || 0;
+    document.getElementById('book-active').checked = book.active !== false;
+    /* Show cover preview if URL exists */
+    var preview = document.getElementById('book-cover-preview');
+    if (preview) {
+        preview.textContent = '';
+        if (book.cover_url) {
+            var img = document.createElement('img');
+            img.src = book.cover_url; img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:6px;';
+            preview.appendChild(img);
+        } else {
+            var ico = mke('i'); ico.setAttribute('data-lucide','image');
+            ico.style.cssText = 'width:24px;height:24px;color:var(--text-tertiary)';
+            preview.appendChild(ico);
+        }
+    }
+    document.getElementById('book-form-toggle-label').textContent = 'Editing: ' + (book.title_ku || book.title_ar || 'book');
+    switchTab('books'); openForm('book');
+}
+
+function cancelBookEdit() {
+    document.getElementById('book-edit-id').value = '';
+    ['book-title-ku','book-title-ar','book-author-ku','book-author-ar','book-category',
+     'book-pages','book-pdf-url','book-description','book-cover-url'].forEach(function(id) {
+        var el = document.getElementById(id); if (el) el.value = '';
+    });
+    var maxSort = allBooks.reduce(function(m, b){ return Math.max(m, b.sort_order || 0); }, 0);
+    document.getElementById('book-sort').value = maxSort + 1;
+    document.getElementById('book-active').checked = true;
+    document.getElementById('book-cover-file').value = '';
+    document.getElementById('book-pdf-file').value = '';
+    document.getElementById('book-pdf-upload-status').textContent = '';
+    var preview = document.getElementById('book-cover-preview');
+    if (preview) {
+        preview.textContent = '';
+        var ico = mke('i'); ico.setAttribute('data-lucide','image');
+        ico.style.cssText = 'width:24px;height:24px;color:var(--text-tertiary)';
+        preview.appendChild(ico);
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+    document.getElementById('book-cover-upload-status').textContent = '';
+    document.getElementById('book-form-toggle-label').textContent = 'Add Book';
+    closeForm('book');
+}
+
+function onPdfFilePicked(input) {
+    var file = input.files && input.files[0]; if (!file) return;
+    var statusEl = document.getElementById('book-pdf-upload-status');
+    if (statusEl) statusEl.textContent = '📄 ' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + ' MB) — will upload on Save';
+    /* Clear direct URL field when file is chosen */
+    document.getElementById('book-pdf-url').value = '';
+}
+
+async function uploadPdf(file) {
+    var statusEl = document.getElementById('book-pdf-upload-status');
+    if (statusEl) statusEl.textContent = 'Uploading PDF... (this may take a moment)';
+    var url = await uploadToR2(file, 'pdfs', 'tafsirkurd-books');
+    if (statusEl) statusEl.textContent = url ? 'PDF uploaded ✓' : 'Upload failed.';
+    return url;
+}
+
+function previewCover(input) {
+    var file = input.files && input.files[0]; if (!file) return;
+    var preview = document.getElementById('book-cover-preview');
+    if (!preview) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        preview.textContent = '';
+        var img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:6px;';
+        preview.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+    /* Clear direct URL field when file is chosen */
+    document.getElementById('book-cover-url').value = '';
+}
+
+async function uploadToR2(file, folder, bucket) {
+    var token = sessionStorage.getItem('adminToken');
+    if (!token) { showNotification('Not authenticated', 'error'); return null; }
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('folder', folder);
+    fd.append('bucket', bucket);
+    var res = await fetch('/s3-upload', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+        body: fd
+    });
+    if (!res.ok) {
+        var err = await res.json().catch(function(){ return {}; });
+        showNotification('Upload failed: ' + (err.error || res.status), 'error');
+        return null;
+    }
+    var data = await res.json();
+    return data.publicUrl || null;
+}
+
+async function uploadCover(file) {
+    return await uploadToR2(file, 'book-covers', 'tafsirkurd-books');
+}
+
+async function saveBook() {
+    var titleKu = document.getElementById('book-title-ku').value.trim();
+    var titleAr = document.getElementById('book-title-ar').value.trim();
+    if (!titleKu && !titleAr) { showNotification('At least one title is required.', 'warning'); return; }
+
+    var statusEl = document.getElementById('book-cover-upload-status');
+    var coverUrl = document.getElementById('book-cover-url').value.trim() || null;
+    var fileInput = document.getElementById('book-cover-file');
+
+    /* Upload cover file if one was picked */
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        if (statusEl) statusEl.textContent = 'Uploading cover...';
+        var uploaded = await uploadCover(fileInput.files[0]);
+        if (uploaded) coverUrl = uploaded;
+        if (statusEl) statusEl.textContent = uploaded ? 'Cover uploaded.' : 'Upload failed — using URL field.';
+    }
+
+    /* Upload PDF file if one was picked */
+    var pdfFileInput = document.getElementById('book-pdf-file');
+    var pdfUrl = document.getElementById('book-pdf-url').value.trim() || null;
+    if (pdfFileInput && pdfFileInput.files && pdfFileInput.files[0]) {
+        var uploadedPdf = await uploadPdf(pdfFileInput.files[0]);
+        if (uploadedPdf) pdfUrl = uploadedPdf;
+    }
+
+    var editId = document.getElementById('book-edit-id').value;
+    var manualSort = parseInt(document.getElementById('book-sort').value);
+    var autoSort = !editId && !manualSort
+        ? (allBooks.length ? Math.max.apply(null, allBooks.map(function(b){ return b.sort_order || 0; })) + 1 : 1)
+        : (manualSort || 0);
+
+    var payload = {
+        title_ku:    titleKu || null,
+        title_ar:    titleAr || null,
+        author_ku:   document.getElementById('book-author-ku').value.trim() || null,
+        author_ar:   document.getElementById('book-author-ar').value.trim() || null,
+        category:    document.getElementById('book-category').value.trim() || null,
+        pages:       parseInt(document.getElementById('book-pages').value) || null,
+        pdf_url:     pdfUrl,
+        description: document.getElementById('book-description').value.trim() || null,
+        cover_url:   coverUrl,
+        sort_order:  autoSort,
+        active:      document.getElementById('book-active').checked
+    };
+    var r = editId ? await _booksApi({ action: 'update', id: editId, payload: payload })
+                   : await _booksApi({ action: 'insert', payload: payload });
+    if (r.error) { showNotification('Save failed: ' + JSON.stringify(r.error), 'error'); return; }
+    var isNew = !editId;
+    showNotification(editId ? 'Book updated.' : 'Book added.', 'success');
+    cancelBookEdit(); await loadBooks(); localStorage.removeItem('gencine_books_v1');
+    if (isNew) {
+        var bookList = document.getElementById('book-list');
+        if (bookList && bookList.firstChild) bookList.firstChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+async function autoSaveBookSort(val) {
+    var editId = document.getElementById('book-edit-id').value;
+    if (!editId) return; // new book — will be saved on Save Book click
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    try {
+        await supabase.from('gencine_books').update({ sort_order: parseInt(val) || 0 }).eq('id', editId);
+        var book = allBooks.find(function(b){ return b.id === editId; });
+        if (book) { book.sort_order = parseInt(val) || 0; allBooks.sort(function(x,y){ return y.sort_order - x.sort_order; }); renderBooksList(); }
+        localStorage.removeItem('gencine_books_v1');
+        showNotification('Sort order updated.', 'success');
+    } catch(e) { showNotification('Failed to update sort order', 'error'); }
+}
+
+async function moveBook(idx, dir) {
+    var a = allBooks[idx], b = allBooks[idx + dir];
+    if (!a || !b) return;
+    var sa = a.sort_order, sb = b.sort_order;
+    /* swap sort_order values */
+    var supabase = window.adminAuth.getSupabase(); if (!supabase) return;
+    try {
+        await Promise.all([
+            supabase.from('gencine_books').update({ sort_order: sb }).eq('id', a.id),
+            supabase.from('gencine_books').update({ sort_order: sa }).eq('id', b.id)
+        ]);
+    } catch(e) { showNotification('Sort failed', 'error'); return; }
+    /* optimistic local swap — no full reload needed */
+    a.sort_order = sb; b.sort_order = sa;
+    allBooks.sort(function(x,y){ return y.sort_order - x.sort_order; });
+    localStorage.removeItem('gencine_books_v1');
+    renderBooksList();
+}
+
+async function deleteBook(id) {
+    var book = allBooks.find(function(b){ return b.id === id; });
+    if (!confirm('Delete "' + (book ? (book.title_ku || book.title_ar || id) : id) + '"?')) return;
+    var r = await _booksApi({ action: 'delete', id: id });
+    if (r.error) { showNotification('Delete failed: ' + JSON.stringify(r.error), 'error'); return; }
+    showNotification('Book deleted.', 'success'); await loadBooks(); localStorage.removeItem('gencine_books_v1');
+}
+
+/* ── Theme toggle ── */
+(function() {
+    var themeIcon = document.getElementById('theme-icon');
+    if (localStorage.getItem('admin-theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        themeIcon.setAttribute('data-lucide', 'sun');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+    document.getElementById('theme-toggle').addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        var isDark = document.body.classList.contains('dark-mode');
+        themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+    });
+})();
+
+/* ── Init ── */
+(async function() {
+    var isAuth = await window.adminAuth.checkAuth();
+    if (isAuth) await loadAll();
+})();
+
+document.getElementById('menu-toggle').addEventListener('click', function() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+});
+var mobileBtn = document.getElementById('mobile-menu-toggle');
+if (mobileBtn) mobileBtn.addEventListener('click', function() {
+    document.getElementById('sidebar').classList.toggle('mobile-open');
+});
+// Search filter
+var searchInput = document.getElementById('search-input');
+if (searchInput) searchInput.addEventListener('input', function() {
+    var q = this.value.toLowerCase();
+    document.querySelectorAll('.item-card, .cat-card').forEach(function(el) {
+        el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+});
+if (typeof lucide !== 'undefined') lucide.createIcons();
+</script>
+</body>
+</html>

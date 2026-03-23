@@ -1,0 +1,74 @@
+{
+    "name": "tafsir-kurd",
+    "version": "2.0.0",
+    "description": "Modern, fast, and offline-capable Quran platform with Kurdish Tafsir - قورئانا پیرۆز ب تەفسیرا کوردی",
+    "main": "index.js",
+    "scripts": {
+        "dev": "npx serve src",
+        "build": "node scripts/bump-sw-version.js",
+        "build:prod": "node scripts/bump-sw-version.js production-deploy",
+        "test": "echo 'No tests configured yet'",
+        "lint": "echo 'Linting...'",
+        "format": "echo 'Formatting code...'",
+        "cap:sync": "npx cap sync && node scripts/verify-assets.js",
+        "cap:ios": "npx cap open ios",
+        "cap:android": "npx cap open android"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tafsirkurd/tafsir-kurd.git"
+    },
+    "keywords": [
+        "quran",
+        "tafsir",
+        "kurdish",
+        "islamic",
+        "pwa",
+        "offline-first",
+        "supabase"
+    ],
+    "author": "Tafsir Kurd Team",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/tafsirkurd/tafsir-kurd/issues"
+    },
+    "homepage": "https://tafsirkurd.com",
+    "dependencies": {
+        "@capacitor-community/keep-awake": "^8.0.0",
+        "@capacitor-community/media": "^9.0.2",
+        "@capacitor-community/speech-recognition": "^7.0.1",
+        "@capacitor/android": "^8.2.0",
+        "@capacitor/app": "^8.0.1",
+        "@capacitor/browser": "^8.0.2",
+        "@capacitor/cli": "^8.2.0",
+        "@capacitor/core": "^8.2.0",
+        "@capacitor/filesystem": "^8.1.2",
+        "@capacitor/haptics": "^8.0.1",
+        "@capacitor/ios": "^8.2.0",
+        "@capacitor/local-notifications": "^8.0.2",
+        "@capacitor/preferences": "^8.0.1",
+        "@capacitor/push-notifications": "^8.0.2",
+        "@capacitor/share": "^8.0.1",
+        "@capacitor/splash-screen": "^8.0.1",
+        "@capacitor/status-bar": "^8.0.1",
+        "@supabase/supabase-js": "^2.55.0",
+        "@upstash/redis": "^1.35.8",
+        "bcrypt": "^6.0.0",
+        "bcrypt-ts": "^8.0.0",
+        "bcryptjs": "^2.4.3",
+        "dompurify": "^3.3.1",
+        "googleapis": "^140.0.0",
+        "isomorphic-dompurify": "^2.34.0",
+        "jsonwebtoken": "^9.0.2",
+        "sharp": "^0.34.5",
+        "tweetnacl": "^1.0.3"
+    },
+    "engines": {
+        "node": ">=16.0.0",
+        "npm": ">=8.0.0"
+    },
+    "devDependencies": {
+        "jsdom": "^28.1.0",
+        "typescript": "^5.9.3"
+    }
+}

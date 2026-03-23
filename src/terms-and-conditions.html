@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+  <script src="/utils/theme-loader.js"></script>
+  <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co">
+  <script src="/utils/translations.js?v=20260225"></script>
+  <script src="/utils/scroll-position.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="مەرج و رێسا - تەفسیر کورد">
+  <meta name="keywords" content="مەرج و رێسا، تەفسیر کورد، قورئان">
+  <meta name="theme-color" content="#000000">
+  <title data-t="terms-and-conditions_title_1">مەرج و رێسا | TafsirKurd</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+
+  <!-- Kurdish Number Utility - Convert all numbers to Kurdish numerals -->
+  <script src="utils/kurdish-numbers.js"></script>
+  <script src="utils/auto-kurdish-numbers.js"></script>
+
+  <!-- Critical Font Preloading - Instant font display, zero FOIT/FOUT -->
+  <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=16" as="font" type="font/woff2" crossorigin>
+
+  <!-- Local Fonts - Zero external requests, instant loading -->
+  <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
+
+  <!-- Local Font Awesome - Zero external requests -->
+  <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles/Style.css?v=9">
+
+  <style>
+    :root {
+      --primary: #000000;
+      --primary-light: #333333;
+      --primary-dark: #000000;
+      --accent: #ffffff;
+      --bg: #fafafa;
+      --card-bg: #ffffff;
+      --text: #000000;
+      --text-muted: #666666;
+      --text-light: #999999;
+      --border: #e8e8e8;
+      --border-light: #f0f0f0;
+      --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+      --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="dark"] {
+      --primary: #ffffff;
+      --primary-light: #e0e0e0;
+      --primary-dark: #ffffff;
+      --accent: #000000;
+      --bg: #0a0a0a;
+      --card-bg: #1a1a1a;
+      --text: #ffffff;
+      --text-muted: #b0b0b0;
+      --text-light: #808080;
+      --border: #2a2a2a;
+      --border-light: #1f1f1f;
+      --shadow-sm: 0 2px 10px rgba(255, 255, 255, 0.05);
+      --shadow-md: 0 8px 25px rgba(255, 255, 255, 0.08);
+      --shadow-lg: 0 20px 40px rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Diagonal grid background pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.02;
+      z-index: -1;
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 35px, var(--primary) 35px, var(--primary) 36px),
+        repeating-linear-gradient(-45deg, transparent, transparent 35px, var(--primary) 35px, var(--primary) 36px);
+      pointer-events: none;
+    }
+
+    .legal-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 80px 20px 40px;
+      min-height: 100vh;
+    }
+
+    .legal-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .legal-title {
+      font-size: 2.5rem;
+      color: var(--text);
+      margin-bottom: 15px;
+    }
+
+    .legal-updated {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .legal-section {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 25px;
+      border: 1px solid var(--border);
+    }
+
+    .legal-section h2 {
+      color: var(--text);
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .legal-section h2 i {
+      color: var(--primary);
+      font-size: 1.3rem;
+    }
+
+    .legal-section p {
+      color: var(--text-muted);
+      line-height: 1.8;
+      margin-bottom: 15px;
+      font-size: 1.05rem;
+    }
+
+    .legal-section ul {
+      list-style: none;
+      padding-right: 0;
+      margin: 15px 0;
+    }
+
+    .legal-section li {
+      color: var(--text-muted);
+      padding: 8px 0 8px 30px;
+      position: relative;
+      line-height: 1.7;
+    }
+
+    .legal-section li:before {
+      content: "";
+      display: none;
+    }
+
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all var(--transition);
+      margin-bottom: 30px;
+    }
+
+    .back-button:hover {
+      background: var(--primary-dark);
+      transform: translateX(5px);
+    }
+
+    .info-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      border-right: 3px solid var(--primary);
+      background: var(--card-bg);
+      border-radius: 4px;
+    }
+
+    .info-note i {
+      color: var(--primary);
+      font-size: 1.2rem;
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+
+    .info-note p {
+      color: var(--text);
+      margin: 0;
+      font-weight: 500;
+      line-height: 1.7;
+    }
+
+    .closing-message {
+      text-align: center;
+      padding: 40px 20px;
+      margin: 40px 0 20px;
+      position: relative;
+    }
+
+    .closing-message::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(to right, transparent, var(--primary), transparent);
+    }
+
+    .closing-message i {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .closing-message p {
+      color: var(--text);
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin: 0;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .legal-title {
+        font-size: 2rem;
+      }
+
+      .legal-section {
+        padding: 20px;
+      }
+
+      .legal-section h2 {
+        font-size: 1.3rem;
+      }
+
+      .legal-container {
+        padding: 60px 15px 30px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .legal-title {
+        font-size: 1.6rem;
+        line-height: 1.3;
+      }
+
+      .legal-section {
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+
+      .legal-section h2 {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+      }
+
+      .legal-section p,
+      .legal-section li {
+        font-size: 0.9rem;
+        line-height: 1.7;
+      }
+
+      .legal-container {
+        padding: 40px 10px 20px;
+      }
+
+      .info-note {
+        padding: 16px;
+        gap: 10px;
+        font-size: 0.85rem;
+      }
+
+      .back-button {
+        font-size: 0.9rem;
+        padding: 10px 16px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .legal-title {
+        font-size: 1.4rem;
+      }
+
+      .legal-section h2 {
+        font-size: 1.1rem;
+      }
+
+      .legal-section p,
+      .legal-section li {
+        font-size: 0.85rem;
+      }
+    }
+
+    /* Footer Styles */
+    footer {
+      background: var(--card-bg);
+      border-top: 1px solid var(--border);
+      margin-top: 80px;
+      padding: 60px 20px 30px;
+      text-align: right;
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      direction: rtl;
+    }
+
+    .footer-main {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .footer-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .footer-brand-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .footer-logo-img {
+      width: 45px;
+      height: 45px;
+      object-fit: contain;
+      transition: transform 0.3s;
+    }
+
+    .footer-logo-img:hover {
+      transform: scale(1.1) rotate(10deg);
+    }
+
+    .footer-brand-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .footer-brand-tagline {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+
+    .footer-social-icons {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .footer-social-icons a {
+      color: var(--text-muted);
+      font-size: 1.3rem;
+      transition: all 0.3s;
+    }
+
+    .footer-social-icons a:hover {
+      color: var(--primary);
+      transform: translateY(-3px);
+    }
+
+    .footer-section {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      text-align: right;
+    }
+
+    .footer-section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 5px;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .footer-contact-text {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .footer-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+
+    .footer-link:hover {
+      color: var(--primary);
+      transform: translateX(-5px);
+    }
+
+    .footer-link i {
+      margin-left: 8px;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .footer-copyright {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .footer-meta-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-meta-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: color 0.3s;
+    }
+
+    .footer-meta-link:hover {
+      color: var(--primary);
+    }
+
+    @media (max-width: 768px) {
+      .footer-main {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body dir="rtl">
+
+<div class="legal-container">
+  <button type="button" onclick="history.back()" class="back-button">
+    <i class="fas fa-arrow-right"></i>
+    <span data-t="terms_back">گەڕیان ڤە</span>
+  </button>
+
+  <div class="legal-header">
+    <h1 class="legal-title" data-t="terms_title">مەرج و رێسا</h1>
+    <p class="legal-updated"><span data-t="terms_updated_label">نووترین نووکرن:</span> <span id="lastUpdate"></span></p>
+  </div>
+
+  <div class="info-note" style="margin-top: 20px; border-right-color: #28a745;">
+    <i class="fas fa-book-quran"></i>
+    <p data-t="terms_intro">ب خێر هاتن بۆ تەفسیر کورد. ئەڤ پلاتفۆرمە هاتیە دروستکرن بۆ خزمەتکرنا قورئانا پیرۆز و بەلاڤکرنا زانیاریێن ئیسلامی ب گۆرەی بنەمایێ ئەخلاق و راستگۆییێ د ئیسلامێدا.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2 data-t="terms_section1_title"><i class="fas fa-handshake"></i> مەرج و رێسا</h2>
+    <p data-t="terms_eligibility_intro">ب بکارئینانا تەفسیر کورد، تو رازیبوونێ ددەی کو ب ڤان مەرج و رێسایێن ئیسلامی و یاسایانە پەیڕەو بکەی. ئەڤ مەرجانە دیارکرینە ب پێی پرەنسیپێن عەدل و ئینساف ل ئیسلامێدا. تکایە ب وردی بخوینەڤە پێش بکارئینانا خزمەتگوزاریێن مە.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2 data-t="terms_section2_title"><i class="fas fa-check-circle"></i> قەبولکرنا مەرجان</h2>
+    <p data-t="terms_acceptance_intro">ب دەستگەهشتن، گەڕیان، یان بکارئینانا تەفسیر کورد، تو دان ب وێ چەندێ ددانی کو:</p>
+    <ul>
+      <li data-t="terms_eligibility_li1">تەمەنێ تە کێمترین ١٣ سالە یان زێدەترە (تەمەنێ بالغبوونێ د ئیسلامێدا)</li>
+      <li data-t="terms_eligibility_li2">شیانێن تە یێن هوسا هەنە کو ب ڤان مەرجێن یاسایی پابەند بی</li>
+      <li data-t="terms_eligibility_li3">زانیاریێن خۆ ب راستی و دروستی ددەی ب گۆرەی پرەنسیپێ راستگۆییێ د ئیسلامێدا</li>
+      <li data-t="terms_eligibility_li4">ب شێوەیەکێ یاسایی و ئەخلاقی یێ ئیسلامی خزمەتگوزاریان بکار دئینی</li>
+      <li data-t="terms_eligibility_li5">رێزێ بۆ قورئانا پیرۆز و پەیامێن ئیسلامی دگری</li>
+    </ul>
+  </div>
+
+  <div class="legal-section">
+    <h2 data-t="terms_section3_title"><i class="fas fa-book-quran"></i> ناڤەرۆکا قورئانی و تەفسیر</h2>
+    <p data-t="terms_content_intro">هەمی تێکستێن قورئانی و وەرگێڕان ژ ژێدەرێن باوەرپێکری پێشکێش د هێنە کرن. تەفسیر ژ کارێن زانایێن ئیسلامی یێن دیارکری هاتینە وەرگرتن. ئەم هەول ددەین:</p>
+    <ul>
+      <li data-t="terms_content_li1">وردبینی و دروستی ناڤەرۆکێ بپارێزین</li>
+      <li data-t="terms_content_li2">ژێدەرێن رێزدار و باوەرپێکری بکار بینین</li>
+      <li data-t="terms_content_li3">نووکرنەکا بەردەوام بۆ وردبینیەکا زێدەتر دابین بکەین</li>
+      <li data-t="terms_content_li4">رێزێ بۆ هەمی ئاستێن زانستی بگرین</li>
+    </ul>
+  </div>
+
+  <div class="legal-section">
+    <h2 data-t="terms_section4_title"><i class="fas fa-user-shield"></i> بەرپرسیارەتیا بکارئینەری</h2>
+    <p data-t="terms_conduct_intro">وەک بکارئینەرەکێ تەفسیر کورد، تو رازیبوونێ دکەی کو:</p>
+    <ul>
+      <li data-t="terms_conduct_li1">ب رێز و شێوەیەکێ گونجای دگەل پلاتفۆرمێ مامەلە بکەی</li>
+      <li data-t="terms_conduct_li2">ناڤەرۆکا گونەهکار، قەدەغەکری، یان زیانبهخش بەلاڤ نەکەی</li>
+      <li data-t="terms_conduct_li3">مافێن خەلکێن دی رێز بگری</li>
+      <li data-t="terms_conduct_li4">هەر کارەکێ نەیاسایی یان زیانبهخش ئەنجام نەدەی</li>
+      <li data-t="terms_conduct_li5">هەولێ خرابکرنا سیستەمان نەدەی</li>
+    </ul>
+  </div>
+
+  <div class="legal-section">
+    <h2 data-t="terms_section5_title"><i class="fas fa-copyright"></i> مافێ کۆپیکرنێ و مافێ تایبەتمەندیێ</h2>
+    <p data-t="terms_ip_intro">هەمی ناڤەرۆک، دیزاین، شێواز، و کۆد ل سەر تەفسیر کورد مافێ کۆپیکرنێ هەیە. تێکستێن قورئانی مافێ گشتی نە و بۆ قازانجێ نەبیت دشێت بهێتە بکارئینان. تو دشێی:</p>
+    <ul>
+      <li data-t="terms_ip_li1">ئایەتان ب نیازا تاکەکەسی بخوینی و لێکۆلین ڤە لێ بکەی</li>
+      <li data-t="terms_ip_li2">هەڤبەشکرن د سۆشیال میدیایێ دا ب ناساندنا ژێدەرێ</li>
+      <li data-t="terms_ip_li3">نڤیسین و پرۆژەیێن ئەکادیمی ب وێنەکرنەکا گونجای</li>
+    </ul>
+    <p data-t="terms_ip_commercial">بۆ هەر بکارئینانەکا بازرگانی یان بەلاڤکرنەکا بەربەلاڤ، تکایە پەیوەندیێ ب مە بکە ل tefsirkurd@gmail.com</p>
+  </div>
+
+  <div class="legal-section">
+    <h2 data-t="terms_section6_title"><i class="fas fa-link"></i> بەستەرێن دەرەکی</h2>
+    <p data-t="terms_links_intro">مالپەڕا مە دشێت بەستەرێن مالپەڕێن دەرەکی بخۆڤە بگریت. ئەم بەرپرسیار نینن بۆ:</p>
+    <ul>
+      <li data-t="terms_links_li1">ناڤەرۆکا مالپەڕێن دەرەکی</li>
+      <li data-t="terms_links_li2">رێسایێن تایبەتمەندیێ یێن کۆمپانیێن دی</li>
+      <li data-t="terms_links_li3">بەردەستی یان وردبینیا ژێدەرێن دەرڤە</li>
+    </ul>
+  </div>
+
+  <div class="legal-section">
+    <h2 data-t="terms_section7_title"><i class="fas fa-exclamation-triangle"></i> سنوورداریا بەرپرسیارەتیێ</h2>
+    <p data-t="terms_disclaimer_intro">تەفسیر کورد "وەک خۆی" دابین د هێتە کرن. ئەم:</p>
+    <ul>
+      <li data-t="terms_disclaimer_li1">دلنیاییێ نا دەین کو خزمەتگوزاری هەردەم بەردەست دێ بیت</li>
+      <li data-t="terms_disclaimer_li2">بەرپرسیار نینن بۆ خەلەتی، کێماسی، یان جیاوازیێ</li>
+      <li data-t="terms_disclaimer_li3">بەرپرسیارەتیا چ زیانەکێ راستەوخۆ یان نەراستەوخۆ وەرناگرین</li>
+      <li data-t="terms_disclaimer_li4">دەستەبەری پزیشکی، یاسایی، یان ئیفتای تایبەت دابین ناکەین</li>
+    </ul>
+    <p data-t="terms_disclaimer_note">تکایە بۆ بریارێن دینی، دگەل زانایێن باوەرپێکری یێن خۆجهی راوێژ بکە.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2 data-t="terms_section8_title"><i class="fas fa-shield-alt"></i> دابینکرنا ئاسایشێ</h2>
+    <p data-t="terms_security_intro">ئەم هەول ددەین پارێزگاریێ ل ئاسایشا داتا و تایبەتمەندیا بکارئینەران بکەین، بەلێ:</p>
+    <ul>
+      <li data-t="terms_security_li1">چ سیستەمەک ١٠٠٪ پاراستی نینە</li>
+      <li data-t="terms_security_li2">بکارئینەران بەرپرسیارن ژ پاراستنا پەیڤا نهێنیا خۆ</li>
+      <li data-t="terms_security_li3">دڤێت چالاکیا گوماناوی ئاگەهدارا مە بکەن</li>
+    </ul>
+  </div>
+
+  <div class="legal-section">
+    <h2 data-t="terms_section9_title"><i class="fas fa-edit"></i> گوهۆڕین د مەرجان دا</h2>
+    <p data-t="terms_changes">ئەم مافێ گوهۆڕینا ئەڤ مەرج و رێسایانە پاراستی یە د هەر دەمەکی دا. گوهۆڕین دێ هێنە دانان ل سەر مالپەڕی و بەردەوامبوونا بکارئینانا تە پشتی گوهۆڕینێ واتە رازیبوونا تە یە دگەل مەرجێن نوو.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2 data-t="terms_section10_title"><i class="fas fa-gavel"></i> یاسایا ب جهئینکری</h2>
+    <p data-t="terms_governing_law">ئەم مەرج و رێسایانە بەپێی یاساکانی هەرێمی کوردستانی عێراق ڕێکدەخرێن و لێکدەدرێنەوە. هەر ناکۆکییەک لە دادگای پێویست چارەسەر دەکرێت.</p>
+  </div>
+
+  <div class="legal-section">
+    <h2 data-t="terms_section11_title"><i class="fas fa-envelope"></i> پەیوەندیێ پێڤە بکە</h2>
+    <p data-t="terms_contact_intro">ئەگەر پرسیارێن تە هەنە دەربارەی ئەڤ مەرج و رێسایانە، تکایە پەیوەندیێ ب مە بکە:</p>
+    <ul>
+      <li data-t="terms_contact_email">ئیمەیل: tefsirkurd@gmail.com</li>
+      <li data-t="terms-and-conditions_li_2">مالپەڕ: <a href="https://tafsirkurd.com" style="color: var(--primary);">tafsirkurd.com</a></li>
+    </ul>
+  </div>
+
+  <div class="closing-message">
+    <i class="fas fa-book-quran"></i>
+    <p><strong data-t="terms_closing">سوپاس بۆ بکارئینانا تەفسیر کورد</strong><br>
+    ئەم هیڤیدارین ئەڤ خزمەتگوزاریە ببیتە ئەگەرەک بۆ نێزیکبوون ژ قورئانا پیرۆز و فێربوونا دینێ ئیسلامێ. ب گۆرەی بنەمایێ ئەخلاقی یێ ئیسلامی، ئەم بەردەوام دێ بین د پێشکێشکرنا خزمەتگوزاریەکا باش و پاراستی.</p>
+  </div>
+
+  <button type="button" onclick="history.back()" class="back-button" style="margin-top: 30px;">
+    <i class="fas fa-arrow-right"></i>
+    <span data-t="terms_back">گەڕیان ڤە</span>
+  </button>
+</div>
+
+<script>
+  // Set current year and last update date
+  document.addEventListener('DOMContentLoaded', function() {
+    const yearSpans = document.querySelectorAll('#year');
+    yearSpans.forEach(span => {
+      span.textContent = new Date().getFullYear();
+    });
+
+    // Set last update date to today
+    const lastUpdateSpan = document.getElementById('lastUpdate');
+    if (lastUpdateSpan) {
+      const today = new Date();
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      lastUpdateSpan.textContent = today.toLocaleDateString('ar', options);
+    }
+  });
+</script>
+
+    <!-- Footer Placeholder -->
+    <div id="footer-placeholder"></div>
+    <script src="/utils/footer-loader.js"></script>
+</body>
+</html>

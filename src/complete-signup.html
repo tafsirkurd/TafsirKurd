@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+    <script src="/utils/theme-loader.js"></script>
+    <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co">
+  <script src="/utils/translations.js?v=20260225"></script>
+    <script src="/utils/security.js"></script>
+    <script src="/utils/scroll-position.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="تەمامکرنا تۆمارکرنێ - تەفسیر کورد">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <title data-t="complete-signup_title_1">تەمامکرنا تۆمارکرنێ | TafsirKurd</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+
+    <!-- Kurdish Number Utility - Convert all numbers to Kurdish numerals -->
+    <script src="utils/kurdish-numbers.js"></script>
+    <!-- Auto-conversion disabled on this page to keep username/email in English -->
+    <!-- <script src="utils/auto-kurdish-numbers.js"></script> -->
+
+    <!-- Apply theme immediately to prevent flash -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const userPrefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+            const theme = savedTheme || (userPrefs.darkMode ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+
+    <!-- Critical Font Preloading - Instant font display, zero FOIT/FOUT -->
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=16" as="font" type="font/woff2" crossorigin>
+
+    <!-- Local Fonts - Zero external requests, instant loading -->
+    <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
+
+    <!-- Local Font Awesome - Zero external requests -->
+    <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Auth Redirect Handler -->
+    <script src="/utils/auth-redirect.js" defer></script>
+
+    <!-- Notification System -->
+    <script src="/utils/notification-messages.js"></script>
+    <script src="/utils/notification-scheduler.js"></script>
+
+    <style>
+        :root {
+            --primary: #000000;
+            --accent: #ffffff;
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #000000;
+            --text-muted: #666666;
+            --border: #e8e8e8;
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --success: #10b981;
+        }
+
+        /* Dark Mode */
+        [data-theme="dark"] {
+            --primary: #ffffff;
+            --accent: #000000;
+            --bg: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text: #ffffff;
+            --text-muted: #b3b3b3;
+            --border: #404040;
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        }
+
+        [data-theme="dark"] .shape {
+            background: white;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #fdfdfd 0%, #ffffff 100%);
+            min-height: 100vh;
+            max-height: 100vh;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .bg-animation {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape:nth-child(1) {
+            width: 200px;
+            height: 200px;
+            background: black;
+            border-radius: 50%;
+            top: 10%;
+            left: 10%;
+        }
+
+        .shape:nth-child(2) {
+            width: 150px;
+            height: 150px;
+            background: black;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            top: 60%;
+            right: 10%;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0) scale(1);
+            }
+            50% {
+                transform: translateY(-20px) translateX(20px) scale(1.05);
+            }
+        }
+
+        .signup-container {
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.5s ease-out;
+            margin: auto;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .signup-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: var(--shadow-lg);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .success-icon {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .success-icon i {
+            font-size: 2.8rem;
+            color: var(--success);
+            animation: checkBounce 0.6s ease-out;
+        }
+
+        @keyframes checkBounce {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .welcome-header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .welcome-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--primary);
+        }
+
+        .welcome-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .user-info {
+            background: var(--bg);
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            text-align: center;
+            border: 2px solid var(--border);
+        }
+
+        .user-avatar {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 3px solid var(--primary);
+        }
+
+        .user-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .user-email {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .preferences-section {
+            margin: 15px 0;
+        }
+
+        .preferences-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--primary);
+            text-align: center;
+        }
+
+        .preference-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: var(--bg);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .preference-item:hover {
+            border-color: var(--primary);
+            transform: translateX(-3px);
+        }
+
+        .preference-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .preference-icon {
+            font-size: 1rem;
+            color: var(--primary);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 45px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 50px;
+            transition: background 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        [data-theme="dark"] .toggle-switch {
+            background: #4a4a4a;
+        }
+
+        .toggle-switch.active {
+            background: var(--primary);
+        }
+
+        [data-theme="dark"] .toggle-switch.active {
+            background: #ffffff;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            right: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        [data-theme="dark"] .toggle-switch::after {
+            background: #ffffff;
+        }
+
+        [data-theme="dark"] .toggle-switch.active::after {
+            background: #000000;
+        }
+
+        .toggle-switch.active::after {
+            right: 23px;
+        }
+
+        .continue-btn {
+            width: 100%;
+            padding: 13px;
+            background: var(--primary);
+            color: var(--accent);
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all var(--transition);
+            margin: 15px 0 0 0;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .continue-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        [data-theme="dark"] .continue-btn {
+            background: #ffffff;
+            color: #000000;
+            border: 2px solid #ffffff;
+        }
+
+        [data-theme="dark"] .continue-btn::before {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .continue-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .continue-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .continue-btn:hover {
+            background: #f0f0f0;
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .continue-btn span,
+        .continue-btn i {
+            position: relative;
+            z-index: 1;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .continue-btn.loading .loading-spinner {
+            display: block;
+        }
+
+        .continue-btn.loading span {
+            display: none;
+        }
+
+        .skip-link {
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .skip-btn {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .skip-btn:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .signup-card {
+                padding: 20px;
+            }
+
+            .success-icon i {
+                font-size: 2.5rem;
+            }
+
+            .welcome-title {
+                font-size: 1.4rem;
+            }
+
+            .shape:nth-child(1) {
+                width: 150px;
+                height: 150px;
+                top: 5%;
+                left: 5%;
+            }
+
+            .shape:nth-child(2) {
+                width: 120px;
+                height: 120px;
+                top: 70%;
+                right: 5%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+
+            .signup-card {
+                padding: 18px;
+                border-radius: 18px;
+            }
+
+            .success-icon {
+                margin-bottom: 12px;
+            }
+
+            .success-icon i {
+                font-size: 2.2rem;
+            }
+
+            .welcome-header {
+                margin-bottom: 12px;
+            }
+
+            .welcome-title {
+                font-size: 1.2rem;
+            }
+
+            .welcome-subtitle {
+                font-size: 0.85rem;
+            }
+
+            .user-info {
+                padding: 12px;
+                margin: 12px 0;
+            }
+
+            .user-avatar {
+                width: 45px;
+                height: 45px;
+                margin-bottom: 8px;
+            }
+
+            .user-name {
+                font-size: 1rem;
+            }
+
+            .user-email {
+                font-size: 0.78rem;
+            }
+
+            .preferences-section {
+                margin: 12px 0;
+            }
+
+            .preferences-title {
+                font-size: 0.9rem;
+                margin-bottom: 10px;
+            }
+
+            .preference-item {
+                padding: 12px 14px;
+                margin-bottom: 8px;
+                border-radius: 12px;
+                min-height: 50px;
+            }
+
+            .preference-label {
+                font-size: 0.85rem;
+                gap: 8px;
+            }
+
+            .preference-icon {
+                font-size: 1rem;
+            }
+
+            .toggle-switch {
+                width: 48px;
+                height: 26px;
+            }
+
+            .toggle-switch::after {
+                width: 22px;
+                height: 22px;
+            }
+
+            .toggle-switch.active::after {
+                right: 24px;
+            }
+
+            .continue-btn {
+                font-size: 0.88rem;
+                padding: 11px;
+                margin-top: 12px;
+            }
+
+            .skip-link {
+                margin-top: 10px;
+            }
+
+            .skip-btn {
+                font-size: 0.75rem;
+            }
+
+            /* Mobile Notification Styles */
+            .notification-toast {
+                top: 15px !important;
+                right: 10px !important;
+                left: 10px !important;
+                padding: 12px 18px !important;
+                font-size: 0.9rem !important;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .signup-card {
+                padding: 15px;
+            }
+
+            .welcome-title {
+                font-size: 1.1rem;
+            }
+
+            .continue-btn {
+                font-size: 0.82rem;
+                padding: 10px;
+            }
+        }
+    </style>
+  <!-- Text Highlighter for Admin Panel -->
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="signup-container">
+        <div class="signup-card">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+
+            <div class="welcome-header">
+                <h1 class="welcome-title" data-t="signup_success_title">سەرکەفتی بوو!</h1>
+                <p class="welcome-subtitle" data-t="signup_success_subtitle">
+                    ب سەرکەفتی چویە ژوورڤە. بلا ئەزموونا تە رێکێخین
+                </p>
+            </div>
+
+            <div class="user-info" id="userInfo">
+                <!-- User info will be inserted here -->
+            </div>
+
+            <div class="preferences-section">
+                <h2 class="preferences-title" data-t="signup_preferences_title">هەلبژارتنێن تە</h2>
+
+                <div class="preference-item" onclick="togglePreference(this, 'notifications')">
+                    <div class="preference-label">
+                        <i class="fas fa-bell preference-icon"></i>
+                        <span data-t="signup_daily_notification">ئاگەهدارکرنا رۆژانە</span>
+                    </div>
+                    <div class="toggle-switch active" data-pref="notifications"></div>
+                </div>
+
+                <div class="preference-item" onclick="togglePreference(this, 'darkMode')">
+                    <div class="preference-label">
+                        <i class="fas fa-moon preference-icon"></i>
+                        <span data-t="signup_dark_mode">رەوشا تاریک</span>
+                    </div>
+                    <div class="toggle-switch" data-pref="darkMode"></div>
+                </div>
+
+                <div class="preference-item" onclick="togglePreference(this, 'autoSave')">
+                    <div class="preference-label">
+                        <i class="fas fa-save preference-icon"></i>
+                        <span data-t="signup_auto_save">هەلگرتنا خۆکار</span>
+                    </div>
+                    <div class="toggle-switch active" data-pref="autoSave"></div>
+                </div>
+            </div>
+
+            <button class="continue-btn" id="continueBtn" onclick="completeSignup()">
+                <div class="loading-spinner"></div>
+                <span data-t="signup_continue_btn">دەستپێکرن</span>
+                <i class="fas fa-arrow-left"></i>
+            </button>
+
+            <div class="skip-link">
+                <a class="skip-btn" data-t="signup_skip_link" onclick="skipToMain()">راکێشان و چوونە سەرەتا</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase client securely
+        let supabaseClient = null;
+
+        async function initSupabase() {
+            try {
+                const response = await fetch('/config');
+                if (!response.ok) throw new Error('Failed to fetch auth configuration');
+                const config = await response.json();
+                if (!config.supabaseUrl || !config.supabaseKey) throw new Error('Invalid auth configuration');
+                supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                window.supabaseClient = supabaseClient;
+                console.log('✅ Supabase initialized securely');
+                return true;
+            } catch (error) {
+                console.error('Supabase initialization error:', error);
+                return false;
+            }
+        }
+
+        // Load user data from Supabase
+        window.addEventListener('load', async () => {
+            // 🔥 NUCLEAR SECURITY: Initialize comprehensive security system
+            if (window.TafsirKurdSecurity) {
+                window.TafsirKurdSecurity.init({
+                    criticalElements: ['firstName', 'lastName', 'displayName'],
+                    protectedFields: [],
+                    validateSession: true,
+                    securityLevel: 'nuclear'
+                });
+            }
+
+            // Initialize Supabase first
+            await initSupabase();
+            if (!supabaseClient) {
+                console.error('Failed to initialize Supabase');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            try {
+                // Check if auth-redirect is loaded
+                if (!window.authRedirect) {
+                    console.error('Auth redirect handler not loaded');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // Get user profile from Supabase
+                const profile = await window.authRedirect.getUserProfile();
+
+                if (!profile) {
+                    // If no profile, redirect to login
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // Display user info with default avatar if needed (XSS-safe)
+                const userInfoDiv = document.getElementById('userInfo');
+                userInfoDiv.textContent = ''; // Clear existing content
+
+                const img = document.createElement('img');
+                img.src = profile.avatar_url || '/assets/default-avatar.png';
+                img.alt = profile.display_name || 'User';
+                img.className = 'user-avatar';
+                userInfoDiv.appendChild(img);
+
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'user-name';
+                nameDiv.setAttribute('data-no-convert', 'true');
+                nameDiv.textContent = profile.display_name || 'User';
+                userInfoDiv.appendChild(nameDiv);
+
+                const emailDiv = document.createElement('div');
+                emailDiv.className = 'user-email';
+                emailDiv.setAttribute('data-no-convert', 'true');
+                emailDiv.textContent = profile.email || '';
+                userInfoDiv.appendChild(emailDiv);
+
+                // Load saved preferences from Supabase profile
+                loadPreferences(profile);
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+                window.location.href = '/login.html';
+            }
+        });
+
+        function loadPreferences(profile) {
+            // Load preferences from Supabase profile
+            const savedPrefs = profile.preferences || {
+                notifications: true,
+                darkMode: false,
+                autoSave: true,
+                fontSize: 'medium',
+                arabicFont: 'uthmanic'
+            };
+
+            // Also check localStorage for backward compatibility
+            const localPrefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+            const mergedPrefs = { ...savedPrefs, ...localPrefs };
+
+            // Apply saved theme
+            document.documentElement.setAttribute('data-theme', mergedPrefs.darkMode ? 'dark' : 'light');
+            localStorage.setItem('theme', mergedPrefs.darkMode ? 'dark' : 'light');
+
+            // Apply saved preferences to toggles
+            document.querySelectorAll('.toggle-switch').forEach(toggle => {
+                const pref = toggle.getAttribute('data-pref');
+                if (mergedPrefs[pref]) {
+                    toggle.classList.add('active');
+                } else {
+                    toggle.classList.remove('active');
+                }
+            });
+
+            // Save merged preferences to localStorage for immediate use
+            localStorage.setItem('userPreferences', JSON.stringify(mergedPrefs));
+        }
+
+        async function togglePreference(item, prefName) {
+            const toggle = item.querySelector('.toggle-switch');
+            const wasActive = toggle.classList.contains('active');
+            const willBeActive = !wasActive;
+
+            // Special handling for notifications
+            if (prefName === 'notifications' && willBeActive) {
+                // Request browser notification permission
+                const granted = await window.notificationScheduler.requestPermission();
+
+                if (!granted) {
+                    showNotification('Please enable notifications in your browser settings to receive reminders');
+                    return; // Don't toggle if permission denied
+                }
+            }
+
+            toggle.classList.toggle('active');
+            const isActive = toggle.classList.contains('active');
+
+            // Save preference
+            const prefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+            prefs[prefName] = isActive;
+            localStorage.setItem('userPreferences', JSON.stringify(prefs));
+
+            // Handle notification preference
+            if (prefName === 'notifications') {
+                if (isActive) {
+                    // Save notification settings to browser
+                    window.notificationScheduler.saveSettings({
+                        enabled: true,
+                        dailyReminder: true,
+                        streakReminder: true,
+                        goalReminder: true,
+                        fridayReminder: true
+                    });
+
+                    // Save to database so email reminders work
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    if (user.sub) {
+                        const userKey = 'quran_data_' + user.sub;
+                        const saved = localStorage.getItem(userKey);
+                        const userData = saved ? JSON.parse(saved) : {};
+
+                        userData.notificationSettings = {
+                            enabled: true,
+                            emailReminders: true,
+                            dailyReminder: true,
+                            streakReminder: true,
+                            goalReminder: true,
+                            fridayReminder: true
+                        };
+
+                        const { data: { session: _s1 } } = await supabaseClient.auth.getSession();
+                        const _token1 = _s1?.access_token || '';
+                        fetch('/user-data', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _token1 },
+                            body: JSON.stringify({
+                                userId: user.sub,
+                                action: 'save',
+                                data: userData
+                            })
+                        }).catch(err => console.error('Failed to save notification settings:', err));
+
+                        // Send confirmation notification to admin via Discord
+                        fetch('/discord-notify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                type: 'notification_enabled',
+                                title: '🔔 Notifications Enabled!',
+                                message: `${userData.full_name || userData.userName || 'User'} enabled email reminders`,
+                                details: `Email: ${userData.email || user.email || 'Not provided'}`,
+                                data: {
+                                    userName: userData.full_name || userData.userName || 'Unknown',
+                                    userEmail: userData.email || user.email || 'Not provided',
+                                    timestamp: new Date().toISOString()
+                                }
+                            })
+                        }).catch(err => console.error('Failed to send Telegram notification:', err));
+                    }
+
+                    // Translation key: notification_email_enabled
+                    // Kurdish: بیرانینێن ئیمێلی هاتنە چالاک کرن! تو دێ ڕۆژانە بیرانینێن قورئانێ د ئیمێلا خۆ دا وەرگری 📧🌙
+                    // English: Email reminders enabled! You'll receive daily Quran reminders in your inbox 📧🌙
+                    showNotification(window.t&&window.t('signup.email_reminders_on')||'بیرانینێن ئیمێلی هاتنە چالاک کرن! تو دێ ڕۆژانە بیرانینێن قورئانێ د ئیمێلا خۆ دا وەرگری 📧🌙');
+                } else {
+                    // Disable notifications
+                    window.notificationScheduler.saveSettings({ enabled: false });
+
+                    // Save to database
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    if (user.sub) {
+                        const userKey = 'quran_data_' + user.sub;
+                        const saved = localStorage.getItem(userKey);
+                        const userData = saved ? JSON.parse(saved) : {};
+
+                        userData.notificationSettings = {
+                            enabled: false,
+                            emailReminders: false
+                        };
+
+                        const { data: { session: _s2 } } = await supabaseClient.auth.getSession();
+                        const _token2 = _s2?.access_token || '';
+                        fetch('/user-data', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _token2 },
+                            body: JSON.stringify({
+                                userId: user.sub,
+                                action: 'save',
+                                data: userData
+                            })
+                        }).catch(err => console.error('Failed to save notification settings:', err));
+                    }
+
+                    // Translation key: notification_email_disabled
+                    // Kurdish: بیرانینێن ئیمێلی هاتنە گرتن
+                    // English: Email reminders disabled
+                    showNotification(window.t&&window.t('signup.email_reminders_off')||'بیرانینێن ئیمێلی هاتنە گرتن');
+                }
+            }
+
+            // If darkMode, apply theme immediately and save in Quran.html format
+            if (prefName === 'darkMode') {
+                const theme = isActive ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+
+                // Show notification
+                showNotification(isActive ? 'رەوشا تاریک چالاککر' : 'رەوشا رووناهیێ چالاککر');
+            }
+        }
+
+        function showNotification(msg) {
+            const notif = document.createElement('div');
+
+            // Calculate position based on existing notifications
+            const existingNotifications = document.querySelectorAll('.notification-toast');
+            let topPosition = 20; // Start position
+
+            existingNotifications.forEach((existing) => {
+                topPosition += existing.offsetHeight + 15; // Stack with 15px gap
+            });
+
+            notif.className = 'notification-toast';
+            notif.style.cssText = `
+                position: fixed;
+                top: ${topPosition}px;
+                right: 20px;
+                left: 20px;
+                padding: 15px 20px;
+                background: linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%);
+                color: var(--accent);
+                border-radius: 12px;
+                font-weight: 600;
+                text-align: center;
+                box-shadow: var(--shadow-lg);
+                z-index: 10000;
+                animation: slideInDown 0.3s ease-out;
+                transition: all 0.3s ease;
+            `;
+            notif.textContent = msg;
+            document.body.appendChild(notif);
+
+            // Remove with animation after 2 seconds
+            setTimeout(() => {
+                notif.style.animation = 'slideInDown 0.3s ease-in reverse';
+                setTimeout(() => {
+                    notif.remove();
+                    // Reposition remaining notifications
+                    repositionNotifications();
+                }, 300);
+            }, 2000);
+        }
+
+        function repositionNotifications() {
+            const notifications = document.querySelectorAll('.notification-toast');
+            let topPosition = 20;
+
+            notifications.forEach((notif) => {
+                notif.style.top = topPosition + 'px';
+                topPosition += notif.offsetHeight + 15;
+            });
+        }
+
+        async function completeSignup() {
+            const btn = document.getElementById('continueBtn');
+            btn.classList.add('loading');
+
+            try {
+                // Get current user session
+                const { data: { session } } = await supabaseClient.auth.getSession();
+
+                if (!session) {
+                    console.error('No active session');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // Get current preferences from UI
+                const preferences = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+
+                // Update profile in Supabase with preferences
+                const { error: updateError } = await supabaseClient
+                    .from('profiles')
+                    .update({
+                        preferences: preferences,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', session.user.id);
+
+                if (updateError) {
+                    console.error('Error updating preferences:', updateError);
+                }
+
+                // Save to localStorage for backward compatibility
+                localStorage.setItem('signupCompleted', 'true');
+
+                console.log('✅ Preferences saved to Supabase profiles');
+
+                // Try to clear service worker caches (non-blocking)
+                clearAllCaches().catch(err => console.error('Cache clear error:', err));
+
+                // Use auth-redirect handler to mark signup as completed and redirect
+                if (window.authRedirect) {
+                    await window.authRedirect.markSignupCompleted();
+                } else {
+                    // Fallback if auth-redirect not loaded
+                    window.location.href = '/quran.html';
+                }
+            } catch (error) {
+                console.error('Signup completion error:', error);
+                // Force redirect even on error
+                window.location.href = '/quran.html';
+            }
+        }
+
+        async function skipToMain() {
+            try {
+                // Get current user session
+                const { data: { session } } = await supabaseClient.auth.getSession();
+
+                if (!session) {
+                    console.error('No active session');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // Save default preferences
+                const defaultPrefs = {
+                    notifications: true,
+                    darkMode: false,
+                    autoSave: true,
+                    fontSize: 'medium',
+                    arabicFont: 'uthmanic'
+                };
+
+                // Update profile in Supabase with default preferences
+                const { error: updateError } = await supabaseClient
+                    .from('profiles')
+                    .update({
+                        preferences: defaultPrefs,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', session.user.id);
+
+                if (updateError) {
+                    console.error('Error saving default preferences:', updateError);
+                }
+
+                // Save to localStorage for backward compatibility
+                localStorage.setItem('userPreferences', JSON.stringify(defaultPrefs));
+                localStorage.setItem('signupCompleted', 'true');
+
+                console.log('✅ Default preferences saved to Supabase (skipped)');
+
+                // Try to clear service worker caches (non-blocking)
+                clearAllCaches().catch(err => console.error('Cache clear error:', err));
+
+                // Use auth-redirect handler to mark signup as completed and redirect
+                if (window.authRedirect) {
+                    await window.authRedirect.markSignupCompleted();
+                } else {
+                    // Fallback if auth-redirect not loaded
+                    window.location.href = '/quran.html';
+                }
+            } catch (error) {
+                console.error('Skip error:', error);
+                // Force redirect even on error
+                window.location.href = '/quran.html';
+            }
+        }
+
+        async function clearAllCaches() {
+            try {
+                // Clear all caches
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(cacheName => {
+                    console.log('Clearing cache:', cacheName);
+                    return caches.delete(cacheName);
+                }));
+
+                // Unregister all service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map(registration => {
+                        console.log('Unregistering service worker');
+                        return registration.unregister();
+                    }));
+                }
+            } catch (error) {
+                console.error('Failed to clear caches:', error);
+            }
+        }
+
+        // Don't register service worker on signup page
+        // It will be registered on Quran.html after successful navigation
+    </script>
+</body>
+</html>

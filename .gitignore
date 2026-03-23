@@ -1,0 +1,113 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.dev.vars
+config.bat
+
+# Build outputs
+dist/
+build/
+out/
+
+# Cloudflare
+.wrangler/
+wrangler.toml
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-*
+.project
+.settings/
+*.code-workspace
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory
+coverage/
+*.lcov
+.nyc_output/
+
+# Temporary folders
+tmp/
+temp/
+*.tmp
+
+# Debug and test files
+debug.html
+debug-backgrounds.html
+test.html
+*.test.js
+*.spec.js
+
+# Cache
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+
+# Misc
+*.bak
+*.orig
+*.rej
+*~
+.history/
+
+# Capacitor - track ios/ and android/ but ignore build artifacts
+ios/App/Pods/
+ios/App/build/
+android/.gradle/
+android/**/build/
+android/local.properties
+android/*.keystore
+android/nul
+
+# Sensitive / personal data
+testers.csv
+
+# Local Claude settings
+.claude/
+
+# Temp / generated files
+duplicate_report.txt
+scripts/test.txt
+scripts/scan-results.jsondistribution.key
+distribution.p12
+distribution.pem
+distribution.csr
+distribution_p12_b64.txt
+profile_b64.txt

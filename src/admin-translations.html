@@ -1,0 +1,3006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>Translations - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2" as="font" type="font/woff2" crossorigin="">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        @font-face {
+            font-family: 'IBM Plex Sans Arabic';
+            src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'IBM Plex Sans Arabic';
+            src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2') format('woff2');
+            font-weight: 500 700;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        /* Kurdish text — use IBM Plex Sans Arabic everywhere */
+        .t-text,
+        .qe-textarea,
+        .edit-field textarea,
+        .history-diff,
+        .history-search,
+        .history-mark-note-text {
+            font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+        }
+
+        /* ===== No horizontal scroll ===== */
+        .main-content { overflow-x: hidden; }
+        .content-area { overflow-x: hidden; }
+
+        /* ===== Platform Tabs ===== */
+        .platform-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border-light);
+        }
+        .platform-tab {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            color: var(--text-tertiary);
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .platform-tab:hover {
+            color: var(--text-primary);
+        }
+        .platform-tab.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--text-primary);
+        }
+        .platform-tab .tab-count {
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .platform-tab.active .tab-count {
+            background: var(--text-primary);
+            color: var(--bg-app);
+        }
+        @media (max-width: 768px) {
+            .platform-tabs { margin-bottom: 16px; }
+            .platform-tab { padding: 10px 16px; font-size: 13px; }
+        }
+
+        /* ===== Stats ===== */
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .stat-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 20px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .stat-pill strong {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        /* ===== Filters ===== */
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .filter-search {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+        .filter-search svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: var(--text-tertiary);
+            pointer-events: none;
+        }
+        .filter-search input {
+            width: 100%;
+            padding: 11px 40px 11px 40px;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .filter-search input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+        }
+        body.dark-mode .filter-search input:focus {
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.06);
+        }
+        .filter-clear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: var(--bg-active);
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1;
+            padding: 0;
+        }
+        .filter-clear.visible { display: flex; }
+
+        /* ===== Page Chips ===== */
+        .page-chips-wrap {
+            margin-bottom: 18px;
+        }
+        .page-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .page-chip {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .page-chip:hover {
+            border-color: var(--border-medium);
+            background: var(--bg-hover);
+        }
+        .page-chip.active {
+            background: var(--text-primary);
+            color: var(--bg-app);
+            border-color: var(--text-primary);
+        }
+        .page-chip .chip-count {
+            display: inline-block;
+            margin-left: 3px;
+            font-size: 10px;
+            font-weight: 700;
+            opacity: 0.5;
+        }
+        .page-chip.has-results {
+            border-color: var(--primary, #3b82f6);
+            color: var(--primary, #3b82f6);
+            background: rgba(59,130,246,.07);
+        }
+        .page-chip.has-results .chip-count { opacity: 0.9; }
+        .page-chip.no-results { opacity: 0.35; pointer-events: none; }
+        .search-hint {
+            padding: 8px 14px;
+            font-size: 12px;
+            color: var(--text-tertiary);
+            background: var(--bg-surface);
+            border: 1px dashed var(--border-light);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .search-hint a {
+            color: var(--primary, #3b82f6);
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        /* ===== Context line ===== */
+        .t-context {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-style: italic;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ===== Copy toast on key ===== */
+        .t-key { cursor: pointer; position: relative; }
+        .t-key:hover { opacity: 0.7; }
+        .t-key::after {
+            content: 'Copied!';
+            position: absolute;
+            top: -28px;
+            left: 0;
+            background: var(--text-primary);
+            color: var(--bg-app);
+            font-size: 10px;
+            font-family: inherit;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .t-key.copied::after { opacity: 1; }
+
+        /* ===== Search match highlight ===== */
+        .highlight {
+            background: #fef08a;
+            color: #000;
+            border-radius: 2px;
+            padding: 0 1px;
+        }
+        body.dark-mode .highlight {
+            background: #854d0e;
+            color: #fef08a;
+        }
+
+        /* ===== Translation List ===== */
+        .translation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .t-row {
+            display: grid;
+            grid-template-columns: 180px 1fr auto 50px;
+            gap: 12px 16px;
+            align-items: start;
+            padding: 16px 20px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            transition: all 0.2s;
+            overflow: hidden;
+            min-width: 0;
+        }
+        .t-row:hover {
+            border-color: var(--border-medium);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        body.dark-mode .t-row:hover {
+            box-shadow: 0 2px 8px rgba(255,255,255,0.02);
+        }
+        .t-row.editing {
+            grid-template-columns: 1fr;
+            padding: 24px;
+            border-color: var(--primary);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        body.dark-mode .t-row.editing {
+            box-shadow: 0 4px 20px rgba(255,255,255,0.04);
+        }
+        .t-key {
+            font-size: 12.5px;
+            font-weight: 600;
+            min-width: 0;
+            color: var(--text-primary);
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            word-break: break-all;
+            line-height: 1.4;
+        }
+        .t-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            direction: rtl;
+            text-align: right;
+            line-height: 1.6;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
+        }
+        .t-page-badge {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-tertiary);
+            background: var(--bg-hover);
+            padding: 4px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+        .t-actions {
+            display: flex;
+            gap: 2px;
+            justify-content: flex-end;
+        }
+        .t-btn {
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .t-btn:hover {
+            background: var(--bg-active);
+            color: var(--text-primary);
+        }
+        .t-btn.delete:hover {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+        body.dark-mode .t-btn.delete:hover {
+            background: #1c0a0a;
+        }
+        .t-btn svg { width: 15px; height: 15px; }
+
+        /* ===== Inline Edit Form ===== */
+        .edit-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .edit-row {
+            display: flex;
+            gap: 12px;
+        }
+        .edit-field {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .edit-field label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-tertiary);
+        }
+        .edit-field input,
+        .edit-field textarea,
+        .edit-field select {
+            padding: 11px 14px;
+            border: 1.5px solid var(--border-light);
+            border-radius: 10px;
+            background: var(--bg-app);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .edit-field input:focus,
+        .edit-field textarea:focus,
+        .edit-field select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+        }
+        body.dark-mode .edit-field input:focus,
+        body.dark-mode .edit-field textarea:focus,
+        body.dark-mode .edit-field select:focus {
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.06);
+        }
+        .edit-field textarea {
+            min-height: 90px;
+            resize: vertical;
+            direction: rtl;
+            line-height: 1.7;
+        }
+        .edit-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            padding-top: 6px;
+        }
+        .edit-actions .btn {
+            padding: 10px 24px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 10px;
+        }
+
+        /* ===== Empty State ===== */
+        .empty-state {
+            text-align: center;
+            padding: 70px 20px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+        }
+        .empty-state svg {
+            width: 44px;
+            height: 44px;
+            color: var(--text-tertiary);
+            margin-bottom: 14px;
+            opacity: 0.5;
+        }
+        .empty-state p {
+            color: var(--text-tertiary);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* ===== Pagination ===== */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 20px;
+            padding: 12px 0;
+        }
+        .pagination-btn {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pagination-btn:hover:not(:disabled) { background: var(--bg-hover); }
+        .pagination-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+        .pagination-info {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        /* ===== History Panel ===== */
+        .history-panel {
+            margin-top: 32px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .history-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        .history-filters {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: var(--bg-primary);
+        }
+        .history-search {
+            flex: 1;
+            min-width: 180px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+            font-family: inherit;
+        }
+        .history-search:focus { border-color: var(--accent-primary); }
+        .history-tabs { display: flex; gap: 4px; flex-shrink: 0; }
+        .history-tab {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+        .history-tab:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
+        .history-tab.active { background: var(--accent-primary); color: #fff; border-color: var(--accent-primary); }
+        .history-stats {
+            padding: 7px 20px;
+            font-size: 12px;
+            color: var(--text-tertiary);
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-primary);
+            min-height: 32px;
+        }
+        .history-list {
+            max-height: 560px;
+            overflow-y: auto;
+        }
+        .history-empty {
+            padding: 32px;
+            text-align: center;
+            color: var(--text-tertiary);
+            font-size: 14px;
+        }
+        .history-item {
+            display: flex;
+            gap: 14px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-light);
+            align-items: flex-start;
+            font-size: 13px;
+        }
+        .history-item:last-child { border-bottom: none; }
+        .history-badges {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex-shrink: 0;
+            align-items: flex-start;
+        }
+        .history-badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .history-badge.edit   { background: #dbeafe; color: #1d4ed8; }
+        .history-badge.add    { background: #dcfce7; color: #15803d; }
+        .history-badge.delete { background: #fee2e2; color: #b91c1c; }
+        body.dark-mode .history-badge.edit   { background: #1e3a5f; color: #93c5fd; }
+        body.dark-mode .history-badge.add    { background: #14532d; color: #86efac; }
+        body.dark-mode .history-badge.delete { background: #450a0a; color: #fca5a5; }
+        .history-platform {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+        }
+        .history-platform.web     { background: #f0f9ff; color: #0369a1; }
+        .history-platform.android { background: #f0fdf4; color: #166534; }
+        .history-platform.ios     { background: #fdf4ff; color: #7e22ce; }
+        body.dark-mode .history-platform.web     { background: #0c1a2e; color: #7dd3fc; }
+        body.dark-mode .history-platform.android { background: #052e16; color: #86efac; }
+        body.dark-mode .history-platform.ios     { background: #2e1065; color: #d8b4fe; }
+        .history-meta {
+            flex: 1;
+            min-width: 0;
+        }
+        .history-key {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: monospace;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+        .history-diff { color: var(--text-secondary); line-height: 1.6; }
+        .diff-row {
+            display: flex;
+            gap: 8px;
+            align-items: baseline;
+            margin-bottom: 3px;
+        }
+        .diff-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-tertiary);
+            flex-shrink: 0;
+            min-width: 44px;
+        }
+        .history-diff .old-text {
+            color: #b91c1c;
+            text-decoration: line-through;
+            word-break: break-word;
+        }
+        .history-diff .new-text {
+            color: #15803d;
+            word-break: break-word;
+        }
+        body.dark-mode .history-diff .old-text { color: #fca5a5; }
+        body.dark-mode .history-diff .new-text  { color: #86efac; }
+        .history-time-col {
+            flex-shrink: 0;
+            text-align: left;
+            min-width: 70px;
+        }
+        .history-date {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .history-time {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            white-space: nowrap;
+        }
+        .history-email {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+        /* Marked tab special color */
+        .history-tab.marked-tab.active { background: #f59e0b; border-color: #f59e0b; }
+        .history-tab.marked-tab:hover:not(.active) { border-color: #f59e0b; color: #d97706; }
+        /* Marked item highlight */
+        .history-item.is-marked {
+            background: #fffbeb;
+            border-left: 3px solid #f59e0b;
+        }
+        body.dark-mode .history-item.is-marked { background: #1c1500; border-left-color: #d97706; }
+        /* Mark button on each item */
+        .history-mark-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
+            padding: 3px 10px;
+            background: none;
+            border: 1px dashed var(--border-light);
+            border-radius: 6px;
+            font-size: 11px;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+        .history-mark-btn:hover { border-color: #f59e0b; color: #d97706; border-style: solid; }
+        /* Mark indicator (when already marked) */
+        .history-mark-indicator {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            margin-top: 8px;
+            padding: 8px 10px;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+        body.dark-mode .history-mark-indicator { background: #1c1500; border-color: #78350f; }
+        .history-mark-note-text { color: var(--text-primary); font-style: italic; flex: 1; }
+        .history-mark-by { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+        .history-mark-remove {
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            font-size: 11px;
+            padding: 0 2px;
+            font-family: inherit;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .history-mark-remove:hover { color: #b91c1c; }
+        /* Realtime badge on History button */
+        .history-notif-badge {
+            position: absolute;
+            top: -7px;
+            right: -7px;
+            background: #ef4444;
+            color: #fff;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            line-height: 18px;
+            text-align: center;
+            padding: 0 4px;
+            pointer-events: none;
+            box-shadow: 0 0 0 2px var(--bg-primary);
+            animation: badgePop 0.3s ease-out;
+        }
+        @keyframes badgePop {
+            0%   { transform: scale(0); }
+            70%  { transform: scale(1.25); }
+            100% { transform: scale(1); }
+        }
+        /* New entry slide-in when panel is open */
+        @keyframes historySlideIn {
+            from { opacity: 0; transform: translateY(-6px); background: #dcfce7; }
+            to   { opacity: 1; transform: translateY(0);  background: transparent; }
+        }
+        .history-item-new { animation: historySlideIn 0.5s ease-out forwards; }
+        body.dark-mode .history-item-new {
+            animation-name: historySlideInDark;
+        }
+        @keyframes historySlideInDark {
+            from { opacity: 0; transform: translateY(-6px); background: #052e16; }
+            to   { opacity: 1; transform: translateY(0);  background: transparent; }
+        }
+        /* Live dot in history panel header */
+        .history-live-dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+            margin-right: 6px;
+            box-shadow: 0 0 0 2px #bbf7d0;
+            animation: livePulse 2s ease-in-out infinite;
+            vertical-align: middle;
+        }
+        body.dark-mode .history-live-dot { box-shadow: 0 0 0 2px #14532d; }
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.5; transform: scale(0.8); }
+        }
+        .history-live-dot.offline { background: #f59e0b; box-shadow: 0 0 0 2px #fde68a; animation: none; }
+        body.dark-mode .history-live-dot.offline { box-shadow: 0 0 0 2px #78350f; }
+        /* Inline mark form */
+        .mark-form {
+            margin-top: 8px;
+            padding: 10px;
+            background: var(--bg-primary);
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+        }
+        .mark-form textarea {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            font-size: 12px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 56px;
+            box-sizing: border-box;
+        }
+        .mark-form textarea:focus { outline: none; border-color: #f59e0b; }
+        .mark-form-actions { display: flex; gap: 6px; margin-top: 7px; justify-content: flex-end; }
+        .mark-btn-save {
+            padding: 5px 14px;
+            background: #f59e0b;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .mark-btn-save:hover { background: #d97706; }
+        .mark-btn-cancel {
+            padding: 5px 14px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--text-primary);
+            color: var(--bg-app);
+            padding: 13px 28px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 10001;
+            opacity: 0;
+            transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+            pointer-events: none;
+            white-space: nowrap;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ===== Add New Row ===== */
+        .add-row {
+            background: var(--bg-surface);
+            border: 2px dashed var(--border-medium);
+            border-radius: 14px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            display: none;
+        }
+        .add-row.active {
+            display: block;
+            animation: fadeSlideIn 0.25s ease;
+        }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .add-row .edit-form {
+            padding: 22px;
+        }
+
+        /* ===== FAB ===== */
+        .fab {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: var(--bg-app);
+            border: none;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+            cursor: pointer;
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .fab:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+        .fab:active { transform: scale(0.9); }
+        .fab svg { width: 24px; height: 24px; }
+
+        /* ===== Saving spinner ===== */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .btn .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--border-light);
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+
+        /* ===== Mobile ===== */
+        @media (max-width: 768px) {
+            .content-area { padding: 14px 10px; }
+            .page-header { margin-bottom: 14px; }
+            .page-title { font-size: 20px; }
+
+            /* Stats compact */
+            .stats-row {
+                gap: 8px;
+                margin-bottom: 14px;
+            }
+            .stat-pill {
+                padding: 12px;
+                font-size: 12px;
+                flex: 1;
+                justify-content: center;
+                flex-direction: column;
+                gap: 2px;
+                text-align: center;
+                border-radius: 12px;
+            }
+            .stat-pill strong { font-size: 20px; }
+
+            /* Search sticky */
+            .filters {
+                position: sticky;
+                top: 56px;
+                z-index: 10;
+                background: var(--bg-app);
+                padding: 6px 0 10px;
+                margin-bottom: 6px;
+            }
+            .filter-search {
+                min-width: unset;
+                width: 100%;
+            }
+            .filter-search input {
+                height: 48px;
+                font-size: 16px;
+                border-radius: 14px;
+                padding-left: 44px;
+            }
+            .filter-search svg { left: 16px; width: 18px; height: 18px; }
+            .filter-clear { right: 8px; width: 40px; height: 40px; font-size: 18px; border-radius: 50%; }
+
+            /* Page chips - wrap to new lines */
+            .page-chips-wrap {
+                margin-bottom: 12px;
+            }
+            .page-chips {
+                gap: 6px;
+            }
+            .page-chip {
+                padding: 8px 14px;
+                font-size: 12px;
+                border-radius: 8px;
+            }
+
+            /* Cards */
+            .translation-list { gap: 8px; }
+            .t-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 16px;
+                border-radius: 14px;
+                position: relative;
+            }
+            .t-key {
+                font-size: 12px;
+                padding-right: 90px;
+                color: var(--text-secondary);
+            }
+            .t-text {
+                white-space: normal;
+                font-size: 16px;
+                line-height: 1.7;
+                color: var(--text-primary);
+                font-weight: 500;
+            }
+            .t-page-badge {
+                font-size: 10px;
+                padding: 4px 10px;
+                border-radius: 6px;
+                width: fit-content;
+            }
+            .t-context {
+                font-size: 11px;
+                margin-top: 4px;
+                white-space: normal;
+            }
+            .t-actions {
+                position: absolute;
+                top: 13px;
+                right: 12px;
+                gap: 6px;
+            }
+            .t-btn {
+                width: 40px;
+                height: 40px;
+                border: 1px solid var(--border-light);
+                border-radius: 12px;
+                background: var(--bg-app);
+            }
+            .t-btn svg { width: 16px; height: 16px; }
+
+            /* Editing card */
+            .t-row.editing {
+                padding: 20px 16px;
+                border-color: var(--primary);
+                border-width: 2px;
+            }
+            .edit-row {
+                flex-direction: column;
+                gap: 14px;
+            }
+            .edit-field label { font-size: 12px; }
+            .edit-field input,
+            .edit-field select {
+                font-size: 16px;
+                padding: 14px;
+                border-radius: 12px;
+                height: 52px;
+            }
+            .edit-field textarea {
+                font-size: 16px;
+                padding: 14px;
+                border-radius: 12px;
+                min-height: 110px;
+            }
+            .edit-actions {
+                flex-direction: row;
+                gap: 10px;
+                padding-top: 8px;
+            }
+            .edit-actions .btn {
+                flex: 1;
+                height: 50px;
+                font-size: 15px;
+                font-weight: 700;
+                border-radius: 12px;
+                justify-content: center;
+            }
+
+            /* Add form */
+            .add-row { border-radius: 14px; margin-bottom: 12px; }
+            .add-row .edit-form { padding: 18px 14px; }
+
+            /* FAB */
+            #addBtn { display: none !important; }
+            .fab {
+                display: flex;
+                bottom: 20px;
+                right: 16px;
+                width: 60px;
+                height: 60px;
+                box-shadow: 0 6px 28px rgba(0,0,0,0.3);
+            }
+
+            /* Pagination */
+            .pagination { gap: 16px; padding: 18px 0; }
+            .pagination-btn {
+                width: 50px;
+                height: 50px;
+                border-radius: 14px;
+            }
+            .pagination-info { font-size: 15px; }
+
+            /* Toast */
+            .toast {
+                bottom: 94px;
+                font-size: 14px;
+                padding: 14px 28px;
+                border-radius: 14px;
+            }
+
+            /* Header actions */
+            .page-header .page-actions { gap: 8px; }
+            .page-header .page-actions .btn { font-size: 12px; padding: 8px 12px; }
+
+            .empty-state { padding: 50px 20px; border-radius: 14px; }
+            .empty-state p { font-size: 15px; }
+        }
+
+        /* ===== Quick Edit Mode ===== */
+        .qe-bar {
+            position: sticky;
+            top: 56px;
+            z-index: 20;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-medium);
+            border-radius: 12px;
+            padding: 10px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+        }
+        body.dark-mode .qe-bar { box-shadow: 0 2px 16px rgba(0,0,0,0.3); }
+        .qe-count { flex: 1; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+        .qe-hint { font-size: 11px; color: var(--text-tertiary); }
+        .qe-textarea {
+            width: 100%;
+            min-height: 26px;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            direction: rtl;
+            text-align: right;
+            resize: none;
+            padding: 0;
+            line-height: 1.6;
+            outline: none;
+            overflow: hidden;
+            cursor: text;
+            display: block;
+        }
+        .qe-textarea:focus { outline: none; }
+        .t-row.qe-dirty { border-color: #f59e0b; background: #fffbeb; }
+        body.dark-mode .t-row.qe-dirty { border-color: #d97706; background: #1c1500; }
+        @keyframes qeSavedFlash {
+            0%   { border-color: #22c55e; background: #f0fdf4; }
+            100% { border-color: var(--border-light); background: var(--bg-surface); }
+        }
+        .t-row.qe-saved { animation: qeSavedFlash 0.7s ease forwards; }
+        body.dark-mode .t-row.qe-saved { animation: none; border-color: #22c55e; }
+        #quickEditBtn.qe-active { background: var(--text-primary); color: var(--bg-app); border-color: var(--text-primary); }
+        .qe-save-btn { font-size: 18px; font-weight: 700; line-height: 1; }
+        .qe-save-btn:hover { color: #22c55e !important; background: #f0fdf4 !important; }
+        body.dark-mode .qe-save-btn:hover { background: #052e16 !important; }
+
+        /* ===== Page actions — icons only on narrow screens ===== */
+        @media (max-width: 480px) {
+            .page-header .page-actions .btn span { display: none; }
+            .page-header .page-actions .btn { padding: 8px 10px; min-width: 40px; }
+        }
+
+        /* ===== Small phones ===== */
+        @media (max-width: 380px) {
+            .content-area { padding: 10px 6px; }
+            .t-row { padding: 14px 12px; }
+            .t-key { font-size: 11px; }
+            .t-text { font-size: 15px; }
+            .platform-tab { padding: 8px 10px; font-size: 12px; gap: 4px; }
+            .platform-tab .tab-count { display: none; }
+        }
+
+        /* ===== History Drawer ===== */
+        .history-drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s;
+        }
+        .history-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+        #historyPanel {
+            position: fixed !important;
+            top: 0;
+            right: 0;
+            width: 580px;
+            max-width: 100vw;
+            height: 100vh;
+            background: var(--bg-app);
+            border-left: 1px solid var(--border-light);
+            border-radius: 0 !important;
+            box-shadow: -8px 0 48px rgba(0,0,0,0.14);
+            z-index: 1000;
+            display: flex !important;
+            flex-direction: column;
+            margin-top: 0 !important;
+            transform: translateX(100%);
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+            overflow: hidden;
+        }
+        #historyPanel.open { transform: translateX(0); }
+        #historyPanel .history-list { flex: 1; max-height: none; overflow-y: auto; }
+        #historyPanel .history-header {
+            flex-shrink: 0;
+            padding: max(18px, env(safe-area-inset-top)) 20px 18px;
+        }
+        #historyPanel .history-filters { flex-shrink: 0; }
+        #historyPanel .history-stats { flex-shrink: 0; }
+        .history-close-btn {
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+        .history-close-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+        /* ===== Body lock when drawer open ===== */
+        body.history-open { overflow: hidden; }
+
+        /* ===== History panel — mobile ===== */
+        @media (max-width: 768px) {
+            #historyPanel { width: 100vw; box-shadow: none; }
+            .history-filters { flex-direction: column; align-items: stretch; gap: 8px; }
+            .history-search { min-width: unset; width: 100%; font-size: 16px; height: 44px; }
+            .history-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; flex-wrap: nowrap; }
+            .history-tab { white-space: nowrap; flex-shrink: 0; padding: 7px 14px; }
+            .history-item { flex-wrap: wrap; gap: 10px; padding: 12px 14px; }
+            .history-badges { flex-direction: row; align-items: center; flex-wrap: wrap; }
+            .history-time-col { order: -1; width: 100%; display: flex; gap: 6px; align-items: center; }
+            .history-date, .history-time { white-space: nowrap; }
+            .history-time::before { content: '·'; margin-left: 4px; color: var(--text-tertiary); }
+            .history-meta { width: 100%; min-width: 0; }
+            .mark-form textarea { font-size: 16px; }
+            .history-close-btn { width: 44px; height: 44px; font-size: 22px; border-radius: 10px; }
+
+            /* Quick Edit bar on mobile */
+            .qe-bar { flex-wrap: wrap; gap: 8px; top: 56px; border-radius: 0; border-left: none; border-right: none; border-top: none; margin: 0 -10px 12px; padding: 10px 14px; }
+            .qe-hint { display: none; }
+            .qe-count { width: 100%; font-size: 12px; }
+
+            /* Quick Edit textarea on mobile */
+            .qe-textarea { font-size: 16px; line-height: 1.7; min-height: 32px; }
+        }
+        @media (max-width: 480px) {
+            .history-header { padding: 12px 14px; }
+            .history-title { font-size: 14px; }
+            .history-stats { padding: 6px 14px; font-size: 11px; }
+        }
+    </style>
+
+    <style id="early-sidebar-hide">
+        .sidebar-nav { visibility: hidden; }
+    </style>
+    <script>
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+            if (role === 'super_admin') {
+                css = '.sidebar-nav{visibility:visible}';
+            } else if (role === 'analyst') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'editor') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'custom') {
+                css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            }
+            if (role) style.textContent = css;
+        })();
+    </script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span></a>
+                    <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span></a>
+                    <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                    <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                    <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                    <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                    <a href="/admin-translations.html" class="nav-item active"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                    <a href="/admin-reading-stats.html" class="nav-item"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                    <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                    <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                    <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+                    <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                    <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                    <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+                    <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
+                    <a href="/admin-activity-feed.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">Activity Feed</span></a>
+                    <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name"></div>
+                        <div class="sidebar-profile-email"></div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; display: flex; align-items: center; transition: color 0.2s;" title="Logout"><i data-lucide="log-out"></i></button>
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+                <div class="topbar-search" style="visibility:hidden;"><input type="text" disabled></div>
+                <div class="topbar-actions">
+                    <div class="session-timer" id="sessionTimer" title="Session expires after 1 hour"><i data-lucide="clock"></i><span id="sessionTimerText">60:00</span></div>
+                    <button class="topbar-btn" style="position: relative;">
+                        <i data-lucide="bell"></i>
+                        <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span></button>
+                    <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
+                </div>
+            </header>
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">Translations</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" onclick="importAllTranslations()" id="importBtn"><i data-lucide="download"></i><span>Import All</span></button>
+                        <button class="btn btn-secondary" onclick="toggleHistory()" id="historyBtn" style="position:relative"><i data-lucide="history"></i><span>History</span><span id="historyBadge" class="history-notif-badge" style="display:none">0</span></button>
+                        <button class="btn btn-secondary" onclick="toggleQuickEdit()" id="quickEditBtn" style="display:none"><i data-lucide="zap"></i><span>Quick Edit</span></button>
+                        <button class="btn btn-primary" onclick="toggleAddForm()" id="addBtn"><i data-lucide="plus"></i><span>Add New</span></button>
+                    </div>
+                </div>
+
+                <div class="platform-tabs" id="platformTabs">
+                    <button class="platform-tab active" onclick="setPlatform('web', this)">
+                        <i data-lucide="globe" style="width:16px;height:16px"></i> Web <span class="tab-count" id="webCount">--</span>
+                    </button>
+                    <button class="platform-tab" onclick="setPlatform('mobile', this)">
+                        <i data-lucide="smartphone" style="width:16px;height:16px"></i> Mobile <span class="tab-count" id="androidCount">--</span>
+                    </button>
+                    <button class="platform-tab" onclick="setPlatform('notifications', this)">
+                        <i data-lucide="bell" style="width:16px;height:16px"></i> Notifications <span class="tab-count" id="notifCount">--</span>
+                    </button>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-pill"><strong id="totalTranslations">--</strong> translations</div>
+                    <div class="stat-pill"><strong id="totalPages">--</strong> <span id="pagesLabel">pages</span></div>
+                </div>
+
+                <div class="filters">
+                    <div class="filter-search">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="searchInput" placeholder="Search by key or text..." oninput="onSearchInput()">
+                        <button class="filter-clear" id="searchClear" onclick="clearSearch()">&times;</button>
+                    </div>
+                </div>
+                <div class="page-chips-wrap"><div class="page-chips" id="pageChips"></div></div>
+
+                <div class="add-row" id="addForm">
+                    <div class="edit-form">
+                        <div class="edit-row">
+                            <div class="edit-field">
+                                <label>Key ID</label>
+                                <input type="text" id="newKeyId" placeholder="e.g. home_hero_title">
+                            </div>
+                            <div class="edit-field">
+                                <label>Page</label>
+                                <select id="newPage"></select>
+                            </div>
+                        </div>
+                        <div class="edit-field">
+                            <label>Kurdish Text</label>
+                            <textarea id="newKurdishText" placeholder="Kurdish translation text..."></textarea>
+                        </div>
+                        <div class="edit-field">
+                            <label>Context (optional)</label>
+                            <input type="text" id="newContext" placeholder="e.g. Hero section title, Button label...">
+                        </div>
+                        <div class="edit-actions">
+                            <button class="btn btn-secondary" onclick="toggleAddForm()">Cancel</button>
+                            <button class="btn btn-primary" onclick="addTranslation()"><i data-lucide="plus"></i><span>Add</span></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="qe-bar" id="qeBar" style="display:none">
+                    <span class="qe-count" id="qeCount">No changes yet</span>
+                    <span class="qe-hint">Enter = save &amp; next &nbsp;·&nbsp; Esc = discard</span>
+                    <button class="btn btn-secondary" onclick="toggleQuickEdit()" style="font-size:13px;padding:8px 14px"><i data-lucide="x"></i><span>Exit</span></button>
+                    <button class="btn btn-primary" onclick="saveAllQuickEdits()" id="qeSaveBtn" style="font-size:13px;padding:8px 14px" disabled><i data-lucide="check-check"></i><span>Save All</span></button>
+                </div>
+
+                <div class="translation-list" id="translationList">
+                    <div class="empty-state"><p>Loading...</p></div>
+                </div>
+
+                <div class="pagination" id="pagination">
+                    <button class="pagination-btn" id="prevPage" onclick="changePage(-1)"><i data-lucide="chevron-left"></i></button>
+                    <span class="pagination-info" id="pageInfo">Page 1</span>
+                    <button class="pagination-btn" id="nextPage" onclick="changePage(1)"><i data-lucide="chevron-right"></i></button>
+                </div>
+
+                <div class="history-drawer-overlay" id="historyOverlay" onclick="toggleHistory()"></div>
+                <div class="history-panel" id="historyPanel">
+                    <div class="history-header">
+                        <h2 class="history-title"><i data-lucide="history" style="width:18px;height:18px;vertical-align:middle;margin-right:6px"></i> Change History <span id="historyLiveDot" class="history-live-dot" title="Live"></span></h2>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <button class="btn btn-secondary" onclick="loadHistory()" id="historyRefreshBtn" style="font-size:13px;padding:8px 14px"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i><span>Refresh</span></button>
+                            <button class="history-close-btn" onclick="toggleHistory()" title="Close">&times;</button>
+                        </div>
+                    </div>
+                    <div class="history-filters">
+                        <input type="search" class="history-search" id="historySearch" placeholder="Search by key, text, email..." oninput="onHistorySearch()">
+                        <div class="history-tabs">
+                            <button class="history-tab active" onclick="setHistoryTab('all', this)">All</button>
+                            <button class="history-tab" onclick="setHistoryTab('web', this)">🌐 Web</button>
+                            <button class="history-tab" onclick="setHistoryTab('mobile', this)">📱 Mobile</button>
+                            <button class="history-tab marked-tab" onclick="setHistoryTab('marked', this)">🔖 Marked</button>
+                        </div>
+                    </div>
+                    <div class="history-stats" id="historyStats"></div>
+                    <div class="history-list" id="historyList">
+                        <div class="history-empty">Click Refresh to load history</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <button class="fab" id="fab" onclick="toggleAddForm()"><i data-lucide="plus"></i></button>
+    <div class="toast" id="toast"></div>
+
+    <script src="/utils/admin-session-timer-ui.js?v=5"></script>
+    <script src="/utils/admin-auth.js?v=4"></script>
+    <script src="/utils/admin-notifications.js"></script>
+    <script>
+        lucide.createIcons();
+
+        const WEB_PAGES = [
+            'all','index','quran','about','founder','islamvoice',
+            'onboarding','login','profile','settings','goals',
+            'bookmarks','reading-goal','complete-signup',
+            'privacy-policy','terms-and-conditions','delete-account','footer'
+        ];
+        // For dropdowns (Add New / Edit)
+        const KNOWN_PAGES = WEB_PAGES.concat(['android','ios']);
+
+        let allTranslations = [];
+        let filteredList = [];
+        let supabase = null;
+        let currentPage = 1;
+        const PER_PAGE = 50;
+        let canEdit = true;
+        let canDelete = true;
+        let editingId = null;
+        let activePlatform = 'web';
+        let quickEditMode = false;
+        let quickEditDirty = {}; // { id: newText } — only changed rows
+
+        (async () => {
+            const auth = await window.adminAuth.checkAuth();
+            if (auth) {
+                supabase = window.adminAuth.getSupabase();
+                canEdit = window.adminAuth.hasPermission('translations', 'edit');
+                canDelete = window.adminAuth.hasPermission('translations', 'delete');
+                if (canEdit) document.getElementById('quickEditBtn').style.display = '';
+                populatePageDropdowns();
+                loadTranslations();
+                subscribeHistoryRealtime();
+            }
+        })();
+
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        });
+
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        if ((localStorage.getItem('admin-theme') || 'light') === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeIcon.setAttribute('data-lucide', 'sun');
+            lucide.createIcons();
+        }
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                // History drawer takes priority
+                var hp = document.getElementById('historyPanel');
+                if (hp && hp.classList.contains('open')) { toggleHistory(); return; }
+                cancelEdit();
+                var af = document.getElementById('addForm');
+                if (af && af.classList.contains('active')) toggleAddForm();
+            }
+        });
+
+        function setPlatform(platform, btn) {
+            // Warn if quick edit has unsaved changes before switching platforms
+            if (quickEditMode && Object.keys(quickEditDirty).length > 0) {
+                if (!confirm('You have ' + Object.keys(quickEditDirty).length + ' unsaved change(s). Switch platform and discard?')) return;
+            }
+            if (quickEditMode) {
+                quickEditMode = false;
+                quickEditDirty = {};
+                var _qeBtn = document.getElementById('quickEditBtn');
+                var _qeBar = document.getElementById('qeBar');
+                if (_qeBtn) { _qeBtn.classList.remove('qe-active'); _qeBtn.querySelector('span').textContent = 'Quick Edit'; }
+                if (_qeBar) _qeBar.style.display = 'none';
+            }
+            activePlatform = platform;
+            activePageFilter = '';
+            currentPage = 1;
+
+            // Update tab UI
+            document.querySelectorAll('.platform-tab').forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+            if (btn) btn.classList.add('active');
+
+            updateStats();
+            populatePageFilter();
+            filterTranslations();
+        }
+
+        function getPlatformData() {
+            if (activePlatform === 'mobile') {
+                return allTranslations.filter(function(t) {
+                    var p = normalizePage(t.page);
+                    var c = t.category || '';
+                    return (p === 'android' || p === 'ios') && c !== 'notifications' && c !== 'notification';
+                });
+            } else if (activePlatform === 'notifications') {
+                return allTranslations.filter(function(t) { var c = t.category || ''; return c === 'notifications' || c === 'notification'; });
+            } else {
+                // Web = everything except android, ios, and notifications
+                return allTranslations.filter(function(t) {
+                    var p = normalizePage(t.page);
+                    var c = t.category || '';
+                    return p !== 'android' && p !== 'ios' && c !== 'notifications' && c !== 'notification';
+                });
+            }
+        }
+
+        function updatePlatformCounts() {
+            var webCount = 0, mobileCount = 0, notifCount = 0;
+            allTranslations.forEach(function(t) {
+                var c = t.category || '';
+                if (c === 'notifications' || c === 'notification') { notifCount++; return; }
+                var p = normalizePage(t.page);
+                if (p === 'android' || p === 'ios') mobileCount++;
+                else webCount++;
+            });
+            document.getElementById('webCount').textContent = webCount;
+            document.getElementById('androidCount').textContent = mobileCount;
+            document.getElementById('notifCount').textContent = notifCount;
+        }
+
+        function populatePageDropdowns() {
+            var sel = document.getElementById('newPage');
+            sel.textContent = '';
+            KNOWN_PAGES.forEach(function(p) {
+                var opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                sel.appendChild(opt);
+            });
+        }
+
+        async function loadTranslations() {
+            try {
+                var result = await supabase
+                    .from('kurdish_translations')
+                    .select('*')
+                    .order('page', { ascending: true })
+                    .order('key_id', { ascending: true });
+
+                if (result.error) throw result.error;
+                allTranslations = result.data || [];
+                updateStats();
+                populatePageFilter();
+                filterTranslations();
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Failed to load translations');
+            }
+        }
+
+        function updateStats() {
+            var platformData = getPlatformData();
+            document.getElementById('totalTranslations').textContent = platformData.length;
+            document.getElementById('pagesLabel').textContent = (activePlatform === 'mobile' || activePlatform === 'notifications') ? 'categories' : 'pages';
+            if (activePlatform === 'mobile' || activePlatform === 'notifications') {
+                // For app platforms, count categories
+                var cats = [];
+                platformData.forEach(function(t) {
+                    var c = t.category || 'general';
+                    if (cats.indexOf(c) === -1) cats.push(c);
+                });
+                document.getElementById('totalPages').textContent = cats.length;
+            } else {
+                var pages = [];
+                platformData.forEach(function(t) {
+                    var p = normalizePage(t.page);
+                    if (pages.indexOf(p) === -1) pages.push(p);
+                });
+                document.getElementById('totalPages').textContent = pages.length;
+            }
+            updatePlatformCounts();
+        }
+
+        var activePageFilter = '';
+
+        function populatePageFilter(filteredData) {
+            var platformData = getPlatformData();
+            var pageCounts = {};      // total per chip
+            var matchCounts = {};     // filtered per chip (during search)
+            var isSearching = Array.isArray(filteredData);
+
+            function getChipKey(t) {
+                return (activePlatform === 'mobile' || activePlatform === 'notifications')
+                    ? (t.category || 'general')
+                    : normalizePage(t.page);
+            }
+
+            platformData.forEach(function(t) {
+                var k = getChipKey(t);
+                pageCounts[k] = (pageCounts[k] || 0) + 1;
+            });
+
+            if (isSearching) {
+                filteredData.forEach(function(t) {
+                    var k = getChipKey(t);
+                    matchCounts[k] = (matchCounts[k] || 0) + 1;
+                });
+            }
+
+            if (activePlatform !== 'mobile') {
+                WEB_PAGES.forEach(function(p) {
+                    if (p !== 'all' && !(p in pageCounts)) pageCounts[p] = 0;
+                });
+            }
+
+            var pages = Object.keys(pageCounts).sort();
+            var container = document.getElementById('pageChips');
+            container.textContent = '';
+
+            // "All" chip
+            var allChip = document.createElement('button');
+            allChip.className = 'page-chip' + (!activePageFilter ? ' active' : '');
+            allChip.textContent = 'All';
+            var allCount = document.createElement('span');
+            allCount.className = 'chip-count';
+            allCount.textContent = isSearching ? filteredData.length : platformData.length;
+            allChip.appendChild(allCount);
+            allChip.addEventListener('click', function() { setPageFilter(''); });
+            container.appendChild(allChip);
+
+            pages.forEach(function(p) {
+                var chip = document.createElement('button');
+                var displayCount = isSearching ? (matchCounts[p] || 0) : pageCounts[p];
+                var cls = 'page-chip';
+                if (activePageFilter === p) cls += ' active';
+                else if (isSearching && matchCounts[p] > 0) cls += ' has-results';
+                else if (isSearching && !matchCounts[p]) cls += ' no-results';
+                chip.className = cls;
+                chip.textContent = p;
+                var count = document.createElement('span');
+                count.className = 'chip-count';
+                count.textContent = displayCount;
+                chip.appendChild(count);
+                chip.addEventListener('click', function() { setPageFilter(p); });
+                container.appendChild(chip);
+            });
+        }
+
+        function setPageFilter(page) {
+            activePageFilter = page;
+            populatePageFilter();
+            filterTranslations();
+        }
+
+        function normalizePage(page) {
+            if (!page) return 'all';
+            return page.toLowerCase().replace(/\.html$/i, '');
+        }
+
+        var _searchDebounce = null;
+        function onSearchInput() {
+            var val = document.getElementById('searchInput').value;
+            document.getElementById('searchClear').classList.toggle('visible', val.length > 0);
+            clearTimeout(_searchDebounce);
+            _searchDebounce = setTimeout(filterTranslations, 220);
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchClear').classList.remove('visible');
+            filterTranslations();
+        }
+
+        function filterTranslations() {
+            var search = document.getElementById('searchInput').value.toLowerCase().trim();
+            var platformData = getPlatformData();
+
+            function chipKey(t) {
+                return (activePlatform === 'mobile' || activePlatform === 'notifications')
+                    ? (t.category || 'general') : normalizePage(t.page);
+            }
+
+            // First pass: search-only matches (ignoring chip filter)
+            var searchMatches = search ? platformData.filter(function(t) {
+                return t.key_id.toLowerCase().indexOf(search) !== -1 ||
+                    t.kurdish_text.toLowerCase().indexOf(search) !== -1 ||
+                    (t.context && t.context.toLowerCase().indexOf(search) !== -1);
+            }) : platformData;
+
+            // Second pass: apply chip filter
+            var matches = activePageFilter
+                ? searchMatches.filter(function(t) { return chipKey(t) === activePageFilter; })
+                : searchMatches;
+
+            // Smart rank when searching
+            if (search) {
+                matches.sort(function(a, b) {
+                    return getSearchScore(b, search) - getSearchScore(a, search);
+                });
+            }
+
+            // Live-update chip counts based on search results (no chip filter applied)
+            populatePageFilter(search ? searchMatches : null);
+
+            // If chip filter is active and returns 0 results but search has results elsewhere, show hint
+            _renderSearchHint(search, matches.length, activePageFilter ? searchMatches.length : 0);
+
+            filteredList = matches;
+            currentPage = 1;
+            renderPage();
+        }
+
+        function _renderSearchHint(search, matchCount, totalWithoutChip) {
+            var existing = document.getElementById('search-hint-bar');
+            if (existing) existing.remove();
+            if (!search || !activePageFilter || matchCount > 0 || totalWithoutChip === 0) return;
+            var hint = document.createElement('div');
+            hint.id = 'search-hint-bar';
+            hint.className = 'search-hint';
+            var msg = document.createTextNode(
+                'No results in "' + activePageFilter + '". ' +
+                totalWithoutChip + ' result' + (totalWithoutChip !== 1 ? 's' : '') + ' found in other categories. '
+            );
+            var link = document.createElement('a');
+            link.textContent = 'Search all';
+            link.onclick = function() { setPageFilter(''); };
+            hint.appendChild(msg);
+            hint.appendChild(link);
+            var listEl = document.getElementById('translationList');
+            if (listEl) listEl.parentNode.insertBefore(hint, listEl);
+        }
+
+        function getSearchScore(t, search) {
+            var score = 0;
+            var key = t.key_id.toLowerCase();
+            var text = t.kurdish_text.toLowerCase();
+
+            // Exact full match (highest)
+            if (text === search) score += 100;
+            if (key === search) score += 100;
+
+            // Starts with search
+            if (text.indexOf(search) === 0) score += 50;
+            if (key.indexOf(search) === 0) score += 40;
+
+            // Contains search (closer to start = higher score)
+            var textIdx = text.indexOf(search);
+            var keyIdx = key.indexOf(search);
+            if (textIdx !== -1) score += 20 + Math.max(0, 10 - textIdx);
+            if (keyIdx !== -1) score += 15 + Math.max(0, 10 - keyIdx);
+
+            // Match ratio (how much of the text the search covers)
+            if (textIdx !== -1) score += Math.round((search.length / text.length) * 10);
+
+            return score;
+        }
+
+        function renderPage() {
+            var total = Math.max(1, Math.ceil(filteredList.length / PER_PAGE));
+            if (currentPage > total) currentPage = total;
+
+            var start = (currentPage - 1) * PER_PAGE;
+            var items = filteredList.slice(start, start + PER_PAGE);
+            renderList(items);
+            updatePagination(total);
+        }
+
+        function renderList(items) {
+            var container = document.getElementById('translationList');
+            container.textContent = '';
+
+            if (items.length === 0) {
+                var empty = document.createElement('div');
+                empty.className = 'empty-state';
+                var icon = document.createElement('i');
+                icon.setAttribute('data-lucide', 'search');
+                empty.appendChild(icon);
+                var msg = document.createElement('p');
+                msg.textContent = 'No translations found';
+                empty.appendChild(msg);
+                container.appendChild(empty);
+                lucide.createIcons({ nodes: [container] });
+                return;
+            }
+
+            items.forEach(function(t) {
+                var row = document.createElement('div');
+                row.className = 't-row';
+                row.id = 'row-' + t.id;
+
+                if (quickEditMode) {
+                    buildQuickEditRow(row, t);
+                    if (quickEditDirty[t.id] !== undefined) row.classList.add('qe-dirty');
+                } else if (editingId === t.id) {
+                    row.className = 't-row editing';
+                    buildEditFormDOM(row, t);
+                } else {
+                    buildDisplayRow(row, t);
+                }
+
+                container.appendChild(row);
+            });
+
+            lucide.createIcons({ nodes: [container] });
+        }
+
+        function buildDisplayRow(row, t) {
+            var search = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            // Key (tap to copy)
+            var keyDiv = document.createElement('div');
+            keyDiv.className = 't-key';
+            keyDiv.title = 'Tap to copy key';
+            if (search) {
+                highlightText(keyDiv, t.key_id, search);
+            } else {
+                keyDiv.textContent = t.key_id;
+            }
+            keyDiv.addEventListener('click', function() {
+                navigator.clipboard.writeText(t.key_id);
+                keyDiv.classList.add('copied');
+                setTimeout(function() { keyDiv.classList.remove('copied'); }, 1000);
+            });
+            row.appendChild(keyDiv);
+
+            // Text + context wrapper
+            var contentDiv = document.createElement('div');
+            var textDiv = document.createElement('div');
+            textDiv.className = 't-text';
+            if (search) {
+                highlightText(textDiv, t.kurdish_text, search);
+                textDiv.dir = 'rtl';
+            } else {
+                textDiv.textContent = t.kurdish_text;
+            }
+            contentDiv.appendChild(textDiv);
+
+            if (t.context) {
+                var ctxDiv = document.createElement('div');
+                ctxDiv.className = 't-context';
+                ctxDiv.textContent = t.context;
+                contentDiv.appendChild(ctxDiv);
+            }
+            row.appendChild(contentDiv);
+
+            // Page badge
+            var pageDiv = document.createElement('div');
+            pageDiv.className = 't-page-badge';
+            pageDiv.textContent = (activePlatform === 'mobile' || activePlatform === 'notifications') ? (t.category || 'general') : normalizePage(t.page);
+            row.appendChild(pageDiv);
+
+            // Actions
+            var actionsDiv = document.createElement('div');
+            actionsDiv.className = 't-actions';
+
+            if (canEdit) {
+                var editBtn = document.createElement('button');
+                editBtn.className = 't-btn';
+                editBtn.title = 'Edit';
+                editBtn.addEventListener('click', function() { startEdit(t.id); });
+                var editIcon = document.createElement('i');
+                editIcon.setAttribute('data-lucide', 'pencil');
+                editBtn.appendChild(editIcon);
+                actionsDiv.appendChild(editBtn);
+            }
+
+            if (canDelete) {
+                var delBtn = document.createElement('button');
+                delBtn.className = 't-btn delete';
+                delBtn.title = 'Delete';
+                delBtn.addEventListener('click', function() { deleteTranslation(t.id); });
+                var delIcon = document.createElement('i');
+                delIcon.setAttribute('data-lucide', 'trash-2');
+                delBtn.appendChild(delIcon);
+                actionsDiv.appendChild(delBtn);
+            }
+
+            row.appendChild(actionsDiv);
+        }
+
+        function highlightText(el, text, search) {
+            if (!search) { el.textContent = text; return; }
+            // Escape special regex chars then highlight ALL occurrences
+            var escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            var parts = text.split(new RegExp('(' + escaped + ')', 'i'));
+            if (parts.length === 1) { el.textContent = text; return; }
+            parts.forEach(function(part) {
+                if (part.toLowerCase() === search.toLowerCase()) {
+                    var mark = document.createElement('span');
+                    mark.className = 'highlight';
+                    mark.textContent = part;
+                    el.appendChild(mark);
+                } else if (part) {
+                    el.appendChild(document.createTextNode(part));
+                }
+            });
+        }
+
+        function buildEditFormDOM(row, t) {
+            var form = document.createElement('div');
+            form.className = 'edit-form';
+
+            // Row 1: Key + Page
+            var editRow = document.createElement('div');
+            editRow.className = 'edit-row';
+
+            var keyField = document.createElement('div');
+            keyField.className = 'edit-field';
+            var keyLabel = document.createElement('label');
+            keyLabel.textContent = 'Key ID';
+            var keyInput = document.createElement('input');
+            keyInput.type = 'text';
+            keyInput.id = 'editKey-' + t.id;
+            keyInput.value = t.key_id;
+            keyField.appendChild(keyLabel);
+            keyField.appendChild(keyInput);
+            editRow.appendChild(keyField);
+
+            var pageField = document.createElement('div');
+            pageField.className = 'edit-field';
+            var pageLabel = document.createElement('label');
+            pageLabel.textContent = 'Page';
+            var pageSelect = document.createElement('select');
+            pageSelect.id = 'editPage-' + t.id;
+            var np = normalizePage(t.page);
+            var pageList = KNOWN_PAGES.slice();
+            if (pageList.indexOf(np) === -1) pageList.push(np);
+            pageList.forEach(function(p) {
+                var opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                if (p === np) opt.selected = true;
+                pageSelect.appendChild(opt);
+            });
+            pageField.appendChild(pageLabel);
+            pageField.appendChild(pageSelect);
+            editRow.appendChild(pageField);
+            form.appendChild(editRow);
+
+            // Row 2: Kurdish Text
+            var textField = document.createElement('div');
+            textField.className = 'edit-field';
+            var textLabel = document.createElement('label');
+            textLabel.textContent = 'Kurdish Text';
+            var textArea = document.createElement('textarea');
+            textArea.id = 'editText-' + t.id;
+            textArea.value = t.kurdish_text;
+            textField.appendChild(textLabel);
+            textField.appendChild(textArea);
+            form.appendChild(textField);
+
+            // Row 3: Context
+            var ctxField = document.createElement('div');
+            ctxField.className = 'edit-field';
+            var ctxLabel = document.createElement('label');
+            ctxLabel.textContent = 'Context (optional)';
+            var ctxInput = document.createElement('input');
+            ctxInput.type = 'text';
+            ctxInput.id = 'editCtx-' + t.id;
+            ctxInput.value = t.context || '';
+            ctxInput.placeholder = 'e.g. Hero section title, Button label...';
+            ctxField.appendChild(ctxLabel);
+            ctxField.appendChild(ctxInput);
+            form.appendChild(ctxField);
+
+            // Actions
+            var actions = document.createElement('div');
+            actions.className = 'edit-actions';
+            var cancelBtn = document.createElement('button');
+            cancelBtn.className = 'btn btn-secondary';
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.addEventListener('click', cancelEdit);
+            actions.appendChild(cancelBtn);
+
+            var saveBtn = document.createElement('button');
+            saveBtn.className = 'btn btn-primary';
+            saveBtn.id = 'saveBtn-' + t.id;
+            saveBtn.textContent = 'Save';
+            saveBtn.addEventListener('click', function() { saveEdit(t.id); });
+            actions.appendChild(saveBtn);
+
+            form.appendChild(actions);
+            row.appendChild(form);
+        }
+
+        function updatePagination(totalPages) {
+            document.getElementById('pageInfo').textContent = currentPage + ' / ' + totalPages;
+            document.getElementById('prevPage').disabled = currentPage <= 1;
+            document.getElementById('nextPage').disabled = currentPage >= totalPages;
+        }
+
+        function changePage(delta) {
+            var total = Math.max(1, Math.ceil(filteredList.length / PER_PAGE));
+            var next = currentPage + delta;
+            if (next < 1 || next > total) return;
+            currentPage = next;
+            renderPage();
+            document.querySelector('.content-area').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ===== Inline Edit =====
+        function startEdit(id) {
+            if (!canEdit) return;
+            editingId = id;
+            renderPage();
+            var ta = document.getElementById('editText-' + id);
+            if (ta) ta.focus();
+        }
+
+        function cancelEdit() {
+            if (editingId) {
+                editingId = null;
+                renderPage();
+            }
+        }
+
+        async function saveEdit(id) {
+            var keyEl = document.getElementById('editKey-' + id);
+            var textEl = document.getElementById('editText-' + id);
+            var pageEl = document.getElementById('editPage-' + id);
+            var ctxEl = document.getElementById('editCtx-' + id);
+            var btn = document.getElementById('saveBtn-' + id);
+
+            if (!keyEl || !textEl) return;
+            var keyVal = keyEl.value.trim();
+            var textVal = textEl.value.trim();
+            var pageVal = pageEl ? pageEl.value : 'all';
+            var ctxVal = ctxEl ? ctxEl.value.trim() : '';
+
+            if (!keyVal || !textVal) {
+                showToast('Key and text are required');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '';
+            var spinner = document.createElement('span');
+            spinner.className = 'spinner';
+            btn.appendChild(spinner);
+            btn.appendChild(document.createTextNode(' Saving...'));
+
+            try {
+                var oldItem = allTranslations.find(function(t) { return t.id === id; });
+                var oldText = oldItem ? oldItem.kurdish_text : '';
+                var oldKey  = oldItem ? oldItem.key_id : '';
+
+                var result = await supabase
+                    .from('kurdish_translations')
+                    .update({ key_id: keyVal, kurdish_text: textVal, page: pageVal, context: ctxVal || '' })
+                    .eq('id', id);
+
+                if (result.error) throw result.error;
+
+                logChange('edit', { key_id: keyVal, old_key: oldKey !== keyVal ? oldKey : undefined, old_text: oldText, new_text: textVal, page: pageVal });
+
+                var item = allTranslations.find(function(t) { return t.id === id; });
+                if (item) {
+                    item.key_id = keyVal;
+                    item.kurdish_text = textVal;
+                    item.page = pageVal;
+                    item.context = ctxVal || '';
+                }
+
+                editingId = null;
+                renderPage();
+                showToast('Saved');
+            } catch (err) {
+                console.error('Save error:', err);
+                showToast('Failed to save: ' + err.message);
+                btn.disabled = false;
+                btn.textContent = 'Save';
+            }
+        }
+
+        // ===== Add New =====
+        function toggleAddForm() {
+            var form = document.getElementById('addForm');
+            form.classList.toggle('active');
+            if (form.classList.contains('active')) {
+                document.getElementById('newKeyId').value = '';
+                document.getElementById('newKurdishText').value = '';
+                document.getElementById('newPage').value = (activePlatform === 'web') ? 'all' : (activePlatform === 'notifications' || activePlatform === 'mobile') ? 'android' : activePlatform;
+                document.getElementById('newContext').value = '';
+                document.getElementById('newKeyId').focus();
+            }
+        }
+
+        async function addTranslation() {
+            var keyVal = document.getElementById('newKeyId').value.trim();
+            var textVal = document.getElementById('newKurdishText').value.trim();
+            var pageVal = document.getElementById('newPage').value;
+            var ctxVal = document.getElementById('newContext').value.trim();
+
+            if (!keyVal || !textVal) {
+                showToast('Key and text are required');
+                return;
+            }
+
+            try {
+                var result = await supabase
+                    .from('kurdish_translations')
+                    .insert([{ key_id: keyVal, kurdish_text: textVal, page: pageVal, category: 'general', context: ctxVal || '' }])
+                    .select()
+                    .single();
+
+                if (result.error) throw result.error;
+
+                logChange('add', { key_id: keyVal, new_text: textVal, page: pageVal });
+
+                // Insert into local array and re-sort — no full DB reload needed
+                allTranslations.push(result.data);
+                allTranslations.sort(function(a, b) {
+                    var pa = (a.page || '').toLowerCase();
+                    var pb = (b.page || '').toLowerCase();
+                    if (pa < pb) return -1;
+                    if (pa > pb) return 1;
+                    var ka = (a.key_id || '').toLowerCase();
+                    var kb = (b.key_id || '').toLowerCase();
+                    return ka < kb ? -1 : ka > kb ? 1 : 0;
+                });
+
+                toggleAddForm();
+                updateStats();
+                populatePageFilter();
+                filterTranslations();
+                showToast('Translation added');
+            } catch (err) {
+                console.error('Add error:', err);
+                showToast('Failed to add: ' + err.message);
+            }
+        }
+
+        // ===== Delete =====
+        async function deleteTranslation(id) {
+            if (!canDelete) return;
+            if (!confirm('Delete this translation?')) return;
+
+            try {
+                var delItem = allTranslations.find(function(t) { return t.id === id; });
+
+                var result = await supabase
+                    .from('kurdish_translations')
+                    .delete()
+                    .eq('id', id);
+
+                if (result.error) throw result.error;
+
+                if (delItem) logChange('delete', { key_id: delItem.key_id, old_text: delItem.kurdish_text, page: delItem.page });
+
+                allTranslations = allTranslations.filter(function(t) { return t.id !== id; });
+                filteredList = filteredList.filter(function(t) { return t.id !== id; });
+                delete quickEditDirty[id];
+                if (quickEditMode) updateQeBar();
+                updateStats();
+                renderPage();
+                showToast('Deleted');
+            } catch (err) {
+                console.error('Delete error:', err);
+                showToast('Failed to delete');
+            }
+        }
+
+        // ===== Bulk Import (Fast Batch) =====
+        async function importAllTranslations() {
+            if (!canEdit) { showToast('No edit permission'); return; }
+            if (!confirm('Import translations from all pages. Existing entries will be skipped. Continue?')) return;
+
+            var btn = document.getElementById('importBtn');
+            var btnLabel = btn.querySelector('span');
+            btn.disabled = true;
+            btnLabel.textContent = 'Loading...';
+
+            try {
+                // 1. Load bulk translations script
+                await new Promise(function(resolve, reject) {
+                    if (window.BULK_TRANSLATIONS) { resolve(); return; }
+                    var script = document.createElement('script');
+                    script.src = '/utils/bulk-translations.js?v=' + Date.now();
+                    script.onload = resolve;
+                    script.onerror = function() { reject(new Error('Failed to load')); };
+                    document.head.appendChild(script);
+                });
+                if (!window.BULK_TRANSLATIONS) throw new Error('No data');
+
+                // 2. Fetch ALL existing entries with key_id + page
+                btnLabel.textContent = 'Checking...';
+                var existingMap = {};
+                var offset = 0;
+                while (true) {
+                    var res = await supabase
+                        .from('kurdish_translations')
+                        .select('key_id,page')
+                        .range(offset, offset + 999);
+                    if (res.error) throw res.error;
+                    res.data.forEach(function(r) { existingMap[r.key_id] = r.page; });
+                    if (res.data.length < 1000) break;
+                    offset += 1000;
+                }
+
+                // 3. Deduplicate BULK_TRANSLATIONS by key_id
+                var seenKeys = {};
+                var uniqueEntries = [];
+                window.BULK_TRANSLATIONS.forEach(function(t) {
+                    if (!seenKeys[t.key_id]) {
+                        seenKeys[t.key_id] = true;
+                        uniqueEntries.push(t);
+                    }
+                });
+                var dupes = window.BULK_TRANSLATIONS.length - uniqueEntries.length;
+
+                // 4. Split: new entries, entries needing page fix, already correct
+                var newEntries = [];
+                var fixEntries = [];
+                var skipped = 0;
+                uniqueEntries.forEach(function(t) {
+                    if (!(t.key_id in existingMap)) {
+                        newEntries.push(t);
+                    } else if (existingMap[t.key_id] !== t.page) {
+                        fixEntries.push(t);
+                    } else {
+                        skipped++;
+                    }
+                });
+                console.log('[Import] New:', newEntries.length, 'Fix page:', fixEntries.length, 'OK:', skipped, 'Dupes:', dupes);
+
+                var added = 0, updated = 0, errors = 0;
+
+                // 5. Insert new entries in batches of 50
+                if (newEntries.length > 0) {
+                    var rows = newEntries.map(function(t) {
+                        return { key_id: t.key_id, kurdish_text: t.kurdish_text, page: t.page, category: t.category || 'general', context: t.context || '' };
+                    });
+                    for (var i = 0; i < rows.length; i += 50) {
+                        var batch = rows.slice(i, i + 50);
+                        btnLabel.textContent = 'Adding ' + Math.min(i + 50, rows.length) + '/' + rows.length;
+                        var ins = await supabase.from('kurdish_translations').insert(batch);
+                        if (ins.error) {
+                            for (var j = 0; j < batch.length; j++) {
+                                var single = await supabase.from('kurdish_translations').insert([batch[j]]);
+                                if (single.error) { errors++; } else { added++; }
+                            }
+                        } else { added += batch.length; }
+                    }
+                }
+
+                // 6. Fix page names — run 10 updates in parallel
+                if (fixEntries.length > 0) {
+                    for (var i = 0; i < fixEntries.length; i += 10) {
+                        var chunk = fixEntries.slice(i, i + 10);
+                        btnLabel.textContent = 'Fixing ' + Math.min(i + 10, fixEntries.length) + '/' + fixEntries.length;
+                        var results = await Promise.all(chunk.map(function(t) {
+                            return supabase.from('kurdish_translations')
+                                .update({ page: t.page, category: t.category || 'general' })
+                                .eq('key_id', t.key_id);
+                        }));
+                        results.forEach(function(r) {
+                            if (r.error) errors++; else updated++;
+                        });
+                    }
+                }
+
+                var msg = 'Added ' + added + ', Fixed ' + updated + ', OK ' + skipped + (errors ? ', ERRORS ' + errors : '');
+                console.log('[Import] Done:', msg);
+                showToast(msg);
+                await loadTranslations();
+            } catch (error) {
+                console.error('Import failed:', error);
+                showToast('Import failed: ' + error.message);
+            } finally {
+                btnLabel.textContent = 'Import All';
+                btn.disabled = false;
+            }
+        }
+
+        // ===== History =====
+        var _historyAllRows = [];
+        var _historyTab = 'all';
+        var _historySearchDebounce = null;
+        var _historyPollInterval = null;
+        var _historyChannel = null;
+        var _unreadCount = 0;
+        function onHistorySearch() {
+            clearTimeout(_historySearchDebounce);
+            _historySearchDebounce = setTimeout(filterHistory, 220);
+        }
+
+        function getPlatform(keyId, page) {
+            // Trust page field first — most accurate (prayer.fajr is android, not web)
+            if (page) {
+                var np = normalizePage(page);
+                if (np === 'android') return 'android';
+                if (np === 'ios') return 'ios';
+            }
+            // Fall back to key prefix
+            if (!keyId) return 'web';
+            var k = keyId.toLowerCase();
+            if (k.startsWith('android_') || k.startsWith('app_')) return 'android';
+            if (k.startsWith('ios_')) return 'ios';
+            return 'web';
+        }
+
+        function toggleHistory() {
+            var panel = document.getElementById('historyPanel');
+            var overlay = document.getElementById('historyOverlay');
+            var isOpen = panel.classList.contains('open');
+            if (isOpen) {
+                panel.classList.remove('open');
+                overlay.classList.remove('open');
+                document.body.classList.remove('history-open');
+                clearInterval(_historyPollInterval);
+                _historyPollInterval = null;
+            } else {
+                panel.classList.add('open');
+                overlay.classList.add('open');
+                document.body.classList.add('history-open');
+                lucide.createIcons({ nodes: [panel] });
+                // Clear badge when opening
+                _unreadCount = 0;
+                updateHistoryBadge();
+                loadHistory();
+                // Fallback poll every 30s (safety net if Realtime drops)
+                clearInterval(_historyPollInterval);
+                _historyPollInterval = setInterval(pollHistory, 30000);
+            }
+        }
+
+        function updateHistoryBadge() {
+            var badge = document.getElementById('historyBadge');
+            if (!badge) return;
+            if (_unreadCount > 0) {
+                badge.textContent = _unreadCount > 9 ? '9+' : String(_unreadCount);
+                badge.style.display = '';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Supabase Realtime subscription — instant push for new history entries
+        function subscribeHistoryRealtime() {
+            if (_historyChannel || !supabase) return;
+            var dot = document.getElementById('historyLiveDot');
+            _historyChannel = supabase
+                .channel('history-live')
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'admin_audit_logs',
+                    filter: 'page_slug=eq.admin-translations'
+                }, function(payload) {
+                    var panel = document.getElementById('historyPanel');
+                    if (panel && panel.classList.contains('open')) {
+                        // Panel open — prepend new row instantly and animate it
+                        _historyAllRows.unshift(payload.new);
+                        filterHistory();
+                        var firstItem = document.querySelector('#historyList .history-item');
+                        if (firstItem) firstItem.classList.add('history-item-new');
+                    } else {
+                        // Panel closed — show badge
+                        _unreadCount++;
+                        updateHistoryBadge();
+                    }
+                })
+                .subscribe(function(status) {
+                    if (!dot) return;
+                    if (status === 'SUBSCRIBED') {
+                        dot.classList.remove('offline');
+                        dot.title = 'Live';
+                    } else {
+                        dot.classList.add('offline');
+                        dot.title = 'Reconnecting...';
+                    }
+                });
+        }
+
+        // Silent fallback poll — only fires if Realtime somehow missed an entry
+        async function pollHistory() {
+            try {
+                var result = await supabase
+                    .from('admin_audit_logs')
+                    .select('id,created_at')
+                    .eq('page_slug', 'admin-translations')
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                if (result.error || !result.data || !result.data.length) return;
+                var haveLatest = _historyAllRows.length ? _historyAllRows[0].created_at : null;
+                if (!haveLatest || result.data[0].created_at > haveLatest) {
+                    loadHistory();
+                }
+            } catch(e) {}
+        }
+
+        async function logChange(action, details) {
+            try {
+                var email = sessionStorage.getItem('adminEmail') || '';
+                var platform = getPlatform(details.key_id, details.page);
+                var result = await supabase.from('admin_audit_logs').insert([{
+                    email: email,
+                    action: 'translation_' + action,
+                    details: Object.assign({}, details, { platform: platform }),
+                    page_slug: 'admin-translations',
+                    resource_type: 'translation',
+                    severity: action === 'delete' ? 'warning' : 'info'
+                }]);
+                if (result.error) {
+                    console.error('[History] logChange failed:', result.error.message, result.error);
+                    showToast('⚠️ History log failed: ' + result.error.message);
+                }
+                // Realtime subscription handles panel refresh — no manual reload needed
+            } catch (e) {
+                console.error('[History] logChange exception:', e.message);
+            }
+        }
+
+        async function loadHistory() {
+            var listEl = document.getElementById('historyList');
+            var statsEl = document.getElementById('historyStats');
+            var btn = document.getElementById('historyRefreshBtn');
+            listEl.textContent = '';
+            statsEl.textContent = 'Loading...';
+            btn.disabled = true;
+
+            try {
+                var result = await supabase
+                    .from('admin_audit_logs')
+                    .select('*')
+                    .eq('page_slug', 'admin-translations')
+                    .order('created_at', { ascending: false })
+                    .limit(500);
+
+                if (result.error) throw result.error;
+                _historyAllRows = result.data || [];
+                filterHistory();
+            } catch (e) {
+                listEl.textContent = '';
+                statsEl.textContent = '';
+                var errDiv = document.createElement('div');
+                errDiv.className = 'history-empty';
+                errDiv.textContent = 'Failed to load: ' + e.message;
+                listEl.appendChild(errDiv);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function setHistoryTab(tab, btn) {
+            _historyTab = tab;
+            document.querySelectorAll('.history-tab').forEach(function(t) { t.classList.remove('active'); });
+            btn.classList.add('active');
+            filterHistory();
+        }
+
+        function filterHistory() {
+            var search = (document.getElementById('historySearch').value || '').toLowerCase().trim();
+            var rows = _historyAllRows;
+
+            // Filter by tab
+            if (_historyTab === 'marked') {
+                rows = rows.filter(function(row) { return (row.details || {}).marked === true; });
+            } else if (_historyTab !== 'all') {
+                rows = rows.filter(function(row) {
+                    var details = row.details || {};
+                    var p = details.platform || getPlatform(details.key_id, details.page);
+                    if (_historyTab === 'mobile') return p === 'android' || p === 'ios';
+                    return p === _historyTab;
+                });
+            }
+
+            // Filter by search text
+            if (search) {
+                rows = rows.filter(function(row) {
+                    var d = row.details || {};
+                    var haystack = [d.key_id || '', d.old_text || '', d.new_text || '', row.email || '', d.page || ''].join(' ').toLowerCase();
+                    return haystack.includes(search);
+                });
+            }
+
+            // Update stats bar
+            var statsEl = document.getElementById('historyStats');
+            if (_historyAllRows.length > 0) {
+                var total = _historyAllRows.length;
+                var shown = rows.length;
+                var edits = rows.filter(function(r){ return r.action === 'translation_edit'; }).length;
+                var adds  = rows.filter(function(r){ return r.action === 'translation_add'; }).length;
+                var dels  = rows.filter(function(r){ return r.action === 'translation_delete'; }).length;
+                statsEl.textContent = (shown < total ? shown + ' of ' + total : total) + ' changes — ' + edits + ' edited · ' + adds + ' added · ' + dels + ' deleted';
+            } else {
+                statsEl.textContent = '';
+            }
+
+            renderHistory(rows);
+        }
+
+        function makeEl(tag, cls, text) {
+            var el = document.createElement(tag);
+            if (cls) el.className = cls;
+            if (text !== undefined) el.textContent = text;
+            return el;
+        }
+
+        function renderHistory(rows) {
+            var listEl = document.getElementById('historyList');
+            listEl.textContent = '';
+
+            if (!rows.length) {
+                listEl.appendChild(makeEl('div', 'history-empty', 'No records found'));
+                return;
+            }
+
+            rows.forEach(function(row) {
+                var action = (row.action || '').replace('translation_', '');
+                var details = row.details || {};
+                var badgeClass = action === 'add' ? 'add' : action === 'delete' ? 'delete' : 'edit';
+                var badgeLabel = action === 'add' ? 'Added' : action === 'delete' ? 'Deleted' : 'Edited';
+                var platform = details.platform || getPlatform(details.key_id);
+                var platformLabel = (platform === 'android' || platform === 'ios') ? 'Mobile' : 'Web';
+
+                var item = makeEl('div', 'history-item');
+
+                // Left: stacked badges (action + platform)
+                var badges = makeEl('div', 'history-badges');
+                badges.appendChild(makeEl('span', 'history-badge ' + badgeClass, badgeLabel));
+                badges.appendChild(makeEl('span', 'history-platform ' + platform, platformLabel));
+                item.appendChild(badges);
+
+                // Center: meta
+                var meta = makeEl('div', 'history-meta');
+
+                // Key + page
+                var keyDiv = makeEl('div', 'history-key', (details.key_id || ''));
+                if (details.page) {
+                    var pageSpan = makeEl('span', '', ' (' + details.page + ')');
+                    pageSpan.style.fontWeight = '400';
+                    pageSpan.style.color = 'var(--text-tertiary)';
+                    keyDiv.appendChild(pageSpan);
+                }
+                meta.appendChild(keyDiv);
+
+                // Diff block — always shows before/after with labels
+                var diff = makeEl('div', 'history-diff');
+                if (action === 'edit') {
+                    if (details.old_key && details.old_key !== details.key_id) {
+                        var keyRow = makeEl('div', 'diff-row');
+                        keyRow.appendChild(makeEl('span', 'diff-label', 'Key:'));
+                        var oldK = makeEl('span', 'old-text', details.old_key);
+                        var arr = makeEl('span', '', ' → ');
+                        arr.style.color = 'var(--text-tertiary)';
+                        keyRow.appendChild(oldK);
+                        keyRow.appendChild(arr);
+                        keyRow.appendChild(makeEl('span', 'new-text', details.key_id));
+                        diff.appendChild(keyRow);
+                    }
+                    if ((details.old_text || '') !== (details.new_text || '')) {
+                        var beforeRow = makeEl('div', 'diff-row');
+                        beforeRow.appendChild(makeEl('span', 'diff-label', 'Before:'));
+                        beforeRow.appendChild(makeEl('span', 'old-text', details.old_text || '(empty)'));
+                        diff.appendChild(beforeRow);
+                        var afterRow = makeEl('div', 'diff-row');
+                        afterRow.appendChild(makeEl('span', 'diff-label', 'After:'));
+                        afterRow.appendChild(makeEl('span', 'new-text', details.new_text || '(empty)'));
+                        diff.appendChild(afterRow);
+                    }
+                } else if (action === 'add') {
+                    var addRow = makeEl('div', 'diff-row');
+                    addRow.appendChild(makeEl('span', 'diff-label', 'Text:'));
+                    addRow.appendChild(makeEl('span', 'new-text', details.new_text || ''));
+                    diff.appendChild(addRow);
+                } else if (action === 'delete') {
+                    var delRow = makeEl('div', 'diff-row');
+                    delRow.appendChild(makeEl('span', 'diff-label', 'Text:'));
+                    delRow.appendChild(makeEl('span', 'old-text', details.old_text || ''));
+                    diff.appendChild(delRow);
+                }
+                meta.appendChild(diff);
+
+                if (row.email) meta.appendChild(makeEl('div', 'history-email', '👤 ' + row.email));
+
+                // Mark section
+                (function(rowId, rowDetails) {
+                    if (rowDetails.marked) {
+                        // Show mark indicator
+                        item.classList.add('is-marked');
+                        var ind = makeEl('div', 'history-mark-indicator');
+                        ind.appendChild(makeEl('span', '', '🔖'));
+                        var indContent = makeEl('div', '');
+                        indContent.style.flex = '1';
+                        indContent.appendChild(makeEl('div', 'history-mark-note-text', '"' + (rowDetails.mark_note || 'Marked') + '"'));
+                        if (rowDetails.marked_by) {
+                            indContent.appendChild(makeEl('div', 'history-mark-by', '👤 ' + rowDetails.marked_by + (rowDetails.marked_at ? ' · ' + new Date(rowDetails.marked_at).toLocaleDateString('en-GB') : '')));
+                        }
+                        ind.appendChild(indContent);
+                        var removeBtn = makeEl('button', 'history-mark-remove', '× Remove');
+                        removeBtn.title = 'Remove mark';
+                        removeBtn.onclick = function() { removeMark(rowId); };
+                        ind.appendChild(removeBtn);
+                        meta.appendChild(ind);
+                    } else {
+                        // Show mark button + hidden inline form
+                        var markBtn = makeEl('button', 'history-mark-btn', '🔖 Mark');
+                        var formId = 'mf-' + rowId;
+                        markBtn.onclick = function() {
+                            var f = document.getElementById(formId);
+                            if (!f) return;
+                            var hidden = f.style.display === 'none';
+                            f.style.display = hidden ? 'block' : 'none';
+                            if (hidden) f.querySelector('textarea').focus();
+                        };
+                        meta.appendChild(markBtn);
+
+                        var form = document.createElement('div');
+                        form.className = 'mark-form';
+                        form.id = formId;
+                        form.style.display = 'none';
+                        var ta = document.createElement('textarea');
+                        ta.placeholder = 'Why are you marking this? (optional)';
+                        form.appendChild(ta);
+                        var actions = makeEl('div', 'mark-form-actions');
+                        var cancelBtn = makeEl('button', 'mark-btn-cancel', 'Cancel');
+                        cancelBtn.type = 'button';
+                        cancelBtn.onclick = function() { form.style.display = 'none'; };
+                        var saveBtn = makeEl('button', 'mark-btn-save', '✓ Save Mark');
+                        saveBtn.type = 'button';
+                        saveBtn.onclick = function() { saveMark(rowId, ta.value.trim()); };
+                        actions.appendChild(cancelBtn);
+                        actions.appendChild(saveBtn);
+                        form.appendChild(actions);
+                        meta.appendChild(form);
+                    }
+                })(row.id, details);
+
+                item.appendChild(meta);
+
+                // Right: date + time column
+                var timeCol = makeEl('div', 'history-time-col');
+                if (row.created_at) {
+                    var d = new Date(row.created_at);
+                    timeCol.appendChild(makeEl('div', 'history-date', d.toLocaleDateString('en-GB')));
+                    timeCol.appendChild(makeEl('div', 'history-time', d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })));
+                }
+                item.appendChild(timeCol);
+
+                listEl.appendChild(item);
+            });
+        }
+
+        async function saveMark(rowId, note) {
+            var row = _historyAllRows.find(function(r) { return r.id === rowId; });
+            if (!row) return;
+            var email = sessionStorage.getItem('adminEmail') || '';
+            var newDetails = Object.assign({}, row.details || {}, {
+                marked: true,
+                mark_note: note,
+                marked_by: email,
+                marked_at: new Date().toISOString()
+            });
+            try {
+                var result = await supabase.from('admin_audit_logs').update({ details: newDetails }).eq('id', rowId);
+                if (result.error) throw result.error;
+                row.details = newDetails;
+                filterHistory();
+                showToast('🔖 Marked');
+            } catch(e) {
+                showToast('Failed to save mark');
+            }
+        }
+
+        async function removeMark(rowId) {
+            var row = _historyAllRows.find(function(r) { return r.id === rowId; });
+            if (!row) return;
+            var newDetails = Object.assign({}, row.details || {});
+            delete newDetails.marked;
+            delete newDetails.mark_note;
+            delete newDetails.marked_by;
+            delete newDetails.marked_at;
+            try {
+                var result = await supabase.from('admin_audit_logs').update({ details: newDetails }).eq('id', rowId);
+                if (result.error) throw result.error;
+                row.details = newDetails;
+                filterHistory();
+                showToast('Mark removed');
+            } catch(e) {
+                showToast('Failed to remove mark');
+            }
+        }
+
+        // ===== Quick Edit Mode =====
+        function toggleQuickEdit() {
+            if (!canEdit) return;
+            // Warn before discarding unsaved changes
+            if (quickEditMode && Object.keys(quickEditDirty).length > 0) {
+                if (!confirm('You have ' + Object.keys(quickEditDirty).length + ' unsaved change(s). Exit and discard them?')) return;
+            }
+            quickEditMode = !quickEditMode;
+            quickEditDirty = {};
+            _qeSaving = {};
+            _qeSaveAllInProgress = false;
+            var btn = document.getElementById('quickEditBtn');
+            var bar = document.getElementById('qeBar');
+            if (quickEditMode) {
+                btn.classList.add('qe-active');
+                btn.querySelector('span').textContent = 'Exit Quick Edit';
+                bar.style.display = 'flex';
+                editingId = null;
+            } else {
+                btn.classList.remove('qe-active');
+                btn.querySelector('span').textContent = 'Quick Edit';
+                bar.style.display = 'none';
+            }
+            updateQeBar();
+            renderPage();
+            if (quickEditMode) {
+                setTimeout(function() {
+                    var first = document.querySelector('.qe-textarea');
+                    if (first) { first.focus(); first.select(); }
+                }, 40);
+            }
+            lucide.createIcons({ nodes: [bar] });
+        }
+
+        function updateQeBar() {
+            var count = Object.keys(quickEditDirty).length;
+            var countEl = document.getElementById('qeCount');
+            var saveBtn = document.getElementById('qeSaveBtn');
+            if (countEl) countEl.textContent = count === 0 ? 'No changes yet — start typing' : count + ' change' + (count !== 1 ? 's' : '') + ' pending';
+            if (saveBtn) saveBtn.disabled = count === 0;
+        }
+
+        function buildQuickEditRow(row, t) {
+            // Key (read-only)
+            var keyDiv = document.createElement('div');
+            keyDiv.className = 't-key';
+            keyDiv.textContent = t.key_id;
+            row.appendChild(keyDiv);
+
+            // Editable Kurdish text
+            var ta = document.createElement('textarea');
+            ta.className = 'qe-textarea';
+            ta.id = 'qe-' + t.id;
+            ta.value = quickEditDirty[t.id] !== undefined ? quickEditDirty[t.id] : t.kurdish_text;
+            ta.rows = 1;
+
+            ta.addEventListener('input', function() {
+                // Auto-grow
+                this.style.height = 'auto';
+                this.style.height = this.scrollHeight + 'px';
+                var isDirty = this.value !== t.kurdish_text;
+                // Re-query row by ID — never use stale closure reference
+                var liveRow = document.getElementById('row-' + t.id);
+                if (isDirty) {
+                    quickEditDirty[t.id] = this.value;
+                    if (liveRow) liveRow.classList.add('qe-dirty');
+                } else {
+                    delete quickEditDirty[t.id];
+                    if (liveRow) liveRow.classList.remove('qe-dirty');
+                }
+                updateQeBar();
+            });
+
+            ta.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    saveSingleQuickEdit(t.id, this.value);
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation(); // don't trigger global Escape handler
+                    delete quickEditDirty[t.id];
+                    var currentRow = document.getElementById('row-' + t.id);
+                    if (currentRow) currentRow.classList.remove('qe-dirty');
+                    this.value = t.kurdish_text;
+                    this.style.height = 'auto';
+                    this.style.height = this.scrollHeight + 'px';
+                    updateQeBar();
+                    // Escape = stay on current row (discard only, no navigation)
+                }
+            });
+
+            // Auto-save when the admin clicks/tabs away — no need to press Enter
+            ta.addEventListener('blur', function() {
+                if (quickEditDirty[t.id] !== undefined) {
+                    saveSingleQuickEdit(t.id, this.value);
+                }
+            });
+
+            row.appendChild(ta);
+
+            // Page / category badge
+            var pageDiv = document.createElement('div');
+            pageDiv.className = 't-page-badge';
+            pageDiv.textContent = (activePlatform === 'mobile' || activePlatform === 'notifications') ? (t.category || 'general') : normalizePage(t.page);
+            row.appendChild(pageDiv);
+
+            // Save button — tap-to-save for mobile users who can't press Enter
+            var qeSaveBtn = document.createElement('button');
+            qeSaveBtn.className = 't-btn qe-save-btn';
+            qeSaveBtn.title = 'Save (Enter)';
+            qeSaveBtn.textContent = '✓';
+            qeSaveBtn.addEventListener('click', function() { saveSingleQuickEdit(t.id, ta.value); });
+            row.appendChild(qeSaveBtn);
+
+            // Auto-grow on first render
+            setTimeout(function() {
+                ta.style.height = 'auto';
+                ta.style.height = ta.scrollHeight + 'px';
+            }, 0);
+        }
+
+        var _qeSaving = {}; // guard against double-save per row
+
+        async function saveSingleQuickEdit(id, value) {
+            if (_qeSaving[id]) return; // already in flight
+            var item = allTranslations.find(function(t) { return String(t.id) === String(id); });
+            if (!item) { focusNextQeRow(id); return; }
+            if (value === item.kurdish_text) { focusNextQeRow(id); return; }
+
+            _qeSaving[id] = true;
+            var liveRow = document.getElementById('row-' + id);
+            if (liveRow) liveRow.style.opacity = '0.5';
+            var oldText = item.kurdish_text;
+            try {
+                var result = await supabase
+                    .from('kurdish_translations')
+                    .update({ kurdish_text: value })
+                    .eq('id', id);
+                if (result.error) throw result.error;
+
+                logChange('edit', { key_id: item.key_id, old_text: oldText, new_text: value, page: item.page });
+                item.kurdish_text = value;
+
+                var pendingNew = quickEditDirty[id];
+                var hasPending = pendingNew !== undefined && pendingNew !== value;
+                liveRow = document.getElementById('row-' + id);
+                if (!hasPending) {
+                    delete quickEditDirty[id];
+                    if (liveRow) liveRow.classList.remove('qe-dirty');
+                }
+                if (liveRow) {
+                    liveRow.classList.add('qe-saved');
+                    setTimeout(function() { var r = document.getElementById('row-' + id); if (r) r.classList.remove('qe-saved'); }, 700);
+                }
+                updateQeBar();
+
+                if (hasPending) {
+                    // New value typed while save was in flight — auto-save it immediately.
+                    // Delete _qeSaving first so the recursive call isn't blocked.
+                    delete _qeSaving[id];
+                    if (liveRow) liveRow.style.opacity = '';
+                    saveSingleQuickEdit(id, pendingNew);
+                    return; // skip focusNextQeRow — stay on this row
+                }
+            } catch (err) {
+                showToast('Save failed: ' + err.message);
+            } finally {
+                delete _qeSaving[id];
+                liveRow = document.getElementById('row-' + id);
+                if (liveRow) liveRow.style.opacity = '';
+            }
+            focusNextQeRow(id);
+        }
+
+        function focusNextQeRow(id) {
+            var start = (currentPage - 1) * PER_PAGE;
+            var pageItems = filteredList.slice(start, start + PER_PAGE);
+            var idx = pageItems.findIndex(function(t) { return String(t.id) === String(id); });
+            if (idx >= 0 && idx < pageItems.length - 1) {
+                // Next row on same page
+                var nextTa = document.getElementById('qe-' + pageItems[idx + 1].id);
+                if (nextTa) { nextTa.focus(); nextTa.select(); }
+            } else if (idx === pageItems.length - 1) {
+                // Last row — advance to next page if there is one
+                var totalPages = Math.max(1, Math.ceil(filteredList.length / PER_PAGE));
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderPage();
+                    setTimeout(function() {
+                        var first = document.querySelector('.qe-textarea');
+                        if (first) { first.focus(); first.select(); }
+                    }, 40);
+                }
+            }
+        }
+
+        var _qeSaveAllInProgress = false;
+
+        async function saveAllQuickEdits() {
+            var ids = Object.keys(quickEditDirty);
+            if (ids.length === 0 || _qeSaveAllInProgress) return;
+            _qeSaveAllInProgress = true;
+
+            var saveBtn = document.getElementById('qeSaveBtn');
+            saveBtn.disabled = true;
+            saveBtn.querySelector('span').textContent = 'Saving...';
+
+            // Snapshot the values we are about to save BEFORE the async work.
+            // This lets us detect if the admin typed a new value during the await.
+            var snapshot = {};
+            ids.forEach(function(id) { snapshot[id] = quickEditDirty[id]; });
+
+            var saved = 0, failed = 0;
+            var results = await Promise.allSettled(ids.map(function(id) {
+                var item = allTranslations.find(function(t) { return String(t.id) === String(id); });
+                if (!item) return Promise.resolve();
+                var newText = snapshot[id];
+                var oldText = item.kurdish_text; // capture before mutation
+                return supabase
+                    .from('kurdish_translations')
+                    .update({ kurdish_text: newText })
+                    .eq('id', id)
+                    .then(function(r) {
+                        if (r.error) throw r.error;
+                        logChange('edit', { key_id: item.key_id, old_text: oldText, new_text: newText, page: item.page });
+                        item.kurdish_text = newText;
+                    });
+            }));
+
+            // Only clear dirty if value hasn't changed since we started saving.
+            // If the admin typed something new during the await, keep it dirty.
+            results.forEach(function(r, i) {
+                if (r.status === 'fulfilled') {
+                    var id = ids[i];
+                    if (quickEditDirty[id] === snapshot[id]) delete quickEditDirty[id];
+                    saved++;
+                } else failed++;
+            });
+
+            renderPage();
+            updateQeBar();
+            showToast(saved + ' saved' + (failed ? ', ' + failed + ' failed — retry with Save All' : ''));
+
+            _qeSaveAllInProgress = false;
+            saveBtn.disabled = Object.keys(quickEditDirty).length === 0;
+            saveBtn.querySelector('span').textContent = 'Save All';
+        }
+
+        // ===== Toast =====
+        function showToast(msg) {
+            var toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            clearTimeout(toast._timer);
+            toast._timer = setTimeout(function() { toast.classList.remove('show'); }, 2500);
+        }
+    </script>
+</body>
+</html>

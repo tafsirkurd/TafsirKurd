@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>Schedule Management - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+
+    <style id="early-sidebar-hide">
+        /* Hide sidebar nav by default until role is confirmed */
+        .sidebar-nav { visibility: hidden; }
+    </style>
+    <script>
+        // Early role-based sidebar hiding - runs before body renders
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+
+            if (role === 'super_admin') {
+                css = '.sidebar-nav{visibility:visible}';
+            } else if (role === 'analyst') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'editor') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'custom') {
+                css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            }
+            if (role) {
+                style.textContent = css;
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span></a>
+                    <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span></a>
+                    <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                    <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                    <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                    <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                    <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                    <a href="/admin-reading-stats.html" class="nav-item"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                    <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                    <a href="/admin-schedule.html" class="nav-item active"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                    <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+                    <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                    <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                    <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+                    <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
+                    <a href="/admin-activity-feed.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">Activity Feed</span></a>
+                    <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name"></div>
+                        <div class="sidebar-profile-email"></div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; display: flex; align-items: center; transition: color 0.2s;" title="Logout"><i data-lucide="log-out"></i></button>
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+                <div class="topbar-search"><i data-lucide="search"></i><input type="text" placeholder="Search..." id="search-input"></div>
+                <div class="topbar-actions">
+                    <div class="session-timer" id="sessionTimer" title="Session expires after 1 hour"><i data-lucide="clock"></i><span id="sessionTimerText">60:00</span></div>
+                    <button class="topbar-btn" style="position: relative;">
+                        <i data-lucide="bell"></i>
+                        <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span></button>
+                    <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
+                </div>
+            </header>
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">Daily Schedule</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" onclick="loadSchedule()"><i data-lucide="refresh-cw"></i>Refresh</button>
+                        <button class="btn btn-primary" onclick="openModal()"><i data-lucide="plus"></i>Add Item</button>
+                    </div>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric-card"><div class="metric-value" id="total">0</div><div class="metric-label">Total Items</div></div>
+                    <div class="metric-card"><div class="metric-value" id="active">0</div><div class="metric-label">Active</div></div>
+                    <div class="metric-card"><div class="metric-value" id="inactive">0</div><div class="metric-label">Inactive</div></div>
+                </div>
+                <div class="card">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th style="width:50px;">Icon</th><th>Day</th><th>Time</th><th>Topic</th><th>Description</th><th style="width:60px;">Order</th><th style="width:80px;">Status</th><th style="width:100px;"></th></tr></thead>
+                            <tbody id="table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div class="modal" id="modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+        <div class="modal-content" style="background:var(--bg-surface);border-radius:12px;max-width:600px;width:90%;max-height:90vh;overflow-y:auto;">
+            <div class="modal-header" style="padding:20px 24px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;">
+                <h3 class="modal-title" id="modalTitle">Add Schedule Item</h3>
+                <button class="modal-close" onclick="closeModal()" style="background:transparent;border:none;cursor:pointer;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="padding:24px;">
+                <input type="hidden" id="scheduleId">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Icon Class</label><input type="text" id="iconClass" class="form-input" placeholder="fas fa-sun"></div>
+                    <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Display Order</label><input type="number" id="displayOrder" class="form-input" value="0"></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Day Label</label><input type="text" id="dayLabel" class="form-input" dir="rtl" placeholder="ڕۆژانە"></div>
+                    <div><label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Time Label</label><input type="text" id="timeLabel" class="form-input" dir="rtl" placeholder="سپێدێ"></div>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Topic</label>
+                    <input type="text" id="topic" class="form-input" dir="rtl" placeholder="زکر و ستوری">
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Description</label>
+                    <textarea id="description" class="form-input" dir="rtl" style="min-height:80px;resize:vertical;" placeholder="شرۆڤەکرن..."></textarea>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <input type="checkbox" id="isActive" checked style="width:18px;height:18px;cursor:pointer;">
+                    <label for="isActive" style="font-size:14px;cursor:pointer;">Active</label>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding:16px 24px;border-top:1px solid var(--border-light);display:flex;gap:12px;justify-content:flex-end;">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="save()">Save</button>
+            </div>
+        </div>
+    </div>
+    <script src="/utils/admin-session-timer-ui.js?v=5"></script>
+    <script src="/utils/admin-auth.js?v=4"></script>
+    <script src="/utils/admin-notifications.js"></script>
+    <script>
+        lucide.createIcons();
+        let schedule = [];
+        (async () => { const auth = await window.adminAuth.checkAuth(); if (auth) loadSchedule(); })();
+        document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
+        const themeToggle = document.getElementById('theme-toggle'), themeIcon = document.getElementById('theme-icon');
+        const savedTheme = localStorage.getItem('admin-theme') || 'light';
+        if (savedTheme === 'dark') { document.body.classList.add('dark-mode'); themeIcon.setAttribute('data-lucide', 'sun');
+            lucide.createIcons(); }
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+        });
+        async function loadSchedule() {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+            const { data, error } = await supabase.from('schedule').select('*').order('display_order', { ascending: true });
+            if (error) { console.error(error); return; }
+            schedule = data || [];
+            document.getElementById('total').textContent = schedule.length;
+            document.getElementById('active').textContent = schedule.filter(s => s.is_active).length;
+            document.getElementById('inactive').textContent = schedule.filter(s => !s.is_active).length;
+            const tbody = document.getElementById('table');
+            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+            if (schedule.length === 0) {
+                const tr = document.createElement('tr'), td = document.createElement('td');
+                td.colSpan = 8; td.style.textAlign = 'center'; td.style.padding = '40px';
+                td.textContent = 'No schedule items found';
+                tr.appendChild(td); tbody.appendChild(tr);
+                return;
+            }
+            schedule.forEach(s => {
+                const tr = document.createElement('tr');
+
+                // Icon
+                const tdIcon = document.createElement('td');
+                tdIcon.style.textAlign = 'center';
+                if (s.icon_class && s.icon_class.startsWith('fa')) {
+                    const icon = document.createElement('i');
+                    icon.className = s.icon_class;
+                    icon.style.fontSize = '18px';
+                    icon.style.color = 'var(--primary)';
+                    tdIcon.appendChild(icon);
+                } else {
+                    tdIcon.textContent = s.icon_class || '—';
+                }
+                tr.appendChild(tdIcon);
+
+                // Day
+                const tdDay = document.createElement('td');
+                tdDay.textContent = s.day_label || '—';
+                tdDay.dir = 'rtl';
+                tdDay.style.fontWeight = '600';
+                tr.appendChild(tdDay);
+
+                // Time
+                const tdTime = document.createElement('td');
+                tdTime.textContent = s.time_label || '—';
+                tdTime.dir = 'rtl';
+                tdTime.style.fontSize = '13px';
+                tr.appendChild(tdTime);
+
+                // Topic
+                const tdTopic = document.createElement('td');
+                tdTopic.textContent = s.topic || '—';
+                tdTopic.dir = 'rtl';
+                tdTopic.style.fontWeight = '500';
+                tr.appendChild(tdTopic);
+
+                // Description (truncated)
+                const tdDesc = document.createElement('td');
+                tdDesc.dir = 'rtl';
+                tdDesc.style.fontSize = '12px';
+                tdDesc.style.color = 'var(--text-secondary)';
+                tdDesc.style.maxWidth = '200px';
+                tdDesc.style.overflow = 'hidden';
+                tdDesc.style.textOverflow = 'ellipsis';
+                tdDesc.style.whiteSpace = 'nowrap';
+                tdDesc.textContent = s.description ? (s.description.length > 50 ? s.description.substring(0, 50) + '...' : s.description) : '—';
+                tdDesc.title = s.description || '';
+                tr.appendChild(tdDesc);
+
+                // Order
+                const tdOrder = document.createElement('td');
+                tdOrder.textContent = s.display_order;
+                tdOrder.style.textAlign = 'center';
+                tr.appendChild(tdOrder);
+
+                // Status
+                const tdStatus = document.createElement('td');
+                const statusBadge = document.createElement('span');
+                statusBadge.style.cssText = 'padding:4px 8px;border-radius:10px;font-size:11px;font-weight:500;cursor:pointer;';
+                if (s.is_active) {
+                    statusBadge.style.background = 'rgba(34,197,94,0.1)';
+                    statusBadge.style.color = '#22c55e';
+                    statusBadge.textContent = 'Active';
+                } else {
+                    statusBadge.style.background = 'rgba(239,68,68,0.1)';
+                    statusBadge.style.color = '#ef4444';
+                    statusBadge.textContent = 'Inactive';
+                }
+                statusBadge.onclick = () => toggleStatus(s.id, !s.is_active);
+                statusBadge.title = 'Click to toggle';
+                tdStatus.appendChild(statusBadge);
+                tr.appendChild(tdStatus);
+
+                // Actions
+                const tdActions = document.createElement('td');
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'table-actions';
+                const editBtn = document.createElement('button');
+                editBtn.className = 'table-btn';
+                editBtn.onclick = () => edit(s.id);
+                const editIcon = document.createElement('i');
+                editIcon.setAttribute('data-lucide', 'edit-2');
+                editBtn.appendChild(editIcon);
+                actionsDiv.appendChild(editBtn);
+                const delBtn = document.createElement('button');
+                delBtn.className = 'table-btn';
+                delBtn.onclick = () => del(s.id);
+                const delIcon = document.createElement('i');
+                delIcon.setAttribute('data-lucide', 'trash-2');
+                delBtn.appendChild(delIcon);
+                actionsDiv.appendChild(delBtn);
+                tdActions.appendChild(actionsDiv);
+                tr.appendChild(tdActions);
+
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        async function toggleStatus(id, newStatus) {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+            await supabase.from('schedule').update({ is_active: newStatus, updated_at: new Date().toISOString() }).eq('id', id);
+            loadSchedule();
+        }
+        function openModal() {
+            document.getElementById('scheduleId').value = '';
+            document.getElementById('iconClass').value = '';
+            document.getElementById('displayOrder').value = '0';
+            document.getElementById('dayLabel').value = '';
+            document.getElementById('timeLabel').value = '';
+            document.getElementById('topic').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('isActive').checked = true;
+            document.getElementById('modalTitle').textContent = 'Add Schedule Item';
+            document.getElementById('modal').style.display = 'flex';
+            lucide.createIcons();
+        }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+        function edit(id) {
+            const s = schedule.find(x => x.id === id);
+            if (!s) return;
+            document.getElementById('scheduleId').value = s.id;
+            document.getElementById('iconClass').value = s.icon_class || '';
+            document.getElementById('displayOrder').value = s.display_order || 0;
+            document.getElementById('dayLabel').value = s.day_label || '';
+            document.getElementById('timeLabel').value = s.time_label || '';
+            document.getElementById('topic').value = s.topic || '';
+            document.getElementById('description').value = s.description || '';
+            document.getElementById('isActive').checked = s.is_active !== false;
+            document.getElementById('modalTitle').textContent = 'Edit Schedule Item';
+            document.getElementById('modal').style.display = 'flex';
+            lucide.createIcons();
+        }
+        async function save() {
+            const id = document.getElementById('scheduleId').value;
+            const data = {
+                icon_class: document.getElementById('iconClass').value || null,
+                display_order: parseInt(document.getElementById('displayOrder').value) || 0,
+                day_label: document.getElementById('dayLabel').value || null,
+                time_label: document.getElementById('timeLabel').value || null,
+                topic: document.getElementById('topic').value || null,
+                description: document.getElementById('description').value || null,
+                is_active: document.getElementById('isActive').checked,
+                updated_at: new Date().toISOString()
+            };
+            const supabase = window.adminAuth.getSupabase();
+            if (id) {
+                await supabase.from('schedule').update(data).eq('id', id);
+            } else {
+                data.created_at = new Date().toISOString();
+                await supabase.from('schedule').insert(data);
+            }
+            closeModal();
+            loadSchedule();
+        }
+        async function del(id) {
+            if (!confirm('Delete?')) return;
+            const supabase = window.adminAuth.getSupabase();
+            await supabase.from('schedule').delete().eq('id', id);
+            loadSchedule();
+        }
+    </script>
+</body>
+</html>

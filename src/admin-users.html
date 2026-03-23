@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>User Management - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--bg-active);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .stat-icon svg {
+            width: 20px;
+            height: 20px;
+            color: var(--text-primary);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+
+        .filters-bar {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-tertiary);
+        }
+
+        .filter-input,
+        .filter-select {
+            padding: 8px 12px;
+            background: var(--bg-app);
+            border: 1px solid var(--border-medium);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: var(--font-family);
+        }
+
+        .filter-input:focus,
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .filter-select {
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .user-id {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-family: monospace;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-active);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 40px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-surface);
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .detail-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            width: 140px;
+            flex-shrink: 0;
+        }
+
+        .detail-value {
+            font-size: 13px;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-tertiary);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sortable:hover {
+            color: var(--text-primary);
+        }
+
+        .sort-icon {
+            display: inline-block;
+            margin-left: 4px;
+            opacity: 0.3;
+        }
+
+        .sortable.active .sort-icon {
+            opacity: 1;
+        }
+
+        .pagination-info {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+    </style>
+
+    <style id="early-sidebar-hide">
+        /* Hide sidebar nav by default until role is confirmed */
+        .sidebar-nav { visibility: hidden; }
+    </style>
+    <script>
+        // Early role-based sidebar hiding - runs before body renders
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+
+            if (role === 'super_admin') {
+                css = '.sidebar-nav{visibility:visible}';
+            } else if (role === 'analyst') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'editor') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'custom') {
+                css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            }
+            if (role) {
+                style.textContent = css;
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- OVERVIEW -->
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item">
+                        <i data-lucide="bar-chart-2"></i>
+                        <span class="nav-item-label">Dashboard</span>
+                    </a>
+                    <a href="/admin-analytics.html" class="nav-item">
+                        <i data-lucide="trending-up"></i>
+                        <span class="nav-item-label">Analytics</span>
+                    </a>
+                </div>
+
+                <!-- CONTENT -->
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item">
+                        <i data-lucide="message-square"></i>
+                        <span class="nav-item-label">Messages</span>
+                        <span class="nav-item-badge" id="message-badge">0</span>
+                    </a>
+                    <a href="/admin-videos.html" class="nav-item">
+                        <i data-lucide="video"></i>
+                        <span class="nav-item-label">Videos</span>
+                    </a>
+                    <a href="/admin-islamvoice-management.html" class="nav-item">
+                        <i data-lucide="radio"></i>
+                        <span class="nav-item-label">IslamVoice</span>
+                    </a>
+                    <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                    <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                    <a href="/admin-translations.html" class="nav-item">
+                        <i data-lucide="languages"></i>
+                        <span class="nav-item-label">Translations</span>
+                    </a>
+                </div>
+
+                <!-- USERS -->
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item active">
+                        <i data-lucide="users"></i>
+                        <span class="nav-item-label">Users</span>
+                    </a>
+                    <a href="/admin-reading-stats.html" class="nav-item">
+                        <i data-lucide="book-open"></i>
+                        <span class="nav-item-label">Reading Stats</span>
+                    </a>
+                </div>
+
+                <!-- SYSTEM -->
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-account-management.html" class="nav-item">
+                        <i data-lucide="user-cog"></i>
+                        <span class="nav-item-label">Admin Accounts</span>
+                    </a>
+                    <a href="/admin-features.html" class="nav-item">
+                        <i data-lucide="layers"></i>
+                        <span class="nav-item-label">Features</span>
+                    </a>
+                    <a href="/admin-schedule.html" class="nav-item">
+                        <i data-lucide="calendar"></i>
+                        <span class="nav-item-label">Schedule</span>
+                    </a>
+                    <a href="/admin-social-stats.html" class="nav-item">
+                        <i data-lucide="share-2"></i>
+                        <span class="nav-item-label">Social Stats</span>
+                    </a>
+                    <a href="/admin-bot-protection.html" class="nav-item">
+                        <i data-lucide="shield"></i>
+                        <span class="nav-item-label">Bot Protection</span>
+                    </a>
+                    <a href="/admin-database.html" class="nav-item">
+                        <i data-lucide="database"></i>
+                        <span class="nav-item-label">Database</span>
+                    </a>
+                    <a href="/admin-search-console.html" class="nav-item">
+                        <i data-lucide="search"></i>
+                        <span class="nav-item-label">Search Console</span>
+                    </a>
+                    <a href="/admin-email-templates.html" class="nav-item">
+                        <i data-lucide="mail"></i>
+                        <span class="nav-item-label">Email Templates</span>
+                    </a>
+                    <a href="/admin-activity-feed.html" class="nav-item">
+                        <i data-lucide="activity"></i>
+                        <span class="nav-item-label">Activity Feed</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar">
+                        <i data-lucide="user"></i>
+                    </div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name"></div>
+                        <div class="sidebar-profile-email"></div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; display: flex; align-items: center; transition: color 0.2s;" title="Logout">
+                        <i data-lucide="log-out"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- TOP BAR -->
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="topbar-search">
+                    <i data-lucide="search"></i>
+                    <input type="text" placeholder="Search users..." id="topbar-search">
+                </div>
+                <div class="topbar-actions">
+                    <div class="session-timer" id="sessionTimer" title="Session expires after 1 hour"><i data-lucide="clock"></i><span id="sessionTimerText">60:00</span></div>
+                    <button class="topbar-btn" style="position: relative;">
+                        <i data-lucide="bell"></i>
+                        <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span>
+                    </button>
+                    <button class="topbar-btn" id="theme-toggle" title="Toggle Dark Mode">
+                        <i data-lucide="moon" id="theme-icon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- CONTENT AREA -->
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">User Management</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" onclick="exportUsers()">
+                            <i data-lucide="download"></i>
+                            Export CSV
+                        </button>
+                        <button class="btn btn-secondary" onclick="loadUsers()">
+                            <i data-lucide="refresh-cw"></i>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STATS CARDS -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="users"></i>
+                        </div>
+                        <div class="stat-value" id="totalUsers">--</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="user-check"></i>
+                        </div>
+                        <div class="stat-value" id="activeToday">--</div>
+                        <div class="stat-label">Active Today</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="book-open"></i>
+                        </div>
+                        <div class="stat-value" id="totalAyahs">--</div>
+                        <div class="stat-label">Total Ayahs Read</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-lucide="trending-up"></i>
+                        </div>
+                        <div class="stat-value" id="avgCompletion">--</div>
+                        <div class="stat-label">Avg Completion</div>
+                    </div>
+                </div>
+
+                <!-- USER GROWTH CHART -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">User Growth (Last 30 Days)</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="userGrowthChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FILTERS -->
+                <div class="filters-bar" style="margin-top: 32px;">
+                    <div class="filter-group">
+                        <label class="filter-label">Search</label>
+                        <input type="text" class="filter-input" id="searchInput" placeholder="Search by name, email, or ID...">
+                    </div>
+
+                    <div class="filter-group" style="flex: 0 0 180px;">
+                        <label class="filter-label">Sort By</label>
+                        <select class="filter-select" id="sortSelect">
+                            <option value="created_desc">Newest First</option>
+                            <option value="created_asc">Oldest First</option>
+                            <option value="name_asc">Name A-Z</option>
+                            <option value="name_desc">Name Z-A</option>
+                            <option value="email_asc">Email A-Z</option>
+                            <option value="progress_desc">Highest Progress</option>
+                            <option value="progress_asc">Lowest Progress</option>
+                            <option value="active_desc">Most Active</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group" style="flex: 0 0 140px;">
+                        <label class="filter-label">Per Page</label>
+                        <select class="filter-select" id="perPageSelect">
+                            <option value="25">25</option>
+                            <option value="50" selected>50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- USERS TABLE -->
+                <div class="card">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th>User ID</th>
+                                    <th>Reading Progress</th>
+                                    <th>Ayahs Read</th>
+                                    <th>Last Active</th>
+                                    <th>Joined</th>
+                                    <th style="width: 100px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 40px;">
+                                        <div class="loading-spinner"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- PAGINATION -->
+                    <div style="padding: 16px; border-top: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center;">
+                        <div class="pagination-info" id="paginationInfo">
+                            Loading...
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary" id="prevBtn" onclick="prevPage()">
+                                <i data-lucide="chevron-left"></i>
+                                Previous
+                            </button>
+                            <button class="btn btn-secondary" id="nextBtn" onclick="nextPage()">
+                                Next
+                                <i data-lucide="chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- USER DETAILS MODAL -->
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">User Details</h3>
+                <button class="modal-close" onclick="closeUserModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeUserModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE CONFIRMATION MODAL -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Delete User</h3>
+                <button class="modal-close" onclick="closeDeleteModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Are you sure you want to delete this user? This action cannot be undone.
+                </p>
+                <div class="detail-row" style="border: none; padding: 8px 0;">
+                    <div class="detail-label">User:</div>
+                    <div class="detail-value" id="deleteUserName">--</div>
+                </div>
+                <div class="detail-row" style="border: none; padding: 8px 0;">
+                    <div class="detail-label">Email:</div>
+                    <div class="detail-value" id="deleteUserEmail">--</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">
+                    <i data-lucide="trash-2"></i>
+                    Delete User
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/utils/admin-session-timer-ui.js?v=5"></script>
+    <script src="/utils/admin-auth.js?v=4"></script>
+    <script src="/utils/admin-notifications.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Delegated click handler for table action buttons (avoids inline onclick XSS)
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            const action = btn.dataset.action;
+            const userId = btn.dataset.userid;
+            if (!userId) return;
+            if (action === 'view') viewUser(userId);
+            else if (action === 'delete') deleteUser(userId);
+        });
+
+        // State management
+        let allUsers = [];
+        let filteredUsers = [];
+        let currentPage = 1;
+        let perPage = 50;
+        let userGrowthChart = null;
+        let deleteUserId = null;
+
+        // Check authentication
+        (async () => {
+            const isAuth = await window.adminAuth.checkAuth();
+            if (isAuth) {
+                await loadUsers();
+                setupEventListeners();
+            }
+        })();
+
+        // Sidebar toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
+
+        mobileMenuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('mobile-open');
+        });
+
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+
+        // Check saved theme preference (default to light mode)
+        const savedTheme = localStorage.getItem('admin-theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeIcon.setAttribute('data-lucide', 'sun');
+            lucide.createIcons();
+        }
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+
+            // Update icon
+            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+
+            // Save preference
+            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+
+            // Recreate chart with new theme
+            if (userGrowthChart && allUsers.length > 0) {
+                renderUserGrowthChart();
+            }
+        });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', debounce(handleSearch, 300));
+            document.getElementById('topbar-search').addEventListener('input', debounce(handleSearch, 300));
+            document.getElementById('sortSelect').addEventListener('change', handleSort);
+            document.getElementById('perPageSelect').addEventListener('change', handlePerPageChange);
+        }
+
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Load users from Supabase
+        async function loadUsers() {
+            try {
+                console.log('Loading users via API...');
+
+                const adminToken = sessionStorage.getItem('adminToken');
+                if (!adminToken) {
+                    console.error('No admin token');
+                    showError('Authentication required');
+                    return;
+                }
+
+                // Fetch users via server-side API (bypasses RLS)
+                const response = await fetch('/admin-users-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                    body: JSON.stringify({ action: 'get_users', token: adminToken })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    console.error('Error fetching users:', data.error);
+                    showError(data.error || 'Failed to load users');
+                    return;
+                }
+
+                // Map API response to expected format
+                allUsers = (data.users || []).map(user => ({
+                    user_id: user.id,
+                    profile_name: user.name,
+                    profile_email: user.email,
+                    profile_picture: user.avatar,
+                    registration_source: user.registration_source,
+                    created_at: user.created_at,
+                    lastActive: user.last_active,
+                    current_surah: user.current_surah,
+                    current_ayah: user.current_ayah,
+                    total_ayahs_read: user.total_ayahs_read,
+                    reading_streak: user.reading_streak,
+                    bookmarks: user.bookmarks,
+                    daily_goal: user.daily_goal,
+                    monthly_goal: user.monthly_goal
+                }));
+
+                console.log(`Loaded ${allUsers.length} users`);
+
+                // Calculate stats
+                updateStats();
+
+                // Render user growth chart
+                renderUserGrowthChart();
+
+                // Apply filters and render table
+                applyFilters();
+
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showError('Failed to load users');
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            // Total users
+            document.getElementById('totalUsers').textContent = allUsers.length.toLocaleString();
+
+            // Active today (users with lastActive today)
+            const activeToday = allUsers.filter(user => {
+                if (!user.lastActive) return false;
+                const lastActive = new Date(user.lastActive);
+                return lastActive >= today;
+            }).length;
+            document.getElementById('activeToday').textContent = activeToday.toLocaleString();
+
+            // Total ayahs read
+            const totalAyahs = allUsers.reduce((sum, user) => {
+                const ayahs = parseInt(user.total_ayahs_read) || 0;
+                return sum + ayahs;
+            }, 0);
+            document.getElementById('totalAyahs').textContent = totalAyahs.toLocaleString();
+
+            // Average completion (assuming 6236 total ayahs in Quran)
+            const totalAyahsInQuran = 6236;
+            const avgCompletion = allUsers.length > 0
+                ? (totalAyahs / (allUsers.length * totalAyahsInQuran) * 100).toFixed(1)
+                : 0;
+            document.getElementById('avgCompletion').textContent = avgCompletion + '%';
+        }
+
+        // Render user growth chart
+        function renderUserGrowthChart() {
+            const canvas = document.getElementById('userGrowthChart');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+
+            // Destroy existing chart
+            if (userGrowthChart) {
+                userGrowthChart.destroy();
+            }
+
+            // Prepare data for last 30 days
+            const days = 30;
+            const now = new Date();
+            const chartData = [];
+
+            for (let i = days - 1; i >= 0; i--) {
+                const date = new Date(now);
+                date.setDate(date.getDate() - i);
+                date.setHours(0, 0, 0, 0);
+
+                const count = allUsers.filter(user => {
+                    const createdAt = new Date(user.created_at);
+                    return createdAt <= date;
+                }).length;
+
+                chartData.push({
+                    date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                    count: count
+                });
+            }
+
+            // Determine if dark mode
+            const isDark = document.body.classList.contains('dark-mode');
+            const textColor = isDark ? '#FFFFFF' : '#000000';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
+            // Create chart
+            userGrowthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.map(d => d.date),
+                    datasets: [{
+                        label: 'Total Users',
+                        data: chartData.map(d => d.count),
+                        borderColor: textColor,
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: textColor,
+                        pointBorderColor: textColor,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: isDark ? '#FFFFFF' : '#000000',
+                            titleColor: isDark ? '#000000' : '#FFFFFF',
+                            bodyColor: isDark ? '#000000' : '#FFFFFF',
+                            borderColor: isDark ? '#FFFFFF' : '#000000',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: textColor,
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Handle search
+        function handleSearch(e) {
+            const query = e.target.value.toLowerCase().trim();
+
+            if (!query) {
+                filteredUsers = [...allUsers];
+            } else {
+                filteredUsers = allUsers.filter(user => {
+                    return (
+                        (user.profile_name || '').toLowerCase().includes(query) ||
+                        (user.profile_email || '').toLowerCase().includes(query) ||
+                        (user.user_id || '').toLowerCase().includes(query)
+                    );
+                });
+            }
+
+            // Sync both search inputs
+            document.getElementById('searchInput').value = e.target.value;
+            document.getElementById('topbar-search').value = e.target.value;
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        // Handle sort
+        function handleSort(e) {
+            const sortValue = e.target.value;
+            const [field, direction] = sortValue.split('_');
+
+            filteredUsers.sort((a, b) => {
+                let valA, valB;
+
+                switch (field) {
+                    case 'name':
+                        valA = (a.profile_name || '').toLowerCase();
+                        valB = (b.profile_name || '').toLowerCase();
+                        break;
+                    case 'email':
+                        valA = (a.profile_email || '').toLowerCase();
+                        valB = (b.profile_email || '').toLowerCase();
+                        break;
+                    case 'created':
+                        valA = new Date(a.created_at);
+                        valB = new Date(b.created_at);
+                        break;
+                    case 'progress':
+                        valA = calculateProgress(a);
+                        valB = calculateProgress(b);
+                        break;
+                    case 'active':
+                        valA = a.lastActive ? new Date(a.lastActive) : new Date(0);
+                        valB = b.lastActive ? new Date(b.lastActive) : new Date(0);
+                        break;
+                    default:
+                        return 0;
+                }
+
+                if (direction === 'asc') {
+                    return valA > valB ? 1 : valA < valB ? -1 : 0;
+                } else {
+                    return valA < valB ? 1 : valA > valB ? -1 : 0;
+                }
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        // Handle per page change
+        function handlePerPageChange(e) {
+            perPage = parseInt(e.target.value);
+            currentPage = 1;
+            renderTable();
+        }
+
+        // Apply filters
+        function applyFilters() {
+            filteredUsers = [...allUsers];
+            const sortSelect = document.getElementById('sortSelect');
+            if (sortSelect) {
+                handleSort({ target: sortSelect });
+            } else {
+                renderTable();
+            }
+        }
+
+        // Calculate reading progress percentage
+        function calculateProgress(user) {
+            const totalAyahs = 6236;
+            const ayahsRead = parseInt(user.total_ayahs_read) || 0;
+            return (ayahsRead / totalAyahs * 100);
+        }
+
+        // Render table
+        function renderTable() {
+            const tbody = document.getElementById('usersTableBody');
+            const start = (currentPage - 1) * perPage;
+            const end = start + perPage;
+            const pageUsers = filteredUsers.slice(start, end);
+
+            if (pageUsers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <i data-lucide="users"></i>
+                                <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">No users found</div>
+                                <div style="font-size: 14px;">Try adjusting your search or filters</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+                updatePagination();
+                return;
+            }
+
+            tbody.innerHTML = pageUsers.map(user => {
+                const progress = calculateProgress(user);
+                const avatar = user.profile_picture ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(user.profile_name)}&background=random&size=80`;
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <img src="${escapeHtml(avatar)}" alt="${escapeHtml(user.profile_name)}" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.profile_name)}&background=random&size=80'">
+                                <div class="user-details">
+                                    <div class="user-name">${escapeHtml(user.profile_name)}</div>
+                                    <div class="user-id">${user.user_id.substring(0, 8)}...</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${escapeHtml(user.profile_email)}</td>
+                        <td style="font-family: monospace; font-size: 12px;">${user.user_id}</td>
+                        <td>
+                            <div style="min-width: 120px;">
+                                <div style="font-size: 13px; font-weight: 600; margin-bottom: 4px;">${progress.toFixed(1)}%</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${Math.min(progress, 100)}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="font-weight: 600;">${(parseInt(user.total_ayahs_read) || 0).toLocaleString()}</td>
+                        <td>${formatDate(user.lastActive)}</td>
+                        <td>${formatDate(user.created_at)}</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="table-btn" title="View Details" data-action="view" data-userid="${escapeHtml(user.user_id)}">
+                                    <i data-lucide="eye"></i>
+                                </button>
+                                <button class="table-btn" title="Delete User" data-action="delete" data-userid="${escapeHtml(user.user_id)}">
+                                    <i data-lucide="trash-2"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+            updatePagination();
+        }
+
+        // Update pagination
+        function updatePagination() {
+            const total = filteredUsers.length;
+            const start = total === 0 ? 0 : (currentPage - 1) * perPage + 1;
+            const end = Math.min(currentPage * perPage, total);
+            const totalPages = Math.ceil(total / perPage);
+
+            document.getElementById('paginationInfo').textContent =
+                `Showing ${start}-${end} of ${total} users`;
+
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+
+            lucide.createIcons();
+        }
+
+        // Pagination functions
+        function nextPage() {
+            const totalPages = Math.ceil(filteredUsers.length / perPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // View user details
+        function viewUser(userId) {
+            const user = allUsers.find(u => u.user_id === userId);
+            if (!user) return;
+
+            const progress = calculateProgress(user);
+            const avatar = user.profile_picture ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(user.profile_name)}&background=random&size=120`;
+
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <img src="${escapeHtml(avatar)}" alt="${escapeHtml(user.profile_name)}" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 12px;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.profile_name)}&background=random&size=120'">
+                    <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">${escapeHtml(user.profile_name)}</div>
+                    <div style="font-size: 13px; color: var(--text-tertiary);">${escapeHtml(user.profile_email)}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">User ID</div>
+                    <div class="detail-value" style="font-family: monospace; font-size: 12px;">${user.user_id}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Email</div>
+                    <div class="detail-value">${escapeHtml(user.profile_email)}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Current Position</div>
+                    <div class="detail-value">${user.currentPosition || 'Not started'}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Ayahs Read</div>
+                    <div class="detail-value" style="font-weight: 600;">${(parseInt(user.total_ayahs_read) || 0).toLocaleString()} / 6,236</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Completion</div>
+                    <div class="detail-value">
+                        <div style="font-weight: 600; margin-bottom: 8px;">${progress.toFixed(2)}%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${Math.min(progress, 100)}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Last Active</div>
+                    <div class="detail-value">${formatDateFull(user.lastActive)}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Account Created</div>
+                    <div class="detail-value">${formatDateFull(user.created_at)}</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-label">Last Updated</div>
+                    <div class="detail-value">${formatDateFull(user.updated_at)}</div>
+                </div>
+            `;
+
+            document.getElementById('userModal').classList.add('active');
+            lucide.createIcons();
+        }
+
+        // Close user modal
+        function closeUserModal() {
+            document.getElementById('userModal').classList.remove('active');
+        }
+
+        // Delete user
+        function deleteUser(userId) {
+            const user = allUsers.find(u => u.user_id === userId);
+            if (!user) return;
+
+            deleteUserId = userId;
+            document.getElementById('deleteUserName').textContent = user.profile_name;
+            document.getElementById('deleteUserEmail').textContent = user.profile_email;
+            document.getElementById('deleteModal').classList.add('active');
+            lucide.createIcons();
+        }
+
+        // Close delete modal
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+            deleteUserId = null;
+        }
+
+        // Confirm delete
+        async function confirmDelete() {
+            if (!deleteUserId) return;
+
+            try {
+                const adminToken = sessionStorage.getItem('adminToken');
+                if (!adminToken) { alert('Not authenticated'); return; }
+
+                const res = await fetch('/admin-users-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                    body: JSON.stringify({ action: 'delete_user', userId: deleteUserId, token: adminToken })
+                });
+                const result = await res.json();
+
+                if (!result.success) {
+                    alert('Failed to delete user: ' + (result.error || 'Unknown error'));
+                    return;
+                }
+
+                // Remove from local array
+                allUsers = allUsers.filter(u => u.user_id !== deleteUserId);
+
+                // Close modal and refresh
+                closeDeleteModal();
+                updateStats();
+                applyFilters();
+
+                alert('User deleted successfully');
+
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert('Failed to delete user: ' + error.message);
+            }
+        }
+
+        // Export users to CSV
+        function exportUsers() {
+            if (filteredUsers.length === 0) {
+                alert('No users to export');
+                return;
+            }
+
+            const headers = ['Name', 'Email', 'User ID', 'Ayahs Read', 'Progress %', 'Current Position', 'Last Active', 'Created'];
+            const rows = filteredUsers.map(user => {
+                const progress = calculateProgress(user);
+                return [
+                    user.profile_name,
+                    user.profile_email,
+                    user.user_id,
+                    parseInt(user.total_ayahs_read) || 0,
+                    progress.toFixed(2) + '%',
+                    user.currentPosition || 'Not started',
+                    formatDateFull(user.lastActive),
+                    formatDateFull(user.created_at)
+                ];
+            });
+
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tafsirkurd-users-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Show error
+        function showError(message) {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <i data-lucide="alert-circle"></i>
+                            <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #dc2626;">Error</div>
+                            <div style="font-size: 14px;">${escapeHtml(message)}</div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            lucide.createIcons();
+        }
+
+        // Format date (relative)
+        function formatDate(dateString) {
+            if (!dateString) return 'Never';
+
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (days > 7) {
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            } else if (days > 0) {
+                return `${days} day${days > 1 ? 's' : ''} ago`;
+            } else if (hours > 0) {
+                return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            } else if (minutes > 0) {
+                return `${minutes} min${minutes > 1 ? 's' : ''} ago`;
+            } else {
+                return 'Just now';
+            }
+        }
+
+        // Format date (full)
+        function formatDateFull(dateString) {
+            if (!dateString) return 'Never';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Close modals on outside click
+        document.getElementById('userModal').addEventListener('click', (e) => {
+            if (e.target.id === 'userModal') {
+                closeUserModal();
+            }
+        });
+
+        document.getElementById('deleteModal').addEventListener('click', (e) => {
+            if (e.target.id === 'deleteModal') {
+                closeDeleteModal();
+            }
+        });
+    </script>
+</body>
+</html>

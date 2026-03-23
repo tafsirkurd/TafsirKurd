@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>Admin Login - TafsirKurd</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #FFFFFF;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-logo {
+            width: 88px;
+            height: 88px;
+            margin: 0 auto 16px;
+        }
+
+        .login-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: #666666;
+        }
+
+        .login-card {
+            background: #F5F5F5;
+            border: 1px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: #FFFFFF;
+            border: 1px solid #CCCCCC;
+            border-radius: 8px;
+            color: #000000;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #000000;
+        }
+
+        .form-input::placeholder {
+            color: #999999;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: #000000;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-login:hover {
+            background: #333333;
+        }
+
+        .btn-login:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 16px;
+            font-size: 13px;
+            color: #000000;
+            display: none;
+        }
+
+        .error-message.active {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #FFFFFF;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 12px;
+            color: #999999;
+        }
+
+        .lockout-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            text-align: center;
+        }
+
+        .lockout-box.active {
+            display: flex;
+        }
+
+        .lockout-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #856404;
+        }
+
+        .lockout-countdown {
+            font-size: 24px;
+            font-weight: 700;
+            color: #856404;
+            letter-spacing: 0.05em;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .lockout-sub {
+            font-size: 12px;
+            color: #856404;
+            opacity: 0.8;
+        }
+        /* ── 2FA screen ── */
+        .totp-screen { display: none; }
+        .totp-screen.active { display: block; }
+        .totp-icon { font-size: 2.4rem; text-align: center; margin-bottom: 6px; }
+        .totp-title { font-size: 16px; font-weight: 700; text-align: center; color: var(--text-primary, #1a1a1a); margin-bottom: 4px; }
+        .totp-sub { font-size: 12px; text-align: center; color: #888; margin-bottom: 20px; }
+        .totp-input { letter-spacing: .35em; font-size: 1.5rem; font-weight: 700; text-align: center; }
+        .totp-back { background: none; border: none; color: #888; font-size: 12px; cursor: pointer; margin-top: 10px; width: 100%; text-align: center; }
+        .totp-back:hover { color: #555; }
+    </style>
+    <script>
+        // Early role-based sidebar hiding - runs before body renders
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            if (role && role !== 'super_admin') {
+                var style = document.createElement('style');
+                style.id = 'early-sidebar-hide';
+                var css = '';
+                if (role === 'analyst') {
+                    css = '.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                } else if (role === 'editor') {
+                    css = '.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+                }
+                style.textContent = css;
+                document.head.appendChild(style);
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-logo">
+                <img src="/assets/images/logo.png" alt="TafsirKurd">
+            </div>
+            <h1 class="login-title">Admin Login</h1>
+            <p class="login-subtitle">TafsirKurd Dashboard</p>
+        </div>
+
+        <div class="login-card">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input
+                        type="email"
+                        class="form-input"
+                        id="email"
+                        placeholder="Enter your email"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input
+                        type="password"
+                        class="form-input"
+                        id="password"
+                        placeholder="Enter your password"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <div class="cf-turnstile" id="turnstileWidget"
+                     data-sitekey="0x4AAAAAACns__hRPm3UKqjW"
+                     data-theme="auto"
+                     data-callback="onTurnstileSuccess"
+                     data-expired-callback="onTurnstileExpired"
+                     style="margin-bottom:8px"></div>
+
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <i data-lucide="log-in"></i>
+                    <span>Sign In</span>
+                </button>
+
+                <div class="error-message" id="errorMessage">
+                    <i data-lucide="alert-circle" style="width: 16px; height: 16px;"></i>
+                    <span id="errorText"></span>
+                </div>
+
+                <div class="lockout-box" id="lockoutBox">
+                    <div class="lockout-title">&#128274; Account Locked</div>
+                    <div class="lockout-countdown" id="lockoutCountdown">--:--:--</div>
+                    <div class="lockout-sub">Try again when the timer reaches 00:00:00</div>
+                </div>
+            </form>
+
+            <!-- 2FA step — shown after correct password -->
+            <div class="totp-screen" id="totpScreen">
+                <div class="totp-icon">🔐</div>
+                <div class="totp-title">Two-Factor Authentication</div>
+                <div class="totp-sub">Enter the 6-digit code from your authenticator app,<br>or a backup code.</div>
+                <input type="text" id="totpCode" class="form-input totp-input"
+                    placeholder="000000" maxlength="10" autocomplete="one-time-code" inputmode="numeric">
+                <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:.85rem;color:var(--text-muted);cursor:pointer;user-select:none">
+                    <input type="checkbox" id="trustDevice" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer">
+                    Trust this device for 30 days
+                </label>
+                <div class="error-message" id="totpError" style="margin-top:10px">
+                    <i data-lucide="alert-circle" style="width:16px;height:16px"></i>
+                    <span id="totpErrorText"></span>
+                </div>
+                <button class="btn-login" id="totpBtn" onclick="submitTOTP()" style="margin-top:14px">
+                    <i data-lucide="shield-check"></i>
+                    <span>Verify</span>
+                </button>
+                <button class="totp-back" onclick="cancelTOTP()">← Back to login</button>
+            </div>
+        </div>
+
+        <div class="login-footer">
+            Secure admin access • TafsirKurd © 2026
+        </div>
+    </div>
+
+    <script src="/utils/device-fingerprint.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // Check if already logged in
+        const adminToken = sessionStorage.getItem('adminToken');
+        if (adminToken) {
+            var storedRole = sessionStorage.getItem('adminRole');
+            var storedPerms = [];
+            try { storedPerms = JSON.parse(sessionStorage.getItem('adminPermissions') || '[]'); } catch(e) {}
+            var landing = '/admin-dashboard.html';
+            if (storedRole === 'custom' && storedPerms.length > 0) {
+                var fp = storedPerms.find(function(p) { return p.can_view; });
+                if (fp) landing = '/admin-' + fp.page_slug + '.html';
+            }
+            window.location.href = landing;
+        }
+
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const lockoutBox = document.getElementById('lockoutBox');
+        const lockoutCountdown = document.getElementById('lockoutCountdown');
+
+        var _countdownInterval = null;
+
+        function formatCountdown(ms) {
+            if (ms <= 0) return '00:00:00';
+            var s = Math.floor(ms / 1000);
+            var h = Math.floor(s / 3600);
+            var m = Math.floor((s % 3600) / 60);
+            var sec = s % 60;
+            return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+        }
+
+        function setBtnLoading() {
+            loginBtn.disabled = true;
+            loginBtn.textContent = '';
+            var sp = document.createElement('div');
+            sp.className = 'spinner';
+            loginBtn.appendChild(sp);
+            var lbl = document.createElement('span');
+            lbl.textContent = 'Signing in...';
+            loginBtn.appendChild(lbl);
+        }
+
+        function resetBtn() {
+            loginBtn.disabled = false;
+            loginBtn.textContent = '';
+            var ic = document.createElement('i');
+            ic.setAttribute('data-lucide', 'log-in');
+            loginBtn.appendChild(ic);
+            var lbl = document.createElement('span');
+            lbl.textContent = 'Sign In';
+            loginBtn.appendChild(lbl);
+            lucide.createIcons();
+        }
+
+        function applyLockout(lockedUntilISO) {
+            localStorage.setItem('adminLoginLockoutUntil', lockedUntilISO);
+            showLockoutUI(new Date(lockedUntilISO));
+        }
+
+        function showLockoutUI(until) {
+            lockoutBox.classList.add('active');
+            errorMessage.classList.remove('active');
+            loginBtn.disabled = true;
+            document.getElementById('email').disabled = true;
+            document.getElementById('password').disabled = true;
+
+            if (_countdownInterval) clearInterval(_countdownInterval);
+            _countdownInterval = setInterval(function() {
+                var remaining = until - Date.now();
+                if (remaining <= 0) {
+                    clearInterval(_countdownInterval);
+                    lockoutBox.classList.remove('active');
+                    localStorage.removeItem('adminLoginLockoutUntil');
+                    resetBtn();
+                    document.getElementById('email').disabled = false;
+                    document.getElementById('password').disabled = false;
+                    lockoutCountdown.textContent = '00:00:00';
+                } else {
+                    lockoutCountdown.textContent = formatCountdown(remaining);
+                }
+            }, 1000);
+            lockoutCountdown.textContent = formatCountdown(until - Date.now());
+        }
+
+        // On load: restore lockout state if still active
+        (function() {
+            var stored = localStorage.getItem('adminLoginLockoutUntil');
+            if (stored) {
+                var until = new Date(stored);
+                if (until > new Date()) {
+                    showLockoutUI(until);
+                } else {
+                    localStorage.removeItem('adminLoginLockoutUntil');
+                }
+            }
+        })();
+
+        var _turnstileToken = '';
+        function onTurnstileSuccess(token) { _turnstileToken = token; }
+        function onTurnstileExpired() { _turnstileToken = ''; }
+
+        async function submitTOTP() {
+            const code = document.getElementById('totpCode').value.trim();
+            if (!code) return;
+            const btn = document.getElementById('totpBtn');
+            btn.disabled = true;
+            document.getElementById('totpError').classList.remove('active');
+            try {
+                const res = await fetch('/admin-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    // token = tempToken, email field reused for totpCode (server reads it)
+                    body: JSON.stringify({ action: 'verify-totp', token: window._totpTempToken, email: code, deviceFingerprint: window.deviceFingerprint ? await window.deviceFingerprint.get() : null, trustDevice: document.getElementById('trustDevice').checked })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.removeItem('adminLoginLockoutUntil');
+                    localStorage.removeItem('adminLoginFailedAttempts');
+                    if (data.trustToken) {
+                        localStorage.setItem('adminTrustToken', data.trustToken);
+                        localStorage.setItem('adminTrustExpiry', Date.now() + 30*24*60*60*1000);
+                    }
+                    sessionStorage.setItem('adminToken', data.token);
+                    sessionStorage.setItem('adminSessionStart', new Date().toISOString());
+                    if (data.user) {
+                        sessionStorage.setItem('adminRole', data.user.role);
+                        sessionStorage.setItem('adminPermissions', JSON.stringify(data.permissions || []));
+                    }
+                    var landingPage = '/admin-dashboard.html';
+                    if (data.user && data.user.role === 'custom' && data.permissions && data.permissions.length > 0) {
+                        var first = data.permissions.find(function(p) { return p.can_view; });
+                        if (first) landingPage = '/admin-' + first.page_slug + '.html';
+                    }
+                    window.location.href = landingPage;
+                } else {
+                    if (data.expired) {
+                        cancelTOTP();
+                        errorText.textContent = 'Too many failed attempts. Please log in again.';
+                        errorMessage.classList.add('active');
+                        lucide.createIcons();
+                        return;
+                    }
+                    document.getElementById('totpErrorText').textContent = data.error || 'Invalid code.';
+                    document.getElementById('totpError').classList.add('active');
+                    lucide.createIcons();
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                document.getElementById('totpErrorText').textContent = 'Connection error. Try again.';
+                document.getElementById('totpError').classList.add('active');
+                btn.disabled = false;
+            }
+        }
+
+        document.getElementById('totpCode').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') submitTOTP();
+        });
+
+        function cancelTOTP() {
+            window._totpTempToken = null;
+            document.getElementById('totpScreen').classList.remove('active');
+            loginForm.style.display = '';
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Block if client-side lockout is still active
+            var stored = localStorage.getItem('adminLoginLockoutUntil');
+            if (stored && new Date(stored) > new Date()) return;
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const deviceFingerprint = window.deviceFingerprint ? await window.deviceFingerprint.get() : null;
+            const _tt = localStorage.getItem('adminTrustToken'), _te = localStorage.getItem('adminTrustExpiry');
+            const trustToken = (_tt && _te && Date.now() < +_te) ? _tt : null;
+
+            setBtnLoading();
+            errorMessage.classList.remove('active');
+
+            try {
+                const turnstileToken = _turnstileToken || document.querySelector('[name="cf-turnstile-response"]')?.value || '';
+                const response = await fetch('/admin-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, deviceFingerprint, trustToken, turnstileToken })
+                });
+
+                const data = await response.json();
+
+                if (data.requiresTOTP) {
+                    window._totpTempToken = data.tempToken;
+                    loginForm.style.display = 'none';
+                    document.getElementById('totpScreen').classList.add('active');
+                    document.getElementById('totpCode').focus();
+                    lucide.createIcons();
+                    resetBtn();
+                    return;
+                }
+
+                if (data.success) {
+                    localStorage.removeItem('adminLoginLockoutUntil');
+                    localStorage.removeItem('adminLoginFailedAttempts');
+                    sessionStorage.setItem('adminToken', data.token);
+                    sessionStorage.setItem('adminSessionStart', new Date().toISOString());
+                    if (data.user) {
+                        sessionStorage.setItem('adminRole', data.user.role);
+                        sessionStorage.setItem('adminPermissions', JSON.stringify(data.permissions || []));
+                    }
+                    var landingPage = '/admin-dashboard.html';
+                    if (data.user && data.user.role === 'custom' && data.permissions && data.permissions.length > 0) {
+                        var first = data.permissions.find(function(p) { return p.can_view; });
+                        if (first) landingPage = '/admin-' + first.page_slug + '.html';
+                    }
+                    window.location.href = landingPage;
+                } else {
+                    if (data.turnstileFailed) {
+                        _turnstileToken = '';
+                        if (window.turnstile) turnstile.reset('#turnstileWidget');
+                    }
+                    if (data.locked && data.lockedUntil) {
+                        localStorage.removeItem('adminLoginFailedAttempts');
+                        applyLockout(data.lockedUntil);
+                        return;
+                    }
+
+                    // Only count actual credential failures, not Turnstile/IP/rate-limit errors
+                    if (!data.deviceBlocked && !data.turnstileFailed && !data.ipBlocked) {
+                        var attempts = parseInt(localStorage.getItem('adminLoginFailedAttempts') || '0', 10) + 1;
+                        localStorage.setItem('adminLoginFailedAttempts', String(attempts));
+                        if (attempts >= 3) {
+                            localStorage.removeItem('adminLoginFailedAttempts');
+                            applyLockout(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
+                            return;
+                        }
+                        var attemptsLeft = data.attemptsRemaining !== undefined ? data.attemptsRemaining : (3 - attempts);
+                        var errorMsg = data.error || 'Invalid credentials';
+                        if (attemptsLeft > 0) {
+                            errorMsg += ' (' + attemptsLeft + ' attempt' + (attemptsLeft !== 1 ? 's' : '') + ' remaining)';
+                        }
+                        errorText.textContent = errorMsg;
+                    } else {
+                        errorText.textContent = '\uD83D\uDD12 ' + (data.error || 'Device not authorized');
+                    }
+
+                    errorMessage.classList.add('active');
+                    lucide.createIcons();
+                    resetBtn();
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errorText.textContent = 'Connection error. Please try again.';
+                errorMessage.classList.add('active');
+                lucide.createIcons();
+                resetBtn();
+            }
+        });
+    </script>
+</body>
+</html>

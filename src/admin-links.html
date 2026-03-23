@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>Links - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2" as="font" type="font/woff2" crossorigin="">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="/assets/fontawesome/all.min.css">
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        @font-face {
+            font-family: 'IBM Plex Sans Arabic';
+            src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2') format('woff2');
+            font-weight: 400; font-style: normal; font-display: swap;
+        }
+        @font-face {
+            font-family: 'IBM Plex Sans Arabic';
+            src: url('/assets/fonts/ibm-plex-arabic-v11-latin_arabic-500.woff2') format('woff2');
+            font-weight: 500 700; font-style: normal; font-display: swap;
+        }
+
+        /* ── Stats row ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        .stat-pill {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            flex: 1;
+            min-width: 120px;
+        }
+        .stat-pill-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: var(--bg-active);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+        .stat-pill-icon svg { width: 16px; height: 16px; }
+        .stat-pill strong {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+            display: block;
+        }
+
+        /* ── Form panel ── */
+        .add-form-wrap { margin-bottom: 24px; }
+        .add-form-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        .add-form-toggle:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border-color: var(--border-medium);
+        }
+        .add-form-toggle svg { width: 16px; height: 16px; }
+        .add-form-toggle.editing {
+            background: rgba(59,130,246,.06);
+            border-color: rgba(59,130,246,.3);
+            color: var(--primary);
+        }
+        .add-form-body {
+            display: none;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            padding: 20px;
+        }
+        .add-form-body.open { display: block; }
+        .form-grid { display: flex; flex-direction: column; gap: 14px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid var(--border-medium);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            font-size: 14px;
+            transition: border-color 0.15s;
+            box-sizing: border-box;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            padding-top: 4px;
+        }
+
+        /* ── Link cards ── */
+        .items-list { display: flex; flex-direction: column; gap: 8px; }
+        .item-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .item-card:hover {
+            border-color: var(--border-medium);
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+
+        /* ── Link icon preview — matches public page neutral style ── */
+        .link-icon-preview {
+            width: 44px; height: 44px;
+            border-radius: 11px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            font-size: 17px;
+            color: var(--text-secondary);
+            background: var(--bg-active);
+            border: 1px solid var(--border-light);
+        }
+
+        /* ── App card preview — 2-up grid matching public page ── */
+        .app-cards-preview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        .app-card-preview {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 16px 14px 14px;
+            border-radius: 14px;
+            border: 1px solid var(--border-medium);
+            background: var(--bg-surface);
+            transition: box-shadow 0.15s;
+        }
+        .app-card-preview:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,.08);
+        }
+        .app-card-preview-corner {
+            position: absolute;
+            top: 10px; left: 10px;
+            font-size: 9px;
+            color: var(--text-tertiary);
+        }
+        .app-card-preview-icon {
+            font-size: 1.6rem;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+        .app-card-preview-store {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--text-tertiary);
+            margin-bottom: 2px;
+        }
+        .app-card-preview-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+        .app-card-preview-sub {
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+        .app-card-preview-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .app-card-preview-actions {
+            display: flex;
+            gap: 4px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .item-card-body { flex: 1; min-width: 0; }
+        .item-card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .item-card-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .item-card-url {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            font-family: monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 300px;
+        }
+        .item-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-active { background: rgba(34,197,94,.12); color: #16a34a; }
+        .badge-hidden { background: var(--bg-active); color: var(--text-tertiary); }
+        .badge-sort { background: var(--bg-active); color: var(--text-secondary); }
+        .badge-app  { background: rgba(99,102,241,.12); color: #6366f1; }
+        .badge-link { background: var(--bg-active); color: var(--text-secondary); }
+
+        .item-card-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+            align-items: center;
+        }
+        .icon-action {
+            width: 30px; height: 30px;
+            border-radius: 7px;
+            border: 1px solid var(--border-light);
+            background: transparent;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+        }
+        .icon-action:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-medium); }
+        .icon-action.danger:hover { background: rgba(220,38,38,.08); color: #dc2626; border-color: rgba(220,38,38,.25); }
+        .icon-action svg { width: 13px; height: 13px; }
+        .icon-action:disabled { opacity: 0.25; cursor: default; }
+
+        /* ── Sort buttons ── */
+        .sort-btn-group { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
+
+        /* ── Icon + color row in form ── */
+        .icon-preview-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .icon-live-preview {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 17px;
+            color: var(--text-secondary);
+            background: var(--bg-active);
+            border: 1px solid var(--border-light);
+            flex-shrink: 0;
+        }
+        .color-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .color-row input[type="color"] {
+            width: 40px; height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border-medium);
+            cursor: pointer;
+            padding: 2px 3px;
+            background: var(--bg-primary);
+            flex-shrink: 0;
+        }
+        .color-row .form-input { flex: 1; font-family: monospace; }
+
+        /* ── Toggle switch ── */
+        .toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 0;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 40px; height: 22px;
+            flex-shrink: 0;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: var(--border-medium);
+            border-radius: 22px;
+            transition: .2s;
+        }
+        .toggle-slider:before {
+            content: '';
+            position: absolute;
+            width: 16px; height: 16px;
+            left: 3px; top: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: .2s;
+        }
+        .toggle-switch input:checked + .toggle-slider { background: #22c55e; }
+        .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
+        .toggle-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+
+        /* ── Empty state ── */
+        .empty-state {
+            padding: 56px 24px;
+            text-align: center;
+            color: var(--text-tertiary);
+            background: var(--bg-surface);
+            border: 1px dashed var(--border-medium);
+            border-radius: 12px;
+        }
+        .empty-state-icon {
+            width: 48px; height: 48px;
+            margin: 0 auto 14px;
+            border-radius: 14px;
+            background: var(--bg-active);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .empty-state-icon svg { width: 22px; height: 22px; color: var(--text-tertiary); }
+        .empty-state p { font-size: 14px; margin: 0; }
+
+        /* ── List toolbar ── */
+        .list-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        .list-count { font-size: 13px; color: var(--text-secondary); }
+
+        /* ── Modal ── */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.45);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-backdrop.open { display: flex; }
+        .modal-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-medium);
+            border-radius: 16px;
+            padding: 28px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,.25);
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .modal-close {
+            width: 30px; height: 30px;
+            border-radius: 7px;
+            border: 1px solid var(--border-light);
+            background: transparent;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+        }
+        .modal-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .modal-close svg { width: 14px; height: 14px; }
+
+        /* ── Page texts card ── */
+        .page-texts-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .page-texts-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s;
+        }
+        .page-texts-header:hover { background: var(--bg-hover); }
+        .page-texts-body {
+            display: none;
+            padding: 0 16px 16px;
+            border-top: 1px solid var(--border-light);
+            padding-top: 16px;
+        }
+        .page-texts-body.open { display: block; }
+
+        /* ── Mobile ── */
+        @media (max-width: 768px) {
+            .form-row { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .list-toolbar { flex-wrap: wrap; gap: 8px; }
+            .form-actions { flex-direction: column-reverse; }
+            .form-actions .btn { width: 100%; justify-content: center; }
+            .item-card { flex-wrap: wrap; }
+            .item-card-actions { width: 100%; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--border-light); margin-top: 4px; }
+            .icon-action { width: 36px; height: 36px; }
+            .topbar { padding: 12px 16px; }
+            .page-title { font-size: 16px; }
+            .modal-box { margin: 16px; max-width: calc(100% - 32px); }
+        }
+    </style>
+    <style id="early-sidebar-hide">
+        .sidebar-nav{visibility:hidden}
+    </style>
+    <script>
+        (function(){
+            var role=sessionStorage.getItem('adminRole');
+            var style=document.getElementById('early-sidebar-hide');
+            var css='.sidebar-nav{visibility:visible}';
+            if(role==='super_admin'){
+                css='.sidebar-nav{visibility:visible}';
+            }else if(role==='analyst'){
+                css='.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="admin-links"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            }else if(role==='editor'){
+                css='.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            }else if(role==='custom'){
+                css='.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            }
+            if(role)style.textContent=css;
+        })();
+    </script>
+</head>
+<body>
+<div class="dashboard-container">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <i data-lucide="play-circle"></i>
+                <span class="sidebar-logo-text">TafsirKurd</span>
+            </div>
+            <button class="sidebar-toggle" id="menu-toggle">
+                <i data-lucide="chevron-left"></i>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-header">Overview</div>
+                <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span></a>
+                <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Content</div>
+                <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span></a>
+                <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item active"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">Users</div>
+                <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                <a href="/admin-reading-stats.html" class="nav-item"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-header">System</div>
+                <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+                <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+                <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
+                <a href="/admin-activity-feed.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">Activity Feed</span></a>
+                <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-profile">
+                <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                <div class="sidebar-profile-info">
+                    <div class="sidebar-profile-name"></div>
+                    <div class="sidebar-profile-email"></div>
+                </div>
+                <button onclick="window.adminAuth.logout()" style="background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;transition:color .2s;" title="Logout">
+                    <i data-lucide="log-out"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+        <header class="topbar">
+            <button class="topbar-menu-toggle" id="mobile-menu-toggle">
+                <i data-lucide="menu"></i>
+            </button>
+            <div class="topbar-search">
+                <i data-lucide="search"></i>
+                <input type="text" placeholder="Search links..." id="search-input">
+            </div>
+            <div class="topbar-actions">
+                <div class="session-timer" id="sessionTimer" title="Session expires after 20 minutes">
+                    <i data-lucide="clock"></i>
+                    <span id="sessionTimerText">20:00</span>
+                </div>
+                <button class="topbar-btn" style="position: relative;">
+                    <i data-lucide="bell"></i>
+                    <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span>
+                </button>
+                <button class="topbar-btn" id="theme-toggle">
+                    <i data-lucide="moon" id="theme-icon"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <!-- Page header -->
+            <div class="page-header">
+                <h1 class="page-title">Links</h1>
+                <div class="page-actions">
+                    <button class="btn btn-secondary" onclick="window.open('/links','_blank')" title="Preview public page">
+                        <i data-lucide="external-link"></i>
+                        <span>Preview</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="openAddModal()">
+                        <i data-lucide="plus"></i>
+                        <span>Add Link</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats row -->
+            <div class="stats-row">
+                <div class="stat-pill">
+                    <div class="stat-pill-icon"><i data-lucide="link"></i></div>
+                    <div><strong id="stat-total">—</strong>Total Links</div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-pill-icon"><i data-lucide="eye"></i></div>
+                    <div><strong id="stat-active">—</strong>Active</div>
+                </div>
+                <div class="stat-pill">
+                    <div class="stat-pill-icon"><i data-lucide="eye-off"></i></div>
+                    <div><strong id="stat-hidden">—</strong>Hidden</div>
+                </div>
+            </div>
+
+            <!-- Page texts editor -->
+            <div class="page-texts-card" id="pageTextsCard">
+                <div class="page-texts-header" onclick="togglePageTexts()">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <i data-lucide="type" style="width:15px;height:15px;color:var(--text-secondary)"></i>
+                        <span style="font-size:13px;font-weight:600;color:var(--text-primary)">Page Texts</span>
+                        <span style="font-size:11px;color:var(--text-tertiary)">— tagline &amp; app subtitle</span>
+                    </div>
+                    <i data-lucide="chevron-down" id="pageTextsChevron" style="width:15px;height:15px;color:var(--text-tertiary);transition:transform .2s"></i>
+                </div>
+                <div class="page-texts-body" id="pageTextsBody">
+                    <div class="form-group">
+                        <label class="form-label">Hero Tagline <span style="font-weight:400;color:var(--text-tertiary)">(hero section)</span></label>
+                        <input type="text" id="setting-tagline" class="form-input" dir="rtl" placeholder="هەمی روپەلێن تەفسیر کورد">
+                    </div>
+                    <div class="form-group" style="margin-top:12px;">
+                        <label class="form-label">App Download Subtitle <span style="font-weight:400;color:var(--text-tertiary)">(shown on each app card)</span></label>
+                        <input type="text" id="setting-app-sub" class="form-input" dir="rtl" placeholder="بەخۆڕایی داونلۆد بکە">
+                    </div>
+                    <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+                        <button class="btn btn-primary" onclick="savePageTexts()">
+                            <i data-lucide="save"></i>
+                            <span>Save Texts</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List toolbar -->
+            <div class="list-toolbar">
+                <span class="list-count" id="links-count"></span>
+            </div>
+
+            <!-- Links list -->
+            <div id="links-list" class="items-list"></div>
+        </div>
+    </main>
+</div>
+
+<!-- Notification container -->
+<div id="notification-container" style="position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:340px;pointer-events:none;"></div>
+
+<!-- ── ADD / EDIT MODAL ── -->
+<div class="modal-backdrop" id="link-modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title" id="modal-title">Add Link</div>
+            <button class="modal-close" onclick="closeModal()">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+        <input type="hidden" id="link-edit-id">
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="form-label" for="link-title">Title *</label>
+                <input type="text" id="link-title" class="form-input" placeholder="e.g. Follow on TikTok">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="link-subtitle">Subtitle</label>
+                <input type="text" id="link-subtitle" class="form-input" placeholder="Short description shown below title">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="link-url">URL *</label>
+                <input type="url" id="link-url" class="form-input" placeholder="https://tiktok.com/@tafsirkurd">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="link-category">Section</label>
+                <select id="link-category" class="form-select">
+                    <option value="link">Links (لینکەکان)</option>
+                    <option value="app">App Download (داونلۆد ئەپ)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Icon (Font Awesome class)</label>
+                <div class="icon-preview-wrap">
+                    <div class="icon-live-preview" id="icon-live-preview" style="background:#6366f1;">
+                        <i class="fab fa-link" id="icon-live-i"></i>
+                    </div>
+                    <input type="text" id="link-icon" class="form-input" placeholder="fab fa-tiktok" oninput="updateIconPreview()">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Background Color</label>
+                <div class="color-row">
+                    <input type="color" id="link-color-picker" value="#6366f1" oninput="syncColorFromPicker()">
+                    <input type="text" id="link-bg-color" class="form-input" placeholder="#6366f1" value="#6366f1" oninput="syncColorFromText()" maxlength="9">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="link-sort-order">Sort Order</label>
+                    <input type="number" id="link-sort-order" class="form-input" value="10" min="0">
+                </div>
+                <div class="form-group" style="justify-content:flex-end;">
+                    <label class="form-label">Active</label>
+                    <div class="toggle-wrap">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="link-active" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label" id="active-label">Visible on page</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveLink()">
+                    <i data-lucide="save"></i>
+                    <span id="save-btn-label">Save Link</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/utils/admin-session-timer-ui.js?v=5"></script>
+<script src="/utils/admin-auth.js?v=4"></script>
+<script>
+'use strict';
+
+/* ── State ── */
+var allLinks = [];
+
+/* ── DOM helpers ── */
+function mke(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
+function mkIconBtn(lucideIcon, title, danger, cb) {
+    var btn = mke('button', 'icon-action' + (danger ? ' danger' : ''));
+    btn.title = title;
+    btn.onclick = cb;
+    var ico = mke('i'); ico.setAttribute('data-lucide', lucideIcon);
+    btn.appendChild(ico);
+    return btn;
+}
+
+/* ── Toast ── */
+function showNotification(msg, type) {
+    type = type || 'info';
+    var colors = { success:'#22c55e', error:'#ef4444', info:'#3b82f6', warning:'#f59e0b' };
+    var container = document.getElementById('notification-container');
+    var el = document.createElement('div');
+    el.style.cssText = 'background:var(--bg-surface);border:1px solid var(--border-medium);border-left:4px solid ' + (colors[type]||colors.info) + ';border-radius:8px;padding:12px 16px;font-size:13px;color:var(--text-primary);pointer-events:auto;box-shadow:0 4px 16px rgba(0,0,0,.15);animation:fadeIn .2s ease;';
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(function() { el.remove(); }, 3500);
+}
+
+/* ── Update stats ── */
+function updateStats() {
+    var active = allLinks.filter(function(l){ return l.active !== false; }).length;
+    var hidden = allLinks.length - active;
+    document.getElementById('stat-total').textContent = allLinks.length;
+    document.getElementById('stat-active').textContent = active;
+    document.getElementById('stat-hidden').textContent = hidden;
+}
+
+/* ── Load links from Supabase ── */
+async function loadLinks() {
+    var supabase = window.adminAuth.getSupabase();
+    if (!supabase) return;
+    var r = await supabase.from('site_links').select('*').order('sort_order');
+    if (r.error) { showNotification('Error loading links: ' + r.error.message, 'error'); return; }
+    allLinks = r.data || [];
+    renderLinksList();
+    updateStats();
+}
+
+/* ── Render cards ── */
+function renderLinksList() {
+    var list = document.getElementById('links-list');
+    list.textContent = '';
+    var countEl = document.getElementById('links-count');
+    if (countEl) countEl.textContent = allLinks.length + ' link' + (allLinks.length !== 1 ? 's' : '');
+
+    if (!allLinks.length) {
+        var es = mke('div', 'empty-state');
+        var eico = mke('div', 'empty-state-icon');
+        var ei = mke('i'); ei.setAttribute('data-lucide', 'link');
+        eico.appendChild(ei);
+        var ep = mke('p'); ep.textContent = 'No links yet. Add one to get started.';
+        es.appendChild(eico); es.appendChild(ep);
+        list.appendChild(es);
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        return;
+    }
+
+    /* Split into app cards (2-up grid) and link rows */
+    var appLinks  = allLinks.filter(function(l) { return l.category === 'app'; });
+    var linkLinks = allLinks.filter(function(l) { return l.category !== 'app'; });
+
+    /* ── App cards grid ── */
+    if (appLinks.length) {
+        var appGrid = mke('div', 'app-cards-preview');
+        appLinks.forEach(function(link, idx) {
+            var isAppleLink = link.url && link.url.indexOf('apps.apple.com') !== -1;
+            var globalIdx = allLinks.indexOf(link);
+
+            var card = mke('div', 'app-card-preview');
+
+            var corner = mke('i', 'fas fa-arrow-up-right-from-square app-card-preview-corner');
+            corner.setAttribute('aria-hidden', 'true');
+            card.appendChild(corner);
+
+            var ico = mke('i', (isAppleLink ? 'fab fa-apple' : 'fab fa-google-play') + ' app-card-preview-icon');
+            card.appendChild(ico);
+
+            var store = mke('div', 'app-card-preview-store');
+            store.textContent = isAppleLink ? 'App Store' : 'Google Play';
+            card.appendChild(store);
+
+            var name = mke('div', 'app-card-preview-name');
+            name.textContent = isAppleLink ? 'iOS' : 'Android';
+            card.appendChild(name);
+
+            var sub = mke('div', 'app-card-preview-sub');
+            sub.textContent = link.subtitle || 'بەخۆڕایی داونلۆد بکە';
+            card.appendChild(sub);
+
+            var meta = mke('div', 'app-card-preview-meta');
+            var activeBadge = mke('span', 'badge ' + (link.active !== false ? 'badge-active' : 'badge-hidden'));
+            activeBadge.textContent = link.active !== false ? 'Active' : 'Hidden';
+            meta.appendChild(activeBadge);
+            var sortBadge = mke('span', 'badge badge-sort');
+            sortBadge.textContent = '#' + (link.sort_order != null ? link.sort_order : '—');
+            meta.appendChild(sortBadge);
+            card.appendChild(meta);
+
+            var acts = mke('div', 'app-card-preview-actions');
+            acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(l){ return function(){ openEditModal(l.id); }; })(link)));
+            acts.appendChild(mkIconBtn('trash-2', 'Delete', true, (function(id){ return function(){ deleteLink(id); }; })(link.id)));
+            var upBtn = mke('button', 'icon-action'); upBtn.title = 'Move up'; upBtn.disabled = globalIdx === 0;
+            var upIco = mke('i'); upIco.setAttribute('data-lucide', 'chevron-up'); upBtn.appendChild(upIco);
+            (function(i){ upBtn.onclick = function(){ moveLink(i,-1); }; })(globalIdx);
+            var downBtn = mke('button', 'icon-action'); downBtn.title = 'Move down'; downBtn.disabled = globalIdx === allLinks.length - 1;
+            var downIco = mke('i'); downIco.setAttribute('data-lucide', 'chevron-down'); downBtn.appendChild(downIco);
+            (function(i){ downBtn.onclick = function(){ moveLink(i,1); }; })(globalIdx);
+            acts.appendChild(upBtn); acts.appendChild(downBtn);
+            card.appendChild(acts);
+
+            appGrid.appendChild(card);
+        });
+        list.appendChild(appGrid);
+    }
+
+    /* ── Link rows ── */
+    linkLinks.forEach(function(link) {
+        var globalIdx = allLinks.indexOf(link);
+        var card = mke('div', 'item-card');
+
+        var iconWrap = mke('div', 'link-icon-preview');
+        var faIcon = mke('i', link.icon || 'fas fa-link');
+        iconWrap.appendChild(faIcon);
+
+        var body = mke('div', 'item-card-body');
+        var titleEl = mke('div', 'item-card-title');
+        titleEl.textContent = link.title || '(untitled)';
+        body.appendChild(titleEl);
+
+        if (link.subtitle) {
+            var subEl = mke('div', 'item-card-subtitle');
+            subEl.textContent = link.subtitle;
+            body.appendChild(subEl);
+        }
+
+        var urlEl = mke('div', 'item-card-url');
+        urlEl.textContent = link.url || '';
+        body.appendChild(urlEl);
+
+        var meta = mke('div', 'item-card-meta');
+        var sortBadge = mke('span', 'badge badge-sort');
+        sortBadge.textContent = '#' + (link.sort_order != null ? link.sort_order : '—');
+        meta.appendChild(sortBadge);
+        var activeBadge = mke('span', 'badge ' + (link.active !== false ? 'badge-active' : 'badge-hidden'));
+        activeBadge.textContent = link.active !== false ? 'Active' : 'Hidden';
+        meta.appendChild(activeBadge);
+        body.appendChild(meta);
+
+        var sortGroup = mke('div', 'sort-btn-group');
+        var upBtn = mke('button', 'icon-action'); upBtn.title = 'Move up'; upBtn.disabled = globalIdx === 0;
+        var upIco = mke('i'); upIco.setAttribute('data-lucide', 'chevron-up'); upBtn.appendChild(upIco);
+        (function(i){ upBtn.onclick = function(){ moveLink(i,-1); }; })(globalIdx);
+        var downBtn = mke('button', 'icon-action'); downBtn.title = 'Move down'; downBtn.disabled = globalIdx === allLinks.length - 1;
+        var downIco = mke('i'); downIco.setAttribute('data-lucide', 'chevron-down'); downBtn.appendChild(downIco);
+        (function(i){ downBtn.onclick = function(){ moveLink(i,1); }; })(globalIdx);
+        sortGroup.appendChild(upBtn); sortGroup.appendChild(downBtn);
+
+        var acts = mke('div', 'item-card-actions');
+        acts.appendChild(mkIconBtn('pencil', 'Edit', false, (function(l){ return function(){ openEditModal(l.id); }; })(link)));
+        acts.appendChild(mkIconBtn('trash-2', 'Delete', true, (function(id){ return function(){ deleteLink(id); }; })(link.id)));
+
+        card.appendChild(iconWrap);
+        card.appendChild(body);
+        card.appendChild(sortGroup);
+        card.appendChild(acts);
+        list.appendChild(card);
+    });
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+/* ── Move link (up/down) ── */
+async function moveLink(idx, dir) {
+    var target = idx + dir;
+    if (target < 0 || target >= allLinks.length) return;
+    var a = allLinks[idx];
+    var b = allLinks[target];
+    var sa = a.sort_order;
+    var sb = b.sort_order;
+    /* If sort_order values are identical, assign unique ones first */
+    if (sa === sb) {
+        sa = idx + 1;
+        sb = target + 1;
+    }
+    var supabase = window.adminAuth.getSupabase();
+    if (!supabase) return;
+    try {
+        await Promise.all([
+            supabase.from('site_links').update({ sort_order: sb }).eq('id', a.id),
+            supabase.from('site_links').update({ sort_order: sa }).eq('id', b.id)
+        ]);
+    } catch(e) {
+        showNotification('Reorder failed', 'error');
+        return;
+    }
+    a.sort_order = sb;
+    b.sort_order = sa;
+    allLinks.sort(function(x, y){ return (x.sort_order || 0) - (y.sort_order || 0); });
+    renderLinksList();
+    updateStats();
+}
+
+/* ── Modal helpers ── */
+function openAddModal() {
+    document.getElementById('link-edit-id').value = '';
+    document.getElementById('link-title').value = '';
+    document.getElementById('link-subtitle').value = '';
+    document.getElementById('link-url').value = '';
+    document.getElementById('link-icon').value = '';
+    document.getElementById('link-category').value = 'link';
+    document.getElementById('link-bg-color').value = '#6366f1';
+    document.getElementById('link-color-picker').value = '#6366f1';
+    document.getElementById('link-sort-order').value = allLinks.length ? (Math.max.apply(null, allLinks.map(function(l){ return l.sort_order || 0; })) + 1) : 1;
+    document.getElementById('link-active').checked = true;
+    document.getElementById('active-label').textContent = 'Visible on page';
+    document.getElementById('modal-title').textContent = 'Add Link';
+    document.getElementById('save-btn-label').textContent = 'Save Link';
+    updateIconPreview();
+    document.getElementById('link-modal').classList.add('open');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function openEditModal(id) {
+    var link = allLinks.find(function(l){ return l.id === id; });
+    if (!link) return;
+    document.getElementById('link-edit-id').value = id;
+    document.getElementById('link-title').value = link.title || '';
+    document.getElementById('link-subtitle').value = link.subtitle || '';
+    document.getElementById('link-url').value = link.url || '';
+    document.getElementById('link-icon').value = link.icon || '';
+    document.getElementById('link-category').value = link.category || 'link';
+    var col = link.bg_color || '#6366f1';
+    document.getElementById('link-bg-color').value = col;
+    /* color picker only accepts 6-digit hex */
+    document.getElementById('link-color-picker').value = col.length === 7 ? col : '#6366f1';
+    document.getElementById('link-sort-order').value = link.sort_order != null ? link.sort_order : 10;
+    document.getElementById('link-active').checked = link.active !== false;
+    document.getElementById('active-label').textContent = link.active !== false ? 'Visible on page' : 'Hidden';
+    document.getElementById('modal-title').textContent = 'Edit Link';
+    document.getElementById('save-btn-label').textContent = 'Update Link';
+    updateIconPreview();
+    document.getElementById('link-modal').classList.add('open');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function closeModal() {
+    document.getElementById('link-modal').classList.remove('open');
+}
+
+/* Close modal when clicking backdrop */
+document.getElementById('link-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+/* ── Live icon + color preview ── */
+function updateIconPreview() {
+    var iconClass = document.getElementById('link-icon').value.trim() || 'fas fa-link';
+    var iEl = document.getElementById('icon-live-i');
+    if (iEl) iEl.className = iconClass;
+}
+
+function syncColorFromPicker() {
+    var val = document.getElementById('link-color-picker').value;
+    document.getElementById('link-bg-color').value = val;
+    updateIconPreview();
+}
+
+function syncColorFromText() {
+    var val = document.getElementById('link-bg-color').value.trim();
+    /* Only sync to picker if it looks like a valid 6-digit hex */
+    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+        document.getElementById('link-color-picker').value = val;
+    }
+    updateIconPreview();
+}
+
+/* Sync active label */
+document.getElementById('link-active').addEventListener('change', function() {
+    document.getElementById('active-label').textContent = this.checked ? 'Visible on page' : 'Hidden';
+});
+
+/* ── Save link (insert or update) ── */
+async function saveLink() {
+    var title = document.getElementById('link-title').value.trim();
+    if (!title) { showNotification('Title is required.', 'warning'); return; }
+    var url = document.getElementById('link-url').value.trim();
+    if (!url) { showNotification('URL is required.', 'warning'); return; }
+
+    var editId = document.getElementById('link-edit-id').value;
+    var payload = {
+        title: title,
+        subtitle: document.getElementById('link-subtitle').value.trim() || null,
+        url: url,
+        icon: document.getElementById('link-icon').value.trim() || null,
+        category: document.getElementById('link-category').value || 'link',
+        bg_color: document.getElementById('link-bg-color').value.trim() || '#6366f1',
+        sort_order: parseInt(document.getElementById('link-sort-order').value) || 0,
+        active: document.getElementById('link-active').checked
+    };
+
+    var supabase = window.adminAuth.getSupabase();
+    if (!supabase) { showNotification('Not authenticated.', 'error'); return; }
+
+    var r = editId
+        ? await supabase.from('site_links').update(payload).eq('id', editId).select()
+        : await supabase.from('site_links').insert(payload).select();
+
+    if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
+    if (editId && (!r.data || r.data.length === 0)) {
+        showNotification('Update blocked — no rows changed. Check Supabase RLS permissions.', 'error');
+        return;
+    }
+
+    var savedRow = (r.data && r.data[0]) || null;
+    showNotification(editId ? 'Link updated.' : 'Link added.', 'success');
+
+    if (editId && savedRow) {
+        var idx = allLinks.findIndex(function(l){ return String(l.id) === String(editId); });
+        if (idx !== -1) allLinks[idx] = savedRow;
+    } else if (!editId && savedRow) {
+        allLinks.push(savedRow);
+    }
+
+    allLinks.sort(function(a, b){ return (a.sort_order || 0) - (b.sort_order || 0); });
+    renderLinksList();
+    updateStats();
+    closeModal();
+}
+
+/* ── Delete link ── */
+async function deleteLink(id) {
+    var link = allLinks.find(function(l){ return l.id === id; });
+    var name = link ? (link.title || id) : id;
+    if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+    var supabase = window.adminAuth.getSupabase();
+    if (!supabase) return;
+    var r = await supabase.from('site_links').delete().eq('id', id);
+    if (r.error) { showNotification('Delete failed: ' + r.error.message, 'error'); return; }
+    showNotification('Link deleted.', 'success');
+    allLinks = allLinks.filter(function(l){ return l.id !== id; });
+    renderLinksList();
+    updateStats();
+}
+
+/* ── Theme toggle ── */
+(function() {
+    var themeIcon = document.getElementById('theme-icon');
+    if (localStorage.getItem('admin-theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        themeIcon.setAttribute('data-lucide', 'sun');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+    document.getElementById('theme-toggle').addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        var isDark = document.body.classList.contains('dark-mode');
+        themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+    });
+})();
+
+/* ── Page texts (site_settings) ── */
+function togglePageTexts() {
+    var body = document.getElementById('pageTextsBody');
+    var chevron = document.getElementById('pageTextsChevron');
+    body.classList.toggle('open');
+    chevron.style.transform = body.classList.contains('open') ? 'rotate(180deg)' : '';
+}
+
+async function loadPageTexts() {
+    var supabase = window.adminAuth.getSupabase();
+    if (!supabase) return;
+    var r = await supabase.from('site_settings').select('key,value').in('key', ['links_tagline','links_app_sub']);
+    if (r.error || !r.data) return;
+    r.data.forEach(function(row) {
+        if (row.key === 'links_tagline') document.getElementById('setting-tagline').value = row.value;
+        if (row.key === 'links_app_sub')  document.getElementById('setting-app-sub').value  = row.value;
+    });
+}
+
+async function savePageTexts() {
+    var supabase = window.adminAuth.getSupabase();
+    if (!supabase) return;
+    var tagline = document.getElementById('setting-tagline').value.trim();
+    var appSub  = document.getElementById('setting-app-sub').value.trim();
+    if (!tagline || !appSub) { showNotification('Both fields are required.', 'warning'); return; }
+
+    var r = await supabase.from('site_settings').upsert([
+        { key: 'links_tagline', value: tagline },
+        { key: 'links_app_sub', value: appSub  }
+    ], { onConflict: 'key' });
+
+    if (r.error) { showNotification('Save failed: ' + r.error.message, 'error'); return; }
+    showNotification('Page texts saved.', 'success');
+}
+
+/* ── Init ── */
+(async function() {
+    var isAuth = await window.adminAuth.checkAuth();
+    if (isAuth) { await loadLinks(); await loadPageTexts(); }
+})();
+
+document.getElementById('menu-toggle').addEventListener('click', function() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+});
+var mobileBtn = document.getElementById('mobile-menu-toggle');
+if (mobileBtn) mobileBtn.addEventListener('click', function() {
+    document.getElementById('sidebar').classList.toggle('mobile-open');
+});
+
+/* Search filter */
+var searchInput = document.getElementById('search-input');
+if (searchInput) searchInput.addEventListener('input', function() {
+    var q = this.value.toLowerCase();
+    document.querySelectorAll('#links-list .item-card').forEach(function(el) {
+        el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+});
+
+if (typeof lucide !== 'undefined') lucide.createIcons();
+</script>
+</body>
+</html>

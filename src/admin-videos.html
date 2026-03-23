@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>Videos - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        .view-toggle {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            padding: 4px;
+        }
+
+        .view-toggle-btn {
+            padding: 6px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .view-toggle-btn.active {
+            background: var(--bg-active);
+            color: var(--text-primary);
+        }
+
+        .view-toggle-btn:hover:not(.active) {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            padding: 16px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .stat-divider {
+            width: 1px;
+            background: var(--border-light);
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .video-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .video-card:hover {
+            border-color: var(--border-medium);
+            transform: translateY(-2px);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: var(--bg-active);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .video-placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .video-duration {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .video-card-body {
+            padding: 16px;
+        }
+
+        .video-card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .video-card-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .video-card-stat svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .video-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .video-card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .video-card-btn {
+            padding: 6px;
+            background: transparent;
+            border: 1px solid var(--border-medium);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .video-card-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-dark);
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-bar {
+                flex-wrap: wrap;
+            }
+
+            .stat-divider {
+                display: none;
+            }
+        }
+    </style>
+
+    <style id="early-sidebar-hide">
+        /* Hide sidebar nav by default until role is confirmed */
+        .sidebar-nav { visibility: hidden; }
+    </style>
+    <script>
+        // Early role-based sidebar hiding - runs before body renders
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+
+            if (role === 'super_admin') {
+                css = '.sidebar-nav{visibility:visible}';
+            } else if (role === 'analyst') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'editor') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'custom') {
+                css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            }
+            if (role) {
+                style.textContent = css;
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item">
+                        <i data-lucide="bar-chart-2"></i>
+                        <span class="nav-item-label">Dashboard</span>
+                    </a>
+                    <a href="/admin-analytics.html" class="nav-item">
+                        <i data-lucide="trending-up"></i>
+                        <span class="nav-item-label">Analytics</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item">
+                        <i data-lucide="message-square"></i>
+                        <span class="nav-item-label">Messages</span>
+                        <span class="nav-item-badge">13</span>
+                    </a>
+                    <a href="/admin-videos.html" class="nav-item active">
+                        <i data-lucide="video"></i>
+                        <span class="nav-item-label">Videos</span>
+                    </a>
+                    <a href="/admin-islamvoice-management.html" class="nav-item">
+                        <i data-lucide="radio"></i>
+                        <span class="nav-item-label">IslamVoice</span>
+                    </a>
+                    <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                    <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                    <a href="/admin-translations.html" class="nav-item">
+                        <i data-lucide="languages"></i>
+                        <span class="nav-item-label">Translations</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item">
+                        <i data-lucide="users"></i>
+                        <span class="nav-item-label">Users</span>
+                    </a>
+                    <a href="/admin-reading-stats.html" class="nav-item">
+                        <i data-lucide="book-open"></i>
+                        <span class="nav-item-label">Reading Stats</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-account-management.html" class="nav-item">
+                        <i data-lucide="user-cog"></i>
+                        <span class="nav-item-label">Admin Accounts</span>
+                    </a>
+                    <a href="/admin-features.html" class="nav-item">
+                        <i data-lucide="layers"></i>
+                        <span class="nav-item-label">Features</span>
+                    </a>
+                    <a href="/admin-schedule.html" class="nav-item">
+                        <i data-lucide="calendar"></i>
+                        <span class="nav-item-label">Schedule</span>
+                    </a>
+                    <a href="/admin-social-stats.html" class="nav-item">
+                        <i data-lucide="share-2"></i>
+                        <span class="nav-item-label">Social Stats</span>
+                    </a>
+                    <a href="/admin-bot-protection.html" class="nav-item">
+                        <i data-lucide="shield"></i>
+                        <span class="nav-item-label">Bot Protection</span>
+                    </a>
+                    <a href="/admin-database.html" class="nav-item">
+                        <i data-lucide="database"></i>
+                        <span class="nav-item-label">Database</span>
+                    </a>
+                    <a href="/admin-search-console.html" class="nav-item">
+                        <i data-lucide="search"></i>
+                        <span class="nav-item-label">Search Console</span>
+                    </a>
+                    <a href="/admin-email-templates.html" class="nav-item">
+                        <i data-lucide="mail"></i>
+                        <span class="nav-item-label">Email Templates</span>
+                    </a>
+                    <a href="/admin-activity-feed.html" class="nav-item">
+                        <i data-lucide="activity"></i>
+                        <span class="nav-item-label">Activity Feed</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar">
+                        <i data-lucide="user"></i>
+                    </div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name"></div>
+                        <div class="sidebar-profile-email"></div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; display: flex; align-items: center; transition: color 0.2s;" title="Logout">
+                        <i data-lucide="log-out"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="topbar-search">
+                    <i data-lucide="search"></i>
+                    <input type="text" placeholder="Search videos...">
+                </div>
+                <div class="topbar-actions">
+                    <div class="session-timer" id="sessionTimer" title="Session expires after 1 hour"><i data-lucide="clock"></i><span id="sessionTimerText">60:00</span></div>
+                    <button class="topbar-btn" style="position: relative;">
+                        <i data-lucide="bell"></i>
+                        <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span>
+                    </button>
+                    <button class="topbar-btn" id="theme-toggle">
+                        <i data-lucide="moon" id="theme-icon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">Featured Videos</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-primary" onclick="showAddVideoModal()">
+                            <i data-lucide="plus"></i>
+                            Add Video
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STATS -->
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-videos">0</div>
+                        <div class="stat-label">Total Videos</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-views">N/A</div>
+                        <div class="stat-label">Total Views</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="storage-used">N/A</div>
+                        <div class="stat-label">Storage Used</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="uploaded-today">0</div>
+                        <div class="stat-label">Uploaded Today</div>
+                    </div>
+                </div>
+
+                <!-- VIDEO GRID -->
+                <div class="video-grid" id="video-grid">
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-tertiary);">
+                        <div style="width: 40px; height: 40px; border: 3px solid var(--border-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px;"></div>
+                        <p style="font-size: 14px;">Loading videos...</p>
+                    </div>
+                </div>
+
+                <!-- Add/Edit Modal -->
+                <div class="modal" id="video-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+                    <div style="background:var(--bg-surface); border-radius:12px; padding:24px; width:90%; max-width:480px; border:1px solid var(--border-light);">
+                        <h3 style="margin:0 0 16px; color:var(--text-primary);" id="video-modal-title">Add Video</h3>
+                        <input type="hidden" id="video-edit-id">
+                        <div style="margin-bottom:12px;">
+                            <label style="display:block; font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:4px;">Title</label>
+                            <input type="text" id="video-title-input" placeholder="Video title..." style="width:100%; padding:8px 12px; border:1px solid var(--border-medium); border-radius:6px; background:var(--bg-app); color:var(--text-primary); font-size:14px; box-sizing:border-box;">
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="display:block; font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:4px;">Video URL (Instagram/YouTube)</label>
+                            <input type="text" id="video-url-input" placeholder="https://www.instagram.com/reel/..." dir="ltr" style="width:100%; padding:8px 12px; border:1px solid var(--border-medium); border-radius:6px; background:var(--bg-app); color:var(--text-primary); font-size:13px; font-family:monospace; box-sizing:border-box;">
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block; font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:4px;">Position</label>
+                            <input type="number" id="video-position-input" placeholder="1" min="1" style="width:80px; padding:8px 12px; border:1px solid var(--border-medium); border-radius:6px; background:var(--bg-app); color:var(--text-primary); font-size:14px;">
+                        </div>
+                        <div style="display:flex; gap:8px; justify-content:flex-end;">
+                            <button class="btn btn-secondary" onclick="closeVideoModal()">Cancel</button>
+                            <button class="btn btn-primary" onclick="saveVideo()">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/utils/device-fingerprint.js"></script>
+    <script src="/utils/admin-heartbeat.js"></script>
+    <script src="/utils/admin-session-timer-ui.js?v=5"></script>
+    <script src="/utils/admin-auth.js?v=4"></script>
+    <script src="/utils/admin-notifications.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // Theme toggle
+        (function() {
+            const themeIcon = document.getElementById('theme-icon');
+            if (localStorage.getItem('admin-theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeIcon.setAttribute('data-lucide', 'sun');
+                lucide.createIcons();
+            }
+            document.getElementById('theme-toggle').addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                const isDark = document.body.classList.contains('dark-mode');
+                themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                lucide.createIcons();
+                localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+            });
+        })();
+
+        const menuToggle = document.getElementById('menu-toggle');
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
+
+        mobileMenuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('mobile-open');
+        });
+
+        let videosData = [];
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load featured videos from database
+        async function loadFeaturedVideos() {
+            const grid = document.getElementById('video-grid');
+            try {
+                const supabase = window.adminAuth.getSupabase();
+                const { data, error } = await supabase
+                    .from('featured_videos')
+                    .select('*')
+                    .order('position', { ascending: true });
+
+                if (error) throw error;
+                videosData = data || [];
+
+                // Update stats
+                document.getElementById('total-videos').textContent = videosData.length;
+                const activeCount = videosData.filter(v => v.is_active !== false).length;
+                document.getElementById('uploaded-today').textContent = activeCount;
+
+                // Clear grid
+                grid.textContent = '';
+
+                if (videosData.length === 0) {
+                    renderEmptyState(grid);
+                    return;
+                }
+
+                videosData.forEach(v => {
+                    const card = createVideoCard(v);
+                    grid.appendChild(card);
+                });
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Error loading videos:', error);
+                grid.textContent = 'Error loading videos';
+            }
+        }
+
+        function renderEmptyState(container) {
+            const div = document.createElement('div');
+            div.style.cssText = 'grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-tertiary);';
+
+            const icon = document.createElement('i');
+            icon.setAttribute('data-lucide', 'video-off');
+            icon.style.cssText = 'width: 48px; height: 48px; margin-bottom: 12px;';
+
+            const text = document.createElement('p');
+            text.style.cssText = 'font-size: 14px; margin: 0;';
+            text.textContent = 'No featured videos yet';
+
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-primary';
+            btn.style.marginTop = '16px';
+            btn.onclick = showAddVideoModal;
+            btn.textContent = 'Add First Video';
+
+            div.appendChild(icon);
+            div.appendChild(text);
+            div.appendChild(btn);
+            container.appendChild(div);
+            lucide.createIcons();
+        }
+
+        function createVideoCard(v) {
+            const card = document.createElement('div');
+            card.className = 'video-card';
+
+            // Thumbnail
+            const thumb = document.createElement('div');
+            thumb.className = 'video-thumbnail';
+            const thumbContent = getVideoThumbnail(v.video_url);
+            thumb.appendChild(thumbContent);
+
+            // Body
+            const body = document.createElement('div');
+            body.className = 'video-card-body';
+
+            const title = document.createElement('div');
+            title.className = 'video-card-title';
+            title.textContent = v.title || 'Untitled';
+
+            const meta = document.createElement('div');
+            meta.className = 'video-card-meta';
+
+            const posStat = document.createElement('div');
+            posStat.className = 'video-card-stat';
+            posStat.innerHTML = '<i data-lucide="hash"></i>';
+            const posSpan = document.createElement('span');
+            posSpan.textContent = 'Position ' + v.position;
+            posStat.appendChild(posSpan);
+
+            const platformStat = document.createElement('div');
+            platformStat.className = 'video-card-stat';
+            platformStat.innerHTML = '<i data-lucide="link"></i>';
+            const platSpan = document.createElement('span');
+            platSpan.textContent = getVideoPlatform(v.video_url);
+            platformStat.appendChild(platSpan);
+
+            meta.appendChild(posStat);
+            meta.appendChild(platformStat);
+
+            const footer = document.createElement('div');
+            footer.className = 'video-card-footer';
+
+            const badge = document.createElement('span');
+            badge.className = 'badge ' + (v.is_active !== false ? 'badge-success' : 'badge-neutral');
+            badge.textContent = v.is_active !== false ? 'Active' : 'Inactive';
+
+            const actions = document.createElement('div');
+            actions.className = 'video-card-actions';
+
+            const openBtn = document.createElement('button');
+            openBtn.className = 'video-card-btn';
+            openBtn.title = 'Open';
+            openBtn.innerHTML = '<i data-lucide="external-link"></i>';
+            openBtn.onclick = () => window.open(v.video_url, '_blank');
+
+            const editBtn = document.createElement('button');
+            editBtn.className = 'video-card-btn';
+            editBtn.title = 'Edit';
+            editBtn.innerHTML = '<i data-lucide="edit-2"></i>';
+            editBtn.onclick = () => editVideo(v.id);
+
+            const delBtn = document.createElement('button');
+            delBtn.className = 'video-card-btn';
+            delBtn.title = 'Delete';
+            delBtn.innerHTML = '<i data-lucide="trash-2"></i>';
+            delBtn.onclick = () => deleteVideo(v.id);
+
+            actions.appendChild(openBtn);
+            actions.appendChild(editBtn);
+            actions.appendChild(delBtn);
+
+            footer.appendChild(badge);
+            footer.appendChild(actions);
+
+            body.appendChild(title);
+            body.appendChild(meta);
+            body.appendChild(footer);
+
+            card.appendChild(thumb);
+            card.appendChild(body);
+
+            return card;
+        }
+
+        function getVideoThumbnail(url) {
+            // YouTube thumbnail
+            const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\?]+)/);
+            if (ytMatch) {
+                const img = document.createElement('img');
+                img.src = 'https://img.youtube.com/vi/' + ytMatch[1] + '/hqdefault.jpg';
+                img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+                return img;
+            }
+            // Instagram - show icon placeholder
+            if (url.includes('instagram.com')) {
+                const div = document.createElement('div');
+                div.className = 'video-placeholder';
+                div.style.background = 'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)';
+                div.innerHTML = '<i data-lucide="instagram" style="width:48px;height:48px;color:white;"></i>';
+                return div;
+            }
+            const div = document.createElement('div');
+            div.className = 'video-placeholder';
+            div.innerHTML = '<i data-lucide="video" style="width:48px;height:48px;"></i>';
+            return div;
+        }
+
+        function getVideoPlatform(url) {
+            if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
+            if (url.includes('instagram.com')) return 'Instagram';
+            return 'Video';
+        }
+
+        function showAddVideoModal() {
+            document.getElementById('video-modal-title').textContent = 'Add Video';
+            document.getElementById('video-edit-id').value = '';
+            document.getElementById('video-title-input').value = '';
+            document.getElementById('video-url-input').value = '';
+            document.getElementById('video-position-input').value = videosData.length + 1;
+            document.getElementById('video-modal').style.display = 'flex';
+        }
+
+        function editVideo(id) {
+            const video = videosData.find(v => v.id === id);
+            if (!video) return;
+            document.getElementById('video-modal-title').textContent = 'Edit Video';
+            document.getElementById('video-edit-id').value = id;
+            document.getElementById('video-title-input').value = video.title || '';
+            document.getElementById('video-url-input').value = video.video_url || '';
+            document.getElementById('video-position-input').value = video.position || 1;
+            document.getElementById('video-modal').style.display = 'flex';
+        }
+
+        function closeVideoModal() {
+            document.getElementById('video-modal').style.display = 'none';
+        }
+
+        async function saveVideo() {
+            const id = document.getElementById('video-edit-id').value;
+            const title = document.getElementById('video-title-input').value.trim();
+            const videoUrl = document.getElementById('video-url-input').value.trim();
+            const position = parseInt(document.getElementById('video-position-input').value) || 1;
+
+            if (!videoUrl) {
+                alert('Please enter a video URL');
+                return;
+            }
+
+            const supabase = window.adminAuth.getSupabase();
+            try {
+                if (id) {
+                    await supabase.from('featured_videos').update({ title, video_url: videoUrl, position }).eq('id', id);
+                } else {
+                    await supabase.from('featured_videos').insert({ title: title || 'Featured Video', video_url: videoUrl, position, is_active: true });
+                }
+                closeVideoModal();
+                loadFeaturedVideos();
+            } catch (error) {
+                console.error('Error saving video:', error);
+                alert('Error saving video');
+            }
+        }
+
+        async function deleteVideo(id) {
+            if (!confirm('Delete this video?')) return;
+            const supabase = window.adminAuth.getSupabase();
+            try {
+                await supabase.from('featured_videos').delete().eq('id', id);
+                loadFeaturedVideos();
+            } catch (error) {
+                console.error('Error deleting video:', error);
+                alert('Error deleting video');
+            }
+        }
+
+        // Check authentication and load videos
+        (async () => {
+            const isAuth = await window.adminAuth.checkAuth();
+            if (isAuth) {
+                await loadFeaturedVideos();
+            }
+        })();
+
+        // Close modal on backdrop click
+        document.getElementById('video-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'video-modal') closeVideoModal();
+        });
+    </script>
+</body>
+</html>

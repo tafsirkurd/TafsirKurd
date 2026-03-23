@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+    <script src="/utils/theme-loader.js"></script>
+    <script src="/i18n/i18n.js?v=20260224"></script>
+    <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co">
+  <script src="/utils/translations.js?v=20260225"></script>
+    <script src="/utils/scroll-position.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ب خێر بێی بۆ تەفسیر کورد">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <title data-t="onboarding_title_1">ب خێر بێی | TafsirKurd</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+
+    <!-- Kurdish Number Utility - Convert all numbers to Kurdish numerals -->
+    <script src="/utils/kurdish-numbers.js"></script>
+    <script src="/utils/auto-kurdish-numbers.js"></script>
+    <script src="/config/google-config.js"></script>
+
+    <!-- Critical Font Preloading - Instant font display, zero FOIT/FOUT -->
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=16" as="font" type="font/woff2" crossorigin>
+
+    <!-- Local Fonts - Zero external requests, instant loading -->
+    <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
+
+    <!-- Local Font Awesome - Zero external requests -->
+    <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <style>
+        :root {
+            --primary: #000000;
+            --accent: #ffffff;
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --text: #000000;
+            --text-muted: #666666;
+            --border: #e8e8e8;
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --success: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #fdfdfd 0%, #ffffff 100%);
+            min-height: 100vh;
+            max-height: 100vh;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bg-animation {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape:nth-child(1) {
+            width: 200px;
+            height: 200px;
+            background: black;
+            border-radius: 50%;
+            top: 10%;
+            left: 10%;
+        }
+
+        .shape:nth-child(2) {
+            width: 150px;
+            height: 150px;
+            background: black;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            top: 60%;
+            right: 10%;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0) scale(1);
+            }
+            50% {
+                transform: translateY(-20px) translateX(20px) scale(1.05);
+            }
+        }
+
+        .onboarding-container {
+            max-width: 520px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .onboarding-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 35px 28px;
+            box-shadow: var(--shadow-lg);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .slide {
+            display: none;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .slide-icon {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .slide-icon i {
+            font-size: 4rem;
+            background: linear-gradient(135deg, #000000 0%, #333333 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .slide-content {
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .slide-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--primary);
+            line-height: 1.4;
+        }
+
+        .slide-subtitle {
+            font-size: 1.1rem;
+            color: var(--text);
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .slide-description {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+
+        .feature-list {
+            text-align: right;
+            background: var(--bg);
+            padding: 18px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .feature-list-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .feature-list-item i {
+            color: var(--success);
+            font-size: 1.1rem;
+            min-width: 25px;
+        }
+
+        .progress-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 25px 0 20px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dot.active {
+            background: var(--primary);
+            width: 30px;
+            border-radius: 5px;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 13px 20px;
+            border: 2px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .nav-btn:disabled:hover {
+            border-color: var(--border);
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .nav-btn.primary {
+            background: linear-gradient(135deg, #000000 0%, #333333 100%);
+            color: var(--accent);
+            border-color: transparent;
+        }
+
+        .nav-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .skip-btn {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .skip-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .skip-link:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+
+            .onboarding-card {
+                padding: 28px 22px;
+                min-height: 480px;
+            }
+
+            .slide-icon i {
+                font-size: 3.5rem;
+            }
+
+            .slide-title {
+                font-size: 1.5rem;
+                margin-bottom: 12px;
+            }
+
+            .slide-subtitle {
+                font-size: 1rem;
+            }
+
+            .slide-description {
+                font-size: 0.9rem;
+            }
+
+            .shape {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .onboarding-card {
+                padding: 25px 20px;
+                min-height: 450px;
+            }
+
+            .slide-icon {
+                margin-bottom: 20px;
+            }
+
+            .slide-icon i {
+                font-size: 3rem;
+            }
+
+            .slide-title {
+                font-size: 1.3rem;
+            }
+
+            .slide-subtitle {
+                font-size: 0.95rem;
+                margin-bottom: 15px;
+            }
+
+            .slide-description {
+                font-size: 0.85rem;
+                margin-bottom: 20px;
+            }
+
+            .feature-list {
+                padding: 15px;
+                margin-top: 15px;
+            }
+
+            .feature-list-item {
+                font-size: 0.85rem;
+                padding: 6px 0;
+                gap: 10px;
+            }
+
+            .feature-list-item i {
+                font-size: 1rem;
+            }
+
+            .nav-btn {
+                padding: 12px 16px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .onboarding-card {
+                padding: 20px 16px;
+            }
+
+            .slide-title {
+                font-size: 1.2rem;
+            }
+
+            .nav-btn {
+                padding: 11px 14px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+  <!-- Text Highlighter for Admin Panel -->
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="onboarding-container">
+        <div class="onboarding-card">
+            <!-- Slide 1: Welcome -->
+            <div class="slide active" data-slide="0">
+                <div class="slide-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="slide-content">
+                    <h1 class="slide-title" data-i18n="onboarding.slide1.title" data-t="onboarding_slide1_title">سوپاس بۆ باوەرکرنا تە ب مە!</h1>
+                    <p class="slide-subtitle" data-i18n="onboarding.slide1.subtitle" data-t="onboarding_slide1_subtitle">
+                        تو نها بەشەکی ی ژ کومەلگەهەکا تایبەت
+                    </p>
+                    <p class="slide-description" data-i18n="onboarding.slide1.desc" data-t="onboarding_slide1_desc">
+                        ئەم گەلەک دلخوشین کو تە بریار دا بەشدار بی د گەشەکرنا ئێکەم پلاتفۆرمێ کوردی بۆ خواندن و تێگەهشتنا قورئانا پیرۆز. بەشداریکرنا تە گەلەک رامان هەیە بۆ مە و بۆ هەمی کومەلگەها کوردی.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Slide 2: Mission -->
+            <div class="slide" data-slide="1">
+                <div class="slide-icon">
+                    <i class="fas fa-flag"></i>
+                </div>
+                <div class="slide-content">
+                    <h1 class="slide-title" data-i18n="onboarding.slide2.title" data-t="onboarding_slide2_title">ئارمانجا مە</h1>
+                    <p class="slide-subtitle" data-i18n="onboarding.slide2.subtitle" data-t="onboarding_slide2_subtitle">
+                        دروستکرنا پرەکێ د ناڤبەرا خەلکێ کورد و قورئانا پیرۆز دا
+                    </p>
+                    <p class="slide-description" data-t="onboarding_slide2_desc">
+                        ئەم ئارمانجا مە ئەوەیە کو زانست و تێگەهشتنا قورئانێ ب زمانێ کوردی بگەهینینە دەستێ هەر کەسەکی. ب دروستکرنا ڤێ پلاتفۆرمێ، ئەم هەول ددەین کو خواندن و لێکولین ڤە ل قورئانێ ئاسانتر و پڕفائدەتر بکەین.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Slide 3: Features -->
+            <div class="slide" data-slide="2">
+                <div class="slide-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="slide-content">
+                    <h1 class="slide-title" data-i18n="onboarding.slide3.title" data-t="onboarding_slide3_title">چاڤەرێ چ دکەی؟</h1>
+                    <p class="slide-subtitle" data-i18n="onboarding.slide3.subtitle" data-t="onboarding_slide3_subtitle">
+                        تایبەتمەندییەک کو ژیانا تە یا رۆحی دگوهۆڕیت
+                    </p>
+                    <div class="feature-list">
+                        <div class="feature-list-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span data-i18n="onboarding.slide3.feature1" data-t="onboarding_feature1">تەفسیرەکا تەمام ب زمانێ کوردی</span>
+                        </div>
+                        <div class="feature-list-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span data-i18n="onboarding.slide3.feature2" data-t="onboarding_feature2">تێبینیێن تایبەت و نیشانەکرن</span>
+                        </div>
+                        <div class="feature-list-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span data-i18n="onboarding.slide3.feature3" data-t="onboarding_feature3">گوهداریکرن ب دەنگەکێ جوان</span>
+                        </div>
+                        <div class="feature-list-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span data-i18n="onboarding.slide3.feature4" data-t="onboarding_feature4">خواندن بێ ئینتەرنێت</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4: Community -->
+            <div class="slide" data-slide="3">
+                <div class="slide-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="slide-content">
+                    <h1 class="slide-title" data-i18n="onboarding.slide4.title" data-t="onboarding_slide4_title">کومەلگەهەکا مەزن</h1>
+                    <p class="slide-subtitle" data-i18n="onboarding.slide4.subtitle" data-t="onboarding_slide4_subtitle">
+                        هەڤبەشکرنا زانیاری و ئەزموونێ دگەل برایێن تە
+                    </p>
+                    <p class="slide-description" data-t="onboarding_slide4_desc">
+                        بەشەک بە ژ کومەلگەهەکا چالاک و بهێز کو هەر رۆژەکێ گەشە دکەت. هەڤبەشی بیرۆکە و پرسیار و ئەزموونێن خۆ بکە دگەل هزاران بکارئینەرێن دی کو هەمان ئارمانج و خەون هەنە.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Slide 5: Let's Start -->
+            <div class="slide" data-slide="4">
+                <div class="slide-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <div class="slide-content">
+                    <h1 class="slide-title" data-i18n="onboarding.slide5.title" data-t="onboarding_slide5_title">ئامادەی بۆ دەستپێکرنێ؟</h1>
+                    <p class="slide-subtitle" data-i18n="onboarding.slide5.subtitle" data-t="onboarding_slide5_subtitle">
+                        گەشتەکا تە یا رۆحی ژ ڤێرێ دەستپێدکەت
+                    </p>
+                    <p class="slide-description" data-t="onboarding_slide5_desc">
+                        نها دەم و دەرفەتێ ئەوە کو دەست ب خواندن و فێربوونێ بکەی. ئەم لێرێ نە بۆ هاریکاریکرنا تە د هەمی قۆناغێن ڤێ گەشتەیا نایاب دا. بلا پێکڤە ڤێ گەشتەیا جوان دەستپێکەین!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Progress Dots -->
+            <div class="progress-dots">
+                <div class="dot active" data-dot="0"></div>
+                <div class="dot" data-dot="1"></div>
+                <div class="dot" data-dot="2"></div>
+                <div class="dot" data-dot="3"></div>
+                <div class="dot" data-dot="4"></div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="navigation">
+                <button class="nav-btn" id="prevBtn" onclick="previousSlide()" disabled>
+                    <i class="fas fa-arrow-right"></i>
+                    <span data-i18n="onboarding.btn_prev" data-t="onboarding_btn_prev">پێشین</span>
+                </button>
+                <button class="nav-btn primary" id="nextBtn" onclick="nextSlide()">
+                    <span id="nextBtnText" data-i18n="onboarding.btn_next" data-t="onboarding_btn_next">پاشین</span>
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+            </div>
+
+            <div class="skip-btn">
+                <a class="skip-link" onclick="skipOnboarding()" data-i18n="onboarding.skip" data-t="onboarding_skip">راکێشان و دەستپێکرن</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CLIENT_ID = window.GOOGLE_CONFIG.CLIENT_ID;
+        let currentSlide = 0;
+        const totalSlides = 5;
+
+        // Check if user is authenticated
+        window.addEventListener('load', () => {
+            // Check if we're coming from login page
+            const fromLogin = sessionStorage.getItem('fromLogin');
+
+            if (fromLogin === 'true') {
+                // Clear the flag
+                sessionStorage.removeItem('fromLogin');
+
+                // Show onboarding directly without redirect checks
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user) {
+                    showWelcomeMessage(user.name);
+                }
+                return;
+            }
+
+            // Normal flow: check authentication and redirect if needed
+            const isAuthenticated = localStorage.getItem('isAuthenticated');
+            const onboardingCompleted = localStorage.getItem('onboardingCompleted');
+            const signupCompleted = localStorage.getItem('signupCompleted');
+
+            if (isAuthenticated !== 'true') {
+                // Not authenticated, redirect to login
+                window.location.href = '/login';
+                return;
+            }
+
+            // If signup is completed, go straight to Quran.html
+            if (signupCompleted === 'true') {
+                window.location.href = '/quran';
+                return;
+            }
+
+            // If onboarding is completed, go to signup
+            if (onboardingCompleted === 'true') {
+                window.location.href = '/complete-signup';
+                return;
+            }
+
+            // Show onboarding slides for new users
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                showWelcomeMessage(user.name);
+            }
+        });
+
+        function showWelcomeMessage(name) {
+            // Create a welcome notification
+            const notif = document.createElement('div');
+            notif.style.position = 'fixed';
+            notif.style.top = '20px';
+            notif.style.right = '20px';
+            notif.style.left = '20px';
+            notif.style.padding = '18px 25px';
+            notif.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            notif.style.color = 'white';
+            notif.style.borderRadius = '12px';
+            notif.style.fontWeight = '600';
+            notif.style.textAlign = 'center';
+            notif.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.2)';
+            notif.style.zIndex = '10000';
+            notif.style.animation = 'slideInDown 0.5s ease-out';
+            notif.textContent = (typeof t === 'function' ? t('onboarding.welcome', {name: name.split(' ')[0]}) : 'ب خێر بێی ' + name.split(' ')[0]) + '!';
+
+            document.body.appendChild(notif);
+
+            setTimeout(() => {
+                notif.style.animation = 'slideInDown 0.3s ease-in reverse';
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
+        }
+
+        function showSlide(index) {
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.dot');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+
+            // Hide all slides
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+
+            // Show current slide
+            slides[index].classList.add('active');
+            dots[index].classList.add('active');
+
+            // Update buttons
+            prevBtn.disabled = index === 0;
+
+            if (index === totalSlides - 1) {
+                nextBtnText.textContent = typeof t === 'function' ? t('onboarding.btn_start') : 'دەستپێکرن';
+            } else {
+                nextBtnText.textContent = typeof t === 'function' ? t('onboarding.btn_next') : 'پاشین';
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            } else {
+                // Last slide, go to complete-signup
+                completeOnboarding();
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        function skipOnboarding() {
+            completeOnboarding();
+        }
+
+        async function completeOnboarding() {
+            // Save to localStorage
+            localStorage.setItem('onboardingCompleted', 'true');
+
+            // Save to database so it persists after logout
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user && user.sub) {
+                    const userKey = 'quran_data_' + user.sub;
+                    const saved = localStorage.getItem(userKey);
+                    const userData = saved ? JSON.parse(saved) : {};
+
+                    // Mark onboarding as completed in database
+                    userData.onboardingCompleted = true;
+
+                    // Extract Supabase access token from localStorage session
+                    let _obToken = '';
+                    for (const _k of Object.keys(localStorage)) {
+                        if (_k.startsWith('sb-') && _k.endsWith('-auth-token')) {
+                            try { const _p = JSON.parse(localStorage.getItem(_k)); _obToken = _p?.access_token || ''; } catch(e) {}
+                            break;
+                        }
+                    }
+                    await fetch('/user-data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _obToken },
+                        body: JSON.stringify({
+                            userId: user.sub,
+                            action: 'save',
+                            data: userData
+                        })
+                    });
+
+                    console.log('✅ Onboarding completion saved to database');
+                }
+            } catch (error) {
+                console.error('Error saving onboarding completion:', error);
+            }
+
+            window.location.href = '/complete-signup';
+        }
+
+        // Allow clicking on dots to navigate
+        document.querySelectorAll('.dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+                const slideIndex = parseInt(dot.getAttribute('data-dot'));
+                currentSlide = slideIndex;
+                showSlide(currentSlide);
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                nextSlide();
+            } else if (e.key === 'ArrowRight') {
+                previousSlide();
+            }
+        });
+
+        // Don't register service worker on onboarding page
+        // It will be registered on Quran.html after successful navigation
+    </script>
+</body>
+</html>

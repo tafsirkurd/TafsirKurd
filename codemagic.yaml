@@ -1,0 +1,75 @@
+workflows:
+  ios-app-store:
+    name: TafsirKurd iOS — App Store
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    integrations:
+      app_store_connect: TafsirKurd
+    environment:
+      groups:
+        - ios_signing
+      vars:
+        XCODE_PROJECT: ios/App/App.xcodeproj
+        XCODE_SCHEME: App
+        BUNDLE_ID: com.tafsirkurd.app
+        TEAM_ID: 8KA7UDSC9D
+      node: latest
+      xcode: 16.2
+
+    scripts:
+      - name: Install dependencies
+        script: npm install
+
+      - name: Patch plugins for capacitor-swift-pm 8.2.0
+        script: |
+          # Fix @capacitor/share: getArray(key) one-arg overload removed in capacitor-swift-pm 8.2.0
+          python3 - <<'EOF'
+          path = 'node_modules/@capacitor/share/ios/Sources/SharePlugin/SharePlugin.swift'
+          with open(path, 'r') as f:
+              content = f.read()
+          content = content.replace(
+              '        if let files = call.getArray("files") {',
+              '        let files = call.getArray("files", [])\n        if !files.isEmpty {'
+          )
+          with open(path, 'w') as f:
+              f.write(content)
+          print('Patched SharePlugin.swift OK')
+          EOF
+
+      - name: Capacitor sync iOS
+        script: npx cap sync ios
+
+      - name: Set up keychain and signing
+        script: |
+          keychain initialize
+
+          # Install certificate
+          echo "$CM_CERTIFICATE" | base64 --decode > /tmp/distribution.p12
+          keychain add-certificates --certificate /tmp/distribution.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
+
+          # Install provisioning profile
+          echo "$CM_PROVISIONING_PROFILE" | base64 --decode > /tmp/profile.mobileprovision
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          UUID=$(security cms -D -i /tmp/profile.mobileprovision 2>/dev/null | plutil -extract UUID raw - 2>/dev/null || python3 -c "import plistlib,sys; d=plistlib.loads(open('/tmp/profile.mobileprovision','rb').read()); print(d['UUID'])" 2>/dev/null)
+          cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/"$UUID".mobileprovision
+          echo "Installed profile UUID: $UUID"
+
+          xcode-project use-profiles --project "$XCODE_PROJECT"
+
+      - name: Build iOS
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
+        submit_to_app_store: false

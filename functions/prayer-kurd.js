@@ -1,0 +1,127 @@
+/**
+ * Prayer Times Proxy — amozhgary.tv
+ *
+ * GET /prayer-kurd?city=Duhok&month=2&year=2026
+ * Returns: { city, year, month, days: { "1": { Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha, hijri } } }
+ *
+ * HTML structure (Shadcn UI <table> with long class names per <td>):
+ *   <td class="...hidden md:table-cell...<div><span>01 - شوبات - 2026</span></div></td>
+ *   <td class="...hidden md:table-cell...">13ی شعبان 1447</td>
+ *   <td ...>05:39</td> <td ...>07:10</td> ... (6 prayer times)
+ *
+ * Each <td> has ~165 chars of class attributes, so window must be ≥1500.
+ * Times are 12h without AM/PM; converted via sequential-order detection.
+ *
+ * CITY_URL values are the URL-encoded path segments used by amozhgary.tv.
+ * They are inserted directly into the URL (no additional encodeURIComponent).
+ */
+
+const CITY_URL = {
+  Sulaymaniyah:  '%D8%B3%D9%84%DB%8E%D9%85%D8%A7%D9%86%DB%8C',
+  Erbil:         '%D9%87%DB%95%D9%88%D9%84%DB%8E%D8%B1',
+  Duhok:         '%D8%AF%D9%87%DB%86%DA%A9',
+  Kirkuk:        '%DA%A9%DB%95%D8%B1%DA%A9%D9%88%DA%A9',
+  Halabja:       '%D9%87%DB%95%DA%B5%DB%95%D8%A8%D8%AC%DB%95',
+  Kfry:          '%DA%A9%D9%81%D8%B1%DB%8C',
+  Rania:         '%DA%95%D8%A7%D9%86%DB%8C%DB%95',
+  Koya:          '%DA%A9%DB%86%DB%8C%DB%95',
+  Qaladze:       '%D9%82%DB%95%DA%B5%D8%A7%D8%AF%D8%B2%DB%8E',
+  Zakho:         '%D8%B2%D8%A7%D8%AE%DB%86',
+  Bardarash:     '%D8%A8%DB%95%D8%B1%D8%AF%DB%95%DA%95%DB%95%D8%B4',
+  Mosul:         '%D9%85%D9%88%D8%B3%D9%84%D8%B5',
+  Darbandikhan:  '%D8%AF%DB%95%D8%B1%D8%A8%DB%95%D9%86%D8%AF%DB%8C%D8%AE%D8%A7%D9%86',
+  Kalar:         '%DA%A9%DB%95%D9%84%D8%A7%D8%B1',
+  Akre:          '%D8%A6%D8%A7%DA%A9%D8%B1%DB%8C',
+  Daquq:         '%D8%AF%D8%A7%D9%82%D9%88%D9%82',
+  Makhmur:       '%D9%85%DB%95%D8%AE%D9%85%D9%88%D8%B1',
+  Mandali:       '%D9%85%DB%95%D9%86%D8%AF%DB%95%D9%84%DB%8C',
+  Qarahanjir:    '%D9%82%DB%95%D8%B1%DB%95%D9%87%DB%95%D9%86%D8%AC%DB%8C%D8%B1',
+  DuzKhormatou:  '%D8%AF%D9%88%D8%B2%20%D8%AE%D9%88%D8%B1%D9%85%D8%A7%D8%AA%D9%88%D9%88',
+};
+
+export async function onRequest(context) {
+  try {
+    const { request } = context;
+    if (request.method === 'OPTIONS') return resp(null, 204);
+
+    const url   = new URL(request.url);
+    const city  = url.searchParams.get('city')  || '';
+    const month = parseInt(url.searchParams.get('month') || '0');
+    const year  = parseInt(url.searchParams.get('year')  || '0');
+
+    const cityPath = CITY_URL[city];
+    if (!cityPath || month < 1 || month > 12 || !year) {
+      return resp({ error: 'Invalid params' }, 400);
+    }
+
+    // cityPath is already percent-encoded — do NOT wrap with encodeURIComponent
+    const pageUrl = 'https://amozhgary.tv/bang/' + cityPath + '?month=' + month;
+    const res = await fetch(pageUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (!res.ok) return resp({ error: 'upstream ' + res.status }, 502);
+
+    const html = await res.text();
+    const days = parseMonthlyTimes(html);
+    return resp({ city, year, month, days });
+
+  } catch (e) {
+    return resp({ error: String(e) }, 500);
+  }
+}
+
+function parseMonthlyTimes(html) {
+  const days = {};
+
+  // Match: "DD - KurdishMonth - YYYY" (inside <span> in the hidden Gregorian date cell)
+  const dateRe = /(\d{1,2})\s*-\s*[\u0600-\u06FF][^\-<]+-\s*\d{4}/g;
+  let m;
+
+  while ((m = dateRe.exec(html)) !== null) {
+    const gregDay = parseInt(m[1]);
+    const pos     = m.index;
+
+    // Window of 1500 chars — enough to cover 6 prayer <td> cells (~165 chars each)
+    // plus the closing tags and Hijri cell (~230 chars) before the times start.
+    const after  = html.slice(pos + m[0].length, pos + m[0].length + 1500);
+    const raw    = [];
+    const tRe    = />(\d{2}:\d{2})</g;
+    let tm;
+    while ((tm = tRe.exec(after)) !== null && raw.length < 6) raw.push(tm[1]);
+
+    if (raw.length === 6) {
+      const t = to24h(raw);
+      days[gregDay] = { Fajr: t[0], Sunrise: t[1], Dhuhr: t[2], Asr: t[3], Maghrib: t[4], Isha: t[5] };
+
+      // Hijri: look backward for "DDی MonthName YYYY" within 500 chars before date
+      const before = html.slice(Math.max(0, pos - 500), pos);
+      const hm = before.match(/(\d{1,2})\u06CC\s*([\u0600-\u06FF]+)\s*(\d{4})/);
+      if (hm) days[gregDay].hijri = hm[1] + '\u06CC ' + hm[2] + ' ' + hm[3];
+    }
+  }
+
+  return days;
+}
+
+/**
+ * amozhgary.tv renders Asr/Maghrib/Isha in 12h without AM/PM.
+ * Detect by sequential reversal: if a time < previous prayer time, it's PM → add 12h.
+ */
+function to24h(times) {
+  const out = []; let prev = 0;
+  for (const t of times) {
+    const p = t.split(':');
+    let h = parseInt(p[0]);
+    const mi = parseInt(p[1]);
+    let mins = h * 60 + mi;
+    if (h < 12 && mins < prev) { h += 12; mins += 720; }
+    prev = mins;
+    out.push((h < 10 ? '0' : '') + h + ':' + (mi < 10 ? '0' : '') + mi);
+  }
+  return out;
+}
+
+function resp(data, status) {
+  return new Response(data == null ? '' : JSON.stringify(data), {
+    status: status || 200,
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+  });
+}

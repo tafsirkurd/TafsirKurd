@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>تەفسیر کورد</title>
+<meta name="description" content="ئەپ، وێبسایت و میدیایێ کۆمەڵایەتیێ تەفسیر کورد">
+<meta property="og:title" content="تەفسیر کورد">
+<meta property="og:description" content="قورئان، تەفسیر و ئایین بە کوردی">
+<meta property="og:image" content="/assets/images/homepage-social.jpg">
+<link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Arabic:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="/assets/fontawesome/all.min.css">
+<style>
+
+/* ─── Reset ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  font-family: 'IBM Plex Arabic', -apple-system, BlinkMacSystemFont,
+               'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+  font-family: inherit;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background:
+    radial-gradient(circle at 20% 20%, #1a1a1a 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, #121212 0%, transparent 40%),
+    #0b0b0b;
+  color: #ffffff;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+/* ─── Noise texture ──────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.03;
+}
+
+/* ─── Page wrapper ───────────────────────────────────────── */
+.page {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+  padding: 72px 24px 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ─── Entrance animations ────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+[data-anim] {
+  opacity: 0;
+  animation: fadeUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ─── Hero ───────────────────────────────────────────────── */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 56px;
+}
+
+.logo-ring {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  margin-bottom: 26px;
+}
+
+/* Outer glow ring */
+.logo-ring::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.07);
+  pointer-events: none;
+}
+
+/* Inner border ring */
+.logo-ring::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.13);
+  pointer-events: none;
+}
+
+.logo-img {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  background: #ffffff;
+}
+
+.hero-name {
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+.hero-handle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.73rem;
+  font-weight: 500;
+  color: rgba(255,255,255,.32);
+  letter-spacing: 0.05em;
+  margin-bottom: 18px;
+}
+
+.ig-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #0095f6;
+  flex-shrink: 0;
+}
+
+.ig-badge i {
+  font-size: 0.38rem;
+  color: #ffffff;
+}
+
+.hero-tagline {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: rgba(255,255,255,.38);
+  line-height: 1.85;
+  max-width: 260px;
+}
+
+/* ─── Section divider ────────────────────────────────────── */
+.section-sep {
+  width: 100%;
+  height: 1px;
+  background: rgba(255,255,255,.06);
+  margin-bottom: 36px;
+}
+
+/* ─── Section label ──────────────────────────────────────── */
+.section-label {
+  width: 100%;
+  font-size: 0.57rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.2);
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+/* ─── App section ────────────────────────────────────────── */
+.app-section {
+  width: 100%;
+  margin-bottom: 48px;
+}
+
+.app-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+.app-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.03);
+  text-decoration: none;
+  color: #ffffff;
+  overflow: hidden;
+  min-height: 162px;
+  cursor: pointer;
+  transition:
+    background   0.22s ease,
+    border-color 0.22s ease,
+    color        0.22s ease,
+    transform    0.22s ease,
+    box-shadow   0.22s ease;
+}
+
+.app-card:hover,
+.app-card:focus-visible {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #080808;
+  transform: translateY(-5px);
+  box-shadow:
+    0 24px 64px rgba(255,255,255,.07),
+    0 8px 24px rgba(255,255,255,.04);
+  outline: none;
+}
+
+.app-card:active { transform: translateY(-2px); }
+
+/* Top-start corner arrow (physical left = visual right in RTL) */
+.app-card-corner {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  font-size: 0.52rem;
+  color: rgba(255,255,255,.22);
+  transition: color 0.22s ease;
+}
+
+.app-card:hover .app-card-corner { color: rgba(8,8,8,.3); }
+
+.app-card-icon {
+  font-size: 2.1rem;
+  line-height: 1;
+  margin-bottom: 16px;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.app-card-store {
+  font-size: 0.54rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.28);
+  margin-bottom: 3px;
+  transition: color 0.22s ease;
+}
+
+.app-card:hover .app-card-store { color: rgba(8,8,8,.38); }
+
+.app-card-name {
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: inherit;
+}
+
+.app-card-sub {
+  font-size: 0.64rem;
+  font-weight: 400;
+  color: rgba(255,255,255,.32);
+  margin-top: 4px;
+  line-height: 1.5;
+  transition: color 0.22s ease;
+}
+
+.app-card:hover .app-card-sub { color: rgba(8,8,8,.42); }
+
+/* ─── Links section ──────────────────────────────────────── */
+.links-section {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.link-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 15px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.07);
+  background: rgba(255,255,255,.02);
+  text-decoration: none;
+  color: #ffffff;
+  transition:
+    background   0.2s ease,
+    border-color 0.2s ease,
+    transform    0.2s ease;
+}
+
+.link-row:hover,
+.link-row:focus-visible {
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.13);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.link-row:active { transform: translateY(0); }
+
+.link-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.09);
+  background: rgba(255,255,255,.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  color: rgba(255,255,255,.65);
+  flex-shrink: 0;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.link-row:hover .link-icon-box {
+  background: rgba(255,255,255,.09);
+  border-color: rgba(255,255,255,.16);
+}
+
+.link-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.link-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.88);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.link-sub {
+  font-size: 0.68rem;
+  color: rgba(255,255,255,.28);
+  margin-top: 2px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.link-arrow {
+  font-size: 0.58rem;
+  color: rgba(255,255,255,.18);
+  flex-shrink: 0;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.link-row:hover .link-arrow {
+  color: rgba(255,255,255,.5);
+  transform: translateX(-2px);
+}
+
+/* ─── Skeleton loaders ───────────────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 0.14; }
+  50%       { opacity: 0.28; }
+}
+
+.sk {
+  background: rgba(255,255,255,.08);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+.sk-app-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+.sk-app  { height: 162px; border-radius: 20px; }
+.sk-link { height: 68px; border-radius: 14px; }
+
+/* ─── Footer ─────────────────────────────────────────────── */
+.page-footer {
+  margin-top: 64px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255,255,255,.05);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.footer-logo {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  opacity: 0.14;
+  filter: grayscale(1);
+  margin-bottom: 4px;
+}
+
+.footer-copy {
+  font-size: 0.62rem;
+  color: rgba(255,255,255,.16);
+  letter-spacing: 0.03em;
+}
+
+.footer-tagline {
+  font-size: 0.58rem;
+  color: rgba(255,255,255,.09);
+  letter-spacing: 0.04em;
+}
+
+/* ─── Empty / error ──────────────────────────────────────── */
+.empty-msg {
+  color: rgba(255,255,255,.18);
+  font-size: 0.8rem;
+  padding: 32px 0;
+  text-align: center;
+  width: 100%;
+  grid-column: 1 / -1;
+}
+
+/* ─── Responsive ─────────────────────────────────────────── */
+@media (max-width: 380px) {
+  .page       { padding: 56px 18px 72px; }
+  .hero-name  { font-size: 1.8rem; }
+  .logo-ring,
+  .logo-img   { width: 82px; height: 82px; }
+
+  /* App cards stack + go horizontal on tiny screens */
+  .app-grid,
+  .sk-app-row { grid-template-columns: 1fr; }
+
+  .app-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    padding: 18px;
+    min-height: auto;
+  }
+
+  .app-card-icon  { margin-bottom: 0; font-size: 1.8rem; }
+  .app-card-corner { top: 12px; left: 12px; }
+  .sk-app { height: 74px; }
+}
+
+@media (min-width: 381px) and (max-width: 599px) {
+  .page { padding: 64px 22px 80px; }
+}
+
+@media (min-width: 600px) {
+  .page { padding: 80px 32px 96px; }
+  .hero-name { font-size: 2.4rem; }
+  .app-card  { padding: 28px 24px 22px; min-height: 176px; }
+  .app-card-icon { font-size: 2.3rem; }
+  .logo-ring, .logo-img { width: 104px; height: 104px; }
+}
+
+@media (min-width: 900px) {
+  .page { padding: 88px 0 104px; }
+}
+
+</style>
+</head>
+<body>
+
+<main class="page">
+
+  <!-- ── Hero ──────────────────────────────────────────────── -->
+  <header class="hero" data-anim style="animation-delay:.04s">
+
+    <div class="logo-ring">
+      <img
+        class="logo-img"
+        src="/assets/images/logo.jpg"
+        alt="TafsirKurd"
+        onerror="this.src='/assets/images/favicon-192x192.png'"
+      >
+    </div>
+
+    <h1 class="hero-name">تەفسیر کورد</h1>
+
+    <p class="hero-handle">
+      <span class="ig-badge" aria-label="Verified"><i class="fas fa-check"></i></span>
+      <span>@tafsirkurd</span>
+    </p>
+
+    <p class="hero-tagline">هەمی روپەلێن تەفسیر کورد</p>
+
+  </header>
+
+  <!-- ── App download section ──────────────────────────────── -->
+  <section class="app-section" aria-label="Download the App" data-anim style="animation-delay:.14s">
+
+    <p class="section-label">GET THE APP</p>
+
+    <div class="app-grid" id="appGrid">
+      <div class="sk sk-app" style="animation-delay:.04s"></div>
+      <div class="sk sk-app" style="animation-delay:.12s"></div>
+    </div>
+
+  </section>
+
+  <!-- ── Links section ─────────────────────────────────────── -->
+  <section class="links-section" aria-label="Links" data-anim style="animation-delay:.22s">
+
+    <p class="section-label">LINKS</p>
+
+    <div class="links-list" id="linksList">
+      <div class="sk sk-link" style="animation-delay:.05s"></div>
+      <div class="sk sk-link" style="animation-delay:.13s"></div>
+      <div class="sk sk-link" style="animation-delay:.21s"></div>
+    </div>
+
+  </section>
+
+  <!-- ── Footer ────────────────────────────────────────────── -->
+  <footer class="page-footer" data-anim style="animation-delay:.32s">
+    <img class="footer-logo" src="/assets/images/favicon.svg" alt="">
+    <p class="footer-copy">© 2026 TafsirKurd</p>
+    <p class="footer-tagline">بۆ موسڵمانێن کورد &nbsp;·&nbsp; For Kurdish Muslims</p>
+  </footer>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var appGrid  = document.getElementById('appGrid');
+  var linkList = document.getElementById('linksList');
+
+  /* ── Helpers ─────────────────────────────────────────────── */
+  function el(tag, cls) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    return e;
+  }
+
+  function clear(node) {
+    while (node.firstChild) node.removeChild(node.firstChild);
+  }
+
+  function isApple(lnk) {
+    return lnk.url && lnk.url.indexOf('apps.apple.com') !== -1;
+  }
+
+  /* ── App card ────────────────────────────────────────────── */
+  function buildAppCard(lnk, delay) {
+    var apple = isApple(lnk);
+
+    var a = el('a', 'app-card');
+    a.href       = lnk.url || '#';
+    a.target     = '_blank';
+    a.rel        = 'noopener noreferrer';
+    a.setAttribute('data-anim', '');
+    a.style.animationDelay = delay + 's';
+
+    /* corner arrow */
+    var corner = el('i', 'fas fa-arrow-up-right-from-square app-card-corner');
+    corner.setAttribute('aria-hidden', 'true');
+
+    /* platform icon */
+    var icon = el('i', (apple ? 'fab fa-apple' : 'fab fa-google-play') + ' app-card-icon');
+    icon.setAttribute('aria-hidden', 'true');
+
+    /* store name */
+    var store = el('span', 'app-card-store');
+    store.textContent = apple ? 'App Store' : 'Google Play';
+
+    /* platform */
+    var name = el('span', 'app-card-name');
+    name.textContent = apple ? 'iOS' : 'Android';
+
+    /* sub */
+    var sub = el('span', 'app-card-sub');
+    sub.textContent = window._appSub || 'بەخۆڕایی داونلۆد بکە';
+
+    a.appendChild(corner);
+    a.appendChild(icon);
+    a.appendChild(store);
+    a.appendChild(name);
+    a.appendChild(sub);
+    return a;
+  }
+
+  /* ── Link row ────────────────────────────────────────────── */
+  function buildLinkRow(lnk, delay) {
+    var a = el('a', 'link-row');
+    a.href       = lnk.url || '#';
+    a.target     = '_blank';
+    a.rel        = 'noopener noreferrer';
+    a.setAttribute('data-anim', '');
+    a.style.animationDelay = delay + 's';
+
+    /* icon box */
+    var iconBox = el('div', 'link-icon-box');
+    var ico = el('i', lnk.icon || 'fas fa-link');
+    ico.setAttribute('aria-hidden', 'true');
+    iconBox.appendChild(ico);
+
+    /* text body */
+    var body  = el('div', 'link-body');
+    var title = el('div', 'link-title');
+    title.textContent = lnk.title || '';
+    body.appendChild(title);
+
+    if (lnk.subtitle) {
+      var sub = el('div', 'link-sub');
+      sub.textContent = lnk.subtitle;
+      body.appendChild(sub);
+    }
+
+    /* arrow */
+    var arrow = el('i', 'fas fa-chevron-left link-arrow');
+    arrow.setAttribute('aria-hidden', 'true');
+
+    a.appendChild(iconBox);
+    a.appendChild(body);
+    a.appendChild(arrow);
+    return a;
+  }
+
+  /* ── Render ──────────────────────────────────────────────── */
+  function render(links) {
+    var apps   = links.filter(function (l) { return l.category === 'app'; });
+    var others = links.filter(function (l) { return l.category !== 'app'; });
+
+    /* App grid */
+    clear(appGrid);
+    if (apps.length) {
+      apps.forEach(function (lnk, i) {
+        appGrid.appendChild(buildAppCard(lnk, 0.18 + i * 0.07));
+      });
+    } else {
+      var noApp = el('p', 'empty-msg');
+      noApp.textContent = 'هیچ ئەپێک نەدۆزراوەتەوە';
+      appGrid.appendChild(noApp);
+    }
+
+    /* Links list */
+    clear(linkList);
+    if (others.length) {
+      others.forEach(function (lnk, i) {
+        linkList.appendChild(buildLinkRow(lnk, 0.28 + i * 0.05));
+      });
+    } else {
+      var noLinks = el('p', 'empty-msg');
+      noLinks.style.gridColumn = 'unset';
+      noLinks.textContent = 'هیچ لینکێک نەدۆزراوەتەوە';
+      linkList.appendChild(noLinks);
+    }
+  }
+
+  /* ── Error ───────────────────────────────────────────────── */
+  function showError() {
+    clear(appGrid);
+    clear(linkList);
+    var msg = el('p', 'empty-msg');
+    msg.textContent = 'کێشەیەک هەیە. تکایە دووباره هەوڵبدەوە.';
+    appGrid.appendChild(msg);
+  }
+
+  /* ── Fetch ───────────────────────────────────────────────── */
+  fetch('/config')
+    .then(function (r) { return r.json(); })
+    .then(function (cfg) {
+      var headers = {
+        'apikey':        cfg.supabaseKey,
+        'Authorization': 'Bearer ' + cfg.supabaseKey
+      };
+      /* Fetch links + settings in parallel */
+      return Promise.all([
+        fetch(cfg.supabaseUrl + '/rest/v1/site_links?active=eq.true&order=sort_order.asc', { headers: headers })
+          .then(function (r) { return r.json(); }),
+        fetch(cfg.supabaseUrl + '/rest/v1/site_settings?key=in.(links_tagline,links_app_sub)', { headers: headers })
+          .then(function (r) { return r.json(); })
+      ]);
+    })
+    .then(function (results) {
+      var links    = results[0];
+      var settings = results[1];
+      /* Apply settings */
+      if (Array.isArray(settings)) {
+        settings.forEach(function (row) {
+          if (row.key === 'links_tagline') {
+            var el = document.querySelector('.hero-tagline');
+            if (el) el.textContent = row.value;
+          }
+          if (row.key === 'links_app_sub') {
+            window._appSub = row.value;
+          }
+        });
+      }
+      render(links);
+    })
+    .catch(showError);
+
+}());
+</script>
+</body>
+</html>

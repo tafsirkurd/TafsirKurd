@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>Account Management - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        .role-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .role-super_admin { background: rgba(99, 102, 241, 0.1); color: rgb(99, 102, 241); }
+        .role-editor { background: rgba(34, 197, 94, 0.1); color: rgb(34, 197, 94); }
+        .role-analyst { background: rgba(234, 179, 8, 0.1); color: rgb(234, 179, 8); }
+        .role-custom { background: rgba(168, 85, 247, 0.1); color: rgb(168, 85, 247); }
+        .status-active { color: var(--success); }
+        .status-inactive { color: var(--text-tertiary); }
+        .status-locked { color: var(--error); }
+        .permission-notice {
+            background: rgba(234, 179, 8, 0.1);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: rgb(234, 179, 8);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Modal */
+        .btn-danger { background:#dc2626;color:#fff;border:none; }
+        .btn-danger:hover { background:#b91c1c; }
+        .backup-codes-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0; }
+        .backup-code { font-family:monospace;font-size:13px;font-weight:700;background:var(--bg-active);border-radius:6px;padding:8px 12px;text-align:center;letter-spacing:.05em; }
+        .totp-qr { display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 0; }
+        .totp-secret-box { font-family:monospace;font-size:12px;background:var(--bg-active);border-radius:6px;padding:8px 12px;word-break:break-all;text-align:center;letter-spacing:.1em; }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: var(--bg-surface, #fff);
+            border-radius: 16px;
+            max-width: 620px;
+            width: 94%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            animation: modalIn 0.2s ease-out;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-hdr {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-light, #e5e7eb);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-hdr h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0;
+        }
+        .modal-close-btn {
+            background: var(--bg-active, #f3f4f6);
+            border: none;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary, #6b7280);
+            transition: all 0.15s;
+        }
+        .modal-close-btn:hover { background: var(--border-light, #e5e7eb); }
+        .modal-bdy { padding: 24px; }
+        .modal-ftr {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-light, #e5e7eb);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        /* Form fields */
+        .field { margin-bottom: 18px; }
+        .field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            color: var(--text-secondary, #6b7280);
+        }
+        .field .hint {
+            font-size: 11px;
+            color: var(--text-tertiary, #9ca3af);
+            margin-top: 4px;
+        }
+        .field-row {
+            display: flex;
+            gap: 12px;
+        }
+        .field-row .field { flex: 1; }
+        .toggle-field {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: var(--bg-active, #f9fafb);
+            border: 1px solid var(--border-light, #e5e7eb);
+            transition: all 0.15s;
+        }
+        .toggle-field:hover { border-color: var(--text-tertiary, #9ca3af); }
+        .toggle-field span { font-size: 13px; font-weight: 500; }
+
+        /* Permissions grid */
+        .perms-section {
+            margin-top: 20px;
+            border-top: 1px solid var(--border-light, #e5e7eb);
+            padding-top: 18px;
+        }
+        .perms-hdr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .perms-hdr h4 {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary, #6b7280);
+            margin: 0;
+        }
+        .perms-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .perms-actions button {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-light, #e5e7eb);
+            background: var(--bg-active, #f9fafb);
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-secondary, #6b7280);
+            transition: all 0.15s;
+        }
+        .perms-actions button:hover {
+            background: var(--bg-surface, #fff);
+            border-color: var(--text-tertiary, #9ca3af);
+        }
+        .perms-grid {
+            border: 1px solid var(--border-light, #e5e7eb);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .perms-grid-hdr {
+            display: grid;
+            grid-template-columns: 1fr 60px 60px 60px;
+            gap: 0;
+            padding: 8px 14px;
+            background: var(--bg-active, #f3f4f6);
+            border-bottom: 1px solid var(--border-light, #e5e7eb);
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-tertiary, #9ca3af);
+        }
+        .perms-grid-hdr span:not(:first-child) { text-align: center; }
+        .perm-row {
+            display: grid;
+            grid-template-columns: 1fr 60px 60px 60px;
+            gap: 0;
+            padding: 7px 14px;
+            border-bottom: 1px solid var(--border-light, #e5e7eb);
+            align-items: center;
+            transition: background 0.1s;
+        }
+        .perm-row:last-child { border-bottom: none; }
+        .perm-row:hover { background: var(--bg-active, #f9fafb); }
+        .perm-row .page-name {
+            font-size: 12.5px;
+            font-weight: 500;
+        }
+        .perm-row .perm-check {
+            text-align: center;
+        }
+        .perm-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: rgb(99, 102, 241);
+        }
+        .perms-note {
+            font-size: 11px;
+            color: var(--text-tertiary, #9ca3af);
+            margin-top: 8px;
+            font-style: italic;
+        }
+        .perms-hidden { display: none; }
+    </style>
+
+    <style id="early-sidebar-hide">
+        /* Hide sidebar nav by default until role is confirmed */
+        .sidebar-nav { visibility: hidden; }
+    </style>
+    <script>
+        // Early role-based sidebar hiding - runs before body renders
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+
+            if (role === 'super_admin') {
+                css = '.sidebar-nav{visibility:visible}';
+            } else if (role === 'analyst') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'editor') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'custom') {
+                css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            }
+            if (role) {
+                style.textContent = css;
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span></a>
+                    <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span></a>
+                    <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                    <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                    <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                    <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                    <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                    <a href="/admin-reading-stats.html" class="nav-item"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-account-management.html" class="nav-item active"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                    <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                    <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                    <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+                    <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                    <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                    <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+                    <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
+                    <a href="/admin-activity-feed.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">Activity Feed</span></a>
+                    <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name"></div>
+                        <div class="sidebar-profile-email"></div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; display: flex; align-items: center; transition: color 0.2s;" title="Logout"><i data-lucide="log-out"></i></button>
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+                <div class="topbar-search"><i data-lucide="search"></i><input type="text" placeholder="Search admins..." id="search-input" onkeyup="filterAdmins()"></div>
+                <div class="topbar-actions">
+                    <!-- Session Timer Display -->
+                    <div class="session-timer" id="sessionTimer" title="Session expires after 1 hour">
+                        <i data-lucide="clock"></i>
+                        <span id="sessionTimerText">60:00</span>
+                    </div>
+                    <button class="topbar-btn" style="position: relative;">
+                        <i data-lucide="bell"></i>
+                        <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span></button>
+                    <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
+                </div>
+            </header>
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">Admin Account Management</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" onclick="loadAccounts()"><i data-lucide="refresh-cw"></i>Refresh</button>
+                        <button class="btn btn-secondary" onclick="quickResetDevice()" id="resetDeviceBtn"><i data-lucide="smartphone"></i>Reset Device Lock</button>
+                        <button class="btn btn-primary" onclick="openCreateModal()" id="createBtn"><i data-lucide="user-plus"></i>Create Account</button>
+                    </div>
+                </div>
+                <div id="permissionNotice" class="permission-notice" style="display:none;">
+                    <i data-lucide="shield-alert"></i>
+                    <span>You do not have permission to manage admin accounts. Only Super Admins can access this feature.</span>
+                </div>
+                <!-- Change Password -->
+                <div class="card" style="margin-bottom:20px;padding:24px 28px">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+                        <div style="width:36px;height:36px;border-radius:10px;background:var(--bg-active);display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0">
+                            <i data-lucide="key-round" style="width:17px;height:17px"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:700;font-size:15px;line-height:1.2">Change My Password</div>
+                            <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px">Update your login password</div>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+                        <div>
+                            <label style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Current Password</label>
+                            <input type="password" id="cpCurrent" class="form-input" placeholder="Current password" style="width:100%">
+                        </div>
+                        <div>
+                            <label style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">New Password</label>
+                            <input type="password" id="cpNew" class="form-input" placeholder="Min 8 characters" style="width:100%">
+                        </div>
+                        <div>
+                            <label style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px">Confirm New Password</label>
+                            <input type="password" id="cpConfirm" class="form-input" placeholder="Repeat new password" style="width:100%">
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+                        <div id="cpMsg" style="font-size:13px;display:none"></div>
+                        <div style="flex:1"></div>
+                        <button class="btn btn-primary" onclick="changeMyPassword()"><i data-lucide="save"></i>Update Password</button>
+                    </div>
+                </div>
+
+                <!-- Active Sessions -->
+                <div class="card" style="margin-bottom:20px;padding:20px">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+                        <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">
+                            <i data-lucide="monitor" style="width:16px;height:16px"></i>
+                            My Active Sessions
+                        </div>
+                        <button class="btn btn-danger" onclick="revokeAllOtherSessions()" style="font-size:12px;padding:6px 14px">
+                            <i data-lucide="log-out" style="width:13px;height:13px"></i> Kill All Other Sessions
+                        </button>
+                    </div>
+                    <div id="activeSessionsList"><div style="color:var(--text-tertiary);font-size:13px">Loading...</div></div>
+                </div>
+
+                <!-- Trusted Devices -->
+                <div class="card" style="margin-bottom:20px;padding:20px">
+                    <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:14px">
+                        <i data-lucide="monitor-smartphone" style="width:16px;height:16px"></i>
+                        Trusted Devices
+                        <span style="font-size:11px;color:var(--text-tertiary);font-weight:400">— devices that skip 2FA for 30 days</span>
+                    </div>
+                    <div id="trustedDevicesList"><div style="color:var(--text-tertiary);font-size:13px">Loading...</div></div>
+                </div>
+
+                <!-- My 2FA -->
+                <div class="card" id="my2faCard" style="margin-bottom:20px;padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+                    <div>
+                        <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px">
+                            <i data-lucide="shield" style="width:16px;height:16px"></i>
+                            Two-Factor Authentication (My Account)
+                            <span id="my2faStatus" style="font-size:11px;padding:2px 10px;border-radius:20px;font-weight:600"></span>
+                        </div>
+                        <div style="font-size:12px;color:var(--text-tertiary);margin-top:4px">Protect your account with an authenticator app.</div>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                        <button class="btn btn-primary" id="enable2faBtn" onclick="open2faSetup()" style="display:none"><i data-lucide="shield-plus"></i>Enable 2FA</button>
+                        <button class="btn btn-danger"  id="disable2faBtn" onclick="open2faDisable()" style="display:none"><i data-lucide="shield-off"></i>Disable 2FA</button>
+                    </div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card"><div class="metric-value" id="totalAdmins">0</div><div class="metric-label">Total Admins</div></div>
+                    <div class="metric-card"><div class="metric-value" id="activeAdmins">0</div><div class="metric-label">Active</div></div>
+                    <div class="metric-card"><div class="metric-value" id="lockedAdmins">0</div><div class="metric-label">Locked</div></div>
+                    <div class="metric-card"><div class="metric-value" id="activeSessions">0</div><div class="metric-label">Active Sessions</div></div>
+                </div>
+                <div class="card">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Full Name</th>
+                                    <th>Role</th>
+                                    <th>Live Status</th>
+                                    <th>Device Status</th>
+                                    <th>Last Login</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accountsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div class="modal-overlay" id="accountModal">
+        <div class="modal-box">
+            <div class="modal-hdr">
+                <h3 id="modalTitle">Create Admin Account</h3>
+                <button class="modal-close-btn" onclick="closeModal()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-bdy">
+                <input type="hidden" id="accountId">
+                <div class="field-row">
+                    <div class="field">
+                        <label>Email</label>
+                        <input type="email" id="accountEmail" class="form-input" placeholder="admin@example.com" required>
+                    </div>
+                    <div class="field">
+                        <label>Full Name</label>
+                        <input type="text" id="accountFullName" class="form-input" placeholder="John Doe">
+                    </div>
+                </div>
+                <div class="field" id="passwordGroup">
+                    <label>Password</label>
+                    <input type="password" id="accountPassword" class="form-input" placeholder="Min 8 characters">
+                    <div class="hint">Leave empty to keep current password</div>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label>Role</label>
+                        <select id="accountRole" class="form-input" onchange="onRoleChange()">
+                            <option value="super_admin">Super Admin</option>
+                            <option value="editor">Editor</option>
+                            <option value="analyst">Analyst</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>&nbsp;</label>
+                        <label class="toggle-field">
+                            <input type="checkbox" id="accountActive" checked>
+                            <span>Account Active</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="perms-section perms-hidden" id="permsSection">
+                    <div class="perms-hdr">
+                        <h4>Page Permissions</h4>
+                        <div class="perms-actions">
+                            <button onclick="permsCheckAll(true)">Select All</button>
+                            <button onclick="permsCheckAll(false)">Deselect All</button>
+                        </div>
+                    </div>
+                    <div class="perms-grid">
+                        <div class="perms-grid-hdr">
+                            <span>Page</span>
+                            <span>View</span>
+                            <span>Edit</span>
+                            <span>Delete</span>
+                        </div>
+                        <div id="permsRows"></div>
+                    </div>
+                    <div class="perms-note">Permissions override role defaults. Super Admin always has full access.</div>
+                </div>
+            </div>
+            <div class="modal-ftr">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveAccount()">Save Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2FA Setup Modal -->
+    <div class="modal-overlay" id="totp2faModal">
+        <div class="modal-box" style="max-width:420px">
+            <div class="modal-hdr">
+                <h3>Enable Two-Factor Authentication</h3>
+                <button class="modal-close-btn" onclick="document.getElementById('totp2faModal').classList.remove('open')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-bdy">
+                <div id="totpSetupStep">
+                    <p style="font-size:13px;margin-bottom:12px">1. Scan this QR code with Google Authenticator, Authy, or any TOTP app.</p>
+                    <div class="totp-qr">
+                        <img id="totpQrImg" src="" alt="QR Code" style="width:200px;height:200px;border-radius:8px">
+                        <div style="font-size:12px;color:var(--text-tertiary)">Or enter this secret manually:</div>
+                        <div class="totp-secret-box" id="totpSecretDisplay"></div>
+                    </div>
+                    <p style="font-size:13px;margin:12px 0 8px">2. Enter the 6-digit code from the app to confirm:</p>
+                    <input type="text" id="totpConfirmCode" class="form-input" placeholder="000000" maxlength="6" inputmode="numeric" style="letter-spacing:.3em;font-size:1.3rem;text-align:center">
+                    <div id="totpSetupError" style="color:#dc2626;font-size:12px;margin-top:6px"></div>
+                    <button class="btn btn-primary" id="totpConfirmBtn" onclick="confirmTOTPSetup()" style="width:100%;margin-top:14px">Activate 2FA</button>
+                </div>
+                <div id="totpBackupStep" style="display:none">
+                    <div style="text-align:center;font-size:1.5rem;margin-bottom:8px">✅</div>
+                    <p style="font-weight:700;text-align:center;margin-bottom:4px">2FA Enabled!</p>
+                    <p style="font-size:12px;color:var(--text-tertiary);text-align:center;margin-bottom:12px">Save these backup codes somewhere safe. Each can be used once if you lose your phone.</p>
+                    <div class="backup-codes-grid" id="backupCodesGrid"></div>
+                    <button class="btn btn-primary" onclick="document.getElementById('totp2faModal').classList.remove('open')" style="width:100%;margin-top:8px">I've saved my backup codes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2FA Disable Modal -->
+    <div class="modal-overlay" id="totp2faDisableModal">
+        <div class="modal-box" style="max-width:360px">
+            <div class="modal-hdr">
+                <h3>Disable Two-Factor Authentication</h3>
+                <button class="modal-close-btn" onclick="document.getElementById('totp2faDisableModal').classList.remove('open')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-bdy">
+                <p style="font-size:13px;margin-bottom:14px">Enter your current 6-digit authenticator code to confirm.</p>
+                <input type="text" id="totpDisableCode" class="form-input" placeholder="000000" maxlength="6" inputmode="numeric" style="letter-spacing:.3em;font-size:1.3rem;text-align:center">
+                <div id="totpDisableError" style="color:#dc2626;font-size:12px;margin-top:6px"></div>
+                <button class="btn btn-danger" id="totpDisableBtn" onclick="confirmTOTPDisable()" style="width:100%;margin-top:14px">Disable 2FA</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/utils/admin-session-timer-ui.js?v=5"></script>
+    <script src="/utils/admin-auth.js?v=4"></script>
+    <script src="/utils/admin-notifications.js"></script>
+    <script>
+        lucide.createIcons();
+        let accounts = [];
+        let allAccounts = [];
+        let currentUser = null;
+
+        var ADMIN_PAGES = [
+            { slug: 'dashboard', label: 'Dashboard' },
+            { slug: 'analytics', label: 'Analytics' },
+            { slug: 'messages', label: 'Messages' },
+            { slug: 'videos', label: 'Videos' },
+            { slug: 'islamvoice', label: 'IslamVoice' },
+            { slug: 'gencine', label: 'Gencine' },
+            { slug: 'images', label: 'Site Images' },
+            { slug: 'translations', label: 'Translations' },
+            { slug: 'users', label: 'Users' },
+            { slug: 'reading-stats', label: 'Reading Stats' },
+            { slug: 'account-management', label: 'Admin Accounts' },
+            { slug: 'features', label: 'Features' },
+            { slug: 'schedule', label: 'Schedule' },
+            { slug: 'social-stats', label: 'Social Stats' },
+            { slug: 'bot-protection', label: 'Bot Protection' },
+            { slug: 'database', label: 'Database' },
+            { slug: 'search-console', label: 'Search Console' },
+            { slug: 'email-templates', label: 'Email Templates' },
+            { slug: 'activity-feed', label: 'Activity Feed' }
+        ];
+
+        var ROLE_PRESETS = {
+            super_admin: function() {
+                var p = {};
+                ADMIN_PAGES.forEach(function(pg) { p[pg.slug] = { can_view: true, can_edit: true, can_delete: true }; });
+                return p;
+            },
+            editor: function() {
+                var view = ['dashboard','messages','videos','islamvoice','gencine','images','translations','schedule'];
+                var edit = ['messages','videos','islamvoice','gencine','images','translations','schedule'];
+                var p = {};
+                ADMIN_PAGES.forEach(function(pg) {
+                    p[pg.slug] = {
+                        can_view: view.indexOf(pg.slug) !== -1,
+                        can_edit: edit.indexOf(pg.slug) !== -1,
+                        can_delete: false
+                    };
+                });
+                return p;
+            },
+            analyst: function() {
+                var view = ['dashboard','analytics','users','reading-stats','social-stats','images'];
+                var p = {};
+                ADMIN_PAGES.forEach(function(pg) {
+                    p[pg.slug] = {
+                        can_view: view.indexOf(pg.slug) !== -1,
+                        can_edit: false,
+                        can_delete: false
+                    };
+                });
+                return p;
+            },
+            custom: function() {
+                var p = {};
+                ADMIN_PAGES.forEach(function(pg) { p[pg.slug] = { can_view: false, can_edit: false, can_delete: false }; });
+                return p;
+            }
+        };
+
+        function buildPermsGrid() {
+            var container = document.getElementById('permsRows');
+            container.textContent = '';
+            ADMIN_PAGES.forEach(function(page) {
+                var row = document.createElement('div');
+                row.className = 'perm-row';
+                row.setAttribute('data-slug', page.slug);
+
+                var nameSpan = document.createElement('span');
+                nameSpan.className = 'page-name';
+                nameSpan.textContent = page.label;
+                row.appendChild(nameSpan);
+
+                ['can_view', 'can_edit', 'can_delete'].forEach(function(perm) {
+                    var cell = document.createElement('span');
+                    cell.className = 'perm-check';
+                    var cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.setAttribute('data-slug', page.slug);
+                    cb.setAttribute('data-perm', perm);
+                    cell.appendChild(cb);
+                    row.appendChild(cell);
+                });
+
+                container.appendChild(row);
+            });
+        }
+
+        function onRoleChange() {
+            var role = document.getElementById('accountRole').value;
+            var section = document.getElementById('permsSection');
+            if (role === 'super_admin') {
+                section.classList.add('perms-hidden');
+            } else {
+                section.classList.remove('perms-hidden');
+                applyPreset(role);
+            }
+        }
+
+        function applyPreset(role) {
+            var presetFn = ROLE_PRESETS[role] || ROLE_PRESETS.custom;
+            setPermissionsInGrid(presetFn());
+        }
+
+        function getPermissionsFromGrid() {
+            var perms = [];
+            ADMIN_PAGES.forEach(function(page) {
+                var vw = document.querySelector('input[data-slug="' + page.slug + '"][data-perm="can_view"]');
+                var ed = document.querySelector('input[data-slug="' + page.slug + '"][data-perm="can_edit"]');
+                var dl = document.querySelector('input[data-slug="' + page.slug + '"][data-perm="can_delete"]');
+                perms.push({
+                    page_slug: page.slug,
+                    can_view: vw ? vw.checked : false,
+                    can_edit: ed ? ed.checked : false,
+                    can_delete: dl ? dl.checked : false
+                });
+            });
+            return perms;
+        }
+
+        function setPermissionsInGrid(permsMap) {
+            ADMIN_PAGES.forEach(function(page) {
+                var p = permsMap[page.slug] || { can_view: false, can_edit: false, can_delete: false };
+                var vw = document.querySelector('input[data-slug="' + page.slug + '"][data-perm="can_view"]');
+                var ed = document.querySelector('input[data-slug="' + page.slug + '"][data-perm="can_edit"]');
+                var dl = document.querySelector('input[data-slug="' + page.slug + '"][data-perm="can_delete"]');
+                if (vw) vw.checked = !!p.can_view;
+                if (ed) ed.checked = !!p.can_edit;
+                if (dl) dl.checked = !!p.can_delete;
+            });
+        }
+
+        function permsCheckAll(state) {
+            var checkboxes = document.querySelectorAll('#permsRows input[type="checkbox"]');
+            checkboxes.forEach(function(cb) { cb.checked = state; });
+        }
+
+        (async () => { const auth = await window.adminAuth.checkAuth(); if (auth) { await loadAccounts(); load2faStatus(); loadTrustedDevices(); loadActiveSessions(); } })();
+        document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
+        const themeToggle = document.getElementById('theme-toggle'), themeIcon = document.getElementById('theme-icon');
+        const savedTheme = localStorage.getItem('admin-theme') || 'light';
+        if (savedTheme === 'dark') { document.body.classList.add('dark-mode'); themeIcon.setAttribute('data-lucide', 'sun');
+            lucide.createIcons(); }
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+        });
+
+        buildPermsGrid();
+
+        async function loadAccounts() {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+            const token = sessionStorage.getItem('adminToken');
+            const authResponse = await fetch('/admin-auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'verify', token })
+            });
+            const authData = await authResponse.json();
+            currentUser = authData;
+            if (authData.role !== 'super_admin') {
+                document.getElementById('permissionNotice').style.display = 'flex';
+                document.getElementById('createBtn').style.display = 'none';
+                lucide.createIcons();
+                return;
+            }
+            const listRes = await fetch('/admin-management', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'list_accounts', token })
+            });
+            const listData = await listRes.json();
+            if (listData.error) { console.error(listData.error); alert('Error loading accounts: ' + listData.error); return; }
+            allAccounts = listData.data || [];
+            accounts = allAccounts.slice();
+            document.getElementById('totalAdmins').textContent = accounts.length;
+            document.getElementById('activeAdmins').textContent = accounts.filter(a => a.is_active).length;
+            document.getElementById('lockedAdmins').textContent = accounts.filter(a => a.is_locked).length;
+            const { data: sessions } = await supabase.from('admin_sessions').select('id').gt('expires_at', new Date().toISOString());
+            document.getElementById('activeSessions').textContent = sessions ? sessions.length : 0;
+            renderAccountsTable();
+        }
+        function renderAccountsTable() {
+            const tbody = document.getElementById('accountsTable');
+            tbody.textContent = '';
+            if (accounts.length === 0) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 7;
+                td.style.textAlign = 'center';
+                td.style.padding = '40px';
+                td.textContent = 'No admin accounts found';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+                return;
+            }
+            accounts.forEach(account => {
+                const tr = document.createElement('tr');
+                const tdEmail = document.createElement('td');
+                tdEmail.textContent = account.email;
+                tdEmail.style.fontWeight = '500';
+                tr.appendChild(tdEmail);
+                const tdName = document.createElement('td');
+                tdName.textContent = account.full_name || '—';
+                tr.appendChild(tdName);
+                const tdRole = document.createElement('td');
+                const roleBadge = document.createElement('span');
+                roleBadge.className = 'role-badge role-' + account.role;
+                roleBadge.textContent = account.role.replace('_', ' ');
+                tdRole.appendChild(roleBadge);
+                tr.appendChild(tdRole);
+                const tdLiveStatus = document.createElement('td');
+                const liveStatus = account.status || 'offline';
+                const liveStatusBadge = document.createElement('span');
+                liveStatusBadge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:12px;font-size:11px;font-weight:600;';
+                if (liveStatus === 'online') {
+                    liveStatusBadge.style.background = 'rgba(34,197,94,0.1)';
+                    liveStatusBadge.style.color = 'rgb(34,197,94)';
+                    liveStatusBadge.textContent = 'Online';
+                } else if (liveStatus === 'idle') {
+                    liveStatusBadge.style.background = 'rgba(234,179,8,0.1)';
+                    liveStatusBadge.style.color = 'rgb(234,179,8)';
+                    liveStatusBadge.textContent = 'Idle';
+                } else {
+                    liveStatusBadge.style.background = 'rgba(156,163,175,0.1)';
+                    liveStatusBadge.style.color = 'rgb(156,163,175)';
+                    liveStatusBadge.textContent = 'Offline';
+                }
+                tdLiveStatus.appendChild(liveStatusBadge);
+                tr.appendChild(tdLiveStatus);
+                const tdDevice = document.createElement('td');
+                if (account.device_fingerprint) {
+                    const deviceBadge = document.createElement('span');
+                    deviceBadge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;font-size:11px;';
+                    deviceBadge.textContent = 'Locked';
+                    deviceBadge.title = 'Device: ' + (account.device_user_agent || 'Unknown');
+                    tdDevice.appendChild(deviceBadge);
+                } else {
+                    const unlockedSpan = document.createElement('span');
+                    unlockedSpan.style.color = 'var(--text-tertiary)';
+                    unlockedSpan.style.fontSize = '11px';
+                    unlockedSpan.textContent = 'Unlocked';
+                    tdDevice.appendChild(unlockedSpan);
+                }
+                tr.appendChild(tdDevice);
+                const tdLogin = document.createElement('td');
+                tdLogin.textContent = account.last_login ? new Date(account.last_login).toLocaleDateString() : 'Never';
+                tdLogin.style.fontSize = '13px';
+                tr.appendChild(tdLogin);
+                const tdActions = document.createElement('td');
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'table-actions';
+                const editBtn = document.createElement('button');
+                editBtn.className = 'table-btn';
+                editBtn.title = 'Edit';
+                editBtn.onclick = () => editAccount(account.id);
+                const editIcon = document.createElement('i');
+                editIcon.setAttribute('data-lucide', 'edit-2');
+                editBtn.appendChild(editIcon);
+                actionsDiv.appendChild(editBtn);
+                if (account.device_fingerprint) {
+                    const resetDeviceBtn = document.createElement('button');
+                    resetDeviceBtn.className = 'table-btn';
+                    resetDeviceBtn.title = 'Reset Device Lock';
+                    resetDeviceBtn.style.color = 'rgb(234,179,8)';
+                    resetDeviceBtn.onclick = () => resetDevice(account.id, account.email);
+                    const resetIcon = document.createElement('i');
+                    resetIcon.setAttribute('data-lucide', 'smartphone');
+                    resetDeviceBtn.appendChild(resetIcon);
+                    actionsDiv.appendChild(resetDeviceBtn);
+                }
+                if (account.status === 'online' || account.status === 'idle') {
+                    const logoutBtn = document.createElement('button');
+                    logoutBtn.className = 'table-btn';
+                    logoutBtn.title = 'Force Logout';
+                    logoutBtn.style.color = 'rgb(239,68,68)';
+                    logoutBtn.onclick = () => forceLogout(account.id, account.email);
+                    const logoutIcon = document.createElement('i');
+                    logoutIcon.setAttribute('data-lucide', 'log-out');
+                    logoutBtn.appendChild(logoutIcon);
+                    actionsDiv.appendChild(logoutBtn);
+                }
+                if (account.is_locked) {
+                    const unlockBtn = document.createElement('button');
+                    unlockBtn.className = 'table-btn';
+                    unlockBtn.title = 'Unlock Account';
+                    unlockBtn.onclick = () => unlockAccount(account.id);
+                    const unlockIcon = document.createElement('i');
+                    unlockIcon.setAttribute('data-lucide', 'unlock');
+                    unlockBtn.appendChild(unlockIcon);
+                    actionsDiv.appendChild(unlockBtn);
+                }
+                if (account.totp_enabled) {
+                    const resetBtn2fa = document.createElement('button');
+                    resetBtn2fa.className = 'table-btn';
+                    resetBtn2fa.title = 'Reset 2FA';
+                    resetBtn2fa.onclick = () => reset2faForUser(account.id, account.email);
+                    const resetIcon2fa = document.createElement('i');
+                    resetIcon2fa.setAttribute('data-lucide', 'shield-off');
+                    resetBtn2fa.appendChild(resetIcon2fa);
+                    actionsDiv.appendChild(resetBtn2fa);
+                }
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'table-btn';
+                deleteBtn.title = 'Delete';
+                deleteBtn.onclick = () => deleteAccount(account.id);
+                const deleteIcon = document.createElement('i');
+                deleteIcon.setAttribute('data-lucide', 'trash-2');
+                deleteBtn.appendChild(deleteIcon);
+                actionsDiv.appendChild(deleteBtn);
+                tdActions.appendChild(actionsDiv);
+                tr.appendChild(tdActions);
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+        function openCreateModal() {
+            document.getElementById('accountId').value = '';
+            document.getElementById('accountEmail').value = '';
+            document.getElementById('accountFullName').value = '';
+            document.getElementById('accountPassword').value = '';
+            document.getElementById('accountRole').value = 'editor';
+            document.getElementById('accountActive').checked = true;
+            document.getElementById('modalTitle').textContent = 'Create Admin Account';
+            document.getElementById('passwordGroup').style.display = '';
+            onRoleChange();
+            document.getElementById('accountModal').classList.add('open');
+            lucide.createIcons();
+        }
+        async function editAccount(id) {
+            const account = accounts.find(a => a.id === id);
+            if (!account) return;
+            document.getElementById('accountId').value = account.id;
+            document.getElementById('accountEmail').value = account.email;
+            document.getElementById('accountFullName').value = account.full_name || '';
+            document.getElementById('accountPassword').value = '';
+            document.getElementById('accountRole').value = account.role;
+            document.getElementById('accountActive').checked = account.is_active;
+            document.getElementById('modalTitle').textContent = 'Edit Admin Account';
+            onRoleChange();
+            // Load existing permissions from DB
+            try {
+                var supabase = window.adminAuth.getSupabase();
+                if (supabase) {
+                    var res = await supabase.from('admin_permissions').select('page_slug,can_view,can_edit,can_delete').eq('user_id', account.id);
+                    if (res.data && res.data.length > 0) {
+                        var permsMap = {};
+                        res.data.forEach(function(r) { permsMap[r.page_slug] = r; });
+                        setPermissionsInGrid(permsMap);
+                        // If they have custom permissions, switch to custom role view
+                        if (account.role !== 'super_admin') {
+                            document.getElementById('permsSection').classList.remove('perms-hidden');
+                        }
+                    }
+                }
+            } catch (e) { console.error('Load permissions error:', e); }
+            document.getElementById('accountModal').classList.add('open');
+            lucide.createIcons();
+        }
+        function closeModal() { document.getElementById('accountModal').classList.remove('open'); }
+        async function saveAccount() {
+            const id = document.getElementById('accountId').value;
+            const email = document.getElementById('accountEmail').value;
+            const fullName = document.getElementById('accountFullName').value;
+            const password = document.getElementById('accountPassword').value;
+            const role = document.getElementById('accountRole').value;
+            const isActive = document.getElementById('accountActive').checked;
+
+            if (!email) { alert('Email is required'); return; }
+            if (!id && !password) { alert('Password is required for new accounts'); return; }
+
+            const token = sessionStorage.getItem('adminToken');
+
+            try {
+                const action = id ? 'update_account' : 'create_account';
+                const body = {
+                    action,
+                    token,
+                    email: email.toLowerCase(),
+                    full_name: fullName || null,
+                    role,
+                    is_active: isActive
+                };
+
+                if (password) { body.password = password; }
+                if (id) { body.targetUserId = id; }
+
+                const response = await fetch('/admin-management', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Save permissions if not super_admin
+                    var userId = id || (data.user && data.user.id ? data.user.id : null);
+                    if (role !== 'super_admin' && userId) {
+                        try {
+                            var perms = getPermissionsFromGrid();
+                            await fetch('/admin-management', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    action: 'update_permissions',
+                                    token: token,
+                                    targetUserId: userId,
+                                    permissions: perms
+                                })
+                            });
+                        } catch (pe) { console.error('Save permissions error:', pe); }
+                    }
+                    alert(data.message);
+                    closeModal();
+                    loadAccounts();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Save account error:', error);
+                alert('Connection error');
+            }
+        }
+        async function forceLogout(id, email) {
+            if (!confirm('Force logout "' + email + '"? They will be logged out immediately.')) return;
+            const token = sessionStorage.getItem('adminToken');
+            try {
+                const response = await fetch('/admin-management', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'force_logout',
+                        token,
+                        targetUserId: id
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert(data.message);
+                    loadAccounts();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Force logout error:', error);
+                alert('Connection error');
+            }
+        }
+        async function resetDevice(id, email) {
+            if (!confirm('Reset device lock for "' + email + '"? They can login from any device again.')) return;
+            const token = sessionStorage.getItem('adminToken');
+            try {
+                const response = await fetch('/admin-management', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'reset_device',
+                        token,
+                        targetUserId: id
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert(data.message);
+                    loadAccounts();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Reset device error:', error);
+                alert('Connection error');
+            }
+        }
+        async function unlockAccount(id) {
+            if (!confirm('Unlock this account?')) return;
+            const supabase = window.adminAuth.getSupabase();
+            await supabase.from('admin_users').update({ is_locked: false, locked_until: null, failed_attempts: 0 }).eq('id', id);
+            loadAccounts();
+        }
+        async function deleteAccount(id) {
+            const account = accounts.find(a => a.id === id);
+            if (!account) return;
+            if (!confirm('Delete admin account "' + account.email + '"? This action cannot be undone.')) return;
+            const supabase = window.adminAuth.getSupabase();
+            await supabase.from('admin_users').delete().eq('id', id);
+            loadAccounts();
+        }
+        /* ══════════════ 2FA MANAGEMENT ══════════════ */
+        var _my2faEnabled = false;
+
+        async function load2faStatus() {
+            var token = sessionStorage.getItem('adminToken');
+            if (!token) return;
+            var res = await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'verify', token }) });
+            var data = await res.json();
+            if (!data.success) return;
+            _my2faEnabled = !!data.totpEnabled;
+            var badge = document.getElementById('my2faStatus');
+            badge.textContent = _my2faEnabled ? '✓ Enabled' : 'Disabled';
+            badge.style.background = _my2faEnabled ? 'rgba(34,197,94,.15)' : 'rgba(156,163,175,.15)';
+            badge.style.color = _my2faEnabled ? '#16a34a' : '#6b7280';
+            document.getElementById('enable2faBtn').style.display = _my2faEnabled ? 'none' : '';
+            document.getElementById('disable2faBtn').style.display = _my2faEnabled ? '' : 'none';
+        }
+
+        async function open2faSetup() {
+            var token = sessionStorage.getItem('adminToken');
+            var res = await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'setup-totp', token }) });
+            var data = await res.json();
+            if (data.error) { alert(data.error); return; }
+            document.getElementById('totpQrImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(data.otpauthUrl);
+            document.getElementById('totpSecretDisplay').textContent = data.secret;
+            document.getElementById('totpSetupStep').style.display = '';
+            document.getElementById('totpBackupStep').style.display = 'none';
+            document.getElementById('totpConfirmCode').value = '';
+            document.getElementById('totpSetupError').textContent = '';
+            document.getElementById('totp2faModal').classList.add('open');
+            lucide.createIcons();
+        }
+
+        async function confirmTOTPSetup() {
+            var token = sessionStorage.getItem('adminToken');
+            var code = document.getElementById('totpConfirmCode').value.trim();
+            if (!code) return;
+            var btn = document.getElementById('totpConfirmBtn');
+            btn.disabled = true; btn.textContent = 'Verifying...';
+            var res = await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'confirm-totp', token, password: code }) });
+            var data = await res.json();
+            btn.disabled = false; btn.textContent = 'Activate 2FA';
+            if (data.error) { document.getElementById('totpSetupError').textContent = data.error; return; }
+            var grid = document.getElementById('backupCodesGrid');
+            while (grid.firstChild) grid.removeChild(grid.firstChild);
+            data.backupCodes.forEach(function(c) {
+                var el = document.createElement('div'); el.className = 'backup-code'; el.textContent = c; grid.appendChild(el);
+            });
+            document.getElementById('totpSetupStep').style.display = 'none';
+            document.getElementById('totpBackupStep').style.display = '';
+            load2faStatus();
+        }
+
+        async function open2faDisable() {
+            document.getElementById('totpDisableCode').value = '';
+            document.getElementById('totpDisableError').textContent = '';
+            document.getElementById('totp2faDisableModal').classList.add('open');
+            lucide.createIcons();
+        }
+
+        async function confirmTOTPDisable() {
+            var token = sessionStorage.getItem('adminToken');
+            var code = document.getElementById('totpDisableCode').value.trim();
+            if (!code) return;
+            var btn = document.getElementById('totpDisableBtn');
+            btn.disabled = true; btn.textContent = 'Disabling...';
+            var res = await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'disable-totp', token, password: code }) });
+            var data = await res.json();
+            btn.disabled = false; btn.textContent = 'Disable 2FA';
+            if (data.error) { document.getElementById('totpDisableError').textContent = data.error; return; }
+            document.getElementById('totp2faDisableModal').classList.remove('open');
+            load2faStatus();
+        }
+
+        async function reset2faForUser(userId, userEmail) {
+            if (!confirm('Reset 2FA for ' + userEmail + '? They will need to set it up again.')) return;
+            var token = sessionStorage.getItem('adminToken');
+            var res = await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'reset-totp', token, email: userId }) });
+            var data = await res.json();
+            if (data.success) { alert('2FA reset for ' + userEmail); loadAccounts(); }
+            else alert(data.error || 'Failed');
+        }
+
+        function filterAdmins() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            if (!query) {
+                accounts = allAccounts.slice();
+            } else {
+                accounts = allAccounts.filter(a => a.email.toLowerCase().includes(query) || (a.full_name && a.full_name.toLowerCase().includes(query)));
+            }
+            renderAccountsTable();
+        }
+
+        // ===== ACTIVE SESSIONS =====
+        async function loadActiveSessions() {
+            var token = sessionStorage.getItem('adminToken');
+            var container = document.getElementById('activeSessionsList');
+            var res = await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ action:'get-my-sessions', token }) });
+            var data = await res.json();
+            while (container.firstChild) container.removeChild(container.firstChild);
+            if (!data.sessions || data.sessions.length === 0) {
+                var empty = document.createElement('div');
+                empty.style.cssText = 'color:var(--text-tertiary);font-size:13px';
+                empty.textContent = 'No active sessions found.';
+                container.appendChild(empty);
+                return;
+            }
+            data.sessions.forEach(function(s) {
+                var row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-color);flex-wrap:wrap';
+                var info = document.createElement('div');
+                var nameRow = document.createElement('div');
+                nameRow.style.cssText = 'display:flex;align-items:center;gap:8px';
+                var name = document.createElement('div');
+                name.style.cssText = 'font-size:13px;font-weight:600;color:var(--text-primary)';
+                name.textContent = (s.user_agent || 'Unknown device').substring(0, 60);
+                nameRow.appendChild(name);
+                if (s.isCurrent) {
+                    var badge = document.createElement('span');
+                    badge.style.cssText = 'font-size:10px;font-weight:700;background:rgba(34,197,94,.15);color:#16a34a;padding:2px 8px;border-radius:20px';
+                    badge.textContent = 'CURRENT';
+                    nameRow.appendChild(badge);
+                }
+                var meta = document.createElement('div');
+                meta.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:2px';
+                var created = new Date(s.created_at).toLocaleString('en-GB', { timeZone:'Asia/Baghdad', hour12:false });
+                var expires = new Date(s.expires_at).toLocaleString('en-GB', { timeZone:'Asia/Baghdad', hour12:false });
+                meta.textContent = 'IP: ' + (s.ip_address || '-') + '  ·  Started: ' + created + '  ·  Expires: ' + expires;
+                info.appendChild(nameRow);
+                info.appendChild(meta);
+                var btn = document.createElement('button');
+                btn.className = 'btn btn-danger';
+                btn.style.cssText = 'font-size:12px;padding:5px 12px' + (s.isCurrent ? ';opacity:.4;cursor:not-allowed' : '');
+                btn.textContent = s.isCurrent ? 'Current' : 'Kill';
+                btn.disabled = s.isCurrent;
+                if (!s.isCurrent) btn.onclick = (function(id){ return function(){ revokeSession(id); }; })(s.id);
+                row.appendChild(info);
+                row.appendChild(btn);
+                container.appendChild(row);
+            });
+        }
+        async function revokeSession(sessionId) {
+            if (!confirm('Kill this session?')) return;
+            var token = sessionStorage.getItem('adminToken');
+            await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ action:'revoke-session', token, sessionId }) });
+            loadActiveSessions();
+        }
+        async function revokeAllOtherSessions() {
+            if (!confirm('Kill ALL other sessions? Only your current session will remain.')) return;
+            var token = sessionStorage.getItem('adminToken');
+            await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ action:'revoke-all-other-sessions', token }) });
+            loadActiveSessions();
+        }
+
+        // ===== CHANGE PASSWORD =====
+        async function changeMyPassword() {
+            var cur = document.getElementById('cpCurrent').value;
+            var nw  = document.getElementById('cpNew').value;
+            var cfm = document.getElementById('cpConfirm').value;
+            var msg = document.getElementById('cpMsg');
+            if (!cur || !nw || !cfm) { showMsg(msg, 'All fields are required.', 'error'); return; }
+            if (nw.length < 8)       { showMsg(msg, 'New password must be at least 8 characters.', 'error'); return; }
+            if (nw !== cfm)          { showMsg(msg, 'New passwords do not match.', 'error'); return; }
+            var token = sessionStorage.getItem('adminToken');
+            var res = await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ action:'change-password', token, currentPassword: cur, newPassword: nw }) });
+            var data = await res.json();
+            if (data.success) {
+                showMsg(msg, 'Password updated. All other sessions have been logged out.', 'success');
+                document.getElementById('cpCurrent').value = '';
+                document.getElementById('cpNew').value = '';
+                document.getElementById('cpConfirm').value = '';
+            } else {
+                showMsg(msg, data.error || 'Failed to update password.', 'error');
+            }
+        }
+        function showMsg(el, text, type) {
+            el.textContent = text;
+            el.style.display = 'block';
+            el.style.color = type === 'success' ? '#16a34a' : '#dc2626';
+        }
+
+        // ===== TRUSTED DEVICES =====
+        async function loadTrustedDevices() {
+            var token = sessionStorage.getItem('adminToken');
+            var container = document.getElementById('trustedDevicesList');
+            var res = await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ action:'get-trusted-devices', token }) });
+            var data = await res.json();
+            while (container.firstChild) container.removeChild(container.firstChild);
+            if (!data.devices || data.devices.length === 0) {
+                var empty = document.createElement('div');
+                empty.style.cssText = 'color:var(--text-tertiary);font-size:13px';
+                empty.textContent = 'No trusted devices. Check "Trust this device" when logging in with 2FA.';
+                container.appendChild(empty);
+                return;
+            }
+            data.devices.forEach(function(d) {
+                var row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-color);flex-wrap:wrap';
+                var info = document.createElement('div');
+                var name = document.createElement('div');
+                name.style.cssText = 'font-size:13px;font-weight:600;color:var(--text-primary)';
+                name.textContent = (d.device_name || 'Unknown device').substring(0, 80);
+                var meta = document.createElement('div');
+                meta.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:2px';
+                var added = new Date(d.created_at).toLocaleDateString('en-GB');
+                var exp   = new Date(d.expires_at).toLocaleDateString('en-GB');
+                meta.textContent = 'IP: ' + (d.ip_address || '-') + '  ·  Added: ' + added + '  ·  Expires: ' + exp;
+                info.appendChild(name);
+                info.appendChild(meta);
+                var btn = document.createElement('button');
+                btn.className = 'btn btn-danger';
+                btn.style.cssText = 'font-size:12px;padding:5px 12px';
+                btn.textContent = 'Revoke';
+                btn.onclick = (function(id){ return function(){ revokeDevice(id); }; })(d.id);
+                row.appendChild(info);
+                row.appendChild(btn);
+                container.appendChild(row);
+            });
+        }
+        async function quickResetDevice() {
+            var email = prompt('Enter the email of the locked account:');
+            if (!email) return;
+            var token = sessionStorage.getItem('adminToken');
+            var res = await fetch('/admin-management', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'reset_device_by_email', token, email: email.trim() })
+            });
+            var data = await res.json();
+            if (data.error) { alert('Error: ' + data.error); return; }
+            alert('Device lock cleared. They can now log in from any device.');
+            loadAccounts();
+        }
+
+        async function revokeDevice(deviceId) {
+            if (!confirm('Revoke this trusted device? It will need 2FA on next login.')) return;
+            var token = sessionStorage.getItem('adminToken');
+            await fetch('/admin-auth', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ action:'revoke-trusted-device', token, deviceId }) });
+            loadTrustedDevices();
+        }
+    </script>
+</body>
+</html>

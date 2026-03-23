@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>Site Images - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
+    <style>
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+        }
+        .image-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .image-card-preview {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: var(--bg-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .image-card-preview.avatar-preview {
+            aspect-ratio: 1;
+            max-width: 250px;
+            margin: 0 auto;
+            border-radius: 50%;
+            margin-top: 20px;
+        }
+        .image-card-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .image-card-preview .placeholder {
+            color: var(--text-tertiary);
+            font-size: 3rem;
+        }
+        .image-card-body {
+            padding: 20px;
+        }
+        .image-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .image-card-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+        .image-card-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .image-card-actions .btn {
+            flex: 1;
+            font-size: 0.85rem;
+            padding: 8px 12px;
+        }
+        .upload-input { display: none; }
+        .image-card-url {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            background: var(--bg-base);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            box-sizing: border-box;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+        .status-badge.set { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+        .status-badge.empty { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .section-divider {
+            margin: 32px 0 24px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        /* Crop Modal */
+        .crop-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .crop-modal-content {
+            background: var(--bg-surface);
+            border-radius: 12px;
+            max-width: 720px;
+            width: 94%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        .crop-modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .crop-modal-header h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .crop-dimensions {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-family: monospace;
+        }
+        .crop-preview {
+            position: relative;
+            flex: 1;
+            background: #1a1a1a;
+            min-height: 350px;
+            max-height: 65vh;
+        }
+        .crop-preview img {
+            display: block;
+            max-width: 100%;
+            max-height: 65vh;
+        }
+        .crop-actions {
+            padding: 14px 20px;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        @media (max-width: 768px) {
+            .images-grid { grid-template-columns: 1fr; }
+            .crop-modal-content { width: 98%; max-height: 95vh; }
+            .crop-preview { min-height: 200px; }
+        }
+        .reciter-photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 16px;
+        }
+        .reciter-photo-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .reciter-photo-preview {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: var(--bg-hover);
+            margin: 16px auto 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--border-light);
+        }
+        .reciter-photo-preview img { width:100%; height:100%; object-fit:cover; }
+        .reciter-photo-preview .placeholder { color:var(--text-tertiary); font-size:1.8rem; }
+        .reciter-photo-body { padding: 10px 14px 14px; }
+        .reciter-photo-flag { text-align:center; font-size:1.3rem; margin-bottom:4px; }
+        .reciter-photo-name { font-size:.85rem; font-weight:600; color:var(--text-primary); margin-bottom:8px; direction:rtl; text-align:center; }
+        .reciter-photo-actions { display:flex; gap:5px; margin-top:8px; }
+        .reciter-photo-actions .btn { flex:1; font-size:.78rem; padding:6px 8px; }
+        .r2-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(247,130,8,.1); color:#f78208; border-radius:4px; padding:2px 8px; font-size:.72rem; font-weight:600; margin-bottom:16px; }
+    </style>
+
+    <style id="early-sidebar-hide">
+        /* Hide sidebar nav by default until role is confirmed */
+        .sidebar-nav { visibility: hidden; }
+    </style>
+    <script>
+        // Early role-based sidebar hiding - runs before body renders
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+
+            if (role === 'super_admin') {
+                css = '.sidebar-nav{visibility:visible}';
+            } else if (role === 'analyst') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'editor') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'custom') {
+                css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            }
+            if (role) {
+                style.textContent = css;
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span></a>
+                    <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span><span class="nav-item-badge" id="message-badge">0</span></a>
+                    <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                    <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                    <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                    <a href="/admin-images.html" class="nav-item active"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                    <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                    <a href="/admin-reading-stats.html" class="nav-item"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                    <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                    <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                    <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+                    <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                    <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                    <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+                    <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
+                    <a href="/admin-activity-feed.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">Activity Feed</span></a>
+                    <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name"></div>
+                        <div class="sidebar-profile-email"></div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;" title="Logout">
+                        <i data-lucide="log-out"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+                <div class="topbar-search"><i data-lucide="search"></i><input type="text" placeholder="Site Images" disabled></div>
+                <div class="topbar-actions">
+                    <div class="session-timer" id="sessionTimer" title="Session expires after 1 hour"><i data-lucide="clock"></i><span id="sessionTimerText">60:00</span></div>
+                    <button class="topbar-btn" id="theme-toggle" title="Toggle Dark Mode"><i data-lucide="moon" id="theme-icon"></i></button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="page-header">
+                    <h1>Site Images</h1>
+                    <p>Manage images used across the website (founder avatar, hero cards)</p>
+                </div>
+
+                <h3 class="section-divider">Founder Page</h3>
+                <div class="images-grid">
+                    <div class="image-card" data-key="founder_avatar_url">
+                        <div class="image-card-preview avatar-preview" id="preview-founder_avatar_url">
+                            <div class="placeholder"><i data-lucide="user"></i></div>
+                        </div>
+                        <div class="image-card-body">
+                            <div class="image-card-title">Founder Avatar</div>
+                            <div class="image-card-desc">Profile image on the founder page hero section</div>
+                            <span class="status-badge empty" id="status-founder_avatar_url">Not Set</span>
+                            <input type="url" class="image-card-url" id="url-founder_avatar_url" placeholder="Paste image URL...">
+                            <div class="image-card-actions">
+                                <button class="btn btn-secondary" onclick="pickFile('founder_avatar_url')">Upload</button>
+                                <button class="btn btn-primary" onclick="saveImage('founder_avatar_url')">Save</button>
+                                <button class="btn btn-danger" onclick="removeImage('founder_avatar_url')" style="flex:0;padding:8px 12px;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                            </div>
+                            <input type="file" class="upload-input" id="file-founder_avatar_url" accept="image/*" onchange="handleUpload('founder_avatar_url', this)">
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="section-divider">Homepage Hero Cards</h3>
+                <div class="images-grid">
+                    <div class="image-card" data-key="hero_card_quran_image">
+                        <div class="image-card-preview" id="preview-hero_card_quran_image">
+                            <div class="placeholder"><i data-lucide="book-open"></i></div>
+                        </div>
+                        <div class="image-card-body">
+                            <div class="image-card-title">Quran Card Image</div>
+                            <div class="image-card-desc">Background image for the Quran hero card on homepage</div>
+                            <span class="status-badge empty" id="status-hero_card_quran_image">Not Set</span>
+                            <input type="url" class="image-card-url" id="url-hero_card_quran_image" placeholder="Paste image URL...">
+                            <div class="image-card-actions">
+                                <button class="btn btn-secondary" onclick="pickFile('hero_card_quran_image')">Upload</button>
+                                <button class="btn btn-primary" onclick="saveImage('hero_card_quran_image')">Save</button>
+                                <button class="btn btn-danger" onclick="removeImage('hero_card_quran_image')" style="flex:0;padding:8px 12px;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                            </div>
+                            <input type="file" class="upload-input" id="file-hero_card_quran_image" accept="image/*" onchange="handleUpload('hero_card_quran_image', this)">
+                        </div>
+                    </div>
+
+                    <div class="image-card" data-key="hero_card_islamvoice_image">
+                        <div class="image-card-preview" id="preview-hero_card_islamvoice_image">
+                            <div class="placeholder"><i data-lucide="play"></i></div>
+                        </div>
+                        <div class="image-card-body">
+                            <div class="image-card-title">IslamVoice Card Image</div>
+                            <div class="image-card-desc">Background image for the IslamVoice hero card on homepage</div>
+                            <span class="status-badge empty" id="status-hero_card_islamvoice_image">Not Set</span>
+                            <input type="url" class="image-card-url" id="url-hero_card_islamvoice_image" placeholder="Paste image URL...">
+                            <div class="image-card-actions">
+                                <button class="btn btn-secondary" onclick="pickFile('hero_card_islamvoice_image')">Upload</button>
+                                <button class="btn btn-primary" onclick="saveImage('hero_card_islamvoice_image')">Save</button>
+                                <button class="btn btn-danger" onclick="removeImage('hero_card_islamvoice_image')" style="flex:0;padding:8px 12px;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                            </div>
+                            <input type="file" class="upload-input" id="file-hero_card_islamvoice_image" accept="image/*" onchange="handleUpload('hero_card_islamvoice_image', this)">
+                        </div>
+                    </div>
+                </div>
+                <h3 class="section-divider">Login Page Hero Images</h3>
+                <div class="images-grid">
+                    <div class="image-card" data-key="login_hero_default_image">
+                        <div class="image-card-preview" id="preview-login_hero_default_image">
+                            <div class="placeholder"><i data-lucide="home"></i></div>
+                        </div>
+                        <div class="image-card-body">
+                            <div class="image-card-title">Login Hero — Default</div>
+                            <div class="image-card-desc">Hero image when user visits login directly (not from Quran/IslamVoice)</div>
+                            <span class="status-badge empty" id="status-login_hero_default_image">Not Set</span>
+                            <input type="url" class="image-card-url" id="url-login_hero_default_image" placeholder="Paste image URL...">
+                            <div class="image-card-actions">
+                                <button class="btn btn-secondary" onclick="pickFile('login_hero_default_image')">Upload</button>
+                                <button class="btn btn-primary" onclick="saveImage('login_hero_default_image')">Save</button>
+                                <button class="btn btn-danger" onclick="removeImage('login_hero_default_image')" style="flex:0;padding:8px 12px;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                            </div>
+                            <input type="file" class="upload-input" id="file-login_hero_default_image" accept="image/*" onchange="handleUpload('login_hero_default_image', this)">
+                        </div>
+                    </div>
+
+                    <div class="image-card" data-key="login_hero_quran_image">
+                        <div class="image-card-preview" id="preview-login_hero_quran_image">
+                            <div class="placeholder"><i data-lucide="book-open"></i></div>
+                        </div>
+                        <div class="image-card-body">
+                            <div class="image-card-title">Login Hero — Quran</div>
+                            <div class="image-card-desc">Hero image when user comes from Quran page</div>
+                            <span class="status-badge empty" id="status-login_hero_quran_image">Not Set</span>
+                            <input type="url" class="image-card-url" id="url-login_hero_quran_image" placeholder="Paste image URL...">
+                            <div class="image-card-actions">
+                                <button class="btn btn-secondary" onclick="pickFile('login_hero_quran_image')">Upload</button>
+                                <button class="btn btn-primary" onclick="saveImage('login_hero_quran_image')">Save</button>
+                                <button class="btn btn-danger" onclick="removeImage('login_hero_quran_image')" style="flex:0;padding:8px 12px;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                            </div>
+                            <input type="file" class="upload-input" id="file-login_hero_quran_image" accept="image/*" onchange="handleUpload('login_hero_quran_image', this)">
+                        </div>
+                    </div>
+
+                    <div class="image-card" data-key="login_hero_islamvoice_image">
+                        <div class="image-card-preview" id="preview-login_hero_islamvoice_image">
+                            <div class="placeholder"><i data-lucide="play"></i></div>
+                        </div>
+                        <div class="image-card-body">
+                            <div class="image-card-title">Login Hero — IslamVoice</div>
+                            <div class="image-card-desc">Hero image when user comes from IslamVoice page</div>
+                            <span class="status-badge empty" id="status-login_hero_islamvoice_image">Not Set</span>
+                            <input type="url" class="image-card-url" id="url-login_hero_islamvoice_image" placeholder="Paste image URL...">
+                            <div class="image-card-actions">
+                                <button class="btn btn-secondary" onclick="pickFile('login_hero_islamvoice_image')">Upload</button>
+                                <button class="btn btn-primary" onclick="saveImage('login_hero_islamvoice_image')">Save</button>
+                                <button class="btn btn-danger" onclick="removeImage('login_hero_islamvoice_image')" style="flex:0;padding:8px 12px;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                            </div>
+                            <input type="file" class="upload-input" id="file-login_hero_islamvoice_image" accept="image/*" onchange="handleUpload('login_hero_islamvoice_image', this)">
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="section-divider">About Page</h3>
+                <div class="images-grid">
+                    <div class="image-card" data-key="tafsir_book_image">
+                        <div class="image-card-preview" id="preview-tafsir_book_image" style="aspect-ratio:3/4;max-width:260px;margin:0 auto;">
+                            <div class="placeholder"><i data-lucide="book-open"></i></div>
+                        </div>
+                        <div class="image-card-body">
+                            <div class="image-card-title">Tafsir Book Image</div>
+                            <div class="image-card-desc">Picture of the tafsir book shown on the About page source section (3:4)</div>
+                            <span class="status-badge empty" id="status-tafsir_book_image">Not Set</span>
+                            <input type="url" class="image-card-url" id="url-tafsir_book_image" placeholder="Paste image URL...">
+                            <div class="image-card-actions">
+                                <button class="btn btn-secondary" onclick="pickFile('tafsir_book_image')">Upload</button>
+                                <button class="btn btn-primary" onclick="saveImage('tafsir_book_image')">Save</button>
+                                <button class="btn btn-danger" onclick="removeImage('tafsir_book_image')" style="flex:0;padding:8px 12px;"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+                            </div>
+                            <input type="file" class="upload-input" id="file-tafsir_book_image" accept="image/*" onchange="handleUpload('tafsir_book_image', this)">
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="section-divider">Qari Profile Photos</h3>
+                <p style="color:var(--text-secondary);font-size:.88rem;margin:-16px 0 20px">Circular profile pictures shown in the audio player. Upload a 1:1 square photo — stored in Cloudflare R2. <span class="r2-badge"><i data-lucide="cloud" style="width:12px;height:12px"></i> R2</span></p>
+                <div id="reciterPhotosGrid" class="reciter-photos-grid"></div>
+            </div>
+        </main>
+
+        <div class="crop-modal" id="cropModal" style="display:none">
+            <div class="crop-modal-content">
+                <div class="crop-modal-header">
+                    <h3 id="cropTitle">Crop Image</h3>
+                    <span class="crop-dimensions" id="cropDimensions"></span>
+                </div>
+                <div class="crop-preview">
+                    <img id="cropImage" src="" alt="Crop preview">
+                </div>
+                <div class="crop-actions">
+                    <button class="btn btn-secondary" onclick="cancelCrop()">Cancel</button>
+                    <button class="btn btn-primary" id="cropSaveBtn" onclick="confirmCrop()">Crop & Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/utils/admin-session-timer-ui.js?v=5"></script>
+    <script src="/utils/admin-auth.js?v=4"></script>
+    <script src="/utils/admin-notifications.js"></script>
+    <script>
+        lucide.createIcons();
+
+        const R2_WORKER_URL = 'https://tafsirkurd-images.tefsirkurd.workers.dev';
+        const R2_UPLOAD_SECRET = 'tk_r2_img_2026_K8mX3pW7nR9vJ4sQ';
+
+        const IMAGE_KEYS = ['founder_avatar_url', 'hero_card_quran_image', 'hero_card_islamvoice_image', 'login_hero_default_image', 'login_hero_quran_image', 'login_hero_islamvoice_image', 'tafsir_book_image'];
+        let supabase = null;
+
+        const RECITERS_ADMIN = [
+            {id:'Alafasy_128kbps',                          name:'مشاري العفاسي',             flag:'🇰🇼'},
+            {id:'Nasser_Alqatami_128kbps',                  name:'ناصر القطامي',              flag:'🇰🇼'},
+            {id:'ahmed_ibn_ali_al_ajamy_128kbps',            name:'أحمد العجمي',               flag:'🇰🇼'},
+            {id:'MaherAlMuaiqly128kbps',                    name:'ماهر المعيقلي',             flag:'🇸🇦'},
+            {id:'Abdurrahmaan_As-Sudais_192kbps',           name:'عبد الرحمن السديس',         flag:'🇸🇦'},
+            {id:'Saood_ash-Shuraym_128kbps',                name:'سعود الشريم',               flag:'🇸🇦'},
+            {id:'Yasser_Ad-Dussary_128kbps',                name:'ياسر الدوسري',              flag:'🇸🇦'},
+            {id:'Hudhaify_128kbps',                         name:'علي الحذيفي',               flag:'🇸🇦'},
+            {id:'Abu_Bakr_Ash-Shaatree_128kbps',            name:'أبو بكر الشاطري',           flag:'🇸🇦'},
+            {id:'Muhammad_Jibreel_128kbps',                 name:'محمد جبريل',                flag:'🇸🇦'},
+            {id:'Hani_Rifai_192kbps',                       name:'هاني الرفاعي',              flag:'🇸🇦'},
+            {id:'Muhammad_Ayyoub_128kbps',                  name:'محمد أيوب',                 flag:'🇸🇦'},
+            {id:'Ghamadi_40kbps',                           name:'سعد الغامدي',               flag:'🇸🇦'},
+            {id:'Abdullaah_3awwaad_Al-Juhaynee_128kbps',    name:'عبد الله الجهني',           flag:'🇸🇦'},
+            {id:'Sahl_Yassin_128kbps',                      name:'سهل ياسين',                 flag:'🇸🇦'},
+            {id:'Abdullah_Basfar_192kbps',                  name:'عبد الله بصفر',             flag:'🇸🇦'},
+            {id:'Fares_Abbad_64kbps',                       name:'فارس عباد',                 flag:'🇩🇿'},
+            {id:'Abdul_Basit_Murattal_192kbps',             name:'عبد الباسط (مورتل)',         flag:'🇪🇬'},
+            {id:'Abdul_Basit_Mujawwad_128kbps',             name:'عبد الباسط (مجود)',          flag:'🇪🇬'},
+            {id:'Minshawy_Murattal_128kbps',                name:'محمد المنشاوي',             flag:'🇪🇬'},
+            {id:'Husary_128kbps',                           name:'محمود الحصري',              flag:'🇪🇬'},
+            {id:'Mustafa_Ismail_48kbps',                    name:'مصطفى إسماعيل',            flag:'🇪🇬'},
+            {id:'Mohammad_al_Tablaway_128kbps',             name:'محمد الطبلاوي',             flag:'🇪🇬'}
+        ];
+
+        (async () => {
+            const isAuth = await window.adminAuth.checkAuth();
+            if (isAuth) {
+                supabase = window.adminAuth.getSupabase();
+                buildReciterGrid();
+                await loadAllImages();
+            }
+        })();
+
+        document.getElementById('menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        });
+        (function() {
+            const themeIcon = document.getElementById('theme-icon');
+            if (localStorage.getItem('admin-theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeIcon.setAttribute('data-lucide', 'sun');
+                lucide.createIcons();
+            }
+            document.getElementById('theme-toggle').addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                const isDark = document.body.classList.contains('dark-mode');
+                themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                lucide.createIcons();
+                localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+            });
+        })();
+
+        async function loadAllImages() {
+            if (!supabase) return;
+            try {
+                const { data, error } = await supabase
+                    .from('site_settings')
+                    .select('key, value')
+                    .in('key', IMAGE_KEYS);
+                if (error) throw error;
+                (data || []).forEach(row => {
+                    if (row.value) {
+                        updatePreview(row.key, row.value);
+                        const urlInput = document.getElementById('url-' + row.key);
+                        if (urlInput) urlInput.value = row.value;
+                    }
+                });
+                // Load reciter photos
+                const { data: rData } = await supabase
+                    .from('site_settings')
+                    .select('key, value')
+                    .like('key', 'reciter_photo_%');
+                (rData || []).forEach(row => {
+                    if (row.value) {
+                        updatePreview(row.key, row.value);
+                        const urlInput = document.getElementById('url-' + row.key);
+                        if (urlInput) urlInput.value = row.value;
+                    }
+                });
+            } catch (e) {
+                console.error('Failed to load images:', e);
+            }
+        }
+
+        function updatePreview(key, url) {
+            const preview = document.getElementById('preview-' + key);
+            const status = document.getElementById('status-' + key);
+            if (!preview) return;
+
+            // Clear existing content
+            while (preview.firstChild) preview.removeChild(preview.firstChild);
+
+            if (url) {
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = 'Preview';
+                preview.appendChild(img);
+                if (status) { status.textContent = 'Set'; status.className = 'status-badge set'; }
+            } else {
+                const icons = { founder_avatar_url: 'user', hero_card_quran_image: 'book-open', hero_card_islamvoice_image: 'play', login_hero_quran_image: 'book-open', login_hero_islamvoice_image: 'play', tafsir_book_image: 'book-open' };
+                const placeholder = document.createElement('div');
+                placeholder.className = 'placeholder';
+                const icon = document.createElement('i');
+                icon.setAttribute('data-lucide', icons[key] || 'image');
+                placeholder.appendChild(icon);
+                preview.appendChild(placeholder);
+                lucide.createIcons();
+                if (status) { status.textContent = 'Not Set'; status.className = 'status-badge empty'; }
+            }
+        }
+
+        // Cropper state
+        let cropper = null;
+        let currentCropKey = null;
+
+        const ASPECT_RATIOS = {
+            founder_avatar_url: 1,
+            hero_card_quran_image: 16 / 9,
+            hero_card_islamvoice_image: 16 / 9,
+            login_hero_quran_image: 9 / 16,
+            login_hero_islamvoice_image: 9 / 16,
+            tafsir_book_image: 3 / 4
+        };
+
+        const CROP_TITLES = {
+            founder_avatar_url: 'Crop Founder Avatar (1:1)',
+            hero_card_quran_image: 'Crop Quran Card (16:9)',
+            hero_card_islamvoice_image: 'Crop IslamVoice Card (16:9)',
+            login_hero_quran_image: 'Crop Login Hero — Quran (9:16)',
+            login_hero_islamvoice_image: 'Crop Login Hero — IslamVoice (9:16)',
+            tafsir_book_image: 'Crop Tafsir Book (3:4)'
+        };
+
+        function pickFile(key) {
+            document.getElementById('file-' + key).click();
+        }
+
+        function handleUpload(key, input) {
+            const file = input.files[0];
+            if (!file || !supabase) return;
+
+            currentCropKey = key;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const cropImage = document.getElementById('cropImage');
+                cropImage.src = e.target.result;
+
+                document.getElementById('cropTitle').textContent = CROP_TITLES[key] || (key.startsWith('reciter_photo_') ? 'Crop Reciter Photo (1:1)' : 'Crop Image');
+                document.getElementById('cropDimensions').textContent = '';
+                document.getElementById('cropModal').style.display = 'flex';
+
+                // Destroy previous cropper if any
+                if (cropper) { cropper.destroy(); cropper = null; }
+
+                cropper = new Cropper(cropImage, {
+                    aspectRatio: ASPECT_RATIOS[key] !== undefined ? ASPECT_RATIOS[key] : (key.startsWith('reciter_photo_') ? 1 : NaN),
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 0.85,
+                    responsive: true,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: true,
+                    background: true,
+                    crop: function(event) {
+                        var w = Math.round(event.detail.width);
+                        var h = Math.round(event.detail.height);
+                        document.getElementById('cropDimensions').textContent = w + ' × ' + h + ' px';
+                    }
+                });
+            };
+            reader.readAsDataURL(file);
+            input.value = '';
+        }
+
+        async function confirmCrop() {
+            if (!cropper || !currentCropKey || !supabase) return;
+
+            var btn = document.getElementById('cropSaveBtn');
+            btn.textContent = 'Uploading...';
+            btn.disabled = true;
+
+            try {
+                var canvas = cropper.getCroppedCanvas({ imageSmoothingQuality: 'high' });
+                var blob = await new Promise(function(resolve) {
+                    canvas.toBlob(resolve, 'image/jpeg', 0.9);
+                });
+
+                // Determine R2 key based on type
+                var r2Key = currentCropKey.startsWith('reciter_photo_')
+                    ? 'reciter_photos/' + currentCropKey.replace('reciter_photo_', '') + '.jpg'
+                    : 'site-images/' + currentCropKey + '-' + Date.now() + '.jpg';
+
+                var form = new FormData();
+                form.append('file', blob, r2Key.split('/').pop());
+                form.append('key', r2Key);
+
+                var res = await fetch(R2_WORKER_URL + '/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + R2_UPLOAD_SECRET },
+                    body: form
+                });
+                if (!res.ok) {
+                    var errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.error || 'Upload failed: HTTP ' + res.status);
+                }
+                var data = await res.json();
+                var url = data.url;
+
+                document.getElementById('url-' + currentCropKey).value = url;
+                updatePreview(currentCropKey, url);
+                await saveToDb(currentCropKey, url);
+
+                closeCropModal();
+                alert('Saved to R2!');
+            } catch (e) {
+                console.error('Upload failed:', e);
+                alert('Upload failed: ' + e.message);
+            } finally {
+                btn.textContent = 'Crop & Save';
+                btn.disabled = false;
+            }
+        }
+
+        function cancelCrop() {
+            closeCropModal();
+        }
+
+        function closeCropModal() {
+            document.getElementById('cropModal').style.display = 'none';
+            if (cropper) { cropper.destroy(); cropper = null; }
+            currentCropKey = null;
+        }
+
+        async function saveImage(key) {
+            const url = document.getElementById('url-' + key).value.trim();
+            if (!url) { alert('Please enter an image URL or upload a file first.'); return; }
+            await saveToDb(key, url);
+            updatePreview(key, url);
+            alert('Image saved!');
+        }
+
+        async function removeImage(key) {
+            if (!confirm('Remove this image?')) return;
+            await saveToDb(key, '');
+            document.getElementById('url-' + key).value = '';
+            updatePreview(key, '');
+            alert('Image removed.');
+        }
+
+        function buildReciterGrid() {
+            const grid = document.getElementById('reciterPhotosGrid');
+            if (!grid) return;
+            RECITERS_ADMIN.forEach(r => {
+                const key = 'reciter_photo_' + r.id;
+                const card = document.createElement('div');
+                card.className = 'reciter-photo-card';
+
+                const preview = document.createElement('div');
+                preview.className = 'reciter-photo-preview';
+                preview.id = 'preview-' + key;
+                const ph = document.createElement('div');
+                ph.className = 'placeholder';
+                const ico = document.createElement('i');
+                ico.setAttribute('data-lucide', 'user');
+                ph.appendChild(ico);
+                preview.appendChild(ph);
+                card.appendChild(preview);
+
+                const body = document.createElement('div');
+                body.className = 'reciter-photo-body';
+
+                const flagDiv = document.createElement('div');
+                flagDiv.className = 'reciter-photo-flag';
+                flagDiv.textContent = r.flag;
+                body.appendChild(flagDiv);
+
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'reciter-photo-name';
+                nameDiv.textContent = r.name;
+                body.appendChild(nameDiv);
+
+                const badge = document.createElement('span');
+                badge.className = 'status-badge empty';
+                badge.id = 'status-' + key;
+                badge.textContent = 'Not Set';
+                body.appendChild(badge);
+
+                const urlInput = document.createElement('input');
+                urlInput.type = 'url';
+                urlInput.className = 'image-card-url';
+                urlInput.id = 'url-' + key;
+                urlInput.placeholder = 'Paste URL or upload...';
+                urlInput.style.marginTop = '8px';
+                body.appendChild(urlInput);
+
+                const actions = document.createElement('div');
+                actions.className = 'reciter-photo-actions';
+
+                const upBtn = document.createElement('button');
+                upBtn.className = 'btn btn-secondary';
+                upBtn.textContent = 'Upload';
+                upBtn.onclick = () => pickFile(key);
+
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'btn btn-primary';
+                saveBtn.textContent = 'Save URL';
+                saveBtn.onclick = () => saveImage(key);
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn btn-danger';
+                delBtn.style.cssText = 'flex:0;padding:6px 10px';
+                const trashIco = document.createElement('i');
+                trashIco.setAttribute('data-lucide', 'trash-2');
+                trashIco.style.cssText = 'width:14px;height:14px';
+                delBtn.appendChild(trashIco);
+                delBtn.onclick = () => removeImage(key);
+
+                actions.appendChild(upBtn);
+                actions.appendChild(saveBtn);
+                actions.appendChild(delBtn);
+                body.appendChild(actions);
+
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.className = 'upload-input';
+                fileInput.id = 'file-' + key;
+                fileInput.accept = 'image/*';
+                fileInput.onchange = function() { handleUpload(key, this); };
+                body.appendChild(fileInput);
+
+                card.appendChild(body);
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        async function saveToDb(key, value) {
+            if (!supabase) return;
+            try {
+                const { error } = await supabase
+                    .from('site_settings')
+                    .upsert({ key: key, value: value }, { onConflict: 'key' });
+                if (error) throw error;
+            } catch (e) {
+                console.error('Save failed:', e);
+                alert('Failed to save: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

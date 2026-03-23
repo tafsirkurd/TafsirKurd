@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>Bot Protection - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        .status-header {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .status-subtext {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-left: auto;
+        }
+
+        .integration-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .integration-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .integration-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .integration-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .integration-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .integration-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .integration-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .integration-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-active);
+            border: 1px solid var(--border-medium);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text-tertiary);
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+            background-color: var(--bg-app);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            border: 1px solid var(--border-medium);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .alert-warning {
+            background: var(--bg-surface);
+            border-color: var(--border-medium);
+        }
+
+        .alert-icon {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .alert-message {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .code-block {
+            background: var(--bg-app);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            overflow-x: auto;
+            margin-top: 8px;
+        }
+    </style>
+
+    <style id="early-sidebar-hide">
+        /* Hide sidebar nav by default until role is confirmed */
+        .sidebar-nav { visibility: hidden; }
+    </style>
+    <script>
+        // Early role-based sidebar hiding - runs before body renders
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+
+            if (role === 'super_admin') {
+                css = '.sidebar-nav{visibility:visible}';
+            } else if (role === 'analyst') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'editor') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'custom') {
+                css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            }
+            if (role) {
+                style.textContent = css;
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item">
+                        <i data-lucide="bar-chart-2"></i>
+                        <span class="nav-item-label">Dashboard</span>
+                    </a>
+                    <a href="/admin-analytics.html" class="nav-item">
+                        <i data-lucide="trending-up"></i>
+                        <span class="nav-item-label">Analytics</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item">
+                        <i data-lucide="message-square"></i>
+                        <span class="nav-item-label">Messages</span>
+                        <span class="nav-item-badge">13</span>
+                    </a>
+                    <a href="/admin-videos.html" class="nav-item">
+                        <i data-lucide="video"></i>
+                        <span class="nav-item-label">Videos</span>
+                    </a>
+                    <a href="/admin-islamvoice-management.html" class="nav-item">
+                        <i data-lucide="radio"></i>
+                        <span class="nav-item-label">IslamVoice</span>
+                    </a>
+                    <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                    <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                    <a href="/admin-translations.html" class="nav-item">
+                        <i data-lucide="languages"></i>
+                        <span class="nav-item-label">Translations</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item">
+                        <i data-lucide="users"></i>
+                        <span class="nav-item-label">Users</span>
+                    </a>
+                    <a href="/admin-reading-stats.html" class="nav-item">
+                        <i data-lucide="book-open"></i>
+                        <span class="nav-item-label">Reading Stats</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-account-management.html" class="nav-item">
+                        <i data-lucide="user-cog"></i>
+                        <span class="nav-item-label">Admin Accounts</span>
+                    </a>
+                    <a href="/admin-features.html" class="nav-item">
+                        <i data-lucide="layers"></i>
+                        <span class="nav-item-label">Features</span>
+                    </a>
+                    <a href="/admin-schedule.html" class="nav-item">
+                        <i data-lucide="calendar"></i>
+                        <span class="nav-item-label">Schedule</span>
+                    </a>
+                    <a href="/admin-social-stats.html" class="nav-item">
+                        <i data-lucide="share-2"></i>
+                        <span class="nav-item-label">Social Stats</span>
+                    </a>
+                    <a href="/admin-bot-protection.html" class="nav-item active">
+                        <i data-lucide="shield"></i>
+                        <span class="nav-item-label">Bot Protection</span>
+                    </a>
+                    <a href="/admin-database.html" class="nav-item">
+                        <i data-lucide="database"></i>
+                        <span class="nav-item-label">Database</span>
+                    </a>
+                    <a href="/admin-search-console.html" class="nav-item">
+                        <i data-lucide="search"></i>
+                        <span class="nav-item-label">Search Console</span>
+                    </a>
+                    <a href="/admin-email-templates.html" class="nav-item">
+                        <i data-lucide="mail"></i>
+                        <span class="nav-item-label">Email Templates</span>
+                    </a>
+                    <a href="/admin-activity-feed.html" class="nav-item">
+                        <i data-lucide="activity"></i>
+                        <span class="nav-item-label">Activity Feed</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar">
+                        <i data-lucide="user"></i>
+                    </div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name"></div>
+                        <div class="sidebar-profile-email"></div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; display: flex; align-items: center; transition: color 0.2s;" title="Logout">
+                        <i data-lucide="log-out"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="topbar-search">
+                    <i data-lucide="search"></i>
+                    <input type="text" placeholder="Search...">
+                </div>
+                <div class="topbar-actions">
+                    <!-- Session Timer Display -->
+                    <div class="session-timer" id="sessionTimer" title="Session expires after 1 hour">
+                        <i data-lucide="clock"></i>
+                        <span id="sessionTimerText">60:00</span>
+                    </div>
+                    <button class="topbar-btn" style="position: relative;">
+                        <i data-lucide="bell"></i>
+                        <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span>
+                    </button>
+                    <button class="topbar-btn" id="theme-toggle">
+                        <i data-lucide="moon" id="theme-icon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">Bot Protection & Security</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary">
+                            <i data-lucide="download"></i>
+                            Export Logs
+                        </button>
+                        <button class="btn btn-primary">
+                            <i data-lucide="settings"></i>
+                            Configure
+                        </button>
+                    </div>
+                </div>
+
+                <!-- LIVE STATUS -->
+                <div class="status-header">
+                    <div class="status-dot"></div>
+                    <div class="status-text">Bot Protection Active</div>
+                    <div class="status-subtext">All systems operational</div>
+                </div>
+
+                <!-- METRICS -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="metricUsers">0</div>
+                        <div class="metric-label">Total Users</div>
+                        <div class="metric-change positive">
+                            <i data-lucide="users"></i>
+                            <span id="metricNewUsers">0 new this week</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-value" id="metricSessions">0</div>
+                        <div class="metric-label">Admin Sessions (24h)</div>
+                        <div class="metric-change positive">
+                            <i data-lucide="shield"></i>
+                            <span>Authenticated access</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-value" id="metricMessages">0</div>
+                        <div class="metric-label">Contact Messages</div>
+                        <div class="metric-change positive">
+                            <i data-lucide="message-square"></i>
+                            <span id="metricMessages24h">0 today</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-value" id="metricEpisodes">0</div>
+                        <div class="metric-label">IslamVoice Episodes</div>
+                        <div class="metric-change">
+                            <i data-lucide="video"></i>
+                            <span>Content protected</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RECENT ADMIN SESSIONS -->
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Admin Sessions</h3>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Admin</th>
+                                    <th>IP Address</th>
+                                    <th>Device</th>
+                                    <th>Status</th>
+                                    <th>Last Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sessionsTable">
+                                <tr>
+                                    <td colspan="5" style="text-align:center;padding:30px;color:var(--text-tertiary);">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- CLOUDFLARE INTEGRATION -->
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <h3 class="integration-title">Cloudflare WAF Integration</h3>
+                        <span class="badge badge-success">Connected</span>
+                    </div>
+                    <div class="integration-content">
+                        <div class="integration-row">
+                            <span class="integration-label">Rate Limiting</span>
+                            <label class="toggle">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="integration-row">
+                            <span class="integration-label">Bot Fight Mode</span>
+                            <label class="toggle">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="integration-row">
+                            <span class="integration-label">Turnstile (CAPTCHA)</span>
+                            <label class="toggle">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="integration-row">
+                            <span class="integration-label">Custom WAF Rules</span>
+                            <span class="integration-value">6 active</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUPABASE RLS -->
+                <div class="integration-card">
+                    <div class="integration-header">
+                        <h3 class="integration-title">Supabase Row Level Security</h3>
+                        <span class="badge badge-success">Secured</span>
+                    </div>
+                    <div class="integration-content">
+                        <div class="integration-row">
+                            <span class="integration-label">Contact Form</span>
+                            <span class="integration-value">INSERT-only with validation</span>
+                        </div>
+                        <div class="integration-row">
+                            <span class="integration-label">TV Content</span>
+                            <span class="integration-value">Read-only (Public)</span>
+                        </div>
+                        <div class="integration-row">
+                            <span class="integration-label">Admin Tables</span>
+                            <span class="integration-value">Backend-only access</span>
+                        </div>
+                        <div class="integration-row">
+                            <span class="integration-label">Function Security</span>
+                            <span class="integration-value">Immutable search_path ✓</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ALERTS -->
+                <div class="alert alert-warning">
+                    <div class="alert-icon">
+                        <i data-lucide="alert-triangle" style="width: 18px; height: 18px; color: var(--text-primary);"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">Manual Action Required</div>
+                        <div class="alert-message">
+                            Enable "Leaked Password Protection" in Supabase Dashboard → Authentication → Policies
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <div class="alert-icon">
+                        <i data-lucide="info" style="width: 18px; height: 18px; color: var(--text-secondary);"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">Cloudflare WAF Rules Status</div>
+                        <div class="alert-message">
+                            WAF rules configured. Test in "Log" mode for 24 hours before enabling "Block" mode.
+                        </div>
+                        <div class="code-block">
+                            Rate Limit Contact Form: 5 req/60s<br>
+                            Block Writes to Read-Only Tables: Active<br>
+                            Analytics Rate Limit: 30 req/min
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/utils/device-fingerprint.js"></script>
+    <script src="/utils/admin-heartbeat.js"></script>
+    <script src="/utils/admin-session-timer-ui.js?v=5"></script>
+    <script src="/utils/admin-auth.js?v=4"></script>
+    <script src="/utils/admin-notifications.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // Theme toggle
+        (function() {
+            const themeIcon = document.getElementById('theme-icon');
+            if (localStorage.getItem('admin-theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeIcon.setAttribute('data-lucide', 'sun');
+                lucide.createIcons();
+            }
+            document.getElementById('theme-toggle').addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                const isDark = document.body.classList.contains('dark-mode');
+                themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                lucide.createIcons();
+                localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+            });
+        })();
+
+        // Check authentication and load data
+        (async () => {
+            const auth = await window.adminAuth.checkAuth();
+            if (auth) loadSecurityData();
+        })();
+
+        const menuToggle = document.getElementById('menu-toggle');
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
+
+        mobileMenuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('mobile-open');
+        });
+
+        async function loadSecurityData() {
+            const supabase = window.adminAuth.getSupabase();
+            if (!supabase) return;
+
+            try {
+                // Fetch counts
+                const [profilesRes, messagesRes, episodesRes, sessionsRes] = await Promise.all([
+                    supabase.from('profiles').select('id, created_at', { count: 'exact' }),
+                    supabase.from('contact_messages').select('id, created_at', { count: 'exact' }),
+                    supabase.from('islamvoice_episodes').select('id', { count: 'exact', head: true }),
+                    supabase.from('admin_sessions').select('*, admin_users(email)').order('created_at', { ascending: false }).limit(10)
+                ]);
+
+                // Update metrics
+                const totalUsers = profilesRes.count || 0;
+                const profiles = profilesRes.data || [];
+                const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+                const newUsers = profiles.filter(p => new Date(p.created_at) > weekAgo).length;
+                document.getElementById('metricUsers').textContent = totalUsers;
+                document.getElementById('metricNewUsers').textContent = newUsers + ' new this week';
+
+                const totalMessages = messagesRes.count || 0;
+                const messages = messagesRes.data || [];
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const messagesToday = messages.filter(m => new Date(m.created_at) >= today).length;
+                document.getElementById('metricMessages').textContent = totalMessages;
+                document.getElementById('metricMessages24h').textContent = messagesToday + ' today';
+
+                document.getElementById('metricEpisodes').textContent = episodesRes.count || 0;
+
+                // Sessions
+                const sessions = sessionsRes.data || [];
+                const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+                const sessions24h = sessions.filter(s => new Date(s.created_at) > oneDayAgo).length;
+                document.getElementById('metricSessions').textContent = sessions24h;
+
+                // Render sessions table
+                const tbody = document.getElementById('sessionsTable');
+                while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+                if (sessions.length === 0) {
+                    const tr = document.createElement('tr');
+                    const td = document.createElement('td');
+                    td.colSpan = 5;
+                    td.style.cssText = 'text-align:center;padding:30px;color:var(--text-tertiary);';
+                    td.textContent = 'No sessions found';
+                    tr.appendChild(td);
+                    tbody.appendChild(tr);
+                } else {
+                    sessions.forEach(s => {
+                        const tr = document.createElement('tr');
+
+                        // Admin email
+                        const tdAdmin = document.createElement('td');
+                        tdAdmin.textContent = s.admin_users?.email || 'Unknown';
+                        tdAdmin.style.fontWeight = '500';
+                        tr.appendChild(tdAdmin);
+
+                        // IP
+                        const tdIP = document.createElement('td');
+                        tdIP.textContent = s.ip_address || '—';
+                        tdIP.style.fontFamily = 'monospace';
+                        tdIP.style.fontSize = '12px';
+                        tr.appendChild(tdIP);
+
+                        // Device (parse user agent)
+                        const tdDevice = document.createElement('td');
+                        const ua = s.user_agent || '';
+                        let device = 'Unknown';
+                        if (ua.includes('Windows')) device = 'Windows';
+                        else if (ua.includes('Mac')) device = 'Mac';
+                        else if (ua.includes('Linux')) device = 'Linux';
+                        else if (ua.includes('iPhone')) device = 'iPhone';
+                        else if (ua.includes('Android')) device = 'Android';
+                        tdDevice.textContent = device;
+                        tdDevice.style.fontSize = '13px';
+                        tr.appendChild(tdDevice);
+
+                        // Status
+                        const tdStatus = document.createElement('td');
+                        const badge = document.createElement('span');
+                        const isActive = s.is_active && new Date(s.expires_at) > new Date();
+                        badge.className = 'badge ' + (isActive ? 'badge-success' : 'badge-secondary');
+                        badge.textContent = isActive ? 'Active' : 'Expired';
+                        tdStatus.appendChild(badge);
+                        tr.appendChild(tdStatus);
+
+                        // Last activity
+                        const tdTime = document.createElement('td');
+                        const lastAct = s.last_activity || s.created_at;
+                        tdTime.textContent = getTimeAgo(new Date(lastAct));
+                        tdTime.style.fontSize = '12px';
+                        tdTime.style.color = 'var(--text-tertiary)';
+                        tr.appendChild(tdTime);
+
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading security data:', error);
+            }
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'Just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return minutes + ' min ago';
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return hours + 'h ago';
+            const days = Math.floor(hours / 24);
+            return days + 'd ago';
+        }
+    </script>
+</body>
+</html>

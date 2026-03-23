@@ -1,0 +1,9 @@
+# robots.txt for TafsirKurd.com
+# Allow all search engines to crawl the entire site
+
+User-agent: *
+Allow: /
+Disallow: /admin-*
+
+# Sitemap location
+Sitemap: https://tafsirkurd.com/sitemap.xml

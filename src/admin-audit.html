@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>Audit Log - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        .audit-filters { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; align-items:center; }
+        .audit-filter-select { padding:7px 12px; border:1px solid var(--border-color); border-radius:8px; background:var(--bg-secondary); color:var(--text-primary); font-size:13px; }
+        .audit-filter-input { padding:7px 12px; border:1px solid var(--border-color); border-radius:8px; background:var(--bg-secondary); color:var(--text-primary); font-size:13px; min-width:200px; }
+        .severity-info     { background:rgba(59,130,246,.1);  color:#3b82f6;  padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; }
+        .severity-warning  { background:rgba(234,179,8,.1);   color:#ca8a04;  padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; }
+        .severity-critical { background:rgba(239,68,68,.1);   color:#dc2626;  padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; }
+        .severity-default  { background:rgba(156,163,175,.1); color:#6b7280;  padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; }
+        .audit-action { font-family:monospace; font-size:12px; background:var(--bg-active); border-radius:4px; padding:2px 6px; }
+        .pagination { display:flex; gap:6px; align-items:center; margin-top:16px; flex-wrap:wrap; }
+        .pagination button { padding:6px 12px; border:1px solid var(--border-color); border-radius:6px; background:var(--bg-secondary); color:var(--text-primary); font-size:13px; cursor:pointer; }
+        .pagination button.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+        .pagination button:disabled { opacity:.4; cursor:not-allowed; }
+        .detail-cell { max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; color:var(--text-tertiary); cursor:pointer; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span></a>
+                    <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span></a>
+                    <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                    <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                    <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                    <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                    <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                    <a href="/admin-reading-stats.html" class="nav-item"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                    <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                    <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                    <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+                    <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                    <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                    <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+                    <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
+                    <a href="/admin-activity-feed.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">Activity Feed</span></a>
+                    <a href="/admin-audit.html" class="nav-item active"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name"></div>
+                        <div class="sidebar-profile-email"></div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background:transparent;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;" title="Logout"><i data-lucide="log-out"></i></button>
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+                <div class="topbar-search"><i data-lucide="search"></i><input type="text" placeholder="Search by email or action..." id="search-input" oninput="applyFilters()"></div>
+                <div class="topbar-actions">
+                    <div class="session-timer" id="sessionTimer" title="Session expires after 1 hour">
+                        <i data-lucide="clock"></i>
+                        <span id="sessionTimerText">60:00</span>
+                    </div>
+                    <button class="topbar-btn" style="position:relative;">
+                        <i data-lucide="bell"></i>
+                        <span id="notification-badge" style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center;display:none;"></span>
+                    </button>
+                    <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
+                </div>
+            </header>
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">Audit Log</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" onclick="loadLogs()"><i data-lucide="refresh-cw"></i>Refresh</button>
+                    </div>
+                </div>
+
+                <div class="card" style="padding:20px">
+                    <div class="audit-filters">
+                        <select class="audit-filter-select" id="filterSeverity" onchange="applyFilters()">
+                            <option value="">All Severities</option>
+                            <option value="info">Info</option>
+                            <option value="warning">Warning</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                        <select class="audit-filter-select" id="filterAction" onchange="applyFilters()">
+                            <option value="">All Actions</option>
+                            <option value="login_success">login_success</option>
+                            <option value="login_success_2fa">login_success_2fa</option>
+                            <option value="login_failed">login_failed</option>
+                            <option value="logout">logout</option>
+                            <option value="account_locked">account_locked</option>
+                            <option value="ip_blocked">ip_blocked</option>
+                            <option value="totp_failed">totp_failed</option>
+                            <option value="totp_brute_force">totp_brute_force</option>
+                            <option value="totp_disabled">totp_disabled</option>
+                            <option value="password_changed">password_changed</option>
+                            <option value="trusted_device_revoked">trusted_device_revoked</option>
+                            <option value="update_admin_account">update_admin_account</option>
+                        </select>
+                        <input type="date" class="audit-filter-select" id="filterDateFrom" onchange="applyFilters()" title="From date">
+                        <input type="date" class="audit-filter-select" id="filterDateTo" onchange="applyFilters()" title="To date">
+                        <button class="btn btn-secondary" onclick="clearFilters()" style="font-size:12px;padding:6px 12px">Clear Filters</button>
+                        <span id="auditCount" style="font-size:12px;color:var(--text-tertiary);margin-left:auto"></span>
+                    </div>
+
+                    <div class="table-container">
+                        <table id="auditTable">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Severity</th>
+                                    <th>Action</th>
+                                    <th>Email</th>
+                                    <th>IP Address</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="pagination"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center">
+        <div style="background:var(--bg-primary);border-radius:12px;padding:24px;max-width:560px;width:90%;max-height:80vh;overflow-y:auto">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <div style="font-weight:700;font-size:15px">Audit Entry Details</div>
+                <button onclick="closeDetail()" style="background:none;border:none;cursor:pointer;color:var(--text-tertiary)"><i data-lucide="x"></i></button>
+            </div>
+            <div id="detailContent"></div>
+        </div>
+    </div>
+
+    <script src="/utils/admin-session-timer-ui.js?v=5"></script>
+    <script src="/utils/admin-auth.js?v=4"></script>
+    <script src="/utils/admin-notifications.js"></script>
+    <script>
+        lucide.createIcons();
+        document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
+
+        var allLogs = [];
+        var filtered = [];
+        var page = 1;
+        var pageSize = 50;
+
+        (async () => {
+            var auth = await window.adminAuth.checkAuth();
+            if (auth) loadLogs();
+        })();
+
+        async function loadLogs() {
+            document.getElementById('auditBody').textContent = '';
+            var loading = document.createElement('tr');
+            var td = document.createElement('td');
+            td.colSpan = 6;
+            td.style.textAlign = 'center';
+            td.style.padding = '24px';
+            td.style.color = 'var(--text-tertiary)';
+            td.textContent = 'Loading...';
+            loading.appendChild(td);
+            document.getElementById('auditBody').appendChild(loading);
+
+            var token = sessionStorage.getItem('adminToken');
+            try {
+                var res = await fetch('/admin-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'get-audit-logs', token })
+                });
+                var data = await res.json();
+                allLogs = data.logs || [];
+                page = 1;
+                applyFilters();
+            } catch(e) {
+                document.getElementById('auditBody').textContent = '';
+                var errRow = document.createElement('tr');
+                var errTd = document.createElement('td');
+                errTd.colSpan = 6;
+                errTd.style.textAlign = 'center';
+                errTd.style.color = '#dc2626';
+                errTd.textContent = 'Failed to load logs.';
+                errRow.appendChild(errTd);
+                document.getElementById('auditBody').appendChild(errRow);
+            }
+        }
+
+        function applyFilters() {
+            var sev    = document.getElementById('filterSeverity').value;
+            var act    = document.getElementById('filterAction').value;
+            var from   = document.getElementById('filterDateFrom').value;
+            var to     = document.getElementById('filterDateTo').value;
+            var search = document.getElementById('search-input').value.toLowerCase();
+            filtered = allLogs.filter(function(l) {
+                if (sev    && l.severity !== sev) return false;
+                if (act    && l.action   !== act) return false;
+                if (search && !(l.email || '').toLowerCase().includes(search) && !(l.action || '').toLowerCase().includes(search) && !(l.ip_address || '').includes(search)) return false;
+                if (from) { var d = new Date(l.created_at); if (d < new Date(from)) return false; }
+                if (to)   { var d2 = new Date(l.created_at); if (d2 > new Date(to + 'T23:59:59')) return false; }
+                return true;
+            });
+            document.getElementById('auditCount').textContent = filtered.length + ' entries';
+            page = 1;
+            renderPage();
+        }
+
+        function clearFilters() {
+            document.getElementById('filterSeverity').value = '';
+            document.getElementById('filterAction').value = '';
+            document.getElementById('filterDateFrom').value = '';
+            document.getElementById('filterDateTo').value = '';
+            document.getElementById('search-input').value = '';
+            applyFilters();
+        }
+
+        function renderPage() {
+            var tbody = document.getElementById('auditBody');
+            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+            var start = (page - 1) * pageSize;
+            var slice = filtered.slice(start, start + pageSize);
+            if (slice.length === 0) {
+                var row = document.createElement('tr');
+                var td = document.createElement('td');
+                td.colSpan = 6;
+                td.style.textAlign = 'center';
+                td.style.padding = '24px';
+                td.style.color = 'var(--text-tertiary)';
+                td.textContent = 'No entries found.';
+                row.appendChild(td);
+                tbody.appendChild(row);
+                renderPagination();
+                return;
+            }
+            slice.forEach(function(log) {
+                var tr = document.createElement('tr');
+
+                // Time
+                var tdTime = document.createElement('td');
+                tdTime.style.cssText = 'white-space:nowrap;font-size:12px';
+                tdTime.textContent = new Date(log.created_at).toLocaleString('en-GB', { timeZone: 'Asia/Baghdad', hour12: false });
+                tr.appendChild(tdTime);
+
+                // Severity
+                var tdSev = document.createElement('td');
+                var badge = document.createElement('span');
+                badge.className = 'severity-' + (log.severity || 'default');
+                badge.textContent = log.severity || '-';
+                tdSev.appendChild(badge);
+                tr.appendChild(tdSev);
+
+                // Action
+                var tdAct = document.createElement('td');
+                var code = document.createElement('span');
+                code.className = 'audit-action';
+                code.textContent = log.action || '-';
+                tdAct.appendChild(code);
+                tr.appendChild(tdAct);
+
+                // Email
+                var tdEmail = document.createElement('td');
+                tdEmail.style.fontSize = '13px';
+                tdEmail.textContent = log.email || '-';
+                tr.appendChild(tdEmail);
+
+                // IP
+                var tdIp = document.createElement('td');
+                tdIp.style.cssText = 'font-size:12px;font-family:monospace';
+                tdIp.textContent = log.ip_address || '-';
+                tr.appendChild(tdIp);
+
+                // Details
+                var tdDet = document.createElement('td');
+                var detStr = log.details ? JSON.stringify(log.details) : '-';
+                tdDet.className = 'detail-cell';
+                tdDet.title = 'Click to expand';
+                tdDet.textContent = detStr;
+                tdDet.onclick = (function(l) { return function() { showDetail(l); }; })(log);
+                tr.appendChild(tdDet);
+
+                tbody.appendChild(tr);
+            });
+            renderPagination();
+            lucide.createIcons();
+        }
+
+        function renderPagination() {
+            var total = Math.ceil(filtered.length / pageSize);
+            var container = document.getElementById('pagination');
+            while (container.firstChild) container.removeChild(container.firstChild);
+            if (total <= 1) return;
+
+            var prev = document.createElement('button');
+            prev.textContent = '← Prev';
+            prev.disabled = page === 1;
+            prev.onclick = function() { page--; renderPage(); };
+            container.appendChild(prev);
+
+            var start = Math.max(1, page - 2);
+            var end   = Math.min(total, page + 2);
+            for (var i = start; i <= end; i++) {
+                var btn = document.createElement('button');
+                btn.textContent = i;
+                if (i === page) btn.className = 'active';
+                btn.onclick = (function(p) { return function() { page = p; renderPage(); }; })(i);
+                container.appendChild(btn);
+            }
+
+            var next = document.createElement('button');
+            next.textContent = 'Next →';
+            next.disabled = page === total;
+            next.onclick = function() { page++; renderPage(); };
+            container.appendChild(next);
+
+            var info = document.createElement('span');
+            info.style.cssText = 'font-size:12px;color:var(--text-tertiary);margin-left:8px';
+            info.textContent = 'Page ' + page + ' of ' + total + ' (' + filtered.length + ' total)';
+            container.appendChild(info);
+        }
+
+        function showDetail(log) {
+            var content = document.getElementById('detailContent');
+            while (content.firstChild) content.removeChild(content.firstChild);
+
+            var fields = [
+                ['Time',     new Date(log.created_at).toLocaleString('en-GB', { timeZone: 'Asia/Baghdad', hour12: false }) + ' (Baghdad)'],
+                ['Severity', log.severity || '-'],
+                ['Action',   log.action || '-'],
+                ['Email',    log.email || '-'],
+                ['IP',       log.ip_address || '-'],
+                ['User Agent', (log.user_agent || '-').substring(0, 200)],
+                ['Page',     log.page_slug || '-'],
+                ['Device FP', log.device_fingerprint ? log.device_fingerprint.substring(0, 32) + '...' : '-'],
+                ['Details',  log.details ? JSON.stringify(log.details, null, 2) : '-'],
+            ];
+
+            fields.forEach(function(pair) {
+                var row = document.createElement('div');
+                row.style.cssText = 'display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border-color);font-size:13px;align-items:flex-start';
+                var label = document.createElement('div');
+                label.style.cssText = 'color:var(--text-tertiary);min-width:90px;flex-shrink:0;font-size:11px;padding-top:1px';
+                label.textContent = pair[0];
+                var val = document.createElement('div');
+                val.style.cssText = 'color:var(--text-primary);word-break:break-all;white-space:pre-wrap;font-family:' + (pair[0]==='Details'||pair[0]==='Device FP'||pair[0]==='IP' ? 'monospace' : 'inherit');
+                val.textContent = pair[1];
+                row.appendChild(label);
+                row.appendChild(val);
+                content.appendChild(row);
+            });
+
+            var modal = document.getElementById('detailModal');
+            modal.style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function closeDetail() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDetail();
+        });
+    </script>
+</body>
+</html>

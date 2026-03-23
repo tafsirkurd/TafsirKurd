@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="utils/theme-loader.js"></script>
+    <title>Reading Statistics - TafsirKurd Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.36.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/css/admin-styles.css">
+
+    <style id="early-sidebar-hide">
+        /* Hide sidebar nav by default until role is confirmed */
+        .sidebar-nav { visibility: hidden; }
+    </style>
+    <script>
+        // Early role-based sidebar hiding - runs before body renders
+        (function() {
+            var role = sessionStorage.getItem('adminRole');
+            var style = document.getElementById('early-sidebar-hide');
+            var css = '.sidebar-nav{visibility:visible}';
+
+            if (role === 'super_admin') {
+                css = '.sidebar-nav{visibility:visible}';
+            } else if (role === 'analyst') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="messages"],.nav-item[href*="videos"],.nav-item[href*="islamvoice-management"],.nav-item[href*="admin-gencine"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="schedule"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'editor') {
+                css = '.sidebar-nav{visibility:visible}.nav-item[href*="analytics"],.nav-item[href*="users"],.nav-item[href*="reading-stats"],.nav-item[href*="social-stats"],.nav-item[href*="account-management"],.nav-item[href*="features"],.nav-item[href*="bot-protection"],.nav-item[href*="database"],.nav-item[href*="search-console"],.nav-item[href*="email-templates"],.nav-item[href*="activity-feed"]{display:none!important}';
+            } else if (role === 'custom') {
+                css = '.sidebar-nav{visibility:visible}.nav-item{display:none!important}';
+            }
+            if (role) {
+                style.textContent = css;
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="play-circle"></i>
+                    <span class="sidebar-logo-text">TafsirKurd</span>
+                </div>
+                <button class="sidebar-toggle" id="menu-toggle"><i data-lucide="chevron-left"></i></button>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-header">Overview</div>
+                    <a href="/admin-dashboard.html" class="nav-item"><i data-lucide="bar-chart-2"></i><span class="nav-item-label">Dashboard</span></a>
+                    <a href="/admin-analytics.html" class="nav-item"><i data-lucide="trending-up"></i><span class="nav-item-label">Analytics</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Content</div>
+                    <a href="/admin-messages.html" class="nav-item"><i data-lucide="message-square"></i><span class="nav-item-label">Messages</span></a>
+                    <a href="/admin-videos.html" class="nav-item"><i data-lucide="video"></i><span class="nav-item-label">Videos</span></a>
+                    <a href="/admin-islamvoice-management.html" class="nav-item"><i data-lucide="radio"></i><span class="nav-item-label">IslamVoice</span></a>
+                    <a href="/admin-gencine.html" class="nav-item"><i data-lucide="gem"></i><span class="nav-item-label">Gencine</span></a>
+                <a href="/admin-links.html" class="nav-item"><i data-lucide="link"></i><span class="nav-item-label">Links</span></a>
+                    <a href="/admin-images.html" class="nav-item"><i data-lucide="camera"></i><span class="nav-item-label">Site Images</span></a>
+                    <a href="/admin-translations.html" class="nav-item"><i data-lucide="languages"></i><span class="nav-item-label">Translations</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">Users</div>
+                    <a href="/admin-users.html" class="nav-item"><i data-lucide="users"></i><span class="nav-item-label">Users</span></a>
+                    <a href="/admin-reading-stats.html" class="nav-item active"><i data-lucide="book-open"></i><span class="nav-item-label">Reading Stats</span></a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">System</div>
+                    <a href="/admin-account-management.html" class="nav-item"><i data-lucide="user-cog"></i><span class="nav-item-label">Admin Accounts</span></a>
+                    <a href="/admin-features.html" class="nav-item"><i data-lucide="layers"></i><span class="nav-item-label">Features</span></a>
+                    <a href="/admin-schedule.html" class="nav-item"><i data-lucide="calendar"></i><span class="nav-item-label">Schedule</span></a>
+                    <a href="/admin-social-stats.html" class="nav-item"><i data-lucide="share-2"></i><span class="nav-item-label">Social Stats</span></a>
+                    <a href="/admin-bot-protection.html" class="nav-item"><i data-lucide="shield"></i><span class="nav-item-label">Bot Protection</span></a>
+                    <a href="/admin-database.html" class="nav-item"><i data-lucide="database"></i><span class="nav-item-label">Database</span></a>
+                    <a href="/admin-search-console.html" class="nav-item"><i data-lucide="search"></i><span class="nav-item-label">Search Console</span></a>
+                    <a href="/admin-email-templates.html" class="nav-item"><i data-lucide="mail"></i><span class="nav-item-label">Email Templates</span></a>
+                    <a href="/admin-activity-feed.html" class="nav-item"><i data-lucide="activity"></i><span class="nav-item-label">Activity Feed</span></a>
+                    <a href="/admin-audit.html" class="nav-item"><i data-lucide="shield-check"></i><span class="nav-item-label">Audit Log</span></a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar"><i data-lucide="user"></i></div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-name"></div>
+                        <div class="sidebar-profile-email"></div>
+                    </div>
+                    <button onclick="window.adminAuth.logout()" style="background: transparent; border: none; color: var(--text-tertiary); cursor: pointer; padding: 4px; display: flex; align-items: center; transition: color 0.2s;" title="Logout"><i data-lucide="log-out"></i></button>
+                </div>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="topbar">
+                <button class="topbar-menu-toggle" id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+                <div class="topbar-search"><i data-lucide="search"></i><input type="text" placeholder="Search..." id="search-input"></div>
+                <div class="topbar-actions">
+                    <div class="session-timer" id="sessionTimer" title="Session expires after 1 hour"><i data-lucide="clock"></i><span id="sessionTimerText">60:00</span></div>
+                    <button class="topbar-btn" style="position: relative;">
+                        <i data-lucide="bell"></i>
+                        <span id="notification-badge" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center; display: none;"></span></button>
+                    <button class="topbar-btn" id="theme-toggle"><i data-lucide="moon" id="theme-icon"></i></button>
+                </div>
+            </header>
+            <div class="content-area">
+                <div class="page-header">
+                    <h1 class="page-title">Reading Statistics</h1>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" onclick="loadStats()"><i data-lucide="refresh-cw"></i>Refresh</button>
+                    </div>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric-card"><div class="metric-value" id="totalReaders">0</div><div class="metric-label">Total Readers</div></div>
+                    <div class="metric-card"><div class="metric-value" id="avgProgress">0%</div><div class="metric-label">Avg Progress</div></div>
+                    <div class="metric-card"><div class="metric-value" id="completedReaders">0</div><div class="metric-label">Completed</div></div>
+                    <div class="metric-card"><div class="metric-value" id="activeReaders">0</div><div class="metric-label">Active (7d)</div></div>
+                </div>
+                <div class="card" style="margin-bottom: 24px;">
+                    <div style="padding: 20px;">
+                        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Reading Progress Distribution</h3>
+                        <canvas id="chart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>User</th><th>Current Position</th><th>Progress</th><th>Ayahs Read</th><th>Streak</th><th>Last Activity</th></tr></thead>
+                            <tbody id="table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="/utils/admin-session-timer-ui.js?v=5"></script>
+    <script src="/utils/admin-auth.js?v=4"></script>
+    <script src="/utils/admin-notifications.js"></script>
+    <script>
+        lucide.createIcons();
+        let chart = null;
+
+        // Surah names for display
+        const surahNames = [
+            '', 'Al-Fatiha', 'Al-Baqarah', 'Aal-Imran', 'An-Nisa', 'Al-Maidah', 'Al-Anam', 'Al-Araf',
+            'Al-Anfal', 'At-Tawbah', 'Yunus', 'Hud', 'Yusuf', 'Ar-Rad', 'Ibrahim', 'Al-Hijr',
+            'An-Nahl', 'Al-Isra', 'Al-Kahf', 'Maryam', 'Ta-Ha', 'Al-Anbiya', 'Al-Hajj', 'Al-Muminun',
+            'An-Nur', 'Al-Furqan', 'Ash-Shuara', 'An-Naml', 'Al-Qasas', 'Al-Ankabut', 'Ar-Rum',
+            'Luqman', 'As-Sajdah', 'Al-Ahzab', 'Saba', 'Fatir', 'Ya-Sin', 'As-Saffat', 'Sad',
+            'Az-Zumar', 'Ghafir', 'Fussilat', 'Ash-Shura', 'Az-Zukhruf', 'Ad-Dukhan', 'Al-Jathiyah',
+            'Al-Ahqaf', 'Muhammad', 'Al-Fath', 'Al-Hujurat', 'Qaf', 'Adh-Dhariyat', 'At-Tur',
+            'An-Najm', 'Al-Qamar', 'Ar-Rahman', 'Al-Waqiah', 'Al-Hadid', 'Al-Mujadila', 'Al-Hashr',
+            'Al-Mumtahanah', 'As-Saff', 'Al-Jumuah', 'Al-Munafiqun', 'At-Taghabun', 'At-Talaq',
+            'At-Tahrim', 'Al-Mulk', 'Al-Qalam', 'Al-Haqqah', 'Al-Maarij', 'Nuh', 'Al-Jinn',
+            'Al-Muzzammil', 'Al-Muddaththir', 'Al-Qiyamah', 'Al-Insan', 'Al-Mursalat', 'An-Naba',
+            'An-Naziat', 'Abasa', 'At-Takwir', 'Al-Infitar', 'Al-Mutaffifin', 'Al-Inshiqaq',
+            'Al-Buruj', 'At-Tariq', 'Al-Ala', 'Al-Ghashiyah', 'Al-Fajr', 'Al-Balad', 'Ash-Shams',
+            'Al-Layl', 'Ad-Duha', 'Ash-Sharh', 'At-Tin', 'Al-Alaq', 'Al-Qadr', 'Al-Bayyinah',
+            'Az-Zalzalah', 'Al-Adiyat', 'Al-Qariah', 'At-Takathur', 'Al-Asr', 'Al-Humazah',
+            'Al-Fil', 'Quraysh', 'Al-Maun', 'Al-Kawthar', 'Al-Kafirun', 'An-Nasr', 'Al-Masad',
+            'Al-Ikhlas', 'Al-Falaq', 'An-Nas'
+        ];
+
+        (async () => { const auth = await window.adminAuth.checkAuth(); if (auth) loadStats(); })();
+        document.getElementById('menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
+        const themeToggle = document.getElementById('theme-toggle'), themeIcon = document.getElementById('theme-icon');
+        const savedTheme = localStorage.getItem('admin-theme') || 'light';
+        if (savedTheme === 'dark') { document.body.classList.add('dark-mode'); themeIcon.setAttribute('data-lucide', 'sun');
+            lucide.createIcons(); }
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+        });
+        async function loadStats() {
+            console.log('Loading reading stats via API...');
+
+            const adminToken = sessionStorage.getItem('adminToken');
+            if (!adminToken) {
+                console.error('No admin token');
+                return;
+            }
+
+            try {
+                // Fetch stats via server-side API (bypasses RLS)
+                const response = await fetch('/admin-users-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                    body: JSON.stringify({ action: 'get_reading_stats', token: adminToken })
+                });
+
+                const data = await response.json();
+                console.log('API Response:', data);
+
+                if (!data.success) {
+                    console.error('Error fetching stats:', data.error);
+                    document.getElementById('totalReaders').textContent = 'Error';
+                    return;
+                }
+
+                const { stats, users } = data;
+                console.log('Stats:', stats);
+                console.log('Users count:', users?.length);
+
+                const totalAyahsInQuran = 6236;
+
+                // Update metrics
+                document.getElementById('totalReaders').textContent = stats.totalReaders || 0;
+                document.getElementById('avgProgress').textContent = (stats.avgProgress || 0) + '%';
+                document.getElementById('completedReaders').textContent = stats.completedReaders || 0;
+                document.getElementById('activeReaders').textContent = stats.activeReaders || 0;
+
+                // Use pre-calculated distribution from API
+                const rangeCounts = stats.distribution || [0, 0, 0, 0, 0, 0];
+            const ctx = document.getElementById('chart').getContext('2d');
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['0-10%', '10-25%', '25-50%', '50-75%', '75-90%', '90-100%'],
+                    datasets: [{
+                        label: 'Readers',
+                        data: rangeCounts.slice(0, 6),
+                        backgroundColor: 'rgba(99, 102, 241, 0.5)',
+                        borderColor: 'rgb(99, 102, 241)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+            const tbody = document.getElementById('table');
+            tbody.innerHTML = '';
+            const sortedUsers = [...users].sort((a, b) => b.ayahsRead - a.ayahsRead).slice(0, 20);
+            if (sortedUsers.length === 0) {
+                const tr = document.createElement('tr'), td = document.createElement('td');
+                td.colSpan = 6; td.style.textAlign = 'center'; td.style.padding = '40px';
+                td.textContent = 'No reading data found';
+                tr.appendChild(td); tbody.appendChild(tr);
+                return;
+            }
+            sortedUsers.forEach(u => {
+                const tr = document.createElement('tr');
+
+                // User column
+                const tdUser = document.createElement('td');
+                const userContainer = document.createElement('div');
+                userContainer.style.cssText = 'display:flex;align-items:center;gap:10px;';
+                if (u.avatar) {
+                    const avatar = document.createElement('img');
+                    avatar.src = u.avatar;
+                    avatar.style.cssText = 'width:36px;height:36px;border-radius:50%;object-fit:cover;';
+                    avatar.onerror = function() { this.style.display = 'none'; };
+                    userContainer.appendChild(avatar);
+                }
+                const userInfo = document.createElement('div');
+                const userName = document.createElement('div');
+                userName.style.cssText = 'font-weight:600;font-size:14px;';
+                userName.textContent = u.name;
+                userInfo.appendChild(userName);
+                const userEmail = document.createElement('div');
+                userEmail.style.cssText = 'font-size:12px;color:var(--text-tertiary);';
+                userEmail.textContent = u.email || u.id.toString().substring(0, 8) + '...';
+                userInfo.appendChild(userEmail);
+                userContainer.appendChild(userInfo);
+                tdUser.appendChild(userContainer);
+                tr.appendChild(tdUser);
+
+                // Current Position column
+                const tdPosition = document.createElement('td');
+                if (u.currentSurah > 0) {
+                    const posContainer = document.createElement('div');
+                    const surahName = document.createElement('div');
+                    surahName.style.cssText = 'font-weight:600;font-size:13px;';
+                    surahName.textContent = surahNames[u.currentSurah] || ('Surah ' + u.currentSurah);
+                    posContainer.appendChild(surahName);
+                    const ayahNum = document.createElement('div');
+                    ayahNum.style.cssText = 'font-size:12px;color:var(--text-tertiary);';
+                    ayahNum.textContent = 'Ayah ' + u.currentAyah;
+                    posContainer.appendChild(ayahNum);
+                    tdPosition.appendChild(posContainer);
+                } else {
+                    tdPosition.textContent = '—';
+                    tdPosition.style.color = 'var(--text-tertiary)';
+                }
+                tr.appendChild(tdPosition);
+
+                // Progress column
+                const progress = ((u.ayahsRead / totalAyahsInQuran) * 100).toFixed(1);
+                const tdProgress = document.createElement('td');
+                const progressBar = document.createElement('div');
+                progressBar.style.cssText = 'width:100px;height:6px;background:var(--bg-active);border-radius:3px;overflow:hidden;';
+                const progressFill = document.createElement('div');
+                progressFill.style.cssText = 'width:' + Math.min(progress, 100) + '%;height:100%;background:var(--primary);';
+                progressBar.appendChild(progressFill);
+                tdProgress.appendChild(progressBar);
+                const progressText = document.createElement('span');
+                progressText.style.cssText = 'font-size:12px;margin-left:8px;';
+                progressText.textContent = progress + '%';
+                tdProgress.appendChild(progressText);
+                tr.appendChild(tdProgress);
+
+                // Ayahs Read column
+                const tdAyahs = document.createElement('td');
+                tdAyahs.textContent = u.ayahsRead.toLocaleString();
+                tdAyahs.style.fontWeight = '600';
+                tr.appendChild(tdAyahs);
+
+                // Streak column
+                const tdStreak = document.createElement('td');
+                if (u.readingStreak > 0) {
+                    const streakSpan = document.createElement('span');
+                    streakSpan.style.cssText = 'color:var(--success);font-weight:600;';
+                    streakSpan.textContent = '🔥 ' + u.readingStreak;
+                    tdStreak.appendChild(streakSpan);
+                } else {
+                    tdStreak.textContent = '0';
+                    tdStreak.style.color = 'var(--text-tertiary)';
+                }
+                tr.appendChild(tdStreak);
+
+                // Last Activity column
+                const tdLast = document.createElement('td');
+                tdLast.textContent = new Date(u.lastActive).toLocaleDateString();
+                tdLast.style.fontSize = '13px';
+                tr.appendChild(tdLast);
+
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('totalReaders').textContent = 'Error';
+            }
+        }
+    </script>
+</body>
+</html>

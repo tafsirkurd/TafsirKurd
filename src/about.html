@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+  <script src="/utils/theme-loader.js"></script>
+  <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co">
+  <script src="/utils/translations.js?v=20260225"></script>
+  <script src="/utils/scroll-position.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="TafsirKurd | تەفسیر کورد - دەربارەی تەفسیر کورد - پلاتفۆرمەکا کوردی بۆ خویندنا قورئانا پیرۆز">
+  <meta name="keywords" content="tafsirkurd, tafsir kurd, تەفسیر کورد, دەربارەی تەفسیر کورد, ئارمانجا تەفسیر کورد, تەفسیرا کوردی">
+  <meta name="theme-color" content="#000000">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://tafsirkurd.com/about">
+  <title data-t="about_title_1">دەربارە | TafsirKurd</title>
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://tafsirkurd.com/about">
+  <meta property="og:title" content="دەربارە | TafsirKurd">
+  <meta property="og:description" content="پلاتفۆرمەکا کوردی بۆ خویندنا قورئانا پیرۆز">
+  <meta property="og:image" content="https://tafsirkurd.com/assets/images/homepage-social.jpg">
+  <meta property="og:site_name" content="Tafsir Kurd">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+
+  <script src="utils/kurdish-numbers.js"></script>
+  <script src="utils/auto-kurdish-numbers.js"></script>
+
+  <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=16" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
+  <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-alt: #fafafa;
+      --text: #000000;
+      --text-secondary: #404040;
+      --text-muted: #666666;
+      --border: #e5e5e5;
+      --border-light: #f0f0f0;
+    }
+    [data-theme="dark"] {
+      --bg: #000000;
+      --bg-alt: #0a0a0a;
+      --text: #ffffff;
+      --text-secondary: #e0e0e0;
+      --text-muted: #999999;
+      --border: #1a1a1a;
+      --border-light: #141414;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: transparent;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .nav.scrolled {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 40px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .nav-logo {
+      height: 36px;
+      transition: transform 0.3s;
+    }
+    [data-theme="dark"] .nav-logo { filter: invert(1); }
+    .nav-logo:hover { transform: scale(1.05); }
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      opacity: 0.7;
+      transition: opacity 0.3s;
+    }
+    .nav-back:hover { opacity: 1; }
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 140px 40px 100px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        radial-gradient(circle at 20% 80%, var(--border) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, var(--border) 0%, transparent 50%);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .hero-content {
+      position: relative;
+      max-width: 900px;
+    }
+    .hero-label {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      padding: 10px 24px;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+    }
+    .hero h1 {
+      font-size: clamp(3rem, 8vw, 5.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 32px;
+      letter-spacing: -0.02em;
+    }
+    .hero-desc {
+      font-size: 1.3rem;
+      color: var(--text-secondary);
+      max-width: 700px;
+      margin: 0 auto 32px;
+      line-height: 1.9;
+    }
+    .social-links {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 48px;
+    }
+    .social-link {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 1.1rem;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .social-link:hover {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+      transform: translateY(-4px);
+    }
+    .scroll-indicator {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(10px); }
+    }
+
+    /* Section Styles */
+    .section {
+      padding: 120px 40px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 80px;
+    }
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    /* Tafsir Source Section */
+    .source-section {
+      background: var(--bg-alt);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .source-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    .source-content h3 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+    .source-content p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      line-height: 2;
+      margin-bottom: 20px;
+    }
+    .source-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px;
+      text-align: center;
+    }
+    .source-card-image {
+      width: 100%;
+      max-width: 240px;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      border-radius: 16px;
+      margin: 0 auto 24px;
+      display: block;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+    .source-card-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--text);
+      color: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 24px;
+    }
+    .source-card h4 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .source-card-subtitle {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .source-card p {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+
+    /* Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+    .feature-card {
+      padding: 48px 36px;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--text);
+      transform: scaleX(0);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 40px 80px -20px rgba(0,0,0,0.15);
+    }
+    [data-theme="dark"] .feature-card:hover {
+      box-shadow: 0 40px 80px -20px rgba(255,255,255,0.08);
+    }
+    .feature-card:hover::before {
+      transform: scaleX(1);
+    }
+    .feature-num {
+      font-size: 4rem;
+      font-weight: 800;
+      color: var(--border);
+      line-height: 1;
+      margin-bottom: 24px;
+    }
+    .feature-card h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .feature-card p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+
+    /* Stats Section */
+    .stats-section {
+      background: var(--text);
+      color: var(--bg);
+      padding: 100px 40px;
+    }
+    .stats-grid {
+      max-width: 600px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 60px;
+      text-align: center;
+    }
+    .stat-item h3 {
+      font-size: clamp(3rem, 6vw, 5rem);
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+    .stat-item p {
+      font-size: 0.95rem;
+      opacity: 0.7;
+    }
+
+    /* Quote Section */
+    .quote-section {
+      padding: 160px 40px;
+      text-align: center;
+      position: relative;
+    }
+    .quote-mark {
+      font-size: 12rem;
+      font-family: Georgia, serif;
+      color: var(--border);
+      line-height: 0.5;
+      margin-bottom: 20px;
+    }
+    .quote-text {
+      font-family: 'KFGQPC Hafs', 'Scheherazade New', serif;
+      font-size: clamp(1.5rem, 3vw, 2.5rem);
+      line-height: 2.2;
+      max-width: 900px;
+      margin: 0 auto 32px;
+    }
+    .quote-translation {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      font-style: italic;
+      max-width: 700px;
+      margin: 0 auto 20px;
+      line-height: 1.9;
+    }
+    .quote-ref {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Declaration Section */
+    .declaration-section {
+      border-top: 1px solid var(--border);
+      background: var(--bg-alt);
+    }
+    .declaration-content {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .declaration-icon {
+      width: 64px;
+      height: 64px;
+      border: 2px solid var(--text);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin: 0 auto 32px;
+    }
+    .declaration-content h3 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+    .declaration-content p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      line-height: 2;
+      margin-bottom: 20px;
+    }
+    .declaration-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* CTA Section */
+    .cta-section {
+      padding: 120px 40px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+    .cta-section h2 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .cta-section p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+    }
+    .cta-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 36px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 100px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-primary {
+      background: var(--text);
+      color: var(--bg);
+    }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3);
+    }
+    [data-theme="dark"] .btn-primary:hover {
+      box-shadow: 0 20px 40px -10px rgba(255,255,255,0.15);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      border-color: var(--text);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .source-grid { grid-template-columns: 1fr; gap: 48px; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .stats-grid { gap: 40px; }
+    }
+    @media (max-width: 768px) {
+      .nav { padding: 16px 20px; }
+      .nav.scrolled { padding: 14px 20px; }
+      .hero { padding: 120px 20px 80px; min-height: auto; }
+      .hero-desc { font-size: 1.1rem; }
+      .section { padding: 80px 20px; }
+      .section-header { margin-bottom: 48px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .feature-card { padding: 36px 28px; }
+      .stats-section { padding: 60px 20px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+      .quote-section { padding: 80px 20px; }
+      .quote-mark { font-size: 6rem; }
+      .source-card { padding: 36px 24px; }
+      .cta-section { padding: 80px 20px; }
+      .cta-buttons { flex-direction: column; align-items: center; }
+      .btn { width: 100%; max-width: 300px; justify-content: center; }
+      .scroll-indicator { display: none; }
+    }
+    @media (max-width: 480px) {
+      .nav { padding: 14px 16px; }
+      .nav-logo { height: 30px; }
+      .hero { padding: 100px 16px 60px; }
+      .hero-label { font-size: 0.65rem; padding: 8px 16px; }
+      .hero-desc { font-size: 1rem; }
+      .section { padding: 60px 16px; }
+      .stats-grid { grid-template-columns: 1fr; gap: 24px; }
+      .stat-item h3 { font-size: 3rem; }
+      .source-card { padding: 28px 20px; }
+      .declaration-content h3 { font-size: 1.5rem; }
+    }
+
+    /* Footer Styles */
+    footer {
+      background: var(--bg-alt);
+      border-top: 1px solid var(--border);
+      padding: 80px 40px 40px;
+    }
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .footer-main {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+    .footer-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .footer-brand-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .footer-logo-img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+    [data-theme="dark"] .footer-logo-img { filter: invert(1); }
+    .footer-brand-name {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .footer-brand-tagline {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+    .footer-social-icons {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .footer-social-icons a {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+    .footer-social-icons a:hover {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+    }
+    .footer-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .footer-section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .footer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .footer-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.3s;
+    }
+    .footer-link:hover {
+      color: var(--text);
+    }
+    .footer-contact-text {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .footer-bottom {
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-copyright {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .footer-meta-links {
+      display: flex;
+      gap: 24px;
+    }
+    .footer-meta-link {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    .footer-meta-link:hover {
+      color: var(--text);
+    }
+    @media (max-width: 1024px) {
+      .footer-main { grid-template-columns: 1fr 1fr; gap: 40px; }
+    }
+    @media (max-width: 768px) {
+      footer { padding: 60px 20px 30px; }
+      .footer-main { grid-template-columns: 1fr; gap: 32px; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+      .footer-meta-links { justify-content: center; }
+    }
+  </style>
+</head>
+<body dir="rtl">
+
+<nav class="nav" id="navbar">
+  <a href="/">
+    <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="nav-logo">
+  </a>
+  <a href="/" class="nav-back">
+    <span data-t="about_back">گەڕیانەڤە</span>
+    <i class="fas fa-arrow-left"></i>
+  </a>
+</nav>
+
+<section class="hero">
+  <div class="hero-content">
+    <span class="hero-label" data-t="about_hero_label">دەربارەی مە</span>
+    <h1 data-t="about_hero_title">تەفسیر کورد</h1>
+    <p class="hero-desc" data-t="about_hero_desc">پلاتفۆرمەکا کوردی بۆ خویندنا قورئانا پیرۆز ب تەفسیرا ساناهی و وەرگێڕانا کوردی یا ماموستا تەحسین ئیبراهیم دۆسکی.</p>
+    <div class="social-links">
+      <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener" class="social-link" aria-label="Instagram">
+        <i class="fab fa-instagram"></i>
+      </a>
+      <a href="https://www.youtube.com/@tafsirkurd" target="_blank" rel="noopener" class="social-link" aria-label="YouTube">
+        <i class="fab fa-youtube"></i>
+      </a>
+      <a href="https://t.me/tafsirkurd" target="_blank" rel="noopener" class="social-link" aria-label="Telegram">
+        <i class="fab fa-telegram"></i>
+      </a>
+      <a href="mailto:tefsirkurd@gmail.com" class="social-link" aria-label="Email">
+        <i class="fas fa-envelope"></i>
+      </a>
+    </div>
+  </div>
+  <div class="scroll-indicator">
+    <span data-t="about_scroll">بەر ب خوارڤە بچە</span>
+    <i class="fas fa-chevron-down"></i>
+  </div>
+</section>
+
+<section class="section source-section">
+  <div class="source-grid">
+    <div class="source-content">
+      <h3 data-t="about_source_title">سەرچاڤا تەفسیرێ</h3>
+      <p data-t="about_source_desc1">ئەم ل تەفسیر کورد تەفسیرا ساناهی ب کار دینین، تەفسیرەکا باوەرپێکری و ئاسان کو ب شێوازەکێ ڕوون و ڕەوان مانایێن قورئانا پیرۆز شرۆڤە دکەت بۆ خواندنەوانێن کوردی.</p>
+      <p data-t="about_source_desc2">ئەڤ تەفسیرە ب زمانەکێ ڕەوان و ب دوورکەفتن ژ ئاڵۆزی نڤیسراییە، کو بۆ هەمی خواندنەوانان گونجایی و فامکرنا وێ سەناهییە.</p>
+    </div>
+    <div class="source-card">
+      <div class="source-card-icon" id="tafsirBookFallback">
+        <i class="fas fa-book-open"></i>
+      </div>
+      <img class="source-card-image" id="tafsirBookImage" src="" alt="تەفسیرا ساناهی" style="display:none;">
+      <h4 data-t="about_source_card_title">تەفسیرا ساناهی</h4>
+      <p class="source-card-subtitle" data-t="about_source_card_author">ماموستا تەحسین ئیبراهیم دۆسکی</p>
+      <p data-t="about_source_card_desc">وەرگێڕان و تەفسیرا قورئانا پیرۆز ب زمانێ کوردی (کرمانجی) بۆ هەمی کورد زمانان ل سەرانسەری جیهانێ.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-header">
+    <p class="section-label" data-t="about_services_label">خزمەتگوزاری</p>
+    <h2 class="section-title" data-t="about_services_title">ئەم چ پێشکێش دکەین</h2>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-num" data-t="about_div_2">٠١</div>
+      <h3 data-t="about_feature1_title">خواندنا قورئانێ</h3>
+      <p data-t="about_feature1_desc">خواندنا قورئانا پیرۆز ب دەقێ عەرەبی یێ ڕەسەن دگەل وەرگێڕانا کوردی و تەفسیرا ساناهی بۆ هەر ئایەتەکێ.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-num" data-t="about_div_3">٠٢</div>
+      <h3 data-t="about_feature2_title">دەنگێ ئیسلامێ</h3>
+      <p data-t="about_feature2_desc">ڤیدیویێن ئیسلامی یێن ب زمانێ کوردی، زنجیرەیێن فێربوونێ و ناڤەڕۆکا هەوەدەر بۆ گەشەکرنا زانیارییا ئایینی.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-num" data-t="about_div_4">٠٣</div>
+      <h3 data-t="about_feature3_title">نیشانەکرن و پاشەکەفتن</h3>
+      <p data-t="about_feature3_desc">شوێنکەفتنا خواندنا خۆ، نیشانەکرنا ئایەتان، و هەڤدەنگکرنا دانەیان ل هەمی ئامێران.</p>
+    </div>
+  </div>
+</section>
+
+<section class="stats-section">
+  <div class="stats-grid">
+    <div class="stat-item">
+      <h3 data-t="about_h3_5">٦٥ھ+</h3>
+      <p data-t="about_stat_followers">فۆڵۆوەر</p>
+    </div>
+    <div class="stat-item">
+      <h3 data-t="about_h3_6">٢٥م+</h3>
+      <p data-t="about_stat_views">بینەر</p>
+    </div>
+  </div>
+</section>
+
+<section class="quote-section">
+  <div class="quote-mark">"</div>
+  <p class="quote-text" data-t="about_quote_arabic">وَمَنْ أَحْسَنُ قَوْلًا مِّمَّن دَعَا إِلَى اللَّهِ وَعَمِلَ صَالِحًا وَقَالَ إِنَّنِي مِنَ الْمُسْلِمِينَ</p>
+  <p class="quote-translation" data-t="about_quote_translation">"کەس ژ وی گۆتن باشتر نینە یێ بۆ تەوحیدا خودێ و پەرستنا وی گازی کری و کارێ چاک کری، و گۆتی: هندی ئەزم ئەز ژ وان موسلمانامە یێن خۆ ئێخستینە بن فەرمانا خودێ."</p>
+  <p class="quote-ref" data-t="about_quote_ref">سوڕەتا فصلت — ٣٣</p>
+</section>
+
+<section class="section declaration-section">
+  <div class="declaration-content">
+    <div class="declaration-icon">
+      <i class="fas fa-shield-halved"></i>
+    </div>
+    <h3 data-t="about_declaration_title">نە سیاسی، نە حزبی</h3>
+    <p data-t="about_declaration_desc1">تەفسیر کورد پلاتفۆرمەکە بتنێ و بتنێ بۆ مەبەستێن ئایینی و ئیسلامی یە. ئەم هیچ پەیوەندییەک ب هیچ حزبەک، ڕێکخراوەک، یان لایەنەکێ سیاسی ڤە نینە.</p>
+    <p data-t="about_declaration_desc2">ئارمانجا مە بتنێ خزمەتکرنا پەرتوکا خودای و گەهاندنا فێرکاریێن قورئانێ بۆ هەمی کوردان ب بێ جیاکاری یە.</p>
+  </div>
+</section>
+
+<section class="cta-section">
+  <h2 data-t="about_cta_title">دەست ب خواندنێ بکە</h2>
+  <p data-t="about_cta_desc">قورئانا پیرۆز ب زمانێ کوردی بخوینە</p>
+  <div class="cta-buttons">
+    <a href="/quran" class="btn btn-primary">
+      <i class="fas fa-book-quran"></i>
+      <span data-t="about_cta_quran">قورئانا پیرۆز</span>
+    </a>
+    <a href="/islamvoice" class="btn btn-secondary">
+      <i class="fas fa-play"></i>
+      <span data-t="about_cta_islamvoice">دەنگێ ئیسلامێ</span>
+    </a>
+  </div>
+</section>
+
+<div id="footer-placeholder"></div>
+<script src="/utils/footer-loader.js"></script>
+
+<script>
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      navbar.classList.add('scrolled');
+    } else {
+      navbar.classList.remove('scrolled');
+    }
+  });
+</script>
+<script>
+(async function(){
+  var img = document.getElementById('tafsirBookImage');
+  var fallback = document.getElementById('tafsirBookFallback');
+  // Try localStorage cache first
+  var cached = localStorage.getItem('tafsir_book_image');
+  if (cached) { img.src = cached; img.style.display = ''; fallback.style.display = 'none'; }
+  // Fetch from DB
+  try {
+    var cfg = await fetch('/config').then(function(r){ return r.json(); });
+    if (!cfg.supabaseUrl || !cfg.supabaseKey) return;
+    var res = await fetch(cfg.supabaseUrl + '/rest/v1/site_settings?key=eq.tafsir_book_image&select=value', {
+      headers: { 'apikey': cfg.supabaseKey, 'Authorization': 'Bearer ' + cfg.supabaseKey }
+    });
+    var rows = await res.json();
+    if (rows && rows[0] && rows[0].value) {
+      img.src = rows[0].value;
+      img.style.display = '';
+      fallback.style.display = 'none';
+      localStorage.setItem('tafsir_book_image', rows[0].value);
+    } else {
+      localStorage.removeItem('tafsir_book_image');
+    }
+  } catch(e) { /* Silently ignore - image loading is optional */ }
+})();
+</script>
+</body>
+</html>

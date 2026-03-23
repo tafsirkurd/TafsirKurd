@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ku">
+<head>
+    <script src="/utils/theme-loader.js"></script>
+    <link rel="preconnect" href="https://gijupzejtbpifjzwadee.supabase.co">
+  <script src="/utils/translations.js?v=20260225"></script>
+    <script src="/utils/scroll-position.js"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <title data-t="settings_title_1">رێکخستن | TafsirKurd</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/images/favicon-96x96.png">
+
+    <!-- Console Cleaner - Clean console in production -->
+    <script src="/utils/console-cleaner.js"></script>
+
+    <!-- Kurdish Number Utility - Convert all numbers to Kurdish numerals -->
+    <script src="/utils/kurdish-numbers.js"></script>
+    <script src="/utils/auto-kurdish-numbers.js"></script>
+
+    <!-- Critical Font Preloading - Instant font display, zero FOIT/FOUT -->
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-regular.woff2?v=16" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/ibm-plex-arabic-v11-latin_arabic-600.woff2?v=16" as="font" type="font/woff2" crossorigin>
+
+    <!-- Local Fonts - Zero external requests, instant loading -->
+    <link rel="stylesheet" href="/assets/fonts/fonts.css?v=16">
+
+    <!-- Local Font Awesome - Zero external requests -->
+    <link rel="stylesheet" href="/assets/fontawesome/all.min.css?v=16">
+    <style>
+        :root {
+            --primary: #000000;
+            --accent: #ffffff;
+            --bg: #fafafa;
+            --card-bg: #ffffff;
+            --item-bg: #f5f5f5;
+            --text: #000000;
+            --text-muted: #666666;
+            --border: #e8e8e8;
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.1);
+            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --primary: #ffffff;
+            --accent: #000000;
+            --bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --item-bg: #252525;
+            --text: #ffffff;
+            --text-muted: #b0b0b0;
+            --border: #2a2a2a;
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            transition: background-color var(--transition), color var(--transition);
+        }
+
+        .header {
+            background: var(--card-bg);
+            padding: 20px 0;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            padding: 12px 24px;
+            background: var(--primary);
+            color: var(--accent);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto 100px;
+            padding: 0 30px;
+        }
+
+        .settings-grid {
+            display: grid;
+            gap: 30px;
+        }
+
+        .settings-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--shadow-md);
+            border: 2px solid var(--border);
+        }
+
+        .settings-card-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px;
+            background: var(--item-bg);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            transition: all var(--transition);
+            border: 2px solid transparent;
+        }
+
+        .setting-item:hover {
+            border-color: var(--border);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .setting-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-info {
+            flex: 1;
+        }
+
+        .setting-label {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-description {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        .setting-toggle {
+            width: 60px;
+            height: 32px;
+            background: var(--border);
+            border-radius: 16px;
+            position: relative;
+            cursor: pointer;
+            transition: background var(--transition);
+        }
+
+        .setting-toggle.active {
+            background: var(--primary);
+        }
+
+        .setting-toggle-knob {
+            width: 26px;
+            height: 26px;
+            background: var(--accent);
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            transition: transform var(--transition);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            pointer-events: none; /* Allow clicks to pass through to parent */
+        }
+
+        .setting-toggle.active .setting-toggle-knob {
+            transform: translateX(-28px);
+        }
+
+        .setting-select {
+            padding: 12px 20px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            background: var(--card-bg);
+            color: var(--text);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            min-width: 200px;
+        }
+
+        .setting-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .setting-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .setting-slider {
+            width: 200px;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--border);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .setting-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .setting-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .slider-value {
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 60px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .font-preview {
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+            transition: all var(--transition);
+        }
+
+        .font-preview-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .font-preview-text {
+            font-size: 1.5rem;
+            line-height: 1.8;
+            color: var(--text);
+            transition: all var(--transition);
+        }
+
+        .font-preview-text.arabic-preview {
+            font-family: var(--arabic-font, 'Scheherazade New');
+            font-size: var(--arabic-size, 2.2rem);
+        }
+
+        .font-preview-text.tafsir-preview {
+            font-family: var(--tafsir-font, 'IBM Plex Sans Arabic');
+            font-size: var(--tafsir-size, 1.1rem);
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 15px;
+            background: transparent;
+            color: #e74c3c;
+            border: 2px solid #e74c3c;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .reset-btn:hover {
+            background: #e74c3c;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .notification {
+            position: fixed;
+            right: 30px;
+            padding: 18px 30px;
+            background: var(--primary);
+            color: var(--accent);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: all 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-title {
+                font-size: 1.2rem;
+            }
+
+            .settings-card {
+                padding: 15px;
+            }
+
+            .settings-card-title {
+                font-size: 1.3rem;
+            }
+
+            .setting-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .setting-label {
+                font-size: 0.9rem;
+            }
+
+            .setting-slider {
+                width: 100%;
+            }
+
+            .setting-select {
+                width: 100%;
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+
+            .setting-slider-container {
+                width: 100%;
+            }
+
+            .font-preview {
+                padding: 12px;
+            }
+
+            .font-preview-text {
+                font-size: 1.1rem;
+            }
+
+            button, .btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+
+            .notification {
+                top: 80px !important;
+                right: 10px !important;
+                left: 10px !important;
+                padding: 14px 20px !important;
+                font-size: 0.95rem !important;
+                text-align: center;
+            }
+        }
+
+        /* Footer Styles */
+        footer {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            margin-top: 80px;
+            padding: 60px 20px 30px;
+            text-align: right;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            direction: rtl;
+        }
+
+        .footer-main {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .footer-logo-img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+        }
+
+        .footer-brand-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .footer-brand-tagline {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
+
+        .footer-social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .footer-social-icons a {
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            transition: all 0.4s;
+        }
+
+        .footer-social-icons a:hover {
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .footer-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .footer-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .footer-contact-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .footer-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.4s;
+        }
+
+        .footer-link:hover {
+            color: var(--primary);
+            transform: translateX(-5px);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            padding-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .footer-copyright {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer-meta-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-meta-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        .footer-meta-link:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .footer-main {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .footer-main {
+                grid-template-columns: 1fr;
+            }
+            .footer-brand {
+                text-align: center;
+            }
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+  <!-- Text Highlighter for Admin Panel -->
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <h1 class="header-title">
+                <i class="fas fa-cog"></i>
+                <span data-t="settings_page_title">رێکخستن</span>
+            </h1>
+            <a href="/quran" class="back-btn">
+                <i class="fas fa-arrow-right"></i>
+                <span data-t="settings_back_btn">گەڕیان ڤە</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="settings-grid">
+            <!-- Display Settings -->
+            <div class="settings-card">
+                <h2 class="settings-card-title">
+                    <i class="fas fa-palette"></i>
+                    <span data-t="settings_display_title">رۆکار</span>
+                </h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-moon"></i>
+                            <span data-t="settings_dark_mode_label">رەوشا تاریک</span>
+                        </div>
+                        <div class="setting-description" data-t="settings_dark_mode_desc">گوهۆڕین بۆ رەوشا تاریک بۆ خواندنا ئاسانتر</div>
+                    </div>
+                    <div class="setting-toggle" id="darkModeToggle" onclick="toggleDarkMode()">
+                        <div class="setting-toggle-knob"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Arabic Font Settings -->
+            <div class="settings-card">
+                <h2 class="settings-card-title">
+                    <i class="fas fa-font"></i>
+                    <span data-t="settings_arabic_font_title">فۆنتا عەرەبی</span>
+                </h2>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-text-height"></i>
+                            <span data-t="settings_arabic_font_type_label">جۆرێ فۆنتێ</span>
+                        </div>
+                        <div class="setting-description" data-t="settings_arabic_font_type_desc">دەستکاریکرنا فۆنتا تێکستێ عەرەبی</div>
+                    </div>
+                    <select class="setting-select" id="arabicFontSelect" onchange="changeArabicFont()">
+                        <option value="KFGQPC Hafs" data-t="settings_font_hafs">KFGQPC Hafs (حەفس)</option>
+                        <option value="Scheherazade New">Scheherazade New</option>
+                        <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-text-width"></i>
+                            <span data-t="settings_arabic_font_size_label">قەبارەیا فۆنتێ</span>
+                        </div>
+                        <div class="setting-description" data-t="settings_arabic_font_size_desc">مەزن یان بچووککرنا تێکستێ عەرەبی</div>
+                    </div>
+                    <div class="setting-slider-container">
+                        <input type="range" class="setting-slider" id="arabicSizeSlider"
+                               min="1.5" max="3.5" step="0.1" value="2.2"
+                               oninput="changeArabicSize(this.value)">
+                        <span class="slider-value" id="arabicSizeValue">2.2rem</span>
+                    </div>
+                </div>
+
+                <div class="font-preview">
+                    <div class="font-preview-label" data-t="settings_arabic_preview_label">پێشبینیا فۆنتێ</div>
+                    <div class="font-preview-text arabic-preview" id="arabicPreview" data-t="settings_div_2">
+                        بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tafsir Font Settings -->
+            <div class="settings-card">
+                <h2 class="settings-card-title">
+                    <i class="fas fa-book-open"></i>
+                    <span data-t="settings_tafsir_font_title">فۆنتا تەفسیرێ</span>
+                </h2>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-text-height"></i>
+                            <span data-t="settings_tafsir_font_type_label">جۆرێ فۆنتێ</span>
+                        </div>
+                        <div class="setting-description" data-t="settings_tafsir_font_type_desc">دەستکاریکرنا فۆنتا تەفسیرێیا کوردی</div>
+                    </div>
+                    <select class="setting-select" id="tafsirFontSelect" onchange="changeTafsirFont()">
+                        <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
+                        <option value="Scheherazade New">Scheherazade New</option>
+                        <option value="KFGQPC Hafs" data-t="settings_tafsir_font_hafs">KFGQPC Hafs (حەفس)</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-text-width"></i>
+                            <span data-t="settings_tafsir_font_size_label">قەبارەیا فۆنتێ</span>
+                        </div>
+                        <div class="setting-description" data-t="settings_tafsir_font_size_desc">مەزن یان بچووککرنا تێکستێ تەفسیرێ</div>
+                    </div>
+                    <div class="setting-slider-container">
+                        <input type="range" class="setting-slider" id="tafsirSizeSlider"
+                               min="0.9" max="1.8" step="0.05" value="1.1"
+                               oninput="changeTafsirSize(this.value)">
+                        <span class="slider-value" id="tafsirSizeValue">1.1rem</span>
+                    </div>
+                </div>
+
+                <div class="font-preview">
+                    <div class="font-preview-label" data-t="settings_tafsir_preview_label">پێشبینیا فۆنتێ</div>
+                    <div class="font-preview-text tafsir-preview" id="tafsirPreview" data-t="settings_div_3">
+                        ب ناڤێ خودێ ئه‌ز خواندنا قورئانێ ده‌ست پێ دكه‌م
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reading Settings -->
+            <div class="settings-card">
+                <h2 class="settings-card-title">
+                    <i class="fas fa-book-reader"></i>
+                    <span data-t="settings_reading_title">خواندن</span>
+                </h2>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-eye"></i>
+                            <span data-t="settings_show_tafsir_label">نیشاندان و ڤەدیتنا تەفسیرێ</span>
+                        </div>
+                        <div class="setting-description" data-t="settings_show_tafsir_desc">نیشاندان یان ڤەشارتنا تەفسیرێ کوردی</div>
+                    </div>
+                    <div class="setting-toggle active" id="tafsirToggle" onclick="toggleTafsir()">
+                        <div class="setting-toggle-knob"></div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-scroll"></i>
+                            <span data-t="settings_auto_scroll_label">زڤراندنا خۆکار</span>
+                        </div>
+                        <div class="setting-description" data-t="settings_auto_scroll_desc">زڤراندنا خۆکارا پەڕەیێ د دەما خواندنێدا</div>
+                    </div>
+                    <div class="setting-toggle" id="autoScrollToggle" onclick="toggleAutoScroll()">
+                        <div class="setting-toggle-knob"></div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-gauge-high"></i>
+                            <span data-t="settings_scroll_speed_label">خێرایا زڤراندنێ</span>
+                        </div>
+                        <div class="setting-description" data-t="settings_scroll_speed_desc">دیارکرنا خێرایا زڤراندنا خۆکار (١٠ ئاست)</div>
+                    </div>
+                    <div class="setting-slider-container">
+                        <input type="range" class="setting-slider" id="autoScrollSpeedSlider"
+                               min="1" max="10" value="5" step="1"
+                               oninput="updateAutoScrollSpeed(this.value)"
+                               style="width: 100%;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="settings-card">
+                <h2 class="settings-card-title">
+                    <i class="fas fa-bell"></i>
+                    بیرهاتن
+                </h2>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-envelope"></i>
+                            بیرهاتنێن ئیمەیلێ
+                        </div>
+                        <div class="setting-description" data-t="settings_email_reminder_desc">وەرگرتنا بیرهاتنێن رۆژانە ب رێیا ئیمەیلێ</div>
+                    </div>
+                    <div class="setting-toggle active" id="emailNotificationsToggle" onclick="toggleEmailNotifications()">
+                        <div class="setting-toggle-knob"></div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">
+                            <i class="fas fa-desktop"></i>
+                            بیرهاتنێن گەڕۆکێ
+                        </div>
+                        <div class="setting-description" data-t="settings_browser_reminder_desc">وەرگرتنا بیرهاتنێن گەڕۆکێ</div>
+                    </div>
+                    <div class="setting-toggle active" id="browserNotificationsToggle" onclick="toggleBrowserNotifications()">
+                        <div class="setting-toggle-knob"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reset Settings -->
+            <div class="settings-card">
+                <h2 class="settings-card-title">
+                    <i class="fas fa-undo"></i>
+                    گەڕیاندنڤە بۆ بنەڕەت
+                </h2>
+                <p style="color: var(--text-muted); margin-bottom: 20px; line-height: 1.8;" data-t="settings_p_8">
+                    ئەڤ کارە هەموو رێکخستنان دگەڕینیتەڤە بۆ بنەڕەتێن وان. ئەڤ کردارە ناگەڕیێتەڤە.
+                </p>
+                <button class="reset-btn" onclick="resetSettings()">
+                    <i class="fas fa-redo"></i>
+                    گەڕیاندنەڤەیا هەموو رێکخستنان
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // Secure Configuration - Load from server
+        let supabaseClient = null;
+
+        async function initSupabase() {
+            try {
+                const response = await fetch('/config');
+                if (!response.ok) throw new Error('Failed to fetch config');
+                const config = await response.json();
+                supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+                console.log('✅ Supabase initialized securely');
+                return true;
+            } catch (error) {
+                console.error('❌ Supabase init failed:', error);
+                return false;
+            }
+        }
+
+        // Initialize settings from localStorage
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize toggle handlers immediately when DOM is ready
+            initToggleHandlers();
+            loadSettings();
+            console.log('Settings page initialized');
+        });
+
+        window.addEventListener('load', async () => {
+            try {
+                await initSupabase(); // Initialize Supabase securely first
+            } catch (e) {
+                console.error('Supabase init error:', e);
+            }
+
+            // Check authentication
+            const user = localStorage.getItem('user');
+            const isAuthenticated = !!user;
+
+            // Hide notification settings if not authenticated
+            if (!isAuthenticated) {
+                const notificationCard = document.querySelector('.settings-card:has(#emailNotificationsToggle)');
+                if (notificationCard) {
+                    notificationCard.style.display = 'none';
+                }
+            }
+
+            // Show the page
+            document.body.classList.add('ready');
+
+            // Only load notification settings if authenticated
+            if (isAuthenticated) {
+                try {
+                    loadNotificationSettings();
+                } catch (e) {
+                    console.error('Notification settings error:', e);
+                }
+            }
+        });
+
+        // Initialize toggle styles (onclick handlers are in HTML)
+        function initToggleHandlers() {
+            console.log('Initializing toggle styles...');
+
+            // Just set cursor styles - onclick handlers are inline in HTML
+            const toggles = document.querySelectorAll('.setting-toggle');
+            toggles.forEach(toggle => {
+                toggle.style.cursor = 'pointer';
+            });
+
+            console.log('Toggle styles initialized');
+        }
+
+        function loadSettings() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            if (savedTheme === 'dark') {
+                darkModeToggle.classList.add('active');
+            } else {
+                darkModeToggle.classList.remove('active');
+            }
+
+            const savedArabicFont = localStorage.getItem('arabicFont') || 'KFGQPC Hafs';
+            const savedArabicSize = localStorage.getItem('arabicSize') || '2.2';
+            const savedTafsirFont = localStorage.getItem('tafsirFont') || 'IBM Plex Sans Arabic';
+            const savedTafsirSize = localStorage.getItem('tafsirSize') || '1.1';
+
+            document.getElementById('arabicFontSelect').value = savedArabicFont;
+            document.getElementById('arabicSizeSlider').value = savedArabicSize;
+            document.getElementById('arabicSizeValue').textContent = savedArabicSize + 'rem';
+            document.getElementById('tafsirFontSelect').value = savedTafsirFont;
+            document.getElementById('tafsirSizeSlider').value = savedTafsirSize;
+            document.getElementById('tafsirSizeValue').textContent = savedTafsirSize + 'rem';
+
+            document.documentElement.style.setProperty('--arabic-font', savedArabicFont);
+            document.documentElement.style.setProperty('--arabic-size', savedArabicSize + 'rem');
+            document.documentElement.style.setProperty('--tafsir-font', savedTafsirFont);
+            document.documentElement.style.setProperty('--tafsir-size', savedTafsirSize + 'rem');
+
+            // Load reading settings (default: showTafsir = true)
+            const showTafsir = localStorage.getItem('showTafsir');
+            const shouldShow = showTafsir === null ? true : showTafsir === 'true';
+            const tafsirToggle = document.getElementById('tafsirToggle');
+            if (shouldShow) {
+                tafsirToggle.classList.add('active');
+            } else {
+                tafsirToggle.classList.remove('active');
+            }
+
+            const autoScroll = localStorage.getItem('autoScroll');
+            const shouldAutoScroll = autoScroll === null ? false : autoScroll === 'true';
+            const autoScrollToggle = document.getElementById('autoScrollToggle');
+            if (shouldAutoScroll) {
+                autoScrollToggle.classList.add('active');
+            } else {
+                autoScrollToggle.classList.remove('active');
+            }
+
+            // Load auto-scroll speed (default: 5 - medium)
+            const autoScrollSpeed = localStorage.getItem('autoScrollSpeed') || '5';
+            const autoScrollSpeedSlider = document.getElementById('autoScrollSpeedSlider');
+            if (autoScrollSpeedSlider) {
+                autoScrollSpeedSlider.value = autoScrollSpeed;
+            }
+
+            // Initialize previews
+            const arabicPreview = document.getElementById('arabicPreview');
+            const tafsirPreview = document.getElementById('tafsirPreview');
+            if (arabicPreview) {
+                arabicPreview.style.fontFamily = savedArabicFont;
+                arabicPreview.style.fontSize = savedArabicSize + 'rem';
+            }
+            if (tafsirPreview) {
+                tafsirPreview.style.fontFamily = savedTafsirFont;
+                tafsirPreview.style.fontSize = savedTafsirSize + 'rem';
+            }
+        }
+
+        function toggleDarkMode() {
+            console.log('toggleDarkMode function called');
+            const toggle = document.getElementById('darkModeToggle');
+            const current = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = current === 'light' ? 'dark' : 'light';
+
+            console.log('Switching theme from', current, 'to', newTheme);
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // Explicitly set active class based on new theme
+            if (newTheme === 'dark') {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
+
+            showNotification(newTheme === 'dark' ? 'رەوشا تاری هاتە چالاککرن' : 'رەوشا ڕووناهیێ هاتە چالاککرن');
+        }
+
+        function changeArabicFont() {
+            const font = document.getElementById('arabicFontSelect').value;
+            document.documentElement.style.setProperty('--arabic-font', font);
+            localStorage.setItem('arabicFont', font);
+
+            // Update preview
+            const preview = document.getElementById('arabicPreview');
+            if (preview) {
+                preview.style.fontFamily = font;
+            }
+
+            showNotification('فۆنتا عەرەبی هاتە گوهۆڕین');
+        }
+
+        function changeArabicSize(value) {
+            document.getElementById('arabicSizeValue').textContent = value + 'rem';
+            document.documentElement.style.setProperty('--arabic-size', value + 'rem');
+            localStorage.setItem('arabicSize', value);
+
+            // Update preview
+            const preview = document.getElementById('arabicPreview');
+            if (preview) {
+                preview.style.fontSize = value + 'rem';
+            }
+        }
+
+        function changeTafsirFont() {
+            const font = document.getElementById('tafsirFontSelect').value;
+            document.documentElement.style.setProperty('--tafsir-font', font);
+            localStorage.setItem('tafsirFont', font);
+
+            // Update preview
+            const preview = document.getElementById('tafsirPreview');
+            if (preview) {
+                preview.style.fontFamily = font;
+            }
+
+            showNotification('فۆنتا تەفسیرێ هاتە گوهۆڕین');
+        }
+
+        function changeTafsirSize(value) {
+            document.getElementById('tafsirSizeValue').textContent = value + 'rem';
+            document.documentElement.style.setProperty('--tafsir-size', value + 'rem');
+            localStorage.setItem('tafsirSize', value);
+
+            // Update preview
+            const preview = document.getElementById('tafsirPreview');
+            if (preview) {
+                preview.style.fontSize = value + 'rem';
+            }
+        }
+
+        function toggleTafsir() {
+            const toggle = document.getElementById('tafsirToggle');
+            toggle.classList.toggle('active');
+            localStorage.setItem('showTafsir', toggle.classList.contains('active'));
+            showNotification(toggle.classList.contains('active') ? 'تەفسیر هاتە نیشاندان' : 'تەفسیر هاتە ڤەشارتن');
+        }
+
+        function toggleAutoScroll() {
+            const toggle = document.getElementById('autoScrollToggle');
+            toggle.classList.toggle('active');
+            localStorage.setItem('autoScroll', toggle.classList.contains('active'));
+            showNotification(toggle.classList.contains('active') ? 'زڤڕاندنا خۆکار هاتە چالاککرن' : 'زڤڕاندنا خۆکار هاتە نەچالاککرن');
+        }
+
+        function updateAutoScrollSpeed(speed) {
+            localStorage.setItem('autoScrollSpeed', speed);
+
+            const speedNames = {
+                '1': '١ - زۆر زۆر هێواش',
+                '2': '٢ - زۆر هێواش',
+                '3': '٣ - هێواش',
+                '4': '٤ - کەمێ هێواش',
+                '5': '٥ - ناڤەند',
+                '6': '٦ - کەمێ خێرا',
+                '7': '٧ - خێرا',
+                '8': '٨ - زۆر خێرا',
+                '9': '٩ - زۆر زۆر خێرا',
+                '10': '١٠ - خێراترین'
+            };
+            showNotification(`خێرایا زڤراندنێ: ${speedNames[speed]}`);
+        }
+
+        function resetSettings() {
+            if (confirm('ئایا دڵنیایت لە گەڕیاندنەڤەیا هەموو رێکخستنان بۆ بنەڕەت؟')) {
+                localStorage.removeItem('arabicFont');
+                localStorage.removeItem('arabicSize');
+                localStorage.removeItem('tafsirFont');
+                localStorage.removeItem('tafsirSize');
+                localStorage.removeItem('theme');
+                localStorage.removeItem('showTafsir');
+                localStorage.removeItem('autoScroll');
+                localStorage.removeItem('autoScrollSpeed');
+
+                document.getElementById('arabicFontSelect').value = 'KFGQPC Hafs';
+                document.getElementById('arabicSizeSlider').value = '2.2';
+                document.getElementById('arabicSizeValue').textContent = '2.2rem';
+                document.getElementById('tafsirFontSelect').value = 'IBM Plex Sans Arabic';
+                document.getElementById('tafsirSizeSlider').value = '1.1';
+                document.getElementById('tafsirSizeValue').textContent = '1.1rem';
+
+                document.documentElement.style.setProperty('--arabic-font', 'KFGQPC Hafs');
+                document.documentElement.style.setProperty('--arabic-size', '2.2rem');
+                document.documentElement.style.setProperty('--tafsir-font', 'IBM Plex Sans Arabic');
+                document.documentElement.style.setProperty('--tafsir-size', '1.1rem');
+                document.documentElement.setAttribute('data-theme', 'light');
+
+                document.getElementById('darkModeToggle').classList.remove('active');
+                document.getElementById('tafsirToggle').classList.add('active');
+                document.getElementById('autoScrollToggle').classList.remove('active');
+
+                // Reset auto scroll speed to default (5 - medium)
+                const autoScrollSpeedSlider = document.getElementById('autoScrollSpeedSlider');
+                if (autoScrollSpeedSlider) {
+                    autoScrollSpeedSlider.value = '5';
+                }
+
+                showNotification('ڕێکخستن ڤەگەڕیان سەر ڕەوشا بنەڕەت');
+            }
+        }
+
+        function showNotification(msg) {
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.textContent = msg;
+
+            // Calculate position based on existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            let topPosition = 100; // Start position
+
+            existingNotifications.forEach((existing) => {
+                topPosition += existing.offsetHeight + 15; // Stack with 15px gap
+            });
+
+            notif.style.top = topPosition + 'px';
+            document.body.appendChild(notif);
+
+            // Remove with animation after 3 seconds
+            setTimeout(() => {
+                notif.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    notif.remove();
+                    // Reposition remaining notifications
+                    repositionNotifications();
+                }, 300);
+            }, 3000);
+        }
+
+        function repositionNotifications() {
+            const notifications = document.querySelectorAll('.notification');
+            let topPosition = 100;
+
+            notifications.forEach((notif) => {
+                notif.style.top = topPosition + 'px';
+                topPosition += notif.offsetHeight + 15;
+            });
+        }
+
+        // Load notification settings from Supabase
+        async function loadNotificationSettings() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (!user || !user.id) return;
+
+                // Fetch user data from Supabase
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .select('notificationSettings')
+                    .eq('id', user.id)
+                    .single();
+
+                if (error) {
+                    console.error('Error loading notification settings:', error);
+                    return;
+                }
+
+                // Update toggles based on database values
+                const notifSettings = data?.notificationSettings || {
+                    enabled: true,
+                    emailReminders: true,
+                    browserNotifications: true
+                };
+
+                const emailToggle = document.getElementById('emailNotificationsToggle');
+                const browserToggle = document.getElementById('browserNotificationsToggle');
+
+                if (notifSettings.emailReminders) {
+                    emailToggle.classList.add('active');
+                } else {
+                    emailToggle.classList.remove('active');
+                }
+
+                if (notifSettings.browserNotifications) {
+                    browserToggle.classList.add('active');
+                } else {
+                    browserToggle.classList.remove('active');
+                }
+            } catch (err) {
+                console.error('Error loading notification settings:', err);
+            }
+        }
+
+        // Toggle email notifications
+        async function toggleEmailNotifications() {
+            const toggle = document.getElementById('emailNotificationsToggle');
+            const willBeActive = !toggle.classList.contains('active');
+
+            toggle.classList.toggle('active');
+
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (!user || !user.id) return;
+
+                // Update database
+                const { data: currentData } = await supabaseClient
+                    .from('users')
+                    .select('notificationSettings')
+                    .eq('id', user.id)
+                    .single();
+
+                const updatedSettings = {
+                    ...(currentData?.notificationSettings || {}),
+                    emailReminders: willBeActive,
+                    enabled: willBeActive || currentData?.notificationSettings?.browserNotifications || false
+                };
+
+                const { error } = await supabaseClient
+                    .from('users')
+                    .update({ notificationSettings: updatedSettings })
+                    .eq('id', user.id);
+
+                if (error) {
+                    console.error('Error updating email notifications:', error);
+                    toggle.classList.toggle('active'); // Revert on error
+                    showNotification('خەلەتییەک چێبوو');
+                    return;
+                }
+
+                showNotification(willBeActive ? 'بیرهاتنێن ئیمەیلی هاتنە چالاککرن' : 'بیرهاتنێن ئیمەیلی هاتنە نەچالاککرن');
+            } catch (err) {
+                console.error('Error toggling email notifications:', err);
+                toggle.classList.toggle('active'); // Revert on error
+                showNotification('خەلەتییەک چێبوو');
+            }
+        }
+
+        // Toggle browser notifications
+        async function toggleBrowserNotifications() {
+            const toggle = document.getElementById('browserNotificationsToggle');
+            const willBeActive = !toggle.classList.contains('active');
+
+            // Request permission if enabling
+            if (willBeActive && 'Notification' in window) {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    showNotification('مافێ بیرهاتنێن گەڕۆکی نەهاتە دان');
+                    return;
+                }
+            }
+
+            toggle.classList.toggle('active');
+
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (!user || !user.id) return;
+
+                // Update database
+                const { data: currentData } = await supabaseClient
+                    .from('users')
+                    .select('notificationSettings')
+                    .eq('id', user.id)
+                    .single();
+
+                const updatedSettings = {
+                    ...(currentData?.notificationSettings || {}),
+                    browserNotifications: willBeActive,
+                    enabled: willBeActive || currentData?.notificationSettings?.emailReminders || false
+                };
+
+                const { error } = await supabaseClient
+                    .from('users')
+                    .update({ notificationSettings: updatedSettings })
+                    .eq('id', user.id);
+
+                if (error) {
+                    console.error('Error updating browser notifications:', error);
+                    toggle.classList.toggle('active'); // Revert on error
+                    showNotification('خەلەتییەک چێبوو');
+                    return;
+                }
+
+                showNotification(willBeActive ? 'بیرهاتنێن گەڕۆکی هاتنە چالاککرن' : 'بیرهاتنێن گەڕۆکی هاتنە نەچالاککرن');
+            } catch (err) {
+                console.error('Error toggling browser notifications:', err);
+                toggle.classList.toggle('active'); // Revert on error
+                showNotification('خەلەتییەک چێبوو');
+            }
+        }
+
+        // Register Service Worker for offline support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js?v=506')
+                .then(registration => {
+                    console.log('✅ Service Worker registered successfully:', registration.scope);
+                })
+                .catch(error => {
+                    console.log('❌ Service Worker registration failed:', error);
+                });
+        }
+    </script>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-main">
+                <!-- Brand Section -->
+                <div class="footer-brand">
+                    <div class="footer-brand-header">
+                        <img src="/assets/images/logo.png" alt="تەفسیر کورد" class="footer-logo-img logo-image" loading="lazy" width="45" height="45">
+                        <h2 class="footer-brand-name" data-t="settings_h2_10">تەفسیر کورد</h2>
+                    </div>
+                    <p class="footer-brand-tagline" data-t="settings_p_11">
+                        پلاتفۆرمەکا ئارام بۆ خواندنێ، گەڕیان و رامان ل سەر قورئانا پیرۆز ب زمانێ کوردی (بادینی). قورئان بگەهیتە دەستێ هەر کەسەکی، هەر جهەکی و هەر دەمەکی.
+                    </p>
+                    <div class="footer-social-icons">
+                        <a href="https://www.instagram.com/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://www.youtube.com/@tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="https://t.me/tafsirkurd" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                            <i class="fab fa-telegram"></i>
+                        </a>
+                        <a href="https://www.pinterest.com/tafsirkurd/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest">
+                            <i class="fab fa-pinterest"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Navigate Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title" data-t="settings_h3_12">گەڕیان</h3>
+                    <div class="footer-links">
+                        <a href="/profile" class="footer-link" data-t="settings_a_13">پرۆفایل</a>
+                        <a href="/goals" class="footer-link" data-t="settings_a_14">ئارمانج</a>
+                        <a href="/bookmarks" class="footer-link" data-t="settings_a_15">نیشانەکری</a>
+                        <a href="/settings" class="footer-link" data-t="settings_a_16">رێکخستن</a>
+                    </div>
+                </div>
+
+                <!-- Resources Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title" data-t="settings_h3_17">رۆژپەڕێن دی</h3>
+                    <div class="footer-links">
+                        <a href="/" class="footer-link" data-t="settings_a_18">مالپەڕێ سەرەکی</a>
+                        <a href="/quran" class="footer-link" data-t="settings_a_19">قورئانا پیرۆز</a>
+                        <a href="/#features" class="footer-link" data-t="settings_a_20">تایبەتمەندی</a>
+                        <a href="/#about" class="footer-link" data-t="settings_a_21">دەربارەی مە</a>
+                    </div>
+                </div>
+
+                <!-- Connect Section -->
+                <div class="footer-section">
+                    <h3 class="footer-section-title" data-t="settings_h3_22">پەیوەندی</h3>
+                    <div class="footer-links">
+                        <p class="footer-contact-text" data-t="settings_p_23">ئەگەر تە پرسیارەک یان پێشنیارەک هەبیت، پەیوەندییێ ب مە بکە و ب زووترین دەم دێ بەرسڤا تە هێتە دان!</p>
+                        <a href="mailto:tefsirkurd@gmail.com" class="footer-link">
+                            <i class="fas fa-envelope"></i> tefsirkurd@gmail.com
+                        </a>
+                        <a href="/#contact" class="footer-link">
+                            <i class="fas fa-paper-plane"></i> فۆرمێ پڕ بکە
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <p class="footer-copyright">
+                    &copy; <span id="footer-year"></span> تەفسیر کورد. هەمی ماف پاراستی نە. خودایێ مەزن بەرەکەتێ بێخیتە هەول و ماندبوونا مە.
+                </p>
+                <div class="footer-meta-links">
+                    <a href="/privacy-policy" class="footer-meta-link" data-t="settings_a_26">پاراستنا تایبەتمەندیێ</a>
+                    <a href="/terms-and-conditions" class="footer-meta-link" data-t="settings_a_27">مەرج و رێسایان</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Set current year
+        document.getElementById('footer-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
