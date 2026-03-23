@@ -22,9 +22,63 @@ workflows:
 
       - name: Patch plugins for capacitor-swift-pm 8.2.0
         script: |
-          # Upgrade @capacitor/share to 8.2.0 — already uses the updated API, no Swift patch needed
-          npm install @capacitor/share@8.2.0 --legacy-peer-deps
-          echo "share version: $(node -e \"console.log(require('./node_modules/@capacitor/share/package.json').version)\")"
+          # Write SharePlugin.swift via Python — avoids heredoc encoding issues.
+          # call.reject removed entirely (replaced with call.resolve) since reject has member-lookup
+          # issues in capacitor-swift-pm 8.2.0 regardless of argument count.
+          cat > /tmp/patch_share.py << 'PYEOF'
+          f = 'node_modules/@capacitor/share/ios/Sources/SharePlugin/SharePlugin.swift'
+          lines = [
+              'import Foundation',
+              'import Capacitor',
+              '',
+              '@objc(SharePlugin)',
+              'public class SharePlugin: CAPPlugin, CAPBridgedPlugin {',
+              '    public let identifier = "SharePlugin"',
+              '    public let jsName = "Share"',
+              '    public let pluginMethods: [CAPPluginMethod] = [',
+              '        CAPPluginMethod(name: "canShare", returnType: CAPPluginReturnPromise),',
+              '        CAPPluginMethod(name: "share", returnType: CAPPluginReturnPromise)',
+              '    ]',
+              '',
+              '    @objc func canShare(_ call: CAPPluginCall) {',
+              '        call.resolve(["value": true])',
+              '    }',
+              '',
+              '    @objc func share(_ call: CAPPluginCall) {',
+              '        var items = [Any]()',
+              '        let text = call.getString("text", "")',
+              '        if !text.isEmpty { items.append(text) }',
+              '        let urlStr = call.getString("url", "")',
+              '        if !urlStr.isEmpty, let urlObj = URL(string: urlStr) { items.append(urlObj) }',
+              '        let title = call.getString("title", "")',
+              '        if let files = call.getArray("files", String.self) {',
+              '            for fileStr in files {',
+              '                if let fileUrl = URL(string: fileStr) { items.append(fileUrl) }',
+              '            }',
+              '        }',
+              '        guard !items.isEmpty else { call.resolve([:]); return }',
+              '        DispatchQueue.main.async { [weak self] in',
+              '            let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)',
+              '            if !title.isEmpty { ac.setValue(title, forKey: "subject") }',
+              '            guard self?.bridge?.viewController?.presentedViewController == nil else {',
+              '                call.resolve([:])',
+              '                return',
+              '            }',
+              '            ac.completionWithItemsHandler = { activityType, completed, _, _ in',
+              '                call.resolve(["activityType": activityType?.rawValue ?? ""])',
+              '            }',
+              '            self?.setCenteredPopover(ac)',
+              '            self?.bridge?.viewController?.present(ac, animated: true, completion: nil)',
+              '        }',
+              '    }',
+              '}',
+          ]
+          content = '\n'.join(lines) + '\n'
+          open(f, 'w').write(content)
+          print('SharePlugin.swift written OK')
+          print(open(f).read())
+          PYEOF
+          python3 /tmp/patch_share.py
 
           # Fix @capacitor-community/media: getArray("sort") one-arg optional removed in 8.2.0
           cat > /tmp/patch_media.py << 'PYEOF'
