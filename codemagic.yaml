@@ -58,6 +58,185 @@ workflows:
           SHAREEOF
           echo "SharePlugin rewritten"
 
+          # ── StatusBarPlugin: full rewrite (PluginConfig.getString removed in 8.2.0) ──
+          cat > node_modules/@capacitor/status-bar/ios/Sources/StatusBarPlugin/StatusBarPlugin.swift << 'STATUSBAREOF'
+          import Foundation
+          import Capacitor
+          @objc(StatusBarPlugin)
+          public class StatusBarPlugin: CAPPlugin, CAPBridgedPlugin {
+              public let identifier = "StatusBarPlugin"
+              public let jsName = "StatusBar"
+              public let pluginMethods: [CAPPluginMethod] = [
+                  CAPPluginMethod(name: "setStyle", returnType: CAPPluginReturnPromise),
+                  CAPPluginMethod(name: "setBackgroundColor", returnType: CAPPluginReturnPromise),
+                  CAPPluginMethod(name: "show", returnType: CAPPluginReturnPromise),
+                  CAPPluginMethod(name: "hide", returnType: CAPPluginReturnPromise),
+                  CAPPluginMethod(name: "getInfo", returnType: CAPPluginReturnPromise),
+                  CAPPluginMethod(name: "setOverlaysWebView", returnType: CAPPluginReturnPromise)
+              ]
+              private var statusBar: StatusBar?
+              private let statusBarVisibilityChanged = "statusBarVisibilityChanged"
+              private let statusBarOverlayChanged = "statusBarOverlayChanged"
+              override public func load() {
+                  guard let bridge = bridge else { return }
+                  statusBar = StatusBar(bridge: bridge, config: statusBarConfig())
+              }
+              private func statusBarConfig() -> StatusBarConfig {
+                  var config = StatusBarConfig()
+                  config.overlaysWebView = getConfig().getBoolean("overlaysWebView", config.overlaysWebView)
+                  let cfgJSON = getConfig().getConfigJSON()
+                  if let colorStr = cfgJSON["backgroundColor"] as? String, !colorStr.isEmpty {
+                      config.backgroundColor = UIColor.capacitor.color(argb: hexStringToARGB(colorStr))
+                  }
+                  if let styleStr = cfgJSON["style"] as? String, !styleStr.isEmpty {
+                      config.style = style(fromString: styleStr)
+                  }
+                  return config
+              }
+              private func style(fromString str: String) -> UIStatusBarStyle {
+                  switch str.lowercased() {
+                  case "dark", "lightcontent": return .lightContent
+                  case "light", "darkcontent": return .darkContent
+                  default: return .default
+                  }
+              }
+              @objc func setStyle(_ call: CAPPluginCall) {
+                  let styleStr = call.getString("style","")
+                  if !styleStr.isEmpty { statusBar?.setStyle(style(fromString: styleStr)) }
+                  call.resolve([:])
+              }
+              @objc func setBackgroundColor(_ call: CAPPluginCall) {
+                  guard let hexString = call.options["color"] as? String else { return }
+                  let color = UIColor.capacitor.color(argb: hexStringToARGB(hexString))
+                  DispatchQueue.main.async { [weak self] in
+                      self?.statusBar?.setBackgroundColor(color)
+                  }
+                  call.resolve()
+              }
+              @objc func hide(_ call: CAPPluginCall) {
+                  let animation = call.getString("animation","FADE")
+                  DispatchQueue.main.async { [weak self] in
+                      self?.statusBar?.hide(animation: animation)
+                      guard let info = self?.statusBar?.getInfo(), let dict = self?.toDict(info),
+                            let event = self?.statusBarVisibilityChanged else { return }
+                      self?.notifyListeners(event, data: dict)
+                  }
+                  call.resolve()
+              }
+              @objc func show(_ call: CAPPluginCall) {
+                  let animation = call.getString("animation","FADE")
+                  DispatchQueue.main.async { [weak self] in
+                      self?.statusBar?.show(animation: animation)
+                      guard let info = self?.statusBar?.getInfo(), let dict = self?.toDict(info),
+                            let event = self?.statusBarVisibilityChanged else { return }
+                      self?.notifyListeners(event, data: dict)
+                  }
+                  call.resolve()
+              }
+              @objc func getInfo(_ call: CAPPluginCall) {
+                  DispatchQueue.main.async { [weak self] in
+                      guard let info = self?.statusBar?.getInfo(), let dict = self?.toDict(info) else { return }
+                      call.resolve(dict)
+                  }
+              }
+              @objc func setOverlaysWebView(_ call: CAPPluginCall) {
+                  guard let overlay = call.options["overlay"] as? Bool else { return }
+                  DispatchQueue.main.async { [weak self] in
+                      self?.statusBar?.setOverlaysWebView(overlay)
+                      guard let info = self?.statusBar?.getInfo(), let dict = self?.toDict(info),
+                            let event = self?.statusBarOverlayChanged else { return }
+                      self?.notifyListeners(event, data: dict)
+                  }
+                  call.resolve()
+              }
+              private func toDict(_ info: StatusBarInfo) -> [String: Any] {
+                  return ["visible": info.visible!, "style": info.style!, "color": info.color!,
+                          "overlays": info.overlays!, "height": info.height!]
+              }
+              private func hexStringToARGB(_ hex: String) -> UInt32 {
+                  var s = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+                  if s.hasPrefix("#") { s = String(s.dropFirst()) }
+                  if s.count == 6 { s = "FF" + s }
+                  var val: UInt64 = 0
+                  Scanner(string: s).scanHexInt64(&val)
+                  return UInt32(val)
+              }
+          }
+          STATUSBAREOF
+          echo "StatusBarPlugin rewritten"
+
+          # ── SplashScreenPlugin: full rewrite (PluginConfig.getString removed in 8.2.0) ─
+          cat > node_modules/@capacitor/splash-screen/ios/Sources/SplashScreenPlugin/SplashScreenPlugin.swift << 'SPLASHEOF'
+          import Foundation
+          import Capacitor
+          @objc(SplashScreenPlugin)
+          public class SplashScreenPlugin: CAPPlugin, CAPBridgedPlugin {
+              public let identifier = "SplashScreenPlugin"
+              public let jsName = "SplashScreen"
+              public let pluginMethods: [CAPPluginMethod] = [
+                  CAPPluginMethod(name: "show", returnType: CAPPluginReturnPromise),
+                  CAPPluginMethod(name: "hide", returnType: CAPPluginReturnPromise)
+              ]
+              private var splashScreen: SplashScreen?
+              override public func load() {
+                  if let view = bridge?.viewController?.view {
+                      splashScreen = SplashScreen(parentView: view, config: splashScreenConfig())
+                      splashScreen?.showOnLaunch()
+                  }
+              }
+              @objc public func show(_ call: CAPPluginCall) {
+                  if let splash = splashScreen {
+                      let settings = splashScreenSettings(from: call)
+                      splash.show(settings: settings, completion: { call.resolve() })
+                  } else { call.resolve([:]) }
+              }
+              @objc public func hide(_ call: CAPPluginCall) {
+                  if let splash = splashScreen {
+                      let settings = splashScreenSettings(from: call)
+                      splash.hide(settings: settings)
+                      call.resolve()
+                  } else { call.resolve([:]) }
+              }
+              private func splashScreenSettings(from call: CAPPluginCall) -> SplashScreenSettings {
+                  var settings = SplashScreenSettings()
+                  let showDuration = call.getInt("showDuration", -1)
+                  if showDuration >= 0 { settings.showDuration = showDuration }
+                  let fadeInDuration = call.getInt("fadeInDuration", -1)
+                  if fadeInDuration >= 0 { settings.fadeInDuration = fadeInDuration }
+                  let fadeOutDuration = call.getInt("fadeOutDuration", -1)
+                  if fadeOutDuration >= 0 { settings.fadeOutDuration = fadeOutDuration }
+                  settings.autoHide = call.getBool("autoHide", settings.autoHide)
+                  return settings
+              }
+              private func splashScreenConfig() -> SplashScreenConfig {
+                  var config = SplashScreenConfig()
+                  let cfgJSON = getConfig().getConfigJSON()
+                  if let bgStr = cfgJSON["backgroundColor"] as? String, !bgStr.isEmpty {
+                      config.backgroundColor = UIColor.capacitor.color(argb: hexStringToARGB(bgStr))
+                  }
+                  if let spinnerStr = cfgJSON["iosSpinnerStyle"] as? String, !spinnerStr.isEmpty {
+                      config.spinnerStyle = spinnerStr.lowercased() == "small" ? .medium : .large
+                  }
+                  if let spinnerColorStr = cfgJSON["spinnerColor"] as? String, !spinnerColorStr.isEmpty {
+                      config.spinnerColor = UIColor.capacitor.color(argb: hexStringToARGB(spinnerColorStr))
+                  }
+                  config.showSpinner = getConfig().getBoolean("showSpinner", config.showSpinner)
+                  config.launchShowDuration = getConfig().getInt("launchShowDuration", config.launchShowDuration)
+                  config.launchAutoHide = getConfig().getBoolean("launchAutoHide", config.launchAutoHide)
+                  return config
+              }
+              private func hexStringToARGB(_ hex: String) -> UInt32 {
+                  var s = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+                  if s.hasPrefix("#") { s = String(s.dropFirst()) }
+                  if s.count == 6 { s = "FF" + s }
+                  var val: UInt64 = 0
+                  Scanner(string: s).scanHexInt64(&val)
+                  return UInt32(val)
+              }
+          }
+          SPLASHEOF
+          echo "SplashScreenPlugin rewritten"
+
           # ── All other plugins: regex patches ───────────────────────────────────
           cat > /tmp/patch_plugins.py << 'PYEOF'
           import re, os
@@ -109,8 +288,6 @@ workflows:
               'node_modules/@capacitor/filesystem/ios/Sources/FilesystemPlugin/FilesystemPlugin.swift',
               'node_modules/@capacitor/preferences/ios/Sources/PreferencesPlugin/PreferencesPlugin.swift',
               'node_modules/@capacitor/haptics/ios/Sources/HapticsPlugin/HapticsPlugin.swift',
-              'node_modules/@capacitor/splash-screen/ios/Sources/SplashScreenPlugin/SplashScreenPlugin.swift',
-              'node_modules/@capacitor/status-bar/ios/Sources/StatusBarPlugin/StatusBarPlugin.swift',
               'node_modules/@capacitor/browser/ios/Sources/BrowserPlugin/BrowserPlugin.swift',
               'node_modules/@capacitor-community/speech-recognition/ios/Sources/SpeechRecognitionPlugin/SpeechRecognitionPlugin.swift',
               'node_modules/@capacitor-community/keep-awake/ios/Sources/KeepAwakePlugin/KeepAwakePlugin.swift',
