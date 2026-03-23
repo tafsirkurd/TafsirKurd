@@ -71,7 +71,7 @@ workflows:
                       if !title.isEmpty { actionController.setValue(title, forKey: "subject") }
                       actionController.completionWithItemsHandler = { (activityType, completed, _ returnedItems, activityError) in
                           if activityError != nil {
-                              call.reject("Error sharing item", nil, activityError)
+                              call.reject("Error sharing item")
                               return
                           }
                           if completed {
