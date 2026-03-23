@@ -23,144 +23,23 @@ workflows:
       - name: Capacitor sync iOS
         script: npx cap sync ios
 
-      - name: Patch plugins for capacitor-swift-pm 8.2.0
+      - name: Pin capacitor-swift-pm to 8.0.0 for plugin compatibility
         script: |
-          # Runs AFTER cap sync so cap sync cannot restore the original files.
-          # Write SharePlugin.swift via Python — avoids heredoc encoding issues.
-          # call.reject removed entirely (replaced with call.resolve) since reject has member-lookup
-          # issues in capacitor-swift-pm 8.2.0 regardless of argument count.
-          cat > /tmp/patch_share.py << 'PYEOF'
-          f = 'node_modules/@capacitor/share/ios/Sources/SharePlugin/SharePlugin.swift'
-          lines = [
-              'import Foundation',
-              'import Capacitor',
-              '',
-              '@objc(SharePlugin)',
-              'public class SharePlugin: CAPPlugin, CAPBridgedPlugin {',
-              '    public let identifier = "SharePlugin"',
-              '    public let jsName = "Share"',
-              '    public let pluginMethods: [CAPPluginMethod] = [',
-              '        CAPPluginMethod(name: "canShare", returnType: CAPPluginReturnPromise),',
-              '        CAPPluginMethod(name: "share", returnType: CAPPluginReturnPromise)',
-              '    ]',
-              '',
-              '    @objc func canShare(_ call: CAPPluginCall) {',
-              '        call.resolve(["value": true])',
-              '    }',
-              '',
-              '    @objc func share(_ call: CAPPluginCall) {',
-              '        var items = [Any]()',
-              '        let text = call.getString("text", "")',
-              '        if !text.isEmpty { items.append(text) }',
-              '        let urlStr = call.getString("url", "")',
-              '        if !urlStr.isEmpty, let urlObj = URL(string: urlStr) { items.append(urlObj) }',
-              '        let title = call.getString("title", "")',
-              '        guard !items.isEmpty else { call.resolve([:]); return }',
-              '        DispatchQueue.main.async { [weak self] in',
-              '            let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)',
-              '            if !title.isEmpty { ac.setValue(title, forKey: "subject") }',
-              '            ac.completionWithItemsHandler = { _, _, _, _ in',
-              '                call.resolve([:])',
-              '            }',
-              '            self?.setCenteredPopover(ac)',
-              '            self?.viewController?.present(ac, animated: true, completion: nil)',
-              '        }',
-              '    }',
-              '}',
-          ]
-          content = '\n'.join(lines) + '\n'
-          open(f, 'w').write(content)
-          print('SharePlugin.swift written OK')
-          print(open(f).read())
-          PYEOF
-          python3 /tmp/patch_share.py
-
-          # Fix @capacitor-community/media: getArray("sort") one-arg optional removed in 8.2.0
-          cat > /tmp/patch_media.py << 'PYEOF'
-          f = 'node_modules/@capacitor-community/media/ios/Sources/MediaPlugin/MediaPlugin.swift'
-          t = open(f).read()
-          t = t.replace('call.getArray("sort") as? [[String: Any]]', 'call.getArray("sort", JSObject.self)')
-          open(f, 'w').write(t)
-          print('Patched MediaPlugin.swift OK')
-          PYEOF
-          python3 /tmp/patch_media.py
-
-          # Fix @capacitor/push-notifications: call.reject removed + one-arg getArray in 8.2.0
-          cat > /tmp/patch_push.py << 'PYEOF'
-          import re
-          f = 'node_modules/@capacitor/push-notifications/ios/Sources/PushNotificationsPlugin/PushNotificationsPlugin.swift'
-          t = open(f).read()
-          t = re.sub(r'call\.reject\([^)]+\)', 'call.resolve([:])', t)
-          open(f, 'w').write(t)
-          print('Patched PushNotificationsPlugin.swift OK')
-          f2 = 'node_modules/@capacitor/push-notifications/ios/Sources/PushNotificationsPlugin/PushNotificationsHandler.swift'
-          t2 = open(f2).read()
-          t2 = t2.replace(
-              'if let optionsArray = self.plugin?.getConfig().getArray("presentationOptions") as? [String] {',
-              'let optionsArray = (self.plugin?.getConfig().getArray("presentationOptions", []) as? [String]) ?? []\n            if !optionsArray.isEmpty {'
-          )
-          open(f2, 'w').write(t2)
-          print('Patched PushNotificationsHandler.swift OK')
-          PYEOF
-          python3 /tmp/patch_push.py
-
-          # Fix @capacitor/splash-screen: one-arg getString + color(fromHex:) → color(argb:) in 8.2.0
-          cat > /tmp/patch_splash.py << 'PYEOF'
-          f = 'node_modules/@capacitor/splash-screen/ios/Sources/SplashScreenPlugin/SplashScreenPlugin.swift'
-          t = open(f).read()
-          helper = '\nprivate func hexStringToARGB(_ hex: String) -> UInt32 {\n    let h = hex.replacingOccurrences(of: "#", with: "")\n    let v = UInt32(h, radix: 16) ?? 0\n    return h.count <= 6 ? (0xFF000000 | v) : v\n}\n'
-          old = ('        if let backgroundColor = getConfig().getString("backgroundColor") {\n'
-                 '            config.backgroundColor = UIColor.capacitor.color(fromHex: backgroundColor)\n'
-                 '        }\n'
-                 '        if let spinnerStyle = getConfig().getString("iosSpinnerStyle") {\n'
-                 '            switch spinnerStyle.lowercased() {\n'
-                 '            case "small":\n'
-                 '                config.spinnerStyle = .medium\n'
-                 '            default:\n'
-                 '                config.spinnerStyle = .large\n'
-                 '            }\n'
-                 '        }\n'
-                 '        if let spinnerColor = getConfig().getString("spinnerColor") {\n'
-                 '            config.spinnerColor = UIColor.capacitor.color(fromHex: spinnerColor)\n'
-                 '        }')
-          new = ('        let _bgC = getConfig().getString("backgroundColor", "")\n'
-                 '        if !_bgC.isEmpty { config.backgroundColor = UIColor.capacitor.color(argb: hexStringToARGB(_bgC)) }\n'
-                 '        let _ssStr = getConfig().getString("iosSpinnerStyle", "")\n'
-                 '        if !_ssStr.isEmpty {\n'
-                 '            switch _ssStr.lowercased() {\n'
-                 '            case "small":\n'
-                 '                config.spinnerStyle = .medium\n'
-                 '            default:\n'
-                 '                config.spinnerStyle = .large\n'
-                 '            }\n'
-                 '        }\n'
-                 '        let _scStr = getConfig().getString("spinnerColor", "")\n'
-                 '        if !_scStr.isEmpty { config.spinnerColor = UIColor.capacitor.color(argb: hexStringToARGB(_scStr)) }')
-          t = t.replace(old, new)
-          t = t.rstrip() + '\n' + helper
-          open(f, 'w').write(t)
-          print('Patched SplashScreenPlugin.swift OK')
-          PYEOF
-          python3 /tmp/patch_splash.py
-
-          # Fix @capacitor/status-bar: color(fromHex:) → color(argb:) + one-arg getString in 8.2.0
-          cat > /tmp/patch_statusbar.py << 'PYEOF'
-          f = 'node_modules/@capacitor/status-bar/ios/Sources/StatusBarPlugin/StatusBarPlugin.swift'
-          t = open(f).read()
-          helper = '\nprivate func hexStringToARGB(_ hex: String) -> UInt32 {\n    let h = hex.replacingOccurrences(of: "#", with: "")\n    let v = UInt32(h, radix: 16) ?? 0\n    return h.count <= 6 ? (0xFF000000 | v) : v\n}\n'
-          t = t.replace(
-              '        if let colorConfig = getConfig().getString("backgroundColor"), let color = UIColor.capacitor.color(fromHex: colorConfig) {\n            config.backgroundColor = color\n        }\n        if let configStyle = getConfig().getString("style") {\n            config.style = style(fromString: configStyle)\n        }',
-              '        let _bgStr = getConfig().getString("backgroundColor", "")\n        if !_bgStr.isEmpty { config.backgroundColor = UIColor.capacitor.color(argb: hexStringToARGB(_bgStr)) }\n        let _styleStr = getConfig().getString("style", "")\n        if !_styleStr.isEmpty { config.style = style(fromString: _styleStr) }'
-          )
-          t = t.replace(
-              '        guard\n            let hexString = call.options["color"] as? String,\n            let color = UIColor.capacitor.color(fromHex: hexString)\n        else { return }',
-              '        guard let hexString = call.options["color"] as? String else { return }\n        let color = UIColor.capacitor.color(argb: hexStringToARGB(hexString))'
-          )
-          t = t.rstrip() + '\n' + helper
-          open(f, 'w').write(t)
-          print('Patched StatusBarPlugin.swift OK')
-          PYEOF
-          python3 /tmp/patch_statusbar.py
+          # @capacitor/ios@8.2.0 generates Package.swift pinned to capacitor-swift-pm@8.2.0.
+          # But plugin packages (share, local-notifications, etc.) at 8.0.x were written for
+          # the 8.0.x API (call.reject, optional getString, color(fromHex:), JSArray=[Any]).
+          # Pinning back to 8.0.0 makes all original plugin Swift code compile without patches.
+          python3 -c "
+f = 'ios/App/CapApp-SPM/Package.swift'
+t = open(f).read()
+t = t.replace('exact: \"8.2.0\"', 'exact: \"8.0.0\"')
+open(f, 'w').write(t)
+print('Package.swift patched to capacitor-swift-pm 8.0.0')
+print(open(f).read())
+"
+          # Remove any stale Package.resolved so Xcode re-resolves the new version
+          find ios -name "Package.resolved" -delete 2>/dev/null || true
+          echo "Package.resolved cleared"
 
       - name: Set up keychain and signing
         script: |
