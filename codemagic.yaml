@@ -85,6 +85,25 @@ workflows:
           PYEOF
           python3 /tmp/patch_media.py
 
+          # Fix @capacitor/push-notifications: call.reject removed + one-arg getArray in 8.2.0
+          cat > /tmp/patch_push.py << 'PYEOF'
+          import re
+          f = 'node_modules/@capacitor/push-notifications/ios/Sources/PushNotificationsPlugin/PushNotificationsPlugin.swift'
+          t = open(f).read()
+          t = re.sub(r'call\.reject\([^)]+\)', 'call.resolve([:])', t)
+          open(f, 'w').write(t)
+          print('Patched PushNotificationsPlugin.swift OK')
+          f2 = 'node_modules/@capacitor/push-notifications/ios/Sources/PushNotificationsPlugin/PushNotificationsHandler.swift'
+          t2 = open(f2).read()
+          t2 = t2.replace(
+              'if let optionsArray = self.plugin?.getConfig().getArray("presentationOptions") as? [String] {',
+              'let optionsArray = (self.plugin?.getConfig().getArray("presentationOptions", []) as? [String]) ?? []\n            if !optionsArray.isEmpty {'
+          )
+          open(f2, 'w').write(t2)
+          print('Patched PushNotificationsHandler.swift OK')
+          PYEOF
+          python3 /tmp/patch_push.py
+
           # Fix @capacitor/splash-screen: one-arg getString + color(fromHex:) → color(argb:) in 8.2.0
           cat > /tmp/patch_splash.py << 'PYEOF'
           f = 'node_modules/@capacitor/splash-screen/ios/Sources/SplashScreenPlugin/SplashScreenPlugin.swift'
