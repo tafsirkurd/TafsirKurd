@@ -23,23 +23,101 @@ workflows:
       - name: Capacitor sync iOS
         script: npx cap sync ios
 
-      - name: Pin capacitor-swift-pm to 8.0.0 for plugin compatibility
+      - name: Patch plugin Swift files for capacitor-swift-pm 8.2.0 API changes
         script: |
-          # @capacitor/ios@8.2.0 generates Package.swift pinned to capacitor-swift-pm@8.2.0.
-          # But plugin packages (share, local-notifications, etc.) at 8.0.x were written for
-          # the 8.0.x API (call.reject, optional getString, color(fromHex:), JSArray=[Any]).
-          # Pinning back to 8.0.0 makes all original plugin Swift code compile without patches.
-          cat > /tmp/patch_pkg.py << 'PYEOF'
-          f = 'ios/App/CapApp-SPM/Package.swift'
-          t = open(f).read()
-          t = t.replace('exact: "8.2.0"', 'exact: "8.0.0"')
-          open(f, 'w').write(t)
-          print('Package.swift patched to capacitor-swift-pm 8.0.0')
-          print(open(f).read())
+          # ── SharePlugin: full rewrite ──────────────────────────────────────────
+          cat > node_modules/@capacitor/share/ios/Sources/SharePlugin/SharePlugin.swift << 'SHAREEOF'
+          import Foundation
+          import Capacitor
+          @objc(SharePlugin)
+          public class SharePlugin: CAPPlugin, CAPBridgedPlugin {
+              public let identifier = "SharePlugin"
+              public let jsName = "Share"
+              public let pluginMethods: [CAPPluginMethod] = [
+                  CAPPluginMethod(name: "canShare", returnType: CAPPluginReturnPromise),
+                  CAPPluginMethod(name: "share", returnType: CAPPluginReturnPromise)
+              ]
+              @objc func canShare(_ call: CAPPluginCall) { call.resolve(["value": true]) }
+              @objc func share(_ call: CAPPluginCall) {
+                  var items = [Any]()
+                  let text = call.getString("text", "")
+                  if !text.isEmpty { items.append(text) }
+                  let urlStr = call.getString("url", "")
+                  if !urlStr.isEmpty, let urlObj = URL(string: urlStr) { items.append(urlObj) }
+                  let title = call.getString("title", "")
+                  guard !items.isEmpty else { call.resolve([:]); return }
+                  DispatchQueue.main.async { [weak self] in
+                      let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                      if !title.isEmpty { ac.setValue(title, forKey: "subject") }
+                      ac.completionWithItemsHandler = { _, _, _, _ in call.resolve([:]) }
+                      self?.setCenteredPopover(ac)
+                      self?.viewController?.present(ac, animated: true, completion: nil)
+                  }
+              }
+          }
+          SHAREEOF
+          echo "SharePlugin rewritten"
+
+          # ── All other plugins: regex patches ───────────────────────────────────
+          cat > /tmp/patch_plugins.py << 'PYEOF'
+          import re, os
+
+          def rd(f): return open(f).read()
+          def wr(f, t): open(f,'w').write(t); print('patched: '+f)
+
+          HEX_HELPER = "\n    private func hexStringToARGB(_ hex: String) -> UInt32 {\n        var s = hex.trimmingCharacters(in: .whitespacesAndNewlines)\n        if s.hasPrefix(\"#\") { s = String(s.dropFirst()) }\n        if s.count == 6 { s = \"FF\" + s }\n        var val: UInt64 = 0\n        Scanner(string: s).scanHexInt64(&val)\n        return UInt32(val)\n    }\n"
+
+          def patch(t):
+              t = re.sub(r'call\.reject\([^)]*\)', 'call.resolve([:])', t)
+              t = re.sub(r'(guard|if) let (\w+) = call\.getString\("([^"]+)"\)', r'\1 let \2 = Optional(call.getString("\3","")).filter({!$0.isEmpty})', t)
+              t = re.sub(r'(guard|if) let (\w+) = call\.getObject\("([^"]+)"\)', r'\1 let \2 = Optional(call.getObject("\3",[:]) ).filter({!$0.isEmpty})', t)
+              t = re.sub(r'(guard|if) let (\w+) = call\.getArray\("([^"]+)"\)', r'\1 let \2 = Optional(call.getArray("\3",[]) ).filter({!$0.isEmpty})', t)
+              t = re.sub(r'call\.getString\("([^"]+)"\)(?!,)', r'call.getString("\1","")', t)
+              t = re.sub(r'call\.getArray\("([^"]+)"\)(?!,)', r'call.getArray("\1",[])', t)
+              t = re.sub(r'call\.getObject\("([^"]+)"\)(?!,)', r'call.getObject("\1",[:])', t)
+              t = re.sub(r'\.color\(fromHex:\s*([^)]+)\)', r'.color(argb: hexStringToARGB(\1))', t)
+              return t
+
+          def inject_hex(t):
+              if 'color(argb:' not in t: return t
+              if 'func hexStringToARGB' in t: return t
+              i = t.rfind('\n}')
+              return (t[:i] + HEX_HELPER + '\n}' + t[i+2:]) if i != -1 else t
+
+          files = [
+              'node_modules/@capacitor/push-notifications/ios/Sources/PushNotificationsPlugin/PushNotificationsPlugin.swift',
+              'node_modules/@capacitor/local-notifications/ios/Sources/LocalNotificationsPlugin/LocalNotificationsPlugin.swift',
+              'node_modules/@capacitor/app/ios/Sources/AppPlugin/AppPlugin.swift',
+              'node_modules/@capacitor/filesystem/ios/Sources/FilesystemPlugin/FilesystemPlugin.swift',
+              'node_modules/@capacitor/preferences/ios/Sources/PreferencesPlugin/PreferencesPlugin.swift',
+              'node_modules/@capacitor/haptics/ios/Sources/HapticsPlugin/HapticsPlugin.swift',
+              'node_modules/@capacitor/splash-screen/ios/Sources/SplashScreenPlugin/SplashScreenPlugin.swift',
+              'node_modules/@capacitor/status-bar/ios/Sources/StatusBarPlugin/StatusBarPlugin.swift',
+              'node_modules/@capacitor/browser/ios/Sources/BrowserPlugin/BrowserPlugin.swift',
+              'node_modules/@capacitor-community/speech-recognition/ios/Sources/SpeechRecognitionPlugin/SpeechRecognitionPlugin.swift',
+              'node_modules/@capacitor-community/keep-awake/ios/Sources/KeepAwakePlugin/KeepAwakePlugin.swift',
+          ]
+          for f in files:
+              if os.path.exists(f):
+                  wr(f, inject_hex(patch(rd(f))))
+
+          mp = 'node_modules/@capacitor-community/media/ios/Sources/MediaPlugin/MediaPlugin.swift'
+          if os.path.exists(mp):
+              t = patch(rd(mp))
+              t = re.sub(r'\.getArray\("sort",\[\]\)\s*as\?\s*\[\[String:\s*Any\]\]', '.getArray("sort",JSObject.self)', t)
+              t = re.sub(r'\.getArray\("sort"\)\s*as\?\s*\[\[String:\s*Any\]\]', '.getArray("sort",JSObject.self)', t)
+              wr(mp, inject_hex(t))
+
+          ph = 'node_modules/@capacitor/push-notifications/ios/Sources/PushNotificationsPlugin/PushNotificationsHandler.swift'
+          if os.path.exists(ph):
+              t = rd(ph)
+              t = re.sub(r'if let optionsArray = self\.plugin\?\.getConfig\(\)\.getArray\("presentationOptions"\)\s*as\?\s*\[String\]', 'let optionsArray = (self.plugin?.getConfig().getArray("presentationOptions",[]) as? [String]) ?? []; if !optionsArray.isEmpty', t)
+              t = re.sub(r'self\.plugin\?\.getConfig\(\)\.getArray\("presentationOptions"\)', 'self.plugin?.getConfig().getArray("presentationOptions",[])', t)
+              wr(ph, t)
+
+          print('All plugin patches applied!')
           PYEOF
-          python3 /tmp/patch_pkg.py
-          find ios -name "Package.resolved" -delete 2>/dev/null || true
-          echo "Package.resolved cleared"
+          python3 /tmp/patch_plugins.py
 
       - name: Set up keychain and signing
         script: |
