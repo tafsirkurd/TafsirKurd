@@ -29,15 +29,15 @@ workflows:
           # But plugin packages (share, local-notifications, etc.) at 8.0.x were written for
           # the 8.0.x API (call.reject, optional getString, color(fromHex:), JSArray=[Any]).
           # Pinning back to 8.0.0 makes all original plugin Swift code compile without patches.
-          python3 -c "
-f = 'ios/App/CapApp-SPM/Package.swift'
-t = open(f).read()
-t = t.replace('exact: \"8.2.0\"', 'exact: \"8.0.0\"')
-open(f, 'w').write(t)
-print('Package.swift patched to capacitor-swift-pm 8.0.0')
-print(open(f).read())
-"
-          # Remove any stale Package.resolved so Xcode re-resolves the new version
+          cat > /tmp/patch_pkg.py << 'PYEOF'
+          f = 'ios/App/CapApp-SPM/Package.swift'
+          t = open(f).read()
+          t = t.replace('exact: "8.2.0"', 'exact: "8.0.0"')
+          open(f, 'w').write(t)
+          print('Package.swift patched to capacitor-swift-pm 8.0.0')
+          print(open(f).read())
+          PYEOF
+          python3 /tmp/patch_pkg.py
           find ios -name "Package.resolved" -delete 2>/dev/null || true
           echo "Package.resolved cleared"
 
