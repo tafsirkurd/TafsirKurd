@@ -76,6 +76,8 @@ workflows:
               t = re.sub(r'call\.getArray\("([^"]+)"\)(?!,)', r'call.getArray("\1",[])', t)
               t = re.sub(r'call\.getObject\("([^"]+)"\)(?!,)', r'call.getObject("\1",[:])', t)
               t = re.sub(r'\.color\(fromHex:\s*([^)]+)\)', r'.color(argb: hexStringToARGB(\1))', t)
+              # Last: remove stale force-unwraps — vars were String?/etc in 8.0.x, now non-optional
+              t = re.sub(r'(\w+)!(?=[,\]\)])', r'\1', t)
               return t
 
           def inject_hex(t):
