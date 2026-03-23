@@ -53,10 +53,9 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Required for athan notifications on Android 13+ (API 33+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Required for exact-time prayer alarms on Android 12+ (API 31+) -->
+    <!-- Required for exact-time prayer alarms on Android 12+ (API 31+).
+         If user denies, app degrades silently (no athan, prayer times still shown). -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <!-- USE_EXACT_ALARM: auto-granted on Android 13+, no user dialog needed -->
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <!-- Required for voice tasbih speech recognition -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 </manifest>

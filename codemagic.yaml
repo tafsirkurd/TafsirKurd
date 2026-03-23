@@ -51,7 +51,7 @@ workflows:
                       if !title.isEmpty { ac.setValue(title, forKey: "subject") }
                       ac.completionWithItemsHandler = { _, _, _, _ in call.resolve([:]) }
                       self?.setCenteredPopover(ac)
-                      self?.bridge?.viewController?.present(ac, animated: true)
+                      UIApplication.shared.keyWindow?.rootViewController?.present(ac, animated: true)
                   }
               }
           }
@@ -69,21 +69,30 @@ workflows:
 
           def patch(t):
               t = re.sub(r'call\.reject\([^)]*\)', 'call.resolve([:])', t)
-              t = re.sub(r'(guard|if) let (\w+) = call\.getString\("([^"]+)"\)', r'\1 let \2 = Optional(call.getString("\3","")).filter({!$0.isEmpty})', t)
-              t = re.sub(r'(guard|if) let (\w+) = call\.getObject\("([^"]+)"\)', r'\1 let \2 = Optional(call.getObject("\3",[:]) ).filter({!$0.isEmpty})', t)
-              t = re.sub(r'(guard|if) let (\w+) = call\.getArray\("([^"]+)"\)', r'\1 let \2 = Optional(call.getArray("\3",[]) ).filter({!$0.isEmpty})', t)
-              # 5a. Typed getArray/getObject with .self arg (8.0.x API; guard-let form first)
-              t = re.sub(r'(guard|if) let (\w+) = call\.getArray\("([^"]+)",\s*\w+\.self\)', r'\1 let \2 = Optional(call.getArray("\3",[])).filter({!$0.isEmpty})', t)
-              t = re.sub(r'(guard|if) let (\w+) = call\.getObject\("([^"]+)",\s*\w+\.self\)', r'\1 let \2 = Optional(call.getObject("\3",[:]) ).filter({!$0.isEmpty})', t)
+              # guard/if let X = call.getString/getArray/getObject — use Optional()+comma condition (Optional.filter does not exist)
+              t = re.sub(r'(guard|if) let (\w+) = call\.getString\("([^"]+)"\)', r'\1 let \2 = Optional(call.getString("\3","")), !\2.isEmpty', t)
+              t = re.sub(r'(guard|if) let (\w+) = call\.getObject\("([^"]+)"\)', r'\1 let \2 = Optional(call.getObject("\3",[:]) ), !\2.isEmpty', t)
+              t = re.sub(r'(guard|if) let (\w+) = call\.getArray\("([^"]+)"\)', r'\1 let \2 = Optional(call.getArray("\3",[])), !\2.isEmpty', t)
+              # Typed .self forms (8.0.x API)
+              t = re.sub(r'(guard|if) let (\w+) = call\.getArray\("([^"]+)",\s*\w+\.self\)', r'\1 let \2 = Optional(call.getArray("\3",[])), !\2.isEmpty', t)
+              t = re.sub(r'(guard|if) let (\w+) = call\.getObject\("([^"]+)",\s*\w+\.self\)', r'\1 let \2 = Optional(call.getObject("\3",[:]) ), !\2.isEmpty', t)
               t = re.sub(r'call\.getArray\("([^"]+)",\s*\w+\.self\)', r'call.getArray("\1",[])', t)
               t = re.sub(r'call\.getObject\("([^"]+)",\s*\w+\.self\)', r'call.getObject("\1",[:])', t)
-              # 5b. JSTypes.coerceDictionaryToJSObject removed in 8.2.0
+              # JSTypes.coerceDictionaryToJSObject removed in 8.2.0
               t = re.sub(r'JSTypes\.coerceDictionaryToJSObject\(([^)]+)\)', r'(\1 as? JSObject)', t)
+              # PluginConfig (getConfig()) single-arg getters removed — guard/if let form
+              t = re.sub(r'(guard|if) let (\w+) = getConfig\(\)\.getString\("([^"]+)"\)', r'let \2 = getConfig().getString("\3",""); \1 !\2.isEmpty', t)
+              t = re.sub(r'(guard|if) let (\w+) = getConfig\(\)\.getArray\("([^"]+)"\)', r'let \2 = getConfig().getArray("\3",[]); \1 !\2.isEmpty', t)
+              # PluginConfig single-arg getters — plain form
+              t = re.sub(r'getConfig\(\)\.getString\("([^"]+)"\)(?!,)', r'getConfig().getString("\1","")', t)
+              t = re.sub(r'getConfig\(\)\.getArray\("([^"]+)"\)(?!,)', r'getConfig().getArray("\1",[])', t)
+              t = re.sub(r'getConfig\(\)\.getObject\("([^"]+)"\)(?!,)', r'getConfig().getObject("\1",[:])', t)
+              # Remaining one-arg call.get* forms
               t = re.sub(r'call\.getString\("([^"]+)"\)(?!,)', r'call.getString("\1","")', t)
               t = re.sub(r'call\.getArray\("([^"]+)"\)(?!,)', r'call.getArray("\1",[])', t)
               t = re.sub(r'call\.getObject\("([^"]+)"\)(?!,)', r'call.getObject("\1",[:])', t)
               t = re.sub(r'\.color\(fromHex:\s*([^)]+)\)', r'.color(argb: hexStringToARGB(\1))', t)
-              # Last: remove stale force-unwraps — vars were String?/etc in 8.0.x, now non-optional
+              # Remove stale force-unwraps from vars that were String?/etc in 8.0.x, now non-optional
               t = re.sub(r'(\w+)!(?=[,\]\)])', r'\1', t)
               return t
 
@@ -119,7 +128,7 @@ workflows:
 
           ph = 'node_modules/@capacitor/push-notifications/ios/Sources/PushNotificationsPlugin/PushNotificationsHandler.swift'
           if os.path.exists(ph):
-              t = rd(ph)
+              t = patch(rd(ph))
               t = re.sub(r'if let optionsArray = self\.plugin\?\.getConfig\(\)\.getArray\("presentationOptions"\)\s*as\?\s*\[String\]', 'let optionsArray = (self.plugin?.getConfig().getArray("presentationOptions",[]) as? [String]) ?? []; if !optionsArray.isEmpty', t)
               t = re.sub(r'self\.plugin\?\.getConfig\(\)\.getArray\("presentationOptions"\)', 'self.plugin?.getConfig().getArray("presentationOptions",[])', t)
               wr(ph, t)
