@@ -52,7 +52,7 @@ workflows:
 
                   let title = call.getString("title", "")
 
-                  let files = call.getArray("files", [Any]())
+                  let files: JSArray = call.getArray("files", JSArray())
                   if !files.isEmpty {
                       files.forEach { file in
                           if let url = file as? String, let fileUrl = URL(string: url) {
@@ -93,9 +93,13 @@ workflows:
           echo "Patched SharePlugin.swift OK"
 
           # Fix @capacitor-community/media: getArray("sort") one-arg optional removed in 8.2.0
-          sed -i 's/call\.getArray("sort")/call.getArray("sort", [Any]())/g' \
-            node_modules/@capacitor-community/media/ios/Sources/MediaPlugin/MediaPlugin.swift
-          echo "Patched MediaPlugin.swift OK"
+          python3 -c "
+f='node_modules/@capacitor-community/media/ios/Sources/MediaPlugin/MediaPlugin.swift'
+t=open(f).read()
+t=t.replace('call.getArray(\"sort\") as? [[String: Any]]','call.getArray(\"sort\", JSObject.self)')
+open(f,'w').write(t)
+print('Patched MediaPlugin.swift OK')
+"
 
       - name: Capacitor sync iOS
         script: npx cap sync ios
