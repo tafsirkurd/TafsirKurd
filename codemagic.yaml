@@ -310,6 +310,13 @@ workflows:
               t = re.sub(r'self\.plugin\?\.getConfig\(\)\.getArray\("presentationOptions"\)', 'self.plugin?.getConfig().getArray("presentationOptions",[])', t)
               wr(ph, t)
 
+          sb = 'node_modules/@capacitor/status-bar/ios/Sources/StatusBarPlugin/StatusBar.swift'
+          if os.path.exists(sb):
+              t = rd(sb)
+              t = t.replace('bridge.viewController?.view.frame', 'UIApplication.shared.keyWindow?.rootViewController?.view.frame')
+              t = t.replace('bridge.viewController?.view.window', 'UIApplication.shared.keyWindow?.rootViewController?.view.window')
+              wr(sb, t)
+
           print('All plugin patches applied!')
           PYEOF
           python3 /tmp/patch_plugins.py
