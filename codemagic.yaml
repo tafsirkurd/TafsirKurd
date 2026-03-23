@@ -20,8 +20,12 @@ workflows:
       - name: Install dependencies
         script: npm install
 
+      - name: Capacitor sync iOS
+        script: npx cap sync ios
+
       - name: Patch plugins for capacitor-swift-pm 8.2.0
         script: |
+          # Runs AFTER cap sync so cap sync cannot restore the original files.
           # Write SharePlugin.swift via Python — avoids heredoc encoding issues.
           # call.reject removed entirely (replaced with call.resolve) since reject has member-lookup
           # issues in capacitor-swift-pm 8.2.0 regardless of argument count.
@@ -89,9 +93,6 @@ workflows:
           print('Patched MediaPlugin.swift OK')
           PYEOF
           python3 /tmp/patch_media.py
-
-      - name: Capacitor sync iOS
-        script: npx cap sync ios
 
       - name: Set up keychain and signing
         script: |
