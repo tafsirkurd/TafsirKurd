@@ -85,6 +85,64 @@ workflows:
           PYEOF
           python3 /tmp/patch_media.py
 
+          # Fix @capacitor/splash-screen: one-arg getString + color(fromHex:) → color(argb:) in 8.2.0
+          cat > /tmp/patch_splash.py << 'PYEOF'
+          f = 'node_modules/@capacitor/splash-screen/ios/Sources/SplashScreenPlugin/SplashScreenPlugin.swift'
+          t = open(f).read()
+          helper = '\nprivate func hexStringToARGB(_ hex: String) -> UInt32 {\n    let h = hex.replacingOccurrences(of: "#", with: "")\n    let v = UInt32(h, radix: 16) ?? 0\n    return h.count <= 6 ? (0xFF000000 | v) : v\n}\n'
+          old = ('        if let backgroundColor = getConfig().getString("backgroundColor") {\n'
+                 '            config.backgroundColor = UIColor.capacitor.color(fromHex: backgroundColor)\n'
+                 '        }\n'
+                 '        if let spinnerStyle = getConfig().getString("iosSpinnerStyle") {\n'
+                 '            switch spinnerStyle.lowercased() {\n'
+                 '            case "small":\n'
+                 '                config.spinnerStyle = .medium\n'
+                 '            default:\n'
+                 '                config.spinnerStyle = .large\n'
+                 '            }\n'
+                 '        }\n'
+                 '        if let spinnerColor = getConfig().getString("spinnerColor") {\n'
+                 '            config.spinnerColor = UIColor.capacitor.color(fromHex: spinnerColor)\n'
+                 '        }')
+          new = ('        let _bgC = getConfig().getString("backgroundColor", "")\n'
+                 '        if !_bgC.isEmpty { config.backgroundColor = UIColor.capacitor.color(argb: hexStringToARGB(_bgC)) }\n'
+                 '        let _ssStr = getConfig().getString("iosSpinnerStyle", "")\n'
+                 '        if !_ssStr.isEmpty {\n'
+                 '            switch _ssStr.lowercased() {\n'
+                 '            case "small":\n'
+                 '                config.spinnerStyle = .medium\n'
+                 '            default:\n'
+                 '                config.spinnerStyle = .large\n'
+                 '            }\n'
+                 '        }\n'
+                 '        let _scStr = getConfig().getString("spinnerColor", "")\n'
+                 '        if !_scStr.isEmpty { config.spinnerColor = UIColor.capacitor.color(argb: hexStringToARGB(_scStr)) }')
+          t = t.replace(old, new)
+          t = t.rstrip() + '\n' + helper
+          open(f, 'w').write(t)
+          print('Patched SplashScreenPlugin.swift OK')
+          PYEOF
+          python3 /tmp/patch_splash.py
+
+          # Fix @capacitor/status-bar: color(fromHex:) → color(argb:) + one-arg getString in 8.2.0
+          cat > /tmp/patch_statusbar.py << 'PYEOF'
+          f = 'node_modules/@capacitor/status-bar/ios/Sources/StatusBarPlugin/StatusBarPlugin.swift'
+          t = open(f).read()
+          helper = '\nprivate func hexStringToARGB(_ hex: String) -> UInt32 {\n    let h = hex.replacingOccurrences(of: "#", with: "")\n    let v = UInt32(h, radix: 16) ?? 0\n    return h.count <= 6 ? (0xFF000000 | v) : v\n}\n'
+          t = t.replace(
+              '        if let colorConfig = getConfig().getString("backgroundColor"), let color = UIColor.capacitor.color(fromHex: colorConfig) {\n            config.backgroundColor = color\n        }\n        if let configStyle = getConfig().getString("style") {\n            config.style = style(fromString: configStyle)\n        }',
+              '        let _bgStr = getConfig().getString("backgroundColor", "")\n        if !_bgStr.isEmpty { config.backgroundColor = UIColor.capacitor.color(argb: hexStringToARGB(_bgStr)) }\n        let _styleStr = getConfig().getString("style", "")\n        if !_styleStr.isEmpty { config.style = style(fromString: _styleStr) }'
+          )
+          t = t.replace(
+              '        guard\n            let hexString = call.options["color"] as? String,\n            let color = UIColor.capacitor.color(fromHex: hexString)\n        else { return }',
+              '        guard let hexString = call.options["color"] as? String else { return }\n        let color = UIColor.capacitor.color(argb: hexStringToARGB(hexString))'
+          )
+          t = t.rstrip() + '\n' + helper
+          open(f, 'w').write(t)
+          print('Patched StatusBarPlugin.swift OK')
+          PYEOF
+          python3 /tmp/patch_statusbar.py
+
       - name: Set up keychain and signing
         script: |
           keychain initialize
