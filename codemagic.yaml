@@ -40,8 +40,6 @@ workflows:
             @capacitor/haptics@8.0.1 \
             @capacitor/local-notifications@8.0.2 \
             @capacitor/preferences@8.0.1 \
-            @capacitor/push-notifications@8.0.2 \
-            @capacitor/splash-screen@8.0.1 \
             --save --save-exact --legacy-peer-deps
 
       - name: Verify removed plugins absent from node_modules
@@ -62,9 +60,21 @@ workflows:
             npm ls @capacitor/share || true
             exit 1
           fi
+          if [ -d node_modules/@capacitor/push-notifications ]; then
+            echo "ERROR: @capacitor/push-notifications found in node_modules — overrides not working"
+            npm ls @capacitor/push-notifications || true
+            exit 1
+          fi
+          if [ -d node_modules/@capacitor/splash-screen ]; then
+            echo "ERROR: @capacitor/splash-screen found in node_modules — overrides not working"
+            npm ls @capacitor/splash-screen || true
+            exit 1
+          fi
           echo "@capacitor/status-bar — absent (OK)"
           echo "@capacitor-community/keep-awake — absent (OK)"
           echo "@capacitor/share — absent (OK)"
+          echo "@capacitor/push-notifications — absent (OK)"
+          echo "@capacitor/splash-screen — absent (OK)"
 
       - name: Verify Capacitor versions
         script: |
@@ -79,13 +89,13 @@ workflows:
               core|ios|android|cli)
                 expected="8.2.0"
                 ;;
-              browser|local-notifications|push-notifications)
+              browser|local-notifications)
                 expected="8.0.2"
                 ;;
               filesystem)
                 expected="8.1.2"
                 ;;
-              app|haptics|preferences|splash-screen)
+              app|haptics|preferences)
                 expected="8.0.1"
                 ;;
               *)
@@ -122,7 +132,7 @@ workflows:
 
           # 2. Scan ALL iOS project files for removed plugin references
           echo "Scanning ios/App for removed plugin strings..."
-          if grep -R "CapacitorCommunityKeepAwake\|KeepAwakePlugin\|CapacitorStatusBar\|StatusBarPlugin\|CapacitorShare\|SharePlugin" ios/App; then
+          if grep -R "CapacitorCommunityKeepAwake\|KeepAwakePlugin\|CapacitorStatusBar\|StatusBarPlugin\|CapacitorShare\|SharePlugin\|CapacitorPushNotifications\|PushNotificationsPlugin\|CapacitorSplashScreen\|SplashScreenPlugin" ios/App; then
             echo "ERROR: Removed plugins still found in iOS project files — see matches above"
             exit 1
           fi
