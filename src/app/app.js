@@ -5141,21 +5141,19 @@ App.openLogin=function(){
 
   function signInWithApple(){
     if(!S.supabase){showMsg(t('error.system_not_ready'),'error');return}
-    var redirectUrl='com.tafsirkurd.app://auth/callback';
-    if(!window.Capacitor||!window.Capacitor.isNativePlatform()){
-      redirectUrl=window.location.origin+'/app/index.html';
-    }
-    S.supabase.auth.signInWithOAuth({
-      provider:'apple',
-      options:{redirectTo:redirectUrl,skipBrowserRedirect:true,scopes:'name email'}
+    var plugin=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SignInWithApple;
+    if(!plugin){showMsg(t('error.generic'),'error');return}
+    plugin.authorize().then(function(res){
+      var token=res&&res.response&&res.response.identityToken;
+      if(!token){showMsg(t('error.generic'),'error');return null}
+      return S.supabase.auth.signInWithIdToken({provider:'apple',token:token});
     }).then(function(resp){
+      if(!resp)return;
       if(resp.error){showMsg(resp.error.message,'error');return}
-      if(resp.data&&resp.data.url){
-        if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser){
-          window.Capacitor.Plugins.Browser.open({url:resp.data.url});
-        }else{
-          window.location.href=resp.data.url;
-        }
+      var session=resp.data&&resp.data.session;
+      if(session){
+        setUserFromSession(session);
+        App.closeLogin();
       }
     }).catch(function(e){showMsg(e.message||t('error.generic'),'error')});
   }

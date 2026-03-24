@@ -40,6 +40,7 @@ workflows:
             @capacitor/haptics@8.0.1 \
             @capacitor/local-notifications@8.0.1 \
             @capacitor/preferences@8.0.1 \
+            @capacitor-community/apple-sign-in@7.1.0 \
             --save --save-exact --legacy-peer-deps
 
       - name: Verify removed plugins absent from node_modules
