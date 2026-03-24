@@ -346,8 +346,12 @@ workflows:
           # Unwrap CMS envelope to raw plist
           security cms -D -i /tmp/profile.mobileprovision > /tmp/profile.plist
 
-          # Extract UUID using PlistBuddy (most reliable on macOS)
+          # Extract UUID using PlistBuddy
           UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /tmp/profile.plist)
+          if [ -z "$UUID" ]; then
+            echo "ERROR: UUID is empty — profile decode failed. Check CM_PROVISIONING_PROFILE value."
+            exit 1
+          fi
           echo "Profile UUID: $UUID"
 
           # Log profile details
@@ -359,7 +363,7 @@ workflows:
           # Install profile with UUID filename (required by Xcode)
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/"$UUID".mobileprovision
-          echo "Installed: ~/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
+          echo "Installed: $UUID.mobileprovision"
 
           xcode-project use-profiles --project "$XCODE_PROJECT"
 
