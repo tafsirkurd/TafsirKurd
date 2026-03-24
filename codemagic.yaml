@@ -66,20 +66,26 @@ workflows:
 
       - name: Verify Capacitor versions
         script: |
-          node -e "
-          const p=require('./node_modules/@capacitor/core/package.json');
-          console.log('@capacitor/core installed:', p.version);
-          "
-          # Print all installed @capacitor/* versions from node_modules
-          echo 'Installed @capacitor/* versions:'
+          echo "Installed @capacitor/* versions:"
+          ok=true
           for d in node_modules/@capacitor/*/; do
-            pkg=\$(basename \$d)
-            ver=\$(node -e "try{console.log(require('./@capacitor/\${pkg}/package.json').version)}catch(e){}" 2>/dev/null || echo '?')
-            echo "  @capacitor/\${pkg}: \${ver}"
+            pkg=$(basename "$d")
+            ver=$(node -p "require('./node_modules/@capacitor/${pkg}/package.json').version" 2>/dev/null || echo "?")
+            echo "  @capacitor/${pkg}: ${ver}"
+            if [ "$pkg" = "filesystem" ]; then
+              if [ "$ver" != "8.0.0" ]; then
+                echo "  ERROR: @capacitor/filesystem must be 8.0.0 (got ${ver})"
+                ok=false
+              fi
+            else
+              if [ "$ver" != "8.0.1" ]; then
+                echo "  ERROR: @capacitor/${pkg} must be 8.0.1 (got ${ver})"
+                ok=false
+              fi
+            fi
           done
-          # Fail if any 8.2.x is installed in node_modules
-          if find node_modules/@capacitor -name package.json -maxdepth 2 | xargs grep -l '"version": "8\.2\.' 2>/dev/null; then
-            echo "ERROR: 8.2.x capacitor package found in node_modules — aborting"
+          if [ "$ok" = "false" ]; then
+            echo "Version mismatch — aborting"
             exit 1
           fi
           echo "All @capacitor/* versions OK"
