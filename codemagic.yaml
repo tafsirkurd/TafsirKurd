@@ -237,147 +237,6 @@ workflows:
           SPLASHEOF
           echo "SplashScreenPlugin rewritten"
 
-          # ── StatusBar: full rewrite (bridge.webView + bridge.viewController removed in 8.2.0) ─
-          cat > node_modules/@capacitor/status-bar/ios/Sources/StatusBarPlugin/StatusBar.swift << 'STATUSBARHELPEREOF'
-          import Foundation
-          import Capacitor
-          import WebKit
-          public class StatusBar {
-              private var bridge: CAPBridgeProtocol
-              private var isOverlayingWebview = true
-              private var backgroundColor = UIColor.black
-              private var backgroundView: UIView?
-              private var observers: [NSObjectProtocol] = []
-              init(bridge: CAPBridgeProtocol, config: StatusBarConfig) {
-                  self.bridge = bridge
-                  setupObservers(with: config)
-              }
-              deinit {
-                  observers.forEach { NotificationCenter.default.removeObserver($0) }
-              }
-              // iOS 13+ multi-scene safe key window access (no deprecated keyWindow)
-              private func activeKeyWindow() -> UIWindow? {
-                  UIApplication.shared.connectedScenes
-                      .filter { $0.activationState == .foregroundActive }
-                      .compactMap { $0 as? UIWindowScene }
-                      .first?.windows.first(where: { $0.isKeyWindow })
-              }
-              private func setupObservers(with config: StatusBarConfig) {
-                  observers.append(NotificationCenter.default.addObserver(forName: .capacitorViewDidAppear, object: .none, queue: .none) { [weak self] _ in
-                      self?.handleViewDidAppear(config: config)
-                  })
-                  observers.append(NotificationCenter.default.addObserver(forName: .capacitorStatusBarTapped, object: .none, queue: .none) { [weak self] _ in
-                      self?.bridge.triggerJSEvent(eventName: "statusTap", target: "window")
-                  })
-                  observers.append(NotificationCenter.default.addObserver(forName: .capacitorViewWillTransition, object: .none, queue: .none) { [weak self] _ in
-                      self?.handleViewWillTransition()
-                  })
-              }
-              private func handleViewDidAppear(config: StatusBarConfig) {
-                  setStyle(config.style)
-                  setBackgroundColor(config.backgroundColor)
-                  setOverlaysWebView(config.overlaysWebView)
-              }
-              private func handleViewWillTransition() {
-                  DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                      self?.resizeStatusBarBackgroundView()
-                      self?.resizeWebView()
-                  }
-              }
-              func setStyle(_ style: UIStatusBarStyle) { bridge.statusBarStyle = style }
-              func setBackgroundColor(_ color: UIColor) {
-                  backgroundColor = color
-                  backgroundView?.backgroundColor = color
-              }
-              func setAnimation(_ animation: String) {
-                  if animation == "SLIDE" { bridge.statusBarAnimation = .slide }
-                  else if animation == "NONE" { bridge.statusBarAnimation = .none }
-                  else { bridge.statusBarAnimation = .fade }
-              }
-              func hide(animation: String) {
-                  setAnimation(animation)
-                  if bridge.statusBarVisible {
-                      bridge.statusBarVisible = false
-                      DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                          self?.resizeWebView()
-                          self?.backgroundView?.removeFromSuperview()
-                          self?.backgroundView?.isHidden = true
-                      }
-                  }
-              }
-              func show(animation: String) {
-                  setAnimation(animation)
-                  if !bridge.statusBarVisible {
-                      bridge.statusBarVisible = true
-                      DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [self] in
-                          resizeWebView()
-                          if !isOverlayingWebview {
-                              resizeStatusBarBackgroundView()
-                              activeKeyWindow()?.rootViewController?.view.addSubview(backgroundView!)
-                          }
-                          backgroundView?.isHidden = false
-                      }
-                  }
-              }
-              func getInfo() -> StatusBarInfo {
-                  let style: String
-                  switch bridge.statusBarStyle {
-                  case .default: style = "DEFAULT"
-                  case .lightContent: style = "DARK"
-                  case .darkContent: style = "LIGHT"
-                  @unknown default: style = "DEFAULT"
-                  }
-                  return StatusBarInfo(overlays: isOverlayingWebview, visible: bridge.statusBarVisible,
-                      style: style, color: UIColor.capacitor.hex(fromColor: backgroundColor),
-                      height: getStatusBarFrame().size.height)
-              }
-              func setOverlaysWebView(_ overlay: Bool) {
-                  if overlay == isOverlayingWebview { return }
-                  isOverlayingWebview = overlay
-                  if overlay {
-                      backgroundView?.removeFromSuperview()
-                  } else {
-                      initializeBackgroundViewIfNeeded()
-                      activeKeyWindow()?.rootViewController?.view.addSubview(backgroundView!)
-                  }
-                  resizeWebView()
-              }
-              private func resizeWebView() {
-                  guard let window = activeKeyWindow(),
-                        let rootView = window.rootViewController?.view else { return }
-                  let bounds = window.bounds
-                  rootView.frame = bounds
-                  let statusBarHeight = getStatusBarFrame().size.height
-                  var rootViewFrame = rootView.frame
-                  if isOverlayingWebview {
-                      let safeAreaTop = rootView.safeAreaInsets.top
-                      if statusBarHeight >= safeAreaTop && safeAreaTop > 0 {
-                          rootViewFrame.origin.y = safeAreaTop == 40 ? 20 : statusBarHeight - safeAreaTop
-                      } else {
-                          rootViewFrame.origin.y = 0
-                      }
-                  } else {
-                      rootViewFrame.origin.y = statusBarHeight
-                  }
-                  rootViewFrame.size.height -= rootViewFrame.origin.y
-                  rootView.frame = rootViewFrame
-              }
-              private func resizeStatusBarBackgroundView() { backgroundView?.frame = getStatusBarFrame() }
-              private func getStatusBarFrame() -> CGRect {
-                  return activeKeyWindow()?.windowScene?.statusBarManager?.statusBarFrame ?? .zero
-              }
-              private func initializeBackgroundViewIfNeeded() {
-                  if backgroundView == nil {
-                      backgroundView = UIView(frame: getStatusBarFrame())
-                      backgroundView!.backgroundColor = backgroundColor
-                      backgroundView!.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
-                      backgroundView!.isHidden = !bridge.statusBarVisible
-                  }
-              }
-          }
-          STATUSBARHELPEREOF
-          echo "StatusBar (helper) rewritten"
-
           # ── All other plugins: regex patches ───────────────────────────────────
           cat > /tmp/patch_plugins.py << 'PYEOF'
           import re, os
@@ -450,6 +309,23 @@ workflows:
               t = re.sub(r'if let optionsArray = self\.plugin\?\.getConfig\(\)\.getArray\("presentationOptions"\)\s*as\?\s*\[String\]', 'let optionsArray = (self.plugin?.getConfig().getArray("presentationOptions",[]) as? [String]) ?? []; if !optionsArray.isEmpty', t)
               t = re.sub(r'self\.plugin\?\.getConfig\(\)\.getArray\("presentationOptions"\)', 'self.plugin?.getConfig().getArray("presentationOptions",[])', t)
               wr(ph, t)
+
+          # StatusBar.swift — bridge.webView and bridge.viewController both removed in 8.2.0 binary.
+          # Use bridge.getWebView() which is the current Capacitor API.
+          # getWebView() returns WKWebView? so .superview, .window, .safeAreaInsets, .frame all apply directly.
+          sb = 'node_modules/@capacitor/status-bar/ios/Sources/StatusBarPlugin/StatusBar.swift'
+          if os.path.exists(sb):
+              t = rd(sb)
+              # bridge.webView → bridge.getWebView()
+              t = t.replace('bridge.webView', 'bridge.getWebView()')
+              # bridge.viewController?.view.window?.windowScene?.keyWindow?.bounds
+              # → bridge.getWebView()?.window?.bounds  (get window from the webview itself)
+              t = t.replace('bridge.viewController?.view.window?.windowScene?.keyWindow?.bounds', 'bridge.getWebView()?.window?.bounds')
+              # bridge.viewController?.view.frame = bounds → webView?.superview?.frame = bounds
+              t = t.replace('bridge.viewController?.view.frame = bounds', 'bridge.getWebView()?.superview?.frame = bounds')
+              # bridge.viewController?.view.window?.windowScene?.statusBarManager
+              t = t.replace('bridge.viewController?.view.window?.windowScene?.statusBarManager', 'bridge.getWebView()?.window?.windowScene?.statusBarManager')
+              wr(sb, t)
 
           print('All plugin patches applied!')
           PYEOF
