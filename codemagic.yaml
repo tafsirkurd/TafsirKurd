@@ -23,6 +23,9 @@ workflows:
           rm -rf ios/App/Pods ios/App/Podfile.lock ios/App/DerivedData
           rm -rf ~/Library/Developer/Xcode/DerivedData/*
           rm -rf ~/Library/Caches/org.swift.swiftpm
+          # Remove SPM package cache to force re-resolution of Package.swift
+          rm -rf ios/App/CapApp-SPM/.build
+          rm -rf ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
 
       - name: Install dependencies
         script: npm install --legacy-peer-deps
@@ -63,6 +66,17 @@ workflows:
             exit 1
           fi
           echo "Package.swift OK — capacitor-swift-pm exact 8.0.1 confirmed"
+
+          # Confirm removed plugins are not present
+          if grep -q 'StatusBar\|status-bar' ios/App/CapApp-SPM/Package.swift; then
+            echo "ERROR: CapacitorStatusBar still present in Package.swift — must be removed"
+            exit 1
+          fi
+          if grep -q 'KeepAwake\|keep-awake' ios/App/CapApp-SPM/Package.swift; then
+            echo "ERROR: CapacitorCommunityKeepAwake still present in Package.swift — must be removed"
+            exit 1
+          fi
+          echo "Removed plugins confirmed absent from Package.swift"
 
 
       - name: Set up keychain and signing
