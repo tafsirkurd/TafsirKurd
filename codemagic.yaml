@@ -23,6 +23,9 @@ workflows:
       - name: Capacitor sync iOS
         script: |
           rm -rf ios/App/Pods ios/App/DerivedData
+          # Wipe Xcode SPM cache so old capacitor-swift-pm 8.2.0 binary is not reused
+          rm -rf ~/Library/Developer/Xcode/DerivedData/App-*
+          rm -rf ~/Library/Caches/org.swift.swiftpm
           npx cap sync ios
 
 
