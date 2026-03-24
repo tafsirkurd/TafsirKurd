@@ -68,36 +68,36 @@ workflows:
 
       - name: Verify Capacitor versions
         script: |
-          # Expected versions keyed by package name (space-separated pairs)
-          declare -A EXPECTED
-          EXPECTED[core]=8.2.0
-          EXPECTED[ios]=8.2.0
-          EXPECTED[android]=8.2.0
-          EXPECTED[cli]=8.2.0
-          EXPECTED[app]=8.0.1
-          EXPECTED[browser]=8.0.2
-          EXPECTED[filesystem]=8.1.2
-          EXPECTED[haptics]=8.0.1
-          EXPECTED[local-notifications]=8.0.2
-          EXPECTED[preferences]=8.0.1
-          EXPECTED[push-notifications]=8.0.2
-          EXPECTED[splash-screen]=8.0.1
+          set -e
           echo "Installed @capacitor/* versions:"
           ok=true
           for d in node_modules/@capacitor/*/; do
             [ -d "$d" ] || continue
             pkg=$(basename "$d")
             ver=$(node -p "require('./node_modules/@capacitor/${pkg}/package.json').version" 2>/dev/null || echo "?")
-            if [ -n "${EXPECTED[$pkg]+x}" ]; then
-              expected="${EXPECTED[$pkg]}"
-              if [ "$ver" = "$expected" ]; then
-                echo "@capacitor/${pkg}: ${ver} (OK)"
-              else
-                echo "@capacitor/${pkg}: ${ver} (ERROR: expected ${expected})"
-                ok=false
-              fi
+            case "$pkg" in
+              core|ios|android|cli)
+                expected="8.2.0"
+                ;;
+              browser|local-notifications|push-notifications)
+                expected="8.0.2"
+                ;;
+              filesystem)
+                expected="8.1.2"
+                ;;
+              app|haptics|preferences|splash-screen)
+                expected="8.0.1"
+                ;;
+              *)
+                echo "@capacitor/${pkg}: ${ver} (skipped)"
+                continue
+                ;;
+            esac
+            if [ "$ver" = "$expected" ]; then
+              echo "@capacitor/${pkg}: ${ver} (OK)"
             else
-              echo "@capacitor/${pkg}: ${ver} (skipped)"
+              echo "@capacitor/${pkg}: ${ver} (ERROR: expected ${expected})"
+              ok=false
             fi
           done
           if [ "$ok" = "false" ]; then
