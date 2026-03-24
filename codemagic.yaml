@@ -17,21 +17,52 @@ workflows:
       xcode: 16.2
 
     scripts:
-      - name: Clean install
+      - name: Full clean
         script: |
-          # Full clean — remove all caches and lockfiles
           rm -rf node_modules package-lock.json
           rm -rf ios/App/Pods ios/App/Podfile.lock ios/App/DerivedData
-          rm -rf ~/Library/Developer/Xcode/DerivedData/App-*
+          rm -rf ~/Library/Developer/Xcode/DerivedData/*
           rm -rf ~/Library/Caches/org.swift.swiftpm
-          # Fresh install with exact versions
-          npm install --legacy-peer-deps
-          npm install @capacitor/core@8.0.1 @capacitor/ios@8.0.1 @capacitor/cli@8.0.1 --save --save-exact --legacy-peer-deps
-          # Verify installed versions
-          node -e "const l=require('./package-lock.json'); ['@capacitor/core','@capacitor/ios','@capacitor/cli','@capacitor/status-bar','@capacitor/push-notifications','@capacitor/splash-screen'].forEach(p => console.log(p, l.packages['node_modules/'+p]?.version))"
+
+      - name: Install dependencies
+        script: npm install --legacy-peer-deps
+
+      - name: Force exact Capacitor core versions
+        script: |
+          npm install \
+            @capacitor/core@8.0.1 \
+            @capacitor/ios@8.0.1 \
+            @capacitor/cli@8.0.1 \
+            --save --save-exact --legacy-peer-deps
+
+      - name: Verify Capacitor versions
+        script: |
+          node -e "
+          const p=require('./package.json').dependencies;
+          console.log('Capacitor versions:');
+          Object.keys(p).filter(x=>x.includes('capacitor')).forEach(k=>{
+            console.log(k, p[k]);
+          });
+          "
+          # Fail if any 8.2.x is present
+          if grep -r '"8\.2\.' package.json | grep capacitor; then
+            echo "ERROR: 8.2.x capacitor package found — aborting"
+            exit 1
+          fi
+          echo "All @capacitor/* versions OK (8.0.x only)"
 
       - name: Capacitor sync iOS
         script: npx cap sync ios
+
+      - name: Verify Package.swift
+        script: |
+          SPMVER=$(grep 'capacitor-swift-pm' ios/App/CapApp-SPM/Package.swift | grep -o '"8\.[^"]*"')
+          echo "capacitor-swift-pm version in Package.swift: $SPMVER"
+          if [[ "$SPMVER" != '"8.0.1"' ]]; then
+            echo "ERROR: capacitor-swift-pm is $SPMVER, expected \"8.0.1\""
+            exit 1
+          fi
+          echo "Package.swift OK — capacitor-swift-pm exact 8.0.1 confirmed"
 
 
       - name: Set up keychain and signing
