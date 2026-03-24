@@ -21,7 +21,8 @@ workflows:
         script: |
           rm -rf node_modules package-lock.json
           rm -rf ios/App/Pods ios/App/Podfile.lock ios/App/DerivedData
-          rm -rf ios/App/CapApp-SPM ios/App/.build
+          rm -rf ios/App/CapApp-SPM/.build ios/App/CapApp-SPM/Package.resolved
+          rm -rf ios/App/.build
           rm -rf ~/Library/Developer/Xcode/DerivedData/*
           rm -rf ~/Library/Caches/org.swift.swiftpm
 
@@ -100,6 +101,28 @@ workflows:
             exit 1
           fi
           echo "All official @capacitor/* versions OK"
+
+      - name: Verify iOS project structure
+        script: |
+          # CapApp-SPM must exist — its presence tells the Capacitor CLI to use
+          # SPM mode instead of CocoaPods. If it's missing, cap sync ios will look
+          # for a Podfile (which we don't have) and fail with ENOENT.
+          fail=false
+          for f in \
+            ios/App/App.xcodeproj/project.pbxproj \
+            ios/App/CapApp-SPM/Package.swift \
+            ios/App/CapApp-SPM/Sources/CapApp-SPM/CapApp-SPM.swift; do
+            if [ ! -f "$f" ]; then
+              echo "ERROR: required file missing: $f"
+              fail=true
+            else
+              echo "OK: $f"
+            fi
+          done
+          if [ "$fail" = "true" ]; then
+            echo "iOS project structure incomplete — cannot continue"
+            exit 1
+          fi
 
       - name: Capacitor sync iOS
         script: npx cap sync ios
