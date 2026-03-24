@@ -76,33 +76,37 @@ workflows:
           # Decode provisioning profile (printf avoids trailing newline that corrupts base64)
           printf '%s' "$CM_PROVISIONING_PROFILE" | base64 --decode > /tmp/profile.mobileprovision
 
-          echo "Profile file size:"
+          echo "Decoded provisioning profile size:"
           wc -c /tmp/profile.mobileprovision
 
+          echo "Trying to decode CMS payload..."
           security cms -D -i /tmp/profile.mobileprovision > /tmp/profile.plist
 
-          echo "Reading profile values..."
-
-          UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /tmp/profile.plist 2>/dev/null)
-          NAME=$(/usr/libexec/PlistBuddy -c "Print Name" /tmp/profile.plist 2>/dev/null)
-          TEAM=$(/usr/libexec/PlistBuddy -c "Print TeamIdentifier:0" /tmp/profile.plist 2>/dev/null)
-          APPID=$(/usr/libexec/PlistBuddy -c "Print Entitlements:application-identifier" /tmp/profile.plist 2>/dev/null)
-          SIGNIN=$(/usr/libexec/PlistBuddy -c "Print Entitlements:com.apple.developer.applesignin" /tmp/profile.plist 2>/dev/null)
+          echo "Reading provisioning profile fields..."
+          UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /tmp/profile.plist 2>/dev/null || true)
+          NAME=$(/usr/libexec/PlistBuddy -c "Print Name" /tmp/profile.plist 2>/dev/null || true)
+          APPID=$(/usr/libexec/PlistBuddy -c "Print Entitlements:application-identifier" /tmp/profile.plist 2>/dev/null || true)
+          TEAM=$(/usr/libexec/PlistBuddy -c "Print TeamIdentifier:0" /tmp/profile.plist 2>/dev/null || true)
+          SIGNIN=$(/usr/libexec/PlistBuddy -c "Print Entitlements:com.apple.developer.applesignin" /tmp/profile.plist 2>/dev/null || true)
 
           echo "Profile name: $NAME"
           echo "UUID: $UUID"
-          echo "Team: $TEAM"
           echo "App ID: $APPID"
+          echo "Team: $TEAM"
           echo "Sign in with Apple: $SIGNIN"
 
-          if [ -z "$UUID" ]; then
-            echo "ERROR: Provisioning profile UUID is empty. Profile is invalid or base64 is broken."
+          if [ ! -s /tmp/profile.mobileprovision ]; then
+            echo "ERROR: Decoded provisioning profile file is empty"
             exit 1
           fi
 
-          # Install profile with UUID filename (required by Xcode)
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/"$UUID".mobileprovision
+          if [ -z "$UUID" ]; then
+            echo "ERROR: Provisioning profile UUID is empty. CM_PROVISIONING_PROFILE is invalid, truncated, or corrupted."
+            exit 1
+          fi
+
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp /tmp/profile.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
           echo "Installed: $UUID.mobileprovision"
 
           xcode-project use-profiles --project "$XCODE_PROJECT"
