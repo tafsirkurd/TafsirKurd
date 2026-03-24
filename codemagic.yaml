@@ -17,16 +17,21 @@ workflows:
       xcode: 16.2
 
     scripts:
-      - name: Install dependencies
-        script: npm install --legacy-peer-deps
-
-      - name: Capacitor sync iOS
+      - name: Clean install
         script: |
-          rm -rf ios/App/Pods ios/App/DerivedData
-          # Wipe Xcode SPM cache so old capacitor-swift-pm 8.2.0 binary is not reused
+          # Full clean — remove all caches and lockfiles
+          rm -rf node_modules package-lock.json
+          rm -rf ios/App/Pods ios/App/Podfile.lock ios/App/DerivedData
           rm -rf ~/Library/Developer/Xcode/DerivedData/App-*
           rm -rf ~/Library/Caches/org.swift.swiftpm
-          npx cap sync ios
+          # Fresh install with exact versions
+          npm install --legacy-peer-deps
+          npm install @capacitor/core@8.0.1 @capacitor/ios@8.0.1 @capacitor/cli@8.0.1 --save --save-exact --legacy-peer-deps
+          # Verify installed versions
+          node -e "const l=require('./package-lock.json'); ['@capacitor/core','@capacitor/ios','@capacitor/cli','@capacitor/status-bar','@capacitor/push-notifications','@capacitor/splash-screen'].forEach(p => console.log(p, l.packages['node_modules/'+p]?.version))"
+
+      - name: Capacitor sync iOS
+        script: npx cap sync ios
 
 
       - name: Set up keychain and signing
