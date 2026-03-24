@@ -30,12 +30,22 @@ workflows:
       - name: Install dependencies
         script: npm install --legacy-peer-deps
 
-      - name: Force exact Capacitor core versions
+      - name: Force exact Capacitor versions (all plugins)
         script: |
           npm install \
             @capacitor/core@8.0.1 \
             @capacitor/ios@8.0.1 \
+            @capacitor/android@8.0.1 \
             @capacitor/cli@8.0.1 \
+            @capacitor/app@8.0.1 \
+            @capacitor/browser@8.0.1 \
+            @capacitor/filesystem@8.0.0 \
+            @capacitor/haptics@8.0.1 \
+            @capacitor/local-notifications@8.0.1 \
+            @capacitor/preferences@8.0.1 \
+            @capacitor/push-notifications@8.0.1 \
+            @capacitor/share@8.0.1 \
+            @capacitor/splash-screen@8.0.1 \
             --save --save-exact --legacy-peer-deps
 
       - name: Verify removed plugins absent from node_modules
@@ -57,18 +67,22 @@ workflows:
       - name: Verify Capacitor versions
         script: |
           node -e "
-          const p=require('./package.json').dependencies;
-          console.log('Capacitor versions:');
-          Object.keys(p).filter(x=>x.includes('capacitor')).forEach(k=>{
-            console.log(k, p[k]);
-          });
+          const p=require('./node_modules/@capacitor/core/package.json');
+          console.log('@capacitor/core installed:', p.version);
           "
-          # Fail if any 8.2.x is present
-          if grep -r '"8\.2\.' package.json | grep capacitor; then
-            echo "ERROR: 8.2.x capacitor package found — aborting"
+          # Print all installed @capacitor/* versions from node_modules
+          echo 'Installed @capacitor/* versions:'
+          for d in node_modules/@capacitor/*/; do
+            pkg=\$(basename \$d)
+            ver=\$(node -e "try{console.log(require('./@capacitor/\${pkg}/package.json').version)}catch(e){}" 2>/dev/null || echo '?')
+            echo "  @capacitor/\${pkg}: \${ver}"
+          done
+          # Fail if any 8.2.x is installed in node_modules
+          if find node_modules/@capacitor -name package.json -maxdepth 2 | xargs grep -l '"version": "8\.2\.' 2>/dev/null; then
+            echo "ERROR: 8.2.x capacitor package found in node_modules — aborting"
             exit 1
           fi
-          echo "All @capacitor/* versions OK (8.0.x only)"
+          echo "All @capacitor/* versions OK"
 
       - name: Capacitor sync iOS
         script: npx cap sync ios
