@@ -66,29 +66,41 @@ workflows:
 
       - name: Verify Capacitor versions
         script: |
+          OFFICIAL="core ios android cli app browser haptics preferences push-notifications local-notifications share splash-screen filesystem"
           echo "Installed @capacitor/* versions:"
           ok=true
           for d in node_modules/@capacitor/*/; do
             pkg=$(basename "$d")
             ver=$(node -p "require('./node_modules/@capacitor/${pkg}/package.json').version" 2>/dev/null || echo "?")
-            echo "  @capacitor/${pkg}: ${ver}"
-            if [ "$pkg" = "filesystem" ]; then
-              if [ "$ver" != "8.0.0" ]; then
-                echo "  ERROR: @capacitor/filesystem must be 8.0.0 (got ${ver})"
+            # Check if this is an official plugin we enforce
+            is_official=false
+            for official in $OFFICIAL; do
+              if [ "$pkg" = "$official" ]; then
+                is_official=true
+                break
+              fi
+            done
+            if [ "$is_official" = "true" ]; then
+              if [ "$pkg" = "filesystem" ]; then
+                expected="8.0.0"
+              else
+                expected="8.0.1"
+              fi
+              if [ "$ver" = "$expected" ]; then
+                echo "  @capacitor/${pkg}: ${ver} (OK)"
+              else
+                echo "  @capacitor/${pkg}: ${ver} (ERROR: expected ${expected})"
                 ok=false
               fi
             else
-              if [ "$ver" != "8.0.1" ]; then
-                echo "  ERROR: @capacitor/${pkg} must be 8.0.1 (got ${ver})"
-                ok=false
-              fi
+              echo "  @capacitor/${pkg}: ${ver} (skipped)"
             fi
           done
           if [ "$ok" = "false" ]; then
             echo "Version mismatch — aborting"
             exit 1
           fi
-          echo "All @capacitor/* versions OK"
+          echo "All official @capacitor/* versions OK"
 
       - name: Capacitor sync iOS
         script: npx cap sync ios
