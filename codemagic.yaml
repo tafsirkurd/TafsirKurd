@@ -38,6 +38,19 @@ workflows:
             @capacitor/cli@8.0.1 \
             --save --save-exact --legacy-peer-deps
 
+      - name: Purge removed plugins from node_modules
+        script: |
+          # Belt-and-suspenders: remove these packages even if npm somehow installed them
+          # as transitive dependencies of other packages. cap sync reads node_modules
+          # directly — if they exist there, cap sync will re-add them to Package.swift.
+          rm -rf node_modules/@capacitor/status-bar
+          rm -rf node_modules/@capacitor-community/keep-awake
+          echo "Verified removed:"
+          ls node_modules/@capacitor/status-bar 2>/dev/null && echo "ERROR: @capacitor/status-bar still in node_modules" && exit 1 || true
+          ls node_modules/@capacitor-community/keep-awake 2>/dev/null && echo "ERROR: @capacitor-community/keep-awake still in node_modules" && exit 1 || true
+          echo "@capacitor/status-bar — not in node_modules (OK)"
+          echo "@capacitor-community/keep-awake — not in node_modules (OK)"
+
       - name: Verify Capacitor versions
         script: |
           node -e "
@@ -57,26 +70,24 @@ workflows:
       - name: Capacitor sync iOS
         script: npx cap sync ios
 
-      - name: Verify Package.swift
+      - name: Verify iOS project clean
         script: |
+          # 1. Check capacitor-swift-pm version
           SPMVER=$(grep 'capacitor-swift-pm' ios/App/CapApp-SPM/Package.swift | grep -o '"8\.[^"]*"')
           echo "capacitor-swift-pm version in Package.swift: $SPMVER"
           if [[ "$SPMVER" != '"8.0.1"' ]]; then
             echo "ERROR: capacitor-swift-pm is $SPMVER, expected \"8.0.1\""
             exit 1
           fi
-          echo "Package.swift OK — capacitor-swift-pm exact 8.0.1 confirmed"
+          echo "Package.swift version: OK"
 
-          # Confirm removed plugins are not present
-          if grep -q 'StatusBar\|status-bar' ios/App/CapApp-SPM/Package.swift; then
-            echo "ERROR: CapacitorStatusBar still present in Package.swift — must be removed"
+          # 2. Scan ALL iOS project files for removed plugin references
+          echo "Scanning ios/App for removed plugin strings..."
+          if grep -R "CapacitorCommunityKeepAwake\|KeepAwakePlugin\|CapacitorStatusBar\|StatusBarPlugin" ios/App; then
+            echo "ERROR: Removed plugins still found in iOS project files — see matches above"
             exit 1
           fi
-          if grep -q 'KeepAwake\|keep-awake' ios/App/CapApp-SPM/Package.swift; then
-            echo "ERROR: CapacitorCommunityKeepAwake still present in Package.swift — must be removed"
-            exit 1
-          fi
-          echo "Removed plugins confirmed absent from Package.swift"
+          echo "Removed plugins confirmed absent from all iOS project files"
 
 
       - name: Set up keychain and signing
