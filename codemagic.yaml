@@ -30,17 +30,17 @@ workflows:
       - name: Force exact Capacitor versions (all plugins)
         script: |
           npm install \
-            @capacitor/core@8.2.0 \
-            @capacitor/ios@8.2.0 \
-            @capacitor/android@8.2.0 \
-            @capacitor/cli@8.2.0 \
+            @capacitor/core@8.0.1 \
+            @capacitor/ios@8.0.1 \
+            @capacitor/android@8.0.1 \
+            @capacitor/cli@8.0.1 \
             @capacitor/app@8.0.1 \
-            @capacitor/browser@8.0.2 \
-            @capacitor/filesystem@8.1.2 \
+            @capacitor/browser@8.0.1 \
+            @capacitor/filesystem@8.0.0 \
             @capacitor/haptics@8.0.1 \
-            @capacitor/local-notifications@8.0.2 \
+            @capacitor/local-notifications@8.0.1 \
             @capacitor/preferences@8.0.1 \
-            @capacitor/push-notifications@8.0.2 \
+            @capacitor/push-notifications@8.0.1 \
             @capacitor/splash-screen@8.0.1 \
             --save --save-exact --legacy-peer-deps
 
@@ -76,17 +76,11 @@ workflows:
             pkg=$(basename "$d")
             ver=$(node -p "require('./node_modules/@capacitor/${pkg}/package.json').version" 2>/dev/null || echo "?")
             case "$pkg" in
-              core|ios|android|cli)
-                expected="8.2.0"
-                ;;
-              browser|local-notifications|push-notifications)
-                expected="8.0.2"
+              core|ios|android|cli|app|browser|haptics|local-notifications|preferences|push-notifications|splash-screen)
+                expected="8.0.1"
                 ;;
               filesystem)
-                expected="8.1.2"
-                ;;
-              app|haptics|preferences|splash-screen)
-                expected="8.0.1"
+                expected="8.0.0"
                 ;;
               *)
                 echo "@capacitor/${pkg}: ${ver} (skipped)"
@@ -114,8 +108,8 @@ workflows:
           # 1. Check capacitor-swift-pm version
           SPMVER=$(grep 'capacitor-swift-pm' ios/App/CapApp-SPM/Package.swift | grep -o '"8\.[^"]*"')
           echo "capacitor-swift-pm version in Package.swift: $SPMVER"
-          if [[ "$SPMVER" != '"8.2.0"' ]]; then
-            echo "ERROR: capacitor-swift-pm is $SPMVER, expected \"8.2.0\""
+          if [[ "$SPMVER" != '"8.0.1"' ]]; then
+            echo "ERROR: capacitor-swift-pm is $SPMVER, expected \"8.0.1\""
             exit 1
           fi
           echo "Package.swift version: OK"
