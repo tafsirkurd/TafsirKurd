@@ -38,18 +38,21 @@ workflows:
             @capacitor/cli@8.0.1 \
             --save --save-exact --legacy-peer-deps
 
-      - name: Purge removed plugins from node_modules
+      - name: Verify removed plugins absent from node_modules
         script: |
-          # Belt-and-suspenders: remove these packages even if npm somehow installed them
-          # as transitive dependencies of other packages. cap sync reads node_modules
-          # directly — if they exist there, cap sync will re-add them to Package.swift.
-          rm -rf node_modules/@capacitor/status-bar
-          rm -rf node_modules/@capacitor-community/keep-awake
-          echo "Verified removed:"
-          ls node_modules/@capacitor/status-bar 2>/dev/null && echo "ERROR: @capacitor/status-bar still in node_modules" && exit 1 || true
-          ls node_modules/@capacitor-community/keep-awake 2>/dev/null && echo "ERROR: @capacitor-community/keep-awake still in node_modules" && exit 1 || true
-          echo "@capacitor/status-bar — not in node_modules (OK)"
-          echo "@capacitor-community/keep-awake — not in node_modules (OK)"
+          # package.json overrides block these. Verify they were not installed.
+          if [ -d node_modules/@capacitor/status-bar ]; then
+            echo "ERROR: @capacitor/status-bar found in node_modules — overrides not working"
+            npm ls @capacitor/status-bar || true
+            exit 1
+          fi
+          if [ -d node_modules/@capacitor-community/keep-awake ]; then
+            echo "ERROR: @capacitor-community/keep-awake found in node_modules — overrides not working"
+            npm ls @capacitor-community/keep-awake || true
+            exit 1
+          fi
+          echo "@capacitor/status-bar — absent from node_modules (OK)"
+          echo "@capacitor-community/keep-awake — absent from node_modules (OK)"
 
       - name: Verify Capacitor versions
         script: |

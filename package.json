@@ -61,6 +61,10 @@
         "sharp": "^0.34.5",
         "tweetnacl": "^1.0.3"
     },
+    "overrides": {
+        "@capacitor/status-bar": "0.0.0",
+        "@capacitor-community/keep-awake": "0.0.0"
+    },
     "engines": {
         "node": ">=16.0.0",
         "npm": ">=8.0.0"
