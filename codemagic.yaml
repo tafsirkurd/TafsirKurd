@@ -255,6 +255,13 @@ workflows:
               deinit {
                   observers.forEach { NotificationCenter.default.removeObserver($0) }
               }
+              // iOS 13+ multi-scene safe key window access (no deprecated keyWindow)
+              private func activeKeyWindow() -> UIWindow? {
+                  UIApplication.shared.connectedScenes
+                      .filter { $0.activationState == .foregroundActive }
+                      .compactMap { $0 as? UIWindowScene }
+                      .first?.windows.first(where: { $0.isKeyWindow })
+              }
               private func setupObservers(with config: StatusBarConfig) {
                   observers.append(NotificationCenter.default.addObserver(forName: .capacitorViewDidAppear, object: .none, queue: .none) { [weak self] _ in
                       self?.handleViewDidAppear(config: config)
@@ -306,7 +313,7 @@ workflows:
                           resizeWebView()
                           if !isOverlayingWebview {
                               resizeStatusBarBackgroundView()
-                              UIApplication.shared.keyWindow?.rootViewController?.view.addSubview(backgroundView!)
+                              activeKeyWindow()?.rootViewController?.view.addSubview(backgroundView!)
                           }
                           backgroundView?.isHidden = false
                       }
@@ -331,13 +338,14 @@ workflows:
                       backgroundView?.removeFromSuperview()
                   } else {
                       initializeBackgroundViewIfNeeded()
-                      UIApplication.shared.keyWindow?.rootViewController?.view.addSubview(backgroundView!)
+                      activeKeyWindow()?.rootViewController?.view.addSubview(backgroundView!)
                   }
                   resizeWebView()
               }
               private func resizeWebView() {
-                  guard let rootView = UIApplication.shared.keyWindow?.rootViewController?.view,
-                        let bounds = UIApplication.shared.keyWindow?.bounds else { return }
+                  guard let window = activeKeyWindow(),
+                        let rootView = window.rootViewController?.view else { return }
+                  let bounds = window.bounds
                   rootView.frame = bounds
                   let statusBarHeight = getStatusBarFrame().size.height
                   var rootViewFrame = rootView.frame
@@ -356,7 +364,7 @@ workflows:
               }
               private func resizeStatusBarBackgroundView() { backgroundView?.frame = getStatusBarFrame() }
               private func getStatusBarFrame() -> CGRect {
-                  return UIApplication.shared.keyWindow?.windowScene?.statusBarManager?.statusBarFrame ?? .zero
+                  return activeKeyWindow()?.windowScene?.statusBarManager?.statusBarFrame ?? .zero
               }
               private func initializeBackgroundViewIfNeeded() {
                   if backgroundView == nil {
