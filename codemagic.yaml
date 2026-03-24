@@ -73,26 +73,32 @@ workflows:
           echo "$CM_CERTIFICATE" | base64 --decode > /tmp/distribution.p12
           keychain add-certificates --certificate /tmp/distribution.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
 
-          # Decode provisioning profile
+          # Decode provisioning profile (printf avoids trailing newline that corrupts base64)
           printf '%s' "$CM_PROVISIONING_PROFILE" | base64 --decode > /tmp/profile.mobileprovision
-          echo "Profile file size: $(wc -c < /tmp/profile.mobileprovision) bytes"
 
-          # Unwrap CMS envelope to raw plist
+          echo "Profile file size:"
+          wc -c /tmp/profile.mobileprovision
+
           security cms -D -i /tmp/profile.mobileprovision > /tmp/profile.plist
 
-          # Extract UUID using PlistBuddy
-          UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /tmp/profile.plist)
+          echo "Reading profile values..."
+
+          UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /tmp/profile.plist 2>/dev/null)
+          NAME=$(/usr/libexec/PlistBuddy -c "Print Name" /tmp/profile.plist 2>/dev/null)
+          TEAM=$(/usr/libexec/PlistBuddy -c "Print TeamIdentifier:0" /tmp/profile.plist 2>/dev/null)
+          APPID=$(/usr/libexec/PlistBuddy -c "Print Entitlements:application-identifier" /tmp/profile.plist 2>/dev/null)
+          SIGNIN=$(/usr/libexec/PlistBuddy -c "Print Entitlements:com.apple.developer.applesignin" /tmp/profile.plist 2>/dev/null)
+
+          echo "Profile name: $NAME"
+          echo "UUID: $UUID"
+          echo "Team: $TEAM"
+          echo "App ID: $APPID"
+          echo "Sign in with Apple: $SIGNIN"
+
           if [ -z "$UUID" ]; then
-            echo "ERROR: UUID is empty — profile decode failed. Check CM_PROVISIONING_PROFILE value."
+            echo "ERROR: Provisioning profile UUID is empty. Profile is invalid or base64 is broken."
             exit 1
           fi
-          echo "Profile UUID: $UUID"
-
-          # Log profile details
-          echo "Profile Name: $(/usr/libexec/PlistBuddy -c 'Print Name' /tmp/profile.plist)"
-          echo "Expiry: $(/usr/libexec/PlistBuddy -c 'Print ExpirationDate' /tmp/profile.plist)"
-          echo "Sign in with Apple: $(/usr/libexec/PlistBuddy -c 'Print Entitlements:com.apple.developer.applesignin:0' /tmp/profile.plist 2>/dev/null || echo 'NOT FOUND')"
-          echo "Bundle ID: $(/usr/libexec/PlistBuddy -c 'Print Entitlements:application-identifier' /tmp/profile.plist)"
 
           # Install profile with UUID filename (required by Xcode)
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
