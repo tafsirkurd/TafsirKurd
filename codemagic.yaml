@@ -21,6 +21,7 @@ workflows:
         script: |
           rm -rf node_modules package-lock.json
           rm -rf ios/App/Pods ios/App/Podfile.lock ios/App/DerivedData
+          rm -rf ios/App/CapApp-SPM ios/App/.build
           rm -rf ~/Library/Developer/Xcode/DerivedData/*
           rm -rf ~/Library/Caches/org.swift.swiftpm
 
@@ -103,16 +104,57 @@ workflows:
       - name: Capacitor sync iOS
         script: npx cap sync ios
 
-      - name: Verify iOS project clean
+      - name: Pin capacitor-swift-pm to exact 8.0.1
         script: |
-          # 1. Check capacitor-swift-pm version
-          SPMVER=$(grep 'capacitor-swift-pm' ios/App/CapApp-SPM/Package.swift | grep -o '"8\.[^"]*"')
-          echo "capacitor-swift-pm version in Package.swift: $SPMVER"
-          if [[ "$SPMVER" != '"8.0.1"' ]]; then
-            echo "ERROR: capacitor-swift-pm is $SPMVER, expected \"8.0.1\""
+          # cap sync regenerates Package.swift using "from: X.Y.Z" which lets SPM
+          # resolve the latest compatible binary (e.g. 8.2.x). Force exact: "8.0.1".
+          PKGFILE="ios/App/CapApp-SPM/Package.swift"
+
+          echo "Package.swift before patch:"
+          grep 'capacitor-swift-pm' "$PKGFILE"
+
+          python3 - <<'PYEOF'
+import re, sys
+
+path = 'ios/App/CapApp-SPM/Package.swift'
+with open(path, 'r') as f:
+    src = f.read()
+
+patched = re.sub(
+    r'\.package\(\s*url:\s*"https://github\.com/ionic-team/capacitor-swift-pm\.git"\s*,[^)]+\)',
+    '.package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.0.1")',
+    src
+)
+
+if patched == src:
+    print('ERROR: capacitor-swift-pm line not found in Package.swift', file=sys.stderr)
+    sys.exit(1)
+
+with open(path, 'w') as f:
+    f.write(patched)
+
+print('Patched successfully')
+PYEOF
+
+          echo "Package.swift after patch:"
+          grep 'capacitor-swift-pm' "$PKGFILE"
+
+          # Hard-fail if exact: "8.0.1" is not present
+          if ! grep -q 'exact: "8.0.1"' "$PKGFILE"; then
+            echo "ERROR: Package.swift does not contain exact: \"8.0.1\" after patch"
             exit 1
           fi
-          echo "Package.swift version: OK"
+          echo "capacitor-swift-pm pinned to exact: \"8.0.1\" — OK"
+
+      - name: Verify iOS project clean
+        script: |
+          # 1. Check capacitor-swift-pm is pinned with exact: "8.0.1"
+          if ! grep -q 'exact: "8.0.1"' ios/App/CapApp-SPM/Package.swift; then
+            echo "ERROR: capacitor-swift-pm not pinned with exact: \"8.0.1\" in Package.swift"
+            grep 'capacitor-swift-pm' ios/App/CapApp-SPM/Package.swift || true
+            exit 1
+          fi
+          echo "capacitor-swift-pm: exact: \"8.0.1\" — OK"
 
           # 2. Scan ALL iOS project files for removed plugin references
           echo "Scanning ios/App for removed plugin strings..."
