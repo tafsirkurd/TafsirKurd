@@ -330,19 +330,35 @@ workflows:
           keychain add-certificates --certificate /tmp/distribution.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
 
           # Install provisioning profile
-          echo "$CM_PROVISIONING_PROFILE" | base64 --decode > /tmp/profile.mobileprovision
+          printf '%s' "$CM_PROVISIONING_PROFILE" | base64 --decode > /tmp/profile.mobileprovision
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          UUID=$(security cms -D -i /tmp/profile.mobileprovision 2>/dev/null | plutil -extract UUID raw - 2>/dev/null || python3 -c "import plistlib,sys; d=plistlib.loads(open('/tmp/profile.mobileprovision','rb').read()); print(d['UUID'])" 2>/dev/null)
+          UUID=$(python3 -c "import plistlib; d=plistlib.loads(open('/tmp/profile.mobileprovision','rb').read()); print(d['UUID'])")
           cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/"$UUID".mobileprovision
           echo "Installed profile UUID: $UUID"
+          echo "$UUID" > /tmp/profile_uuid.txt
+
+          # Verify the profile has Sign in with Apple entitlement
+          python3 -c "
+          import plistlib
+          d = plistlib.loads(open('/tmp/profile.mobileprovision','rb').read())
+          ents = d.get('Entitlements', {})
+          siwf = ents.get('com.apple.developer.applesignin', [])
+          print('Sign in with Apple in profile:', siwf)
+          print('Profile name:', d.get('Name','?'))
+          print('Bundle ID:', ents.get('application-identifier','?'))
+          print('Expiry:', d.get('ExpirationDate','?'))
+          "
 
           xcode-project use-profiles --project "$XCODE_PROJECT"
 
       - name: Build iOS
         script: |
+          UUID=$(cat /tmp/profile_uuid.txt)
+          echo "Using profile UUID: $UUID"
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --xcargs "CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE=$UUID CODE_SIGN_IDENTITY=\"Apple Distribution\""
 
     artifacts:
       - build/ios/ipa/*.ipa
