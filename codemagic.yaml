@@ -93,7 +93,14 @@ workflows:
           echo "All official @capacitor/* versions OK"
 
       - name: Capacitor sync iOS
-        script: npx cap sync ios
+        script: |
+          echo "Node version:"; node -v
+          echo "NPM version:"; npm -v
+          echo "Capacitor doctor:"; npx cap doctor || true
+          echo "Listing ios/App before sync:"; ls -la ios/App || true
+
+          npx cap sync ios --verbose 2>&1
+          echo "cap sync exit code: $?"
 
       - name: Verify iOS project clean
         script: |
