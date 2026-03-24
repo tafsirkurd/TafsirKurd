@@ -329,26 +329,27 @@ workflows:
           echo "$CM_CERTIFICATE" | base64 --decode > /tmp/distribution.p12
           keychain add-certificates --certificate /tmp/distribution.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
 
-          # Install provisioning profile
-          echo "$CM_PROVISIONING_PROFILE" | base64 --decode > /tmp/profile.mobileprovision
+          # Decode provisioning profile
+          printf '%s' "$CM_PROVISIONING_PROFILE" | base64 --decode > /tmp/profile.mobileprovision
+          echo "Profile file size: $(wc -c < /tmp/profile.mobileprovision) bytes"
 
-          # Extract UUID — mobileprovision is CMS-signed, must use security cms -D to unwrap
-          UUID=$(security cms -D -i /tmp/profile.mobileprovision | plutil -extract UUID raw -)
-          echo "Installed profile UUID: $UUID"
+          # Unwrap CMS envelope to raw plist
+          security cms -D -i /tmp/profile.mobileprovision > /tmp/profile.plist
 
+          # Extract UUID using PlistBuddy (most reliable on macOS)
+          UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /tmp/profile.plist)
+          echo "Profile UUID: $UUID"
+
+          # Log profile details
+          echo "Profile Name: $(/usr/libexec/PlistBuddy -c 'Print Name' /tmp/profile.plist)"
+          echo "Expiry: $(/usr/libexec/PlistBuddy -c 'Print ExpirationDate' /tmp/profile.plist)"
+          echo "Sign in with Apple: $(/usr/libexec/PlistBuddy -c 'Print Entitlements:com.apple.developer.applesignin:0' /tmp/profile.plist 2>/dev/null || echo 'NOT FOUND')"
+          echo "Bundle ID: $(/usr/libexec/PlistBuddy -c 'Print Entitlements:application-identifier' /tmp/profile.plist)"
+
+          # Install profile with UUID filename (required by Xcode)
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/"$UUID".mobileprovision
-
-          # Verify Sign in with Apple is present in this profile
-          security cms -D -i /tmp/profile.mobileprovision | python3 -c "
-          import sys, plistlib
-          d = plistlib.loads(sys.stdin.buffer.read())
-          ents = d.get('Entitlements', {})
-          print('Profile name:', d.get('Name', '?'))
-          print('Expiry:', d.get('ExpirationDate', '?'))
-          print('Sign in with Apple:', ents.get('com.apple.developer.applesignin', 'NOT FOUND'))
-          print('Bundle ID:', ents.get('application-identifier', '?'))
-          "
+          echo "Installed: ~/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
 
           xcode-project use-profiles --project "$XCODE_PROJECT"
 
