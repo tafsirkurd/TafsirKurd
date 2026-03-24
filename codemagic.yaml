@@ -75,12 +75,12 @@ workflows:
           echo "Installed @capacitor/* versions:"
           ok=true
           for d in node_modules/@capacitor/*/; do
+            [ -d "$d" ] || continue
             pkg=$(basename "$d")
             ver=$(node -p "require('./node_modules/@capacitor/${pkg}/package.json').version" 2>/dev/null || echo "?")
-            # Check if this is an official plugin we enforce
             is_official=false
-            for official in $OFFICIAL; do
-              if [ "$pkg" = "$official" ]; then
+            for o in $OFFICIAL; do
+              if [ "$pkg" = "$o" ]; then
                 is_official=true
                 break
               fi
@@ -92,13 +92,13 @@ workflows:
                 expected="8.0.1"
               fi
               if [ "$ver" = "$expected" ]; then
-                echo "  @capacitor/${pkg}: ${ver} (OK)"
+                echo "@capacitor/${pkg}: ${ver} (OK)"
               else
-                echo "  @capacitor/${pkg}: ${ver} (ERROR: expected ${expected})"
+                echo "@capacitor/${pkg}: ${ver} (ERROR: expected ${expected})"
                 ok=false
               fi
             else
-              echo "  @capacitor/${pkg}: ${ver} (skipped)"
+              echo "@capacitor/${pkg}: ${ver} (skipped)"
             fi
           done
           if [ "$ok" = "false" ]; then
