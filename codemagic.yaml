@@ -21,10 +21,7 @@ workflows:
         script: |
           rm -rf node_modules package-lock.json
           rm -rf ios/App/Pods ios/App/Podfile.lock ios/App/DerivedData
-          rm -rf ios/App/CapApp-SPM/.build ios/App/CapApp-SPM/Package.resolved
-          rm -rf ios/App/.build
           rm -rf ~/Library/Developer/Xcode/DerivedData/*
-          rm -rf ~/Library/Caches/org.swift.swiftpm
 
       - name: Install dependencies
         script: npm install --legacy-peer-deps
@@ -46,37 +43,20 @@ workflows:
 
       - name: Verify removed plugins absent from node_modules
         script: |
-          # package.json overrides block these. Verify they were not installed.
-          if [ -d node_modules/@capacitor/status-bar ]; then
-            echo "ERROR: @capacitor/status-bar found in node_modules — overrides not working"
-            npm ls @capacitor/status-bar || true
-            exit 1
-          fi
-          if [ -d node_modules/@capacitor-community/keep-awake ]; then
-            echo "ERROR: @capacitor-community/keep-awake found in node_modules — overrides not working"
-            npm ls @capacitor-community/keep-awake || true
-            exit 1
-          fi
-          if [ -d node_modules/@capacitor/share ]; then
-            echo "ERROR: @capacitor/share found in node_modules — overrides not working"
-            npm ls @capacitor/share || true
-            exit 1
-          fi
-          if [ -d node_modules/@capacitor/push-notifications ]; then
-            echo "ERROR: @capacitor/push-notifications found in node_modules — overrides not working"
-            npm ls @capacitor/push-notifications || true
-            exit 1
-          fi
-          if [ -d node_modules/@capacitor/splash-screen ]; then
-            echo "ERROR: @capacitor/splash-screen found in node_modules — overrides not working"
-            npm ls @capacitor/splash-screen || true
-            exit 1
-          fi
-          echo "@capacitor/status-bar — absent (OK)"
-          echo "@capacitor-community/keep-awake — absent (OK)"
-          echo "@capacitor/share — absent (OK)"
-          echo "@capacitor/push-notifications — absent (OK)"
-          echo "@capacitor/splash-screen — absent (OK)"
+          for pkg in \
+            @capacitor/status-bar \
+            @capacitor-community/keep-awake \
+            @capacitor/share \
+            @capacitor/push-notifications \
+            @capacitor/splash-screen; do
+            dir="node_modules/${pkg}"
+            if [ -d "$dir" ]; then
+              echo "ERROR: ${pkg} found in node_modules — overrides not working"
+              npm ls "$pkg" || true
+              exit 1
+            fi
+            echo "${pkg} — absent (OK)"
+          done
 
       - name: Verify Capacitor versions
         script: |
@@ -112,82 +92,23 @@ workflows:
           fi
           echo "All official @capacitor/* versions OK"
 
-      - name: Verify iOS project structure
-        script: |
-          # CapApp-SPM must exist — its presence tells the Capacitor CLI to use
-          # SPM mode instead of CocoaPods. If it's missing, cap sync ios will look
-          # for a Podfile (which we don't have) and fail with ENOENT.
-          fail=false
-          for f in \
-            ios/App/App.xcodeproj/project.pbxproj \
-            ios/App/CapApp-SPM/Package.swift \
-            ios/App/CapApp-SPM/Sources/CapApp-SPM/CapApp-SPM.swift; do
-            if [ ! -f "$f" ]; then
-              echo "ERROR: required file missing: $f"
-              fail=true
-            else
-              echo "OK: $f"
-            fi
-          done
-          if [ "$fail" = "true" ]; then
-            echo "iOS project structure incomplete — cannot continue"
-            exit 1
-          fi
-
       - name: Capacitor sync iOS
         script: npx cap sync ios
 
-      - name: Pin capacitor-swift-pm to exact 8.0.1
-        script: |
-          # cap sync regenerates Package.swift using "from: X.Y.Z" which lets SPM
-          # resolve the latest compatible binary (e.g. 8.2.x). Force exact: "8.0.1".
-          PKGFILE="ios/App/CapApp-SPM/Package.swift"
-
-          echo "Package.swift before patch:"
-          grep 'capacitor-swift-pm' "$PKGFILE"
-
-          cat > /tmp/patch_spm.py << 'PYEOF'
-          import re, sys
-          path = 'ios/App/CapApp-SPM/Package.swift'
-          with open(path, 'r') as f:
-              src = f.read()
-          patched = re.sub(
-              r'\.package\(\s*url:\s*"https://github\.com/ionic-team/capacitor-swift-pm\.git"\s*,[^)]+\)',
-              '.package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.0.1")',
-              src
-          )
-          if patched == src:
-              print('ERROR: capacitor-swift-pm pattern not found in Package.swift', file=sys.stderr)
-              sys.exit(1)
-          with open(path, 'w') as f:
-              f.write(patched)
-          print('Patched successfully')
-          PYEOF
-
-          python3 /tmp/patch_spm.py
-
-          echo "Package.swift after patch:"
-          grep 'capacitor-swift-pm' "$PKGFILE"
-
-          grep -q 'exact: "8.0.1"' "$PKGFILE" || {
-            echo "ERROR: Package.swift does not contain exact: \"8.0.1\" after patch"
-            exit 1
-          }
-          echo "capacitor-swift-pm pinned to exact: \"8.0.1\" — OK"
-
       - name: Verify iOS project clean
         script: |
-          # 1. Check capacitor-swift-pm is pinned with exact: "8.0.1"
-          if ! grep -q 'exact: "8.0.1"' ios/App/CapApp-SPM/Package.swift; then
-            echo "ERROR: capacitor-swift-pm not pinned with exact: \"8.0.1\" in Package.swift"
-            grep 'capacitor-swift-pm' ios/App/CapApp-SPM/Package.swift || true
+          # 1. Podfile must exist — CocoaPods mode requires it
+          if [ ! -f ios/App/Podfile ]; then
+            echo "ERROR: ios/App/Podfile missing after cap sync — CocoaPods mode broken"
             exit 1
           fi
-          echo "capacitor-swift-pm: exact: \"8.0.1\" — OK"
+          echo "Podfile: OK"
 
-          # 2. Scan ALL iOS project files for removed plugin references
+          # 2. Scan for banned plugin references
           echo "Scanning ios/App for removed plugin strings..."
-          if grep -R "CapacitorCommunityKeepAwake\|KeepAwakePlugin\|CapacitorStatusBar\|StatusBarPlugin\|CapacitorShare\|SharePlugin\|CapacitorPushNotifications\|PushNotificationsPlugin\|CapacitorSplashScreen\|SplashScreenPlugin" ios/App; then
+          if grep -R \
+            "CapacitorCommunityKeepAwake\|KeepAwakePlugin\|CapacitorStatusBar\|StatusBarPlugin\|CapacitorShare\|SharePlugin\|CapacitorPushNotifications\|PushNotificationsPlugin\|CapacitorSplashScreen\|SplashScreenPlugin" \
+            ios/App; then
             echo "ERROR: Removed plugins still found in iOS project files — see matches above"
             exit 1
           fi
