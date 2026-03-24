@@ -73,20 +73,29 @@ workflows:
           echo "$CM_CERTIFICATE" | base64 --decode > /tmp/distribution.p12
           keychain add-certificates --certificate /tmp/distribution.p12 --certificate-password "$CM_CERTIFICATE_PASSWORD"
 
-          # Decode provisioning profile (printf avoids trailing newline that corrupts base64)
+          # Step 1: Decode provisioning profile
           printf '%s' "$CM_PROVISIONING_PROFILE" | base64 --decode > /tmp/profile.mobileprovision
+
+          # Step 2: Validate decoded file before doing anything else
+          if [ ! -s /tmp/profile.mobileprovision ]; then
+            echo "ERROR: Decoded provisioning profile file is empty"
+            exit 1
+          fi
 
           echo "Decoded provisioning profile size:"
           wc -c /tmp/profile.mobileprovision
 
-          echo "Trying to decode CMS payload..."
-          security cms -D -i /tmp/profile.mobileprovision > /tmp/profile.plist
+          # Step 3: Unwrap CMS envelope — hard fail if this fails
+          security cms -D -i /tmp/profile.mobileprovision > /tmp/profile.plist || {
+            echo "ERROR: Failed to decode CMS (profile corrupted or not a valid .mobileprovision)"
+            exit 1
+          }
 
-          echo "Reading provisioning profile fields..."
-          UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /tmp/profile.plist 2>/dev/null || true)
-          NAME=$(/usr/libexec/PlistBuddy -c "Print Name" /tmp/profile.plist 2>/dev/null || true)
-          APPID=$(/usr/libexec/PlistBuddy -c "Print Entitlements:application-identifier" /tmp/profile.plist 2>/dev/null || true)
-          TEAM=$(/usr/libexec/PlistBuddy -c "Print TeamIdentifier:0" /tmp/profile.plist 2>/dev/null || true)
+          # Step 4: Extract fields using PlistBuddy only
+          NAME=$(/usr/libexec/PlistBuddy -c "Print Name" /tmp/profile.plist)
+          UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /tmp/profile.plist)
+          APPID=$(/usr/libexec/PlistBuddy -c "Print Entitlements:application-identifier" /tmp/profile.plist)
+          TEAM=$(/usr/libexec/PlistBuddy -c "Print TeamIdentifier:0" /tmp/profile.plist)
           SIGNIN=$(/usr/libexec/PlistBuddy -c "Print Entitlements:com.apple.developer.applesignin" /tmp/profile.plist 2>/dev/null || true)
 
           echo "Profile name: $NAME"
@@ -95,20 +104,22 @@ workflows:
           echo "Team: $TEAM"
           echo "Sign in with Apple: $SIGNIN"
 
-          if [ ! -s /tmp/profile.mobileprovision ]; then
-            echo "ERROR: Decoded provisioning profile file is empty"
-            exit 1
-          fi
-
+          # Step 5: Fail if UUID still empty
           if [ -z "$UUID" ]; then
-            echo "ERROR: Provisioning profile UUID is empty. CM_PROVISIONING_PROFILE is invalid, truncated, or corrupted."
+            echo "ERROR: Provisioning profile UUID is empty. CM_PROVISIONING_PROFILE is invalid or corrupted."
             exit 1
           fi
 
+          echo "Using profile UUID: $UUID"
+
+          # Step 6: Install profile
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
           cp /tmp/profile.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/$UUID.mobileprovision"
-          echo "Installed: $UUID.mobileprovision"
 
+          echo "Installed profile:"
+          ls -la "$HOME/Library/MobileDevice/Provisioning Profiles"
+
+          # Step 7: Apply to Xcode project
           xcode-project use-profiles --project "$XCODE_PROJECT"
 
       - name: Build iOS
