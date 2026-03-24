@@ -47,7 +47,6 @@
         "@capacitor/local-notifications": "8.0.1",
         "@capacitor/preferences": "8.0.1",
         "@capacitor/push-notifications": "8.0.1",
-        "@capacitor/share": "8.0.1",
         "@capacitor/splash-screen": "8.0.1",
         "@supabase/supabase-js": "^2.55.0",
         "@upstash/redis": "^1.35.8",
@@ -73,8 +72,8 @@
         "@capacitor/local-notifications": "8.0.1",
         "@capacitor/preferences": "8.0.1",
         "@capacitor/push-notifications": "8.0.1",
-        "@capacitor/share": "8.0.1",
         "@capacitor/splash-screen": "8.0.1",
+        "@capacitor/share": "0.0.0",
         "@capacitor/status-bar": "0.0.0",
         "@capacitor-community/keep-awake": "0.0.0"
     },
