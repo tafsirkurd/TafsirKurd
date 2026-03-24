@@ -113,37 +113,33 @@ workflows:
           echo "Package.swift before patch:"
           grep 'capacitor-swift-pm' "$PKGFILE"
 
-          python3 - <<'PYEOF'
-import re, sys
+          cat > /tmp/patch_spm.py << 'PYEOF'
+          import re, sys
+          path = 'ios/App/CapApp-SPM/Package.swift'
+          with open(path, 'r') as f:
+              src = f.read()
+          patched = re.sub(
+              r'\.package\(\s*url:\s*"https://github\.com/ionic-team/capacitor-swift-pm\.git"\s*,[^)]+\)',
+              '.package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.0.1")',
+              src
+          )
+          if patched == src:
+              print('ERROR: capacitor-swift-pm pattern not found in Package.swift', file=sys.stderr)
+              sys.exit(1)
+          with open(path, 'w') as f:
+              f.write(patched)
+          print('Patched successfully')
+          PYEOF
 
-path = 'ios/App/CapApp-SPM/Package.swift'
-with open(path, 'r') as f:
-    src = f.read()
-
-patched = re.sub(
-    r'\.package\(\s*url:\s*"https://github\.com/ionic-team/capacitor-swift-pm\.git"\s*,[^)]+\)',
-    '.package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.0.1")',
-    src
-)
-
-if patched == src:
-    print('ERROR: capacitor-swift-pm line not found in Package.swift', file=sys.stderr)
-    sys.exit(1)
-
-with open(path, 'w') as f:
-    f.write(patched)
-
-print('Patched successfully')
-PYEOF
+          python3 /tmp/patch_spm.py
 
           echo "Package.swift after patch:"
           grep 'capacitor-swift-pm' "$PKGFILE"
 
-          # Hard-fail if exact: "8.0.1" is not present
-          if ! grep -q 'exact: "8.0.1"' "$PKGFILE"; then
+          grep -q 'exact: "8.0.1"' "$PKGFILE" || {
             echo "ERROR: Package.swift does not contain exact: \"8.0.1\" after patch"
             exit 1
-          fi
+          }
           echo "capacitor-swift-pm pinned to exact: \"8.0.1\" — OK"
 
       - name: Verify iOS project clean
