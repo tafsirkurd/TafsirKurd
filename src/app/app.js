@@ -4876,13 +4876,6 @@ App.openLogin=function(){
   hdr.appendChild(el('div','auth-title',t('auth.login')));
   panel.appendChild(hdr);
 
-  // Guest / skip button — lets reviewers and casual users access all features without sign-in
-  var guestWrap=el('div','auth-guest-wrap');
-  var guestBtn=el('button','auth-guest-btn',t('auth.continue_guest'));
-  on(guestBtn,'click',function(){App.closeLogin()});
-  guestWrap.appendChild(guestBtn);
-  panel.appendChild(guestWrap);
-
   // Body scroll container
   var body=el('div','auth-body');
 
@@ -4978,6 +4971,10 @@ App.openLogin=function(){
     on(googleBtn,'click',function(){signInWithGoogle()});
     f.appendChild(googleBtn);
 
+    var guestBtn=el('button','auth-guest-btn',t('auth.continue_guest'));
+    on(guestBtn,'click',function(){App.closeLogin()});
+    f.appendChild(guestBtn);
+
     forms.appendChild(f);
   }
 
@@ -5042,6 +5039,10 @@ App.openLogin=function(){
     googleBtn.appendChild(el('span','',t('auth.google_signup')));
     on(googleBtn,'click',function(){signInWithGoogle()});
     f.appendChild(googleBtn);
+
+    var guestBtn=el('button','auth-guest-btn',t('auth.continue_guest'));
+    on(guestBtn,'click',function(){App.closeLogin()});
+    f.appendChild(guestBtn);
 
     forms.appendChild(f);
   }
