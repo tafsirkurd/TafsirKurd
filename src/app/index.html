@@ -1670,9 +1670,9 @@ body{background:var(--bg);color:var(--text)}
     <div class="hdr">
       <div class="hdr-title"><i class="fas fa-video"></i> <span data-i18n="header.islamvoice" data-t="android_span_5">ئیسلام ڤۆیس</span></div>
       <div style="display:flex;gap:2px">
-        <button class="hdr-btn" id="ivSpeakerFilterBtn" onclick="App.ivShowSpeakerFilter()" title="ماموستا"><i class="fas fa-user"></i></button>
-        <button class="hdr-btn" id="ivHistoryBtn" onclick="App.ivShowHistory()" title="مێژوو"><i class="fas fa-clock-rotate-left"></i></button>
-        <button class="hdr-btn" id="ivSavedBtn" onclick="App.ivShowSaved()" title="پاراستە"><i class="fas fa-bookmark"></i></button>
+        <button class="hdr-btn" id="ivSpeakerFilterBtn" onclick="App.ivShowSpeakerFilter()" title="ماموستا" data-i18n-title="iv.sheikh_title"><i class="fas fa-user"></i></button>
+        <button class="hdr-btn" id="ivHistoryBtn" onclick="App.ivShowHistory()" title="مێژوو" data-i18n-title="iv.history_title"><i class="fas fa-clock-rotate-left"></i></button>
+        <button class="hdr-btn" id="ivSavedBtn" onclick="App.ivShowSaved()" title="پاراستە" data-i18n-title="iv.saved_title"><i class="fas fa-bookmark"></i></button>
         <button class="hdr-btn" onclick="App.ivToggleSearch()"><i class="fas fa-search"></i></button>
       </div>
     </div>
@@ -1733,11 +1733,11 @@ body{background:var(--bg);color:var(--text)}
     <button class="hdr-btn" id="gencineBackBtn" style="display:none;margin-inline-end:4px" onclick="GencineUI.goHome()"><i class="fas fa-arrow-right"></i></button>
     <div class="hdr-title" id="gencineHdrTitle"><i class="fas fa-gem"></i> <span data-i18n="header.gencine">گەنجینەیا ئایینی</span></div>
     <div id="booksHdrBtns" style="display:none;gap:2px">
-      <button class="hdr-btn" id="bookSheikhBtn" title="ماموستا"><i class="fas fa-user-tie"></i></button>
-      <button class="hdr-btn" id="bookSavedBtn" title="پاراستە"><i class="fas fa-bookmark"></i></button>
-      <button class="hdr-btn" id="bookSearchBtn" title="گەڕان"><i class="fas fa-search"></i></button>
+      <button class="hdr-btn" id="bookSheikhBtn" title="ماموستا" data-i18n-title="iv.sheikh_title"><i class="fas fa-user-tie"></i></button>
+      <button class="hdr-btn" id="bookSavedBtn" title="پاراستە" data-i18n-title="iv.saved_title"><i class="fas fa-bookmark"></i></button>
+      <button class="hdr-btn" id="bookSearchBtn" title="گەڕان" data-i18n-title="iv.search_title"><i class="fas fa-search"></i></button>
     </div>
-    <button class="hdr-btn" id="pdfFsBtn" style="display:none" title="پڕ شاشە"><i class="fas fa-expand"></i></button>
+    <button class="hdr-btn" id="pdfFsBtn" style="display:none" title="پڕ شاشە" data-i18n-title="qs.fullscreen"><i class="fas fa-expand"></i></button>
   </div>
   <div id="gencineContent"></div>
 </section>

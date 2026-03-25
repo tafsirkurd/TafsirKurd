@@ -1415,6 +1415,10 @@ window.BULK_TRANSLATIONS = [
     // IslamVoice extras (social, playback, content management)
     { key_id: "iv.loading_spinner",      kurdish_text: "چاڤەڕێبە...",                         category: "islamvoice", page: "android" },
     { key_id: "iv.sheikh_title",         kurdish_text: "ماموستا",                             category: "islamvoice", page: "android" },
+    { key_id: "iv.history_title",        kurdish_text: "مێژوو",                               category: "islamvoice", page: "android" },
+    { key_id: "iv.saved_title",          kurdish_text: "پاراستە",                             category: "islamvoice", page: "android" },
+    { key_id: "iv.search_title",         kurdish_text: "گەڕان",                               category: "islamvoice", page: "android" },
+    { key_id: "qs.fullscreen",           kurdish_text: "پڕ شاشە",                             category: "quran",      page: "android" },
     { key_id: "iv.clear_filter",         kurdish_text: "لابردنی فلتەر",                       category: "islamvoice", page: "android" },
     { key_id: "iv.share",                kurdish_text: "پارڤەکرن",                            category: "islamvoice", page: "android" },
     { key_id: "iv.share_quick",          kurdish_text: "پارڤەبکە",                            category: "islamvoice", page: "android" },

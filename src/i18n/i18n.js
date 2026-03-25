@@ -13,21 +13,30 @@
 var translations = {};
 var loadPromise = null;
 var CACHE_KEY = 'tafsirkurd_i18n_cache';
-var CACHE_TS_KEY = 'tafsirkurd_i18n_ts';
-var CACHE_TTL = 30 * 1000; // 30 seconds — stale cache served max 30s on startup
+var ETAG_KEY  = 'tafsirkurd_i18n_etag';  // persisted across sessions for 304 short-circuit
+var _lastETag = localStorage.getItem(ETAG_KEY) || null;
 
 /**
  * Try loading from remote endpoint (background merge only — do not use as primary source)
  */
 function loadRemote(){
+  var headers = { 'Cache-Control': 'no-cache' };
+  if(_lastETag) headers['If-None-Match'] = _lastETag;
+
   return fetch('https://tafsirkurd.com/app-translations?platform=android', {
-    cache: 'no-cache'
+    cache: 'no-cache',
+    headers: headers
   })
     .then(function(r){
+      // 304 Not Modified — nothing changed, skip parse entirely
+      if(r.status === 304) return null;
       if(!r.ok) throw new Error('HTTP ' + r.status);
+      var etag = r.headers.get('ETag');
+      if(etag){ _lastETag = etag; try{ localStorage.setItem(ETAG_KEY, etag); }catch(e){} }
       return r.json();
     })
     .then(function(data){
+      if(data === null) return null; // 304 short-circuit
       if(!data || typeof data !== 'object') throw new Error('Invalid data');
       return data;
     });
@@ -66,10 +75,7 @@ function loadLocal(){
  * Save current translations to localStorage cache
  */
 function saveCache(){
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(translations));
-    localStorage.setItem(CACHE_TS_KEY, String(Date.now()));
-  } catch(e){}
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(translations)); } catch(e){}
 }
 
 /**
@@ -80,12 +86,11 @@ function initLang(){
   if(loadPromise) return loadPromise;
 
   var cached = loadCache();
-  var cacheTs = parseInt(localStorage.getItem(CACHE_TS_KEY) || '0');
-  var cacheValid = cached && (Date.now() - cacheTs) < CACHE_TTL;
 
-  // Merge remote updates in background then re-save cache
+  // Always merge remote updates in background — applies any admin changes silently
   function bgMergeRemote(){
     loadRemote().then(function(data){
+      if(data === null) return; // 304 Not Modified — translations already current
       Object.assign(translations, data);
       applyTranslations();
       saveCache();
@@ -94,20 +99,18 @@ function initLang(){
     }).catch(function(){});
   }
 
-  if(cacheValid){
-    // Fresh valid cache — use immediately, refresh in background
+  if(cached){
+    // Stale-while-revalidate: serve cache instantly (zero flash), refresh in background
     translations = cached;
+    applyTranslations();
     bgMergeRemote();
     loadPromise = Promise.resolve(translations);
     return loadPromise;
   }
 
-  // No fresh valid cache — load bundled kmr.json first for instant, correct display
+  // No cache at all (first ever launch) — load bundled kmr.json for instant display
   loadPromise = loadLocal()
-    .catch(function(){
-      // Bundled file unavailable — fall back to stale valid cache if any
-      return cached || {};
-    })
+    .catch(function(){ return {}; })
     .then(function(data){
       translations = data;
       applyTranslations();
@@ -162,11 +165,13 @@ function applyTranslations(){
   });
 }
 
-// Live polling: re-merge remote translations every 8s so admin changes appear
-// within ~18s total (10s CDN cache + 8s poll interval).
+// Live polling: re-merge remote translations every 3s so admin changes appear
+// within ~13s total (10s CDN cache + 3s poll interval).
+// When nothing changed the server returns 304 Not Modified — no JSON parse, no DOM work.
 (function startPolling(){
   setInterval(function(){
     loadRemote().then(function(data){
+      if(data === null) return; // 304 Not Modified — nothing to do
       var changed = Object.keys(data).some(function(k){ return translations[k] !== data[k]; });
       if(changed){
         Object.assign(translations, data);
@@ -175,7 +180,7 @@ function applyTranslations(){
         document.dispatchEvent(new CustomEvent('i18n:updated'));
       }
     }).catch(function(){});
-  }, 8000);
+  }, 3000);
 })();
 
 // Export

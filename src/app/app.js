@@ -100,8 +100,10 @@ function loadReciterPhotos(){
       });
       // Persist so next launch is instant
       try{localStorage.setItem('reciter_photos_cache',JSON.stringify(RECITER_PHOTOS))}catch(e){}
-      // Preload all images into browser cache
-      Object.values(RECITER_PHOTOS).forEach(function(url){var i=new Image();i.src=url;});
+      // Preload images during idle time — doesn't compete with critical resources
+      (window.requestIdleCallback||function(fn){setTimeout(fn,200)})(function(){
+        Object.values(RECITER_PHOTOS).forEach(function(url){var i=new Image();i.src=url;});
+      });
     }).catch(function(){});
 }
 
@@ -1229,9 +1231,9 @@ App._execSearch=function(v){
     // Section dividers on type transition
     if(r.type!==prevType){
       if(r.type==='surah'&&prevType)
-        frag.appendChild(el('div','search-divider','سوور'));
+        frag.appendChild(el('div','search-divider',t('search.divider_surah')));
       else if(r.type==='verse')
-        frag.appendChild(el('div','search-divider','ئایەت'));
+        frag.appendChild(el('div','search-divider',t('search.divider_ayah')));
       prevType=r.type;
     }
     frag.appendChild(App._mkSearchItem(r));
@@ -1701,7 +1703,7 @@ function loadMushafPageQCF(pageEl,pageNum){
     // Juz banner — show only at the START of a new juz
     var juzIdx=JUZ_PAGES.indexOf(pageNum);
     if(juzIdx>=0){
-      var juzBanner=el('div','mushaf-juz-banner','جزء '+toArabicNum(juzIdx+1));
+      var juzBanner=el('div','mushaf-juz-banner',t('reader.juz_label')+' '+toArabicNum(juzIdx+1));
       frag.appendChild(juzBanner);
     }
 
@@ -2297,19 +2299,14 @@ function updateProgress(list,total){
   // Show saved progress on open
   if(maxSeen>0)updateHeader();
 
-  function onAyahScroll(){
+  // IntersectionObserver: browser tracks visibility natively — zero reflow, zero polling
+  var _ioProgress=new IntersectionObserver(function(entries){
     if(destroyed||S.surah!==surahId)return;
-    // Use clientHeight (not getBoundingClientRect().bottom) — avoids Android WebView
-    // reporting content height instead of visible height for scrollable elements.
-    var listTop=scrollEl.getBoundingClientRect().top;
-    var listBot=listTop+scrollEl.clientHeight;
-    var highest=0;
-    list.querySelectorAll('.ayah-card').forEach(function(c){
-      var idx=parseInt(c.dataset.ayah)||0;
-      if(!idx||idx>total)return;
-      var r=c.getBoundingClientRect();
-      // Any part of the card visible within the container's visible area
-      if(r.bottom>listTop&&r.top<listBot&&idx>highest)highest=idx;
+    var highest=maxSeen;
+    entries.forEach(function(entry){
+      if(!entry.isIntersecting)return;
+      var idx=parseInt(entry.target.dataset.ayah)||0;
+      if(idx&&idx<=total&&idx>highest)highest=idx;
     });
     if(highest>maxSeen){
       var prevMax=maxSeen;
@@ -2318,22 +2315,18 @@ function updateProgress(list,total){
       updateHeader();
       scheduleSave();
     }
-  }
+  },{root:scrollEl,threshold:0.1});
 
-  // Poll every 300ms — works even when scroll events lag on Android WebView
-  var _pollId=setInterval(function(){
-    if(destroyed){clearInterval(_pollId);return;}
-    onAyahScroll();
-  },300);
-  scrollEl.addEventListener('scroll',onAyahScroll,{passive:true});
+  // Observe cards already in DOM
+  list.querySelectorAll('.ayah-card').forEach(function(c){_ioProgress.observe(c);});
 
-  window._onNewAyahCard=null;
+  // New cards appended during progressive loading get observed automatically
+  window._onNewAyahCard=function(c){_ioProgress.observe(c);};
 
   _progressCleanup=function(){
     destroyed=true;
-    clearInterval(_pollId);
+    _ioProgress.disconnect();
     clearTimeout(saveTimer);
-    scrollEl.removeEventListener('scroll',onAyahScroll);
     window._onNewAyahCard=null;
   };
 }
@@ -2569,7 +2562,7 @@ function renderReaderSettings(){
   body.appendChild(kaRow);
 
   /* ---- ARABIC FONT ---- */
-  body.appendChild(el('div','qs-section-title','خەتی قورئانی'));
+  body.appendChild(el('div','qs-section-title',t('qs.quran_font_section')));
   var rfFonts=[
     {id:'hafs',  label:'KFGQPC Hafs', family:"'KFGQPC Hafs',serif"},
     {id:'amiri', label:'Amiri Quran', family:"'Amiri Quran',serif"}
@@ -2758,16 +2751,19 @@ App.mushafPlayToggle=function(){
 };
 
 /* ===== MUSHAF AUDIO HIGHLIGHT ===== */
+var _mushafPlayingEls=[]; // cached — avoids querySelectorAll on every ayah change
 function updateMushafHighlight(surah,ayah){
   var view=$('mushafView');
   if(!view)return;
-  view.querySelectorAll('.mushaf-line--playing').forEach(function(e){e.classList.remove('mushaf-line--playing');});
+  // Clear previous playing lines directly — no DOM scan needed
+  _mushafPlayingEls.forEach(function(e){e.classList.remove('mushaf-line--playing');});
+  _mushafPlayingEls=[];
   if(!surah||!ayah)return;
   var key=String(surah)+':'+String(ayah);
   var els=window._mushafVerseElements[key]||[];
   var first=null;
   els.forEach(function(l){
-    if(view.contains(l)){l.classList.add('mushaf-line--playing');if(!first)first=l;}
+    if(view.contains(l)){l.classList.add('mushaf-line--playing');_mushafPlayingEls.push(l);if(!first)first=l;}
   });
   if(first)first.scrollIntoView({behavior:'smooth',block:'center'});
 }
@@ -2785,21 +2781,24 @@ function scrollToAyah(ayahNum){
   }
 }
 
+var _readerPlayBtn=null; // cached — avoids querySelectorAll on every ayah change
 function updateReaderPlayState(surah,ayah,playing){
+  // Clear previous play button directly — no DOM scan needed
+  if(_readerPlayBtn){
+    _readerPlayBtn.classList.remove('playing');
+    var _pi=_readerPlayBtn.querySelector('i');if(_pi)_pi.className='fas fa-play';
+    _readerPlayBtn=null;
+  }
+  if(!playing||!surah)return;
   var list=$('ayahList');
   if(!list)return;
-  // Clear previous
-  list.querySelectorAll('[data-play].playing').forEach(function(b){
-    b.classList.remove('playing');
-    var i=b.querySelector('i');if(i)i.className='fas fa-play';
-  });
-  if(!playing||!surah)return;
   var card=list.querySelector('.ayah-card[data-ayah="'+ayah+'"]');
   if(!card)return;
   var btn=card.querySelector('[data-play]');
   if(!btn)return;
   btn.classList.add('playing');
   var i=btn.querySelector('i');if(i)i.className='fas fa-pause';
+  _readerPlayBtn=btn;
 }
 
 function playAyah(surah,ayah){
@@ -2920,7 +2919,7 @@ App.openMushafSettings=function(){
   function dismiss(){pane.classList.remove('on');setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},260);}
 
   var hdr=el('div','mushaf-settings-hdr');
-  hdr.appendChild(el('span','mushaf-settings-title','ڕێکخستنی مووشەف'));
+  hdr.appendChild(el('span','mushaf-settings-title',t('qs.mushaf_settings_title')));
   var xBtn=el('button','mushaf-settings-close');xBtn.appendChild(icon('fas fa-times'));
   on(xBtn,'click',dismiss);hdr.appendChild(xBtn);
   pane.appendChild(hdr);
@@ -2932,7 +2931,7 @@ App.openMushafSettings=function(){
   if(_abH>0)body.style.paddingBottom='calc(var(--tab-h) + var(--safe-b) + '+(_abH+20)+'px)';
 
   // Font Size stepper
-  body.appendChild(el('div','ms-section-label','قەبارەی نووسین'));
+  body.appendChild(el('div','ms-section-label',t('qs.font_size_label')));
   var fsVal=el('span','stepper-val',S.mushafFontSize+'px');
   var fsMBtn,fsPBtn;
   function setFsSize(v){v=Math.max(14,Math.min(50,Math.round(v)));S.mushafFontSize=v;fsVal.textContent=v+'px';document.documentElement.style.setProperty('--mushaf-size',v+'px');localStorage.setItem('mushafFontSize_'+S.mushafFont,String(v));if(fsMBtn)fsMBtn.disabled=(v<=14);if(fsPBtn)fsPBtn.disabled=(v>=50);}
@@ -2945,7 +2944,7 @@ App.openMushafSettings=function(){
   body.appendChild(fsCtrl);
 
   // Line Height stepper
-  body.appendChild(el('div','ms-section-label','قەراغا ریزان'));
+  body.appendChild(el('div','ms-section-label',t('qs.line_spacing_label')));
   var lhVal=el('span','stepper-val',S.mushafLineH.toFixed(1)+'×');
   var lhCtrl=el('div','setting-stepper');
   var lhMBtn=el('button','stepper-btn','-');var lhPBtn=el('button','stepper-btn','+');
@@ -6006,7 +6005,7 @@ App.ivPlay=function(episodeId){
     if(metaParts.length){body.appendChild(el('div','iv-yt-card-meta',metaParts.join(' · ')));}
     var btn=el('button','iv-yt-card-btn');
     btn.appendChild(icon('fab fa-youtube'));
-    btn.appendChild(document.createTextNode(' YouTube دا تەماشابکە'));
+    btn.appendChild(document.createTextNode(' '+t('iv.watch_on_youtube')));
     body.appendChild(btn);
     card.appendChild(body);
 
@@ -6041,10 +6040,10 @@ App.ivPlay=function(episodeId){
         var ov=el('div','yt-err-overlay');
         var ic=icon('fas fa-lock');ic.className+=' yt-err-icon';
         ov.appendChild(ic);
-        ov.appendChild(el('div','yt-err-msg','ئەم ڤیدیۆیە ناتوانرێت لەناو ئەپ نیشان بدرێت.\nدەتوانیت لە YouTube دا تەماشایی بکەیت.'));
+        ov.appendChild(el('div','yt-err-msg',t('iv.video_blocked_msg')));
         var ob=el('button','yt-err-btn');
         ob.appendChild(icon('fab fa-youtube'));
-        ob.appendChild(document.createTextNode(' YouTube دا بکەرەوە'));
+        ob.appendChild(document.createTextNode(' '+t('iv.open_in_youtube')));
         on(ob,'click',function(){
           var url='https://www.youtube.com/watch?v='+videoId;
           var B=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
@@ -6138,8 +6137,8 @@ function ivRenderSavedList(){
   if(!saved.length){
     var emp=el('div','iv-overlay-empty');
     var eico=el('div','iv-overlay-empty-icon');eico.appendChild(icon('fas fa-bookmark'));emp.appendChild(eico);
-    emp.appendChild(el('div','iv-overlay-empty-title','هیچ ئەپیسۆدێک نەپارستیوی'));
-    emp.appendChild(el('div','iv-overlay-empty-sub','بوتونا bookmark بپەخشە بۆ پاراستن'));
+    emp.appendChild(el('div','iv-overlay-empty-title',t('iv.no_saved_episodes')));
+    emp.appendChild(el('div','iv-overlay-empty-sub',t('iv.bookmark_to_save')));
     list.appendChild(emp);
   }else{
     saved.forEach(function(ep){
@@ -6176,8 +6175,8 @@ function ivRenderHistoryList(){
   if(!keys.length){
     var emp2=el('div','iv-overlay-empty');
     var eico2=el('div','iv-overlay-empty-icon');eico2.appendChild(icon('fas fa-clock-rotate-left'));emp2.appendChild(eico2);
-    emp2.appendChild(el('div','iv-overlay-empty-title','هیچ مێژووێک نیە'));
-    emp2.appendChild(el('div','iv-overlay-empty-sub','ئەپیسۆدێک تەماشابکە، ئینجا ئێرە دەکەوێتەوە'));
+    emp2.appendChild(el('div','iv-overlay-empty-title',t('iv.no_history')));
+    emp2.appendChild(el('div','iv-overlay-empty-sub',t('iv.history_hint')));
     list.appendChild(emp2);
   }else{
     keys.forEach(function(epId){
@@ -6192,8 +6191,8 @@ function ivRenderHistoryList(){
       item.appendChild(thumb);
       var info=el('div','iv-overlay-ep-info');
       if(series)info.appendChild(el('div','iv-overlay-ep-series',series.title));
-      info.appendChild(el('div','iv-overlay-ep-title',ep.title||('ئەپیسۆد '+(ep.episode_number||''))));
-      info.appendChild(el('div','iv-overlay-ep-pct',Math.round(wp.percent)+'% تەماشاکراوە'));
+      info.appendChild(el('div','iv-overlay-ep-title',ep.title||(t('iv.episode_prefix')+' '+(ep.episode_number||''))));
+      info.appendChild(el('div','iv-overlay-ep-pct',Math.round(wp.percent)+t('iv.percent_watched')));
       item.appendChild(info);
       var del=el('button','iv-overlay-ep-del');del.appendChild(icon('fas fa-trash'));
       on(del,'click',function(e){e.stopPropagation();delete progress[epId];try{localStorage.setItem('iv_watch_progress',JSON.stringify(progress))}catch(ex){}haptic([8]);ivRenderHistoryList()});
@@ -6262,7 +6261,7 @@ App.ivShowSpeakerFilter=function(){
   var list=el('div','iv-spk-list');
   var allBtn=el('button','iv-spk-item'+(S.ivSpeakerFilter===null?' on':''));
   allBtn.appendChild(icon('fas fa-users'));
-  allBtn.appendChild(document.createTextNode(' هەمی'));
+  allBtn.appendChild(document.createTextNode(' '+t('iv.all')));
   on(allBtn,'click',function(){
     S.ivSpeakerFilter=null;
     renderIvGrid();
