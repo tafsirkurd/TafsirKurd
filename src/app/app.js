@@ -5955,11 +5955,41 @@ App.ivPlay=function(episodeId){
   wrapper.appendChild(closeBtn);
 
   if(isYouTube){
+    var videoId=ep.video_url;
     var iframe=document.createElement('iframe');
-    iframe.src='https://www.youtube.com/embed/'+ep.video_url+'?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=0';
-    iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+    iframe.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=https://tafsirkurd.com';
+    iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
     iframe.allowFullscreen=true;
     wrapper.appendChild(iframe);
+    // Show error overlay when YouTube reports embedding is blocked (error 150/101/153)
+    function showYTErr(){
+      if(wrapper.querySelector('.yt-err-overlay'))return;
+      var ov=el('div','yt-err-overlay');
+      var ic=icon('fas fa-lock');ic.className+=' yt-err-icon';
+      ov.appendChild(ic);
+      ov.appendChild(el('div','yt-err-msg','ئەم ڤیدیۆیە ناتوانرێت لەناو ئەپ نیشان بدرێت.\nدەتوانیت لە YouTube دا تەماشایی بکەیت.'));
+      var ob=el('button','yt-err-btn');
+      ob.appendChild(icon('fab fa-youtube'));
+      ob.appendChild(document.createTextNode(' YouTube دا بکەرەوە'));
+      on(ob,'click',function(){
+        var url='https://www.youtube.com/watch?v='+videoId;
+        var B=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Browser;
+        if(B){B.open({url:url})}else{window.open(url,'_blank')}
+      });
+      ov.appendChild(ob);
+      wrapper.appendChild(ov);
+    }
+    // Clean up any previous listener before attaching a new one
+    if(window._ytErrHandler){window.removeEventListener('message',window._ytErrHandler);window._ytErrHandler=null;}
+    window._ytErrHandler=function(e){
+      if(!e.data)return;
+      try{
+        var d=typeof e.data==='string'?JSON.parse(e.data):e.data;
+        var code=d.error||(d.info&&d.info.error);
+        if(d.event==='error'||code){showYTErr();}
+      }catch(ex){}
+    };
+    window.addEventListener('message',window._ytErrHandler);
   }else{
     var video=document.createElement('video');
     video.src=ep.video_url;
@@ -6010,6 +6040,8 @@ App.ivCloseVideo=function(){
   // Exit fullscreen if active
   if(document.fullscreenElement)try{document.exitFullscreen()}catch(e){}
   if(document.webkitFullscreenElement)try{document.webkitExitFullscreen()}catch(e){}
+  // Clean up YouTube postMessage error listener
+  if(window._ytErrHandler){window.removeEventListener('message',window._ytErrHandler);window._ytErrHandler=null;}
   // Pause any playing video
   var video=container.querySelector('video');
   if(video){video.pause();video.src=''}
