@@ -5176,7 +5176,12 @@ App.openLogin=function(){
         setUserFromSession(session);
         App.closeLogin();
       }
-    }).catch(function(e){showMsg(e.message||t('error.generic'),'error')});
+    }).catch(function(e){
+      // 1001 = user cancelled the Apple sheet — silent, no error shown
+      var msg=e&&(e.message||e.errorMessage||'');
+      if(msg.indexOf('1001')!==-1||msg.toLowerCase().indexOf('cancel')!==-1)return;
+      showMsg(msg||t('error.generic'),'error');
+    });
   }
 
   on(tabSignin,'click',function(){
