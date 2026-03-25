@@ -964,13 +964,16 @@ window.GencineUI = {
         function toArabicNum(n) {
           return String(n).split('').map(function(d){ return ARABIC_NUMS[+d] || d; }).join('');
         }
+        var ayahnums = dua.ayahnums || [];
+        var realIdx = 0;
         ayahs.forEach(function(ayah, idx) {
           ayah = ayah.trim();
           if (!ayah) return;
           ar.appendChild(document.createTextNode(ayah + ' '));
           var numEl = document.createElement('span');
           numEl.className = 'dua-ayah-num';
-          numEl.textContent = toArabicNum(idx + 1);
+          numEl.textContent = toArabicNum(ayahnums[realIdx] !== undefined ? ayahnums[realIdx] : idx + 1);
+          realIdx++;
           ar.appendChild(numEl);
           ar.appendChild(document.createTextNode(' '));
         });
