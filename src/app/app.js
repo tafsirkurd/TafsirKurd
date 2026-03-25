@@ -4468,13 +4468,15 @@ function renderSettings(){
       navigator.clipboard.writeText(url3).then(function(){toast(t('toast.link_copied'))}).catch(function(){toast(url3)});
     }
   }));
-  // (5) Rate app
-  g5.appendChild(mkBtnRow(t('settings.rate_app'),t('settings.rate_btn'),'fas fa-star',function(){
-    var playUrl='market://details?id=com.tafsirkurd.app';
-    var webUrl='https://play.google.com/store/apps/details?id=com.tafsirkurd.app';
-    try{window.location.href=playUrl}catch(e){window.open(webUrl,'_blank')}
-    setTimeout(function(){window.open(webUrl,'_blank')},500);
-  }));
+  // (5) Rate app — only show on Android (iOS App Store link not yet available)
+  if(!(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios')){
+    g5.appendChild(mkBtnRow(t('settings.rate_app'),t('settings.rate_btn'),'fas fa-star',function(){
+      var playUrl='market://details?id=com.tafsirkurd.app';
+      var webUrl='https://play.google.com/store/apps/details?id=com.tafsirkurd.app';
+      try{window.location.href=playUrl}catch(e){window.open(webUrl,'_blank')}
+      setTimeout(function(){window.open(webUrl,'_blank')},500);
+    }));
+  }
   content.appendChild(g5);
 
   // ── About ────────────────────────────────────
@@ -4560,7 +4562,8 @@ function setUserFromSession(session){
     id:u.id,
     email:u.email,
     name:meta.full_name||meta.name||(u.email?u.email.split('@')[0]:'User'),
-    avatar:meta.avatar_url||null
+    avatar:meta.avatar_url||null,
+    provider:(u.app_metadata&&u.app_metadata.provider)||'email'
   };
 }
 
@@ -5211,8 +5214,13 @@ App.closeProfile=function(){
 };
 
 function renderProfile(panel){
-  var provider=S.user.avatar&&S.user.avatar.indexOf('google')!==-1?'Google':'Email';
+  var rawProv=S.user.provider||(S.user.avatar&&S.user.avatar.indexOf('google')!==-1?'google':'email');
+  var providerLabel=rawProv==='google'?'Google':rawProv==='apple'?'Apple':'Email';
+  var isOAuth=(rawProv==='google'||rawProv==='apple');
   var log=getReadLog();var bms=getBookmarks();
+  // Field-level message helpers
+  function sfm(el,text,type){el.textContent=text;el.className='pp-field-msg '+type;}
+  function cfm(el){el.className='pp-field-msg';el.textContent='';}
   var totalRead=calcTotalRead(log);var streak=calcStreak(log);
 
   // ── Header ────────────────────────────────────
@@ -5271,7 +5279,7 @@ function renderProfile(panel){
   var infoCard=el('div','pp-card');
   var provRow=el('div','pp-row');
   provRow.appendChild(el('div','pp-row-label',t('profile.login_method')));
-  provRow.appendChild(el('div','pp-row-value',provider));
+  provRow.appendChild(el('div','pp-row-value',providerLabel));
   infoCard.appendChild(provRow);
   // Member since (async)
   if(S.supabase){
@@ -5297,50 +5305,53 @@ function renderProfile(panel){
   var nameInput=document.createElement('input');
   nameInput.type='text';nameInput.className='pp-edit-input';nameInput.value=S.user.name||'';nameInput.placeholder=t('profile.name_placeholder');
   nameGroup.appendChild(nameInput);
+  var nameMsg=el('div','pp-field-msg');nameGroup.appendChild(nameMsg);
   var nameBtn=el('button','pp-save-btn',t('profile.save'));
   on(nameBtn,'click',function(){
     var v=nameInput.value.trim();
-    if(!v){showPPMsg(t('profile.name_placeholder'),'error');return}
-    nameBtn.disabled=true;clearPPMsg();
+    if(!v){sfm(nameMsg,t('profile.name_placeholder'),'error');return}
+    nameBtn.disabled=true;cfm(nameMsg);
     S.supabase.auth.updateUser({data:{full_name:v}}).then(function(resp){
       nameBtn.disabled=false;
-      if(resp.error){showPPMsg(resp.error.message,'error');return}
+      if(resp.error){sfm(nameMsg,resp.error.message,'error');return}
       S.user.name=v;
       S.supabase.from('profiles').update({full_name:v,display_name:v}).eq('id',S.user.id).then(function(){});
       var nd=panel.querySelector('.pp-name-display');if(nd)nd.textContent=v;
-      var sh=panel.querySelector('.pp-name-display');if(sh)sh.textContent=v;
-      showPPMsg(t('profile.name_changed'),'success');
-    }).catch(function(e){nameBtn.disabled=false;showPPMsg(e.message||t('error.generic'),'error')});
+      sfm(nameMsg,t('profile.name_changed'),'success');
+    }).catch(function(e){nameBtn.disabled=false;sfm(nameMsg,e.message||t('error.generic'),'error')});
   });
   nameGroup.appendChild(nameBtn);
   nameSec.appendChild(nameGroup);
   body.appendChild(nameSec);
 
-  // ── Edit email ────────────────────────────────
-  var emailSec=el('div','pp-section');
-  emailSec.appendChild(el('div','pp-section-title',t('profile.change_email')));
-  var emailGroup=el('div','pp-edit-group');
-  var emailInput=document.createElement('input');
-  emailInput.type='email';emailInput.className='pp-edit-input';emailInput.value=S.user.email||'';emailInput.placeholder=t('profile.email_placeholder');
-  emailGroup.appendChild(emailInput);
-  var emailBtn=el('button','pp-save-btn',t('profile.change_email'));
-  on(emailBtn,'click',function(){
-    var v=emailInput.value.trim();
-    if(!v){showPPMsg(t('profile.email_placeholder'),'error');return}
-    if(v===S.user.email){showPPMsg(t('profile.new_email'),'error');return}
-    emailBtn.disabled=true;clearPPMsg();
-    S.supabase.auth.updateUser({email:v}).then(function(resp){
-      emailBtn.disabled=false;
-      if(resp.error){showPPMsg(resp.error.message,'error');return}
-      showPPMsg(t('profile.email_sent'),'success');
-    }).catch(function(e){emailBtn.disabled=false;showPPMsg(e.message||t('error.generic'),'error')});
-  });
-  emailGroup.appendChild(emailBtn);
-  emailSec.appendChild(emailGroup);
-  body.appendChild(emailSec);
+  // ── Edit email (email-auth users only) ───────
+  if(!isOAuth){
+    var emailSec=el('div','pp-section');
+    emailSec.appendChild(el('div','pp-section-title',t('profile.change_email')));
+    var emailGroup=el('div','pp-edit-group');
+    var emailInput=document.createElement('input');
+    emailInput.type='email';emailInput.className='pp-edit-input';emailInput.value=S.user.email||'';emailInput.placeholder=t('profile.email_placeholder');
+    emailGroup.appendChild(emailInput);
+    var emailMsg=el('div','pp-field-msg');emailGroup.appendChild(emailMsg);
+    var emailBtn=el('button','pp-save-btn',t('profile.change_email'));
+    on(emailBtn,'click',function(){
+      var v=emailInput.value.trim();
+      if(!v){sfm(emailMsg,t('profile.email_placeholder'),'error');return}
+      if(v===S.user.email){sfm(emailMsg,t('profile.new_email'),'error');return}
+      emailBtn.disabled=true;cfm(emailMsg);
+      S.supabase.auth.updateUser({email:v}).then(function(resp){
+        emailBtn.disabled=false;
+        if(resp.error){sfm(emailMsg,resp.error.message,'error');return}
+        sfm(emailMsg,t('profile.email_sent'),'success');
+      }).catch(function(e){emailBtn.disabled=false;sfm(emailMsg,e.message||t('error.generic'),'error')});
+    });
+    emailGroup.appendChild(emailBtn);
+    emailSec.appendChild(emailGroup);
+    body.appendChild(emailSec);
+  }
 
   // ── Change password (email users only) ────────
-  if(provider==='Email'){
+  if(!isOAuth){
     var passSec=el('div','pp-section');
     passSec.appendChild(el('div','pp-section-title',t('profile.change_pass')));
     var passGroup=el('div','pp-edit-group');
@@ -5349,18 +5360,19 @@ function renderProfile(panel){
     var passConfirm=document.createElement('input');
     passConfirm.type='password';passConfirm.className='pp-edit-input';passConfirm.placeholder=t('profile.confirm_pass');
     passGroup.appendChild(passInput);passGroup.appendChild(passConfirm);
+    var passMsg=el('div','pp-field-msg');passGroup.appendChild(passMsg);
     var passBtn=el('button','pp-save-btn',t('profile.change_pass_btn'));
     on(passBtn,'click',function(){
       var p1=passInput.value,p2=passConfirm.value;
-      if(!p1||p1.length<6){showPPMsg(t('profile.pass_min'),'error');return}
-      if(p1!==p2){showPPMsg(t('profile.pass_mismatch'),'error');return}
-      passBtn.disabled=true;clearPPMsg();
+      if(!p1||p1.length<6){sfm(passMsg,t('profile.pass_min'),'error');return}
+      if(p1!==p2){sfm(passMsg,t('profile.pass_mismatch'),'error');return}
+      passBtn.disabled=true;cfm(passMsg);
       S.supabase.auth.updateUser({password:p1}).then(function(resp){
         passBtn.disabled=false;
-        if(resp.error){showPPMsg(resp.error.message,'error');return}
+        if(resp.error){sfm(passMsg,resp.error.message,'error');return}
         passInput.value='';passConfirm.value='';
-        showPPMsg(t('profile.pass_changed'),'success');
-      }).catch(function(e){passBtn.disabled=false;showPPMsg(e.message||t('error.generic'),'error')});
+        sfm(passMsg,t('profile.pass_changed'),'success');
+      }).catch(function(e){passBtn.disabled=false;sfm(passMsg,e.message||t('error.generic'),'error')});
     });
     passGroup.appendChild(passBtn);
     passSec.appendChild(passGroup);
@@ -5384,16 +5396,19 @@ function renderProfile(panel){
   on(logoutBtn,'click',function(){App.logout();App.closeProfile();});
   actWrap.appendChild(logoutBtn);
 
+  // Separator before destructive action
+  actWrap.appendChild(el('div','pp-actions-sep'));
+
   var deleteBtn=el('button','pp-action-btn pp-delete');
   deleteBtn.appendChild(icon('fas fa-trash-alt'));
   deleteBtn.appendChild(document.createTextNode(' '+t('profile.delete_account')));
   on(deleteBtn,'click',function(){
     if(!confirm(t('profile.confirm_delete1')))return;
     if(!confirm(t('profile.confirm_delete2')))return;
-    clearPPMsg();
+    msg.className='pp-msg';msg.textContent='';
     S.supabase.auth.getSession().then(function(resp){
       var accessToken=resp&&resp.data&&resp.data.session&&resp.data.session.access_token;
-      if(!accessToken){showPPMsg(t('error.generic'),'error');return}
+      if(!accessToken){msg.textContent=t('error.generic');msg.className='pp-msg error';return}
       return fetch('/delete-account',{
         method:'POST',
         headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'}
@@ -5404,7 +5419,7 @@ function renderProfile(panel){
         S.user=null;stopCloudSync();App.closeProfile();
         toast(t('toast.account_deleted'));renderSettings();
       });
-    }).catch(function(e){showPPMsg(e.message||t('error.delete'),'error')});
+    }).catch(function(e){msg.textContent=e.message||t('error.delete');msg.className='pp-msg error';});
   });
   actWrap.appendChild(deleteBtn);
   actSec.appendChild(actWrap);
