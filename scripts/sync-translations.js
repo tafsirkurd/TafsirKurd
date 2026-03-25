@@ -10,9 +10,9 @@ const vm = require('vm');
 
 // Load BULK_TRANSLATIONS by running the file in a sandbox context
 const src = require('fs').readFileSync(__dirname + '/../src/utils/bulk-translations.js', 'utf8');
-const ctx = {};
+const ctx = { window: {} };
 vm.runInNewContext(src, ctx);
-const ENTRIES = ctx.BULK_TRANSLATIONS || [];
+const ENTRIES = ctx.window.BULK_TRANSLATIONS || ctx.BULK_TRANSLATIONS || [];
 
 async function fetchConfig() {
   return new Promise((resolve, reject) => {
