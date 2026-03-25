@@ -4961,18 +4961,18 @@ App.openLogin=function(){
     divider.appendChild(el('span','',t('auth.or')));
     f.appendChild(divider);
 
-    var googleBtn=el('button','auth-google-btn');
-    googleBtn.appendChild(el('span','',t('auth.google_login')));
-    on(googleBtn,'click',function(){signInWithGoogle()});
-    f.appendChild(googleBtn);
-
-    // Sign in with Apple — iOS only (Apple Guideline 4.8)
+    // Sign in with Apple — iOS only, shown first per Apple Guideline 4.8
     if(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios'){
       var appleBtn=el('button','auth-apple-btn');
       appleBtn.appendChild(el('span','',t('auth.apple_login')));
       on(appleBtn,'click',function(){signInWithApple()});
       f.appendChild(appleBtn);
     }
+
+    var googleBtn=el('button','auth-google-btn');
+    googleBtn.appendChild(el('span','',t('auth.google_login')));
+    on(googleBtn,'click',function(){signInWithGoogle()});
+    f.appendChild(googleBtn);
 
     forms.appendChild(f);
   }
@@ -5024,18 +5024,18 @@ App.openLogin=function(){
     divider.appendChild(el('span','',t('auth.or')));
     f.appendChild(divider);
 
-    var googleBtn=el('button','auth-google-btn');
-    googleBtn.appendChild(el('span','',t('auth.google_signup')));
-    on(googleBtn,'click',function(){signInWithGoogle()});
-    f.appendChild(googleBtn);
-
-    // Sign in with Apple — iOS only
+    // Sign in with Apple — iOS only, shown first per Apple Guideline 4.8
     if(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios'){
       var appleBtn=el('button','auth-apple-btn');
       appleBtn.appendChild(el('span','',t('auth.apple_signup')));
       on(appleBtn,'click',function(){signInWithApple()});
       f.appendChild(appleBtn);
     }
+
+    var googleBtn=el('button','auth-google-btn');
+    googleBtn.appendChild(el('span','',t('auth.google_signup')));
+    on(googleBtn,'click',function(){signInWithGoogle()});
+    f.appendChild(googleBtn);
 
     forms.appendChild(f);
   }
