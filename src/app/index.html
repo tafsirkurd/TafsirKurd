@@ -844,6 +844,17 @@ body{background:var(--bg);color:var(--text)}
 .iv-player video,.iv-player iframe{width:100%;aspect-ratio:16/9;display:block;border:none}
 .iv-player-close{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;z-index:10}
 .iv-player-close:active{transform:scale(.9)}
+/* iOS YouTube preview card (replaces unreliable iframe on iOS) */
+.iv-yt-card{margin:0 16px 12px;border-radius:var(--r-l);overflow:hidden;background:var(--surface);border:1px solid var(--border);position:relative}
+.iv-yt-card-thumb{width:100%;aspect-ratio:16/9;background:#111;overflow:hidden;position:relative;cursor:pointer}
+.iv-yt-card-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.iv-yt-play-over{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3)}
+.iv-yt-play-circle{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#ff0000;padding-inline-start:3px}
+.iv-yt-card-body{padding:14px 16px 16px}
+.iv-yt-card-title{font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:5px;direction:rtl;line-height:1.4}
+.iv-yt-card-meta{font-size:.75rem;color:var(--text3);margin-bottom:14px;direction:rtl}
+.iv-yt-card-btn{width:100%;height:46px;background:var(--accent);color:var(--accent-t,#fff);border:none;border-radius:var(--r-m);font-size:.92rem;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:opacity .15s}
+.iv-yt-card-btn:active{opacity:.8}
 .yt-err-overlay{position:absolute;inset:0;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff;text-align:center;padding:24px;z-index:5;border-radius:var(--r-l)}
 .yt-err-icon{font-size:2rem;opacity:.55}
 .yt-err-msg{font-size:.85rem;opacity:.75;line-height:1.7;direction:rtl;max-width:240px}
