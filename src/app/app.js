@@ -268,7 +268,6 @@ function init(){
     setupPullToRefresh('panelSettings',function(){_renderHash.settings=null;renderSettings();});
     setupPullToRefresh('panelPrayer',function(){if(window.PrayerUI)PrayerUI.refresh()});
     setupPullToRefresh('panelGencine',function(){if(window.GencineUI)GencineUI.refresh();});
-    setupPullToRefresh('profilePanel',function(){var p=$('profilePanel');if(p){clear(p);renderProfile(p);}},function(){var p=$('profilePanel');return p&&p.classList.contains('on');});
 
     // Load data
     loadQuranData();
