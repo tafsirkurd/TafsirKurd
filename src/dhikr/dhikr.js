@@ -344,7 +344,7 @@ var _bgRefreshDone = false; /* only refresh once per app session */
 /* Load from cache instantly, then re-fetch once in background per session */
 function _initDbData(onDone) {
   var cachedCats     = _readCache('gencine_cats_v5');
-  var cachedDuas     = _readCache('gencine_duas_v2');
+  var cachedDuas     = _readCache('gencine_duas_v3');
   var cachedHadiths  = _readCache('gencine_hadiths_v2');
   var cachedSections = _readCache('gencine_sections_v1');
   var cachedBooks    = _readCache('gencine_books_v3');
@@ -436,7 +436,7 @@ function _fetchDbData(onDone) {
     }
     if (!duaRes.error && duaRes.data) {
       _dbDuas = duaRes.data;
-      _writeCache('gencine_duas_v2', _dbDuas);
+      _writeCache('gencine_duas_v3', _dbDuas);
     }
     if (!hadithRes.error && hadithRes.data) {
       _dbHadiths = hadithRes.data;
@@ -646,7 +646,7 @@ window.GencineUI = {
   refresh: function(){
     var self = this;
     localStorage.removeItem('gencine_cats_v2');
-    localStorage.removeItem('gencine_duas_v2');
+    localStorage.removeItem('gencine_duas_v3');
     localStorage.removeItem('gencine_hadiths_v2');
     localStorage.removeItem('gencine_sections_v1');
     localStorage.removeItem('gencine_tasbih_v1');
