@@ -25,6 +25,7 @@ public class TafsirAppleSignIn: CAPPlugin, CAPBridgedPlugin {
 
         let controller = ASAuthorizationController(authorizationRequests: [request])
         controller.delegate = self
+        controller.presentationContextProvider = self  // required to avoid error 1000
         controller.performRequests()
     }
 }
@@ -48,7 +49,20 @@ extension TafsirAppleSignIn: ASAuthorizationControllerDelegate {
 
     public func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
         guard let call = pendingCall else { return }
-        call.reject(error.localizedDescription)
+        // Pass numeric error code so JS can reliably detect cancel (1001) regardless of locale
+        let code = (error as? ASAuthorizationError)?.code.rawValue ?? -1
+        call.reject(error.localizedDescription, nil, nil, ["errorCode": code])
         pendingCall = nil
+    }
+}
+
+extension TafsirAppleSignIn: ASAuthorizationControllerPresentationContextProviding {
+    public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        // Return the key window so iOS knows where to present the Sign in with Apple sheet
+        if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+           let window = scene.windows.first(where: { $0.isKeyWindow }) {
+            return window
+        }
+        return UIWindow()
     }
 }

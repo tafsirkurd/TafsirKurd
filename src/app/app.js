@@ -5176,9 +5176,10 @@ App.openLogin=function(){
         App.closeLogin();
       }
     }).catch(function(e){
-      // 1001 = user cancelled the Apple sheet — silent, no error shown
+      // 1001 = user cancelled — silent regardless of locale or message format
+      var code=e&&(e.data&&e.data.errorCode);
       var msg=e&&(e.message||e.errorMessage||'');
-      if(msg.indexOf('1001')!==-1||msg.toLowerCase().indexOf('cancel')!==-1)return;
+      if(code===1001||msg.indexOf('1001')!==-1||msg.toLowerCase().indexOf('cancel')!==-1)return;
       showMsg(msg||t('error.generic'),'error');
     });
   }
