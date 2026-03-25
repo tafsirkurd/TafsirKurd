@@ -1111,6 +1111,9 @@ window.BULK_TRANSLATIONS = [
     { key_id: "auth.or", kurdish_text: "یان", category: "auth", page: "android" },
     { key_id: "auth.google_login", kurdish_text: "چوونا دژوورڤە ب Google", category: "auth", page: "android" },
     { key_id: "auth.google_signup", kurdish_text: "دروستکرنا ھەژمارێ ب Google", category: "auth", page: "android" },
+    { key_id: "auth.apple_login", kurdish_text: "چوونا دژوورڤە ب Apple", category: "auth", page: "android" },
+    { key_id: "auth.apple_signup", kurdish_text: "دروستکرنا ھەژمارێ ب Apple", category: "auth", page: "android" },
+    { key_id: "auth.continue_guest", kurdish_text: "بەردەوام ب بێ ھەژمار ←", category: "auth", page: "android" },
     { key_id: "auth.otp_sent", kurdish_text: "کۆدێ پشتڕاستکرنێ ھاتە هنارتن بۆ ${email}", category: "auth", page: "android" },
     { key_id: "auth.otp_placeholder", kurdish_text: "کۆدێ پشتڕاستکرنێ", category: "auth", page: "android" },
     { key_id: "auth.verify", kurdish_text: "پشتڕاستکرن", category: "auth", page: "android" },
@@ -1134,6 +1137,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "repeat.active", kurdish_text: "دووبارەکرن...", category: "audio", page: "android" },
     { key_id: "audio.reciter", kurdish_text: "خواندەڤان", category: "audio", page: "android" },
     { key_id: "audio.speed", kurdish_text: "لەزاتی", category: "audio", page: "android" },
+    { key_id: "iv.new_badge", kurdish_text: "نوی", category: "islamvoice", page: "android" },
     { key_id: "iv.loading", kurdish_text: "بارکرن...", category: "islamvoice", page: "android" },
     { key_id: "iv.no_series", kurdish_text: "هیچ زنجیرەک نینە", category: "islamvoice", page: "android" },
     { key_id: "iv.refresh", kurdish_text: "نویکرن", category: "islamvoice", page: "android" },
@@ -1297,5 +1301,7 @@ window.BULK_TRANSLATIONS = [
     { key_id: "prayer.no_data",           kurdish_text: "داتا نیه — ئینتەرنێت پشکنی",              category: "prayer",     page: "android" },
     { key_id: "prayer.perm_denied",       kurdish_text: "ئازن نەدرا — ئیجازەت پێدە",               category: "prayer",     page: "android" },
     { key_id: "prayer.athan_off",         kurdish_text: "بانگ هاتنە",                               category: "prayer",     page: "android" },
-    { key_id: "prayer.channel_desc",      kurdish_text: "ئاگاداریێن کاتا نوێژ",                    category: "prayer",     page: "android" }
+    { key_id: "prayer.channel_desc",      kurdish_text: "ئاگاداریێن کاتا نوێژ",                    category: "prayer",     page: "android" },
+    { key_id: "prayer.test_notif_title",  kurdish_text: "تێستی ئازان",                               category: "prayer",     page: "android" },
+    { key_id: "prayer.test_notif_body",   kurdish_text: "تاقیکردنا بانگ — ئاگادارکرن چاکە دیکا!",   category: "prayer",     page: "android" }
 ];
