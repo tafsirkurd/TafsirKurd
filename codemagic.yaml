@@ -95,6 +95,96 @@ workflows:
           fi
           echo "All official @capacitor/* versions OK"
 
+      - name: Patch apple-sign-in plugin for Capacitor 8 compatibility
+        script: |
+          PLUGIN_SWIFT="node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift"
+          if [ -f "$PLUGIN_SWIFT" ]; then
+            cat > "$PLUGIN_SWIFT" << 'SWIFTEOF'
+import Foundation
+import Capacitor
+import AuthenticationServices
+
+@objc(SignInWithApple)
+public class SignInWithApple: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "SignInWithApple"
+    public let jsName = "SignInWithApple"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "authorize", returnType: CAPPluginReturnPromise),
+    ]
+
+    @objc func authorize(_ call: CAPPluginCall) {
+        let appleIDProvider = ASAuthorizationAppleIDProvider()
+        let request = appleIDProvider.createRequest()
+        request.requestedScopes = getRequestedScopes(from: call)
+        request.state = call.getString("state")
+        request.nonce = call.getString("nonce")
+
+        let defaults = UserDefaults()
+        defaults.setValue(call.callbackId, forKey: "callbackId")
+
+        self.bridge?.saveCall(call)
+
+        let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+        authorizationController.delegate = self
+        authorizationController.performRequests()
+    }
+
+    func getRequestedScopes(from call: CAPPluginCall) -> [ASAuthorization.Scope]? {
+        var requestedScopes: [ASAuthorization.Scope] = []
+        if let scopesStr = call.getString("scopes") {
+            if scopesStr.contains("name") { requestedScopes.append(.fullName) }
+            if scopesStr.contains("email") { requestedScopes.append(.email) }
+        }
+        return requestedScopes.isEmpty ? nil : requestedScopes
+    }
+}
+
+extension SignInWithApple: ASAuthorizationControllerDelegate {
+    public func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else { return }
+
+        let defaults = UserDefaults()
+        let id = defaults.string(forKey: "callbackId") ?? ""
+        guard let call = self.bridge?.savedCall(withID: id) else { return }
+
+        var identityToken: String? = nil
+        if let tokenData = appleIDCredential.identityToken {
+            identityToken = String(data: tokenData, encoding: .utf8)
+        }
+        var authorizationCode: String? = nil
+        if let codeData = appleIDCredential.authorizationCode {
+            authorizationCode = String(data: codeData, encoding: .utf8)
+        }
+
+        let result: JSObject = [
+            "response": [
+                "user": appleIDCredential.user,
+                "email": appleIDCredential.email as Any,
+                "givenName": appleIDCredential.fullName?.givenName as Any,
+                "familyName": appleIDCredential.fullName?.familyName as Any,
+                "identityToken": identityToken as Any,
+                "authorizationCode": authorizationCode as Any
+            ] as JSObject
+        ]
+
+        call.resolve(result)
+        self.bridge?.releaseCall(call)
+    }
+
+    public func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+        let defaults = UserDefaults()
+        let id = defaults.string(forKey: "callbackId") ?? ""
+        guard let call = self.bridge?.savedCall(withID: id) else { return }
+        call.reject(error.localizedDescription, nil, error)
+        self.bridge?.releaseCall(call)
+    }
+}
+SWIFTEOF
+            echo "apple-sign-in Plugin.swift patched for Capacitor 8"
+          else
+            echo "apple-sign-in plugin not found — skipping patch"
+          fi
+
       - name: Capacitor sync iOS
         script: npx cap sync ios
 
