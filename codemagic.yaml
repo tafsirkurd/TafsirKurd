@@ -97,92 +97,13 @@ workflows:
 
       - name: Patch apple-sign-in plugin for Capacitor 8 compatibility
         script: |
-          PLUGIN_SWIFT="node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift"
-          if [ -f "$PLUGIN_SWIFT" ]; then
-            cat > "$PLUGIN_SWIFT" << 'SWIFTEOF'
-import Foundation
-import Capacitor
-import AuthenticationServices
-
-@objc(SignInWithApple)
-public class SignInWithApple: CAPPlugin, CAPBridgedPlugin {
-    public let identifier = "SignInWithApple"
-    public let jsName = "SignInWithApple"
-    public let pluginMethods: [CAPPluginMethod] = [
-        CAPPluginMethod(name: "authorize", returnType: CAPPluginReturnPromise),
-    ]
-
-    @objc func authorize(_ call: CAPPluginCall) {
-        let appleIDProvider = ASAuthorizationAppleIDProvider()
-        let request = appleIDProvider.createRequest()
-        request.requestedScopes = getRequestedScopes(from: call)
-        request.state = call.getString("state")
-        request.nonce = call.getString("nonce")
-
-        let defaults = UserDefaults()
-        defaults.setValue(call.callbackId, forKey: "callbackId")
-
-        self.bridge?.saveCall(call)
-
-        let authorizationController = ASAuthorizationController(authorizationRequests: [request])
-        authorizationController.delegate = self
-        authorizationController.performRequests()
-    }
-
-    func getRequestedScopes(from call: CAPPluginCall) -> [ASAuthorization.Scope]? {
-        var requestedScopes: [ASAuthorization.Scope] = []
-        if let scopesStr = call.getString("scopes") {
-            if scopesStr.contains("name") { requestedScopes.append(.fullName) }
-            if scopesStr.contains("email") { requestedScopes.append(.email) }
-        }
-        return requestedScopes.isEmpty ? nil : requestedScopes
-    }
-}
-
-extension SignInWithApple: ASAuthorizationControllerDelegate {
-    public func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
-        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else { return }
-
-        let defaults = UserDefaults()
-        let id = defaults.string(forKey: "callbackId") ?? ""
-        guard let call = self.bridge?.savedCall(withID: id) else { return }
-
-        var identityToken: String? = nil
-        if let tokenData = appleIDCredential.identityToken {
-            identityToken = String(data: tokenData, encoding: .utf8)
-        }
-        var authorizationCode: String? = nil
-        if let codeData = appleIDCredential.authorizationCode {
-            authorizationCode = String(data: codeData, encoding: .utf8)
-        }
-
-        let result: JSObject = [
-            "response": [
-                "user": appleIDCredential.user,
-                "email": appleIDCredential.email as Any,
-                "givenName": appleIDCredential.fullName?.givenName as Any,
-                "familyName": appleIDCredential.fullName?.familyName as Any,
-                "identityToken": identityToken as Any,
-                "authorizationCode": authorizationCode as Any
-            ] as JSObject
-        ]
-
-        call.resolve(result)
-        self.bridge?.releaseCall(call)
-    }
-
-    public func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
-        let defaults = UserDefaults()
-        let id = defaults.string(forKey: "callbackId") ?? ""
-        guard let call = self.bridge?.savedCall(withID: id) else { return }
-        call.reject(error.localizedDescription, nil, error)
-        self.bridge?.releaseCall(call)
-    }
-}
-SWIFTEOF
-            echo "apple-sign-in Plugin.swift patched for Capacitor 8"
+          set -e
+          P="node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift"
+          if [ ! -f "$P" ]; then
+            echo "apple-sign-in plugin not found — skipping"
           else
-            echo "apple-sign-in plugin not found — skipping patch"
+            echo "aW1wb3J0IEZvdW5kYXRpb24KaW1wb3J0IENhcGFjaXRvcgppbXBvcnQgQXV0aGVudGljYXRpb25TZXJ2aWNlcwoKQG9iamMoU2lnbkluV2l0aEFwcGxlKQpwdWJsaWMgY2xhc3MgU2lnbkluV2l0aEFwcGxlOiBDQVBQbHVnaW4sIENBUEJyaWRnZWRQbHVnaW4gewogICAgcHVibGljIGxldCBpZGVudGlmaWVyID0gIlNpZ25JbldpdGhBcHBsZSIKICAgIHB1YmxpYyBsZXQganNOYW1lID0gIlNpZ25JbldpdGhBcHBsZSIKICAgIHB1YmxpYyBsZXQgcGx1Z2luTWV0aG9kczogW0NBUFBsdWdpbk1ldGhvZF0gPSBbCiAgICAgICAgQ0FQUGx1Z2luTWV0aG9kKG5hbWU6ICJhdXRob3JpemUiLCByZXR1cm5UeXBlOiBDQVBQbHVnaW5SZXR1cm5Qcm9taXNlKSwKICAgIF0KCiAgICBAb2JqYyBmdW5jIGF1dGhvcml6ZShfIGNhbGw6IENBUFBsdWdpbkNhbGwpIHsKICAgICAgICBsZXQgYXBwbGVJRFByb3ZpZGVyID0gQVNBdXRob3JpemF0aW9uQXBwbGVJRFByb3ZpZGVyKCkKICAgICAgICBsZXQgcmVxdWVzdCA9IGFwcGxlSURQcm92aWRlci5jcmVhdGVSZXF1ZXN0KCkKICAgICAgICByZXF1ZXN0LnJlcXVlc3RlZFNjb3BlcyA9IGdldFJlcXVlc3RlZFNjb3Blcyhmcm9tOiBjYWxsKQogICAgICAgIHJlcXVlc3Quc3RhdGUgPSBjYWxsLmdldFN0cmluZygic3RhdGUiKQogICAgICAgIHJlcXVlc3Qubm9uY2UgPSBjYWxsLmdldFN0cmluZygibm9uY2UiKQogICAgICAgIGxldCBkZWZhdWx0cyA9IFVzZXJEZWZhdWx0cygpCiAgICAgICAgZGVmYXVsdHMuc2V0VmFsdWUoY2FsbC5jYWxsYmFja0lkLCBmb3JLZXk6ICJjYWxsYmFja0lkIikKICAgICAgICBzZWxmLmJyaWRnZT8uc2F2ZUNhbGwoY2FsbCkKICAgICAgICBsZXQgYXV0aG9yaXphdGlvbkNvbnRyb2xsZXIgPSBBU0F1dGhvcml6YXRpb25Db250cm9sbGVyKGF1dGhvcml6YXRpb25SZXF1ZXN0czogW3JlcXVlc3RdKQogICAgICAgIGF1dGhvcml6YXRpb25Db250cm9sbGVyLmRlbGVnYXRlID0gc2VsZgogICAgICAgIGF1dGhvcml6YXRpb25Db250cm9sbGVyLnBlcmZvcm1SZXF1ZXN0cygpCiAgICB9CgogICAgZnVuYyBnZXRSZXF1ZXN0ZWRTY29wZXMoZnJvbSBjYWxsOiBDQVBQbHVnaW5DYWxsKSAtPiBbQVNBdXRob3JpemF0aW9uLlNjb3BlXT8gewogICAgICAgIHZhciBzY29wZXM6IFtBU0F1dGhvcml6YXRpb24uU2NvcGVdID0gW10KICAgICAgICBpZiBsZXQgcyA9IGNhbGwuZ2V0U3RyaW5nKCJzY29wZXMiKSB7CiAgICAgICAgICAgIGlmIHMuY29udGFpbnMoIm5hbWUiKSB7IHNjb3Blcy5hcHBlbmQoLmZ1bGxOYW1lKSB9CiAgICAgICAgICAgIGlmIHMuY29udGFpbnMoImVtYWlsIikgeyBzY29wZXMuYXBwZW5kKC5lbWFpbCkgfQogICAgICAgIH0KICAgICAgICByZXR1cm4gc2NvcGVzLmlzRW1wdHkgPyBuaWwgOiBzY29wZXMKICAgIH0KfQoKZXh0ZW5zaW9uIFNpZ25JbldpdGhBcHBsZTogQVNBdXRob3JpemF0aW9uQ29udHJvbGxlckRlbGVnYXRlIHsKICAgIHB1YmxpYyBmdW5jIGF1dGhvcml6YXRpb25Db250cm9sbGVyKGNvbnRyb2xsZXI6IEFTQXV0aG9yaXphdGlvbkNvbnRyb2xsZXIsIGRpZENvbXBsZXRlV2l0aEF1dGhvcml6YXRpb24gYXV0aG9yaXphdGlvbjogQVNBdXRob3JpemF0aW9uKSB7CiAgICAgICAgZ3VhcmQgbGV0IGNyZWQgPSBhdXRob3JpemF0aW9uLmNyZWRlbnRpYWwgYXM/IEFTQXV0aG9yaXphdGlvbkFwcGxlSURDcmVkZW50aWFsIGVsc2UgeyByZXR1cm4gfQogICAgICAgIGxldCBkZWZhdWx0cyA9IFVzZXJEZWZhdWx0cygpCiAgICAgICAgbGV0IGlkID0gZGVmYXVsdHMuc3RyaW5nKGZvcktleTogImNhbGxiYWNrSWQiKSA/PyAiIgogICAgICAgIGd1YXJkIGxldCBjYWxsID0gc2VsZi5icmlkZ2U/LnNhdmVkQ2FsbCh3aXRoSUQ6IGlkKSBlbHNlIHsgcmV0dXJuIH0KICAgICAgICB2YXIgaWRUb2tlbjogU3RyaW5nPyA9IG5pbAogICAgICAgIGlmIGxldCBkID0gY3JlZC5pZGVudGl0eVRva2VuIHsgaWRUb2tlbiA9IFN0cmluZyhkYXRhOiBkLCBlbmNvZGluZzogLnV0ZjgpIH0KICAgICAgICB2YXIgYXV0aENvZGU6IFN0cmluZz8gPSBuaWwKICAgICAgICBpZiBsZXQgZCA9IGNyZWQuYXV0aG9yaXphdGlvbkNvZGUgeyBhdXRoQ29kZSA9IFN0cmluZyhkYXRhOiBkLCBlbmNvZGluZzogLnV0ZjgpIH0KICAgICAgICBsZXQgcmVzcDogSlNPYmplY3QgPSBbCiAgICAgICAgICAgICJ1c2VyIjogY3JlZC51c2VyLAogICAgICAgICAgICAiZW1haWwiOiBjcmVkLmVtYWlsIGFzIEFueSwKICAgICAgICAgICAgImdpdmVuTmFtZSI6IGNyZWQuZnVsbE5hbWU/LmdpdmVuTmFtZSBhcyBBbnksCiAgICAgICAgICAgICJmYW1pbHlOYW1lIjogY3JlZC5mdWxsTmFtZT8uZmFtaWx5TmFtZSBhcyBBbnksCiAgICAgICAgICAgICJpZGVudGl0eVRva2VuIjogaWRUb2tlbiBhcyBBbnksCiAgICAgICAgICAgICJhdXRob3JpemF0aW9uQ29kZSI6IGF1dGhDb2RlIGFzIEFueQogICAgICAgIF0KICAgICAgICBjYWxsLnJlc29sdmUoWyJyZXNwb25zZSI6IHJlc3BdKQogICAgICAgIHNlbGYuYnJpZGdlPy5yZWxlYXNlQ2FsbChjYWxsKQogICAgfQoKICAgIHB1YmxpYyBmdW5jIGF1dGhvcml6YXRpb25Db250cm9sbGVyKGNvbnRyb2xsZXI6IEFTQXV0aG9yaXphdGlvbkNvbnRyb2xsZXIsIGRpZENvbXBsZXRlV2l0aEVycm9yIGVycm9yOiBFcnJvcikgewogICAgICAgIGxldCBkZWZhdWx0cyA9IFVzZXJEZWZhdWx0cygpCiAgICAgICAgbGV0IGlkID0gZGVmYXVsdHMuc3RyaW5nKGZvcktleTogImNhbGxiYWNrSWQiKSA/PyAiIgogICAgICAgIGd1YXJkIGxldCBjYWxsID0gc2VsZi5icmlkZ2U/LnNhdmVkQ2FsbCh3aXRoSUQ6IGlkKSBlbHNlIHsgcmV0dXJuIH0KICAgICAgICBjYWxsLnJlamVjdChlcnJvci5sb2NhbGl6ZWREZXNjcmlwdGlvbiwgbmlsLCBlcnJvcikKICAgICAgICBzZWxmLmJyaWRnZT8ucmVsZWFzZUNhbGwoY2FsbCkKICAgIH0KfQo=" | base64 --decode > "$P"
+            echo "apple-sign-in Plugin.swift patched OK"
           fi
 
       - name: Capacitor sync iOS
