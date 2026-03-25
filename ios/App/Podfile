@@ -14,3 +14,82 @@ target 'App' do
   capacitor_pods
   # Add your Pods here
 end
+
+post_install do |installer|
+  # Patch @capacitor-community/apple-sign-in for Capacitor 8 compatibility
+  # (v7.1.0 has force-unwraps and missing CAPBridgedPlugin conformance)
+  swift_file = File.join(__dir__, '../../node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift')
+  if File.exist?(swift_file)
+    File.write(swift_file, <<~'SWIFT')
+      import Foundation
+      import Capacitor
+      import AuthenticationServices
+
+      @objc(SignInWithApple)
+      public class SignInWithApple: CAPPlugin, CAPBridgedPlugin {
+          public let identifier = "SignInWithApple"
+          public let jsName = "SignInWithApple"
+          public let pluginMethods: [CAPPluginMethod] = [
+              CAPPluginMethod(name: "authorize", returnType: CAPPluginReturnPromise),
+          ]
+
+          @objc func authorize(_ call: CAPPluginCall) {
+              let appleIDProvider = ASAuthorizationAppleIDProvider()
+              let request = appleIDProvider.createRequest()
+              request.requestedScopes = getRequestedScopes(from: call)
+              request.state = call.getString("state")
+              request.nonce = call.getString("nonce")
+              let defaults = UserDefaults()
+              defaults.setValue(call.callbackId, forKey: "callbackId")
+              self.bridge?.saveCall(call)
+              let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+              authorizationController.delegate = self
+              authorizationController.performRequests()
+          }
+
+          func getRequestedScopes(from call: CAPPluginCall) -> [ASAuthorization.Scope]? {
+              var scopes: [ASAuthorization.Scope] = []
+              if let s = call.getString("scopes") {
+                  if s.contains("name") { scopes.append(.fullName) }
+                  if s.contains("email") { scopes.append(.email) }
+              }
+              return scopes.isEmpty ? nil : scopes
+          }
+      }
+
+      extension SignInWithApple: ASAuthorizationControllerDelegate {
+          public func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+              guard let cred = authorization.credential as? ASAuthorizationAppleIDCredential else { return }
+              let defaults = UserDefaults()
+              let id = defaults.string(forKey: "callbackId") ?? ""
+              guard let call = self.bridge?.savedCall(withID: id) else { return }
+              var idToken: String? = nil
+              if let d = cred.identityToken { idToken = String(data: d, encoding: .utf8) }
+              var authCode: String? = nil
+              if let d = cred.authorizationCode { authCode = String(data: d, encoding: .utf8) }
+              let resp: JSObject = [
+                  "user": cred.user,
+                  "email": cred.email as Any,
+                  "givenName": cred.fullName?.givenName as Any,
+                  "familyName": cred.fullName?.familyName as Any,
+                  "identityToken": idToken as Any,
+                  "authorizationCode": authCode as Any
+              ]
+              call.resolve(["response": resp])
+              self.bridge?.releaseCall(call)
+          }
+
+          public func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+              let defaults = UserDefaults()
+              let id = defaults.string(forKey: "callbackId") ?? ""
+              guard let call = self.bridge?.savedCall(withID: id) else { return }
+              call.reject(error.localizedDescription, nil, error)
+              self.bridge?.releaseCall(call)
+          }
+      }
+    SWIFT
+    puts "✅ Patched apple-sign-in Plugin.swift for Capacitor 8"
+  else
+    puts "⚠️  apple-sign-in Plugin.swift not found — skipping patch"
+  end
+end
