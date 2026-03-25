@@ -1015,7 +1015,7 @@
         deleteComment: async function(commentId) {
             if (!requireLogin('سڕینەوەی شیرۆڤە')) return;
 
-            if (!confirm('دڵنیایت لە سڕینەوەی ئەم شیرۆڤەیە؟')) return;
+            if (!confirm(_t('iv.confirm_delete_comment','دڵنیایت لە سڕینەوەی ئەم شیرۆڤەیە؟'))) return;
 
             const userId = getCurrentUserId();
             if (!userId) return;
@@ -3508,7 +3508,7 @@
         console.log('🗑️ Delete video requested:', videoId, videoTitle);
 
         // Confirm deletion
-        const confirmDelete = confirm(`ئایا تو دڵنیای کە دڤێت ئەڤ ڤیدیۆیێ بسڕیتەڤە؟\n\n"${videoTitle}"\n\nئەڤ کار ناکرێ پاشتر بگەڕێنەڤە!`);
+        const confirmDelete = confirm(_t('iv.confirm_delete_video','ئایا تو دڵنیای کە دڤێت ئەڤ ڤیدیۆیێ بسڕیتەڤە؟\n\n"${title}"\n\nئەڤ کار ناکرێ پاشتر بگەڕێنەڤە!').replace('${title}', videoTitle));
 
         if (!confirmDelete) {
             console.log('❌ Delete cancelled');

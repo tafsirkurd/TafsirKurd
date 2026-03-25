@@ -171,7 +171,7 @@ function validateSession() {
         localStorage.removeItem('isAuthenticated');
         localStorage.removeItem('user');
 
-        alert('⚠️ گۆڕانکارییەک د سیشنا تە دا هاتە دیتن. تکایە دووبارە بچە ژوورڤە.');
+        alert(window.t ? window.t('security.session_changed') : '⚠️ گۆڕانکارییەک د سیشنا تە دا هاتە دیتن. تکایە دووبارە بچە ژوورڤە.');
         window.location.href = '/login.html';
         return false;
     }

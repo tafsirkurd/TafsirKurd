@@ -1488,6 +1488,8 @@ window.BULK_TRANSLATIONS = [
     { key_id: "iv.resuming",            kurdish_text: "▶️ بەردەوامکرنا لە",               category: "islamvoice", page: "android" },
     { key_id: "iv.downloading_series",   kurdish_text: "دابەزاندنا زنجیرەیا",              category: "islamvoice", page: "android" },
     { key_id: "iv.error_prefix",         kurdish_text: "❌ هەڵە",                          category: "islamvoice", page: "android" },
+    { key_id: "iv.confirm_delete_comment", kurdish_text: "دڵنیایت لە سڕینەوەی ئەم شیرۆڤەیە؟", category: "islamvoice", page: "android" },
+    { key_id: "iv.confirm_delete_video",   kurdish_text: "ئایا تو دڵنیای کە دڤێت ئەڤ ڤیدیۆیێ بسڕیتەڤە؟\n\n\"${title}\"\n\nئەڤ کار ناکرێ پاشتر بگەڕێنەڤە!", category: "islamvoice", page: "android" },
 
     // Adhkar subcategory labels
     { key_id: "adhkar.morning",         kurdish_text: "زکرێن بەیانیکردن",               category: "adhkar", page: "android" },
@@ -1558,6 +1560,13 @@ window.BULK_TRANSLATIONS = [
     { key_id: "adhkar.istikhara",       kurdish_text: "دوعای ئیستیخارە",               category: "adhkar", page: "android" },
 
     // Prayer / Notif / Signup remaining
+    { key_id: "reader.tafsir_empty",     kurdish_text: "تفسیر بردەست نیە",                  category: "reader",    page: "android" },
+    { key_id: "toast.network_reconnected", kurdish_text: "ئینتەرنێت گەڕایەوە ✓",           category: "toast",     page: "android" },
+    { key_id: "settings.quran_reading_intention", kurdish_text: "ب ناڤێ خودێ ئه‌ز خواندنا قورئانێ ده‌ست پێ دكه‌م", category: "settings", page: "android" },
+    { key_id: "auth.email_conflict_email",  kurdish_text: "⚠️ تو ژبەر ئەژمارەکا خوە هەیە!\n\nئیمەیلا تە پەیوەستە ب ئەژمارەکا ئیمەیل. تکایە ب ئیمەیل بچۆ ژوورەوە.", category: "auth", page: "android" },
+    { key_id: "auth.email_conflict_google", kurdish_text: "⚠️ تو ژبەر ئەژمارەکا خوە هەیە!\n\nئیمەیلا تە پەیوەستە ب ئەژمارەکا Google. تکایە ب Google بچۆ ژوورەوە.", category: "auth", page: "android" },
+    { key_id: "security.session_changed",   kurdish_text: "⚠️ گۆڕانکارییەک د سیشنا تە دا هاتە دیتن. تکایە دووبارە بچە ژوورڤە.", category: "security", page: "android" },
+    { key_id: "bookmarks.empty_description", kurdish_text: "دەما تو ئایەتەکێ نیشانە دکەی، ل ڤێرێ دێ بینی. تو دشێی تێبینی و بیرهاتنێن خۆ ژی تۆمار بکەی.", category: "bookmarks", page: "android" },
     { key_id: "prayer.format_24h",           kurdish_text: "24h",                        category: "prayer",        page: "android" },
     { key_id: "prayer.format_12h",           kurdish_text: "12h",                        category: "prayer",        page: "android" },
     { key_id: "prayer.notif_now",            kurdish_text: "هێستا",                      category: "prayer",        page: "android" },

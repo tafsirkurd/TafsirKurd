@@ -2605,7 +2605,7 @@ function renderReaderSettings(){
   var prevAr=el('div','qs-font-preview-ar');
   prevAr.textContent='بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ';
   var prevTf=el('div','qs-font-preview-tf');
-  prevTf.textContent='ب ناڤێ خودێ ئه‌ز خواندنا قورئانێ ده‌ست پێ دكه‌م';
+  prevTf.textContent=t('settings.quran_reading_intention');
   prev.appendChild(prevAr);prev.appendChild(prevTf);
   body.appendChild(prev);
 
@@ -3024,7 +3024,7 @@ App.showMushafVerseTafsir=function(vn,sn){
   // Body: tafsir text
   var body=el('div','mushaf-tafsir-body');
   var txtDiv=el('div',txt?'mushaf-tafsir-txt':'mushaf-tafsir-empty');
-  txtDiv.textContent=txt||(t('reader.tafsir_empty')||'تفسیر بردەست نیە');
+  txtDiv.textContent=txt||t('reader.tafsir_empty');
   body.appendChild(txtDiv);
   pane.appendChild(body);
   ov.appendChild(pane);
@@ -4858,7 +4858,7 @@ window.addEventListener('online',function(){
     if(S.tab==='islamvoice'&&S.ivInited!==false)loadIslamVoiceData(true);
   },800);
   // Show reconnected toast
-  showToast('ئینتەرنێت گەڕایەوە ✓');
+  showToast(t('toast.network_reconnected'));
 });
 
 
