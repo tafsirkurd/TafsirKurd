@@ -844,6 +844,7 @@ window.GencineUI = {
 
   _renderAdhkarGrid: function(container){
     var self = this;
+    var T = window.t || function(k,d){ return d||k; };
     var catKeys = _getAdhkarCatKeys();
     var grid = document.createElement('div');
     grid.className = 'adhkar-grid';
