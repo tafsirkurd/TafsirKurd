@@ -331,12 +331,7 @@
     document.body.appendChild(overlay);
   }
 
-  function open(cityCoords) {
-    buildModal();
-    var t = window.t;
-    var titleEl = document.getElementById('qiblaModalTitle');
-    if (titleEl) titleEl.textContent = t ? t('prayer.qibla_title') : 'Qibla';
-
+  function _startAfterPermission(cityCoords) {
     _isOpen      = true;
     _headingBuf  = [];
     _lastSample  = 0;
@@ -364,7 +359,7 @@
     function onLocation(lat, lon, approx) {
       _qibla = calcQibla(lat, lon);
       buildChips(infoEl, _qibla, calcDist(lat, lon),
-                 approx ? (t ? t('prayer.qibla_approx') : '~') : null);
+                 approx ? (window.t ? window.t('prayer.qibla_approx') : '~') : null);
     }
 
     if (navigator.geolocation) {
@@ -376,7 +371,7 @@
             while (infoEl.firstChild) infoEl.removeChild(infoEl.firstChild);
             var e = document.createElement('span');
             e.className = 'qibla-no-loc';
-            e.textContent = t ? t('prayer.qibla_no_loc') : 'Location unavailable';
+            e.textContent = window.t ? window.t('prayer.qibla_no_loc') : 'Location unavailable';
             infoEl.appendChild(e);
             if (cityCoords) _qibla = calcQibla(cityCoords.lat, cityCoords.lon);
           }
@@ -385,6 +380,26 @@
       );
     } else if (cityCoords) {
       onLocation(cityCoords.lat, cityCoords.lon, true);
+    }
+  }
+
+  function open(cityCoords) {
+    buildModal();
+    var t = window.t;
+    var titleEl = document.getElementById('qiblaModalTitle');
+    if (titleEl) titleEl.textContent = t ? t('prayer.qibla_title') : 'Qibla';
+
+    // iOS 13+ requires explicit permission before DeviceOrientationEvent fires
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission().then(function(state) {
+        _startAfterPermission(cityCoords);
+      }).catch(function() {
+        // Permission denied — compass won't rotate but location still works
+        _startAfterPermission(cityCoords);
+      });
+    } else {
+      _startAfterPermission(cityCoords);
     }
   }
 

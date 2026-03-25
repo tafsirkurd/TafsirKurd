@@ -1799,11 +1799,13 @@
       container.appendChild(reciterWrap);
     }
 
-    // ── Duration ──────────────────────────────────────────────────
-    container.appendChild(secTitle(tStr('prayer.duration_label'), ' as2-dimable' + (isOn ? '' : ' as2-dim')));
-    var durWrap = cel('div', 'as2-dimable' + (isOn ? '' : ' as2-dim'));
-    buildDurationPicker(durWrap);
-    container.appendChild(durWrap);
+    // ── Duration (Android only — iOS has no athan audio) ──────────
+    if (!_isIOS) {
+      container.appendChild(secTitle(tStr('prayer.duration_label'), ' as2-dimable' + (isOn ? '' : ' as2-dim')));
+      var durWrap = cel('div', 'as2-dimable' + (isOn ? '' : ' as2-dim'));
+      buildDurationPicker(durWrap);
+      container.appendChild(durWrap);
+    }
 
     // ── Notification preview ──────────────────────────────────────
     container.appendChild(secTitle(tStr('prayer.test_label') || 'پێشبینین'));
