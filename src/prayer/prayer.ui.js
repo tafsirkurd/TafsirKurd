@@ -1593,7 +1593,7 @@
     ['12', '24'].forEach(function(f) {
       var btn = cel('button', 'as2-seg-btn' + (f === fmt ? ' on' : ''));
       btn.dataset.fmt = f;
-      btn.textContent = f === '24' ? '24h' : '12h';
+      btn.textContent = f === '24' ? tStr('prayer.format_24h','24h') : tStr('prayer.format_12h','12h');
       btn.onclick = function() { onFormatChange(f); };
       seg.appendChild(btn);
     });
@@ -1816,7 +1816,7 @@
     var notifSysApp = cel('span', 'as2-notif-sys-app');
     notifSysApp.textContent = 'TafsirKurd';
     var notifSysTime = cel('span', 'as2-notif-sys-time');
-    notifSysTime.textContent = 'now';
+    notifSysTime.textContent = tStr('prayer.notif_now', 'هێستا');
     notifSys.appendChild(notifSysDot);
     notifSys.appendChild(notifSysApp);
     notifSys.appendChild(notifSysTime);

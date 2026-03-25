@@ -876,7 +876,7 @@ window.GencineUI = {
       /* count */
       var cnt = document.createElement('div');
       cnt.className = 'adhkar-grid-count';
-      cnt.textContent = count + ' زکر';
+      cnt.textContent = count + ' ' + T('gencine.dhikr_unit', 'زکر');
 
       card.appendChild(iconWrap);
       card.appendChild(lbl);
@@ -1158,7 +1158,7 @@ window.GencineUI = {
     var countOf = document.createElement('div');
     countOf.className = 'tasbih-count-of';
     countOf.id = 'tasbihCountOf';
-    countOf.textContent = 'من ' + self._tasbihTarget;
+    countOf.textContent = T('gencine.tasbih_of', 'من') + ' ' + self._tasbihTarget;
     tapBtn.appendChild(countOf);
     var tapHint = document.createElement('div');
     tapHint.className = 'tasbih-tap-hint';

@@ -1277,6 +1277,8 @@ window.BULK_TRANSLATIONS = [
     { key_id: "gencine.hadith_soon_sub",  kurdish_text: "ئەم بەشە هەنووکا ئامادەدەبێت. بەمزوانە زیاد دەبێت!", category: "gencine", page: "android" },
     { key_id: "gencine.asma_search_ph",   kurdish_text: "گەڕان...",                                 category: "gencine",    page: "android" },
     { key_id: "gencine.asma_count",       kurdish_text: "٩٩ ناوێن خوا",                             category: "gencine",    page: "android" },
+    { key_id: "gencine.dhikr_unit",       kurdish_text: "زکر",                                          category: "gencine",    page: "android" },
+    { key_id: "gencine.tasbih_of",        kurdish_text: "من",                                            category: "gencine",    page: "android" },
     { key_id: "gencine.reset",            kurdish_text: "سفر",                                      category: "gencine",    page: "android" },
     { key_id: "gencine.tap_hint",         kurdish_text: "بتەقینە",                                  category: "gencine",    page: "android" },
     { key_id: "gencine.voice_start",      kurdish_text: "دەنگ",                                     category: "gencine",    page: "android" },
@@ -1556,6 +1558,9 @@ window.BULK_TRANSLATIONS = [
     { key_id: "adhkar.istikhara",       kurdish_text: "دوعای ئیستیخارە",               category: "adhkar", page: "android" },
 
     // Prayer / Notif / Signup remaining
+    { key_id: "prayer.format_24h",           kurdish_text: "24h",                        category: "prayer",        page: "android" },
+    { key_id: "prayer.format_12h",           kurdish_text: "12h",                        category: "prayer",        page: "android" },
+    { key_id: "prayer.notif_now",            kurdish_text: "هێستا",                      category: "prayer",        page: "android" },
     { key_id: "prayer.save_settings",       kurdish_text: "پاراستنی ڕێکخستنەکان",      category: "prayer",        page: "android" },
     { key_id: "notif.verse_title",          kurdish_text: "ئایەتا ڕۆژێ",               category: "notifications", page: "android" },
     { key_id: "signup.email_reminders_on",  kurdish_text: "بیرانینێن ئیمێلی هاتنە چالاک کرن! تو دێ ڕۆژانە بیرانینێن قورئانێ د ئیمێلا خۆ دا وەرگری", category: "signup", page: "android" },
