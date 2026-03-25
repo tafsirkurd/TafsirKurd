@@ -937,33 +937,8 @@ window.GencineUI = {
 
   /* ═══════════════════ DUA (Quran only) ═══════════════════ */
   _renderDua: function(container){
-    var self = this;
     var T = window.t || function(k,d){ return d||k; };
-
-    /* ── category chip bar ── */
-    var catKeys = _getCatKeys();
-    // Only show categories that actually have duas
-    var keysWithDuas = catKeys.filter(function(k){ return _getDuas(k).length > 0; });
-    if (keysWithDuas.length > 1) {
-      // Ensure _duaCat is valid
-      if (keysWithDuas.indexOf(self._duaCat) === -1) self._duaCat = keysWithDuas[0];
-      var chips = document.createElement('div');
-      chips.className = 'dua-cats';
-      keysWithDuas.forEach(function(key){
-        var btn = document.createElement('button');
-        btn.className = 'dua-cat-btn' + (key === self._duaCat ? ' on' : '');
-        btn.textContent = _getCatLabel(key);
-        btn.onclick = function(){
-          self._duaCat = key;
-          while(container.firstChild) container.removeChild(container.firstChild);
-          self._renderDua(container);
-        };
-        chips.appendChild(btn);
-      });
-      container.appendChild(chips);
-    }
-
-    var duas = _getDuas(self._duaCat);
+    var duas = _getDuas('quran');
 
     if (!duas.length) {
       var empty = document.createElement('div');
