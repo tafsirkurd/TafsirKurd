@@ -4966,12 +4966,14 @@ App.openLogin=function(){
     // Sign in with Apple — iOS only, shown first per Apple Guideline 4.8
     if(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios'){
       var appleBtn=el('button','auth-apple-btn');
+      appleBtn.appendChild(icon('fab fa-apple'));
       appleBtn.appendChild(el('span','',t('auth.apple_login')));
       on(appleBtn,'click',function(){signInWithApple()});
       f.appendChild(appleBtn);
     }
 
     var googleBtn=el('button','auth-google-btn');
+    googleBtn.appendChild(icon('fab fa-google'));
     googleBtn.appendChild(el('span','',t('auth.google_login')));
     on(googleBtn,'click',function(){signInWithGoogle()});
     f.appendChild(googleBtn);
@@ -5029,12 +5031,14 @@ App.openLogin=function(){
     // Sign in with Apple — iOS only, shown first per Apple Guideline 4.8
     if(window.Capacitor&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios'){
       var appleBtn=el('button','auth-apple-btn');
+      appleBtn.appendChild(icon('fab fa-apple'));
       appleBtn.appendChild(el('span','',t('auth.apple_signup')));
       on(appleBtn,'click',function(){signInWithApple()});
       f.appendChild(appleBtn);
     }
 
     var googleBtn=el('button','auth-google-btn');
+    googleBtn.appendChild(icon('fab fa-google'));
     googleBtn.appendChild(el('span','',t('auth.google_signup')));
     on(googleBtn,'click',function(){signInWithGoogle()});
     f.appendChild(googleBtn);
@@ -5141,14 +5145,28 @@ App.openLogin=function(){
     }).catch(function(e){showMsg(e.message||t('error.generic'),'error')});
   }
 
+  function _genNonce(len){
+    var chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var arr=new Uint8Array(len);
+    crypto.getRandomValues(arr);
+    return Array.from(arr).map(function(x){return chars[x%chars.length]}).join('');
+  }
+  function _sha256hex(str){
+    return crypto.subtle.digest('SHA-256',new TextEncoder().encode(str)).then(function(buf){
+      return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
+    });
+  }
   function signInWithApple(){
     if(!S.supabase){showMsg(t('error.system_not_ready'),'error');return}
     var plugin=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.TafsirAppleSignIn;
     if(!plugin){showMsg(t('error.generic'),'error');return}
-    plugin.authorize().then(function(res){
+    var rawNonce=_genNonce(32);
+    _sha256hex(rawNonce).then(function(hashedNonce){
+      return plugin.authorize({nonce:hashedNonce});
+    }).then(function(res){
       var token=res&&res.identityToken;
       if(!token){showMsg(t('error.generic'),'error');return null}
-      return S.supabase.auth.signInWithIdToken({provider:'apple',token:token});
+      return S.supabase.auth.signInWithIdToken({provider:'apple',token:token,nonce:rawNonce});
     }).then(function(resp){
       if(!resp)return;
       if(resp.error){showMsg(resp.error.message,'error');return}

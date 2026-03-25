@@ -19,6 +19,9 @@ public class TafsirAppleSignIn: CAPPlugin, CAPBridgedPlugin {
         let provider = ASAuthorizationAppleIDProvider()
         let request = provider.createRequest()
         request.requestedScopes = [.fullName, .email]
+        if let nonce = call.getString("nonce") {
+            request.nonce = nonce
+        }
 
         let controller = ASAuthorizationController(authorizationRequests: [request])
         controller.delegate = self
