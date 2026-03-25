@@ -15,6 +15,3 @@ target 'App' do
   # Add your Pods here
 end
 
-# apple-sign-in Plugin.swift is patched via node --eval in codemagic.yaml
-# The codemagic.yaml patch runs BEFORE cap sync, and the Diagnose step
-# re-patches AFTER cap sync if needed. No post_install hook needed here.

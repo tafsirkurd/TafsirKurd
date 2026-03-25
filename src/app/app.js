@@ -5141,10 +5141,10 @@ App.openLogin=function(){
 
   function signInWithApple(){
     if(!S.supabase){showMsg(t('error.system_not_ready'),'error');return}
-    var plugin=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SignInWithApple;
+    var plugin=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.TafsirAppleSignIn;
     if(!plugin){showMsg(t('error.generic'),'error');return}
     plugin.authorize().then(function(res){
-      var token=res&&res.response&&res.response.identityToken;
+      var token=res&&res.identityToken;
       if(!token){showMsg(t('error.generic'),'error');return null}
       return S.supabase.auth.signInWithIdToken({provider:'apple',token:token});
     }).then(function(resp){
