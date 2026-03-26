@@ -283,9 +283,51 @@
       localStorage.setItem('prayerLastScheduleDate', daysData[0].dateISO);
       localStorage.setItem('prayerLastScheduleCount', String(actualCount));
       localStorage.setItem('prayerLastScheduleCity', city);
+      // Save fire-time log for auto-cancel on app foreground
+      try { localStorage.setItem('prayerAthanFireLog', JSON.stringify(details)); } catch(e) {}
     }
 
     return { count: actualCount, error: schedErr, details: details };
+  }
+
+  // ── Auto-dismiss athan notifications on app foreground ─────────────────────
+  //
+  // Android local notifications don't auto-dismiss after they fire.
+  // When the app comes to foreground we cancel any athan notification whose
+  // athan has completed playing — i.e., fire_time + offset_sec has passed.
+  // "Full" duration (offset=0) notifications are never auto-cancelled.
+
+  async function cancelFiredAthanNotifications() {
+    var LN = getLN();
+    if (!LN) return;
+
+    var offsetSec = parseInt(localStorage.getItem('prayerAthanDuration') || '0', 10) || 0;
+    if (offsetSec === 0) return; // "تەواو" (full athan) — user wants notification until they dismiss
+
+    try {
+      var raw = localStorage.getItem('prayerAthanFireLog');
+      if (!raw) return;
+      var log = JSON.parse(raw);
+      var now = Date.now();
+      var toCancel = [];
+
+      log.forEach(function(entry) {
+        if (!entry.id || !entry.atISO) return;
+        // atISO = fire time (= prayer time - offsetSec)
+        // athan completes at: atISO + offsetSec * 1000 = prayer time
+        var cancelAfter = new Date(entry.atISO).getTime() + (offsetSec * 1000);
+        if (cancelAfter <= now) {
+          toCancel.push({ id: entry.id });
+        }
+      });
+
+      if (toCancel.length > 0) {
+        await LN.cancel({ notifications: toCancel }).catch(function() {});
+        console.log('[Athan] Auto-dismissed', toCancel.length, 'completed athan notifications');
+      }
+    } catch(e) {
+      console.warn('[Athan] cancelFiredAthanNotifications:', e);
+    }
   }
 
   // ── Backwards-compat single-day wrapper ────────────────────────────────────
@@ -419,7 +461,8 @@
     scheduleTestNotification: scheduleTestNotification,
     ensureAllChannels: ensureAllChannels,
     getSelectedVoice: getSelectedVoice,
-    debugPendingNotifications: debugPendingNotifications
+    debugPendingNotifications: debugPendingNotifications,
+    cancelFiredAthanNotifications: cancelFiredAthanNotifications
   };
 
 })();

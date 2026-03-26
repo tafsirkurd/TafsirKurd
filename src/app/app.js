@@ -100,9 +100,9 @@ function loadReciterPhotos(){
       });
       // Persist so next launch is instant
       try{localStorage.setItem('reciter_photos_cache',JSON.stringify(RECITER_PHOTOS))}catch(e){}
-      // Preload images during idle time — doesn't compete with critical resources
-      (window.requestIdleCallback||function(fn){setTimeout(fn,200)})(function(){
-        Object.values(RECITER_PHOTOS).forEach(function(url){var i=new Image();i.src=url;});
+      // Preload top 5 reciter photos during idle time — limit burst to avoid network congestion
+      (window.requestIdleCallback||function(fn){setTimeout(fn,500)})(function(){
+        Object.values(RECITER_PHOTOS).slice(0,5).forEach(function(url){var i=new Image();i.src=url;});
       });
     }).catch(function(){});
 }
@@ -308,7 +308,11 @@ function init(){
             // Sync data when app goes to background
             if(S.user)syncToCloud();
           } else {
-            // App came to foreground — reschedule athan + daily verse if new day
+            // App came to foreground — cancel any athan notifications whose athan has completed
+            if(window.PrayerNotifications&&PrayerNotifications.cancelFiredAthanNotifications){
+              PrayerNotifications.cancelFiredAthanNotifications();
+            }
+            // Reschedule athan + daily verse if new day
             if(window.PrayerUI)PrayerUI.initScheduleOnStart();
             initDailyVerse();
             scheduleStreakReminder();
@@ -453,18 +457,17 @@ function init(){
     }catch(e){}
   }
 
-  // Schedule athan + daily verse on startup (in case it's a new day)
+  // Critical: schedule athan + daily verse immediately (notification timing matters)
   if(window.PrayerUI)PrayerUI.initScheduleOnStart();
   initDailyVerse();
-  scheduleStreakReminder();
-  checkNewVideoNotif();
-  checkNewBookNotif();
-  // Pre-fetch all 20 cities for this month in background (once per month)
-  if(window.PrayerUI)PrayerUI.prefetchAllCities();
-  // Pre-warm athan voice buffers at 2s — splash hides at ~1600ms so this fires
-  // ~400ms after the user first sees the app, well before they can navigate to
-  // prayer settings. Voices are decoded one-at-a-time (staggered) so no CPU spike.
-  setTimeout(function(){if(window.PrayerUI)PrayerUI.preloadAthanVoices();},2000);
+  // Stagger non-critical background work to avoid network + CPU spike right after entry
+  setTimeout(function(){scheduleStreakReminder();},800);
+  setTimeout(function(){checkNewVideoNotif();},1500);
+  setTimeout(function(){checkNewBookNotif();},2500);
+  // Heavy: fetches prayer data for all 20 cities — delay until app is fully settled
+  setTimeout(function(){if(window.PrayerUI)PrayerUI.prefetchAllCities();},4000);
+  // Athan voice decode is CPU-intensive — delay until after first 3s of interaction
+  setTimeout(function(){if(window.PrayerUI)PrayerUI.preloadAthanVoices();},3500);
 
   // Fetch prayer data immediately (no delay) so cache is ready for pre-render below
   if(window.PrayerAPI&&window.PrayerCache&&window.PrayerLogic){
@@ -477,7 +480,7 @@ function init(){
     }
   }
 
-  // Pre-fetch mushaf page data for current surah in background so mushaf mode loads instantly
+  // Pre-fetch mushaf page data — delayed to 4.5s so font injection doesn't compete with entry
   setTimeout(function(){
     var pf=_getPageFields();
     getMushafPageRange(S.surah||1).then(function(pages){
@@ -491,7 +494,7 @@ function init(){
         })(pn);
       }
     }).catch(function(){});
-  },1500);
+  },4500);
 
   // Early data prefetch — warm all API/DB caches before user taps any tab.
   // No DOM work here — just fires network requests so cache is hot when tab opens.
@@ -499,40 +502,36 @@ function init(){
     if(window.GencineUI&&GencineUI.prefetch)GencineUI.prefetch();
   },200);
 
-  // Pre-render all tabs in background so every tab is already built before user taps.
-  // Splash hides at ~800ms; start at 900ms then stagger 80ms each to avoid jank.
-  setTimeout(function(){
-    var jobs=[
-      function(){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');},
-      function(){renderGoals();_renderHash.goals=_tabHash('goals');},
-      function(){renderSettings();_renderHash.settings=_tabHash('settings');},
-      function(){if(window.PrayerUI)PrayerUI.render();},
-      function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');},
-      function(){if(window.GencineUI)GencineUI.render();}
-    ];
-    var i=0;
-    function next(){
-      if(i>=jobs.length){if(window._splashReadyTabs)window._splashReadyTabs();return;}
-      jobs[i++]();setTimeout(next,80);
-    }
-    next();
-  },900);
+  // Pre-render fallback — fires at 1500ms if _checkDataReady() hasn't triggered it yet.
+  // Normal case: _checkDataReady() triggers _startTabPrerender() ~100ms after start.
+  setTimeout(function(){_startTabPrerender();},1500);
 
   // Smart splash — 5 stages: quran → i18n → gencine → islamvoice → tabs
   // Progress bar fills as each stage completes. Dismisses only when all ready.
   var _splashStart = Date.now();
-  var _splashMinMs = 1600;
+  var _splashMinMs = 600; // reduced: real gates ensure readiness, no need to fake-wait
   var _splashReady = {quran:false,i18n:false,gencine:false,islamvoice:false,tabs:false};
   var _splashDismissed = false;
+  var _splashPct = 0; // tracks current progress — only ever increases
   function _setSplashProgress(pct){
+    if(pct<=_splashPct)return; // never go backwards
+    _splashPct=pct;
     var fill=document.getElementById('splashBarFill');
     if(fill)fill.style.width=pct+'%';
+    console.log('[Startup] Progress',pct+'%',Date.now()-_splashStart,'ms',JSON.stringify(_splashReady));
   }
   function _checkSplashReady(){
     if(_splashDismissed)return;
-    if(!_splashReady.quran||!_splashReady.i18n||!_splashReady.gencine||!_splashReady.islamvoice||!_splashReady.tabs)return;
+    var pending=[];
+    if(!_splashReady.quran)pending.push('quran');
+    if(!_splashReady.i18n)pending.push('i18n');
+    if(!_splashReady.gencine)pending.push('gencine');
+    if(!_splashReady.islamvoice)pending.push('islamvoice');
+    if(!_splashReady.tabs)pending.push('tabs');
+    if(pending.length){console.log('[Startup] Waiting for:',pending.join(','));return;}
     _splashDismissed=true;
     var elapsed=Date.now()-_splashStart;
+    console.log('[Startup] All gates passed — entering app in',Math.max(0,_splashMinMs-elapsed),'ms. Total elapsed:',elapsed,'ms');
     var delay=Math.max(0,_splashMinMs-elapsed);
     setTimeout(function(){
       _setSplashProgress(100);
@@ -540,11 +539,11 @@ function init(){
         var sp=$('splash');
         if(sp)sp.classList.add('hide');
         var app=$('app');
-        if(app){app.style.display='flex';requestAnimationFrame(function(){requestAnimationFrame(function(){app.classList.add('visible');});});}
+        if(app){app.style.display='flex';requestAnimationFrame(function(){app.classList.add('visible');});}
         try{var sp2=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.SplashScreen;if(sp2)sp2.hide({fadeOutDuration:300});}catch(e){}
         setTimeout(function(){if(sp&&sp.parentNode)sp.parentNode.removeChild(sp);},450);
-        // Pre-cache V4 fonts 3s after splash — silent background download
         setTimeout(precacheV4Fonts,3000);
+        console.log('[Startup] App visible at',Date.now()-_splashStart,'ms');
       },350);
     },delay);
   }
@@ -583,12 +582,44 @@ document.addEventListener('i18n:updated', function(){
 
 /* ===== DATA LOADING ===== */
 var _dataReady={quran:false,tafsir:false};
+var _tabsPrerendering=false; // guard: pre-render runs only once
+var _startupT0=Date.now();   // module load time for debug logs
+
 function _checkDataReady(){
   if(!_dataReady.quran||!_dataReady.tafsir)return;
+  console.log('[Startup] quran+tafsir ready',Date.now()-_startupT0,'ms');
   if(window._splashReadyQuran){window._splashReadyQuran();window._splashReadyQuran=null;}
   if(S.surah)renderAyahs(S.surah);
-  // Build smart search index after both data sources are ready
   if(window.QuranSearch)QuranSearch.init(S.quranData,S.tafsirData);
+  // Data is ready — start pre-rendering tabs NOW instead of waiting for 900ms timer
+  setTimeout(_startTabPrerender,50);
+}
+
+// Pre-render all 6 tabs so they're built before user ever taps them.
+// Called from _checkDataReady (early, data-driven) with 1500ms fallback in init().
+function _startTabPrerender(){
+  if(_tabsPrerendering)return;
+  _tabsPrerendering=true;
+  console.log('[Startup] Tab pre-render start',Date.now()-_startupT0,'ms');
+  var jobs=[
+    function(){renderBookmarks();_renderHash.bm=_tabHash('bookmarks');},
+    function(){renderGoals();_renderHash.goals=_tabHash('goals');},
+    function(){renderSettings();_renderHash.settings=_tabHash('settings');},
+    function(){if(window.PrayerUI)PrayerUI.render();},
+    function(){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');},
+    function(){if(window.GencineUI)GencineUI.render();}
+  ];
+  var _ji=0;
+  function _nextJob(){
+    if(_ji>=jobs.length){
+      console.log('[Startup] Tab pre-render done',Date.now()-_startupT0,'ms');
+      if(window._splashReadyTabs)window._splashReadyTabs();
+      return;
+    }
+    jobs[_ji++]();
+    setTimeout(_nextJob,60);
+  }
+  _nextJob();
 }
 function loadQuranData(){
   fetch('/data/quran.json').then(function(r){
@@ -718,9 +749,10 @@ function _tabHash(name){
 }
 window.App={};
 // Cached panel/tab-item NodeLists — populated once on first tab switch (DOM is ready by then)
-var _cachedPanels=null,_cachedTabItems=null;
+var _cachedPanels=null,_cachedTabItems=null,_cachedTabBtns={};
 function _getCachedPanels(){if(!_cachedPanels)_cachedPanels=document.querySelectorAll('.panel');return _cachedPanels;}
 function _getCachedTabItems(){if(!_cachedTabItems)_cachedTabItems=document.querySelectorAll('.tab-item');return _cachedTabItems;}
+function _getCachedTabBtn(name){if(!_cachedTabBtns[name])_cachedTabBtns[name]=document.querySelector('.tab-item[data-tab="'+name+'"]');return _cachedTabBtns[name];}
 App.tab=function(name){
   if(tapGuard('tab',200))return; // prevent rapid repeated tab taps
   if(name===S.tab&&!S.surah){
@@ -741,8 +773,11 @@ App.tab=function(name){
     var _skyEl=document.getElementById('prayerSkyScene');
     if(_skyEl)_skyEl.classList.remove('sky-paused');
   }
-  // Clear quran search when leaving quran tab
-  if(S.tab==='quran'&&name!=='quran'){var _sb=document.getElementById('searchBar');if(_sb)_sb.classList.remove('on');App.clearSearch();}
+  // Clear quran search when leaving quran tab; disconnect badge observer to stop background work
+  if(S.tab==='quran'&&name!=='quran'){
+    var _sb=document.getElementById('searchBar');if(_sb)_sb.classList.remove('on');App.clearSearch();
+    if(_surahBadgeObs){_surahBadgeObs.disconnect();_surahBadgeObs=null;_surahGridReady=false;}
+  }
   S.tabHistory.push(S.tab);
   S.tab=name;
   // Use cached NodeLists — avoids full DOM scan on every tab switch
@@ -751,7 +786,7 @@ App.tab=function(name){
   var panel=$('panel'+name.charAt(0).toUpperCase()+name.slice(1));
   if(panel)panel.classList.add('on');
   var tabBtnName=(name==='goals'||name==='bookmarks')?'quran':name;
-  var tabBtn=document.querySelector('.tab-item[data-tab="'+tabBtnName+'"]');
+  var tabBtn=_getCachedTabBtn(tabBtnName);
   if(tabBtn)tabBtn.classList.add('on');
 
   if(name==='bookmarks'){var h=_tabHash('bookmarks');if(h!==_renderHash.bm){renderBookmarks();_renderHash.bm=h;}}
@@ -780,11 +815,13 @@ function tapGuard(key,ms){
 }
 
 /* ===== TOAST ===== */
+var _toastTimer=null;
 function toast(msg){
   var t=$('toast');
+  clearTimeout(_toastTimer); // prevent stacking: reset timer if called rapidly
   t.textContent=msg;
   t.classList.add('on');
-  setTimeout(function(){t.classList.remove('on')},2000);
+  _toastTimer=setTimeout(function(){t.classList.remove('on');_toastTimer=null;},2500);
 }
 
 /* ===== HAPTIC ===== */
@@ -1368,6 +1405,7 @@ App._basicSearch=function(v){
 
 /* ===== SURAH GRID ===== */
 var _surahGridReady=false;
+var _surahBadgeObs=null; // IntersectionObserver for backdrop-filter-on-visible-badges
 function renderSurahGrid(){
   var grid=$('surahGrid');
   var ayahLbl=t('surah.card.ayah_count');
@@ -1405,17 +1443,18 @@ function renderSurahGrid(){
       var card=e.target.closest('.surah-card');
       if(card)App.openSurah(+card.dataset.n);
     });
-    // Apply backdrop-filter only to visible cards — keeps GPU layers bounded to ~8 instead of 114
-    var _badgeObs=new IntersectionObserver(function(entries){
+    // Apply backdrop-filter only to truly visible cards — rootMargin:0 limits GPU layers to ~6 at once
+    // Cache badge element on the card node to avoid querySelector on every IO callback
+    _surahBadgeObs=new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
-        var badge=entry.target.querySelector('.surah-num-badge');
+        var badge=entry.target._badge||(entry.target._badge=entry.target.querySelector('.surah-num-badge'));
         if(!badge)return;
-        var bf=entry.isIntersecting?'blur(10px) saturate(160%)':'none';
+        var bf=entry.isIntersecting?'blur(6px) saturate(140%)':'none';
         badge.style.backdropFilter=bf;
         badge.style.webkitBackdropFilter=bf;
       });
-    },{rootMargin:'120px'});
-    grid.querySelectorAll('.surah-card').forEach(function(card){_badgeObs.observe(card);});
+    },{rootMargin:'0px'});
+    grid.querySelectorAll('.surah-card').forEach(function(card){_surahBadgeObs.observe(card);});
   }
 }
 
@@ -1468,7 +1507,8 @@ App.backToList=function(){
   if(S.surah){
     try{localStorage.setItem('surah_scroll_'+S.surah,String($('ayahList').scrollTop))}catch(e){}
   }
-  // Clean up mushaf DOM — keep mode preference so next surah reopens in mushaf
+  // Clean up mushaf DOM + observer — keep mode preference so next surah reopens in mushaf
+  if(_mushafLazyObs){_mushafLazyObs.disconnect();_mushafLazyObs=null;}
   var mv=$('mushafView');if(mv){mv.style.display='none';clear(mv);}
   var al=$('ayahList');if(al)al.style.display='';
   var pb=$('mushafPlayBtn');if(pb)pb.style.display='none';
@@ -2878,9 +2918,12 @@ function getReciterName(){
   return t('audio.reciter');
 }
 
+var _lastAvatarReciter=null;
 function updateAudioBarAvatar(){
   var avatarEl=$('audioBarAvatar');
   if(!avatarEl)return;
+  if(RECITER===_lastAvatarReciter)return; // skip rebuild if reciter hasn't changed
+  _lastAvatarReciter=RECITER;
   while(avatarEl.firstChild)avatarEl.removeChild(avatarEl.firstChild);
   var photo=RECITER_PHOTOS[RECITER];
   if(photo){var img=document.createElement('img');img.src=photo;img.alt='';avatarEl.appendChild(img);}
@@ -3701,12 +3744,14 @@ function renderGoals(){
   }else if(streak>=7){
     hero.appendChild(el('div','streak-milestone',t('goals.streak.week')));
   }
-  // Animate streak number count-up and ring fill
+  // Animate streak number count-up and ring fill — only when panel is actually visible
   var ringOffset=circumference-Math.round(circumference*(Math.min(pct,100)/100));
   setTimeout(function(){
     circleFill.setAttribute('stroke-dashoffset',String(ringOffset));
     var duration=400;var startT=performance.now();var targetNum=streak;
+    var panelOn=$('panelGoals')&&$('panelGoals').classList.contains('on');
     if(targetNum===0){numEl.textContent='0';return}
+    if(!panelOn){numEl.textContent=String(targetNum);return} // pre-render: set final value, skip rAF loop
     function countUp(now){
       var elapsed=now-startT;var progress=Math.min(elapsed/duration,1);
       var eased=1-Math.pow(1-progress,3);
@@ -4897,7 +4942,7 @@ window.addEventListener('online',function(){
     if(S.tab==='islamvoice'&&S.ivInited!==false)loadIslamVoiceData(true);
   },800);
   // Show reconnected toast
-  showToast(t('toast.network_reconnected'));
+  toast(t('toast.network_reconnected'));
 });
 
 
@@ -5731,6 +5776,35 @@ function renderIvError(msg){
   grid.appendChild(err);
 }
 
+// Episodes grouped by series_id — avoids O(series*episodes) filter on every renderIvGrid call.
+var _ivEpsBySeriesId=null;
+function _buildIvEpsCache(){
+  _ivEpsBySeriesId={};
+  if(!S.ivEpisodes)return;
+  S.ivEpisodes.forEach(function(ep){
+    if(!_ivEpsBySeriesId[ep.series_id])_ivEpsBySeriesId[ep.series_id]=[];
+    _ivEpsBySeriesId[ep.series_id].push(ep);
+  });
+}
+
+// Explicitly preload IV series thumbnails using new Image() so they fetch
+// even when the IV panel is hidden (display:none blocks normal img fetches).
+// Keep references in _preloadedIvImages to prevent GC clearing the cache.
+var _preloadedIvImages=[];
+function preloadIvThumbnails(){
+  if(!S.ivSeries||!S.ivSeries.length)return;
+  _preloadedIvImages=[];
+  var sorted=S.ivSeries.slice().sort(function(a,b){return(a.display_order||999)-(b.display_order||999);});
+  sorted.slice(0,6).forEach(function(series){
+    if(!series.thumbnail_url)return;
+    var src=series.thumbnail_url.replace('maxresdefault.jpg','mqdefault.jpg');
+    var img=new Image();
+    img.src=src;
+    _preloadedIvImages.push(img);
+  });
+  console.log('[Startup] Preloading',_preloadedIvImages.length,'IV thumbnails');
+}
+
 function loadIslamVoiceData(force){
   // Only show loading spinner when we have no data at all.
   if(!S.ivSeries){
@@ -5745,7 +5819,9 @@ function loadIslamVoiceData(force){
       if(cs&&ce){
         S.ivSeries=JSON.parse(cs);
         S.ivEpisodes=JSON.parse(ce);
+        _buildIvEpsCache();
         renderIvGrid();
+        preloadIvThumbnails(); // kick off thumbnail fetches before panel is visible
         if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();
       }
     }catch(e){}
@@ -5769,6 +5845,7 @@ function ivFetchFresh(force){
   if(!S.ivSupabase)return;
   if(S.ivLoading&&!force)return; // in-flight guard — prevent duplicate fetches
   S.ivLoading=true;
+  _ivEpsBySeriesId=null; // invalidate cache — fresh data incoming
 
   Promise.all([
     S.ivSupabase.from('islamvoice_series').select('*').order('display_order',{ascending:true}),
@@ -5789,6 +5866,7 @@ function ivFetchFresh(force){
 
     S.ivSeries=seriesRes.data||[];
     S.ivEpisodes=epRes.data||[];
+    _buildIvEpsCache();
 
     // Cache
     try{
@@ -5797,6 +5875,7 @@ function ivFetchFresh(force){
     }catch(e){console.warn('IV cache save failed')}
 
     renderIvGrid();
+    preloadIvThumbnails(); // refresh preload cache with latest data
     if(S.ivCurrentSeries)renderIvEpisodes(S.ivCurrentSeries);
     if(window._splashReadyIslamvoice)window._splashReadyIslamvoice();
   }).catch(function(e){
@@ -5861,8 +5940,9 @@ function renderIvGrid(){
   var spkBtn=document.getElementById('ivSpeakerFilterBtn');
   if(spkBtn)spkBtn.classList.toggle('on',!!spkFilter);
 
+  var _ivCardIdx=0; // counts actually-rendered cards (for eager/lazy decision)
   sorted.forEach(function(series){
-    var eps=S.ivEpisodes?S.ivEpisodes.filter(function(ep){return ep.series_id===series.id}):[];
+    var eps=_ivEpsBySeriesId?(_ivEpsBySeriesId[series.id]||[]):(S.ivEpisodes?S.ivEpisodes.filter(function(ep){return ep.series_id===series.id}):[]);
     var epCount=eps.length;
     if(epCount===0)return;
 
@@ -5889,7 +5969,8 @@ function renderIvGrid(){
       // Use smaller YouTube thumbnail (mqdefault 320×180) instead of maxresdefault (1280×720)
       img.src=series.thumbnail_url.replace('maxresdefault.jpg','mqdefault.jpg');
       img.alt='';
-      img.loading='eager';
+      // First 4 cards: eager — browser fetches even in hidden panels (plus new Image() preload above)
+      img.loading=_ivCardIdx<4?'eager':'lazy';
       img.onload=function(){this.parentNode.style.animation='none';this.parentNode.style.background='none'};
       img.onerror=function(){this.style.display='none'};
       imgWrap.appendChild(img);
@@ -5910,6 +5991,7 @@ function renderIvGrid(){
 
     on(card,'click',function(){App.ivShowSeries(series.id)});
     grid.appendChild(card);
+    _ivCardIdx++;
   });
 
   // No results for search
@@ -6096,6 +6178,7 @@ App.ivPlay=function(episodeId){
     var img=document.createElement('img');
     img.src='https://img.youtube.com/vi/'+videoId+'/hqdefault.jpg';
     img.alt=ep.title||'';
+    img.loading='lazy';
     thumbDiv.appendChild(img);
     var playOver=el('div','iv-yt-play-over');
     var playCircle=el('div','iv-yt-play-circle');
@@ -6408,11 +6491,13 @@ function ivTrackView(episodeId){
 
 /* ===== START ===== */
 function startApp(){
+  console.log('[Startup] startApp()',Date.now()-_startupT0,'ms');
   // Apply persisted mushaf CSS vars immediately
   document.documentElement.style.setProperty('--mushaf-size',(S.mushafFontSize||22)+'px');
   document.documentElement.style.setProperty('--mushaf-lh',String(S.mushafLineH||1.8));
   if(window.i18n){
     i18n.initLang().then(function(){
+      console.log('[Startup] i18n ready (all layers)',Date.now()-_startupT0,'ms');
       init();
       i18n.applyTranslations();
       if(window._splashReadyI18n){ window._splashReadyI18n(); window._splashReadyI18n=null; }
