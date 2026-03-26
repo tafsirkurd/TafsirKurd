@@ -5424,25 +5424,38 @@ function renderProfile(panel){
 
   var deleteBtn=el('button','pp-action-btn pp-delete');
   deleteBtn.appendChild(icon('fas fa-trash-alt'));
-  deleteBtn.appendChild(document.createTextNode(' '+t('profile.delete_account')));
+  var deleteBtnLbl=document.createTextNode(' '+t('profile.delete_account'));
+  deleteBtn.appendChild(deleteBtnLbl);
   on(deleteBtn,'click',function(){
     if(!confirm(t('profile.confirm_delete1')))return;
     if(!confirm(t('profile.confirm_delete2')))return;
     msg.className='pp-msg';msg.textContent='';
+    deleteBtn.disabled=true;
+    deleteBtnLbl.data=' '+(t('profile.deleting')||'...');
     S.supabase.auth.getSession().then(function(resp){
       var accessToken=resp&&resp.data&&resp.data.session&&resp.data.session.access_token;
-      if(!accessToken){msg.textContent=t('error.generic');msg.className='pp-msg error';return}
-      return fetch('/delete-account',{
+      if(!accessToken){
+        deleteBtn.disabled=false;deleteBtnLbl.data=' '+t('profile.delete_account');
+        msg.textContent=t('error.generic');msg.className='pp-msg error';return;
+      }
+      return fetch('https://gijupzejtbpifjzwadee.supabase.co/functions/v1/delete-account',{
         method:'POST',
         headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'}
-      }).then(function(r){return r.json()}).then(function(result){
-        if(!result.success)throw new Error(result.error||t('error.delete'));
+      }).then(function(r){
+        if(!r.ok)return r.json().then(function(d){throw new Error(d.error||('HTTP '+r.status))});
+        return r.json();
+      }).then(function(result){
+        if(!result.success)throw new Error(result.error||t('error.generic'));
         return S.supabase.auth.signOut();
       }).then(function(){
         S.user=null;stopCloudSync();App.closeProfile();
         toast(t('toast.account_deleted'));renderSettings();
       });
-    }).catch(function(e){msg.textContent=e.message||t('error.delete');msg.className='pp-msg error';});
+    }).catch(function(e){
+      deleteBtn.disabled=false;deleteBtnLbl.data=' '+t('profile.delete_account');
+      msg.textContent=e.message||t('error.generic');msg.className='pp-msg error';
+      console.error('Delete account error:',e);
+    });
   });
   actWrap.appendChild(deleteBtn);
   actSec.appendChild(actWrap);

@@ -440,6 +440,7 @@
   "profile.sync": "ھاوکاتکرن",
   "profile.logout": "دەرکەتن",
   "profile.delete_account": "ژێبرنا ھەژمارێ",
+  "profile.deleting": "ژێبرن...",
   "profile.confirm_logout": "تو پشتڕاستی ژ دەرکەتنێ?",
   "profile.confirm_delete1": "تو پشتڕاستی ژ ژێبرنا ھەژمارێ? ئەڤ کارە ناڤەگەڕیتەڤە!",
   "profile.confirm_delete2": "دووبارە: ھەمی داتایێن تە دێ ژ ناڤ چن. تو یێ پشتڕاستی؟",
