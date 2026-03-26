@@ -12,8 +12,8 @@
 
 var translations = {};
 var loadPromise = null;
-var CACHE_KEY = 'tafsirkurd_i18n_cache';
-var ETAG_KEY  = 'tafsirkurd_i18n_etag';  // persisted across sessions for 304 short-circuit
+var CACHE_KEY = 'tafsirkurd_i18n_cache_v2';
+var ETAG_KEY  = 'tafsirkurd_i18n_etag_v2';  // persisted across sessions for 304 short-circuit
 var _lastETag = localStorage.getItem(ETAG_KEY) || null;
 
 /**
