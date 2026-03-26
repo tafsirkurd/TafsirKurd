@@ -90,7 +90,8 @@ function loadLocal(){
     });
 }
 
-// ── Merge remote DB translations (once, background) ──────────────────────────
+// ── Merge remote DB translations ─────────────────────────────────────────────
+// Called once at startup AND on a 30s poll so admin changes go live quickly.
 function mergeRemote(){
   fetch('https://tafsirkurd.com/app-translations?platform=android', { cache: 'no-cache' })
     .then(function(r){
@@ -142,6 +143,9 @@ function initLang(){
 
   return _initPromise;
 }
+
+// ── Poll every 30s so admin panel changes appear within ~30s ─────────────────
+setInterval(mergeRemote, 30000);
 
 // ── Exports ───────────────────────────────────────────────────────────────────
 window.i18n = {
