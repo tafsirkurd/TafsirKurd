@@ -1,35 +1,34 @@
 /**
  * TafsirKurd i18n System v3
  *
- * Architecture (race-condition free):
- *   1. Wipe ALL old caches (v1, v2 keys) on every load
- *   2. Try v3 localStorage cache → instant if valid
- *   3. Otherwise load bundled kmr.json (cache:'no-store') → guaranteed fresh
- *   4. Fire i18n:ready ONLY after translations are in memory
- *   5. Merge remote DB once in background → fire i18n:updated if anything changed
+ * Layer order (each layer overwrites matching keys from the previous):
+ *   1. window.KMR_TRANSLATIONS  — embedded JS object, loaded synchronously
+ *                                  by kmr-bundled.js. ZERO fetch. Works 100%
+ *                                  offline on first launch with no cache.
+ *   2. v3 localStorage cache    — admin-updated values from previous session
+ *   3. remote DB (30s poll)     — latest admin values, 3s timeout at startup
  *
- * No polling. No ETag. No race conditions.
+ * If remote times out or the device is offline, layers 1+2 cover every key.
+ * If there is no cache (fresh install), layer 1 alone covers every key.
+ * Raw keys (iv.*, etc.) are therefore impossible after this change.
  */
 (function(){
 'use strict';
 
-// ── Cache versioning ─────────────────────────────────────────────────────────
+// ── Cache versioning ──────────────────────────────────────────────────────────
 var CACHE_KEY = 'tafsirkurd_i18n_v3';
 
 // Wipe every old cache key so stale data never bleeds through
-var OLD_KEYS = [
-  'tafsirkurd_i18n_cache',
-  'tafsirkurd_i18n_cache_v2',
-  'tafsirkurd_i18n_etag',
-  'tafsirkurd_i18n_etag_v2'
-];
-OLD_KEYS.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+['tafsirkurd_i18n_cache','tafsirkurd_i18n_cache_v2',
+ 'tafsirkurd_i18n_etag','tafsirkurd_i18n_etag_v2'].forEach(function(k){
+  try{ localStorage.removeItem(k); }catch(e){}
+});
 
-// ── State ────────────────────────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────────────────────
 var translations = {};
-var _initPromise  = null;
+var _initPromise = null;
 
-// ── Public: t() ──────────────────────────────────────────────────────────────
+// ── t() ──────────────────────────────────────────────────────────────────────
 function t(key, replacements){
   var value = translations[key];
   if(value === undefined) return key;
@@ -41,7 +40,7 @@ function t(key, replacements){
   return value;
 }
 
-// ── applyTranslations ────────────────────────────────────────────────────────
+// ── applyTranslations ─────────────────────────────────────────────────────────
 function applyTranslations(){
   if(!Object.keys(translations).length) return;
   document.querySelectorAll('[data-i18n]').forEach(function(el){
@@ -64,7 +63,6 @@ function readCache(){
     var raw = localStorage.getItem(CACHE_KEY);
     if(!raw) return null;
     var data = JSON.parse(raw);
-    // Must contain at least one dotted app key (not just platform keys)
     if(data && Object.keys(data).some(function(k){ return k.indexOf('.')>0; })){
       return data;
     }
@@ -76,23 +74,19 @@ function writeCache(data){
   try{ localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }catch(e){}
 }
 
-// ── Load bundled kmr.json (always fresh — cache:'no-store') ──────────────────
-function loadLocal(){
-  // ?v= param + cache:'no-store' together guarantee a fresh read from the bundle
-  return fetch('/i18n/kmr.json?v=20260326', { cache: 'no-store' })
-    .then(function(r){
-      if(!r.ok) throw new Error('kmr.json HTTP '+r.status);
-      return r.json();
-    })
-    .then(function(data){
-      console.log('[i18n] Loaded from kmr.json');
-      return data;
-    });
+// ── Layer 1: bundled translations (synchronous, no fetch, always offline-safe)
+function loadBundled(){
+  var data = window.KMR_TRANSLATIONS;
+  if(data && typeof data === 'object' && Object.keys(data).length > 0){
+    console.log('[i18n] Layer 1: bundled object ('+Object.keys(data).length+' keys)');
+    return data;
+  }
+  // kmr-bundled.js was not loaded — fatal misconfiguration
+  console.error('[i18n] FATAL: window.KMR_TRANSLATIONS missing. kmr-bundled.js not loaded.');
+  return {};
 }
 
-// ── Merge remote DB translations ─────────────────────────────────────────────
-// Returns a Promise so initLang() can await it at startup (no-flash guarantee).
-// The 30s poll also calls this; those calls fire-and-forget.
+// ── Layer 3: remote DB merge ──────────────────────────────────────────────────
 function mergeRemote(){
   return fetch('https://tafsirkurd.com/app-translations?platform=android', { cache: 'no-cache' })
     .then(function(r){
@@ -106,59 +100,44 @@ function mergeRemote(){
       Object.assign(translations, data);
       writeCache(translations);
       applyTranslations();
-      console.log('[i18n] Merged remote translations');
+      console.log('[i18n] Layer 3: remote merged');
       document.dispatchEvent(new CustomEvent('i18n:updated'));
     })
     .catch(function(e){
-      console.warn('[i18n] Remote fetch failed — using local only:', e.message);
+      console.warn('[i18n] Remote unavailable (offline or timeout) — layers 1+2 in use:', e.message);
     });
 }
 
-// ── initLang ─────────────────────────────────────────────────────────────────
-// Layer order (each layer overwrites the previous for matching keys):
-//   1. kmr.json   — bundled, always complete, guarantees ZERO raw keys
-//   2. v3 cache   — admin-updated values from previous session
-//   3. remote DB  — latest admin values (3s timeout, never blocks)
-//
-// Even if cache is stale AND remote times out, kmr.json covers every key.
+// ── initLang ──────────────────────────────────────────────────────────────────
 function initLang(){
   if(_initPromise) return _initPromise;
 
-  // 3s timeout on remote — slow network never blocks the splash
+  // 3s hard timeout on remote so splash never blocks on slow networks
   function mergeRemoteWithTimeout(){
     var timeout = new Promise(function(resolve){ setTimeout(resolve, 3000); });
     return Promise.race([mergeRemote(), timeout]);
   }
 
-  _initPromise = loadLocal()
-    .catch(function(e){
-      // Should never happen (file is in the bundle), but never crash
-      console.error('[i18n] kmr.json failed:', e.message);
-      return {};
-    })
-    .then(function(local){
-      // Layer 1: kmr.json — guaranteed base, every key present
-      Object.assign(translations, local);
-      console.log('[i18n] Base layer: kmr.json (' + Object.keys(local).length + ' keys)');
+  // Layer 1 — synchronous, always succeeds, covers every key
+  var bundled = loadBundled();
+  Object.assign(translations, bundled);
 
-      // Layer 2: overlay cache — admin values from last session (no new keys needed)
-      var cached = readCache();
-      if(cached){
-        Object.assign(translations, cached);
-        console.log('[i18n] Cache overlaid');
-      }
+  // Layer 2 — cached admin translations from last session
+  var cached = readCache();
+  if(cached){
+    Object.assign(translations, cached);
+    console.log('[i18n] Layer 2: cache overlaid');
+  }
 
-      applyTranslations();
+  // Apply layers 1+2 immediately — UI can render without waiting for network
+  applyTranslations();
 
-      // Layer 3: overlay remote — latest admin values, wait before splash hides
-      return mergeRemoteWithTimeout();
-    })
-    .then(function(){ return translations; });
-
+  // Layer 3 — remote, wait for it before resolving so splash hides fully loaded
+  _initPromise = mergeRemoteWithTimeout().then(function(){ return translations; });
   return _initPromise;
 }
 
-// ── Poll every 30s so admin panel changes appear within ~30s ─────────────────
+// ── Poll every 30s — admin changes appear within 30s ─────────────────────────
 setInterval(mergeRemote, 30000);
 
 // ── Exports ───────────────────────────────────────────────────────────────────
