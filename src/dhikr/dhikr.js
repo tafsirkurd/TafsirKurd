@@ -363,6 +363,7 @@ function _initDbData(onDone) {
     _dbDuas    = cachedDuas;
     _dbHadiths = cachedHadiths;
     _dbLoaded  = true;
+    window._gencineDbVersion = (window._gencineDbVersion || 0) + 1; // bump for _tabHash cache
     if (onDone) onDone();
     if (window._splashReadyGencine) window._splashReadyGencine();
     /* One silent background refresh per session to pick up admin changes */

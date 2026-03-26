@@ -278,12 +278,22 @@ function init(){
     // Init shared Supabase client and check auth
     initSupabase(function(){ loadReciterPhotos(); });
 
-    // Pause audio when app goes to background (unless bgAudio is enabled)
+    // Pause audio and sky animations when app goes to background
     document.addEventListener('visibilitychange',function(){
-      if(document.hidden&&!S.bgAudio&&S.audio.playing){
-        S.audio.el.pause();S.audio.playing=false;
-        var ic=$('audioPlayIcon');
-        if(ic)ic.className='fas fa-play';
+      if(document.hidden){
+        if(!S.bgAudio&&S.audio.playing){
+          S.audio.el.pause();S.audio.playing=false;
+          var ic=$('audioPlayIcon');if(ic)ic.className='fas fa-play';
+        }
+        // Pause GPU-expensive sky animations when screen off/background
+        var _skyEl=document.getElementById('prayerSkyScene');
+        if(_skyEl)_skyEl.classList.add('sky-paused');
+      } else {
+        // Resume sky only if prayer tab is active
+        if(S.tab==='prayer'){
+          var _skyEl=document.getElementById('prayerSkyScene');
+          if(_skyEl)_skyEl.classList.remove('sky-paused');
+        }
       }
     });
     try{
@@ -627,15 +637,17 @@ function loadTafsirData(){
   }).catch(function(e){
     console.error('Tafsir load error:',e);
     toast(t('error.tafsir_load'));
-    // Retry once after 3 seconds
+    // Retry once after 3 seconds — flag prevents concurrent retry fetches
+    var _tafsirRetrying=false;
     setTimeout(function(){
-      if(S.tafsirData)return;
+      if(S.tafsirData||_tafsirRetrying)return;
+      _tafsirRetrying=true;
       fetch('/data/kurdish_tafsir.json').then(function(r){return r.json()}).then(function(d){
         S.tafsirData=groupTafsirBySurah(d);
         _dataReady.tafsir=true;
         _checkDataReady();
         toast(t('toast.tafsir_loaded'));
-      }).catch(function(){});
+      }).catch(function(){}).then(function(){_tafsirRetrying=false;});
     },3000);
   });
 }
@@ -698,6 +710,10 @@ function _tabHash(name){
   if(name==='islamvoice'){
     return (S.ivSeries?S.ivSeries.length:0)+':'+(S.ivSearchQuery||'')+(S.ivSpeakerFilter||'');
   }
+  if(name==='gencine'){
+    // Version key — bumped when DB data reloads so hash forces re-render
+    return 'g:'+(window._gencineDbVersion||0);
+  }
   return null;
 }
 window.App={};
@@ -706,6 +722,7 @@ var _cachedPanels=null,_cachedTabItems=null;
 function _getCachedPanels(){if(!_cachedPanels)_cachedPanels=document.querySelectorAll('.panel');return _cachedPanels;}
 function _getCachedTabItems(){if(!_cachedTabItems)_cachedTabItems=document.querySelectorAll('.tab-item');return _cachedTabItems;}
 App.tab=function(name){
+  if(tapGuard('tab',200))return; // prevent rapid repeated tab taps
   if(name===S.tab&&!S.surah){
     if(name==='gencine'&&window.GencineUI){GencineUI.render();var _gp=document.getElementById('panelGencine');if(_gp)_gp.scrollTop=0;}
     return;
@@ -713,8 +730,17 @@ App.tab=function(name){
   haptic([8]);
   if(S.surah&&name==='quran'){App.backToList();return}
   if(S.surah&&name!=='quran'){_endSession();}
-  // Stop prayer countdown when leaving prayer tab
-  if(S.tab==='prayer'&&name!=='prayer'&&window.PrayerUI)PrayerUI.stopCountdown();
+  // Stop prayer countdown and pause sky animations when leaving prayer tab
+  if(S.tab==='prayer'&&name!=='prayer'&&window.PrayerUI){
+    PrayerUI.stopCountdown();
+    var _skyEl=document.getElementById('prayerSkyScene');
+    if(_skyEl)_skyEl.classList.add('sky-paused');
+  }
+  // Resume sky animations when entering prayer tab
+  if(name==='prayer'){
+    var _skyEl=document.getElementById('prayerSkyScene');
+    if(_skyEl)_skyEl.classList.remove('sky-paused');
+  }
   // Clear quran search when leaving quran tab
   if(S.tab==='quran'&&name!=='quran'){var _sb=document.getElementById('searchBar');if(_sb)_sb.classList.remove('on');App.clearSearch();}
   S.tabHistory.push(S.tab);
@@ -739,8 +765,19 @@ App.tab=function(name){
       requestAnimationFrame(function(){if(PrayerUI.ensureCountdown)PrayerUI.ensureCountdown();});
     });
   }
-  if(name==='gencine'&&window.GencineUI){GencineUI.render();}
+  if(name==='gencine'&&window.GencineUI){var _gh=_tabHash('gencine');if(_gh!==_renderHash.gencine){GencineUI.render();_renderHash.gencine=_gh;}}
 };
+
+/* ===== TAP GUARD ===== */
+// Returns true if the call should be IGNORED (too soon after last call)
+var _tapGuardLast={};
+function tapGuard(key,ms){
+  ms=ms||350;
+  var now=Date.now();
+  if(_tapGuardLast[key]&&now-_tapGuardLast[key]<ms)return true; // ignored
+  _tapGuardLast[key]=now;
+  return false; // allowed
+}
 
 /* ===== TOAST ===== */
 function toast(msg){
@@ -1406,6 +1443,8 @@ function renderContinue(){
 
 /* ===== OPEN SURAH ===== */
 App.openSurah=function(num,scrollTo){
+  if(S.surah===num&&$('quranReader').classList.contains('on'))return; // already open
+  if(tapGuard('openSurah',300))return; // prevent double-tap race
   haptic([8]);
   _startSession(num);
   S.surah=num;
@@ -2171,7 +2210,8 @@ function renderAyahs(surahNum,scrollTo){
         for(var i=cur;i<=frameEnd;i++){var c=buildCard(i);if(window._onNewAyahCard)window._onNewAyahCard(c);frag.appendChild(c);}
         list.insertBefore(frag,nav);
         cur=frameEnd+1;
-        if(cur<=end)requestAnimationFrame(renderFrame);
+        if(cur<=end&&!document.hidden)requestAnimationFrame(renderFrame);
+        else if(cur<=end){setTimeout(function(){if(!document.hidden)requestAnimationFrame(renderFrame)},200);}
         else{_renderedTo=end;setupSentinel();}
       })();
     }else{
@@ -5727,6 +5767,7 @@ function loadIslamVoiceData(force){
 
 function ivFetchFresh(force){
   if(!S.ivSupabase)return;
+  if(S.ivLoading&&!force)return; // in-flight guard — prevent duplicate fetches
   S.ivLoading=true;
 
   Promise.all([
@@ -6380,8 +6421,7 @@ function startApp(){
     init();
     if(window._splashReadyI18n){ window._splashReadyI18n(); window._splashReadyI18n=null; }
   }
-  // Re-render current tab whenever background translation merge completes
-  document.addEventListener('i18n:updated',function(){ renderCurrentTab(); });
+  // i18n:updated already handled at top of file (line ~558) — no duplicate here
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',startApp)}else{startApp()}
 

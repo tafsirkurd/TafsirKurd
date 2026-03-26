@@ -242,7 +242,7 @@ body{background:var(--bg);color:var(--text)}
 .ms-slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2)}
 .ms-slider-val{font-size:.82rem;color:var(--text2);min-width:36px;text-align:left;font-variant-numeric:tabular-nums}
 .ms-seg{display:flex;border:1px solid var(--border2);border-radius:var(--r-m);overflow:hidden}
-.ms-seg-btn{flex:1;padding:10px 4px;font-size:.78rem;text-align:center;background:none;color:var(--text2);border:none;cursor:pointer;transition:all .2s}
+.ms-seg-btn{flex:1;padding:10px 4px;font-size:.78rem;text-align:center;background:none;color:var(--text2);border:none;cursor:pointer;transition:background-color .2s,color .2s}
 .ms-seg-btn.on{background:var(--accent);color:var(--accent-t)}
 /* Tajweed colors (quran.com standard) */
 .tj-ham_wasl,.tj-laam_shamsiyah,.tj-silent{color:#aaa}
@@ -324,7 +324,7 @@ body{background:var(--bg);color:var(--text)}
 .audio-settings-title:first-child{margin-top:0}
 /* Speed segmented control */
 .speed-seg{display:flex;gap:0;background:var(--bg2);border-radius:var(--r-m);padding:3px;margin-bottom:4px}
-.speed-seg-btn{flex:1;height:34px;border:none;border-radius:calc(var(--r-m) - 2px);background:transparent;color:var(--text2);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap}
+.speed-seg-btn{flex:1;height:34px;border:none;border-radius:calc(var(--r-m) - 2px);background:transparent;color:var(--text2);font-size:.8rem;font-weight:600;cursor:pointer;transition:background-color .18s,color .18s;white-space:nowrap}
 .speed-seg-btn:active{transform:scale(.93)}
 .speed-seg-btn.on{background:var(--bg);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.18);font-weight:700}
 /* Reciter grid */
@@ -358,13 +358,13 @@ body{background:var(--bg);color:var(--text)}
 .ayah-card--pressing{transform:scale(.985);opacity:.75;transition:transform .1s,opacity .1s}
 
 /* ===== BOTTOM TAB BAR ===== */
-.tabbar{position:fixed;bottom:0;left:0;right:0;height:calc(var(--tab-h) + var(--safe-b));padding-bottom:var(--safe-b);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:stretch;z-index:300;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);background:rgba(255,255,255,.92)}
-[data-theme="dark"] .tabbar{background:rgba(22,22,22,.92)}
-[data-theme="sakina"] .tabbar{background:rgba(17,35,24,.94)}
-[data-theme="noor"] .tabbar{background:rgba(253,244,227,.94)}
+.tabbar{position:fixed;bottom:0;left:0;right:0;height:calc(var(--tab-h) + var(--safe-b));padding-bottom:var(--safe-b);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:stretch;z-index:300}
+[data-theme="dark"] .tabbar{background:#161616}
+[data-theme="sakina"] .tabbar{background:#112318}
+[data-theme="noor"] .tabbar{background:#fdf4e3}
 .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text3);cursor:pointer;position:relative;transition:color .3s var(--ease);-webkit-tap-highlight-color:transparent;padding:4px 0;max-height:60px;overflow:visible}
-.tab-item i{font-size:18px !important;width:48px;height:32px;line-height:32px;text-align:center;border-radius:var(--r-full);transition:all .3s var(--ease);background:transparent}
-.tab-item span{font-size:10px !important;line-height:1;white-space:nowrap;transition:all .3s var(--ease);font-weight:500}
+.tab-item i{font-size:18px !important;width:48px;height:32px;line-height:32px;text-align:center;border-radius:var(--r-full);transition:background-color .3s var(--ease),color .3s var(--ease),transform .3s var(--ease);background:transparent}
+.tab-item span{font-size:10px !important;line-height:1;white-space:nowrap;transition:color .3s var(--ease);font-weight:500}
 .tab-item:active i{transform:scale(.82)}
 .tab-item.on{color:var(--text)}
 .tab-item.on i{background:var(--accent);color:var(--accent-t);border-radius:var(--r-full);transform:scale(1.05);box-shadow:0 2px 10px rgba(0,0,0,.12)}
@@ -412,7 +412,7 @@ body{background:var(--bg);color:var(--text)}
 .week-grid{display:flex;justify-content:center;gap:6px;margin-top:14px}
 .week-day{display:flex;flex-direction:column;align-items:center;gap:5px;transform:scale(0);animation:dotIn .3s var(--ease) forwards}
 .week-day:active .week-dot{transform:scale(.88)}
-.week-dot{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);transition:all .25s var(--ease)}
+.week-dot{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);transition:border-color .25s var(--ease),background-color .25s var(--ease)}
 .week-dot.done{border-color:var(--accent);background:var(--accent);box-shadow:0 1px 6px rgba(0,0,0,.1)}
 .week-dot.today{border-color:var(--accent);border-width:2px}
 .week-dot.done.today{background:var(--accent)}
@@ -597,7 +597,7 @@ body{background:var(--bg);color:var(--text)}
 .auth-title{font-weight:700;font-size:1.1rem}
 .auth-body{padding:20px 16px;flex:1}
 .auth-tabs{display:flex;gap:4px;background:var(--bg3,#f0f0f0);border-radius:var(--r-m);padding:4px;margin-bottom:20px}
-.auth-tab{flex:1;padding:10px;border-radius:calc(var(--r-m) - 2px);font-size:.85rem;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;border:none;background:transparent;color:var(--text2)}
+.auth-tab{flex:1;padding:10px;border-radius:calc(var(--r-m) - 2px);font-size:.85rem;font-weight:600;cursor:pointer;text-align:center;transition:background-color .15s,color .15s;border:none;background:transparent;color:var(--text2)}
 .auth-tab.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
 .auth-form{display:flex;flex-direction:column;gap:12px}
 .auth-form-group{display:flex;flex-direction:column}
@@ -725,7 +725,7 @@ body{background:var(--bg);color:var(--text)}
 .pp-delete-wrap{width:100%}
 .pp-delete-confirm{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-l);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
 .pp-delete-confirm-txt{font-size:.85rem;color:var(--text);line-height:1.6;direction:rtl;margin:0}
-.pp-delete-confirm-yes,.pp-delete-confirm-no{height:44px;border-radius:var(--r-m);font-size:.88rem;font-weight:600;font-family:inherit;cursor:pointer;border:none;transition:all .2s}
+.pp-delete-confirm-yes,.pp-delete-confirm-no{height:44px;border-radius:var(--r-m);font-size:.88rem;font-weight:600;font-family:inherit;cursor:pointer;border:none;transition:opacity .2s}
 .pp-delete-confirm-yes{background:var(--danger,#e74c3c);color:#fff}
 .pp-delete-confirm-yes:active{opacity:.85}
 .pp-delete-confirm-yes.pp-delete-confirm-final{background:#b91c1c}
@@ -787,7 +787,7 @@ body{background:var(--bg);color:var(--text)}
 .iv-spk-title{font-size:1rem;font-weight:700;color:var(--text)}
 .iv-spk-close{width:32px;height:32px;border-radius:50%;background:var(--bg2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:.85rem}
 .iv-spk-list{display:flex;flex-direction:column;gap:4px;padding:0 12px 20px;max-height:60vh;overflow-y:auto}
-.iv-spk-item{display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:var(--r-l);background:var(--bg2);border:none;cursor:pointer;font-size:.88rem;color:var(--text);text-align:right;direction:rtl;transition:all .15s}
+.iv-spk-item{display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:var(--r-l);background:var(--bg2);border:none;cursor:pointer;font-size:.88rem;color:var(--text);text-align:right;direction:rtl;transition:background-color .15s,opacity .15s}
 .iv-spk-item.on{background:var(--accent);color:var(--accent-t)}
 .iv-spk-item i{width:16px;text-align:center;opacity:.7}
 /* Active state for filter button */
@@ -896,7 +896,7 @@ body{background:var(--bg);color:var(--text)}
 .qs-row-sub{font-size:.72rem;color:var(--text3);margin-top:1px}
 .qs-section-title{font-size:.7rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:14px 20px 4px}
 .qs-font-cards{display:flex;gap:10px;padding:4px 20px 14px}
-.qs-font-card{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px 12px;border-radius:var(--r-l);background:var(--bg2);border:2px solid transparent;cursor:pointer;transition:all .2s}
+.qs-font-card{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px 12px;border-radius:var(--r-l);background:var(--bg2);border:2px solid transparent;cursor:pointer;transition:border-color .2s,background-color .2s}
 .qs-font-card.on{border-color:var(--accent);background:var(--surface-h)}
 .qs-font-card-sample{font-size:1.3rem;line-height:1.6;color:var(--text);direction:rtl}
 .qs-font-card-label{font-size:.7rem;font-weight:600;color:var(--text3);letter-spacing:.02em}
@@ -905,7 +905,7 @@ body{background:var(--bg);color:var(--text)}
 .qs-font-preview-tf{font-size:var(--tf-size);line-height:1.7;color:var(--text2);margin-top:4px}
 .qs-reciter-list{display:flex;gap:8px;overflow-x:auto;padding:10px 20px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-bottom:1px solid var(--border)}
 .qs-reciter-list::-webkit-scrollbar{display:none}
-.qs-reciter-chip{flex-shrink:0;padding:4px 10px 4px 4px;border-radius:var(--r-full);background:var(--bg3);font-size:.78rem;cursor:pointer;border:2px solid transparent;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.qs-reciter-chip{flex-shrink:0;padding:4px 10px 4px 4px;border-radius:var(--r-full);background:var(--bg3);font-size:.78rem;cursor:pointer;border:2px solid transparent;transition:border-color .15s,background-color .15s;white-space:nowrap;display:flex;align-items:center;gap:5px}
 .qs-reciter-chip.on{background:var(--accent);color:var(--accent-t)}
 .qs-reciter-chip-avatar{width:22px;height:22px;border-radius:50%;overflow:hidden;background:var(--bg2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .qs-reciter-chip-avatar img{width:100%;height:100%;object-fit:cover}
@@ -993,7 +993,7 @@ body{background:var(--bg);color:var(--text)}
 .sky-bg{position:absolute;inset:0;transition:background 12s linear}
 .sky-hz{position:absolute;bottom:0;left:0;right:0;height:60%;pointer-events:none;transition:opacity 8s}
 /* Stars — 3 twinkling speed variants */
-.sky-stars{position:absolute;top:0;left:0;width:100%;height:80%;pointer-events:none;transition:opacity 8s;will-change:transform}
+.sky-stars{position:absolute;top:0;left:0;width:100%;height:80%;pointer-events:none;transition:opacity 8s}
 @keyframes sky-tw0{0%{opacity:.18}100%{opacity:.95}}
 @keyframes sky-tw1{0%{opacity:.08}100%{opacity:1}}
 @keyframes sky-tw2{0%{opacity:.28}100%{opacity:.82}}
@@ -1001,7 +1001,7 @@ body{background:var(--bg);color:var(--text)}
 .sky-star-t1{animation:sky-tw1 3.6s ease-in-out infinite alternate}
 .sky-star-t2{animation:sky-tw2 1.7s ease-in-out infinite alternate}
 /* Shooting star */
-@keyframes sky-shoot{0%{opacity:1;width:3px;transform:translate(0,0)}100%{opacity:0;width:95px;transform:translate(115px,68px)}}
+@keyframes sky-shoot{0%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(115px,68px)}}
 .sky-shoot{position:absolute;height:1.5px;background:linear-gradient(90deg,rgba(255,255,255,.95),transparent);border-radius:2px;transform-origin:0 50%;transform:rotate(-32deg);animation:sky-shoot .65s ease-out forwards;pointer-events:none;z-index:1}
 /* Aurora borealis */
 .sky-aurora{position:absolute;top:0;left:-10%;right:-10%;height:56%;pointer-events:none;transition:opacity 8s;z-index:1}
@@ -1011,16 +1011,16 @@ body{background:var(--bg);color:var(--text)}
 .sky-au1{position:absolute;inset:0;background:linear-gradient(180deg,transparent 0%,rgba(0,210,120,.22) 38%,rgba(60,180,255,.15) 65%,transparent 100%);filter:blur(14px);animation:sky-au1 7s ease-in-out infinite}
 .sky-au2{position:absolute;top:10%;left:6%;right:6%;height:72%;background:linear-gradient(180deg,transparent,rgba(130,55,255,.16) 46%,rgba(0,200,140,.13) 74%,transparent);filter:blur(20px);animation:sky-au2 9.5s ease-in-out infinite}
 .sky-au3{position:absolute;top:6%;left:20%;right:20%;height:62%;background:linear-gradient(180deg,transparent,rgba(55,255,180,.16) 52%,transparent);filter:blur(11px);animation:sky-au3 5.8s ease-in-out infinite}
-/* Clouds */
-.sky-cloud{position:absolute;pointer-events:none;transition:opacity 6s,color 6s;z-index:2}
-@keyframes sky-cl1{0%{left:-165px}100%{left:calc(100% + 165px)}}
-@keyframes sky-cl2{0%{left:-115px}100%{left:calc(100% + 115px)}}
-@keyframes sky-cl3{0%{left:-185px}100%{left:calc(100% + 185px)}}
+/* Clouds — use transform (GPU-composited, no layout) instead of left */
+.sky-cloud{position:absolute;left:0;pointer-events:none;transition:opacity 6s,color 6s;z-index:2}
+@keyframes sky-cl1{0%{transform:translateX(-165px)}100%{transform:translateX(calc(100vw + 165px))}}
+@keyframes sky-cl2{0%{transform:translateX(-115px)}100%{transform:translateX(calc(100vw + 115px))}}
+@keyframes sky-cl3{0%{transform:translateX(-185px)}100%{transform:translateX(calc(100vw + 185px))}}
 .sky-cloud-a{top:12%;animation:sky-cl1 62s linear infinite}
 .sky-cloud-b{top:23%;animation:sky-cl2 88s linear infinite;animation-delay:-26s}
 .sky-cloud-c{top:7%;animation:sky-cl3 72s linear infinite;animation-delay:-44s}
 /* Celestial body + glow */
-.sky-cel-wrap{position:absolute;transform:translate(-50%,-50%);width:52px;height:52px;pointer-events:none;transition:left 60s linear,top 60s linear;z-index:3;will-change:transform}
+.sky-cel-wrap{position:absolute;transform:translate(-50%,-50%);width:52px;height:52px;pointer-events:none;transition:left 60s linear,top 60s linear;z-index:3}
 .sky-cel-glow{position:absolute;inset:-160%;width:420%;height:420%;border-radius:50%;pointer-events:none;transition:background 10s}
 @keyframes sky-glow-p{0%,100%{transform:scale(1);opacity:.82}50%{transform:scale(1.14);opacity:1}}
 .sky-cel-glow{animation:sky-glow-p 4.8s ease-in-out infinite}
@@ -1048,7 +1048,7 @@ body{background:var(--bg);color:var(--text)}
 @keyframes sky-pt{0%{transform:translateY(0) scale(1);opacity:.88}100%{transform:translateY(-72px) scale(0);opacity:0}}
 .sky-pt{position:absolute;width:2.5px;height:2.5px;border-radius:50%;animation:sky-pt linear infinite}
 /* Mosque/city silhouette */
-.sky-horizon{position:absolute;bottom:0;left:0;right:0;width:100%;height:78px;pointer-events:none;will-change:transform}
+.sky-horizon{position:absolute;bottom:0;left:0;right:0;width:100%;height:78px;pointer-events:none}
 /* UI overlay */
 .sky-top-row{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px 0;z-index:8}
 .sky-city{font-size:1.5rem;font-weight:700;color:rgba(255,255,255,.92);text-shadow:0 1px 8px rgba(0,0,0,.5);line-height:1}
@@ -1107,12 +1107,14 @@ body{background:var(--bg);color:var(--text)}
 .sky-venus{position:absolute;width:4px;height:4px;background:#fff8e0;border-radius:50%;z-index:5;pointer-events:none;transition:opacity 5s,left 8s,top 8s;animation:sky-vns 3.8s ease-in-out infinite}
 /* Star constellation lines */
 .sky-const{stroke:rgba(180,200,255,0.11);stroke-width:0.4}
+/* Pause ALL sky animations when prayer tab is not active — huge GPU/battery win */
+.sky-scene.sky-paused,.sky-scene.sky-paused *{animation-play-state:paused !important}
 /* Prayer panel — no scroll, exact fit */
 #panelPrayer{overflow:hidden;padding-bottom:0}
 #prayerContent{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
 /* Prayer 2-col grid */
 .prayer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 14px calc(var(--tab-h) + var(--safe-b) + 10px);flex:1;align-content:stretch}
-.prayer-grid-card{background:var(--bg2);border-radius:var(--r-l);padding:16px 16px 14px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid transparent;transition:all .2s}
+.prayer-grid-card{background:var(--bg2);border-radius:var(--r-l);padding:16px 16px 14px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid transparent;transition:border-color .2s,background-color .2s,box-shadow .2s}
 .prayer-grid-card--next{background:linear-gradient(145deg,rgba(34,197,94,.12) 0%,rgba(34,197,94,.04) 100%);border-color:var(--accent);box-shadow:0 0 0 1px rgba(34,197,94,.18),0 6px 24px rgba(0,0,0,.2),0 0 20px rgba(34,197,94,.1);animation:prayer-next-pulse 3.5s ease-in-out infinite}
 @keyframes prayer-next-pulse{0%,100%{box-shadow:0 0 0 1px rgba(34,197,94,.18),0 6px 24px rgba(0,0,0,.2),0 0 20px rgba(34,197,94,.1)}50%{box-shadow:0 0 0 1px rgba(34,197,94,.3),0 6px 24px rgba(0,0,0,.2),0 0 30px rgba(34,197,94,.2)}}
 .prayer-grid-card--passed{opacity:.36;filter:saturate(.2)}
@@ -1147,7 +1149,7 @@ body{background:var(--bg);color:var(--text)}
 .prayer-settings-section-label::before{content:'';flex:1;height:1px;background:var(--border);order:1}
 /* City grid in settings */
 .prayer-city-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 16px}
-.prayer-city-grid-btn{padding:9px 4px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg2);color:var(--text2);font-size:.75rem;font-weight:500;text-align:center;cursor:pointer;font-family:inherit;transition:all .15s;line-height:1.2}
+.prayer-city-grid-btn{padding:9px 4px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg2);color:var(--text2);font-size:.75rem;font-weight:500;text-align:center;cursor:pointer;font-family:inherit;transition:border-color .15s,background-color .15s,color .15s;line-height:1.2}
 .prayer-city-grid-btn.on{background:var(--accent);color:var(--accent-t);border-color:var(--accent);font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 .prayer-city-grid-btn:active{transform:scale(.93)}
 /* Format toggle in settings */
@@ -1160,7 +1162,7 @@ body{background:var(--bg);color:var(--text)}
 .prayer-settings-athan{padding:0 16px}
 .prayer-settings-spacer{height:32px}
 /* Master toggle banner */
-.prayer-master-banner{border-radius:18px;padding:18px 18px 18px 20px;display:flex;align-items:center;gap:14px;margin-bottom:10px;cursor:pointer;transition:all .2s;border:1.5px solid transparent}
+.prayer-master-banner{border-radius:18px;padding:18px 18px 18px 20px;display:flex;align-items:center;gap:14px;margin-bottom:10px;cursor:pointer;transition:border-color .2s,background-color .2s,box-shadow .2s;border:1.5px solid transparent}
 .prayer-master-banner--on{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3)}
 .prayer-master-banner--off{background:var(--bg2);border-color:var(--border)}
 .prayer-master-banner-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;transition:all .2s}
@@ -1173,12 +1175,12 @@ body{background:var(--bg);color:var(--text)}
 /* Per-prayer grid */
 .prayer-prayers-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;transition:opacity .2s}
 .prayer-prayers-grid--dim{opacity:.3;pointer-events:none}
-.prayer-prayer-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:16px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:all .2s;position:relative}
+.prayer-prayer-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:16px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:border-color .2s,background-color .2s,box-shadow .2s;position:relative}
 .prayer-prayer-card.on{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.35)}
 .prayer-prayer-card:active{transform:scale(.96)}
 .prayer-prayer-card-top{display:flex;justify-content:space-between;align-items:flex-start}
 .prayer-prayer-card-icon{font-size:1.3rem;line-height:1}
-.prayer-prayer-card-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:.6rem;color:transparent;transition:all .2s;flex-shrink:0}
+.prayer-prayer-card-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:.6rem;color:transparent;transition:border-color .2s,background-color .2s,color .2s;flex-shrink:0}
 .prayer-prayer-card.on .prayer-prayer-card-check{background:var(--accent);border-color:var(--accent);color:#fff}
 .prayer-prayer-card-name{font-size:.92rem;font-weight:700;color:var(--text);direction:rtl}
 .prayer-prayer-card.on .prayer-prayer-card-name{color:var(--accent)}
