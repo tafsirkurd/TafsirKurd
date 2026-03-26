@@ -5446,7 +5446,8 @@ function renderProfile(panel){
         return r.json();
       }).then(function(result){
         if(!result.success)throw new Error(result.error||t('error.generic'));
-        return S.supabase.auth.signOut();
+        // signOut clears local session; ignore server-side 4xx (token already gone)
+        return S.supabase.auth.signOut().catch(function(){});
       }).then(function(){
         S.user=null;stopCloudSync();App.closeProfile();
         toast(t('toast.account_deleted'));renderSettings();
