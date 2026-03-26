@@ -115,40 +115,42 @@ function mergeRemote(){
 }
 
 // ── initLang ─────────────────────────────────────────────────────────────────
-// Resolves only after BOTH local translations AND remote merge are done.
-// This guarantees zero flash: splash stays up until everything is ready.
-// Remote fetch has a 3s timeout so a slow network never blocks the app.
+// Layer order (each layer overwrites the previous for matching keys):
+//   1. kmr.json   — bundled, always complete, guarantees ZERO raw keys
+//   2. v3 cache   — admin-updated values from previous session
+//   3. remote DB  — latest admin values (3s timeout, never blocks)
+//
+// Even if cache is stale AND remote times out, kmr.json covers every key.
 function initLang(){
   if(_initPromise) return _initPromise;
 
-  // Remote merge with 3s timeout — never block forever on slow networks
+  // 3s timeout on remote — slow network never blocks the splash
   function mergeRemoteWithTimeout(){
-    var timeout = new Promise(function(resolve){
-      setTimeout(resolve, 3000);
-    });
+    var timeout = new Promise(function(resolve){ setTimeout(resolve, 3000); });
     return Promise.race([mergeRemote(), timeout]);
   }
 
-  var cached = readCache();
-  if(cached){
-    translations = cached;
-    applyTranslations();
-    console.log('[i18n] Loaded from cache (v3) — awaiting remote merge…');
-    // Wait for remote before resolving so splash hides with full translations
-    _initPromise = mergeRemoteWithTimeout().then(function(){ return translations; });
-    return _initPromise;
-  }
-
-  // No valid cache → load kmr.json then remote merge, both before resolving
   _initPromise = loadLocal()
     .catch(function(e){
-      console.error('[i18n] kmr.json load failed:', e.message, '— continuing with empty translations');
+      // Should never happen (file is in the bundle), but never crash
+      console.error('[i18n] kmr.json failed:', e.message);
       return {};
     })
-    .then(function(data){
-      translations = data;
-      writeCache(translations);
+    .then(function(local){
+      // Layer 1: kmr.json — guaranteed base, every key present
+      Object.assign(translations, local);
+      console.log('[i18n] Base layer: kmr.json (' + Object.keys(local).length + ' keys)');
+
+      // Layer 2: overlay cache — admin values from last session (no new keys needed)
+      var cached = readCache();
+      if(cached){
+        Object.assign(translations, cached);
+        console.log('[i18n] Cache overlaid');
+      }
+
       applyTranslations();
+
+      // Layer 3: overlay remote — latest admin values, wait before splash hides
       return mergeRemoteWithTimeout();
     })
     .then(function(){ return translations; });
