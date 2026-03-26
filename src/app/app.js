@@ -5422,43 +5422,94 @@ function renderProfile(panel){
   // Separator before destructive action
   actWrap.appendChild(el('div','pp-actions-sep'));
 
+  // ── Delete account — custom inline confirm (iOS WKWebView blocks confirm()) ──
+  var deleteWrap=el('div','pp-delete-wrap');
+
   var deleteBtn=el('button','pp-action-btn pp-delete');
+  deleteBtn.addEventListener('click',function(){
+    console.log('[deleteAccount] button clicked — showing confirm step 1');
+    deleteBtn.style.display='none';
+    confirmStep1.style.display='';
+  });
   deleteBtn.appendChild(icon('fas fa-trash-alt'));
-  var deleteBtnLbl=document.createTextNode(' '+t('profile.delete_account'));
-  deleteBtn.appendChild(deleteBtnLbl);
-  on(deleteBtn,'click',function(){
-    if(!confirm(t('profile.confirm_delete1')))return;
-    if(!confirm(t('profile.confirm_delete2')))return;
-    msg.className='pp-msg';msg.textContent='';
-    deleteBtn.disabled=true;
-    deleteBtnLbl.data=' '+(t('profile.deleting')||'...');
+  deleteBtn.appendChild(document.createTextNode(' '+t('profile.delete_account')));
+
+  // Step 1 — first confirmation
+  var confirmStep1=el('div','pp-delete-confirm');
+  confirmStep1.style.display='none';
+  var step1Txt=el('p','pp-delete-confirm-txt',t('profile.confirm_delete1'));
+  var step1Yes=el('button','pp-delete-confirm-yes',t('profile.confirm_delete1_yes')||t('profile.confirm_delete_yes')||'بەلێ، بەردەوام بە');
+  var step1No =el('button','pp-delete-confirm-no', t('profile.confirm_no')||'نەخێر');
+  step1Yes.addEventListener('click',function(){
+    console.log('[deleteAccount] step 1 confirmed — showing step 2');
+    confirmStep1.style.display='none';
+    confirmStep2.style.display='';
+  });
+  step1No.addEventListener('click',function(){
+    console.log('[deleteAccount] step 1 cancelled');
+    confirmStep1.style.display='none';
+    deleteBtn.style.display='';
+  });
+  confirmStep1.appendChild(step1Txt);
+  confirmStep1.appendChild(step1Yes);
+  confirmStep1.appendChild(step1No);
+
+  // Step 2 — final confirmation before irreversible action
+  var confirmStep2=el('div','pp-delete-confirm');
+  confirmStep2.style.display='none';
+  var step2Txt=el('p','pp-delete-confirm-txt',t('profile.confirm_delete2'));
+  var step2Yes=el('button','pp-delete-confirm-yes pp-delete-confirm-final',t('profile.confirm_delete_yes')||'سڕینەوەی ئەکاونت');
+  var step2No =el('button','pp-delete-confirm-no', t('profile.confirm_no')||'نەخێر');
+  step2No.addEventListener('click',function(){
+    console.log('[deleteAccount] step 2 cancelled');
+    confirmStep2.style.display='none';
+    deleteBtn.style.display='';
+  });
+  step2Yes.addEventListener('click',function(){
+    console.log('[deleteAccount] step 2 confirmed — sending delete request');
+    confirmStep2.style.display='none';
+    step2Yes.disabled=true;
+    msg.className='pp-msg';
+    msg.textContent=t('profile.deleting')||'...';
+
     S.supabase.auth.getSession().then(function(resp){
       var accessToken=resp&&resp.data&&resp.data.session&&resp.data.session.access_token;
       if(!accessToken){
-        deleteBtn.disabled=false;deleteBtnLbl.data=' '+t('profile.delete_account');
-        msg.textContent=t('error.generic');msg.className='pp-msg error';return;
+        console.error('[deleteAccount] no access token');
+        deleteBtn.style.display='';
+        msg.textContent=t('error.generic');msg.className='pp-msg error';
+        return;
       }
+      console.log('[deleteAccount] sending request to Edge Function');
       return fetch('https://gijupzejtbpifjzwadee.supabase.co/functions/v1/delete-account',{
         method:'POST',
         headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'}
       }).then(function(r){
-        if(!r.ok)return r.json().then(function(d){throw new Error(d.error||('HTTP '+r.status))});
+        console.log('[deleteAccount] response received, status:',r.status);
+        if(!r.ok)return r.json().then(function(d){throw new Error(d.error||('HTTP '+r.status));});
         return r.json();
       }).then(function(result){
         if(!result.success)throw new Error(result.error||t('error.generic'));
-        // signOut clears local session; ignore server-side 4xx (token already gone)
         return S.supabase.auth.signOut().catch(function(){});
       }).then(function(){
+        console.log('[deleteAccount] success — closing profile');
         S.user=null;stopCloudSync();App.closeProfile();
         toast(t('toast.account_deleted'));renderSettings();
       });
     }).catch(function(e){
-      deleteBtn.disabled=false;deleteBtnLbl.data=' '+t('profile.delete_account');
+      console.error('[deleteAccount] error:',e);
+      deleteBtn.style.display='';
       msg.textContent=e.message||t('error.generic');msg.className='pp-msg error';
-      console.error('Delete account error:',e);
     });
   });
-  actWrap.appendChild(deleteBtn);
+  confirmStep2.appendChild(step2Txt);
+  confirmStep2.appendChild(step2Yes);
+  confirmStep2.appendChild(step2No);
+
+  deleteWrap.appendChild(deleteBtn);
+  deleteWrap.appendChild(confirmStep1);
+  deleteWrap.appendChild(confirmStep2);
+  actWrap.appendChild(deleteWrap);
   actSec.appendChild(actWrap);
   body.appendChild(actSec);
 

@@ -721,6 +721,15 @@ body{background:var(--bg);color:var(--text)}
 .pp-action-btn.pp-logout:active{background:var(--danger,#e74c3c);color:#fff}
 .pp-action-btn.pp-delete{color:var(--danger,#e74c3c);background:transparent;border-color:transparent;opacity:.65;font-size:.85rem}
 .pp-action-btn.pp-delete:active{opacity:1;background:rgba(231,76,60,.06)}
+/* Delete confirm inline UI */
+.pp-delete-wrap{width:100%}
+.pp-delete-confirm{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-l);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.pp-delete-confirm-txt{font-size:.85rem;color:var(--text);line-height:1.6;direction:rtl;margin:0}
+.pp-delete-confirm-yes,.pp-delete-confirm-no{height:44px;border-radius:var(--r-m);font-size:.88rem;font-weight:600;font-family:inherit;cursor:pointer;border:none;transition:all .2s}
+.pp-delete-confirm-yes{background:var(--danger,#e74c3c);color:#fff}
+.pp-delete-confirm-yes:active{opacity:.85}
+.pp-delete-confirm-yes.pp-delete-confirm-final{background:#b91c1c}
+.pp-delete-confirm-no{background:var(--bg3,var(--surface));color:var(--text);border:1px solid var(--border)}
 /* Message */
 .pp-msg{padding:10px 14px;border-radius:var(--r-m);font-size:.82rem;display:none;margin-top:4px}
 .pp-msg.error{display:block;background:#fee2e2;color:#c00}
@@ -1957,8 +1966,8 @@ body{background:var(--bg);color:var(--text)}
 <audio id="audioEl" preload="auto"></audio>
 
 <script src="/utils/supabase.js?v=20260326b"></script>
-<script src="/i18n/kmr-bundled.js?v=20260326f"></script>
-<script src="/i18n/i18n.js?v=20260326f"></script>
+<script src="/i18n/kmr-bundled.js?v=20260326g"></script>
+<script src="/i18n/i18n.js?v=20260326g"></script>
 <script src="/prayer/prayer.cache.js?v=20260326b"></script>
 <script src="/prayer/prayer.api.js?v=20260326b"></script>
 <script src="/prayer/prayer.logic.js?v=20260326b"></script>
