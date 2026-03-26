@@ -91,9 +91,10 @@ function loadLocal(){
 }
 
 // ── Merge remote DB translations ─────────────────────────────────────────────
-// Called once at startup AND on a 30s poll so admin changes go live quickly.
+// Returns a Promise so initLang() can await it at startup (no-flash guarantee).
+// The 30s poll also calls this; those calls fire-and-forget.
 function mergeRemote(){
-  fetch('https://tafsirkurd.com/app-translations?platform=android', { cache: 'no-cache' })
+  return fetch('https://tafsirkurd.com/app-translations?platform=android', { cache: 'no-cache' })
     .then(function(r){
       if(!r.ok) throw new Error('HTTP '+r.status);
       return r.json();
@@ -114,20 +115,31 @@ function mergeRemote(){
 }
 
 // ── initLang ─────────────────────────────────────────────────────────────────
+// Resolves only after BOTH local translations AND remote merge are done.
+// This guarantees zero flash: splash stays up until everything is ready.
+// Remote fetch has a 3s timeout so a slow network never blocks the app.
 function initLang(){
   if(_initPromise) return _initPromise;
+
+  // Remote merge with 3s timeout — never block forever on slow networks
+  function mergeRemoteWithTimeout(){
+    var timeout = new Promise(function(resolve){
+      setTimeout(resolve, 3000);
+    });
+    return Promise.race([mergeRemote(), timeout]);
+  }
 
   var cached = readCache();
   if(cached){
     translations = cached;
     applyTranslations();
-    console.log('[i18n] Loaded from cache (v3)');
-    mergeRemote();
-    _initPromise = Promise.resolve(translations);
+    console.log('[i18n] Loaded from cache (v3) — awaiting remote merge…');
+    // Wait for remote before resolving so splash hides with full translations
+    _initPromise = mergeRemoteWithTimeout().then(function(){ return translations; });
     return _initPromise;
   }
 
-  // No valid cache → must load kmr.json before resolving
+  // No valid cache → load kmr.json then remote merge, both before resolving
   _initPromise = loadLocal()
     .catch(function(e){
       console.error('[i18n] kmr.json load failed:', e.message, '— continuing with empty translations');
@@ -137,9 +149,9 @@ function initLang(){
       translations = data;
       writeCache(translations);
       applyTranslations();
-      mergeRemote();
-      return translations;
-    });
+      return mergeRemoteWithTimeout();
+    })
+    .then(function(){ return translations; });
 
   return _initPromise;
 }
