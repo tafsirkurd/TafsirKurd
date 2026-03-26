@@ -567,7 +567,7 @@ document.addEventListener('i18n:updated', function(){
   else if(tab==='settings'){renderSettings();_renderHash.settings=_tabHash('settings');}
   else if(tab==='islamvoice'){renderIslamVoice();if(S.ivSeries&&S.ivSeries.length)_renderHash.iv=_tabHash('islamvoice');}
   else if(tab==='prayer'&&window.PrayerUI){PrayerUI.redraw();}
-  else if(tab==='gencine'&&window.GencineUI){GencineUI._draw();}
+  else if(tab==='gencine'&&window.GencineUI){GencineUI._homeEl=null;GencineUI._draw();}
   // quran tab uses data-i18n attributes — applyTranslations() already handled it above
 });
 
