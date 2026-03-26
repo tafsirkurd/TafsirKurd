@@ -1494,6 +1494,15 @@ window.BULK_TRANSLATIONS = [
     { key_id: "iv.error_prefix",         kurdish_text: "❌ هەڵە",                          category: "islamvoice", page: "android" },
     { key_id: "iv.confirm_delete_comment", kurdish_text: "دڵنیایت لە سڕینەوەی ئەم شیرۆڤەیە؟", category: "islamvoice", page: "android" },
     { key_id: "iv.confirm_delete_video",   kurdish_text: "ئایا تو دڵنیای کە دڤێت ئەڤ ڤیدیۆیێ بسڕیتەڤە؟\n\n\"${title}\"\n\nئەڤ کار ناکرێ پاشتر بگەڕێنەڤە!", category: "islamvoice", page: "android" },
+    { key_id: "iv.all",                   kurdish_text: "هەمی",                                                                        category: "islamvoice", page: "android" },
+    { key_id: "iv.no_saved_episodes",     kurdish_text: "هیچ ئەپیسۆدێک نەپارستیوی",                                                   category: "islamvoice", page: "android" },
+    { key_id: "iv.bookmark_to_save",      kurdish_text: "بوتونا bookmark بپەخشە بۆ پاراستن",                                           category: "islamvoice", page: "android" },
+    { key_id: "iv.percent_watched",       kurdish_text: "% تەماشاکراوە",                                                               category: "islamvoice", page: "android" },
+    { key_id: "iv.no_history",            kurdish_text: "هیچ مێژووێک نیە",                                                             category: "islamvoice", page: "android" },
+    { key_id: "iv.history_hint",          kurdish_text: "ئەپیسۆدێک تەماشابکە، ئینجا ئێرە دەکەوێتەوە",                                category: "islamvoice", page: "android" },
+    { key_id: "iv.watch_on_youtube",      kurdish_text: "YouTube دا تەماشابکە",                                                        category: "islamvoice", page: "android" },
+    { key_id: "iv.open_in_youtube",       kurdish_text: "YouTube دا بکەرەوە",                                                          category: "islamvoice", page: "android" },
+    { key_id: "iv.video_blocked_msg",     kurdish_text: "ئەم ڤیدیۆیە ناتوانرێت لەناو ئەپ نیشان بدرێت.\nدەتوانیت لە YouTube دا تەماشایی بکەیت.", category: "islamvoice", page: "android" },
 
     // Adhkar subcategory labels
     { key_id: "adhkar.morning",         kurdish_text: "زکرێن بەیانیکردن",               category: "adhkar", page: "android" },
