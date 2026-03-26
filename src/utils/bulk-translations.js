@@ -1504,6 +1504,28 @@ window.BULK_TRANSLATIONS = [
     { key_id: "iv.open_in_youtube",       kurdish_text: "YouTube دا بکەرەوە",                                                          category: "islamvoice", page: "android" },
     { key_id: "iv.video_blocked_msg",     kurdish_text: "ئەم ڤیدیۆیە ناتوانرێت لەناو ئەپ نیشان بدرێت.\nدەتوانیت لە YouTube دا تەماشایی بکەیت.", category: "islamvoice", page: "android" },
 
+    // Search dividers
+    { key_id: "search.divider_surah",     kurdish_text: "سوور",                  category: "search",   page: "android" },
+    { key_id: "search.divider_ayah",      kurdish_text: "ئایەت",                 category: "search",   page: "android" },
+
+    // Reader
+    { key_id: "reader.juz_label",         kurdish_text: "جزء",                   category: "reader",   page: "android" },
+
+    // Profile
+    { key_id: "profile.deleting",         kurdish_text: "ژێبرن...",              category: "profile",  page: "android" },
+
+    // Quick settings (mushaf)
+    { key_id: "qs.mushaf_settings_title", kurdish_text: "ڕێکخستنی مووشەف",      category: "settings", page: "android" },
+    { key_id: "qs.quran_font_section",    kurdish_text: "خەتی قورئانی",          category: "settings", page: "android" },
+    { key_id: "qs.font_size_label",       kurdish_text: "قەبارەی نووسین",        category: "settings", page: "android" },
+    { key_id: "qs.line_spacing_label",    kurdish_text: "قەراغا ریزان",          category: "settings", page: "android" },
+
+    // Settings — font style
+    { key_id: "settings.font_style",         kurdish_text: "ستایلی فونت",        category: "settings", page: "android" },
+    { key_id: "settings.font_tajwidi",        kurdish_text: "تاجویدی V4",         category: "settings", page: "android" },
+    { key_id: "settings.font_madani_classic", kurdish_text: "مەدینی کلاسیک",     category: "settings", page: "android" },
+    { key_id: "settings.font_madani_new",     kurdish_text: "مەدینی نوێ",         category: "settings", page: "android" },
+
     // Adhkar subcategory labels
     { key_id: "adhkar.morning",         kurdish_text: "زکرێن بەیانیکردن",               category: "adhkar", page: "android" },
     { key_id: "adhkar.evening",         kurdish_text: "زکرێن ئێواربوون",                category: "adhkar", page: "android" },
