@@ -178,19 +178,6 @@ private struct CityLabel: View {
     }
 }
 
-private struct RemBadge: View {
-    let text: String
-    var body: some View {
-        Text(text)
-            .font(.system(size: 10, weight: .semibold))
-            .foregroundStyle(DS.accent)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
-            .background(DS.accentDim)
-            .clipShape(Capsule())
-    }
-}
-
 /// Prayer row.
 ///
 /// `compact: true` → 11 pt font, 2 pt vertical padding.
@@ -274,11 +261,14 @@ private struct SmallView: View {
                     .font(.system(size: 22, weight: .ultraLight).monospacedDigit())
                     .foregroundStyle(DS.accent)
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                Spacer()
                 if let n = n {
-                    RemBadge(text: remaining(n.time))
+                    Text(remaining(n.time))
+                        .font(.system(size: 9.5, weight: .light))
+                        .foregroundStyle(DS.t3)
                         .frame(maxWidth: .infinity, alignment: .trailing)
+                        .padding(.top, 2)
                 }
+                Spacer()
             }
             .padding(12)
         } else {
@@ -309,7 +299,11 @@ private struct MediumView: View {
             let n = entry.next
             VStack(spacing: 0) {
                 HStack(alignment: .center, spacing: 0) {
-                    if let n = n { RemBadge(text: remaining(n.time)) }
+                    if let n = n {
+                        Text(remaining(n.time))
+                            .font(.system(size: 9.5, weight: .light))
+                            .foregroundStyle(DS.t3)
+                    }
                     Spacer(minLength: 6)
                     CityLabel(city: d.city)
                 }
@@ -343,7 +337,11 @@ private struct LargeView: View {
             VStack(spacing: 0) {
                 HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 3) {
-                        if let n = n { RemBadge(text: remaining(n.time)) }
+                        if let n = n {
+                            Text(remaining(n.time))
+                                .font(.system(size: 9.5, weight: .light))
+                                .foregroundStyle(DS.t3)
+                        }
                         Text(d.hijri)
                             .font(.system(size: 10))
                             .foregroundStyle(DS.t3)
@@ -383,8 +381,8 @@ private struct LargeView: View {
                             .foregroundStyle(DS.t1)
                         if let n = n {
                             Text(remaining(n.time))
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(DS.t2)
+                                .font(.system(size: 10, weight: .light))
+                                .foregroundStyle(DS.t3)
                         }
                     }
                 }
