@@ -18,18 +18,23 @@ public class SharedPrefsPlugin: CAPPlugin {
     @objc func set(_ call: CAPPluginCall) {
         guard let key   = call.getString("key"),
               let value = call.getString("value") else {
+            NSLog("[SharedPrefs] FAIL: missing key or value")
             call.reject("key and value are required")
             return
         }
+        NSLog("[SharedPrefs] set called — key=%@ valueLen=%d suite=%@", key, value.count, suite)
         guard let ud = UserDefaults(suiteName: suite) else {
-            call.reject("App Group '\(suite)' not configured — add the capability in Xcode")
+            NSLog("[SharedPrefs] CRITICAL: UserDefaults(suiteName:%@) returned nil — App Group missing from entitlements", suite)
+            call.reject("App Group '\(suite)' not configured")
             return
         }
         ud.set(value, forKey: key)
-        ud.synchronize()
-        // Reload widget timelines so the widget reads new data immediately
+        let synced = ud.synchronize()
+        NSLog("[SharedPrefs] wrote key=%@ valueLen=%d synced=%d", key, value.count, synced ? 1 : 0)
         if key == "widgetPrayerData" {
+            NSLog("[SharedPrefs] calling WidgetCenter.reloadAllTimelines")
             WidgetCenter.shared.reloadAllTimelines()
+            NSLog("[SharedPrefs] reloadAllTimelines done")
         }
         call.resolve()
     }

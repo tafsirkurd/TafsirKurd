@@ -1,5 +1,8 @@
 import WidgetKit
 import SwiftUI
+import os.log
+
+private let wLog = Logger(subsystem: "com.tafsirkurd.app.TafsirKurdWidget", category: "data")
 
 // MARK: — Constants
 
@@ -49,12 +52,36 @@ struct PrayerWidgetData: Codable {
     let timings: [String: String]
 
     static func load() -> PrayerWidgetData? {
-        guard
-            let ud   = UserDefaults(suiteName: kAppGroup),
-            let json = ud.string(forKey: kDataKey),
-            let raw  = json.data(using: .utf8)
-        else { return nil }
-        return try? JSONDecoder().decode(PrayerWidgetData.self, from: raw)
+        guard let ud = UserDefaults(suiteName: kAppGroup) else {
+            wLog.error("UserDefaults(suiteName:\(kAppGroup)) is NIL — App Group entitlement missing")
+            return nil
+        }
+        guard let json = ud.string(forKey: kDataKey) else {
+            wLog.warning("key '\(kDataKey)' not found in suite '\(kAppGroup)' — app not opened yet?")
+            return nil
+        }
+        wLog.info("raw data found — len=\(json.count)")
+        guard let raw = json.data(using: .utf8) else {
+            wLog.error("failed to convert JSON string to Data")
+            return nil
+        }
+        do {
+            let decoded = try JSONDecoder().decode(PrayerWidgetData.self, from: raw)
+            wLog.info("decode OK — city=\(decoded.city) date=\(decoded.date)")
+            return decoded
+        } catch {
+            wLog.error("JSON decode failed: \(error.localizedDescription) — raw=\(json.prefix(200))")
+            return nil
+        }
+    }
+
+    static func debugState() -> String {
+        guard let ud = UserDefaults(suiteName: kAppGroup) else { return "NO_GROUP" }
+        guard let json = ud.string(forKey: kDataKey) else { return "NO_KEY" }
+        guard let raw = json.data(using: .utf8),
+              let decoded = try? JSONDecoder().decode(PrayerWidgetData.self, from: raw)
+        else { return "DECODE_ERR(\(json.prefix(20)))" }
+        return "OK:\(decoded.city)"
     }
 
     func prayerDate(_ name: String) -> Date? {
@@ -89,6 +116,7 @@ struct PrayerEntry: TimelineEntry {
     let date: Date
     let data: PrayerWidgetData?
     let next: (name: String, time: Date, ku: String)?
+    var debugState: String = ""
 }
 
 // MARK: — Provider
@@ -98,28 +126,33 @@ struct PrayerProvider: TimelineProvider {
         .init(date: .now, data: nil, next: nil)
     }
     func getSnapshot(in _: Context, completion: @escaping (PrayerEntry) -> Void) {
+        wLog.info("getSnapshot called — debugState=\(PrayerWidgetData.debugState())")
         let d = PrayerWidgetData.load()
-        completion(.init(date: .now, data: d, next: d?.nextPrayer()))
+        completion(.init(date: .now, data: d, next: d?.nextPrayer(), debugState: PrayerWidgetData.debugState()))
     }
     func getTimeline(in _: Context, completion: @escaping (Timeline<PrayerEntry>) -> Void) {
         let now  = Date()
+        wLog.info("getTimeline called — debugState=\(PrayerWidgetData.debugState())")
         let data = PrayerWidgetData.load()
 
         // No data yet — retry in 3 minutes (app may not have been opened yet)
         guard let data = data else {
+            wLog.warning("getTimeline: no data — scheduling retry in 3min")
             let retry = now.addingTimeInterval(3 * 60)
-            let entry = PrayerEntry(date: now, data: nil, next: nil)
+            let entry = PrayerEntry(date: now, data: nil, next: nil, debugState: PrayerWidgetData.debugState())
             completion(Timeline(entries: [entry], policy: .after(retry)))
             return
         }
 
-        var entries: [PrayerEntry] = [.init(date: now, data: data, next: data.nextPrayer(from: now))]
+        let dbg = PrayerWidgetData.debugState()
+        var entries: [PrayerEntry] = [.init(date: now, data: data, next: data.nextPrayer(from: now), debugState: dbg)]
         for name in kPrayerOrder {
             if let t = data.prayerDate(name), t > now {
                 let after = t.addingTimeInterval(30)
-                entries.append(.init(date: t, data: data, next: data.nextPrayer(from: after)))
+                entries.append(.init(date: t, data: data, next: data.nextPrayer(from: after), debugState: dbg))
             }
         }
+        wLog.info("getTimeline: \(entries.count) entries built for city=\(data.city)")
         let refresh = (entries.last?.date ?? now).addingTimeInterval(6 * 3600)
         completion(Timeline(entries: entries, policy: .after(refresh)))
     }
@@ -197,22 +230,48 @@ private struct PRow: View {
     }
 }
 
+/// Debug overlay — tiny label at bottom-left showing data state
+private struct DebugBadge: View {
+    let state: String
+    var body: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Text(state)
+                    .font(.system(size: 7, weight: .medium).monospacedDigit())
+                    .foregroundStyle(state.hasPrefix("OK") ? Color.green.opacity(0.7) : Color.red.opacity(0.8))
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 2)
+                    .background(Color.black.opacity(0.45))
+                    .clipShape(RoundedRectangle(cornerRadius: 3))
+                Spacer()
+            }
+        }
+        .padding(4)
+        .allowsHitTesting(false)
+    }
+}
+
 /// Empty / no data state
 private struct NoDataView: View {
+    let debugState: String
     var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "moon.stars")
-                .font(.system(size: 24, weight: .ultraLight))
-                .foregroundStyle(DS.t3)
-            Text("کاتا نوێژ")
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(DS.t3)
-            Text("بکوژێنەوە بۆ بارکردن")
-                .font(.system(size: 9))
-                .foregroundStyle(DS.t3.opacity(0.6))
+        ZStack {
+            VStack(spacing: 8) {
+                Image(systemName: "moon.stars")
+                    .font(.system(size: 24, weight: .ultraLight))
+                    .foregroundStyle(DS.t3)
+                Text("کاتا نوێژ")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(DS.t3)
+                Text("بکوژێنەوە بۆ بارکردن")
+                    .font(.system(size: 9))
+                    .foregroundStyle(DS.t3.opacity(0.6))
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .environment(\.layoutDirection, .rightToLeft)
+            DebugBadge(state: debugState)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .environment(\.layoutDirection, .rightToLeft)
     }
 }
 
@@ -222,30 +281,30 @@ private struct SmallView: View {
     let entry: PrayerEntry
     var body: some View {
         if let d = entry.data, let n = entry.next {
-            VStack(alignment: .trailing, spacing: 0) {
-                CityLabel(city: d.city)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                Spacer()
-                // Next prayer — dominant
-                Text(n.ku)
-                    .font(.system(size: 34, weight: .bold))
-                    .foregroundStyle(DS.t1)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                // Time
-                Text(d.displayTime(n.name))
-                    .font(.system(size: 22, weight: .thin).monospacedDigit())
-                    .foregroundStyle(DS.accent)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                Spacer()
-                // Remaining
-                RemBadge(text: remaining(n.time))
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+            ZStack {
+                VStack(alignment: .trailing, spacing: 0) {
+                    CityLabel(city: d.city)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    Spacer()
+                    Text(n.ku)
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundStyle(DS.t1)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    Text(d.displayTime(n.name))
+                        .font(.system(size: 22, weight: .thin).monospacedDigit())
+                        .foregroundStyle(DS.accent)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    Spacer()
+                    RemBadge(text: remaining(n.time))
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .padding(14)
+                DebugBadge(state: entry.debugState)
             }
-            .padding(14)
         } else {
-            NoDataView()
+            NoDataView(debugState: entry.debugState)
         }
     }
 }
@@ -256,25 +315,25 @@ private struct MediumView: View {
     let entry: PrayerEntry
     var body: some View {
         if let d = entry.data, let n = entry.next {
-            VStack(spacing: 0) {
-                // Header
-                HStack(alignment: .center) {
-                    RemBadge(text: remaining(n.time))
-                    Spacer()
-                    CityLabel(city: d.city)
-                }
-                .padding(.bottom, 9)
-
-                // Prayer rows
-                VStack(spacing: 2) {
-                    ForEach(kPrayerOrder, id: \.self) { name in
-                        PRow(name: name, time: d.displayTime(name), isNext: name == n.name)
+            ZStack {
+                VStack(spacing: 0) {
+                    HStack(alignment: .center) {
+                        RemBadge(text: remaining(n.time))
+                        Spacer()
+                        CityLabel(city: d.city)
+                    }
+                    .padding(.bottom, 9)
+                    VStack(spacing: 2) {
+                        ForEach(kPrayerOrder, id: \.self) { name in
+                            PRow(name: name, time: d.displayTime(name), isNext: name == n.name)
+                        }
                     }
                 }
+                .padding(13)
+                DebugBadge(state: entry.debugState)
             }
-            .padding(13)
         } else {
-            NoDataView()
+            NoDataView(debugState: entry.debugState)
         }
     }
 }
@@ -285,6 +344,7 @@ private struct LargeView: View {
     let entry: PrayerEntry
     var body: some View {
         if let d = entry.data, let n = entry.next {
+            ZStack {
             VStack(spacing: 0) {
                 // Top bar
                 HStack(alignment: .center) {
@@ -336,8 +396,10 @@ private struct LargeView: View {
                 .padding(.horizontal, 4)
             }
             .padding(16)
+            DebugBadge(state: entry.debugState)
+            } // ZStack
         } else {
-            NoDataView()
+            NoDataView(debugState: entry.debugState)
         }
     }
 }

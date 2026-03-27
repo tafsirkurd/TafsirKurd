@@ -1192,8 +1192,15 @@
       }
       // iOS widget — write to App Group UserDefaults via SharedPrefs plugin
       var sp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedPrefs;
-      if (sp) { sp.set({ key: 'widgetPrayerData', value: payload }); }
-    } catch(e) {}
+      console.log('[Widget] SharedPrefs available:', !!sp, '| payload len:', payload.length);
+      if (sp) {
+        sp.set({ key: 'widgetPrayerData', value: payload })
+          .then(function() { console.log('[Widget] iOS write OK'); })
+          .catch(function(e) { console.log('[Widget] iOS write FAIL:', e && e.message || e); });
+      } else {
+        console.log('[Widget] SharedPrefs NOT available — plugin not loaded on iOS');
+      }
+    } catch(e) { console.log('[Widget] pushWidgetData error:', e); }
   }
 
   async function render() {
