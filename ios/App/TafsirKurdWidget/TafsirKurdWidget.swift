@@ -407,24 +407,22 @@ private struct LargeView: View {
     }
 }
 
-// MARK: — Lock screen widget  (accessoryRectangular — Hero + compact list)
+// MARK: — Lock screen widget  (accessoryRectangular — Hero + compact list, no-clip)
 //
-// Layout (RTL — name right, time left):
-//   [City]                         7 pt .tertiary
-//   [Hero: next prayer  time]     14 pt semibold/medium .primary  ← dominant
-//   [── 5 pt gap ──]
-//   [ڕوژهەلات       time]          8 pt light/ultraLight .tertiary ← dimmest
-//   [other prayers  time] ×4       8 pt light/ultraLight .secondary
+// Height budget — VStack(spacing:0), fits ≤73 pt (standard iPhones):
+//   city  6.5 pt → line ~8 pt  + 1 pt gap  =  9 pt
+//   hero 12.5 pt → line ~15 pt + 3 pt gap  = 18 pt
+//   sunrise 7.5 pt → line ~9 pt             =  9 pt
+//   4 prayers 7.5 pt × 4 → ~9 pt each       = 36 pt
+//   total                                    = 72 pt  ✓ no clip
 //
-// Hierarchy:  hero (.primary 14pt)  >  list (.secondary 8pt)  >  sunrise (.tertiary 8pt)
-// No countdown. .widgetAccentable(true) on hero row.
+// Hierarchy:
+//   hero    → 12.5 pt semibold/medium, .primary + widgetAccentable
+//   prayers →  7.5 pt light/ultraLight, .secondary
+//   sunrise →  7.5 pt light/ultraLight, .tertiary  (dimmest — info only)
+//   city    →  6.5 pt semibold, .tertiary
 //
-// Height estimate (VStack spacing:0):
-//   city  7 pt  → ~9 pt + 2 pt gap = 11 pt
-//   hero 14 pt  → ~17 pt + 5 pt gap = 22 pt
-//   sunrise 8pt → ~10 pt
-//   4 prayers   →  4 × 10 pt = 40 pt
-//   total       ≈ 83 pt  (hero + city always visible; bottom clips on SE/standard)
+// No countdown anywhere.
 
 private struct LockView: View {
     let entry: PrayerEntry
@@ -439,35 +437,35 @@ private struct LockView: View {
                 HStack(spacing: 0) {
                     Spacer()
                     Text(d.city)
-                        .font(.system(size: 7, weight: .semibold))
+                        .font(.system(size: 6.5, weight: .semibold))
                         .foregroundStyle(AnyShapeStyle(.tertiary))
                 }
-                .padding(.bottom, 2)
+                .padding(.bottom, 1)
 
                 // ── Hero: next prayer ────────────────────────────────────
                 HStack(spacing: 0) {
                     Text(kKurdish[heroName] ?? heroName)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 12.5, weight: .semibold))
                         .foregroundStyle(AnyShapeStyle(.primary))
                         .lineLimit(1)
                     Spacer(minLength: 4)
                     Text(d.displayTime(heroName))
-                        .font(.system(size: 14, weight: .medium).monospacedDigit())
+                        .font(.system(size: 12.5, weight: .medium).monospacedDigit())
                         .foregroundStyle(AnyShapeStyle(.primary))
                         .lineLimit(1)
                 }
                 .widgetAccentable(true)
-                .padding(.bottom, 5)
+                .padding(.bottom, 3)
 
-                // ── Sunrise — secondary info, dimmest ────────────────────
+                // ── Sunrise — dimmest, informational ─────────────────────
                 HStack(spacing: 0) {
                     Text("ڕوژهەلات")
-                        .font(.system(size: 8, weight: .light))
+                        .font(.system(size: 7.5, weight: .light))
                         .foregroundStyle(AnyShapeStyle(.tertiary))
                         .lineLimit(1)
                     Spacer(minLength: 4)
                     Text(d.displayTime("Sunrise"))
-                        .font(.system(size: 8, weight: .ultraLight).monospacedDigit())
+                        .font(.system(size: 7.5, weight: .ultraLight).monospacedDigit())
                         .foregroundStyle(AnyShapeStyle(.tertiary))
                         .lineLimit(1)
                 }
@@ -476,12 +474,12 @@ private struct LockView: View {
                 ForEach(kPrayerOrder.filter { $0 != heroName }, id: \.self) { pName in
                     HStack(spacing: 0) {
                         Text(kKurdish[pName] ?? pName)
-                            .font(.system(size: 8, weight: .light))
+                            .font(.system(size: 7.5, weight: .light))
                             .foregroundStyle(AnyShapeStyle(.secondary))
                             .lineLimit(1)
                         Spacer(minLength: 4)
                         Text(d.displayTime(pName))
-                            .font(.system(size: 8, weight: .ultraLight).monospacedDigit())
+                            .font(.system(size: 7.5, weight: .ultraLight).monospacedDigit())
                             .foregroundStyle(AnyShapeStyle(.secondary))
                             .lineLimit(1)
                     }
