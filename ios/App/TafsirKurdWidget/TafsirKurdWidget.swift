@@ -282,9 +282,8 @@ private struct MediumView: View {
     }
 }
 
-// MARK: — Lock screen view (iOS 16+)
+// MARK: — Lock screen view
 
-@available(iOSApplicationExtension 16.0, *)
 private struct LockScreenView: View {
     let entry: PrayerEntry
 
@@ -343,18 +342,10 @@ struct TafsirKurdLockWidgetEntryView: View {
 
     var body: some View {
         if #available(iOSApplicationExtension 17.0, *) {
-            lockContent
+            LockScreenView(entry: entry)
                 .containerBackground(for: .widget) { Color.clear }
         } else {
-            lockContent
-        }
-    }
-
-    @ViewBuilder private var lockContent: some View {
-        if #available(iOSApplicationExtension 16.0, *) {
             LockScreenView(entry: entry)
-        } else {
-            EmptyState()
         }
     }
 }
@@ -373,7 +364,6 @@ struct TafsirKurdWidget: Widget {
     }
 }
 
-@available(iOSApplicationExtension 16.0, *)
 struct TafsirKurdLockWidget: Widget {
     let kind = "TafsirKurdLockWidget"
     var body: some WidgetConfiguration {
@@ -393,8 +383,6 @@ struct TafsirKurdWidgetBundle: WidgetBundle {
     @WidgetBundleBuilder
     var body: some Widget {
         TafsirKurdWidget()
-        if #available(iOSApplicationExtension 16.0, *) {
-            TafsirKurdLockWidget()
-        }
+        TafsirKurdLockWidget()
     }
 }
